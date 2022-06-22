@@ -8,6 +8,9 @@
 #include "MyString.h"
 #include "ParserSession.h"
 
+#if DIAGNOSTICS
+#include "Diagnostics.h"
+#endif // DIAGNOSTICS
 
 ByteDecoder::ByteDecoder() : srcConventionManager(), lastBuf(), lastLoc(), SrcLoc() {}
 
@@ -73,6 +76,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             // Handle CR specially
             //
         case 0x0d: {
+            
+#if DIAGNOSTICS
+            ByteDecoder_CarriageReturnCount++;
+#endif // DIAGNOSTICS
             
             if (TheByteBuffer->currentByte() == 0x0a) {
                 
@@ -168,6 +175,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
         case 0xd0: case 0xd1: case 0xd2: case 0xd3: case 0xd4: case 0xd5: case 0xd6: case 0xd7:
         case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf: {
             
+#if DIAGNOSTICS
+            ByteDecoder_2ByteCount++;
+#endif // DIAGNOSTICS
+            
             //
             // Buffer is possibly already pointing to EOF
             //
@@ -216,6 +227,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             // 3 byte UTF-8 sequence
             //
         case 0xe0: {
+            
+#if DIAGNOSTICS
+            ByteDecoder_3ByteCount++;
+#endif // DIAGNOSTICS
             
             //
             // Buffer is possibly already pointing to EOF
@@ -302,6 +317,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
         /*      */ case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
         case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef: {
+            
+#if DIAGNOSTICS
+            ByteDecoder_3ByteCount++;
+#endif // DIAGNOSTICS
             
             //
             // Buffer is possibly already pointing to EOF
@@ -405,6 +424,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             // 4 byte UTF-8 sequence
             //
         case 0xf0: {
+            
+#if DIAGNOSTICS
+            ByteDecoder_4ByteCount++;
+#endif // DIAGNOSTICS
             
             //
             // Buffer is possibly already pointing to EOF
@@ -527,6 +550,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
         case 0xf1: case 0xf2: case 0xf3: {
             
+#if DIAGNOSTICS
+            ByteDecoder_4ByteCount++;
+#endif // DIAGNOSTICS
+            
             //
             // Buffer is possibly already pointing to EOF
             //
@@ -647,6 +674,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             // 4 byte UTF-8 sequence
             //
         case 0xf4: {
+            
+#if DIAGNOSTICS
+            ByteDecoder_4ByteCount++;
+#endif // DIAGNOSTICS
             
             //
             // Buffer is possibly already pointing to EOF
@@ -769,6 +800,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
         case 0xff: {
             
+#if DIAGNOSTICS
+            ByteDecoder_FFCount++;
+#endif // DIAGNOSTICS
+            
             if (TheByteBuffer->wasEOF) {
                 
                 //
@@ -788,6 +823,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             // Not a valid UTF-8 start
             //
         default: {
+            
+#if DIAGNOSTICS
+            ByteDecoder_Incomplete1ByteCount++;
+#endif // DIAGNOSTICS
             
             //
             // Incomplete

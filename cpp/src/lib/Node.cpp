@@ -13,6 +13,10 @@
 #include "ExprLibrary.h"
 #endif // USE_EXPR_LIB
 
+#if DIAGNOSTICS
+#include "Diagnostics.h"
+#endif // DIAGNOSTICS
+
 #include <numeric> // for accumulate
 #include <limits>
 
@@ -107,6 +111,9 @@ OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(O
     auto LastSrc = Last->getSource();
 
     Src = Source(FirstSrc, LastSrc);
+#if DIAGNOSTICS
+    Node_OperatorNodeCount++;
+#endif // DIAGNOSTICS
 }
 
 Symbol OperatorNode::getOp() const {
@@ -138,7 +145,12 @@ void OperatorNode::print(std::ostream& s) const {
 }
 
 
-LeafNode::LeafNode(Token Tok) : Tok(Tok) {}
+LeafNode::LeafNode(Token Tok) : Tok(Tok) {
+    
+#if DIAGNOSTICS
+    Node_LeafNodeCount++;
+#endif // DIAGNOSTICS
+}
 
 Source LeafNode::getSource() const {
     return Tok.Src;
@@ -172,8 +184,13 @@ void LeafNode::print(std::ostream& s) const {
 
 
 ErrorNode::ErrorNode(Token Tok) : Tok(Tok) {
+    
     assert(Tok.Tok.isError());
     assert(!Tok.Tok.isUnterminated());
+    
+#if DIAGNOSTICS
+    Node_ErrorNodeCount++;
+#endif // DIAGNOSTICS
 }
 
 Token ErrorNode::getToken() const {
@@ -208,7 +225,12 @@ void ErrorNode::print(std::ostream& s) const {
 
 
 UnterminatedTokenErrorNeedsReparseNode::UnterminatedTokenErrorNeedsReparseNode(Token Tok) : Tok(Tok) {
+    
     assert(Tok.Tok.isUnterminated());
+    
+#if DIAGNOSTICS
+    Node_UnterminatedTokenErrorNeedsReparseNodeCount++;
+#endif // DIAGNOSTICS
 }
 
 Source UnterminatedTokenErrorNeedsReparseNode::getSource() const {
@@ -238,6 +260,13 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
 }
 
 
+AbortNode::AbortNode() {
+    
+#if DIAGNOSTICS
+    Node_AbortNodeCount++;
+#endif // DIAGNOSTICS
+}
+
 void AbortNode::print(std::ostream& s) const {
     SYMBOL__ABORTED.print(s);
 }
@@ -261,25 +290,75 @@ bool UnterminatedGroupNeedsReparseNode::check() const {
 }
 
 
-PrefixNode::PrefixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
+PrefixNode::PrefixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_PrefixNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-BinaryNode::BinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
+BinaryNode::BinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_BinaryNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-InfixNode::InfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
+InfixNode::InfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_InfixNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-TernaryNode::TernaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
+TernaryNode::TernaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_TernaryNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-PostfixNode::PostfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
+PostfixNode::PostfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_PostfixNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-PrefixBinaryNode::PrefixBinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
+PrefixBinaryNode::PrefixBinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_PrefixBinaryNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-GroupNode::GroupNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
+GroupNode::GroupNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_GroupNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-CompoundNode::CompoundNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
+CompoundNode::CompoundNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_CompoundNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-GroupMissingCloserNode::GroupMissingCloserNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
+GroupMissingCloserNode::GroupMissingCloserNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_GroupMissingCloserNodeCount++;
+#endif // DIAGNOSTICS
+}
 
-UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {
+    
+#if DIAGNOSTICS
+    Node_UnterminatedGroupNeedsReparseNodeCount++;
+#endif // DIAGNOSTICS
+}
 
 
 CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src() {
@@ -292,6 +371,9 @@ CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Bo
     auto LastSrc = Body->getSource();
     
     Src = Source(FirstSrc, LastSrc);
+#if DIAGNOSTICS
+    Node_CallNodeCount++;
+#endif // DIAGNOSTICS
 }
 
 Source CallNode::getSource() const {
@@ -330,6 +412,9 @@ SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Chi
     auto LastSrc = Last->getSource();
 
     Src = Source(FirstSrc, LastSrc);
+#if DIAGNOSTICS
+    Node_SyntaxErrorNodeCount++;
+#endif // DIAGNOSTICS
 }
 
 bool SyntaxErrorNode::check() const {

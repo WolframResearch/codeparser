@@ -52,6 +52,10 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
     
     if (curSource.to_point() != '\\') {
         
+#if DIAGNOSTICS
+        CharacterDecoder_UnescapedCount++;
+#endif // DIAGNOSTICS
+        
         return WLCharacter(curSource.to_point());
     }
     

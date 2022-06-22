@@ -8,6 +8,10 @@
 #include "MyString.h"
 #include "ParserSession.h"
 
+#if DIAGNOSTICS
+#include "Diagnostics.h"
+#endif // DIAGNOSTICS
+
 
 Tokenizer::Tokenizer() : EmbeddedNewlines(), EmbeddedTabs() {}
 
@@ -428,6 +432,10 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     
     assert(c.to_point() == '*');
     
+#if DIAGNOSTICS
+    Tokenizer_CommentCount++;
+#endif // DIAGNOSTICS
+    
     policy |= STRING_OR_COMMENT;
     
     auto depth = 1;
@@ -596,6 +604,10 @@ inline Token Tokenizer::handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLoc
 inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.to_point() == '`' || c.isLetterlike() || c.isMBLetterlike());
+    
+#if DIAGNOSTICS
+    Tokenizer_SymbolCount++;
+#endif // DIAGNOSTICS
     
     if (c.isLetterlike() || c.isMBLetterlike()) {
         
@@ -1121,6 +1133,10 @@ const int BAILOUT = -1;
 inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.isDigit() || c.to_point() == '.');
+    
+#if DIAGNOSTICS
+    Tokenizer_NumberCount++;
+#endif // DIAGNOSTICS
     
     NumberTokenizationContext Ctxt;
     

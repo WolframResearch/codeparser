@@ -9,6 +9,10 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
 
+#if DIAGNOSTICS
+#include "Diagnostics.h"
+#endif // DIAGNOSTICS
+
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
@@ -90,6 +94,11 @@ void ParserSession::deinit() {
 }
 
 NodeContainerPtr ParserSession::parseExpressions() {
+    
+#if DIAGNOSTICS
+    DiagnosticsLog("enter parseExpressions");
+    DiagnosticsMarkTime();
+#endif // DIAGNOSTICS
     
     std::vector<NodePtr> nodes;
     
@@ -229,6 +238,11 @@ NodeContainerPtr ParserSession::parseExpressions() {
 #endif // COMPUTE_OOB
     
     auto C = new NodeContainer(std::move(nodes));
+    
+#if DIAGNOSTICS
+    DiagnosticsLog("exit parseExpressions");
+    DiagnosticsLogTime();
+#endif // DIAGNOSTICS
     
     return C;
 }
@@ -503,7 +517,18 @@ NodeContainerPtr ParserSession::safeString() {
 }
 
 void ParserSession::releaseContainer(NodeContainerPtr C) {
+    
+#if DIAGNOSTICS
+    DiagnosticsLog("before delete C");
+    DiagnosticsMarkTime();
+#endif // DIAGNOSTICS
+    
     delete C;
+    
+#if DIAGNOSTICS
+    DiagnosticsLog("after delete C");
+    DiagnosticsLogTime();
+#endif // DIAGNOSTICS
 }
 
 bool ParserSession::isAbort() const {

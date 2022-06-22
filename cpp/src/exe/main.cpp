@@ -12,6 +12,7 @@
 #include <cstdlib> // for EXIT_SUCCESS
 #include <cstddef> // for size_t
 
+
 class ScopedFileBuffer;
 
 using ScopedFileBufferPtr = std::unique_ptr<ScopedFileBuffer>;
@@ -197,7 +198,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             ParserSessionDeinit();
             
 #if DIAGNOSTICS
-            DiagnosticsPrint(std::cout);
+            DiagnosticsPrint();
 #endif // DIAGNOSTICS
             
         } else {
@@ -238,7 +239,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             ParserSessionDeinit();
             
 #if DIAGNOSTICS
-            DiagnosticsPrint(std::cout);
+            DiagnosticsPrint();
 #endif // DIAGNOSTICS
         }
         
@@ -303,7 +304,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         ParserSessionDeinit();
         
 #if DIAGNOSTICS
-        DiagnosticsPrint(std::cout);
+        DiagnosticsPrint();
 #endif // DIAGNOSTICS
         
     } else if (mode == LEAF) {
@@ -336,7 +337,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         ParserSessionDeinit();
         
 #if DIAGNOSTICS
-        DiagnosticsPrint(std::cout);
+        DiagnosticsPrint();
 #endif // DIAGNOSTICS
         
     } else {
@@ -374,7 +375,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         ParserSessionDeinit();
         
 #if DIAGNOSTICS
-        DiagnosticsPrint(std::cout);
+        DiagnosticsPrint();
 #endif // DIAGNOSTICS
     }
     

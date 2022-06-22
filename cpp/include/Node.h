@@ -237,6 +237,8 @@ public:
 class AbortNode : public Node {
 public:
     
+    AbortNode();
+    
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
