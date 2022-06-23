@@ -975,7 +975,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     //
     // Diagnostics that count SourceCharacters and WLCharacters will not be accurate inside of fast strings.
     //
-    // Bad SourceCharacters will not be detected. This means that incomplete sequences, stray surrogated, and BOM will not be reported.
+    // Bad SourceCharacters will not be detected. This means that incomplete sequences, stray surrogates, and BOM will not be reported.
     //
     // Bad WLCharacters will not be detected. This means that badly escaped characters will not be reported.
     //
