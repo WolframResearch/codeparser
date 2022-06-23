@@ -958,12 +958,14 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     bool fast = false;
     bool terminated = false;
     
-#if !COMPUTE_OOB && !CHECK_ISSUES && !COMPUTE_SOURCE
+#if !COMPUTE_OOB && !CHECK_ISSUES && !COMPUTE_SOURCE && FAST_STRING_SCAN
     
     //
     // !CHECK_ISSUES (so do not need to warn about strange SourceCharacters)
     // !COMPUTE_OOB (so do not need to care about embedded newlines or tabs)
     // !COMPUTE_SOURCE (so do not need to keep track of line and column information)
+    //
+    // FAST_STRING_SCAN (as a final check that skipping bad SourceCharacters and WLCharacters is ok)
     //
     
     //
@@ -972,6 +974,10 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     // This is faster than explicitly calling TheCharacterDecoder->nextWLCharacter0 over and over again.
     //
     // Diagnostics that count SourceCharacters and WLCharacters will not be accurate inside of fast strings.
+    //
+    // Bad SourceCharacters will not be detected. This means that incomplete sequences, stray surrogated, and BOM will not be reported.
+    //
+    // Bad WLCharacters will not be detected. This means that badly escaped characters will not be reported.
     //
     
     quotPtr = static_cast<Buffer>(std::memchr(TheByteBuffer->buffer, '"', TheByteBuffer->end - TheByteBuffer->buffer));
@@ -1011,7 +1017,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     
     fast = false;
     
-#endif // !COMPUTE_OOB && !CHECK_ISSUES && !COMPUTE_SOURCE
+#endif // !COMPUTE_OOB && !CHECK_ISSUES && !COMPUTE_SOURCE && FAST_STRING_SCAN
     
     if (fast) {
         
