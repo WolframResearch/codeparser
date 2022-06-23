@@ -1564,33 +1564,36 @@ epilog = {
 Epilog
 *)
 
-insertImplicitTimesAfter[node_] :=
-  Switch[node,
-    LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _],
+insertImplicitTimesAfter[children_] :=
+Module[{split},
+
+  split = Split[children,
+    MatchQ[#2,
       (*
       Do not insert implicit Times after whitespace
-      *)
-      {node}
-    ,
-    GroupNode[Comment, _, _],
-      {node}
-    ,
-    LeafNode[Token`Star, _, _],
-      (*
+
       Do not insert implicit Times after *
-      *)
-      {node}
-    ,
-    toBeSpliced[_],
-      (*
+
       Do not insert implicit Times after toBeSpliced[_]
       *)
-      {node}
+      LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Star | Token`LongName`InvisibleTimes | Token`LongName`Times, _, _] |
+      GroupNode[Comment, _, _] |
+      toBeSpliced[_]
+    ]&
+  ];
+  
+  If[MemberQ[#, LeafNode[Token`Star | Token`LongName`InvisibleTimes | Token`LongName`Times, _, _]],
+    (*
+    already has a Times operator
+    *)
+    #
+    (*
+    no Times operator; insert implicit Times
+    *)
     ,
-    _,
-      {node, LeafNode[Token`Fake`ImplicitTimes, \"\", <| Source -> After[node[[3, Key[Source]]]] |>]}
-  ]
-
+    # ~Join~ {LeafNode[Token`Fake`ImplicitTimes, \"\", <| Source -> After[Last[#][[3, Key[Source]]]] |>]}
+  ]& /@ split
+]
 
 (*
 Token`Star Missing first rand
@@ -1621,7 +1624,8 @@ Make sure to handle both * and implicit Times in the same RowBox
 prbDispatch[{_, LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_, pos_] :=
   Module[{childrenWithImplicitTimes},
 
-    childrenWithImplicitTimes = Flatten[(insertImplicitTimesAfter /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
+    partition handledChildren correctly;
+    childrenWithImplicitTimes = Flatten[(insertImplicitTimesAfter[Most[handledChildren]]) ~Join~ {Last[handledChildren]}];
 
     (*
     Remove ImplicitTimes from the end
@@ -1690,7 +1694,8 @@ Make sure to handle both * and implicit Times in the same RowBox
 prbDispatch[_, handledChildren_, ignored_, posIgnored_] :=
   Module[{childrenWithImplicitTimes, calculatedPos},
 
-    childrenWithImplicitTimes = Flatten[(insertImplicitTimesAfter /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
+    partition handledChildren correctly;
+    childrenWithImplicitTimes = Flatten[(insertImplicitTimesAfter[Most[handledChildren]]) ~Join~ {Last[handledChildren]}];
 
     (*
     Remove ImplicitTimes from the end

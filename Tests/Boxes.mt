@@ -18,8 +18,8 @@ Test[
 	ContainerNode[Box, {
 		InfixNode[Times, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 1}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 2}]|>],
 			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20191015-Q5H2Y6"
@@ -405,8 +405,8 @@ Test[
 			LeafNode[Token`LongName`Integral, "\[Integral]", <|Source -> {1, 1}|>],
 			InfixNode[Times, {
 				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1}|>],
-				LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 2, 1, 1}]|>],
 				LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2, 1, 2}|>],
+				LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 2, 1, 2}]|>],
 				CallNode[{LeafNode[Symbol, "Cos", <|Source -> {1, 2, 1, 3, 1, 1}|>]},
 					GroupNode[GroupSquare, {
 						LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 3, 1, 2}|>],
@@ -679,8 +679,8 @@ Test[
 	ContainerNode[Box, {
 		InfixNode[Times, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 1}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 2}]|>],
 			LeafNode[Symbol, "b", <|Source -> {1, 3}|>],
 			LeafNode[Token`Star, "*", <|Source -> {1, 4}|>],
 			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
@@ -697,8 +697,8 @@ Test[
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
 			LeafNode[Token`Star, "*", <|Source -> {1, 2}|>],
 			LeafNode[Symbol, "b", <|Source -> {1, 3}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 3}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 4}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 4}]|>],
 			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-W2R0R5"
@@ -728,8 +728,8 @@ Test[
 	ContainerNode[Box, {
 		InfixNode[Times, {
 			LeafNode[Symbol, "p", <|Source -> {1, 1}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 1}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 2}]|>],
 			LeafNode[Symbol, "q", <|Source -> {1, 3}|>],
 			LeafNode[Token`Star, "*", <|Source -> {1, 4}|>],
 			LeafNode[Token`Newline, "\n", <|Source -> {1, 5}|>],
