@@ -3,6 +3,10 @@
 
 #include "ParserSession.h"
 
+#if DIAGNOSTICS
+#include "Diagnostics.h"
+#endif // DIAGNOSTICS
+
 #if 0
 #ifndef NDEBUG
 #if USE_MATHLINK
@@ -32,6 +36,10 @@ void ByteBuffer::init() {
     end = TheParserSession->bufAndLen.end;
     
     wasEOF = false;
+    
+#if DIAGNOSTICS
+    ByteBuffer_size = end - buffer;
+#endif // DIAGNOSTICS
 }
 
 

@@ -15,6 +15,8 @@ EXTERN_C DLLEXPORT void DiagnosticsLogTime();
 
 EXTERN_C DLLEXPORT void DiagnosticsPrint();
 
+extern int ByteBuffer_size;
+
 extern int ByteDecoder_PrintableCount;
 
 extern int ByteDecoder_LineFeedCount;
@@ -143,7 +145,7 @@ extern int Node_UnterminatedTokenErrorNeedsReparseNodeCount;
 
 extern int Node_SyntaxErrorNodeCount;
 
-extern int Node_OperatorNodeCount;
+//extern int Node_OperatorNodeCount;
 
 extern int Node_AbortNodeCount;
 

@@ -27,6 +27,8 @@ void DiagnosticsLogTime() {
 
 void DiagnosticsPrint() {
     
+    std::cout << "ByteBuffer_size: " << ByteBuffer_size << "\n";
+    
     std::cout << "ByteDecoder_PrintableCount: " << ByteDecoder_PrintableCount << "\n";
     
     std::cout << "ByteDecoder_LineFeedCount: " << ByteDecoder_LineFeedCount << "\n";
@@ -147,41 +149,50 @@ void DiagnosticsPrint() {
     
     std::cout << "Tokenizer_PlusCount: " << Tokenizer_PlusCount << "\n";
     
-    std::cout << "Node_LeafNodeCount: " <<  Node_LeafNodeCount << "\n";
+    std::cout << "Node_LeafNodeCount: " << Node_LeafNodeCount << "\n";
     
-    std::cout << "Node_ErrorNodeCount: " <<  Node_ErrorNodeCount << "\n";
+    std::cout << "Node_ErrorNodeCount: " << Node_ErrorNodeCount << "\n";
     
-    std::cout << "Node_UnterminatedTokenErrorNeedsReparseNodeCount: " <<  Node_UnterminatedTokenErrorNeedsReparseNodeCount << "\n";
+    std::cout << "Node_UnterminatedTokenErrorNeedsReparseNodeCount: " << Node_UnterminatedTokenErrorNeedsReparseNodeCount << "\n";
     
-    std::cout << "Node_SyntaxErrorNodeCount: " <<  Node_SyntaxErrorNodeCount << "\n";
+    std::cout << "Node_SyntaxErrorNodeCount: " << Node_SyntaxErrorNodeCount << "\n";
     
-    std::cout << "Node_AbortNodeCount: " <<  Node_AbortNodeCount << "\n";
+    std::cout << "Node_AbortNodeCount: " << Node_AbortNodeCount << "\n";
     
-    std::cout << "Node_BinaryNodeCount: " <<  Node_BinaryNodeCount << "\n";
+    std::cout << "Node_BinaryNodeCount: " << Node_BinaryNodeCount << "\n";
     
-    std::cout << "Node_CallNodeCount: " <<  Node_CallNodeCount << "\n";
+    std::cout << "Node_CallNodeCount: " << Node_CallNodeCount << "\n";
     
-    std::cout << "Node_CompoundNodeCount: " <<  Node_CompoundNodeCount << "\n";
+    std::cout << "Node_CompoundNodeCount: " << Node_CompoundNodeCount << "\n";
     
-    std::cout << "Node_GroupMissingCloserNodeCount: " <<  Node_GroupMissingCloserNodeCount << "\n";
+    std::cout << "Node_GroupMissingCloserNodeCount: " << Node_GroupMissingCloserNodeCount << "\n";
     
-    std::cout << "Node_GroupNodeCount: " <<  Node_GroupNodeCount << "\n";
+    std::cout << "Node_GroupNodeCount: " << Node_GroupNodeCount << "\n";
     
-    std::cout << "Node_InfixNodeCount: " <<  Node_InfixNodeCount << "\n";
+    std::cout << "Node_InfixNodeCount: " << Node_InfixNodeCount << "\n";
     
-    std::cout << "Node_OperatorNodeCount: " <<  Node_OperatorNodeCount << "\n";
+    std::cout << "Node_PostfixNodeCount: " << Node_PostfixNodeCount << "\n";
     
-    std::cout << "Node_PostfixNodeCount: " <<  Node_PostfixNodeCount << "\n";
+    std::cout << "Node_PrefixBinaryNodeCount: " << Node_PrefixBinaryNodeCount << "\n";
     
-    std::cout << "Node_PrefixBinaryNodeCount: " <<  Node_PrefixBinaryNodeCount << "\n";
+    std::cout << "Node_PrefixNodeCount: " << Node_PrefixNodeCount << "\n";
     
-    std::cout << "Node_PrefixNodeCount: " <<  Node_PrefixNodeCount << "\n";
+    std::cout << "Node_TernaryNodeCount: " << Node_TernaryNodeCount << "\n";
     
-    std::cout << "Node_TernaryNodeCount: " <<  Node_TernaryNodeCount << "\n";
+    std::cout << "Node_UnterminatedGroupNeedsReparseNodeCount: " << Node_UnterminatedGroupNeedsReparseNodeCount << "\n";
     
-    std::cout << "Node_UnterminatedGroupNeedsReparseNodeCount: " <<  Node_UnterminatedGroupNeedsReparseNodeCount << "\n";
+    auto totalNodeCount = Node_LeafNodeCount + Node_ErrorNodeCount + Node_UnterminatedTokenErrorNeedsReparseNodeCount +
+        Node_SyntaxErrorNodeCount + Node_AbortNodeCount + Node_BinaryNodeCount + Node_CallNodeCount + Node_CompoundNodeCount +
+        Node_GroupMissingCloserNodeCount + Node_GroupNodeCount + Node_InfixNodeCount + Node_PostfixNodeCount +
+        Node_PrefixBinaryNodeCount + Node_PrefixNodeCount + Node_TernaryNodeCount + Node_UnterminatedGroupNeedsReparseNodeCount;
+    
+    std::cout << "bytes per leaf node: " << (1.0 * ByteBuffer_size / Node_LeafNodeCount) << "\n";
+    
+    std::cout << "bytes per node: " << (1.0 * ByteBuffer_size / totalNodeCount) << "\n";
 }
 
+
+int ByteBuffer_size = 0;
 
 int ByteDecoder_PrintableCount = 0;
 
@@ -315,7 +326,7 @@ int Node_AbortNodeCount = 0;
 
 int Node_BinaryNodeCount = 0;
 
-int Node_CallNodeCount  = 0;
+int Node_CallNodeCount = 0;
 
 int Node_CompoundNodeCount = 0;
 
@@ -324,8 +335,6 @@ int Node_GroupMissingCloserNodeCount = 0;
 int Node_GroupNodeCount = 0;
 
 int Node_InfixNodeCount = 0;
-
-int Node_OperatorNodeCount = 0;
 
 int Node_PostfixNodeCount = 0;
 

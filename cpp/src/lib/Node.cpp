@@ -101,10 +101,6 @@ Node::~Node() {}
 OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src(Children.first()->getSource(), Children.last()->getSource()) {
     
     assert(!Children.empty());
-    
-#if DIAGNOSTICS
-    Node_OperatorNodeCount++;
-#endif // DIAGNOSTICS
 }
 
 Symbol OperatorNode::getOp() const {
