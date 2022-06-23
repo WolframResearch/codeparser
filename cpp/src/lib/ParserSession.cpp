@@ -100,13 +100,13 @@ NodeContainerPtr ParserSession::parseExpressions() {
     DiagnosticsMarkTime();
 #endif // DIAGNOSTICS
     
-    std::vector<NodePtr> nodes;
+    std::vector<NodeVariant> nodes;
     
     //
     // Collect all expressions
     //
     {
-        std::vector<NodePtr> exprs;
+        std::vector<NodeVariant> exprs;
         
         while (true) {
             
@@ -125,7 +125,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
             
             if (peek.Tok.isTrivia()) {
                 
-                exprs.emplace_back(new LeafNode(peek));
+                exprs.push_back(peek);
                 
                 TheParser->nextToken(peek);
                 
@@ -161,7 +161,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
         
         nodes.clear();
         
-        std::vector<NodePtr> exprs;
+        std::vector<NodeVariant> exprs;
         
         exprs.push_back(NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag)));
         
@@ -249,7 +249,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
 
 NodeContainerPtr ParserSession::tokenize() {
     
-    std::vector<NodePtr> nodes;
+    std::vector<NodeVariant> nodes;
     
     while (true) {
         
@@ -265,27 +265,9 @@ NodeContainerPtr ParserSession::tokenize() {
             break;
         }
         
-        if (Tok.Tok.isError()) {
-            
-            if (Tok.Tok.isUnterminated()) {
-                
-                nodes.emplace_back(new UnterminatedTokenErrorNeedsReparseNode(Tok));
-                
-                TheTokenizer->nextToken(Tok);
-                
-            } else {
-                
-                nodes.emplace_back(new ErrorNode(Tok));
-                
-                TheTokenizer->nextToken(Tok);
-            }
-            
-        } else {
-            
-            nodes.emplace_back(new LeafNode(Tok));
-            
-            TheTokenizer->nextToken(Tok);
-        }
+        nodes.push_back(Tok);
+        
+        TheTokenizer->nextToken(Tok);
         
     } // while (true)
     
@@ -304,68 +286,26 @@ NodeContainerPtr ParserSession::tokenize() {
 }
 
 
-Node *ParserSession::concreteParseLeaf0(int mode) {
+NodeVariant ParserSession::concreteParseLeaf0(int mode) {
     
     switch (mode) {
         case STRINGIFYMODE_NORMAL: {
             
             auto Tok = TheTokenizer->nextToken0(TOPLEVEL);
             
-            if (Tok.Tok.isError()) {
-                
-                if (Tok.Tok.isUnterminated()) {
-                    
-                    return new UnterminatedTokenErrorNeedsReparseNode(Tok);
-                    
-                } else {
-                    
-                    return new ErrorNode(Tok);
-                }
-                
-            } else {
-                
-                return new LeafNode(Tok);
-            }
+            return Tok;
         }
         case STRINGIFYMODE_TAG: {
             
             auto Tok = TheTokenizer->nextToken0_stringifyAsTag();
             
-            if (Tok.Tok.isError()) {
-                
-                if (Tok.Tok.isUnterminated()) {
-                    
-                    return new UnterminatedTokenErrorNeedsReparseNode(Tok);
-                    
-                } else {
-                    
-                    return new ErrorNode(Tok);
-                }
-                
-            } else {
-                
-                return new LeafNode(Tok);
-            }
+            return Tok;
         }
         case STRINGIFYMODE_FILE: {
             
             auto Tok = TheTokenizer->nextToken0_stringifyAsFile();
             
-            if (Tok.Tok.isError()) {
-                
-                if (Tok.Tok.isUnterminated()) {
-                    
-                    return new UnterminatedTokenErrorNeedsReparseNode(Tok);
-                    
-                } else {
-                    
-                    return new ErrorNode(Tok);
-                }
-                
-            } else {
-                
-                return new LeafNode(Tok);
-            }
+            return Tok;
         }
         default: {
             
@@ -378,15 +318,15 @@ Node *ParserSession::concreteParseLeaf0(int mode) {
 
 NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
     
-    std::vector<NodePtr> nodes;
+    std::vector<NodeVariant> nodes;
     
     //
     // Collect all expressions
     //
     {
-        std::vector<NodePtr> exprs;
+        std::vector<NodeVariant> exprs;
         
-        exprs.emplace_back(concreteParseLeaf0(mode));
+        exprs.push_back(concreteParseLeaf0(mode));
         
         NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
         
@@ -397,7 +337,7 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
         
         nodes.clear();
         
-        std::vector<NodePtr> exprs;
+        std::vector<NodeVariant> exprs;
         
         auto node = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
         
@@ -483,7 +423,7 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
 
 NodeContainerPtr ParserSession::safeString() {
     
-    std::vector<NodePtr> nodes;
+    std::vector<NodeVariant> nodes;
     
     //
     // read all characters, just to set unsafeCharacterEncoding flag if necessary

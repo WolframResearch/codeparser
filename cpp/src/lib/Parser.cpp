@@ -271,7 +271,7 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->pushContextAndShift(TokenPrecedence);
     
-    TheParser->appendArgs(Trivia1);
+    TheParser->appendTriviaSeq(Trivia1);
     
     MUSTTAIL
     return (I->parseInfix())(I, token);
@@ -304,7 +304,7 @@ void Parser::eatTrivia(Token& T, NextPolicy policy) {
     
     while (T.Tok.isTrivia()) {
         
-        ArgsStack.emplace_back(new LeafNode(T));
+        ArgsStack.push_back(T);
         
         nextToken(T);
         
@@ -316,7 +316,7 @@ void Parser::eatTrivia(Token& T, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
-        Args.append(new LeafNode(T));
+        Args.append(T);
         
         nextToken(T);
         
@@ -328,7 +328,7 @@ void Parser::eatTrivia_stringifyAsFile(Token& T) {
     
     while (T.Tok.isTrivia()) {
         
-        ArgsStack.emplace_back(new LeafNode(T));
+        ArgsStack.push_back(T);
         
         nextToken(T);
         
@@ -340,7 +340,7 @@ void Parser::eatTrivia_stringifyAsFile(Token& T, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
-        Args.append(new LeafNode(T));
+        Args.append(T);
         
         nextToken(T);
         
@@ -352,7 +352,7 @@ void Parser::eatTriviaButNotToplevelNewlines(Token& T, NextPolicy policy) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
-        ArgsStack.emplace_back(new LeafNode(T));
+        ArgsStack.push_back(T);
         
         nextToken(T);
         
@@ -364,7 +364,7 @@ void Parser::eatTriviaButNotToplevelNewlines(Token& T, NextPolicy policy, Trivia
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
-        Args.append(new LeafNode(T));
+        Args.append(T);
         
         nextToken(T);
         
@@ -376,7 +376,7 @@ void Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token& T, TriviaSeq
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
-        Args.append(new LeafNode(T));
+        Args.append(T);
         
         nextToken(T);
         
@@ -437,8 +437,27 @@ NodeSeq Parser::popContext() {
     //
     
     ArgsStack.resize(Ctxt.Index);
-
+    
     return ArgsTmp;
+}
+
+void Parser::popContextV() {
+    
+    assert(!ContextStack.empty());
+    
+    //
+    // get the top Context
+    //
+    
+    auto Ctxt = ContextStack.back();
+    
+    ContextStack.pop_back();
+    
+    //
+    // forget about the moved Args
+    //
+    
+    ArgsStack.resize(Ctxt.Index);
 }
 
 Context& Parser::topContext() {
@@ -448,11 +467,11 @@ Context& Parser::topContext() {
     return ContextStack.back();
 }
 
-void Parser::appendArg(Node *N) {
-    ArgsStack.emplace_back(N);
+void Parser::appendLeaf(Token N) {
+    ArgsStack.push_back(N);
 }
 
-void Parser::appendArgs(TriviaSeq& Seq) {
+void Parser::appendTriviaSeq(TriviaSeq& Seq) {
     
     //
     // Move all trivia from Seq to back of ArgsStack
@@ -479,18 +498,22 @@ bool Parser::isContextStackEmpty() const {
     return ContextStack.empty();
 }
 
-void Parser::pushNode(Node *N) {
-    NodeStack.emplace_back(N);
+void Parser::pushLeaf(Token T) {
+    NodeStack.push_back(T);
 }
 
-NodePtr& Parser::topNode() {
+void Parser::pushNode(Node *N) {
+    NodeStack.push_back(std::unique_ptr<Node>(N));
+}
+
+NodeVariant& Parser::topNode() {
     
     assert(!NodeStack.empty());
     
     return NodeStack.back();
 }
 
-NodePtr Parser::popNode() {
+NodeVariant Parser::popNode() {
     
     assert(!NodeStack.empty());
     
@@ -499,6 +522,13 @@ NodePtr Parser::popNode() {
     NodeStack.pop_back();
     
     return top;
+}
+
+void Parser::popNodeV() {
+    
+    assert(!NodeStack.empty());
+    
+    NodeStack.pop_back();
 }
 
 size_t Parser::getNodeStackSize() const {
@@ -592,9 +622,9 @@ ColonLHS Parser::checkColonLHS() const {
 
         auto& N = ArgsStack[i];
 
-        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-
-            auto Tok = L->getToken();
+        if (std::holds_alternative<Token>(N)) {
+            
+            auto& Tok = std::get<Token>(N);
 
             if (Tok.Tok.isTrivia()) {
                 continue;
@@ -612,39 +642,44 @@ ColonLHS Parser::checkColonLHS() const {
     }
 
     auto& N = ArgsStack[i];
+    
+    if (std::holds_alternative<NodePtr>(N)) {
+        
+        auto& P = std::get<NodePtr>(N);
+        
+        if (auto B = dynamic_cast<BinaryNode *>(P.get())) {
+            
+            auto Op = B->getOp();
 
-    if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
-
-        auto Op = B->getOp();
-
-        if (Op == SYMBOL_PATTERN) {
-            return COLONLHS_OPTIONAL;
-        }
-
-        return COLONLHS_ERROR;
-    }
-
-    if (auto C = dynamic_cast<CompoundNode *>(N.get())) {
-
-        auto Op = C->getOp();
-
-        switch (Op.getId()) {
-            case SYMBOL_CODEPARSER_PATTERNBLANK.getId():
-            case SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE.getId():
-            case SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE.getId():
-            case SYMBOL_BLANK.getId():
-            case SYMBOL_BLANKSEQUENCE.getId():
-            case SYMBOL_BLANKNULLSEQUENCE.getId(): {
+            if (Op == SYMBOL_PATTERN) {
                 return COLONLHS_OPTIONAL;
             }
+
+            return COLONLHS_ERROR;
         }
 
-        return COLONLHS_ERROR;
+        if (auto C = dynamic_cast<CompoundNode *>(P.get())) {
+
+            auto Op = C->getOp();
+
+            switch (Op.getId()) {
+                case SYMBOL_CODEPARSER_PATTERNBLANK.getId():
+                case SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE.getId():
+                case SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE.getId():
+                case SYMBOL_BLANK.getId():
+                case SYMBOL_BLANKSEQUENCE.getId():
+                case SYMBOL_BLANKNULLSEQUENCE.getId(): {
+                    return COLONLHS_OPTIONAL;
+                }
+            }
+
+            return COLONLHS_ERROR;
+        }
     }
 
-    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-
-        auto Tok = L->getToken();
+    if (std::holds_alternative<Token>(N)) {
+        
+        auto& Tok = std::get<Token>(N);
 
         switch (Tok.Tok.value()) {
             case TOKEN_SYMBOL.value(): {
@@ -659,19 +694,20 @@ ColonLHS Parser::checkColonLHS() const {
                 assert(false && "Fix at call site");
             }
             default: {
+                
+                if (Tok.Tok.isError()) {
+                    
+                    //
+                    // allow errors to be on LHS of :
+                    //
+                    // This is a bit confusing. The thinking is that since there is already an error, then we do not need to introduce another error.
+                    //
+                    return COLONLHS_PATTERN;
+                }
+                
                 return COLONLHS_ERROR;
             }
         }
-    }
-
-    if (dynamic_cast<ErrorNode *>(N.get())) {
-
-        //
-        // allow errors to be on LHS of :
-        //
-        // This is a bit confusing. The thinking is that since there is already an error, then we do not need to introduce another error.
-        //
-        return COLONLHS_PATTERN;
     }
 
     return COLONLHS_ERROR;
@@ -696,9 +732,9 @@ bool Parser::checkTilde() const {
 
         auto& N = ArgsStack[i];
 
-        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-
-            auto Tok = L->getToken();
+        if (std::holds_alternative<Token>(N)) {
+            
+            auto& Tok = std::get<Token>(N);
 
             if (Tok.Tok.isTrivia()) {
                 continue;
@@ -717,9 +753,9 @@ bool Parser::checkTilde() const {
 
     auto& N = ArgsStack[i];
 
-    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-
-        auto Tok = L->getToken();
+    if (std::holds_alternative<Token>(N)) {
+        
+        auto& Tok = std::get<Token>(N);
 
         if (Tok.Tok == TOKEN_TILDE) {
             return true;
@@ -738,16 +774,16 @@ TriviaSeq& Parser::getTrivia2() {
     return trivia2;
 }
 
-void Parser::pushLeafNodeAndNext(Token Tok) {
+void Parser::pushLeafAndNext(Token Tok) {
     
-    NodeStack.emplace_back(new LeafNode(Tok));
+    NodeStack.push_back(Tok);
     
     TheTokenizer->nextToken(Tok);
 }
 
 void Parser::appendLeafArgAndNext(Token Tok) {
     
-    ArgsStack.emplace_back(new LeafNode(Tok));
+    ArgsStack.push_back(Tok);
     
     TheTokenizer->nextToken(Tok);
 }

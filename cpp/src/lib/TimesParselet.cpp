@@ -28,7 +28,7 @@ void TimesParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
     if (TheParserSession->isAbort()) {
-        TheParser->popContext();
+        TheParser->popContextV();
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, TokIn/*ignored*/);
     }
@@ -74,8 +74,8 @@ void TimesParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
     if (TheParserSession->isAbort()) {
-        TheParser->popNode();
-        TheParser->popContext();
+        TheParser->popNodeV();
+        TheParser->popContextV();
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, Ignored2);
     }
@@ -132,7 +132,7 @@ void TimesParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->shift();
     
-    TheParser->appendArgs(Trivia1);
+    TheParser->appendTriviaSeq(Trivia1);
     
     TheParser->appendLeafArgAndNext(Tok1);
 

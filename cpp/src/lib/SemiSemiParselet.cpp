@@ -42,36 +42,41 @@ Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
     
     auto& N = TheParser->topNode();
     
-    if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
+    if (std::holds_alternative<NodePtr>(N)) {
         
-        auto Op = B->getOp();
+        auto& NN = std::get<NodePtr>(N);
         
-        if (Op == SYMBOL_SPAN) {
+        if (auto B = dynamic_cast<BinaryNode *>(NN.get())) {
             
-            return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+            auto Op = B->getOp();
+            
+            if (Op == SYMBOL_SPAN) {
+                
+                return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+            }
+            
+            //
+            // there is a Node, but it is not a Span
+            //
+            
+            return TokIn;
         }
         
-        //
-        // there is a Node, but it is not a Span
-        //
-        
-        return TokIn;
-    }
-    
-    if (auto T = dynamic_cast<TernaryNode *>(N.get())) {
-        
-        auto Op = T->getOp();
-        
-        if (Op == SYMBOL_SPAN) {
+        if (auto T = dynamic_cast<TernaryNode *>(NN.get())) {
             
-            return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+            auto Op = T->getOp();
+            
+            if (Op == SYMBOL_SPAN) {
+                
+                return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+            }
+            
+            //
+            // there is a Node, but it is not a Span
+            //
+            
+            return TokIn;
         }
-        
-        //
-        // there is a Node, but it is not a Span
-        //
-        
-        return TokIn;
     }
     
     //
@@ -96,7 +101,7 @@ void SemiSemiParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     
     TheParser->pushContextV(PRECEDENCE_SEMISEMI);
     
-    TheParser->appendArg(new LeafNode(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start)));
+    TheParser->appendLeaf(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start));
     
     //
     // nextToken() is not needed after an implicit token
@@ -114,7 +119,7 @@ void SemiSemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
     if (TheParserSession->isAbort()) {
-        TheParser->popContext();
+        TheParser->popContextV();
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, TokIn/*ignored*/);
     }
@@ -130,7 +135,7 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
     if (TheParserSession->isAbort()) {
-        TheParser->popContext();
+        TheParser->popContextV();
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, Ignored2);
     }
@@ -155,7 +160,7 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
         //    ^SecondTok
         //
         
-        TheParser->pushNode(new LeafNode(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start)));
+        TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start));
         
         //
         // nextToken() is not needed after an implicit token
@@ -187,7 +192,7 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
     //    ^~SecondTok
     //
     
-    TheParser->pushNode(new LeafNode(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start)));
+    TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start));
     
     //
     // nextToken() is not needed after an implicit token
@@ -230,13 +235,13 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->shift();
     
-    TheParser->appendArg(new LeafNode(SecondTok));
+    TheParser->appendLeaf(SecondTok);
     
     //
     // nextToken() already handled above
     //
     
-    TheParser->appendArgs(Trivia1);
+    TheParser->appendTriviaSeq(Trivia1);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
@@ -252,8 +257,8 @@ void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
     if (TheParserSession->isAbort()) {
-        TheParser->popNode();
-        TheParser->popContext();
+        TheParser->popNodeV();
+        TheParser->popContextV();
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, Ignored2);
     }
@@ -329,15 +334,15 @@ void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->shift();
     
-    TheParser->appendArgs(Trivia1);
+    TheParser->appendTriviaSeq(Trivia1);
     
-    TheParser->appendArg(new LeafNode(ThirdTok));
+    TheParser->appendLeaf(ThirdTok);
     
     //
     // nextToken() already handled above
     //
     
-    TheParser->appendArgs(Trivia2);
+    TheParser->appendTriviaSeq(Trivia2);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == SemiSemiParselet_parse2);

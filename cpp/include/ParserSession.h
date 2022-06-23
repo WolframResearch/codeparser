@@ -1,8 +1,11 @@
 
 #include "API.h"
 
+#include "Token.h"
+
 #include <functional> // for function with GCC and MSVC
 #include <set>
+#include <variant>
 
 class ParserSession;
 class Issue;
@@ -12,6 +15,8 @@ class Node;
 using IssuePtr = std::shared_ptr<Issue>;
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
 using ParserSessionPtr = std::unique_ptr<ParserSession>;
+using NodePtr = std::unique_ptr<Node>;
+using NodeVariant = std::variant<NodePtr, Token>;
 
 
 //
@@ -23,7 +28,7 @@ private:
     IssuePtrSet fatalIssues;
     IssuePtrSet nonFatalIssues;
     
-    Node *concreteParseLeaf0(int mode);
+    NodeVariant concreteParseLeaf0(int mode);
     
 public:
     

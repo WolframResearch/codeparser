@@ -690,7 +690,7 @@ set_target_properties(codeparser-lib PROPERTIES
 	OUTPUT_NAME
 		CodeParser
 	CXX_STANDARD
-		11
+		17
 	CXX_STANDARD_REQUIRED
 		ON
 	CXX_VISIBILITY_PRESET

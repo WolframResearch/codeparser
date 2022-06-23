@@ -42,7 +42,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafNodeAndNext(TokIn);
+    TheParser->pushLeafAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     
@@ -74,9 +74,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         
         TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
         
-        TheParser->nextToken(Tok);
-        
-        TheParser->pushNode(new ErrorNode(Tok));
+        TheParser->pushLeafAndNext(Tok);
         
         MUSTTAIL
         return UnderParselet_reduceBlank(P, TokIn/*ignored*/);
@@ -103,7 +101,7 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafNodeAndNext(TokIn);
+    TheParser->pushLeafAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     
@@ -135,9 +133,7 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         
         TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
         
-        TheParser->pushNode(new ErrorNode(Tok));
-        
-        TheParser->nextToken(Tok);
+        TheParser->pushLeafAndNext(Tok);
     
         MUSTTAIL
         return UnderParselet_reduceBlankContextSensitive(P, TokIn/*ignored*/);
@@ -200,7 +196,7 @@ void UnderDotParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafNodeAndNext(TokIn);
+    TheParser->pushLeafAndNext(TokIn);
     
     MUSTTAIL
     return Parser_parseClimb(Ignored, TokIn/*ignored*/);
@@ -224,7 +220,7 @@ void UnderDotParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokI
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafNodeAndNext(TokIn);
+    TheParser->pushLeafAndNext(TokIn);
     
     // no call needed here
     return;

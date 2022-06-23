@@ -16,15 +16,16 @@
 #include <memory> // for unique_ptr
 #include <ostream>
 #include <cstddef> // for size_t
+#include <variant>
 
 class Node;
-class LeafNode;
 class Parselet;
 
 using NodePtr = std::unique_ptr<Node>;
-using LeafNodePtr = std::unique_ptr<LeafNode>;
 using ParseletPtr = Parselet *;
 typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
+
+using NodeVariant = std::variant<NodePtr, Token>;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -37,7 +38,7 @@ using expr = void *;
 class TriviaSeq {
 private:
     
-    std::vector<LeafNodePtr> vec;
+    std::vector<Token> vec;
     
 public:
     
@@ -47,7 +48,7 @@ public:
     
     bool empty() const;
     
-    void append(LeafNode *N);
+    void append(Token N);
     
     
     friend class Parser;
@@ -65,7 +66,7 @@ public:
 class NodeSeq {
 private:
     
-    std::vector<NodePtr> vec;
+    std::vector<NodeVariant> vec;
     
 public:
     
@@ -73,9 +74,9 @@ public:
     
     bool empty() const;
     
-    const NodePtr& first() const;
+    const NodeVariant& first() const;
     
-    const NodePtr& last() const;
+    const NodeVariant& last() const;
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -151,89 +152,8 @@ public:
 };
 
 //
-// Leaf
 //
-// These are Symbols, Strings, Integers, Reals, Rationals.
 //
-class LeafNode : public Node {
-private:
-    
-    const Token Tok;
-    
-public:
-
-    LeafNode(Token Tok);
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-    
-    Source getSource() const override;
-    
-    Token getToken() const;
-    
-    bool check() const override;
-    
-#if USE_EXPR_LIB
-    expr toExpr() const override;
-#endif // USE_EXPR_LIB
-};
-
-//
-// These are syntax errors similar to LeafNode
-//
-class ErrorNode : public Node {
-private:
-    
-    const Token Tok;
-    
-public:
-    
-    ErrorNode(Token Tok);
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-    
-    Token getToken() const;
-    
-    Source getSource() const override;
-    
-    bool check() const override;
-    
-#if USE_EXPR_LIB
-    expr toExpr() const override;
-#endif // USE_EXPR_LIB
-};
-
-class UnterminatedTokenErrorNeedsReparseNode : public Node {
-private:
-    
-    const Token Tok;
-    
-public:
-    
-    UnterminatedTokenErrorNeedsReparseNode(Token Tok);
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-    
-    Source getSource() const override;
-    
-    bool check() const override;
-    
-#if USE_EXPR_LIB
-    expr toExpr() const override;
-#endif // USE_EXPR_LIB
-};
-
 class AbortNode : public Node {
 public:
     
@@ -329,12 +249,14 @@ class CallNode : public Node {
 private:
     
     const NodeSeq Head;
-    const NodePtr Body;
+    
+    const NodeVariant Body;
+    
     Source Src;
     
 public:
     
-    CallNode(NodeSeq Head, NodePtr Body);
+    CallNode(NodeSeq Head, NodeVariant Body);
     
     Source getSource() const override;
     
@@ -442,11 +364,11 @@ public:
 class CollectedExpressionsNode : public Node {
 private:
     
-    const std::vector<NodePtr> Exprs;
+    const std::vector<NodeVariant> Exprs;
     
 public:
     
-    CollectedExpressionsNode(std::vector<NodePtr> Exprs);
+    CollectedExpressionsNode(std::vector<NodeVariant> Exprs);
     
     Source getSource() const override;
     
@@ -577,9 +499,9 @@ public:
 class NodeContainer {
 public:
     
-    std::vector<NodePtr> N;
+    std::vector<NodeVariant> N;
     
-    NodeContainer(std::vector<NodePtr> N);
+    NodeContainer(std::vector<NodeVariant> N);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;

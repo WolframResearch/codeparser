@@ -44,10 +44,10 @@ enum ColonLHS {
 class Parser {
 private:
     
-    std::vector<NodePtr> ArgsStack;
+    std::vector<NodeVariant> ArgsStack;
     std::vector<Context> ContextStack;
     
-    std::vector<NodePtr> NodeStack;
+    std::vector<NodeVariant> NodeStack;
     std::vector<Closer> GroupStack;
     
     TriviaSeq trivia1;
@@ -86,17 +86,20 @@ public:
     void pushContextV(Precedence Prec);
     void pushContextAndShift(Precedence Prec);
     NodeSeq popContext();
+    void popContextV();
     Context& topContext();
     size_t getContextStackSize() const;
     bool isContextStackEmpty() const;
     
-    void appendArg(Node *N);
-    void appendArgs(TriviaSeq& T);
+    void appendLeaf(Token N);
+    void appendTriviaSeq(TriviaSeq& T);
     size_t getArgsStackSize() const;
     
-    NodePtr& topNode();
+    NodeVariant& topNode();
+    void pushLeaf(Token T);
     void pushNode(Node *N);
-    NodePtr popNode();
+    NodeVariant popNode();
+    void popNodeV();
     size_t getNodeStackSize() const;
     bool isNodeStackEmpty() const;
     
@@ -115,7 +118,7 @@ public:
     TriviaSeq& getTrivia1();
     TriviaSeq& getTrivia2();
     
-    void pushLeafNodeAndNext(Token Tok);
+    void pushLeafAndNext(Token Tok);
     void appendLeafArgAndNext(Token Tok);
     
     bool isQuiescent() const;

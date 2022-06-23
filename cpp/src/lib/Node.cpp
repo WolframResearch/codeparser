@@ -21,6 +21,55 @@
 #include <limits>
 
 
+
+struct CheckVisitor {
+    
+    bool operator()(const NodePtr& N) { return N->check(); }
+    
+    bool operator()(const Token& L) { return L.check(); }
+};
+
+struct GetSourceVisitor {
+    
+    Source operator()(const NodePtr& N) { return N->getSource(); }
+    
+    Source operator()(const Token& L) { return L.Src; }
+};
+
+struct PrintVisitor {
+    
+    std::ostream& s;
+    
+    PrintVisitor(std::ostream& s) : s(s) {};
+    
+    void operator()(const NodePtr& N) { return N->print(s); }
+    
+    void operator()(const Token& L) { return L.print(s); }
+};
+
+#if USE_EXPR_LIB
+struct ToExprVisitor {
+    
+    expr operator()(const NodePtr& N) { return N->toExpr(); }
+    
+    expr operator()(const Token& L) { return L.toExpr(); }
+};
+#endif // USE_EXPR_LIB
+
+#if USE_MATHLINK
+struct PutVisitor {
+    
+    MLINK mlp;
+    
+    PutVisitor(MLINK mlp) : mlp(mlp) {};
+    
+    void operator()(const NodePtr& N) { return N->put(mlp); }
+    
+    void operator()(const Token& L) { return L.put(mlp); }
+};
+#endif // USE_MATHLINK
+
+
 NodeSeq::NodeSeq(size_t Size) : vec() {
     vec.reserve(Size);
 }
@@ -29,14 +78,14 @@ bool NodeSeq::empty() const {
     return vec.empty();
 }
 
-const NodePtr& NodeSeq::first() const {
+const NodeVariant& NodeSeq::first() const {
 
     assert(!vec.empty());
     
     return vec.front();
 }
 
-const NodePtr& NodeSeq::last() const {
+const NodeVariant& NodeSeq::last() const {
 
     assert(!vec.empty());
     
@@ -49,7 +98,9 @@ void NodeSeq::print(std::ostream& s) const {
     s << "[";
     
     for (auto& C : vec) {
-        C->print(s);
+        
+        std::visit(PrintVisitor{s}, C);
+        
         s << ", ";
     }
     
@@ -58,7 +109,7 @@ void NodeSeq::print(std::ostream& s) const {
 
 bool NodeSeq::check() const {
     
-    auto accum = std::accumulate(vec.begin(), vec.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    auto accum = std::accumulate(vec.begin(), vec.end(), true, [](bool a, const NodeVariant& b){ return a && std::visit(CheckVisitor{}, b); });
 
     return accum;
 }
@@ -76,9 +127,7 @@ void TriviaSeq::reset() {
         return;
     }
     
-    auto& First = vec[0];
-    
-    auto T = First->getToken();
+    auto& T = vec[0];
     
     TheByteBuffer->buffer = T.BufLen.buffer;
     TheByteDecoder->SrcLoc = T.Src.Start;
@@ -86,8 +135,8 @@ void TriviaSeq::reset() {
     vec.clear();
 }
 
-void TriviaSeq::append(LeafNode *N) {
-    vec.emplace_back(N);
+void TriviaSeq::append(Token N) {
+    vec.push_back(N);
 }
 
 bool TriviaSeq::empty() const {
@@ -98,7 +147,7 @@ bool TriviaSeq::empty() const {
 Node::~Node() {}
 
 
-OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src(Children.first()->getSource(), Children.last()->getSource()) {
+OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src(std::visit(GetSourceVisitor{}, Children.first()), std::visit(GetSourceVisitor{}, Children.last())) {
     
     assert(!Children.empty());
 }
@@ -127,121 +176,6 @@ void OperatorNode::print(std::ostream& s) const {
     s << ", ";
     
     Src.print(s);
-    
-    s << "]";
-}
-
-
-LeafNode::LeafNode(Token Tok) : Tok(Tok) {
-    
-#if DIAGNOSTICS
-    Node_LeafNodeCount++;
-#endif // DIAGNOSTICS
-}
-
-Source LeafNode::getSource() const {
-    return Tok.Src;
-}
-
-Token LeafNode::getToken() const {
-    return Tok;
-}
-
-bool LeafNode::check() const {
-    return true;
-}
-
-void LeafNode::print(std::ostream& s) const {
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    SYMBOL_CODEPARSER_LEAFNODE.print(s);
-    s << "[";
-    
-    s << Sym.name();
-    s << ", ";
-    
-    Tok.BufLen.print(s);
-    s << ", ";
-    
-    Tok.Src.print(s);
-    
-    s << "]";
-}
-
-
-ErrorNode::ErrorNode(Token Tok) : Tok(Tok) {
-    
-    assert(Tok.Tok.isError());
-    assert(!Tok.Tok.isUnterminated());
-    
-#if DIAGNOSTICS
-    Node_ErrorNodeCount++;
-#endif // DIAGNOSTICS
-}
-
-Token ErrorNode::getToken() const {
-    return Tok;
-}
-
-Source ErrorNode::getSource() const {
-    return Tok.Src;
-}
-
-bool ErrorNode::check() const {
-    return false;
-}
-
-void ErrorNode::print(std::ostream& s) const {
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    SYMBOL_CODEPARSER_ERRORNODE.print(s);
-    s << "[";
-    
-    s << Sym.name();
-    s << ", ";
-    
-    Tok.BufLen.print(s);
-    s << ", ";
-    
-    Tok.Src.print(s);
-    
-    s << "]";
-}
-
-
-UnterminatedTokenErrorNeedsReparseNode::UnterminatedTokenErrorNeedsReparseNode(Token Tok) : Tok(Tok) {
-    
-    assert(Tok.Tok.isUnterminated());
-    
-#if DIAGNOSTICS
-    Node_UnterminatedTokenErrorNeedsReparseNodeCount++;
-#endif // DIAGNOSTICS
-}
-
-Source UnterminatedTokenErrorNeedsReparseNode::getSource() const {
-    return Tok.Src;
-}
-
-bool UnterminatedTokenErrorNeedsReparseNode::check() const {
-    return false;
-}
-
-void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.print(s);
-    s << "[";
-    
-    s << Sym.name();
-    s << ", ";
-    
-    Tok.BufLen.print(s);
-    s << ", ";
-    
-    Tok.Src.print(s);
     
     s << "]";
 }
@@ -348,7 +282,7 @@ UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, 
 }
 
 
-CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src(Head.first()->getSource(), Body->getSource()) {
+CallNode::CallNode(NodeSeq HeadIn, NodeVariant BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src(std::visit(GetSourceVisitor{}, Head.first()), std::visit(GetSourceVisitor{}, Body)) {
     
     assert(!Head.empty());
     
@@ -369,7 +303,7 @@ void CallNode::print(std::ostream& s) const {
     Head.print(s);
     s << ", ";
     
-    Body->print(s);
+    std::visit(PrintVisitor{s}, Body);
     s << ", ";
     
     Src.print(s);
@@ -378,11 +312,11 @@ void CallNode::print(std::ostream& s) const {
 }
 
 bool CallNode::check() const {
-    return Head.check() && Body->check();
+    return Head.check() && std::visit(CheckVisitor{}, Body);
 }
 
 
-SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)), Src(Children.first()->getSource(), Children.last()->getSource()) {
+SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)), Src(std::visit(GetSourceVisitor{}, Children.first()), std::visit(GetSourceVisitor{}, Children.last())) {
     
     assert(!Children.empty());
 
@@ -416,7 +350,7 @@ void SyntaxErrorNode::print(std::ostream& s) const {
 }
 
 
-CollectedExpressionsNode::CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Exprs(std::move(Exprs)) {}
+CollectedExpressionsNode::CollectedExpressionsNode(std::vector<NodeVariant> Exprs) : Exprs(std::move(Exprs)) {}
 
 void CollectedExpressionsNode::print(std::ostream& s) const {
     
@@ -424,7 +358,9 @@ void CollectedExpressionsNode::print(std::ostream& s) const {
     s << "[";
     
     for (auto& E : Exprs) {
-        E->print(s);
+        
+        std::visit(PrintVisitor{s}, E);
+        
         s << ", ";
     }
     
@@ -433,7 +369,7 @@ void CollectedExpressionsNode::print(std::ostream& s) const {
 
 bool CollectedExpressionsNode::check() const {
     
-    auto accum = std::accumulate(Exprs.begin(), Exprs.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    auto accum = std::accumulate(Exprs.begin(), Exprs.end(), true, [](bool a, const NodeVariant& b){ return a && std::visit(CheckVisitor{}, b); });
     
     return accum;
 }
@@ -566,7 +502,7 @@ void SafeStringNode::print(std::ostream& s) const {
 }
 
 
-NodeContainer::NodeContainer(std::vector<NodePtr> N) : N(std::move(N)) {}
+NodeContainer::NodeContainer(std::vector<NodeVariant> N) : N(std::move(N)) {}
 
 void NodeContainer::print(std::ostream& s) const {
     
@@ -574,7 +510,9 @@ void NodeContainer::print(std::ostream& s) const {
     s << "[";
     
     for (auto& NN : N) {
-        NN->print(s);
+        
+        std::visit(PrintVisitor{s}, NN);
+        
         s << ", ";
     }
     
@@ -583,7 +521,7 @@ void NodeContainer::print(std::ostream& s) const {
 
 bool NodeContainer::check() const {
     
-    auto accum = std::accumulate(N.begin(), N.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    auto accum = std::accumulate(N.begin(), N.end(), true, [](bool a, const NodeVariant& b){ return a && std::visit(CheckVisitor{}, b); });
     
     return accum;
 }
@@ -605,7 +543,7 @@ void NodeSeq::put(MLINK mlp) const {
         }
 #endif // CHECK_ABORT
         
-        C->put(mlp);
+        std::visit(PutVisitor{mlp}, C);
     }
 }
 #endif // USE_MATHLINK
@@ -632,72 +570,6 @@ void OperatorNode::put(MLINK mlp) const {
 
 
 #if USE_MATHLINK
-void LeafNode::put(MLINK mlp) const {
-
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LEAFNODE.name(), 3)) {
-        assert(false);
-    }
-
-    auto Sym = TokenToSymbol(Tok.Tok);
-
-    Sym.put(mlp);
-
-    Tok.BufLen.put(mlp);
-    
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
-        assert(false);
-    }
-    
-    Tok.Src.put(mlp);
-}
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-void ErrorNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_ERRORNODE.name(), 3)) {
-        assert(false);
-    }
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    Sym.put(mlp);
-    
-    Tok.BufLen.put(mlp);
-    
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
-        assert(false);
-    }
-    
-    Tok.Src.put(mlp);
-}
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.name(), 3)) {
-        assert(false);
-    }
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    Sym.put(mlp);
-    
-    Tok.BufLen.put(mlp);
-    
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
-        assert(false);
-    }
-    
-    Tok.Src.put(mlp);
-}
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
 void AbortNode::put(MLINK mlp) const {
     
     SYMBOL__ABORTED.put(mlp);
@@ -714,7 +586,7 @@ void CallNode::put(MLINK mlp) const {
         
     Head.put(mlp);
     
-    Body->put(mlp);
+    std::visit(PutVisitor{mlp}, Body);
     
     if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
@@ -754,7 +626,7 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
     
     for (auto& E : Exprs) {
         
-        E->put(mlp);
+        std::visit(PutVisitor{mlp}, E);
     }
 }
 #endif // USE_MATHLINK
@@ -827,7 +699,7 @@ void NodeContainer::put(MLINK mlp) const {
         }
 #endif // CHECK_ABORT
         
-        NN->put(mlp);
+        std::visit(PutVisitor{mlp}, NN);
     }
 }
 #endif // USE_MATHLINK
@@ -850,7 +722,7 @@ expr NodeSeq::toExpr() const {
 #endif // CHECK_ABORT
         
         auto& C = vec[i];
-        auto CExpr = C->toExpr();
+        auto CExpr = std::visit(ToExprVisitor{}, C);
         Expr_InsertA(e, i + 1, CExpr);
     }
     
@@ -887,98 +759,6 @@ expr OperatorNode::toExpr() const {
 }
 #endif // USE_EXPR_LIB
 
-#if USE_EXPR_LIB
-expr LeafNode::toExpr() const {
-    
-    auto head = SYMBOL_CODEPARSER_LEAFNODE.toExpr();
-    
-    auto e = Expr_BuildExprA(head, 3);
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    auto SymExpr = Sym.toExpr();
-    Expr_InsertA(e, 0 + 1, SymExpr);
-    
-    auto TokBufLenExpr = Tok.BufLen.toExpr();
-    Expr_InsertA(e, 1 + 1, TokBufLenExpr);
-    
-    {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
-        
-        auto DataExpr = Expr_BuildExprA(head, 1);
-        
-        auto SrcExpr = Tok.Src.toExpr();
-        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
-        
-        Expr_InsertA(e, 2 + 1, DataExpr);
-    }
-    
-    return e;
-}
-#endif // USE_EXPR_LIB
-
-
-#if USE_EXPR_LIB
-expr ErrorNode::toExpr() const {
-    
-    auto head = SYMBOL_CODEPARSER_ERRORNODE.toExpr();
-    
-    auto e = Expr_BuildExprA(head, 3);
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    auto SymExpr = Sym.toExpr();
-    Expr_InsertA(e, 0 + 1, SymExpr);
-    
-    auto TokBufLenExpr = Tok.BufLen.toExpr();
-    Expr_InsertA(e, 1 + 1, TokBufLenExpr);
-    
-    {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
-        
-        auto DataExpr = Expr_BuildExprA(head, 1);
-        
-        auto SrcExpr = Tok.Src.toExpr();
-        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
-        
-        Expr_InsertA(e, 2 + 1, DataExpr);
-    }
-    
-    return e;
-}
-#endif // USE_EXPR_LIB
-
-
-#if USE_EXPR_LIB
-expr UnterminatedTokenErrorNeedsReparseNode::toExpr() const {
-    
-    auto head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.toExpr();
-    
-    auto e = Expr_BuildExprA(head, 3);
-    
-    auto Sym = TokenToSymbol(Tok.Tok);
-    
-    auto SymExpr = Sym.toExpr();
-    Expr_InsertA(e, 0 + 1, SymExpr);
-    
-    auto TokBufLenExpr = Tok.BufLen.toExpr();
-    Expr_InsertA(e, 1 + 1, TokBufLenExpr);
-    
-    {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
-        
-        auto DataExpr = Expr_BuildExprA(head, 1);
-        
-        auto SrcExpr = Tok.Src.toExpr();
-        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
-        
-        Expr_InsertA(e, 2 + 1, DataExpr);
-    }
-    
-    return e;
-}
-#endif // USE_EXPR_LIB
-
 
 #if USE_EXPR_LIB
 expr AbortNode::toExpr() const {
@@ -1000,7 +780,7 @@ expr CallNode::toExpr() const {
     auto HeadExpr = Head.toExpr();
     Expr_InsertA(e, 0 + 1, HeadExpr);
         
-    auto BodyExpr = Body->toExpr();
+    auto BodyExpr = std::visit(ToExprVisitor{}, Body);
     Expr_InsertA(e, 1 + 1, BodyExpr);
     
     {
@@ -1058,7 +838,7 @@ expr CollectedExpressionsNode::toExpr() const {
     for (size_t i = 0; i < Exprs.size(); i++) {
         
         auto& NN = Exprs[i];
-        auto NExpr = NN->toExpr();
+        auto NExpr = std::visit(ToExprVisitor{}, NN);
         Expr_InsertA(e, i + 1, NExpr);
     }
     
@@ -1154,7 +934,7 @@ expr NodeContainer::toExpr() const {
 #endif // CHECK_ABORT
         
         auto& NN = N[i];
-        auto NExpr = NN->toExpr();
+        auto NExpr = std::visit(ToExprVisitor{}, NN);
         Expr_InsertA(e, i + 1, NExpr);
     }
     

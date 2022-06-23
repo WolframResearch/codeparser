@@ -32,7 +32,7 @@ set_target_properties(codeparser-exe PROPERTIES
 	OUTPUT_NAME
 		codeparser
 	CXX_STANDARD
-		11
+		17
 	CXX_STANDARD_REQUIRED
 		ON
 	INSTALL_RPATH
