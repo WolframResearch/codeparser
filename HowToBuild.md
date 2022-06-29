@@ -30,7 +30,7 @@ cmake --build .
 
 On Windows:
 ```
-cmake -DMATHEMATICA_INSTALL_DIR="C:/Program Files/Wolfram Research/Mathematica/13.0" ..
+cmake -DMATHEMATICA_INSTALL_DIR="C:/Program Files/Wolfram Research/Mathematica/13.1" ..
 cmake --build .
 ```
 
