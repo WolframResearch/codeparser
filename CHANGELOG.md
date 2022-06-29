@@ -1,5 +1,67 @@
 
-## 1.7 - XX June, 2022
+## 1.7 - 4 July, 2022
+
+add suggestions for `a->b` and `a:>b` at top-level
+
+### API changes
+
+Concrete CallNodes have changed how they contain their children.
+
+The old behavior would create a list around the children nodes.
+
+But there can only ever be a single child in a CallNode.
+
+So the wrapping list was removed.
+
+With this:
+
+```
+CodeConcreteParse["f[]"]
+```
+
+The old behavior is:
+```
+ContainerNode[String, {CallNode[{LeafNode[Symbol,
+     "f", <|Source -> {{1, 1}, {1, 2}}|>]}, {GroupNode[
+     GroupSquare, {LeafNode[Token`OpenSquare,
+       "[", <|Source -> {{1, 2}, {1, 3}}|>],
+      LeafNode[Token`CloseSquare,
+       "]", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1,
+          4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1,
+     1}, {1, 4}}|>]
+```
+
+And the new behavior is:
+```
+ContainerNode[String, {CallNode[{LeafNode[Symbol,
+     "f", <|Source -> {{1, 1}, {1, 2}}|>]},
+   GroupNode[
+    GroupSquare, {LeafNode[Token`OpenSquare,
+      "[", <|Source -> {{1, 2}, {1, 3}}|>],
+     LeafNode[Token`CloseSquare,
+      "]", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1,
+        4}}|>], <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1,
+     1}, {1, 4}}|>]
+```
+
+### Internal updates
+
+The major update is using clang's `[[clang::musttail]]` annotation to enforce tail call optimization.
+
+This means that CodeParser no longer uses stack when parsing. Recursive calls use the same stack frame.
+
+This means speed and this means no longer possible to hit the system stack limit when parsing.
+
+To use this, build CodeParser with clang and with `-DUSE_MUSTTAIL=ON`.
+
+This is completely opt-in.
+
+
+Another recent update is that starting in 13.2 (and able to be turned on in 13.1), a library built by the Compiler for building exprs will be used instead of MathLink.
+
+This also means speed.
+
+Old behavior can be used doing `-DTRANSPORT=MathLink`.
 
 
 ## 1.6 - 12 May, 2022
