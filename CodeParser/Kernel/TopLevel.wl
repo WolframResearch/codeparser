@@ -373,7 +373,7 @@ Specifically add a DidYouMean for / -> /@
 *)
 topLevelChildIssues[
   BinaryNode[Divide,
-    {_, LeafNode[Token`Slash, _, slashData_], _}
+    {_, LeafNode[_, _, slashData_], _}
     ,
     data_
   ]
@@ -381,7 +381,7 @@ topLevelChildIssues[
   KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
   {
-    SyntaxIssue["TopLevelExpression1", "Unexpected expression at top-level.", "Warning",
+    SyntaxIssue["TopLevelExpression", "Unexpected expression at top-level.", "Warning",
       <|
         Source -> slashData[Source],
         ConfidenceLevel -> 0.95,
@@ -390,6 +390,56 @@ topLevelChildIssues[
           <|
             Source -> slashData[Source],
             "ReplacementNode" -> LeafNode[Token`SlashAt, "/@", <||>]
+          |>]
+        }
+      |>
+    ]
+  }
+
+topLevelChildIssues[
+  BinaryNode[Rule,
+    {_, LeafNode[_, ruleStr_, ruleData_], _}
+    ,
+    data_
+  ]
+  ,
+  KeyValuePattern["WillReportToplevelIssues" -> True]
+] :=
+  {
+    SyntaxIssue["TopLevelExpression", "Unexpected expression at top-level.", "Warning",
+      <|
+        Source -> slashData[Source],
+        ConfidenceLevel -> 0.95,
+        CodeActions -> {
+          CodeAction["Replace ``" <> ruleStr <> "`` with ``=``", ReplaceNode,
+          <|
+            Source -> ruleData[Source],
+            "ReplacementNode" -> LeafNode[Token`Equal, "=", <||>]
+          |>]
+        }
+      |>
+    ]
+  }
+
+topLevelChildIssues[
+  BinaryNode[RuleDelayed,
+    {_, LeafNode[_, ruleDelayedStr_, ruleDelayedData_], _}
+    ,
+    data_
+  ]
+  ,
+  KeyValuePattern["WillReportToplevelIssues" -> True]
+] :=
+  {
+    SyntaxIssue["TopLevelExpression", "Unexpected expression at top-level.", "Warning",
+      <|
+        Source -> slashData[Source],
+        ConfidenceLevel -> 0.95,
+        CodeActions -> {
+          CodeAction["Replace ``" <> ruleDelayedStr <> "`` with ``:=``", ReplaceNode,
+          <|
+            Source -> ruleDelayedData[Source],
+            "ReplacementNode" -> LeafNode[Token`ColonEqual, ":=", <||>]
           |>]
         }
       |>
