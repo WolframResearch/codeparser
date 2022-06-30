@@ -185,7 +185,7 @@ Module[{pacletInfo, pacletInfoFile, transport},
 
       tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* loadFunc["TokenizeBytes_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
 
-      concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* loadFunc["ConcreteParseLeaf_LibraryLink", { "UTF8String", Integer, Integer, Integer, Integer, Integer }, Integer];
+      concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* loadFunc["ConcreteParseLeaf_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, Integer, Integer }, Integer];
 
       safeStringFunc := safeStringFunc = fromPointerA @* loadFunc["SafeString_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, Integer];
     ,

@@ -994,5 +994,27 @@ Test[
 
 
 
+Test[
+	CodeConcreteParseLeaf["\"abc"]
+	,
+	ErrorNode[Token`Error`UnterminatedString, "\"abc", <|Source -> {{1, 1}, {1, 5}}|>]
+	,
+	TestID->"Concrete-20220630-R9R5L3"
+]
+
+Test[
+	CodeConcreteParseLeaf["\"\<key = values \\\\\n\tspanned on \\\\\n\tmultiple lines.\>\""]
+	,
+	LeafNode[String, "\"key = values \\\\\n\tspanned on \\\\\n\tmultiple lines.\"", <|Source -> {{1, 1}, {3, 18}}|>]
+	,
+	TestID->"Concrete-20220630-F9H0E8"
+]
+
+
+
+
+
+
+
 
 

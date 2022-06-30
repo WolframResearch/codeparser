@@ -1208,9 +1208,11 @@ CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
 
 concreteParseLeaf[str_String, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, leaf, data, exprs},
+Module[{res, leaf, data, exprs, bytes},
 
-  res = concreteParseLeafString[str, NotScript, CodeConcreteParseLeaf, opts];
+  bytes = ByteArray[ToCharacterCode[str, "UTF-8"]];
+
+  res = concreteParseLeafString[bytes, NotScript, CodeConcreteParseLeaf, opts];
 
   If[FailureQ[res],
     Throw[res]
@@ -1273,7 +1275,16 @@ Module[{res, leaf, data, exprs},
 ]]
 
 
-concreteParseLeafString[str_String, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+concreteParseLeafString[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res},
+
+  res = {{}, {}, {}, {}, {}, {}};
+
+  res
+]]
+
+concreteParseLeafString[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, stringifyMode, convention, tabWidth, encodingMode},
 
@@ -1286,7 +1297,7 @@ Module[{res, stringifyMode, convention, tabWidth, encodingMode},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode];
+  res = libraryFunctionWrapper[concreteParseLeafFunc, bytes, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;

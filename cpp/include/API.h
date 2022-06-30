@@ -311,3 +311,24 @@ public:
     MLINK get();
 };
 #endif // USE_MATHLINK
+
+
+#if USE_EXPR_LIB
+//
+//
+//
+class ScopedNumericArray {
+    
+    WolframLibraryData libData;
+    MNumericArray arr;
+    
+public:
+    ScopedNumericArray(WolframLibraryData libData, MArgument Arg);
+    
+    ~ScopedNumericArray();
+    
+    size_t size() const;
+    
+    Buffer data() const;
+};
+#endif // USE_EXPR_LIB
