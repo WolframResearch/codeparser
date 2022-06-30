@@ -408,7 +408,7 @@ topLevelChildIssues[
   {
     SyntaxIssue["TopLevelExpression", "Unexpected expression at top-level.", "Warning",
       <|
-        Source -> slashData[Source],
+        Source -> ruleData[Source],
         ConfidenceLevel -> 0.95,
         CodeActions -> {
           CodeAction["Replace ``" <> ruleStr <> "`` with ``=``", ReplaceNode,
@@ -433,7 +433,7 @@ topLevelChildIssues[
   {
     SyntaxIssue["TopLevelExpression", "Unexpected expression at top-level.", "Warning",
       <|
-        Source -> slashData[Source],
+        Source -> ruleDelayedData[Source],
         ConfidenceLevel -> 0.95,
         CodeActions -> {
           CodeAction["Replace ``" <> ruleDelayedStr <> "`` with ``:=``", ReplaceNode,
