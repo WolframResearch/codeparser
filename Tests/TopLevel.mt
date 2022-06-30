@@ -61,7 +61,7 @@ Test[
 		,
 		<|Source -> {{1, 1}, {1, 20}},
 			AbstractSyntaxIssues -> {
-			SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Warning", <|
+			SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Remark", <|
 				Source -> {{1, 1}, {1, 20}},
 				ConfidenceLevel -> 0.95,
 				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."}
@@ -143,7 +143,7 @@ Test[
 		,
 		<|Source -> {{1, 1}, {1, 16}},
 			AbstractSyntaxIssues -> {
-			SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Warning", <|
+			SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Remark", <|
 				Source -> {{1, 1}, {1, 16}},
 				ConfidenceLevel -> 0.95,
 				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."}|>]}

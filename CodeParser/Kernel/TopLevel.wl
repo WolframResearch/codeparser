@@ -360,7 +360,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, _, data_]
   *)
   ignored_
 ] :=
-  {SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Warning", <|
+  {SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Remark", <|
     Source -> data[Source],
     ConfidenceLevel -> 0.95,
     "AdditionalDescriptions" -> {"Consider breaking up onto separate lines."}
