@@ -73,6 +73,7 @@ Token`LongName`Square -> Parselet`PrefixOperatorParselet[Token`LongName`Square, 
 
 
 Token`Comma -> Parselet`PrefixCommaParselet[],
+Token`LongName`InvisibleComma -> Parselet`PrefixCommaParselet[],
 
 
 (*

@@ -970,5 +970,29 @@ Test[
 
 
 
+Test[
+	CodeConcreteParse["f[\[InvisibleComma]2]"]
+	,
+	ContainerNode[String, {
+		CallNode[{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]}, GroupNode[GroupSquare, {
+			LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 2}, {1, 3}}|>],
+			InfixNode[Comma, {
+				ErrorNode[Token`Error`PrefixImplicitNull, "", <|Source -> {{1, 3}, {1, 3}}|>],
+				LeafNode[Token`LongName`InvisibleComma, "\[InvisibleComma]", <|Source -> {{1, 3}, {1, 4}}|>],
+				LeafNode[Integer, "2", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
+			LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 2}, {1, 6}}|>], <|Source -> {{1, 1}, {1, 6}}|>]}, <|SyntaxIssues -> {
+		
+		EncodingIssue["NonASCIICharacter", "Non-ASCII character: ``\"\[InvisibleComma]\" (\\[InvisibleComma])``.", "Remark", <|Source -> {{1, 3}, {1, 4}}, ConfidenceLevel -> 1., CodeActions -> {
+			CodeAction["Replace with ``\\[InvisibleComma]``", ReplaceText, <|Source -> {{1, 3}, {1, 4}}, "ReplacementText" -> "\\[InvisibleComma]"|>],
+			CodeAction["Replace with ``,``", ReplaceText, <|Source -> {{1, 3}, {1, 4}}, "ReplacementText" -> ","|>],
+			CodeAction["Replace with ````", ReplaceText, <|Source -> {{1, 3}, {1, 4}}, "ReplacementText" -> ""|>]}|>]}, Source -> {{1, 1}, {1, 6}}|>]
+	,
+	TestID->"Concrete-20220630-W4P3C6"
+]
+
+
+
+
+
 
 
