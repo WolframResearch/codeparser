@@ -25,7 +25,7 @@ This is due to various issues including LibraryLink versioning and rpath changes
 
 ## C++ Compiler Compatibility
 
-CodeParser uses C++11 features and requires a compiler that can support at least C++11.
+CodeParser uses C++17 features and requires a compiler that can support at least C++17.
 
 
 ## Wolfram Compiler Compatibility
@@ -52,12 +52,16 @@ Make sure that the correct WolframVersion is specified.
 
 CodeParser uses [LibraryLink](https://reference.wolfram.com/language/guide/LibraryLink.html).
 
-The version of LibraryLink was updated in version 12.1:
+The version of LibraryLink was updated in version 13.1:
 
 | Wolfram version | LibraryLink version |
 | --------------- | ------------------- |
 | 12.0            | 5                   |
 | 12.1            | 6                   |
+| 12.2            | 6                   |
+| 12.3            | 6                   |
+| 13.0            | 6                   |
+| 13.1            | 7                   |
 
 The LibraryLink version is defined in the header file WolframLibrary.h
 
@@ -65,7 +69,11 @@ In the [LibraryLink documentation](https://reference.wolfram.com/language/Librar
 
 >However, you should note that you cannot use a library built with a newer version of the header into an older version of the Wolfram Language.
 
-So LibraryLink defines Wolfram version 12.1 as a minimum that can run with libraries built with the current Wolfram version.
+So LibraryLink defines Wolfram version 13.1 as a minimum that can run with libraries built with the current Wolfram version.
+
+But to be clear, LibraryLink does have forwards-compatibility. For example, libraries built with LibraryLink version 6 will work with LibraryLink version 7.
+
+The CodeParser paclets distributed by Wolfram Research on the public paclet server are built with LibraryLink version 6 in order to guarantee compatibility with all versions of Wolfram System from 12.1 onward.
 
 
 ## rpath (MacOSX)
