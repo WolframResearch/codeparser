@@ -16,6 +16,7 @@
 
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <sstream> // for ostringstream
+#include <algorithm> // for lower_bound
 
 
 BufferAndLength::BufferAndLength() : buffer(), end() {}

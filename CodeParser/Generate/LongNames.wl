@@ -509,7 +509,7 @@ longNamesCPPSource = {
 
 #include \"LongNames.h\"
 
-#include <algorithm> // for std::lower_bound
+#include <algorithm> // for lower_bound
 #include <cassert>
 "} ~Join~
 longNameToCodePointMapNames ~Join~
