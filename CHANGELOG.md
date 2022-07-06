@@ -1,4 +1,7 @@
 
+## 1.8 - XX Sep, 2022
+
+
 ## 1.7 - 4 July, 2022
 
 add suggestions for `a->b` and `a:>b` at top-level
