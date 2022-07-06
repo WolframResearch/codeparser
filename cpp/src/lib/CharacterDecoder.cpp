@@ -17,6 +17,8 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
+#include <algorithm> // for lower_bound
+
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
 #else

@@ -8,8 +8,6 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
 
-#include <algorithm>
-
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
 #else
