@@ -15,52 +15,46 @@
 #endif // WINDOWS_MATHLINK
 
 #if USE_MATHLINK
-using ScopedMLByteArrayPtr = std::unique_ptr<ScopedMLByteArray>;
-using ScopedMLUTF8StringPtr = std::unique_ptr<ScopedMLUTF8String>;
-using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
 #endif // USE_MATHLINK
 
-void ParserSessionCreate() {
-    TheParserSession = ParserSessionPtr(new ParserSession());
+
+ParserSessionPtr CreateParserSession() {
+    return new ParserSession();
 }
 
-void ParserSessionDestroy() {
-    TheParserSession.reset(nullptr);
+void DestroyParserSession(ParserSessionPtr session) {
+    delete session;
 }
 
-void ParserSessionInit(Buffer buf,
-                      size_t bufLen,
-                      WolframLibraryData libData,
-                      SourceConvention srcConvention,
-                      uint32_t tabWidth,
-                      FirstLineBehavior firstLineBehavior,
-                      EncodingMode encodingMode) {
+void ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
+    
     BufferAndLength bufAndLen = BufferAndLength(buf, bufLen);
-    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    
+    session->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
 }
 
-void ParserSessionDeinit() {
-    TheParserSession->deinit();
+void ParserSessionDeinit(ParserSessionPtr session) {
+    session->deinit();
 }
 
-NodeContainerPtr ParserSessionParseExpressions() {
-    return TheParserSession->parseExpressions();
+NodeContainerPtr ParserSessionParseExpressions(ParserSessionPtr session) {
+    return session->parseExpressions();
 }
 
-NodeContainerPtr ParserSessionTokenize() {
-    return TheParserSession->tokenize();
+NodeContainerPtr ParserSessionTokenize(ParserSessionPtr session) {
+    return session->tokenize();
 }
 
-NodeContainerPtr ParserSessionConcreteParseLeaf(StringifyMode mode) {
-    return TheParserSession->concreteParseLeaf(mode);
+NodeContainerPtr ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode) {
+    return session->concreteParseLeaf(mode);
 }
 
-NodeContainerPtr ParserSessionSafeString() {
-    return TheParserSession->safeString();
+NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session) {
+    return session->safeString();
 }
 
-void ParserSessionReleaseContainer(NodeContainerPtr C) {
-    TheParserSession->releaseContainer(C);
+void ParserSessionReleaseContainer(ParserSessionPtr session, NodeContainerPtr C) {
+    session->releaseContainer(C);
 }
 
 
@@ -78,70 +72,176 @@ mint WolframLibrary_getVersion() {
 }
 
 int WolframLibrary_initialize(WolframLibraryData libData) {
-    
-    ParserSessionCreate();
-    
     return 0;
 }
 
 void WolframLibrary_uninitialize(WolframLibraryData libData) {
-    ParserSessionDestroy();
+    
 }
 
+
 #if USE_EXPR_LIB
-DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (Argc != 4) {
+    if (Argc != 0) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto arr = ScopedNumericArray(libData, Args[0]);
+    auto session = CreateParserSession();
     
-    auto mlSrcConvention = MArgument_getInteger(Args[1]);
-    auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
-    
-    auto mlTabWidth = MArgument_getInteger(Args[2]);
-    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
-    
-    auto mlFirstLineBehavior = MArgument_getInteger(Args[3]);
-    auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
-    
-    auto numBytes = arr.size();
-    
-    auto data = arr.data();
-    
-    auto bufAndLen = BufferAndLength(data, numBytes);
-    
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
-    
-    auto C = ParserSessionParseExpressions();
-    
-    auto e = C->toExpr();
-    
-    ParserSessionReleaseContainer(C);
-    
-    ParserSessionDeinit();
+    auto e = Expr_FromInteger64(reinterpret_cast<mint>(session));
     
     MArgument_setInteger(Res, reinterpret_cast<mint>(e));
-    
+
     return LIBRARY_NO_ERROR;
 }
 #elif USE_MATHLINK
-DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     int mlLen;
         
-    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 4) {
+    if (len != 0) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    auto session = CreateParserSession();
+    
+    if (!MLPutInteger(link, reinterpret_cast<mint>(session))) {
+        assert(false);
+    }
+    
+    return LIBRARY_NO_ERROR;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    if (Argc != 1) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto mlSession = MArgument_getInteger(Args[0]);
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
+    
+    DestroyParserSession(session);
+    
+    //
+    // cannot use session after this
+    //
+    
+    auto e = Expr_MEncodedStringToSymbolExpr(SYMBOL_NULL.name());
+    
+    MArgument_setInteger(Res, reinterpret_cast<mint>(e));
+
+    return LIBRARY_NO_ERROR;
+}
+#elif USE_MATHLINK
+DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK link) {
+    
+    int mlLen;
+        
+    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
+    if (len != 1) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    int mlSession;
+    if (!MLGetInteger(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
+    
+    DestroyParserSession(session);
+    
+    //
+    // cannot use session after this
+    //
+    
+    if (!MLPutSymbol(link, SYMBOL_NULL.name())) {
+      assert(false);
+    }
+    
+    return LIBRARY_NO_ERROR;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    if (Argc != 5) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto mlSession = MArgument_getInteger(Args[0]);
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
+    
+    auto arr = ScopedNumericArray(libData, Args[1]);
+
+    auto mlSrcConvention = MArgument_getInteger(Args[2]);
+    auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
+
+    auto mlTabWidth = MArgument_getInteger(Args[3]);
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
+
+    auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
+    auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
+
+    auto numBytes = arr.size();
+
+    auto data = arr.data();
+
+    ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+
+    auto C = ParserSessionParseExpressions(session);
+
+    auto e = C->toExpr(session);
+
+    ParserSessionReleaseContainer(session, C);
+
+    ParserSessionDeinit(session);
+    
+    MArgument_setInteger(Res, reinterpret_cast<mint>(e));
+
+    return LIBRARY_NO_ERROR;
+}
+#elif USE_MATHLINK
+DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
+    
+    int mlLen;
+        
+    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
+    if (len != 5) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    int mlSession;
+    if (!MLGetInteger(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
+    
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -151,45 +251,43 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
-    if (!arr->read()) {
+    auto arr = ScopedMLByteArray(link);
+    if (!arr.read()) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlSrcConvention;
-    if (!MLGetInteger(mlp, &mlSrcConvention)) {
+    if (!MLGetInteger(link, &mlSrcConvention)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
     int tabWidth;
-    if (!MLGetInteger(mlp, &tabWidth)) {
+    if (!MLGetInteger(link, &tabWidth)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlFirstLineBehavior;
-    if (!MLGetInteger(mlp, &mlFirstLineBehavior)) {
+    if (!MLGetInteger(link, &mlFirstLineBehavior)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
-    if (!MLNewPacket(mlp) ) {
+    if (!MLNewPacket(link)) {
         return LIBRARY_FUNCTION_ERROR;
     }
-        
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+    ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
     
-    auto C = ParserSessionParseExpressions();
+    auto C = ParserSessionParseExpressions(session);
     
-    C->put(mlp);
+    C->put(session);
     
-    ParserSessionReleaseContainer(C);
+    ParserSessionReleaseContainer(session, C);
     
-    ParserSessionDeinit();
+    ParserSessionDeinit(session);
     
     return LIBRARY_NO_ERROR;
 }
@@ -199,57 +297,65 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
 #if USE_EXPR_LIB
 int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (Argc != 4) {
+    if (Argc != 5) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto arr = ScopedNumericArray(libData, Args[0]);
+    auto mlSession = MArgument_getInteger(Args[0]);
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    auto mlSrcConvention = MArgument_getInteger(Args[1]);
+    auto arr = ScopedNumericArray(libData, Args[1]);
+
+    auto mlSrcConvention = MArgument_getInteger(Args[2]);
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
-    
-    auto mlTabWidth = MArgument_getInteger(Args[2]);
+
+    auto mlTabWidth = MArgument_getInteger(Args[3]);
     auto tabWidth = static_cast<int>(mlTabWidth);
-    
-    auto mlFirstLineBehavior = MArgument_getInteger(Args[3]);
+
+    auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
-    
+
     auto numBytes = arr.size();
-    
+
     auto data = arr.data();
-    
-    auto bufAndLen = BufferAndLength(data, numBytes);
-    
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
-    
-    auto C = ParserSessionTokenize();
-    
-    auto e = C->toExpr();
-    
-    ParserSessionReleaseContainer(C);
-    
-    ParserSessionDeinit();
+
+    ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+
+    auto C = ParserSessionTokenize(session);
+
+    auto e = C->toExpr(session);
+
+    ParserSessionReleaseContainer(session, C);
+
+    ParserSessionDeinit(session);
     
     MArgument_setInteger(Res, reinterpret_cast<mint>(e));
-    
+
     return LIBRARY_NO_ERROR;
 }
 #elif USE_MATHLINK
-int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     int mlLen;
-        
-    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen)) {
+    
+    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 4) {
+    if (len != 5) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    int mlSession;
+    if (!MLGetInteger(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
+    
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -259,45 +365,43 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
-    if (!arr->read()) {
+    auto arr = ScopedMLByteArray(link);
+    if (!arr.read()) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlSrcConvention;
-    if (!MLGetInteger(mlp, &mlSrcConvention)) {
+    if (!MLGetInteger(link, &mlSrcConvention)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
     int tabWidth;
-    if (!MLGetInteger(mlp, &tabWidth)) {
+    if (!MLGetInteger(link, &tabWidth)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlFirstLineBehavior;
-    if (!MLGetInteger(mlp, &mlFirstLineBehavior)) {
+    if (!MLGetInteger(link, &mlFirstLineBehavior)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
-    if (!MLNewPacket(mlp) ) {
+    if (!MLNewPacket(link) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
-        
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+    ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
     
-    auto C = ParserSessionTokenize();
+    auto C = ParserSessionTokenize(session);
     
-    C->put(mlp);
+    C->put(session);
     
-    ParserSessionReleaseContainer(C);
+    ParserSessionReleaseContainer(session, C);
     
-    ParserSessionDeinit();
+    ParserSessionDeinit(session);
     
     return LIBRARY_NO_ERROR;
 }
@@ -307,64 +411,72 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
 #if USE_EXPR_LIB
 int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (Argc != 6) {
+    if (Argc != 7) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto arr = ScopedNumericArray(libData, Args[0]);
+    auto mlSession = MArgument_getInteger(Args[0]);
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    auto stringifyMode = MArgument_getInteger(Args[1]);
-    
-    auto mlSrcConvention = MArgument_getInteger(Args[2]);
+    auto arr = ScopedNumericArray(libData, Args[1]);
+
+    auto stringifyMode = MArgument_getInteger(Args[2]);
+
+    auto mlSrcConvention = MArgument_getInteger(Args[3]);
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
-    
-    auto mlTabWidth = MArgument_getInteger(Args[3]);
+
+    auto mlTabWidth = MArgument_getInteger(Args[4]);
     auto tabWidth = static_cast<int>(mlTabWidth);
-    
-    auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
+
+    auto mlFirstLineBehavior = MArgument_getInteger(Args[5]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
-    
-    auto mlEncodingMode = MArgument_getInteger(Args[5]);
+
+    auto mlEncodingMode = MArgument_getInteger(Args[6]);
     auto encodingMode = static_cast<EncodingMode>(mlEncodingMode);
-    
+
     auto numBytes = arr.size();
-    
+
     auto data = arr.data();
-    
-    auto bufAndLen = BufferAndLength(data, numBytes);
-    
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
-    
-    auto C = ParserSessionConcreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
-    
-    auto e = C->toExpr();
-    
-    ParserSessionReleaseContainer(C);
-    
-    ParserSessionDeinit();
+
+    ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+
+    auto C = ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode));
+
+    auto e = C->toExpr(session);
+
+    ParserSessionReleaseContainer(session, C);
+
+    ParserSessionDeinit(session);
     
     MArgument_setInteger(Res, reinterpret_cast<mint>(e));
-    
+
     return LIBRARY_NO_ERROR;
 }
 #elif USE_MATHLINK
-int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     int mlLen;
     
     std::string unescaped;
     
-    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen))  {
+    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen))  {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 6) {
+    if (len != 7) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    int mlSession;
+    if (!MLGetInteger(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
+    
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -374,57 +486,59 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
-    if (!arr->read()) {
+    auto arr = ScopedMLByteArray(link);
+    if (!arr.read()) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int stringifyMode;
-    if (!MLGetInteger(mlp, &stringifyMode)) {
+    if (!MLGetInteger(link, &stringifyMode)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlSrcConvention;
-    if (!MLGetInteger(mlp, &mlSrcConvention)) {
+    if (!MLGetInteger(link, &mlSrcConvention)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
     int tabWidth;
-    if (!MLGetInteger(mlp, &tabWidth)) {
+    if (!MLGetInteger(link, &tabWidth)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlFirstLineBehavior;
-    if (!MLGetInteger(mlp, &mlFirstLineBehavior)) {
+    if (!MLGetInteger(link, &mlFirstLineBehavior)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
     int mlEncodingMode;
-    if (!MLGetInteger(mlp, &mlEncodingMode)) {
+    if (!MLGetInteger(link, &mlEncodingMode)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto encodingMode = static_cast<EncodingMode>(mlEncodingMode);
 
-    if (!MLNewPacket(mlp) ) {
+    if (!MLNewPacket(link) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
+    auto numBytes = arr.getByteCount();
     
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    auto data = arr.get();
     
-    auto C = ParserSessionConcreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
+    ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
     
-    C->put(mlp);
+    auto C = ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode));
     
-    ParserSessionReleaseContainer(C);
+    C->put(session);
     
-    ParserSessionDeinit();
+    ParserSessionReleaseContainer(session, C);
+    
+    ParserSessionDeinit(session);
     
     return LIBRARY_NO_ERROR;
 }
@@ -434,48 +548,56 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
 #if USE_EXPR_LIB
 int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (Argc != 1) {
+    if (Argc != 2) {
         return LIBRARY_FUNCTION_ERROR;
     }
+
+    auto mlSession = MArgument_getInteger(Args[0]);
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    auto arr = ScopedNumericArray(libData, Args[0]);
-    
+    auto arr = ScopedNumericArray(libData, Args[1]);
+
     auto numBytes = arr.size();
-    
+
     auto data = arr.data();
-    
-    auto bufAndLen = BufferAndLength(data, numBytes);
-    
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto C = ParserSessionSafeString();
-    
-    auto e = C->toExpr();
-    
-    ParserSessionReleaseContainer(C);
-    
-    ParserSessionDeinit();
+
+    ParserSessionInit(session, data, numBytes, libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto C = ParserSessionSafeString(session);
+
+    auto e = C->toExpr(session);
+
+    ParserSessionReleaseContainer(session, C);
+
+    ParserSessionDeinit(session);
     
     MArgument_setInteger(Res, reinterpret_cast<mint>(e));
-    
+
     return LIBRARY_NO_ERROR;
 }
 #elif USE_MATHLINK
-int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     int mlLen;
     
-    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 1) {
+    if (len != 2) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    int mlSession;
+    if (!MLGetInteger(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
+    
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -485,26 +607,24 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
-    if (!arr->read()) {
+    auto arr = ScopedMLByteArray(link);
+    if (!arr.read()) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLNewPacket(mlp) ) {
+    if (!MLNewPacket(link) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
+    ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    auto C = ParserSessionSafeString(session);
     
-    auto C = ParserSessionSafeString();
+    C->put(session);
     
-    C->put(mlp);
+    ParserSessionReleaseContainer(session, C);
     
-    ParserSessionReleaseContainer(C);
-    
-    ParserSessionDeinit();
+    ParserSessionDeinit(session);
     
     return LIBRARY_NO_ERROR;
 }
@@ -512,19 +632,19 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
 
 
 #if USE_MATHLINK
-ScopedMLUTF8String::ScopedMLUTF8String(MLINK mlp) : mlp(mlp), buf(NULL), b(), c() {}
+ScopedMLUTF8String::ScopedMLUTF8String(MLINK link) : link(link), buf(NULL), b(), c() {}
 
 ScopedMLUTF8String::~ScopedMLUTF8String() {
     
-    if (buf == NULL) {
+    if (!buf) {
         return;
     }
     
-    MLReleaseUTF8String(mlp, buf, b);
+    MLReleaseUTF8String(link, buf, b);
 }
 
 bool ScopedMLUTF8String::read() {
-    return MLGetUTF8String(mlp, &buf, &b, &c);
+    return MLGetUTF8String(link, &buf, &b, &c);
 }
 
 Buffer ScopedMLUTF8String::get() const {
@@ -538,19 +658,19 @@ size_t ScopedMLUTF8String::getByteCount() const {
 
 
 #if USE_MATHLINK
-ScopedMLString::ScopedMLString(MLINK mlp) : mlp(mlp), buf(NULL) {}
+ScopedMLString::ScopedMLString(MLINK link) : link(link), buf(NULL) {}
 
 ScopedMLString::~ScopedMLString() {
     
-    if (buf == NULL) {
+    if (!buf) {
         return;
     }
     
-    MLReleaseString(mlp, buf);
+    MLReleaseString(link, buf);
 }
 
 bool ScopedMLString::read() {
-    return MLGetString(mlp, &buf);
+    return MLGetString(link, &buf);
 }
 
 const char *ScopedMLString::get() const {
@@ -560,16 +680,16 @@ const char *ScopedMLString::get() const {
 
 
 #if USE_MATHLINK
-ScopedMLSymbol::ScopedMLSymbol(MLINK mlp) : mlp(mlp), sym(NULL) {}
+ScopedMLSymbol::ScopedMLSymbol(MLINK link) : link(link), sym(NULL) {}
 
 ScopedMLSymbol::~ScopedMLSymbol() {
     if (sym != NULL) {
-        MLReleaseSymbol(mlp, sym);
+        MLReleaseSymbol(link, sym);
     }
 }
 
 bool ScopedMLSymbol::read() {
-    return MLGetSymbol(mlp, &sym);
+    return MLGetSymbol(link, &sym);
 }
 
 const char *ScopedMLSymbol::get() const {
@@ -579,19 +699,19 @@ const char *ScopedMLSymbol::get() const {
 
 
 #if USE_MATHLINK
-ScopedMLFunction::ScopedMLFunction(MLINK mlp) : mlp(mlp), func(NULL), count() {}
+ScopedMLFunction::ScopedMLFunction(MLINK link) : link(link), func(NULL), count() {}
 
 ScopedMLFunction::~ScopedMLFunction() {
     
-    if (func == NULL) {
+    if (!func) {
         return;
     }
     
-    MLReleaseSymbol(mlp, func);
+    MLReleaseSymbol(link, func);
 }
 
 bool ScopedMLFunction::read() {
-    return MLGetFunction(mlp, &func, &count);
+    return MLGetFunction(link, &func, &count);
 }
 
 const char *ScopedMLFunction::getHead() const {
@@ -605,19 +725,19 @@ int ScopedMLFunction::getArgCount() const {
 
 
 #if USE_MATHLINK
-ScopedMLByteArray::ScopedMLByteArray(MLINK mlp) : mlp(mlp), buf(NULL), dims(), heads(), depth() {}
+ScopedMLByteArray::ScopedMLByteArray(MLINK link) : link(link), buf(NULL), dims(), heads(), depth() {}
 
 ScopedMLByteArray::~ScopedMLByteArray() {
     
-    if (buf == NULL) {
+    if (!buf) {
         return;
     }
     
-    MLReleaseByteArray(mlp, buf, dims, heads, depth);
+    MLReleaseByteArray(link, buf, dims, heads, depth);
 }
 
 bool ScopedMLByteArray::read() {
-    return MLGetByteArray(mlp, &buf, &dims, &heads, &depth);
+    return MLGetByteArray(link, &buf, &dims, &heads, &depth);
 }
 
 Buffer ScopedMLByteArray::get() const {
@@ -637,16 +757,16 @@ ScopedMLEnvironmentParameter::~ScopedMLEnvironmentParameter() {
     MLReleaseParameters(p);
 }
 
-MLEnvironmentParameter ScopedMLEnvironmentParameter::get() {
+MLEnvironmentParameter ScopedMLEnvironmentParameter::get() const {
     return p;
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-ScopedMLLoopbackLink::ScopedMLLoopbackLink() : mlp(NULL), ep(NULL) {
+ScopedMLLoopbackLink::ScopedMLLoopbackLink() : link(NULL), ep(NULL) {
     
-    ScopedMLEnvironmentParameterPtr p;
+    ScopedMLEnvironmentParameter p;
     
     int err;
     
@@ -661,26 +781,25 @@ ScopedMLLoopbackLink::ScopedMLLoopbackLink() : mlp(NULL), ep(NULL) {
     ep = MLInitialize(p.get());
     
     if (ep == (MLENV)0) {
-        
         return;
     }
     
-    mlp = MLLoopbackOpen(ep, &err);
+    link = MLLoopbackOpen(ep, &err);
 }
 
 ScopedMLLoopbackLink::~ScopedMLLoopbackLink() {
     
-    if (mlp == NULL) {
+    if (!link) {
         return;
     }
     
-    MLClose(mlp);
+    MLClose(link);
     
     MLDeinitialize(ep);
 }
 
-MLINK ScopedMLLoopbackLink::get() {
-    return mlp;
+MLINK ScopedMLLoopbackLink::get() const {
+    return link;
 }
 #endif // USE_MATHLINK
 

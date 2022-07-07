@@ -155,13 +155,11 @@ symbolCPPHeader = {
 
 #pragma once
 
-#if USE_MATHLINK
-#include \"mathlink.h\"
-#undef P
-#endif // USE_MATHLINK
-
-#include <memory>
 #include <ostream>
+
+class ParserSession;
+
+using ParserSessionPtr = ParserSession *;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -191,11 +189,11 @@ public:
   void print(std::ostream& s) const;
 
 #if USE_MATHLINK
-  void put(MLINK mlp) const;
+  void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
-  expr toExpr() const;
+  expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
 };
 
@@ -236,6 +234,12 @@ symbolCPPSource = {
 #include \"Symbol.h\"
 
 #include \"Token.h\"
+#include \"ParserSession.h\"
+
+#if USE_MATHLINK
+#include \"mathlink.h\"
+#undef P
+#endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
 #include \"ExprLibrary.h\"
@@ -253,26 +257,26 @@ bool operator!=(Symbol a, Symbol b) {
 }
 
 void Symbol::print(std::ostream& s) const {
-    s << Name;
+  s << Name;
 }
 
 #if USE_MATHLINK
-void Symbol::put(MLINK mlp) const {
-    if (!MLPutSymbol(mlp, Name)) {
-        assert(false);
-    }
+void Symbol::put(ParserSessionPtr session) const {
+
+  auto link = session->getMathLink();
+
+  if (!MLPutSymbol(link, Name)) {
+    assert(false);
+  }
 }
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
-expr Symbol::toExpr() const {
+expr Symbol::toExpr(ParserSessionPtr session) const {
   return Expr_MEncodedStringToSymbolExpr(Name);
 }
 #endif // USE_EXPR_LIB
-
-"} ~Join~
-
-{""};
+"};
 
 Print["exporting Symbol.cpp"];
 res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"];

@@ -5,17 +5,13 @@
 #include "Precedence.h"
 
 class PrefixParselet;
-class InfixParselet;
-class CallParselet;
-class PostfixParselet;
-class GroupParselet;
 class Parselet;
-class Parser;
+class ParserSession;
 
 using ParseletPtr = Parselet *;
 using PrefixParseletPtr = PrefixParselet *;
-using InfixParseletPtr = InfixParselet *;
-typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
+using ParserSessionPtr = ParserSession *;
+typedef void (*ParseFunction)(ParserSessionPtr parser, ParseletPtr parselet, Token firstTok);
 
 //
 // Classes that derive from Parselet are responsible for parsing specific kinds of syntax
@@ -41,11 +37,11 @@ public:
     
     virtual ParseFunction parseInfix() const = 0;
     
-    virtual Precedence getPrecedence() const = 0;
+    virtual Precedence getPrecedence(ParserSessionPtr session) const = 0;
     
-    virtual Symbol getOp() const = 0;
+    virtual Symbol getOp() const;
     
-    virtual Token processImplicitTimes(Token TokIn) const;
+    virtual Token processImplicitTimes(ParserSessionPtr session, Token TokIn) const;
     
     virtual ~InfixParselet() {}
 };
@@ -64,13 +60,11 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void CallParselet_parseInfix(ParseletPtr P, Token firstTok);
-void CallParselet_reduceCall(ParseletPtr P, Token Ignored);
+void CallParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token firstTok);
+void CallParselet_reduceCall(ParserSessionPtr session, ParseletPtr P, Token Ignored);
 
 
 class LeafParselet : public PrefixParselet {
@@ -79,7 +73,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void LeafParselet_reduceLeaf(ParseletPtr P, Token firstTok);
+void LeafParselet_reduceLeaf(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class PrefixEndOfFileParselet : public PrefixParselet {
@@ -88,7 +82,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixEndOfFileParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void PrefixEndOfFileParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class PrefixErrorParselet : public PrefixParselet {
@@ -97,7 +91,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixErrorParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void PrefixErrorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class PrefixCloserParselet : public PrefixParselet {
@@ -106,7 +100,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void PrefixCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class PrefixToplevelCloserParselet : public PrefixParselet {
@@ -115,7 +109,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixToplevelCloserParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void PrefixToplevelCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class PrefixUnsupportedTokenParselet : public PrefixParselet {
@@ -124,7 +118,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixUnsupportedTokenParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void PrefixUnsupportedTokenParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 //
@@ -136,7 +130,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixCommaParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void PrefixCommaParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 //
@@ -148,7 +142,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void PrefixUnhandledParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class PrefixOperatorParselet : public PrefixParselet {
@@ -168,8 +162,8 @@ public:
     Symbol getOp() const;
 };
 
-void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void PrefixOperatorParselet_reducePrefixOperator(ParseletPtr P, Token Ignored);
+void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void PrefixOperatorParselet_reducePrefixOperator(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class InfixImplicitTimesParselet : public InfixParselet {
@@ -177,14 +171,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
     
-    Token processImplicitTimes(Token TokIn) const override;
-    
-    Symbol getOp() const override;
+    Token processImplicitTimes(ParserSessionPtr session, Token TokIn) const override;
 };
 
-void InfixImplicitTimesParselet_parseInfix(ParseletPtr P, Token firstTok);
+void InfixImplicitTimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class InfixAssertFalseParselet : public InfixParselet {
@@ -192,23 +184,23 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void InfixAssertFalseParselet_parseInfix(ParseletPtr P, Token firstTok);
+void InfixAssertFalseParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 //
 // InfixDifferentialDParselet only exists to properly supply precedence, depending on context
 //
-class InfixDifferentialDParselet : public InfixImplicitTimesParselet {
+class InfixDifferentialDParselet : public InfixParselet {
 public:
     
-    Precedence getPrecedence() const override;
+    ParseFunction parseInfix() const override;
     
-    Token processImplicitTimes(Token TokIn) const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
+    
+    Token processImplicitTimes(ParserSessionPtr session, Token TokIn) const override;
 };
 
 
@@ -217,12 +209,10 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void InfixToplevelNewlineParselet_parseInfix(ParseletPtr P, Token firstTok);
+void InfixToplevelNewlineParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class BinaryOperatorParselet : public InfixParselet {
@@ -237,13 +227,13 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
     
     Symbol getOp() const override;
 };
 
-void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token firstTok);
-void BinaryOperatorParselet_reduceBinaryOperator(ParseletPtr P, Token Ignored);
+void BinaryOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void BinaryOperatorParselet_reduceBinaryOperator(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class InfixOperatorParselet : public InfixParselet {
@@ -258,14 +248,14 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
     
     Symbol getOp() const override;
 };
 
-void InfixOperatorParselet_parseInfix(ParseletPtr P, Token firstTok);
-void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored);
-void InfixOperatorParselet_reduceInfixOperator(ParseletPtr P, Token firstTok);
+void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void InfixOperatorParselet_reduceInfixOperator(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 //
@@ -276,14 +266,14 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
     
     Symbol getOp() const override;
 };
 
-void TimesParselet_parseInfix(ParseletPtr P, Token firstTok);
-void TimesParselet_parseLoop(ParseletPtr P, Token Ignored);
-void TimesParselet_reduceTimes(ParseletPtr P, Token Ignored);
+void TimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void TimesParselet_parseLoop(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void TimesParselet_reduceTimes(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class PostfixOperatorParselet : public InfixParselet {
@@ -298,13 +288,13 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
     
     Symbol getOp() const override;
 };
 
-void PostfixOperatorParselet_parseInfix(ParseletPtr P, Token firstTok);
-void PostfixOperatorParselet_reducePostfixOperator(ParseletPtr P, Token firstTok);
+void PostfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void PostfixOperatorParselet_reducePostfixOperator(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 class GroupParselet : public PrefixParselet {
@@ -324,11 +314,11 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void GroupParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void GroupParselet_parseLoop(ParseletPtr P, Token Ignored);
-void GroupParselet_reduceGroup(ParseletPtr P, Token firstTok);
-void GroupParselet_reduceMissingCloser(ParseletPtr P, Token Ignored);
-void GroupParselet_reduceUnterminatedGroup(ParseletPtr P, Token Ignored);
+void GroupParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void GroupParselet_reduceGroup(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void GroupParselet_reduceMissingCloser(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void GroupParselet_reduceUnterminatedGroup(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class SymbolParselet : public PrefixParselet {
@@ -337,10 +327,10 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void SymbolParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void SymbolParselet_parseInfixContextSensitive(ParseletPtr P, Token firstTok);
-void SymbolParselet_reducePatternBlank(ParseletPtr P, Token firstTok);
-void SymbolParselet_reducePatternOptionalDefault(ParseletPtr P, Token firstTok);
+void SymbolParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void SymbolParselet_parseInfixContextSensitive(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void SymbolParselet_reducePatternBlank(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void SymbolParselet_reducePatternOptionalDefault(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 //
@@ -352,14 +342,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void CommaParselet_parseInfix(ParseletPtr P, Token firstTok);
-void CommaParselet_parseLoop(ParseletPtr P, Token Ignored);
-void CommaParselet_reduceComma(ParseletPtr P, Token firstTok);
+void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void CommaParselet_reduceComma(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
 
 
 //
@@ -371,15 +359,13 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void SemiParselet_parseInfix(ParseletPtr P, Token firstTok);
-void SemiParselet_parse1(ParseletPtr P, Token Ignored);
-void SemiParselet_parseLoop(ParseletPtr P, Token Ignored);
-void SemiParselet_reduceCompoundExpression(ParseletPtr P, Token Ignored);
+void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void SemiParselet_parse1(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void SemiParselet_reduceCompoundExpression(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 //
@@ -393,19 +379,17 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Token processImplicitTimes(Token TokIn) const override;
+    Token processImplicitTimes(ParserSessionPtr session, Token TokIn) const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void SemiSemiParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void SemiSemiParselet_parseInfix(ParseletPtr P, Token firstTok);
-void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_reduceBinary(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_reduceTernary(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void SemiSemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void SemiSemiParselet_parse2(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void SemiSemiParselet_reduceBinary(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void SemiSemiParselet_reduceTernary(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class TildeParselet : public InfixParselet {
@@ -413,15 +397,13 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void TildeParselet_parseInfix(ParseletPtr P, Token firstTok);
-void TildeParselet_parse1(ParseletPtr P, Token Ignored);
-void TildeParselet_reduceTilde(ParseletPtr P, Token Ignored);
-void TildeParselet_reduceError(ParseletPtr P, Token Ignored);
+void TildeParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void TildeParselet_parse1(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void TildeParselet_reduceTilde(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void TildeParselet_reduceError(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class ColonParselet : public InfixParselet {
@@ -429,15 +411,13 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void ColonParselet_parseInfix(ParseletPtr P, Token firstTok);
-void ColonParselet_reducePattern(ParseletPtr P, Token Ignored);
-void ColonParselet_reduceError(ParseletPtr P, Token Ignored);
-void ColonParselet_reduceOptional(ParseletPtr P, Token Ignored);
+void ColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void ColonParselet_reducePattern(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void ColonParselet_reduceError(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void ColonParselet_reduceOptional(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class SlashColonParselet : public InfixParselet {
@@ -445,14 +425,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void SlashColonParselet_parseInfix(ParseletPtr P, Token firstTok);
-void SlashColonParselet_parse1(ParseletPtr P, Token Ignored);
-void SlashColonParselet_reduceError(ParseletPtr P, Token Ignored);
+void SlashColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void SlashColonParselet_parse1(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void SlashColonParselet_reduceError(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class EqualParselet : public BinaryOperatorParselet {
@@ -463,12 +441,12 @@ public:
     ParseFunction parseInfix() const override;
 };
 
-void EqualParselet_parseInfix(ParseletPtr P, Token firstTok);
-void EqualParselet_parseInfixTag(ParseletPtr P, Token TokIn);
-void EqualParselet_reduceSet(ParseletPtr P, Token Ignored);
-void EqualParselet_reduceTagSet(ParseletPtr P, Token Ignored);
-void EqualParselet_reduceUnset(ParseletPtr P, Token Ignored);
-void EqualParselet_reduceTagUnset(ParseletPtr P, Token Ignored);
+void EqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void EqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr parselet, Token TokIn);
+void EqualParselet_reduceSet(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void EqualParselet_reduceTagSet(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void EqualParselet_reduceUnset(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void EqualParselet_reduceTagUnset(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class ColonEqualParselet : public BinaryOperatorParselet {
@@ -479,10 +457,10 @@ public:
     ParseFunction parseInfix() const override;
 };
 
-void ColonEqualParselet_parseInfix(ParseletPtr P, Token firstTok);
-void ColonEqualParselet_parseInfixTag(ParseletPtr P, Token firstTok);
-void ColonEqualParselet_reduceSetDelayed(ParseletPtr P, Token Ignored);
-void ColonEqualParselet_reduceTagSetDelayed(ParseletPtr P, Token Ignored);
+void ColonEqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void ColonEqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void ColonEqualParselet_reduceSetDelayed(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void ColonEqualParselet_reduceTagSetDelayed(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class IntegralParselet : public PrefixParselet {
@@ -491,10 +469,10 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void IntegralParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void IntegralParselet_parse1(ParseletPtr P, Token Ignored);
-void IntegralParselet_reduceIntegrate(ParseletPtr P, Token Ignored);
-void IntegralParselet_reduceIntegral(ParseletPtr P, Token Ignored);
+void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void IntegralParselet_reduceIntegrate(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void IntegralParselet_reduceIntegral(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class ColonColonParselet : public InfixParselet {
@@ -502,14 +480,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void ColonColonParselet_parseInfix(ParseletPtr P, Token firstTok);
-void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored);
-void ColonColonParselet_reduceMessageName(ParseletPtr P, Token Ignored);
+void ColonColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void ColonColonParselet_parseLoop(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void ColonColonParselet_reduceMessageName(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class GreaterGreaterParselet : public InfixParselet {
@@ -517,13 +493,11 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok);
-void GreaterGreaterParselet_reducePut(ParseletPtr P, Token TokIn);
+void GreaterGreaterParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void GreaterGreaterParselet_reducePut(ParserSessionPtr session, ParseletPtr parselet, Token TokIn);
 
 
 class GreaterGreaterGreaterParselet : public InfixParselet {
@@ -531,13 +505,11 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override;
-    
-    Symbol getOp() const override;
+    Precedence getPrecedence(ParserSessionPtr session) const override;
 };
 
-void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok);
-void GreaterGreaterGreaterParselet_reducePutAppend(ParseletPtr P, Token Ignored);
+void GreaterGreaterGreaterParselet_parseInfix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void GreaterGreaterGreaterParselet_reducePutAppend(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class LessLessParselet : public PrefixParselet {
@@ -546,8 +518,8 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void LessLessParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void LessLessParselet_reduceGet(ParseletPtr P, Token Ignored);
+void LessLessParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void LessLessParselet_reduceGet(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class HashParselet : public PrefixParselet {
@@ -556,8 +528,8 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void HashParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void HashParselet_reduceSlot(ParseletPtr P, Token Ignored);
+void HashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void HashParselet_reduceSlot(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class HashHashParselet : public PrefixParselet {
@@ -566,8 +538,8 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void HashHashParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void HashHashParselet_reduceSlotSequence(ParseletPtr P, Token Ignored);
+void HashHashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void HashHashParselet_reduceSlotSequence(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class PercentParselet : public PrefixParselet {
@@ -576,8 +548,8 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PercentParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void PercentParselet_reduceOut(ParseletPtr P, Token Ignored);
+void PercentParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+void PercentParselet_reduceOut(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class UnderParselet : public PrefixParselet {
@@ -597,10 +569,10 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn);
-void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn);
-void UnderParselet_reduceBlank(ParseletPtr P, Token Ignored);
-void UnderParselet_reduceBlankContextSensitive(ParseletPtr P, Token Ignored);
+void UnderParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token TokIn);
+void UnderParselet_parseInfixContextSensitive(ParserSessionPtr session, ParseletPtr parselet, Token TokIn);
+void UnderParselet_reduceBlank(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
+void UnderParselet_reduceBlankContextSensitive(ParserSessionPtr session, ParseletPtr parselet, Token Ignored);
 
 
 class UnderDotParselet : public PrefixParselet {
@@ -609,5 +581,5 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn);
-void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn);
+void UnderDotParselet_parsePrefix(ParserSessionPtr session, ParseletPtr parselet, Token TokIn);
+void UnderDotParselet_parseInfixContextSensitive(ParserSessionPtr session, ParseletPtr parselet, Token TokIn);

@@ -17,71 +17,19 @@
 // The syntax for ;; is complicated and has a lot of edge cases.
 //
 
-Symbol SemiSemiParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence SemiSemiParselet::getPrecedence() const {
+Precedence SemiSemiParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_SEMISEMI;
 }
 
-Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
+Token SemiSemiParselet::processImplicitTimes(ParserSessionPtr session, Token TokIn) const {
     
     //
     // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
     //
     
-    if (TheParser->isNodeStackEmpty()) {
-        
-        //
-        // no Node, so this means that Args has already started
-        //
-                
-        return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+    if (Parser_checkSpan(session)) {
+        return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, TokIn.Src.Start);
     }
-    
-    auto& N = TheParser->topNode();
-    
-    if (std::holds_alternative<NodePtr>(N)) {
-        
-        auto& NN = std::get<NodePtr>(N);
-        
-        if (auto B = dynamic_cast<BinaryNode *>(NN.get())) {
-            
-            auto Op = B->getOp();
-            
-            if (Op == SYMBOL_SPAN) {
-                
-                return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
-            }
-            
-            //
-            // there is a Node, but it is not a Span
-            //
-            
-            return TokIn;
-        }
-        
-        if (auto T = dynamic_cast<TernaryNode *>(NN.get())) {
-            
-            auto Op = T->getOp();
-            
-            if (Op == SYMBOL_SPAN) {
-                
-                return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
-            }
-            
-            //
-            // there is a Node, but it is not a Span
-            //
-            
-            return TokIn;
-        }
-    }
-    
-    //
-    // there is a Node, but it is not a Span
-    //
     
     return TokIn;
 }
@@ -90,63 +38,63 @@ ParseFunction SemiSemiParselet::parsePrefix() const {
     return SemiSemiParselet_parsePrefix;
 }
 
-void SemiSemiParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void SemiSemiParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushContextV(PRECEDENCE_SEMISEMI);
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, TokIn.Buf, TokIn.Src.Start));
     
-    TheParser->appendLeaf(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start));
+    Parser_pushContext(session, PRECEDENCE_SEMISEMI);
     
     //
     // nextToken() is not needed after an implicit token
     //
     
     MUSTTAIL
-    return SemiSemiParselet_parseInfix(Ignored, TokIn);
+    return SemiSemiParselet_parseInfix(session, Ignored, TokIn);
 }
 
 ParseFunction SemiSemiParselet::parseInfix() const {
     return SemiSemiParselet_parseInfix;
 }
 
-void SemiSemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void SemiSemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     MUSTTAIL
-    return SemiSemiParselet_parse1(Ignored, TokIn/*ignored*/);
+    return SemiSemiParselet_parse1(session, Ignored, TokIn/*ignored*/);
 }
 
-void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
+void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto SecondTok = TheParser->currentToken(TOPLEVEL);
+    auto SecondTok = Parser_currentToken(session, TOPLEVEL);
     
     //
     // Span should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL);
+    Parser_eatTriviaButNotToplevelNewlines(session, SecondTok, TOPLEVEL);
     
     //
     // a;;
@@ -160,14 +108,14 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
         //    ^SecondTok
         //
         
-        TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, SecondTok.Buf, SecondTok.Src.Start));
         
         //
         // nextToken() is not needed after an implicit token
         //
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
+        return SemiSemiParselet_reduceBinary(session, Ignored, Ignored2);
     }
     
     if (SecondTok.Tok != TOKEN_SEMISEMI) {
@@ -177,14 +125,14 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
         //    ^SecondTok
         //
         
-        auto& Ctxt = TheParser->topContext();
-        assert(Ctxt.F == nullptr);
+        auto& Ctxt = Parser_topContext(session);
+        assert(!Ctxt.F);
         Ctxt.F = SemiSemiParselet_parse2;
         
         auto P2 = prefixParselets[SecondTok.Tok.value()];
         
         MUSTTAIL
-        return (P2->parsePrefix())(P2, SecondTok);
+        return (P2->parsePrefix())(session, P2, SecondTok);
     }
     
     //
@@ -192,22 +140,22 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
     //    ^~SecondTok
     //
     
-    TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, SecondTok.Buf, SecondTok.Src.Start));
     
     //
     // nextToken() is not needed after an implicit token
     //
     
-    TheParser->nextToken(SecondTok);
+    Parser_nextToken(session, SecondTok);
     
-    auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    auto ThirdTok = Parser_currentToken(session, TOPLEVEL);
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
     //
     // Span should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
+    Parser_eatTriviaButNotToplevelNewlines(session, ThirdTok, TOPLEVEL, Trivia1);
     
     if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok == TOKEN_SEMISEMI) {
         
@@ -221,11 +169,11 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
         //      ^~ThirdTok
         //
         
-        Trivia1.reset();
-        SecondTok.reset();
+        Trivia1.reset(session);
+        SecondTok.reset(session);
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
+        return SemiSemiParselet_reduceBinary(session, Ignored, Ignored2);
     }
     
     //
@@ -233,45 +181,43 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
     //      ^ThirdTok
     //
     
-    TheParser->shift();
-    
-    TheParser->appendLeaf(SecondTok);
+    Parser_pushLeaf(session, SecondTok);
     
     //
     // nextToken() already handled above
     //
     
-    TheParser->appendTriviaSeq(Trivia1);
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
     Ctxt.F = SemiSemiParselet_reduceTernary;
     
     auto P2 = prefixParselets[ThirdTok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, ThirdTok);
+    return (P2->parsePrefix())(session, P2, ThirdTok);
 }
 
-void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
+void SemiSemiParselet_parse2(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
-    auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    auto ThirdTok = Parser_currentToken(session, TOPLEVEL);
     
     //
     // Span should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
+    Parser_eatTriviaButNotToplevelNewlines(session, ThirdTok, TOPLEVEL, Trivia1);
     
     if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok != TOKEN_SEMISEMI) {
         
@@ -285,10 +231,10 @@ void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
         //               ^~~~~~~~~~~~~~~~ThirdTok
         //
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
+        return SemiSemiParselet_reduceBinary(session, Ignored, Ignored2);
     }
     
     //
@@ -296,16 +242,16 @@ void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
     //     ^~ThirdTok
     //
     
-    TheParser->nextToken(ThirdTok);
+    Parser_nextToken(session, ThirdTok);
     
-    auto& Trivia2 = TheParser->getTrivia2();
+    auto& Trivia2 = Parser_getTrivia2(session);
     
-    auto FourthTok = TheParser->currentToken(TOPLEVEL);
+    auto FourthTok = Parser_currentToken(session, TOPLEVEL);
     
     //
     // Span should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(FourthTok, TOPLEVEL, Trivia2);
+    Parser_eatTriviaButNotToplevelNewlines(session, FourthTok, TOPLEVEL, Trivia2);
     
     if (!FourthTok.Tok.isPossibleBeginning() || FourthTok.Tok == TOKEN_SEMISEMI) {
         
@@ -319,12 +265,12 @@ void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
         //       ^~FourthTok
         //
         
-        Trivia2.reset();
-        ThirdTok.reset();
-        Trivia1.reset();
+        Trivia2.reset(session);
+        ThirdTok.reset(session);
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
+        return SemiSemiParselet_reduceBinary(session, Ignored, Ignored2);
     }
         
     //
@@ -332,44 +278,38 @@ void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
     //       ^FourthTok
     //
     
-    TheParser->shift();
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    TheParser->appendTriviaSeq(Trivia1);
-    
-    TheParser->appendLeaf(ThirdTok);
+    Parser_pushLeaf(session, ThirdTok);
     
     //
     // nextToken() already handled above
     //
     
-    TheParser->appendTriviaSeq(Trivia2);
+    Parser_pushTriviaSeq(session, Trivia2);
     
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == SemiSemiParselet_parse2);
     Ctxt.F = SemiSemiParselet_reduceTernary;
     
     auto P2 = prefixParselets[FourthTok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, FourthTok);
+    return (P2->parsePrefix())(session, P2, FourthTok);
 }
 
-void SemiSemiParselet_reduceBinary(ParseletPtr Ignored, Token Ignored2) {
+void SemiSemiParselet_reduceBinary(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_SPAN, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(SYMBOL_SPAN, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void SemiSemiParselet_reduceTernary(ParseletPtr Ignored, Token Ignored2) {
+void SemiSemiParselet_reduceTernary(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new TernaryNode(SYMBOL_SPAN, TheParser->popContext()));
+    Parser_pushNode(session, new TernaryNode(SYMBOL_SPAN, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }

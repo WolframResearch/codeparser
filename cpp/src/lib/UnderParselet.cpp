@@ -25,7 +25,7 @@ ParseFunction UnderParselet::parsePrefix() const {
     return UnderParselet_parsePrefix;
 }
 
-void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
+void UnderParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     //
     // prefix
@@ -36,15 +36,15 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     assert(P);
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
@@ -52,16 +52,16 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         // Something like  _b
         //
         
-        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+        Parser_pushContext(session, PRECEDENCE_HIGHEST);
         
         //
         // Context-sensitive and OK to build stack
         //
         
-        SymbolParselet_parseInfixContextSensitive(symbolParselet, Tok);
+        SymbolParselet_parseInfixContextSensitive(session, symbolParselet, Tok);
     
         MUSTTAIL
-        return UnderParselet_reduceBlank(P, TokIn/*ignored*/);
+        return UnderParselet_reduceBlank(session, P, TokIn/*ignored*/);
     }
     
     if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
@@ -72,19 +72,19 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         // It's nice to include the error inside of the blank
         //
         
-        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+        Parser_pushContext(session, PRECEDENCE_HIGHEST);
         
-        TheParser->pushLeafAndNext(Tok);
+        Parser_pushLeafAndNext(session, Tok);
         
         MUSTTAIL
-        return UnderParselet_reduceBlank(P, TokIn/*ignored*/);
+        return UnderParselet_reduceBlank(session, P, TokIn/*ignored*/);
     }
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, TokIn/*ignored*/);
+    return Parser_parseClimb(session, P/*ignored*/, TokIn/*ignored*/);
 }
 
-void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
+void UnderParselet_parseInfixContextSensitive(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     //
     // infix
@@ -95,15 +95,15 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     assert(P);
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
         return;
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
@@ -111,16 +111,16 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         // Something like  a_b
         //
         
-        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+        Parser_pushContext(session, PRECEDENCE_HIGHEST);
         
         //
         // Context-sensitive and OK to build stack
         //
         
-        SymbolParselet_parseInfixContextSensitive(symbolParselet, Tok);
+        SymbolParselet_parseInfixContextSensitive(session, symbolParselet, Tok);
     
         MUSTTAIL
-        return UnderParselet_reduceBlankContextSensitive(P, TokIn/*ignored*/);
+        return UnderParselet_reduceBlankContextSensitive(session, P, TokIn/*ignored*/);
     }
     
     if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
@@ -131,46 +131,42 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         // It's nice to include the error inside of the blank
         //
         
-        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+        Parser_pushContext(session, PRECEDENCE_HIGHEST);
         
-        TheParser->pushLeafAndNext(Tok);
+        Parser_pushLeafAndNext(session, Tok);
     
         MUSTTAIL
-        return UnderParselet_reduceBlankContextSensitive(P, TokIn/*ignored*/);
+        return UnderParselet_reduceBlankContextSensitive(session, P, TokIn/*ignored*/);
     }
     
     // no call needed here
     return;
 }
 
-void UnderParselet_reduceBlank(ParseletPtr P, Token Ignored) {
+void UnderParselet_reduceBlank(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<UnderParselet *>(P));
     
-    TheParser->shift();
-    
     auto BOp = dynamic_cast<UnderParselet *>(P)->getBOp();
     
-    TheParser->pushNode(new CompoundNode(BOp, TheParser->popContext()));
+    Parser_pushNode(session, new CompoundNode(BOp, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, Ignored);
+    return Parser_parseClimb(session, P/*ignored*/, Ignored);
 }
 
 //
 // Called from other parselets
 //
-void UnderParselet_reduceBlankContextSensitive(ParseletPtr P, Token Ignored) {
+void UnderParselet_reduceBlankContextSensitive(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<UnderParselet *>(P));
     
-    TheParser->shift();
-    
     auto BOp = dynamic_cast<UnderParselet *>(P)->getBOp();
     
-    TheParser->pushNode(new CompoundNode(BOp, TheParser->popContext()));
+    Parser_pushNode(session, new CompoundNode(BOp, Parser_popContext(session)));
     
     // no call needed here
     return;
@@ -181,7 +177,7 @@ ParseFunction UnderDotParselet::parsePrefix() const {
     return UnderDotParselet_parsePrefix;
 }
 
-void UnderDotParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void UnderDotParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // prefix
@@ -190,23 +186,23 @@ void UnderDotParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, TokIn/*ignored*/);
+    return Parser_parseClimb(session, Ignored, TokIn/*ignored*/);
 }
 
 
 //
 // Called from other parselets
 //
-void UnderDotParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokIn) {
+void UnderDotParselet_parseInfixContextSensitive(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // infix
@@ -214,13 +210,13 @@ void UnderDotParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokI
     // Something like  a_.
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
         return;
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     // no call needed here
     return;

@@ -29,12 +29,13 @@
 #undef True
 #undef False
 
-#include <memory> // for unique_ptr
 #include <cstddef> // for size_t
 
 class NodeContainer;
+class ParserSession;
 
 using NodeContainerPtr = NodeContainer *;
+using ParserSessionPtr = ParserSession *;
 
 
 //
@@ -107,23 +108,17 @@ enum UnsafeCharacterEncodingFlag {
 };
 
 
-EXTERN_C DLLEXPORT void ParserSessionCreate();
-EXTERN_C DLLEXPORT void ParserSessionDestroy();
+EXTERN_C DLLEXPORT ParserSessionPtr CreateParserSession();
+EXTERN_C DLLEXPORT void DestroyParserSession(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT void ParserSessionInit(Buffer buf,
-                                          size_t bufLen,
-                                          WolframLibraryData libData,
-                                          SourceConvention srcConvention,
-                                          uint32_t tabWidth,
-                                          FirstLineBehavior firstLineBehavior,
-                                          EncodingMode encodingMode);
-EXTERN_C DLLEXPORT void ParserSessionDeinit();
+EXTERN_C DLLEXPORT void ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
+EXTERN_C DLLEXPORT void ParserSessionDeinit(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions();
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionTokenize();
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionConcreteParseLeaf(StringifyMode mode);
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionSafeString();
-EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(NodeContainerPtr C);
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions(ParserSessionPtr session);
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionTokenize(ParserSessionPtr session);
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode);
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session);
+EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(ParserSessionPtr session, NodeContainerPtr C);
 
 EXTERN_C DLLEXPORT void NodeContainerPrint(NodeContainerPtr C, std::ostream& s);
 EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainerPtr C);
@@ -136,27 +131,39 @@ EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
 EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
 #if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK link);
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK link);
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
 EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 #elif USE_MATHLINK
-EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK link);
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
 EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 #elif USE_MATHLINK
-EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link);
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
 EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 #elif USE_MATHLINK
-EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link);
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
 EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 #elif USE_MATHLINK
-EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK link);
 #endif // USE_EXPR_LIB
 
 #if USE_MATHLINK
@@ -164,14 +171,14 @@ EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK 
 // A UTF8 String from MathLink that has lexical scope
 //
 class ScopedMLUTF8String {
-    MLINK mlp;
+    MLINK link;
     Buffer buf;
     int b;
     int c;
     
 public:
     
-    ScopedMLUTF8String(MLINK mlp);
+    ScopedMLUTF8String(MLINK link);
     
     ~ScopedMLUTF8String();
     
@@ -189,12 +196,12 @@ public:
 // A String from MathLink that has lexical scope
 //
 class ScopedMLString {
-    MLINK mlp;
+    MLINK link;
     const char *buf;
     
 public:
     
-    ScopedMLString(MLINK mlp);
+    ScopedMLString(MLINK link);
     
     ~ScopedMLString();
     
@@ -210,12 +217,12 @@ public:
 // A Symbol from MathLink that has lexical scope
 //
 class ScopedMLSymbol {
-    MLINK mlp;
+    MLINK link;
     const char *sym;
     
 public:
     
-    ScopedMLSymbol(MLINK mlp);
+    ScopedMLSymbol(MLINK link);
     
     ~ScopedMLSymbol();
     
@@ -231,13 +238,13 @@ public:
 // A Function from MathLink that has lexical scope
 //
 class ScopedMLFunction {
-    MLINK mlp;
+    MLINK link;
     const char *func;
     int count;
     
 public:
     
-    ScopedMLFunction(MLINK mlp);
+    ScopedMLFunction(MLINK link);
     
     ~ScopedMLFunction();
     
@@ -255,7 +262,7 @@ public:
 // A ByteArray from MathLink that has lexical scope
 //
 class ScopedMLByteArray {
-    MLINK mlp;
+    MLINK link;
     MBuffer buf;
     int *dims;
     char **heads;
@@ -263,7 +270,7 @@ class ScopedMLByteArray {
     
 public:
     
-    ScopedMLByteArray(MLINK mlp);
+    ScopedMLByteArray(MLINK link);
     
     ~ScopedMLByteArray();
     
@@ -289,7 +296,7 @@ public:
     
     ~ScopedMLEnvironmentParameter();
     
-    MLEnvironmentParameter get();
+    MLEnvironmentParameter get() const;
 };
 #endif // USE_MATHLINK
 
@@ -300,7 +307,7 @@ public:
 //
 class ScopedMLLoopbackLink {
     
-    MLINK mlp;
+    MLINK link;
     MLENV ep;
     
 public:
@@ -308,7 +315,7 @@ public:
     
     ~ScopedMLLoopbackLink();
     
-    MLINK get();
+    MLINK get() const;
 };
 #endif // USE_MATHLINK
 

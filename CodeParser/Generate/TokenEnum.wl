@@ -388,7 +388,6 @@ tokenCPPHeader = {
 #include \"Symbol.h\"
 
 #include <cstdint> // for uint16_t
-#include <memory>
 
 
 //

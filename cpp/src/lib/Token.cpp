@@ -4,6 +4,12 @@
 #include "Symbol.h"
 #include "ByteBuffer.h"
 #include "ByteDecoder.h"
+#include "ParserSession.h"
+
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
 #include "ExprLibrary.h"
@@ -11,12 +17,13 @@
 
 #include <cassert>
 
+
 bool containsOnlyASCII(BufferAndLength BufLen);
 bool containsTab(BufferAndLength BufLen);
 
-Token::Token() : BufLen(), Src(), Tok() {}
+Token::Token() : Src(), Buf(), Len(), Tok() {}
 
-Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen), Src(Src), Tok(Tok) {
+Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(BufLen.Buf), Len(BufLen.length()), Tok(Tok) {
 
 #ifndef NDEBUG
     
@@ -44,7 +51,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
                        // There could be a line continuation in front.
                        // Token is still empty.
                        //
-                       (BufLen.buffer[0] == '\\' && SourceCharacter(BufLen.buffer[1]).isNewline()));
+                       (BufLen.Buf[0] == '\\' && SourceCharacter(BufLen.Buf[1]).isNewline()));
             } else {
                 assert(BufLen.length() > 0);
                 //
@@ -87,7 +94,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
 
 bool containsOnlyASCII(BufferAndLength BufLen) {
     
-    for (auto p = BufLen.buffer; p < BufLen.end; p++) {
+    for (auto p = BufLen.Buf; p < BufLen.end(); p++) {
         auto c = *p;
         //
         // Take care to cast to int before comparing
@@ -102,7 +109,7 @@ bool containsOnlyASCII(BufferAndLength BufLen) {
 
 bool containsTab(BufferAndLength BufLen) {
     
-    for (auto p = BufLen.buffer; p < BufLen.end; p++) {
+    for (auto p = BufLen.Buf; p < BufLen.end(); p++) {
         auto c = *p;
         //
         // Take care to cast to int before comparing
@@ -115,24 +122,32 @@ bool containsTab(BufferAndLength BufLen) {
     return false;
 }
 
+BufferAndLength Token::bufLen() const {
+    return BufferAndLength(Buf, Len);
+}
+
+Buffer Token::end() const {
+    return Buf + Len;
+}
+
 bool operator==(Token a, Token b) {
-    return a.Tok == b.Tok && a.BufLen == b.BufLen && a.Src == b.Src;
+    return a.Tok == b.Tok && a.Buf == b.Buf && a.Len == b.Len && a.Src == b.Src;
 }
 
 bool operator!=(Token a, Token b) {
-    return a.Tok != b.Tok || a.BufLen != b.BufLen || a.Src != b.Src;
+    return a.Tok != b.Tok || a.Buf != b.Buf || a.Len != b.Len || a.Src != b.Src;
 }
 
-void Token::reset() {
+void Token::reset(ParserSessionPtr session) {
     
     //
     //
     // Just need to reset the global buffer to the buffer of the token
     //
     
-    TheByteBuffer->buffer = BufLen.buffer;
+    session->buffer = Buf;
     
-    TheByteDecoder->SrcLoc = Src.Start;
+    session->SrcLoc = Src.Start;
 }
 
 bool Token::check() const {
@@ -168,7 +183,7 @@ void Token::print(std::ostream& s) const {
     s << Sym.name();
     s << ", ";
     
-    BufLen.print(s);
+    bufLen().print(s);
     s << ", ";
     
     Src.print(s);
@@ -183,19 +198,21 @@ void PrintTo(const Token& T, std::ostream *s) {
 }
 
 #if USE_MATHLINK
-void Token::put(MLINK mlp) const {
+void Token::put(ParserSessionPtr session) const {
+    
+    auto link = session->getMathLink();
     
     if (Tok.isError()) {
         
         if (Tok.isUnterminated()) {
             
-            if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.name(), 3)) {
+            if (!MLPutFunction(link, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.name(), 3)) {
                 assert(false);
             }
             
         } else {
             
-            if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_ERRORNODE.name(), 3)) {
+            if (!MLPutFunction(link, SYMBOL_CODEPARSER_ERRORNODE.name(), 3)) {
                 assert(false);
             }
         }
@@ -206,27 +223,27 @@ void Token::put(MLINK mlp) const {
         // These are Symbols, Strings, Integers, Reals, Rationals.
         //
         
-        if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LEAFNODE.name(), 3)) {
+        if (!MLPutFunction(link, SYMBOL_CODEPARSER_LEAFNODE.name(), 3)) {
             assert(false);
         }
     }
     
     auto Sym = TokenToSymbol(Tok);
 
-    Sym.put(mlp);
+    Sym.put(session);
 
-    BufLen.put(mlp);
+    bufLen().put(session);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
-    Src.put(mlp);
+    Src.put(session);
 }
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
-expr Token::toExpr() const {
+expr Token::toExpr(ParserSessionPtr session) const {
     
     expr head;
     
@@ -234,11 +251,11 @@ expr Token::toExpr() const {
         
         if (Tok.isUnterminated()) {
             
-            head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.toExpr();
+            head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.toExpr(session);
             
         } else {
             
-            head = SYMBOL_CODEPARSER_ERRORNODE.toExpr();
+            head = SYMBOL_CODEPARSER_ERRORNODE.toExpr(session);
         }
         
     } else {
@@ -247,25 +264,25 @@ expr Token::toExpr() const {
         // These are Symbols, Strings, Integers, Reals, Rationals.
         //
         
-        head = SYMBOL_CODEPARSER_LEAFNODE.toExpr();
+        head = SYMBOL_CODEPARSER_LEAFNODE.toExpr(session);
     }
     
     auto e = Expr_BuildExprA(head, 3);
     
     auto Sym = TokenToSymbol(Tok);
     
-    auto SymExpr = Sym.toExpr();
+    auto SymExpr = Sym.toExpr(session);
     Expr_InsertA(e, 0 + 1, SymExpr);
     
-    auto TokBufLenExpr = BufLen.toExpr();
+    auto TokBufLenExpr = bufLen().toExpr(session);
     Expr_InsertA(e, 1 + 1, TokBufLenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);

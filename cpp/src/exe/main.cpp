@@ -5,7 +5,6 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
-#include <memory> // for unique_ptr
 #include <iostream>
 #include <fstream> // for ofstream
 #include <cstdio> // for rewind
@@ -15,7 +14,7 @@
 
 class ScopedFileBuffer;
 
-using ScopedFileBufferPtr = std::unique_ptr<ScopedFileBuffer>;
+using ScopedFileBufferPtr = ScopedFileBuffer *;
 
 
 enum APIMode {
@@ -127,7 +126,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
     
     WolframLibraryData libData = nullptr;
     
-    ParserSessionCreate();
+    auto session = CreateParserSession();
     
     int result = EXIT_SUCCESS;
     
@@ -141,61 +140,77 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
-            auto C = ParserSessionTokenize();
+            auto C = ParserSessionTokenize(session);
             
             switch (outputMode) {
                 case PRINT: {
+                    
                     NodeContainerPrint(C, std::cout);
+                    
                     std::cout << "\n";
+                    
                     break;
                 }
                 case PRINT_DRYRUN: {
+                    
                     std::ofstream nullStream;
+                    
                     NodeContainerPrint(C, nullStream);
+                    
                     nullStream << "\n";
+                    
                     break;
                 }
                 case NONE: case CHECK: {
+                    
                     break;
                 }
             }
             
-            ParserSessionReleaseContainer(C);
+            ParserSessionReleaseContainer(session, C);
             
-            ParserSessionDeinit();
+            ParserSessionDeinit(session);
             
         } else if (mode == LEAF) {
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
             
             auto stringifyMode = STRINGIFYMODE_NORMAL;
             
-            auto C = ParserSessionConcreteParseLeaf(stringifyMode);
+            auto C = ParserSessionConcreteParseLeaf(session, stringifyMode);
         
             switch (outputMode) {
                 case PRINT: {
+                    
                     NodeContainerPrint(C, std::cout);
+                    
                     std::cout << "\n";
+                    
                     break;
                 }
                 case PRINT_DRYRUN: {
+                    
                     std::ofstream nullStream;
+                    
                     NodeContainerPrint(C, nullStream);
+                    
                     nullStream << "\n";
+                    
                     break;
                 }
                 case NONE: case CHECK: {
+                    
                     break;
                 }
             }
             
-            ParserSessionReleaseContainer(C);
+            ParserSessionReleaseContainer(session, C);
             
-            ParserSessionDeinit();
+            ParserSessionDeinit(session);
             
 #if DIAGNOSTICS
             DiagnosticsPrint();
@@ -205,38 +220,49 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
             
-            auto C = ParserSessionParseExpressions();
+            auto C = ParserSessionParseExpressions(session);
             
             switch (outputMode) {
                 case PRINT: {
+                    
                     NodeContainerPrint(C, std::cout);
+                    
                     std::cout << "\n";
+                    
                     break;
                 }
                 case PRINT_DRYRUN: {
+                    
                     std::ofstream nullStream;
+                    
                     NodeContainerPrint(C, nullStream);
+                    
                     nullStream << "\n";
+                    
                     break;
                 }
                 case CHECK: {
+                    
                     if (!NodeContainerCheck(C)) {
+                        
                         result = EXIT_FAILURE;
+                        
                         break;
                     }
                     
                     break;
                 }
                 case NONE: {
+                    
                     break;
                 }
             }
             
-            ParserSessionReleaseContainer(C);
+            ParserSessionReleaseContainer(session, C);
             
-            ParserSessionDeinit();
+            ParserSessionDeinit(session);
             
 #if DIAGNOSTICS
             DiagnosticsPrint();
@@ -245,7 +271,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
     } // while (true)
     
-    ParserSessionDestroy();
+    DestroyParserSession(session);
     
     return result;
 }
@@ -257,13 +283,17 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
     if (fb->fail()) {
         switch (outputMode) {
             case PRINT: {
+                
                 std::cout << "file open failed\n";
+                
                 break;
             }
             case PRINT_DRYRUN: {
+                
                 break;
             }
             case NONE: case CHECK: {
+                
                 break;
             }
         }
@@ -272,36 +302,44 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
     
     WolframLibraryData libData = nullptr;
     
-    ParserSessionCreate();
+    auto session = CreateParserSession();
     
     int result = EXIT_SUCCESS;
     
     if (mode == TOKENIZE) {
         
-        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(session, fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
-        auto C = ParserSessionTokenize();
+        auto C = ParserSessionTokenize(session);
         
         switch (outputMode) {
             case PRINT: {
+                
                 NodeContainerPrint(C, std::cout);
+                
                 std::cout << "\n";
+                
                 break;
             }
             case PRINT_DRYRUN: {
+                
                 std::ofstream nullStream;
+                
                 NodeContainerPrint(C, nullStream);
+                
                 nullStream << "\n";
+                
                 break;
             }
             case NONE: case CHECK: {
+                
                 break;
             }
         }
         
-        ParserSessionReleaseContainer(C);
+        ParserSessionReleaseContainer(session, C);
         
-        ParserSessionDeinit();
+        ParserSessionDeinit(session);
         
 #if DIAGNOSTICS
         DiagnosticsPrint();
@@ -309,32 +347,40 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else if (mode == LEAF) {
         
-        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(session, fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
-        auto C = ParserSessionConcreteParseLeaf(stringifyMode);
+        auto C = ParserSessionConcreteParseLeaf(session, stringifyMode);
     
         switch (outputMode) {
             case PRINT: {
+                
                 NodeContainerPrint(C, std::cout);
+                
                 std::cout << "\n";
+                
                 break;
             }
             case PRINT_DRYRUN: {
+                
                 std::ofstream nullStream;
+                
                 NodeContainerPrint(C, nullStream);
+                
                 nullStream << "\n";
+                
                 break;
             }
             case NONE: case CHECK: {
+                
                 break;
             }
         }
         
-        ParserSessionReleaseContainer(C);
+        ParserSessionReleaseContainer(session, C);
         
-        ParserSessionDeinit();
+        ParserSessionDeinit(session);
         
 #if DIAGNOSTICS
         DiagnosticsPrint();
@@ -342,26 +388,35 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else {
         
-        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(session, fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
-        auto C = ParserSessionParseExpressions();
+        auto C = ParserSessionParseExpressions(session);
         
         switch (outputMode) {
             case PRINT: {
+                
                 NodeContainerPrint(C, std::cout);
+                
                 std::cout << "\n";
+                
                 break;
             }
             case PRINT_DRYRUN: {
+                
                 std::ofstream nullStream;
+                
                 NodeContainerPrint(C, nullStream);
+                
                 nullStream << "\n";
+                
                 break;
             }
             case NONE: {
+                
                 break;
             }
             case CHECK: {
+                
                 if (!NodeContainerCheck(C)) {
                     result = EXIT_FAILURE;
                 }
@@ -370,16 +425,16 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             }
         }
         
-        ParserSessionReleaseContainer(C);
+        ParserSessionReleaseContainer(session, C);
         
-        ParserSessionDeinit();
+        ParserSessionDeinit(session);
         
 #if DIAGNOSTICS
         DiagnosticsPrint();
 #endif // DIAGNOSTICS
     }
     
-    ParserSessionDestroy();
+    DestroyParserSession(session);
     
     return result;
 }
@@ -390,7 +445,7 @@ ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(),
     
     FILE *file = fopen(inStr, "rb");
     
-    if (file == NULL) {
+    if (!file) {
         return;
     }
     
@@ -411,8 +466,11 @@ ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(),
     inited = true;
     
     auto r = fread(buf, sizeof(unsigned char), len, file);
+    
     if (r != len) {
+        
         inited = false;
+        
         delete[] buf;
     }
     

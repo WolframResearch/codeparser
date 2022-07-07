@@ -63,15 +63,15 @@ void DiagnosticsPrint() {
     
     std::cout << "CharacterDecoder_OctalCount: " << CharacterDecoder_OctalCount << "\n";
 
-    std::cout << "CharacterDecoder_StringMetaBackspace: " << CharacterDecoder_StringMetaBackspace << "\n";
+    std::cout << "CharacterDecoder_StringMetaBackspaceCount: " << CharacterDecoder_StringMetaBackspaceCount << "\n";
 
-    std::cout << "CharacterDecoder_StringMetaFormFeed: " << CharacterDecoder_StringMetaFormFeed << "\n";
+    std::cout << "CharacterDecoder_StringMetaFormFeedCount: " << CharacterDecoder_StringMetaFormFeedCount << "\n";
 
     std::cout << "CharacterDecoder_StringMetaLineFeedCount: " << CharacterDecoder_StringMetaLineFeedCount << "\n";
 
-    std::cout << "CharacterDecoder_StringMetaCarriageReturn: " << CharacterDecoder_StringMetaCarriageReturn << "\n";
+    std::cout << "CharacterDecoder_StringMetaCarriageReturnCount: " << CharacterDecoder_StringMetaCarriageReturnCount << "\n";
 
-    std::cout << "CharacterDecoder_StringMetaTab: " << CharacterDecoder_StringMetaTab << "\n";
+    std::cout << "CharacterDecoder_StringMetaTabCount: " << CharacterDecoder_StringMetaTabCount << "\n";
 
     std::cout << "CharacterDecoder_StringMetaDoubleQuoteCount: " << CharacterDecoder_StringMetaDoubleQuoteCount << "\n";
 
@@ -228,15 +228,15 @@ int CharacterDecoder_6HexCount = 0;
 
 int CharacterDecoder_OctalCount = 0;
 
-int CharacterDecoder_StringMetaBackspace = 0;
+int CharacterDecoder_StringMetaBackspaceCount = 0;
 
-int CharacterDecoder_StringMetaFormFeed = 0;
+int CharacterDecoder_StringMetaFormFeedCount = 0;
 
 int CharacterDecoder_StringMetaLineFeedCount = 0;
 
-int CharacterDecoder_StringMetaCarriageReturn = 0;
+int CharacterDecoder_StringMetaCarriageReturnCount = 0;
 
-int CharacterDecoder_StringMetaTab = 0;
+int CharacterDecoder_StringMetaTabCount = 0;
 
 int CharacterDecoder_StringMetaDoubleQuoteCount = 0;
 

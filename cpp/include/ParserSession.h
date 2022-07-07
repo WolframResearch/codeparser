@@ -2,20 +2,22 @@
 #include "API.h"
 
 #include "Token.h"
+#include "ByteDecoder.h" // for SourceConventionManager
+#include "Parser.h" // for Context
 
-#include <functional> // for function with GCC and MSVC
 #include <set>
 #include <variant>
+#include <vector>
 
 class ParserSession;
 class Issue;
-class IssuePtrCompare;
+class IssueCompare;
 class Node;
 
-using IssuePtr = std::shared_ptr<Issue>;
+using IssuePtr = Issue *;
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
-using ParserSessionPtr = std::unique_ptr<ParserSession>;
-using NodePtr = std::unique_ptr<Node>;
+using ParserSessionPtr = ParserSession *;
+using NodePtr = Node *;
 using NodeVariant = std::variant<NodePtr, Token>;
 
 
@@ -25,39 +27,51 @@ using NodeVariant = std::variant<NodePtr, Token>;
 class ParserSession {
 private:
     
-    IssuePtrSet fatalIssues;
-    IssuePtrSet nonFatalIssues;
-    
     NodeVariant concreteParseLeaf0(int mode);
     
 public:
     
-    std::function<bool ()> currentAbortQ;
+    Buffer start;
+    Buffer end;
+    bool wasEOF;
+    Buffer buffer;
     
-    UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
-    
-    BufferAndLength bufAndLen;
     WolframLibraryData libData;
     SourceConvention srcConvention;
     uint32_t tabWidth;
     FirstLineBehavior firstLineBehavior;
     EncodingMode encodingMode;
     
+    UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
+    
+    SourceConventionManagerPtr srcConventionManager;
+    SourceLocation SrcLoc;
+    
+private:
+    IssuePtrSet fatalIssues;
+    IssuePtrSet nonFatalIssues;
+    
+public:
+    std::set<SourceLocation> SimpleLineContinuations;
+    std::set<SourceLocation> ComplexLineContinuations;
+    std::set<SourceLocation> EmbeddedNewlines;
+    std::set<SourceLocation> EmbeddedTabs;
+    
+    std::vector<NodeVariant> NodeStack;
+    std::vector<Context> ContextStack;
+    std::vector<Closer> GroupStack;
+    
+    TriviaSeq trivia1;
+    TriviaSeq trivia2;
+    
     
     ParserSession();
     
-    ~ParserSession();
-    
-    void init(
-        BufferAndLength bufAndLen,
-        WolframLibraryData libData,
-        SourceConvention srcConvention,
-        uint32_t tabWidth,
-        FirstLineBehavior firstLineBehavior,
-        EncodingMode encodingMode
-    );
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
     
     void deinit();
+    
+    bool abortQ() const;
     
     NodeContainerPtr parseExpressions();
     NodeContainerPtr tokenize();
@@ -66,11 +80,18 @@ public:
     
     void releaseContainer(NodeContainerPtr C);
     
-    bool isAbort() const;
-    
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
     
-    void addIssue(IssuePtr);
+    void addIssue(IssuePtr I);
+    
+    void addSimpleLineContinuation(SourceLocation Loc);
+    void addComplexLineContinuation(SourceLocation Loc);
+    void addEmbeddedNewline(SourceLocation Loc);
+    void addEmbeddedTab(SourceLocation Loc);
+    
+#if USE_MATHLINK
+    MLINK getMathLink() const;
+    
+    bool processMathLink() const;
+#endif // USE_MATHLINK
 };
-
-extern ParserSessionPtr TheParserSession;

@@ -497,7 +497,7 @@ Module[{res, convention, container, tabWidth,
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -673,7 +673,7 @@ Module[{res, convention, container, containerWasAutomatic,
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -851,7 +851,7 @@ Module[{res, convention, container, tabWidth, containerWasAutomatic},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -999,7 +999,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1097,7 +1097,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1159,7 +1159,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1297,7 +1297,7 @@ Module[{res, stringifyMode, convention, tabWidth, encodingMode},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseLeafFunc, bytes, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode];
+  res = libraryFunctionWrapper[concreteParseLeafFunc, $ParserSession, bytes, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1337,7 +1337,7 @@ SafeString[bytes_ByteArray?ByteArrayQ] :=
 Catch[
 Module[{res},
 
-  res = libraryFunctionWrapper[safeStringFunc, bytes];
+  res = libraryFunctionWrapper[safeStringFunc, $ParserSession, bytes];
 
   If[FailureQ[res],
     Throw[res]

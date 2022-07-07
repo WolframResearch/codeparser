@@ -17,9 +17,7 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
-#include <numeric> // for accumulate
 #include <limits>
-
 
 
 struct CheckVisitor {
@@ -47,35 +45,68 @@ struct PrintVisitor {
     void operator()(const Token& L) { return L.print(s); }
 };
 
+struct ReleaseVisitor {
+    
+    void operator()(const NodePtr& N) { N->release(); delete N; }
+    
+    void operator()(const Token& L) {}
+};
+
 #if USE_EXPR_LIB
 struct ToExprVisitor {
     
-    expr operator()(const NodePtr& N) { return N->toExpr(); }
+    ParserSessionPtr session;
     
-    expr operator()(const Token& L) { return L.toExpr(); }
+    ToExprVisitor(ParserSessionPtr session) : session(session) {};
+    
+    expr operator()(const NodePtr& N) { return N->toExpr(session); }
+    
+    expr operator()(const Token& L) { return L.toExpr(session); }
 };
 #endif // USE_EXPR_LIB
 
 #if USE_MATHLINK
 struct PutVisitor {
     
-    MLINK mlp;
+    ParserSessionPtr session;
     
-    PutVisitor(MLINK mlp) : mlp(mlp) {};
+    PutVisitor(ParserSessionPtr session) : session(session) {};
     
-    void operator()(const NodePtr& N) { return N->put(mlp); }
+    void operator()(const NodePtr& N) { N->put(session); }
     
-    void operator()(const Token& L) { return L.put(mlp); }
+    void operator()(const Token& L) { L.put(session); }
 };
 #endif // USE_MATHLINK
 
 
-NodeSeq::NodeSeq(size_t Size) : vec() {
-    vec.reserve(Size);
+NodeSeq::NodeSeq() : vec() {}
+
+NodeSeq::NodeSeq(std::vector<NodeVariant>::iterator Begin, std::vector<NodeVariant>::iterator End) : vec(Begin, End) {}
+
+void NodeSeq::release() {
+    for (auto& N : vec) {
+        std::visit(ReleaseVisitor{}, N);
+    }
+}
+
+void NodeSeq::push(NodeVariant&& N) {
+    vec.push_back(N);
+}
+
+void NodeSeq::clear() {
+    vec.clear();
 }
 
 bool NodeSeq::empty() const {
     return vec.empty();
+}
+
+size_t NodeSeq::size() const {
+    return vec.size();
+}
+
+const NodeVariant& NodeSeq::operator[](size_t index) const {
+    return vec[index];
 }
 
 const NodeVariant& NodeSeq::first() const {
@@ -98,9 +129,7 @@ void NodeSeq::print(std::ostream& s) const {
     s << "[";
     
     for (auto& C : vec) {
-        
         std::visit(PrintVisitor{s}, C);
-        
         s << ", ";
     }
     
@@ -109,15 +138,19 @@ void NodeSeq::print(std::ostream& s) const {
 
 bool NodeSeq::check() const {
     
-    auto accum = std::accumulate(vec.begin(), vec.end(), true, [](bool a, const NodeVariant& b){ return a && std::visit(CheckVisitor{}, b); });
-
-    return accum;
+    for (auto& C : vec) {
+        if (!std::visit(CheckVisitor{}, C)) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 
 TriviaSeq::TriviaSeq() : vec() {}
 
-void TriviaSeq::reset() {
+void TriviaSeq::reset(ParserSessionPtr session) {
     
     //
     // Just need to reset the global buffer to the buffer of the first token in the sequence
@@ -129,13 +162,13 @@ void TriviaSeq::reset() {
     
     auto& T = vec[0];
     
-    TheByteBuffer->buffer = T.BufLen.buffer;
-    TheByteDecoder->SrcLoc = T.Src.Start;
+    session->buffer = T.Buf;
+    session->SrcLoc = T.Src.Start;
     
     vec.clear();
 }
 
-void TriviaSeq::append(Token N) {
+void TriviaSeq::push(Token N) {
     vec.push_back(N);
 }
 
@@ -143,13 +176,26 @@ bool TriviaSeq::empty() const {
     return vec.empty();
 }
 
+void TriviaSeq::clear() {
+    vec.clear();
+}
+
+
+void Node::release() {}
+
+bool Node::check() const {
+    return true;
+}
 
 Node::~Node() {}
 
 
-OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src(std::visit(GetSourceVisitor{}, Children.first()), std::visit(GetSourceVisitor{}, Children.last())) {
-    
+OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq&& ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src(std::visit(GetSourceVisitor{}, Children.first()), std::visit(GetSourceVisitor{}, Children.last())) {
     assert(!Children.empty());
+}
+
+void OperatorNode::release() {
+    Children.release();
 }
 
 Symbol OperatorNode::getOp() const {
@@ -211,70 +257,70 @@ bool UnterminatedGroupNeedsReparseNode::check() const {
 }
 
 
-PrefixNode::PrefixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {
+PrefixNode::PrefixNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_PrefixNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-BinaryNode::BinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {
+BinaryNode::BinaryNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_BinaryNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-InfixNode::InfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {
+InfixNode::InfixNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_InfixNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-TernaryNode::TernaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {
+TernaryNode::TernaryNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_TernaryNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-PostfixNode::PostfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {
+PostfixNode::PostfixNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_PostfixNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-PrefixBinaryNode::PrefixBinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {
+PrefixBinaryNode::PrefixBinaryNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_PrefixBinaryNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-GroupNode::GroupNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {
+GroupNode::GroupNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_GroupNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-CompoundNode::CompoundNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {
+CompoundNode::CompoundNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_CompoundNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-GroupMissingCloserNode::GroupMissingCloserNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {
+GroupMissingCloserNode::GroupMissingCloserNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_GroupMissingCloserNodeCount++;
 #endif // DIAGNOSTICS
 }
 
-UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {
+UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq&& Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {
     
 #if DIAGNOSTICS
     Node_UnterminatedGroupNeedsReparseNodeCount++;
@@ -282,13 +328,20 @@ UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, 
 }
 
 
-CallNode::CallNode(NodeSeq HeadIn, NodeVariant BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src(std::visit(GetSourceVisitor{}, Head.first()), std::visit(GetSourceVisitor{}, Body)) {
+CallNode::CallNode(NodeSeq&& HeadIn, NodeVariant&& BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src(std::visit(GetSourceVisitor{}, Head.first()), std::visit(GetSourceVisitor{}, Body)) {
     
     assert(!Head.empty());
     
 #if DIAGNOSTICS
     Node_CallNodeCount++;
 #endif // DIAGNOSTICS
+}
+
+void CallNode::release() {
+    
+    Head.release();
+
+    std::visit(ReleaseVisitor{}, Body);
 }
 
 Source CallNode::getSource() const {
@@ -316,13 +369,17 @@ bool CallNode::check() const {
 }
 
 
-SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)), Src(std::visit(GetSourceVisitor{}, Children.first()), std::visit(GetSourceVisitor{}, Children.last())) {
+SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq&& ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)), Src(std::visit(GetSourceVisitor{}, Children.first()), std::visit(GetSourceVisitor{}, Children.last())) {
     
     assert(!Children.empty());
 
 #if DIAGNOSTICS
     Node_SyntaxErrorNodeCount++;
 #endif // DIAGNOSTICS
+}
+
+void SyntaxErrorNode::release() {
+    Children.release();
 }
 
 bool SyntaxErrorNode::check() const {
@@ -350,28 +407,18 @@ void SyntaxErrorNode::print(std::ostream& s) const {
 }
 
 
-CollectedExpressionsNode::CollectedExpressionsNode(std::vector<NodeVariant> Exprs) : Exprs(std::move(Exprs)) {}
+CollectedExpressionsNode::CollectedExpressionsNode(NodeSeq&& Exprs) : Exprs(Exprs) {}
+
+void CollectedExpressionsNode::release() {
+    Exprs.release();
+}
 
 void CollectedExpressionsNode::print(std::ostream& s) const {
-    
-    SYMBOL_LIST.print(s);
-    s << "[";
-    
-    for (auto& E : Exprs) {
-        
-        std::visit(PrintVisitor{s}, E);
-        
-        s << ", ";
-    }
-    
-    s << "]";
+    Exprs.print(s);
 }
 
 bool CollectedExpressionsNode::check() const {
-    
-    auto accum = std::accumulate(Exprs.begin(), Exprs.end(), true, [](bool a, const NodeVariant& b){ return a && std::visit(CheckVisitor{}, b); });
-    
-    return accum;
+    return Exprs.check();
 }
 
 Source CollectedExpressionsNode::getSource() const {
@@ -382,7 +429,13 @@ Source CollectedExpressionsNode::getSource() const {
 }
 
 
-CollectedIssuesNode::CollectedIssuesNode(IssuePtrSet Issues) : Issues(std::move(Issues)) {}
+CollectedIssuesNode::CollectedIssuesNode(IssuePtrSet Issues) : Issues(Issues) {}
+
+void CollectedIssuesNode::release() {
+    for (auto& I : Issues) {
+        delete I;
+    }
+}
 
 void CollectedIssuesNode::print(std::ostream& s) const {
     
@@ -399,9 +452,13 @@ void CollectedIssuesNode::print(std::ostream& s) const {
 
 bool CollectedIssuesNode::check() const {
     
-    auto accum = std::accumulate(Issues.begin(), Issues.end(), true, [](bool a, const IssuePtr& b){ return a && b->check(); });
+    for (auto& I : Issues) {
+        if (!I->check()) {
+            return false;
+        }
+    }
     
-    return accum;
+    return true;
 }
 
 Source CollectedIssuesNode::getSource() const {
@@ -412,11 +469,7 @@ Source CollectedIssuesNode::getSource() const {
 }
 
 
-CollectedSourceLocationsNode::CollectedSourceLocationsNode(std::set<SourceLocation> SourceLocs) : SourceLocs(std::move(SourceLocs)) {}
-
-bool CollectedSourceLocationsNode::check() const {
-    return true;
-}
+CollectedSourceLocationsNode::CollectedSourceLocationsNode(std::set<SourceLocation> SourceLocs) : SourceLocs(SourceLocs) {}
 
 Source CollectedSourceLocationsNode::getSource() const {
     
@@ -431,6 +484,7 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
     s << "[";
     
     for (auto& L : SourceLocs) {
+        
         L.print(s);
         s << ", ";
     }
@@ -442,6 +496,12 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
 MyString unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
     
     switch (flag) {
+        case UNSAFECHARACTERENCODING_OK: {
+            
+            assert(false);
+            
+            return STRING_UNSAFECHARACTERENCODING_UNKNOWN;
+        }
         case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE: {
             return STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE;
         }
@@ -451,11 +511,11 @@ MyString unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
         case UNSAFECHARACTERENCODING_BOM: {
             return STRING_UNSAFECHARACTERENCODING_BOM;
         }
-        default: {
-            assert(false);
-            return STRING_UNSAFECHARACTERENCODING_UNKNOWN;
-        }
     }
+    
+    assert(false);
+    
+    return STRING_UNSAFECHARACTERENCODING_UNKNOWN;
 }
 
 MissingBecauseUnsafeCharacterEncodingNode::MissingBecauseUnsafeCharacterEncodingNode(UnsafeCharacterEncodingFlag flag) : flag(flag) {}
@@ -493,263 +553,240 @@ Source SafeStringNode::getSource() const {
     return Source();
 }
 
-bool SafeStringNode::check() const {
-    return true;
-}
-
 void SafeStringNode::print(std::ostream& s) const {
     bufAndLen.print(s);
 }
 
 
-NodeContainer::NodeContainer(std::vector<NodeVariant> N) : N(std::move(N)) {}
+NodeContainer::NodeContainer(NodeSeq&& Nodes) : Nodes(Nodes) {}
+
+void NodeContainer::release() {
+    
+    Nodes.release();
+}
 
 void NodeContainer::print(std::ostream& s) const {
-    
-    SYMBOL_LIST.print(s);
-    s << "[";
-    
-    for (auto& NN : N) {
-        
-        std::visit(PrintVisitor{s}, NN);
-        
-        s << ", ";
-    }
-    
-    s << "]";
+    Nodes.print(s);
 }
 
 bool NodeContainer::check() const {
-    
-    auto accum = std::accumulate(N.begin(), N.end(), true, [](bool a, const NodeVariant& b){ return a && std::visit(CheckVisitor{}, b); });
-    
-    return accum;
+    return Nodes.check();
 }
 
 
 #if USE_MATHLINK
-void NodeSeq::put(MLINK mlp) const {
-
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(vec.size()))) {
+void NodeSeq::put(ParserSessionPtr session) const {
+    
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(vec.size()))) {
         assert(false);
     }
     
     for (auto& C : vec) {
         
 #if CHECK_ABORT
-        if (TheParserSession->isAbort()) {
-            SYMBOL__ABORTED.put(mlp);
+        if (session->abortQ()) {
+            SYMBOL__ABORTED.put(session);
             continue;
         }
 #endif // CHECK_ABORT
         
-        std::visit(PutVisitor{mlp}, C);
+        std::visit(PutVisitor{session}, C);
     }
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void OperatorNode::put(MLINK mlp) const {
-
-    if (!MLPutFunction(mlp, MakeSym.name(), 3)) {
+void OperatorNode::put(ParserSessionPtr session) const {
+    
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, MakeSym.name(), 3)) {
         assert(false);
     }
     
-    Op.put(mlp);
+    Op.put(session);
     
-    Children.put(mlp);
+    Children.put(session);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
-    Src.put(mlp);
+    Src.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void AbortNode::put(MLINK mlp) const {
-    
-    SYMBOL__ABORTED.put(mlp);
+void AbortNode::put(ParserSessionPtr session) const {
+    SYMBOL__ABORTED.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CallNode::put(MLINK mlp) const {
+void CallNode::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CALLNODE.name(), 3)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CALLNODE.name(), 3)) {
         assert(false);
     }
         
-    Head.put(mlp);
+    Head.put(session);
     
-    std::visit(PutVisitor{mlp}, Body);
+    std::visit(PutVisitor{session}, Body);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
-    Src.put(mlp);
+    Src.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void SyntaxErrorNode::put(MLINK mlp) const {
+void SyntaxErrorNode::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_SYNTAXERRORNODE.name(), 3)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_SYNTAXERRORNODE.name(), 3)) {
         assert(false);
     }
     
-    Err.put(mlp);
+    Err.put(session);
     
-    Children.put(mlp);
+    Children.put(session);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
-    Src.put(mlp);
+    Src.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CollectedExpressionsNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Exprs.size()))) {
-        assert(false);
-    }
-    
-    for (auto& E : Exprs) {
-        
-        std::visit(PutVisitor{mlp}, E);
-    }
+void CollectedExpressionsNode::put(ParserSessionPtr session) const {
+    Exprs.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CollectedIssuesNode::put(MLINK mlp) const {
+void CollectedIssuesNode::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Issues.size()))) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(Issues.size()))) {
         assert(false);
     }
     
     for (auto& I : Issues) {
-        
-        I->put(mlp);
+        I->put(session);
     }
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CollectedSourceLocationsNode::put(MLINK mlp) const {
+void CollectedSourceLocationsNode::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(SourceLocs.size()))) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(SourceLocs.size()))) {
         assert(false);
     }
     
     for (auto& L : SourceLocs) {
-            
-        L.put(mlp);
+        L.put(session);
     }
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
+void MissingBecauseUnsafeCharacterEncodingNode::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_MISSING.name(), 1)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_MISSING.name(), 1)) {
         assert(false);
     }
     
     auto reason = unsafeCharacterEncodingReason(flag);
     
-    reason.put(mlp);
+    reason.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void SafeStringNode::put(MLINK mlp) const {
-    bufAndLen.put(mlp);
+void SafeStringNode::put(ParserSessionPtr session) const {
+    bufAndLen.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void NodeContainer::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(N.size()))) {
-        assert(false);
-    }
-    
-    for (auto& NN : N) {
-        
-#if CHECK_ABORT
-        if (TheParserSession->isAbort()) {
-            SYMBOL__ABORTED.put(mlp);
-            continue;
-        }
-#endif // CHECK_ABORT
-        
-        std::visit(PutVisitor{mlp}, NN);
-    }
+void NodeContainer::put(ParserSessionPtr session) const {
+    Nodes.put(session);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_EXPR_LIB
-expr NodeSeq::toExpr() const {
+expr NodeSeq::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_LIST.toExpr();
-    
+    auto head = SYMBOL_LIST.toExpr(session);
+
     auto e = Expr_BuildExprA(head, static_cast<int>(vec.size()));
-    
+
     for (size_t i = 0; i < vec.size(); i++) {
-        
+
 #if CHECK_ABORT
-        if (TheParserSession->isAbort()) {
-            Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr());
+        if (session->abortQ()) {
+            Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr(session));
             continue;
         }
 #endif // CHECK_ABORT
-        
+
         auto& C = vec[i];
-        auto CExpr = std::visit(ToExprVisitor{}, C);
+
+        auto CExpr = std::visit(ToExprVisitor{session}, C);
+
         Expr_InsertA(e, i + 1, CExpr);
     }
-    
+
     return e;
 }
 #endif // USE_EXPR_LIB
 
 
 #if USE_EXPR_LIB
-expr OperatorNode::toExpr() const {
+expr OperatorNode::toExpr(ParserSessionPtr session) const {
     
-    auto head = MakeSym.toExpr();
+    auto head = MakeSym.toExpr(session);
         
     auto e = Expr_BuildExprA(head, 3);
     
-    auto OpExpr = Op.toExpr();
+    auto OpExpr = Op.toExpr(session);
     Expr_InsertA(e, 0 + 1, OpExpr);
         
-    auto ChildrenExpr = Children.toExpr();
+    auto ChildrenExpr = Children.toExpr(session);
     Expr_InsertA(e, 1 + 1, ChildrenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);
@@ -761,34 +798,32 @@ expr OperatorNode::toExpr() const {
 
 
 #if USE_EXPR_LIB
-expr AbortNode::toExpr() const {
+expr AbortNode::toExpr(ParserSessionPtr session) const {
     
-    auto e = SYMBOL__ABORTED.toExpr();
-    
-    return e;
+    return SYMBOL__ABORTED.toExpr(session);
 }
 #endif // USE_EXPR_LIB
 
 
 #if USE_EXPR_LIB
-expr CallNode::toExpr() const {
+expr CallNode::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_CODEPARSER_CALLNODE.toExpr();
+    auto head = SYMBOL_CODEPARSER_CALLNODE.toExpr(session);
     
     auto e = Expr_BuildExprA(head, 3);
     
-    auto HeadExpr = Head.toExpr();
+    auto HeadExpr = Head.toExpr(session);
     Expr_InsertA(e, 0 + 1, HeadExpr);
         
-    auto BodyExpr = std::visit(ToExprVisitor{}, Body);
+    auto BodyExpr = std::visit(ToExprVisitor{session}, Body);
     Expr_InsertA(e, 1 + 1, BodyExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);
@@ -800,24 +835,24 @@ expr CallNode::toExpr() const {
 
 
 #if USE_EXPR_LIB
-expr SyntaxErrorNode::toExpr() const {
+expr SyntaxErrorNode::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_CODEPARSER_SYNTAXERRORNODE.toExpr();
+    auto head = SYMBOL_CODEPARSER_SYNTAXERRORNODE.toExpr(session);
     
     auto e = Expr_BuildExprA(head, 3);
     
-    auto SymExpr = Err.toExpr();
+    auto SymExpr = Err.toExpr(session);
     Expr_InsertA(e, 0 + 1, SymExpr);
     
-    auto ChildrenExpr = Children.toExpr();
+    auto ChildrenExpr = Children.toExpr(session);
     Expr_InsertA(e, 1 + 1, ChildrenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);
@@ -829,16 +864,18 @@ expr SyntaxErrorNode::toExpr() const {
 
 
 #if USE_EXPR_LIB
-expr CollectedExpressionsNode::toExpr() const {
+expr CollectedExpressionsNode::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_LIST.toExpr();
+    auto head = SYMBOL_LIST.toExpr(session);
     
     auto e = Expr_BuildExprA(head, static_cast<int>(Exprs.size()));
     
     for (size_t i = 0; i < Exprs.size(); i++) {
         
         auto& NN = Exprs[i];
-        auto NExpr = std::visit(ToExprVisitor{}, NN);
+        
+        auto NExpr = std::visit(ToExprVisitor{session}, NN);
+        
         Expr_InsertA(e, i + 1, NExpr);
     }
     
@@ -848,17 +885,19 @@ expr CollectedExpressionsNode::toExpr() const {
 
 
 #if USE_EXPR_LIB
-expr CollectedIssuesNode::toExpr() const {
+expr CollectedIssuesNode::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_LIST.toExpr();
+    auto head = SYMBOL_LIST.toExpr(session);
     
     auto e = Expr_BuildExprA(head, static_cast<int>(Issues.size()));
     
     int i = 0;
     for (auto& I : Issues) {
         
-        auto IExpr = I->toExpr();
+        auto IExpr = I->toExpr(session);
+        
         Expr_InsertA(e, i + 1, IExpr);
+        
         i++;
     }
     
@@ -868,17 +907,19 @@ expr CollectedIssuesNode::toExpr() const {
 
 
 #if USE_EXPR_LIB
-expr CollectedSourceLocationsNode::toExpr() const {
+expr CollectedSourceLocationsNode::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_LIST.toExpr();
+    auto head = SYMBOL_LIST.toExpr(session);
             
     auto e = Expr_BuildExprA(head, static_cast<int>(SourceLocs.size()));
     
     int i = 0;
     for (auto& L : SourceLocs) {
         
-        auto LExpr = L.toExpr();
+        auto LExpr = L.toExpr(session);
+        
         Expr_InsertA(e, i + 1, LExpr);
+        
         i++;
     }
     
@@ -888,15 +929,15 @@ expr CollectedSourceLocationsNode::toExpr() const {
 
 
 #if USE_EXPR_LIB
-expr MissingBecauseUnsafeCharacterEncodingNode::toExpr() const {
+expr MissingBecauseUnsafeCharacterEncodingNode::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_MISSING.toExpr();
+    auto head = SYMBOL_MISSING.toExpr(session);
     
     auto e = Expr_BuildExprA(head, 1);
     
     auto reason = unsafeCharacterEncodingReason(flag);
     
-    auto StrExpr = reason.toExpr();
+    auto StrExpr = reason.toExpr(session);
     Expr_InsertA(e, 0 + 1, StrExpr);
     
     return e;
@@ -905,39 +946,14 @@ expr MissingBecauseUnsafeCharacterEncodingNode::toExpr() const {
 
 
 #if USE_EXPR_LIB
-expr SafeStringNode::toExpr() const {
-    
-    auto e = bufAndLen.toExpr();
-    
-    return e;
+expr SafeStringNode::toExpr(ParserSessionPtr session) const {
+    return bufAndLen.toExpr(session);
 }
 #endif // USE_EXPR_LIB
 
 
 #if USE_EXPR_LIB
-expr NodeContainer::toExpr() const {
-    
-    auto head = SYMBOL_LIST.toExpr();
-        
-    auto e = Expr_BuildExprA(head, static_cast<int>(N.size()));
-    
-    for (size_t i = 0; i < N.size(); i++) {
-        
-        //
-        // Check isAbort() inside loops
-        //
-#if CHECK_ABORT
-        if (TheParserSession->isAbort()) {
-            Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr());
-            continue;
-        }
-#endif // CHECK_ABORT
-        
-        auto& NN = N[i];
-        auto NExpr = std::visit(ToExprVisitor{}, NN);
-        Expr_InsertA(e, i + 1, NExpr);
-    }
-    
-    return e;
+expr NodeContainer::toExpr(ParserSessionPtr session) const {
+    return Nodes.toExpr(session);
 }
 #endif // USE_EXPR_LIB

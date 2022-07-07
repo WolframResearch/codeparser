@@ -10,6 +10,8 @@ libraryFunctionWrapper
 (*
 library functions calling INTO lib
 *)
+createParserSessionFunc
+destroyParserSessionFunc
 concreteParseBytesFunc
 tokenizeBytesFunc
 concreteParseLeafFunc
@@ -24,6 +26,9 @@ LongNameSuggestion
 (*
 SetConcreteParseProgress
 *)
+
+
+$ParserSession
 
 
 $ConcreteParseProgress
@@ -52,6 +57,11 @@ TODO: when targeting 12.1 as a minimum, then look into doing paclet["AssetLocati
 location = "Location" /. PacletInformation["CodeParser"]
 
 libraryResources = FileNameJoin[{location, "LibraryResources", $SystemID}]
+
+
+
+$ParserSession := $ParserSession =
+  libraryFunctionWrapper[createParserSessionFunc]
 
 
 
@@ -181,15 +191,23 @@ Module[{pacletInfo, pacletInfoFile, transport},
 
       loadExprLibFuncs[];
 
-      concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* loadFunc["ConcreteParseBytes_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+      createParserSessionFunc := createParserSessionFunc = fromPointerA @* loadFunc["CreateParserSession_LibraryLink", { }, Integer];
 
-      tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* loadFunc["TokenizeBytes_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+      destroyParserSessionFunc := destroyParserSessionFunc = fromPointerA @* loadFunc["DestroyParserSession_LibraryLink", { Integer }, Integer];
 
-      concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* loadFunc["ConcreteParseLeaf_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, Integer, Integer }, Integer];
+      concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
 
-      safeStringFunc := safeStringFunc = fromPointerA @* loadFunc["SafeString_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, Integer];
+      tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+
+      concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* loadFunc["ConcreteParseLeaf_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, Integer, Integer }, Integer];
+
+      safeStringFunc := safeStringFunc = fromPointerA @* loadFunc["SafeString_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"} }, Integer];
     ,
     transport === "MathLink",
+
+      createParserSessionFunc := createParserSessionFunc = loadFunc["CreateParserSession_LibraryLink", LinkObject, LinkObject];
+
+      destroyParserSessionFunc := destroyParserSessionFunc = loadFunc["DestroyParserSession_LibraryLink", LinkObject, LinkObject];
 
       concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
 

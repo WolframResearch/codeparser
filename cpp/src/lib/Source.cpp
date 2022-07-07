@@ -10,6 +10,11 @@
 #include "MyString.h"
 #include "ParserSession.h"
 
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+
 #if USE_EXPR_LIB
 #include "ExprLibrary.h"
 #endif // USE_EXPR_LIB
@@ -19,48 +24,53 @@
 #include <algorithm> // for lower_bound
 
 
-BufferAndLength::BufferAndLength() : buffer(), end() {}
+BufferAndLength::BufferAndLength() : Buf(), Len() {}
 
-BufferAndLength::BufferAndLength(Buffer buffer, size_t length) : buffer(buffer), end(buffer + length) {}
+BufferAndLength::BufferAndLength(Buffer Buf, size_t Len) : Buf(Buf), Len(Len) {
+    assert(Len < 1UL << 48);
+}
 
 size_t BufferAndLength::length() const {
-    return end - buffer;
+    return Len;
+}
+
+Buffer BufferAndLength::end() const {
+    return Buf + Len;
 }
 
 void BufferAndLength::print(std::ostream& s) const {
-    s.write(reinterpret_cast<const char *>(buffer), length());
+    s.write(reinterpret_cast<const char *>(Buf), length());
 }
 
 #if USE_MATHLINK
-void BufferAndLength::put(MLINK mlp) const {
+void BufferAndLength::put(ParserSessionPtr session) const {
     
-    if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length()))) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutUTF8String(link, Buf, static_cast<int>(length()))) {
         assert(false);
     }
 }
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
-expr BufferAndLength::toExpr() const {
-
-    auto StrExpr = Expr_UTF8BytesToStringExpr(buffer, static_cast<int>(length()));
-    
-    return StrExpr;
+expr BufferAndLength::toExpr(ParserSessionPtr session) const {
+    return Expr_UTF8BytesToStringExpr(Buf, static_cast<int>(length()));
 }
 #endif // USE_EXPR_LIB
 
 
 bool operator==(BufferAndLength a, BufferAndLength b) {
-    return a.buffer == b.buffer && a.end == b.end;
+    return a.Buf == b.Buf && a.Len == b.Len;
 }
 
 bool operator!=(BufferAndLength a, BufferAndLength b) {
-    return a.buffer != b.buffer || a.end != b.end;
+    return a.Buf != b.Buf || a.Len != b.Len;
 }
 
 
 
-bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
+bool IssuePtrCompare::operator()(const IssuePtr& L, const IssuePtr& R) const {
     
     if (L->Src < R->Src) {
         return true;
@@ -74,7 +84,7 @@ bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
 }
 
 
-Issue::Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
+Issue::Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(Actions), AdditionalDescriptions(AdditionalDescriptions) {}
 
 void Issue::print(std::ostream& s) const {
     
@@ -114,11 +124,11 @@ bool Issue::check() const {
 }
 
 
-SyntaxIssue::SyntaxIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_SYNTAXISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+SyntaxIssue::SyntaxIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_SYNTAXISSUE, Tag, Msg, Sev, Src, Val, Actions, AdditionalDescriptions) {}
 
-FormatIssue::FormatIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_FORMATISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+FormatIssue::FormatIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_FORMATISSUE, Tag, Msg, Sev, Src, Val, Actions, AdditionalDescriptions) {}
 
-EncodingIssue::EncodingIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_ENCODINGISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+EncodingIssue::EncodingIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_ENCODINGISSUE, Tag, Msg, Sev, Src, Val, Actions, AdditionalDescriptions) {}
 
 
 CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
@@ -287,7 +297,9 @@ void Source::print(std::ostream& s) const {
 }
 
 size_t Source::size() const {
+    
     assert(Start.first == End.first);
+    
     return End.second - Start.second;
 }
 
@@ -350,49 +362,40 @@ bool SourceCharacter::isDigit() const {
 }
 
 bool SourceCharacter::isEndOfFile() const {
-    
-    auto val = to_point();
-    
     return val == EOF;
 }
 
 bool SourceCharacter::isNewline() const {
     
-    auto val = to_point();
-    
     switch (val) {
-        case '\n': case '\r':
+        case '\n': case '\r': {
             return true;
-        default:
-            return false;
+        }
     }
+    
+    return false;
 }
 
 bool SourceCharacter::isWhitespace() const {
-    
-    auto val = to_point();
     
     switch (val) {
         case ' ': case '\t': case '\v': case '\f': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
+}
+
+bool SourceCharacter::isBackslash() const {
+    return val == '\\';
 }
 
 bool SourceCharacter::isMBNewline() const {
-    
-    auto val = to_point();
-    
     return LongNames::isMBNewline(val);
 }
 
 bool SourceCharacter::isMBWhitespace() const {
-    
-    auto val = to_point();
-    
     return LongNames::isMBWhitespace(val);
 }
 
@@ -446,6 +449,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     switch (val) {
         case CODEPOINT_ENDOFFILE: {
+            
             //
             // Invent something for EOF
             //
@@ -454,114 +458,165 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
             stream << SourceCharacter('O');
             stream << SourceCharacter('F');
             stream << SourceCharacter('>');
-            break;
+            
+            return stream;
         }
         case '\b': {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case '\f': {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
             //
             // whitespace and newline characters
             //
         case '\t': {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case '\n': {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case '\r': {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_STRINGMETA_LINEFEED: {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_STRINGMETA_CARRIAGERETURN: {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_STRINGMETA_TAB: {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_STRINGMETA_BACKSLASH: {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_CRLF: {
+            
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_BANG: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_PERCENT: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_AMP: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_OPENPAREN: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_CLOSEPAREN: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_STAR: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_PLUS: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_SLASH: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_AT: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_CARET: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_UNDER: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_BACKTICK: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
         case CODEPOINT_LINEARSYNTAX_SPACE: {
+            
             stream << WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
-            break;
+            
+            return stream;
         }
             //
             // escape
             //
         case '\x1b': {
+            
             stream << WLCharacter(CODEPOINT_ESC, ESCAPE_LONGNAME);
-            break;
+            
+            return stream;
         }
             //
             // C0 control characters
@@ -584,73 +639,78 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         case '\x88': case '\x89': case '\x8a': case '\x8b': case '\x8c': case '\x8d': case '\x8e': case '\x8f':
         case '\x90': case '\x91': case '\x92': case '\x93': case '\x94': case '\x95': case '\x96': case '\x97':
         case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f': {
+            
             stream << WLCharacter(val, ESCAPE_2HEX);
-            break;
-        }
-        default: {
             
-            assert(val >= 0);
-            
-            if (val > 0xffff) {
-                
-                auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
-                
-                if (it != CodePointToLongNameMap_points.end() && *it == val) {
-                    //
-                    // Use LongName if available
-                    //
-                    stream << WLCharacter(val, ESCAPE_LONGNAME);
-                    break;
-                }
-                
-                stream << WLCharacter(val, ESCAPE_6HEX);
-                break;
-                
-            } else if (val > 0xff) {
-                
-                auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
-                
-                if (it != CodePointToLongNameMap_points.end() && *it == val) {
-                    //
-                    // Use LongName if available
-                    //
-                    stream << WLCharacter(val, ESCAPE_LONGNAME);
-                    break;
-                }
-                
-                stream << WLCharacter(val, ESCAPE_4HEX);
-                break;
-                
-            } else if (val > 0x7f) {
-                
-                auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
-                
-                if (it != CodePointToLongNameMap_points.end() && *it == val) {
-                    //
-                    // Use LongName if available
-                    //
-                    stream << WLCharacter(val, ESCAPE_LONGNAME);
-                    break;
-                }
-                
-                stream << WLCharacter(val, ESCAPE_2HEX);
-                break;
-                
-            } else {
-                
-                //
-                // ASCII is untouched
-                // Do not use CodePointToLongNameMap to find Raw names
-                //
-                
-                ByteEncoderState state;
-                
-                ByteEncoder::encodeBytes(stream, val, &state);
-                
-                break;
-            }
+            return stream;
         }
     }
+    
+    assert(val >= 0);
+    
+    if (val > 0xffff) {
+        
+        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+        
+        if (it != CodePointToLongNameMap_points.end() && *it == val) {
+            //
+            // Use LongName if available
+            //
+            stream << WLCharacter(val, ESCAPE_LONGNAME);
+            
+            return stream;
+        }
+        
+        stream << WLCharacter(val, ESCAPE_6HEX);
+        
+        return stream;
+    }
+    
+    if (val > 0xff) {
+        
+        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+        
+        if (it != CodePointToLongNameMap_points.end() && *it == val) {
+            //
+            // Use LongName if available
+            //
+            stream << WLCharacter(val, ESCAPE_LONGNAME);
+            
+            return stream;
+        }
+        
+        stream << WLCharacter(val, ESCAPE_4HEX);
+        
+        return stream;
+    }
+    
+    if (val > 0x7f) {
+        
+        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+        
+        if (it != CodePointToLongNameMap_points.end() && *it == val) {
+            
+            //
+            // Use LongName if available
+            //
+            stream << WLCharacter(val, ESCAPE_LONGNAME);
+            
+            return stream;
+        }
+        
+        stream << WLCharacter(val, ESCAPE_2HEX);
+        
+        return stream;
+    }
+        
+    //
+    // ASCII is untouched
+    // Do not use CodePointToLongNameMap to find Raw names
+    //
+    
+    ByteEncoderState state;
+    
+    ByteEncoder::encodeBytes(stream, val, &state);
     
     return stream;
 }
@@ -697,70 +757,72 @@ SourceCharacter::SourceCharacter_iterator SourceCharacter::end() {
 
 
 #if USE_MATHLINK
-void Issue::put(MLINK mlp) const {
+void Issue::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, MakeSym.name(), 4)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, MakeSym.name(), 4)) {
         assert(false);
     }
     
-    Tag.put(mlp);
+    Tag.put(session);
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
+    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
         assert(false);
     }
     
-    Sev.put(mlp);
+    Sev.put(session);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
             assert(false);
         }
         
-        Src.put(mlp);
+        Src.put(session);
         
         {
-            if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
                 assert(false);
             }
             
-            SYMBOL_CONFIDENCELEVEL.put(mlp);
+            SYMBOL_CONFIDENCELEVEL.put(session);
             
-            if (!MLPutReal(mlp, Val)) {
+            if (!MLPutReal(link, Val)) {
                 assert(false);
             }
         }
         
         if (!Actions.empty()) {
             
-            if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
                 assert(false);
             }
             
-            SYMBOL_CODEPARSER_CODEACTIONS.put(mlp);
+            SYMBOL_CODEPARSER_CODEACTIONS.put(session);
             
-            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Actions.size()))) {
+            if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(Actions.size()))) {
                 assert(false);
             }
             
             for (auto& A : Actions) {
-                A->put(mlp);
+                A->put(session);
             }
         }
         
         if (!AdditionalDescriptions.empty()) {
             
-            if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
                 assert(false);
             }
             
-            STRING_ADDITIONALDESCRIPTIONS.put(mlp);
+            STRING_ADDITIONALDESCRIPTIONS.put(session);
             
-            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(AdditionalDescriptions.size()))) {
+            if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(AdditionalDescriptions.size()))) {
                 assert(false);
             }
             
             for (auto& D : AdditionalDescriptions) {
-                if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
+                if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
                     assert(false);
                 }
             }
@@ -770,32 +832,34 @@ void Issue::put(MLINK mlp) const {
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void ReplaceTextCodeAction::put(MLINK mlp) const {
+void ReplaceTextCodeAction::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
+    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_REPLACETEXT.put(mlp);
+    SYMBOL_CODEPARSER_REPLACETEXT.put(session);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 2)) {
             assert(false);
         }
         
-        Src.put(mlp);
+        Src.put(session);
         
-        if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
             assert(false);
         }
         
-        STRING_REPLACEMENTTEXT.put(mlp);
+        STRING_REPLACEMENTTEXT.put(session);
         
-        if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()))) {
+        if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()))) {
             assert(false);
         }
     }
@@ -803,32 +867,34 @@ void ReplaceTextCodeAction::put(MLINK mlp) const {
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void InsertTextCodeAction::put(MLINK mlp) const {
+void InsertTextCodeAction::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
+    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_INSERTTEXT.put(mlp);
+    SYMBOL_CODEPARSER_INSERTTEXT.put(session);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 2)) {
             assert(false);
         }
         
-        Src.put(mlp);
+        Src.put(session);
         
-        if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
             assert(false);
         }
         
-        STRING_INSERTIONTEXT.put(mlp);
+        STRING_INSERTIONTEXT.put(session);
         
-        if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()))) {
+        if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()))) {
             assert(false);
         }
     }
@@ -836,140 +902,146 @@ void InsertTextCodeAction::put(MLINK mlp) const {
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void DeleteTextCodeAction::put(MLINK mlp) const {
+void DeleteTextCodeAction::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
+    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_DELETETEXT.put(mlp);
+    SYMBOL_CODEPARSER_DELETETEXT.put(session);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
             assert(false);
         }
         
-        Src.put(mlp);
+        Src.put(session);
     }
 }
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void SourceLocation::put(MLINK mlp) const {
+void SourceLocation::put(ParserSessionPtr session) const {
 
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
         assert(false);
     }
 
-    if (!MLPutInteger(mlp, static_cast<int>(first))) {
+    if (!MLPutInteger(link, static_cast<int>(first))) {
         assert(false);
     }
     
-    if (!MLPutInteger(mlp, static_cast<int>(second))) {
+    if (!MLPutInteger(link, static_cast<int>(second))) {
         assert(false);
     }
 }
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void Source::put(MLINK mlp) const {
+void Source::put(ParserSessionPtr session) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
+    auto link = session->getMathLink();
+    
+    if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_SOURCE.put(mlp);
+    SYMBOL_CODEPARSER_SOURCE.put(session);
     
-    switch (TheParserSession->srcConvention) {
+    switch (session->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
-            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
+            
+            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
 
-            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
             
-            if (!MLPutInteger(mlp, static_cast<int>(Start.first))) {
+            if (!MLPutInteger(link, static_cast<int>(Start.first))) {
                 assert(false);
             }
             
-            if (!MLPutInteger(mlp, static_cast<int>(Start.second))) {
+            if (!MLPutInteger(link, static_cast<int>(Start.second))) {
                 assert(false);
             }
             
-            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
             
-            if (!MLPutInteger(mlp, static_cast<int>(End.first))) {
+            if (!MLPutInteger(link, static_cast<int>(End.first))) {
                 assert(false);
             }
             
-            if (!MLPutInteger(mlp, static_cast<int>(End.second))) {
+            if (!MLPutInteger(link, static_cast<int>(End.second))) {
                 assert(false);
             }
             
-            break;
+            return;
         }
         case SOURCECONVENTION_SOURCECHARACTERINDEX: {
-            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
+            
+            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
             
-            if (!MLPutInteger(mlp, static_cast<int>(Start.second))) {
+            if (!MLPutInteger(link, static_cast<int>(Start.second))) {
                 assert(false);
             }
             
-            if (!MLPutInteger(mlp, static_cast<int>(End.second-1))) {
+            if (!MLPutInteger(link, static_cast<int>(End.second-1))) {
                 assert(false);
             }
             
-            break;
-        }
-        default: {
-            assert(false);
-            break;
+            return;
         }
     }
+    
+    assert(false);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_EXPR_LIB
-expr Issue::toExpr() const {
+expr Issue::toExpr(ParserSessionPtr session) const {
     
-    auto head = MakeSym.toExpr();
+    auto head = MakeSym.toExpr(session);
     
     auto e = Expr_BuildExprA(head, 4);
     
-    auto TagExpr = Tag.toExpr();
+    auto TagExpr = Tag.toExpr(session);
     Expr_InsertA(e, 0 + 1, TagExpr);
     
     auto MsgExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()));
     Expr_InsertA(e, 1 + 1, MsgExpr);
     
-    auto SevExpr = Sev.toExpr();
+    auto SevExpr = Sev.toExpr(session);
     Expr_InsertA(e, 2 + 1, SevExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1));
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         {
-            auto head = SYMBOL_RULE.toExpr();
+            auto head = SYMBOL_RULE.toExpr(session);
                     
             auto ConfidenceLevelRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto ConfidenceLevelSymExpr = SYMBOL_CONFIDENCELEVEL.toExpr();
+            auto ConfidenceLevelSymExpr = SYMBOL_CONFIDENCELEVEL.toExpr(session);
             Expr_InsertA(ConfidenceLevelRuleExpr, 0 + 1, ConfidenceLevelSymExpr);
             
             auto ValExpr = Expr_FromReal64(Val);
@@ -982,22 +1054,22 @@ expr Issue::toExpr() const {
         
         if (!Actions.empty()) {
             
-            auto head = SYMBOL_RULE.toExpr();
+            auto head = SYMBOL_RULE.toExpr(session);
                     
             auto CodeActionsRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto CodeActionsSymExpr = SYMBOL_CODEPARSER_CODEACTIONS.toExpr();
+            auto CodeActionsSymExpr = SYMBOL_CODEPARSER_CODEACTIONS.toExpr(session);
             Expr_InsertA(CodeActionsRuleExpr, 0 + 1, CodeActionsSymExpr);
             
             {
-                auto head = SYMBOL_LIST.toExpr();
+                auto head = SYMBOL_LIST.toExpr(session);
                         
                 auto CodeActionsListExpr = Expr_BuildExprA(head, static_cast<int>(Actions.size()));
                 
                 int j = 0;
                 for (auto& A : Actions) {
                     
-                    auto AExpr = A->toExpr();
+                    auto AExpr = A->toExpr(session);
                     
                     Expr_InsertA(CodeActionsListExpr, j + 1, AExpr);
                     
@@ -1013,15 +1085,15 @@ expr Issue::toExpr() const {
         
         if (!AdditionalDescriptions.empty()) {
             
-            auto head = SYMBOL_RULE.toExpr();
+            auto head = SYMBOL_RULE.toExpr(session);
                     
             auto AdditionalDescriptionsRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto AdditionalDescriptionsStrExpr = STRING_ADDITIONALDESCRIPTIONS.toExpr();
+            auto AdditionalDescriptionsStrExpr = STRING_ADDITIONALDESCRIPTIONS.toExpr(session);
             Expr_InsertA(AdditionalDescriptionsRuleExpr, 0 + 1, AdditionalDescriptionsStrExpr);
             
             {
-                auto head = SYMBOL_LIST.toExpr();
+                auto head = SYMBOL_LIST.toExpr(session);
                         
                 auto AdditionalDescriptionsListExpr = Expr_BuildExprA(head, static_cast<int>(AdditionalDescriptions.size()));
                 
@@ -1050,32 +1122,32 @@ expr Issue::toExpr() const {
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
-expr ReplaceTextCodeAction::toExpr() const {
+expr ReplaceTextCodeAction::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr();
+    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr(session);
             
     auto e = Expr_BuildExprA(head, 3);
     
     auto LabelExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()));
     Expr_InsertA(e, 0 + 1, LabelExpr);
     
-    auto CommandExpr = SYMBOL_CODEPARSER_REPLACETEXT.toExpr();
+    auto CommandExpr = SYMBOL_CODEPARSER_REPLACETEXT.toExpr(session);
     Expr_InsertA(e, 1 + 1, CommandExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 2);
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         {
-            auto head = SYMBOL_RULE.toExpr();
+            auto head = SYMBOL_RULE.toExpr(session);
                     
             auto ReplacementTextRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto ReplacementTextStrExpr = STRING_REPLACEMENTTEXT.toExpr();
+            auto ReplacementTextStrExpr = STRING_REPLACEMENTTEXT.toExpr(session);
             Expr_InsertA(ReplacementTextRuleExpr, 0 + 1, ReplacementTextStrExpr);
             
             auto ReplacementTextExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()));
@@ -1092,32 +1164,32 @@ expr ReplaceTextCodeAction::toExpr() const {
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
-expr InsertTextCodeAction::toExpr() const {
+expr InsertTextCodeAction::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr();
+    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr(session);
             
     auto e = Expr_BuildExprA(head, 3);
     
     auto LabelExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()));
     Expr_InsertA(e, 0 + 1, LabelExpr);
     
-    auto CommandExpr = SYMBOL_CODEPARSER_INSERTTEXT.toExpr();
+    auto CommandExpr = SYMBOL_CODEPARSER_INSERTTEXT.toExpr(session);
     Expr_InsertA(e, 1 + 1, CommandExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 2);
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         {
-            auto head = SYMBOL_RULE.toExpr();
+            auto head = SYMBOL_RULE.toExpr(session);
                     
             auto InsertionTextRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto InsertionTextStrExpr = STRING_INSERTIONTEXT.toExpr();
+            auto InsertionTextStrExpr = STRING_INSERTIONTEXT.toExpr(session);
             Expr_InsertA(InsertionTextRuleExpr, 0 + 1, InsertionTextStrExpr);
             
             auto InsertionTextExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()));
@@ -1134,24 +1206,24 @@ expr InsertTextCodeAction::toExpr() const {
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
-expr DeleteTextCodeAction::toExpr() const {
+expr DeleteTextCodeAction::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr();
+    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr(session);
             
     auto e = Expr_BuildExprA(head, 3);
     
     auto LabelExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()));
     Expr_InsertA(e, 0 + 1, LabelExpr);
     
-    auto CommandExpr = SYMBOL_CODEPARSER_DELETETEXT.toExpr();
+    auto CommandExpr = SYMBOL_CODEPARSER_DELETETEXT.toExpr(session);
     Expr_InsertA(e, 1 + 1, CommandExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION.toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr(session);
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = Src.toExpr();
+        auto SrcExpr = Src.toExpr(session);
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);
@@ -1162,9 +1234,9 @@ expr DeleteTextCodeAction::toExpr() const {
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
-expr SourceLocation::toExpr() const {
+expr SourceLocation::toExpr(ParserSessionPtr session) const {
 
-    auto head = SYMBOL_LIST.toExpr();
+    auto head = SYMBOL_LIST.toExpr(session);
 
     auto e = Expr_BuildExprA(head, 2);
     
@@ -1179,24 +1251,24 @@ expr SourceLocation::toExpr() const {
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
-expr Source::toExpr() const {
+expr Source::toExpr(ParserSessionPtr session) const {
     
-    auto head = SYMBOL_RULE.toExpr();
+    auto head = SYMBOL_RULE.toExpr(session);
 
     auto e = Expr_BuildExprA(head, 2);
     
-    auto SourceSymExpr = SYMBOL_CODEPARSER_SOURCE.toExpr();
+    auto SourceSymExpr = SYMBOL_CODEPARSER_SOURCE.toExpr(session);
     Expr_InsertA(e, 0 + 1, SourceSymExpr);
     
-    switch (TheParserSession->srcConvention) {
+    switch (session->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             
-            auto head = SYMBOL_LIST.toExpr();
+            auto head = SYMBOL_LIST.toExpr(session);
 
             auto SrcExpr = Expr_BuildExprA(head, 2);
             
             {
-                auto head = SYMBOL_LIST.toExpr();
+                auto head = SYMBOL_LIST.toExpr(session);
 
                 auto StartExpr = Expr_BuildExprA(head, 2);
                 
@@ -1210,7 +1282,7 @@ expr Source::toExpr() const {
             }
             
             {
-                auto head = SYMBOL_LIST.toExpr();
+                auto head = SYMBOL_LIST.toExpr(session);
 
                 auto EndExpr = Expr_BuildExprA(head, 2);
                 
@@ -1224,11 +1296,12 @@ expr Source::toExpr() const {
             }
 
             Expr_InsertA(e, 1 + 1, SrcExpr);
-            break;
+            
+            return e;
         }
         case SOURCECONVENTION_SOURCECHARACTERINDEX: {
             
-            auto head = SYMBOL_LIST.toExpr();
+            auto head = SYMBOL_LIST.toExpr(session);
 
             auto SrcExpr = Expr_BuildExprA(head, 2);
             
@@ -1239,14 +1312,13 @@ expr Source::toExpr() const {
             Expr_InsertA(SrcExpr, 1 + 1, EndSecondExpr);
 
             Expr_InsertA(e, 1 + 1, SrcExpr);
-            break;
-        }
-        default: {
-            assert(false);
-            return nullptr;
+            
+            return e;
         }
     }
     
-    return e;
+    assert(false);
+    
+    return nullptr;
 }
 #endif // USE_EXPR_LIB

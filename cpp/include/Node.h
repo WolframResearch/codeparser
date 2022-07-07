@@ -6,24 +6,20 @@
 #include "API.h" // for UnsafeCharacterEncodingFlag
 #include "Precedence.h"
 
-#if USE_MATHLINK
-#include "mathlink.h"
-#undef P
-#endif // USE_MATHLINK
-
 #include <vector>
 #include <set>
-#include <memory> // for unique_ptr
 #include <ostream>
 #include <cstddef> // for size_t
 #include <variant>
 
 class Node;
 class Parselet;
+class ParserSession;
 
-using NodePtr = std::unique_ptr<Node>;
+using NodePtr = Node *;
 using ParseletPtr = Parselet *;
-typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
+using ParserSessionPtr = ParserSession *;
+typedef void (*ParseFunction)(ParserSessionPtr parser, ParseletPtr parselet, Token firstTok);
 
 using NodeVariant = std::variant<NodePtr, Token>;
 
@@ -36,22 +32,20 @@ using expr = void *;
 // Used mainly for collecting trivia that has been eaten
 //
 class TriviaSeq {
-private:
+public:
     
     std::vector<Token> vec;
     
-public:
     
     TriviaSeq();
     
-    void reset();
+    void reset(ParserSessionPtr session);
     
     bool empty() const;
     
-    void append(Token N);
+    void push(Token N);
     
-    
-    friend class Parser;
+    void clear();
 };
 
 
@@ -64,22 +58,32 @@ public:
 // So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
 //
 class NodeSeq {
-private:
+public:
     
     std::vector<NodeVariant> vec;
     
-public:
     
-    NodeSeq(size_t Size);
+    NodeSeq();
+    NodeSeq(std::vector<NodeVariant>::iterator Begin, std::vector<NodeVariant>::iterator End);
+    
+    void release();
     
     bool empty() const;
+    
+    void push(NodeVariant&& N);
+    
+    void clear();
+    
+    size_t size() const;
+    
+    const NodeVariant& operator[] (size_t index) const;
     
     const NodeVariant& first() const;
     
     const NodeVariant& last() const;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const;
+    void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
@@ -87,11 +91,8 @@ public:
     bool check() const;
     
 #if USE_EXPR_LIB
-    expr toExpr() const;
+    expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
-    
-    
-    friend class Parser;
 };
 
 
@@ -104,18 +105,20 @@ public:
     
     virtual ~Node();
     
+    virtual void release();
+    
     virtual void print(std::ostream& s) const = 0;
 
     virtual Source getSource() const = 0;
     
 #if USE_MATHLINK
-    virtual void put(MLINK mlp) const = 0;
+    virtual void put(ParserSessionPtr session) const = 0;
 #endif // USE_MATHLINK
     
-    virtual bool check() const = 0;
+    virtual bool check() const;
     
 #if USE_EXPR_LIB
-    virtual expr toExpr() const = 0;
+    virtual expr toExpr(ParserSessionPtr session) const = 0;
 #endif // USE_EXPR_LIB
 };
 
@@ -127,25 +130,27 @@ private:
     
     const Symbol Op;
     const Symbol MakeSym;
-    const NodeSeq Children;
+    NodeSeq Children;
     Source Src;
     
 public:
     
-    OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq Children);
+    OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq&& Children);
+    
+    void release() override;
     
     Source getSource() const override;
     
     bool check() const override;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
     
     Symbol getOp() const;
@@ -160,7 +165,7 @@ public:
     AbortNode();
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -170,7 +175,7 @@ public:
     bool check() const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -182,7 +187,7 @@ public:
 class PrefixNode : public OperatorNode {
 public:
     
-    PrefixNode(Symbol Op, NodeSeq Args);
+    PrefixNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -193,7 +198,7 @@ public:
 class BinaryNode : public OperatorNode {
 public:
     
-    BinaryNode(Symbol Op, NodeSeq Args);
+    BinaryNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -204,7 +209,7 @@ public:
 class InfixNode : public OperatorNode {
 public:
     
-    InfixNode(Symbol Op, NodeSeq Args);
+    InfixNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -215,7 +220,7 @@ public:
 class TernaryNode : public OperatorNode {
 public:
     
-    TernaryNode(Symbol Op, NodeSeq Args);
+    TernaryNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -226,7 +231,7 @@ public:
 class PostfixNode : public OperatorNode {
 public:
     
-    PostfixNode(Symbol Op, NodeSeq Args);
+    PostfixNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -237,7 +242,7 @@ public:
 class PrefixBinaryNode : public OperatorNode {
 public:
     
-    PrefixBinaryNode(Symbol Op, NodeSeq Args);
+    PrefixBinaryNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -248,28 +253,28 @@ public:
 class CallNode : public Node {
 private:
     
-    const NodeSeq Head;
-    
+    NodeSeq Head;
     const NodeVariant Body;
-    
     Source Src;
     
 public:
     
-    CallNode(NodeSeq Head, NodeVariant Body);
+    CallNode(NodeSeq&& Head, NodeVariant&& Body);
+    
+    void release() override;
     
     Source getSource() const override;
     
     virtual bool check() const override;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -281,7 +286,7 @@ public:
 class GroupNode : public OperatorNode {
 public:
     
-    GroupNode(Symbol Op, NodeSeq Args);
+    GroupNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -298,7 +303,7 @@ public:
 class CompoundNode : public OperatorNode {
 public:
     
-    CompoundNode(Symbol Op, NodeSeq Args);
+    CompoundNode(Symbol Op, NodeSeq&& Args);
 };
 
 //
@@ -310,25 +315,27 @@ class SyntaxErrorNode : public Node {
 private:
     
     const Symbol Err;
-    const NodeSeq Children;
+    NodeSeq Children;
     Source Src;
     
 public:
     
-    SyntaxErrorNode(Symbol Err, NodeSeq Children);
+    SyntaxErrorNode(Symbol Err, NodeSeq&& Children);
+    
+    void release() override;
     
     Source getSource() const override;
     
     bool check() const override;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -340,7 +347,7 @@ public:
 class GroupMissingCloserNode : public OperatorNode {
 public:
     
-    GroupMissingCloserNode(Symbol Op, NodeSeq Args);
+    GroupMissingCloserNode(Symbol Op, NodeSeq&& Args);
     
     bool check() const override;
 };
@@ -353,7 +360,7 @@ public:
 class UnterminatedGroupNeedsReparseNode : public OperatorNode {
 public:
     
-    UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq Args);
+    UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq&& Args);
     
     bool check() const override;
 };
@@ -364,16 +371,18 @@ public:
 class CollectedExpressionsNode : public Node {
 private:
     
-    const std::vector<NodeVariant> Exprs;
+    NodeSeq Exprs;
     
 public:
     
-    CollectedExpressionsNode(std::vector<NodeVariant> Exprs);
+    CollectedExpressionsNode(NodeSeq&& Exprs);
+    
+    void release() override;
     
     Source getSource() const override;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -381,7 +390,7 @@ public:
     bool check() const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -397,8 +406,10 @@ public:
     
     CollectedIssuesNode(IssuePtrSet Issues);
     
+    void release() override;
+    
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -408,7 +419,7 @@ public:
     Source getSource() const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -426,16 +437,14 @@ public:
     
     Source getSource() const override;
     
-    bool check() const override;
-    
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -456,13 +465,13 @@ public:
     bool check() const override;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -479,17 +488,15 @@ public:
     SafeStringNode(BufferAndLength bufAndLen);
     
     Source getSource() const override;
-
-    bool check() const override;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -497,14 +504,17 @@ public:
 //
 //
 class NodeContainer {
+    
+    NodeSeq Nodes;
+    
 public:
     
-    std::vector<NodeVariant> N;
+    NodeContainer(NodeSeq&& Nodes);
     
-    NodeContainer(std::vector<NodeVariant> N);
+    void release();
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const;
+    void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
@@ -512,6 +522,6 @@ public:
     bool check() const;
     
 #if USE_EXPR_LIB
-    expr toExpr() const;
+    expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
 };

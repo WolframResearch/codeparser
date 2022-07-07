@@ -51,15 +51,15 @@ extern int CharacterDecoder_6HexCount;
 
 extern int CharacterDecoder_OctalCount;
 
-extern int CharacterDecoder_StringMetaBackspace;
+extern int CharacterDecoder_StringMetaBackspaceCount;
 
-extern int CharacterDecoder_StringMetaFormFeed;
+extern int CharacterDecoder_StringMetaFormFeedCount;
 
 extern int CharacterDecoder_StringMetaLineFeedCount;
 
-extern int CharacterDecoder_StringMetaCarriageReturn;
+extern int CharacterDecoder_StringMetaCarriageReturnCount;
 
-extern int CharacterDecoder_StringMetaTab;
+extern int CharacterDecoder_StringMetaTabCount;
 
 extern int CharacterDecoder_StringMetaDoubleQuoteCount;
 

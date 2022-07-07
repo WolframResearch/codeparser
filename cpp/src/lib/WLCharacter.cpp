@@ -68,75 +68,111 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
                     break;
                 }
                 case CODEPOINT_STRINGMETA_OPEN: {
+                    
                     s << SourceCharacter('<');
+                    
                     break;
                 }
                 case CODEPOINT_STRINGMETA_CLOSE: {
+                    
                     s << SourceCharacter('>');
+                    
                     break;
                 }
                 case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
+                    
                     s << SourceCharacter('"');
+                    
                     break;
                 }
                 case CODEPOINT_STRINGMETA_BACKSLASH: {
+                    
                     s << SourceCharacter('\\');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_BANG: {
+                    
                     s << SourceCharacter('!');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_PERCENT: {
+                    
                     s << SourceCharacter('%');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_AMP: {
+                    
                     s << SourceCharacter('&');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_OPENPAREN: {
+                    
                     s << SourceCharacter('(');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_CLOSEPAREN: {
+                    
                     s << SourceCharacter(')');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_STAR: {
+                    
                     s << SourceCharacter('*');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_PLUS: {
+                    
                     s << SourceCharacter('+');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_SLASH: {
+                    
                     s << SourceCharacter('/');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_AT: {
+                    
                     s << SourceCharacter('@');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_CARET: {
+                    
                     s << SourceCharacter('^');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_UNDER: {
+                    
                     s << SourceCharacter('_');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_BACKTICK: {
+                    
                     s << SourceCharacter('`');
+                    
                     break;
                 }
                 case CODEPOINT_LINEARSYNTAX_SPACE: {
+                    
                     s << SourceCharacter(' ');
+                    
                     break;
                 }
                 default: {
+                    
                     assert(false);
+                    
                     break;
                 }
             }
@@ -146,16 +182,21 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
         case ESCAPE_LONGNAME: {
             
             auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), i);
+            
             assert(it != CodePointToLongNameMap_points.end());
             assert(*it == i);
+            
             auto idx = it - CodePointToLongNameMap_points.begin();
+            
             auto LongName = CodePointToLongNameMap_names[idx];
             
             s << SourceCharacter('\\');
             s << SourceCharacter('[');
+            
             for (size_t idx = 0; idx < LongName.size(); idx++) {
                 s << SourceCharacter(LongName[idx]);
             }
+            
             s << SourceCharacter(']');
             
             break;
@@ -163,12 +204,18 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
         case ESCAPE_OCTAL: {
             
             switch (i) {
-                case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
+                case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
+                    
                     i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    
                     break;
-                case CODEPOINT_STRINGMETA_BACKSLASH:
+                }
+                case CODEPOINT_STRINGMETA_BACKSLASH: {
+                    
                     i = CODEPOINT_ACTUAL_BACKSLASH;
+                    
                     break;
+                }
             }
             
             int8_t o0 = i % 8;
@@ -188,11 +235,15 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
             
             switch (i) {
                 case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
+                    
                     i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    
                     break;
                 }
                 case CODEPOINT_STRINGMETA_BACKSLASH: {
+                    
                     i = CODEPOINT_ACTUAL_BACKSLASH;
+                    
                     break;
                 }
             }
@@ -212,11 +263,15 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
             
             switch (i) {
                 case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
+                    
                     i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    
                     break;
                 }
                 case CODEPOINT_STRINGMETA_BACKSLASH: {
+                    
                     i = CODEPOINT_ACTUAL_BACKSLASH;
+                    
                     break;
                 }
             }
@@ -242,11 +297,15 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
             
             switch (i) {
                 case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
+                    
                     i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    
                     break;
                 }
                 case CODEPOINT_STRINGMETA_BACKSLASH: {
+                    
                     i = CODEPOINT_ACTUAL_BACKSLASH;
+                    
                     break;
                 }
             }
@@ -303,13 +362,11 @@ std::string WLCharacter::safeAndGraphicalString() const {
         String << "\"" << *this << "\" (" << set_graphical << *this << clear_graphical << ")";
         
         return String.str();
-        
-    } else {
-        
-        String << *this;
-        
-        return String.str();
     }
+        
+    String << *this;
+    
+    return String.str();
 }
 
 bool WLCharacter::isEscaped() const {
@@ -331,22 +388,21 @@ bool WLCharacter::isLetterlike() const {
     // Except for BEL and DEL: those are uninterpretable
     //
     switch (val) {
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': /*    \x07*/
-        case '\x08': /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
-        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
-        case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
-        case '$':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
         case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
-        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+        case '$':
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': /*    \x07*/
+        case '\x08': /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
+        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
+        case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f': {
         /* \x7f*/
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isStrangeLetterlike() const {
@@ -378,10 +434,9 @@ bool WLCharacter::isWhitespace() const {
         case ' ': case '\t': case '\v': case '\f': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isStrangeWhitespace() const {
@@ -392,10 +447,9 @@ bool WLCharacter::isStrangeWhitespace() const {
         case '\v': case '\f': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isNewline() const {
@@ -406,10 +460,9 @@ bool WLCharacter::isNewline() const {
         case '\n': case '\r': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isAlpha() const {
@@ -423,10 +476,9 @@ bool WLCharacter::isAlpha() const {
         case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isUpper() const {
@@ -438,10 +490,9 @@ bool WLCharacter::isUpper() const {
         case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isDigit() const {
@@ -452,10 +503,9 @@ bool WLCharacter::isDigit() const {
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isAlphaOrDigit() const {
@@ -470,10 +520,9 @@ bool WLCharacter::isAlphaOrDigit() const {
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isHex() const {
@@ -486,10 +535,9 @@ bool WLCharacter::isHex() const {
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isOctal() const {
@@ -500,10 +548,9 @@ bool WLCharacter::isOctal() const {
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isControl() const {
@@ -525,10 +572,9 @@ bool WLCharacter::isSign() const {
         case '-': case '+': {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 
@@ -556,10 +602,9 @@ bool WLCharacter::isMBLinearSyntax() const {
         case CODEPOINT_LINEARSYNTAX_SPACE: {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 bool WLCharacter::isMBStringMeta() const {
@@ -578,10 +623,9 @@ bool WLCharacter::isMBStringMeta() const {
         case CODEPOINT_STRINGMETA_TAB: {
             return true;
         }
-        default: {
-            return false;
-        }
     }
+    
+    return false;
 }
 
 //

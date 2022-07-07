@@ -16,29 +16,34 @@ using expr = void *;
 //
 struct Token {
     
-    BufferAndLength BufLen;
     Source Src;
+    Buffer Buf;
+    uint64_t Len : 48;
     TokenEnum Tok;
     
     Token();
     Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
-    void reset();
+    BufferAndLength bufLen() const;
+    
+    Buffer end() const;
+    
+    void reset(ParserSessionPtr session);
     
     void print(std::ostream& s) const;
     
     bool check() const;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const;
+    void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
     
 #if USE_EXPR_LIB
-    expr toExpr() const;
+    expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
 };
 
-static_assert((SIZEOF_VOID_P == 8 && sizeof(Token) == 40) || (SIZEOF_VOID_P == 4), "Check your assumptions");
+static_assert((SIZEOF_VOID_P == 8 && sizeof(Token) == 32) || (SIZEOF_VOID_P == 4), "Check your assumptions");
 
 bool operator==(Token a, Token b);
 bool operator!=(Token a, Token b);

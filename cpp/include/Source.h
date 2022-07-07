@@ -5,31 +5,27 @@
 #include "CodePoint.h" // for codepoint
 #include "MyString.h"
 
-#if USE_MATHLINK
-#include "mathlink.h"
-#undef P
-#endif // USE_MATHLINK
-
 #include <set>
 #include <string>
 #include <cassert>
 #include <iterator>
 #include <array>
-#include <memory> // for unique_ptr
 #include <vector>
 #include <cstddef> // for size_t
 
 class Issue;
 class CodeAction;
 class IssuePtrCompare;
+class ParserSession;
 
 using Buffer = const unsigned char *;
 using MBuffer = unsigned char *;
-using IssuePtr = std::shared_ptr<Issue>;
-using CodeActionPtr = std::unique_ptr<CodeAction>;
+using IssuePtr = Issue *;
+using CodeActionPtr = CodeAction *;
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
 using CodeActionPtrVector = std::vector<CodeActionPtr>;
 using AdditionalDescriptionVector = std::vector<std::string>;
+using ParserSessionPtr = ParserSession *;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -41,22 +37,24 @@ using expr = void *;
 //
 struct BufferAndLength {
     
-    Buffer buffer;
-    Buffer end;
+    Buffer Buf;
+    uint64_t Len : 48;
     
     BufferAndLength();
     BufferAndLength(Buffer buffer, size_t length = 0);
     
     size_t length() const;
     
+    Buffer end() const;
+    
     void print(std::ostream& s) const;
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const;
+    void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
     
 #if USE_EXPR_LIB
-    expr toExpr() const;
+    expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
 };
 
@@ -216,6 +214,8 @@ struct SourceCharacter {
     bool isMBWhitespace() const;
     bool isMBNewline() const;
     
+    bool isBackslash() const;
+    
     
     class SourceCharacter_iterator {
     public:
@@ -287,13 +287,13 @@ struct SourceLocation {
     SourceLocation previous();
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const;
+    void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
     
 #if USE_EXPR_LIB
-    expr toExpr() const;
+    expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
 };
 
@@ -328,13 +328,13 @@ struct Source {
     Source(Source start, Source end);
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const;
+    void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
     
 #if USE_EXPR_LIB
-    expr toExpr() const;
+    expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
     
     size_t size() const;
@@ -380,7 +380,7 @@ public:
     Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const;
+    void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
@@ -388,7 +388,7 @@ public:
     bool check() const;
     
 #if USE_EXPR_LIB
-    expr toExpr() const;
+    expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
 };
 
@@ -407,13 +407,13 @@ public:
     CodeAction(std::string Label, Source Src);
     
 #if USE_MATHLINK
-    virtual void put(MLINK mlp) const = 0;
+    virtual void put(ParserSessionPtr session) const = 0;
 #endif // USE_MATHLINK
     
     virtual void print(std::ostream& s) const = 0;
     
 #if USE_EXPR_LIB
-    virtual expr toExpr() const = 0;
+    virtual expr toExpr(ParserSessionPtr session) const = 0;
 #endif // USE_EXPR_LIB
     
     virtual ~CodeAction() {}
@@ -433,13 +433,13 @@ public:
     ReplaceTextCodeAction(std::string Label, Source Src, std::string ReplacementText) : CodeAction(Label, Src), ReplacementText(ReplacementText) {}
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -456,13 +456,13 @@ public:
     InsertTextCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 
@@ -475,13 +475,13 @@ public:
     DeleteTextCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
     
 #if USE_MATHLINK
-    void put(MLINK mlp) const override;
+    void put(ParserSessionPtr session) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
     
 #if USE_EXPR_LIB
-    expr toExpr() const override;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };
 

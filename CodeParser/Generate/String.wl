@@ -66,14 +66,12 @@ stringCPPHeader = {
 
 #pragma once
 
-#if USE_MATHLINK
-#include \"mathlink.h\"
-#undef P
-#endif // USE_MATHLINK
-
-#include <memory>
 #include <ostream>
 #include <cstddef> // for size_t
+
+class ParserSession;
+
+using ParserSessionPtr = ParserSession *;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -99,11 +97,11 @@ public:
   void print(std::ostream& s) const;
 
 #if USE_MATHLINK
-  void put(MLINK mlp) const;
+  void put(ParserSessionPtr session) const;
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
-  expr toExpr() const;
+  expr toExpr(ParserSessionPtr session) const;
 #endif // USE_EXPR_LIB
 };
 
@@ -137,6 +135,13 @@ stringCPPSource = {
 
 #include \"MyString.h\"
 
+#include \"ParserSession.h\"
+
+#if USE_MATHLINK
+#include \"mathlink.h\"
+#undef P
+#endif // USE_MATHLINK
+
 #if USE_EXPR_LIB
 #include \"ExprLibrary.h\"
 #endif // USE_EXPR_LIB
@@ -163,21 +168,22 @@ void MyString::print(std::ostream& s) const {
 }
 
 #if USE_MATHLINK
-void MyString::put(MLINK mlp) const {
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Val), static_cast<int>(Len))) {
-        assert(false);
-    }
+void MyString::put(ParserSessionPtr session) const {
+
+  auto link = session->getMathLink();
+
+  if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Val), static_cast<int>(Len))) {
+    assert(false);
+  }
 }
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
-expr MyString::toExpr() const {
-    return Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Val), Len);
+expr MyString::toExpr(ParserSessionPtr session) const {
+  return Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Val), Len);
 }
 #endif // USE_EXPR_LIB
-"} ~Join~
-
-{""};
+"};
 
 Print["exporting MyString.cpp"];
 res = Export[FileNameJoin[{generatedCPPSrcDir, "MyString.cpp"}], Column[stringCPPSource], "String"];

@@ -8,15 +8,15 @@
 
 #include <set>
 #include <deque>
-#include <memory> // for unique_ptr
 #include <vector>
 
-class Parser;
 class Parselet;
+class ParserSession;
 
-using ParserPtr = std::unique_ptr<Parser>;
 using ParseletPtr = Parselet *;
-typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
+using ParserSessionPtr = ParserSession *;
+typedef void (*ParseFunction)(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+
 
 struct Context {
     
@@ -38,94 +38,54 @@ enum ColonLHS {
     COLONLHS_ERROR
 };
 
-//
-//
-//
-class Parser {
-private:
-    
-    std::vector<NodeVariant> ArgsStack;
-    std::vector<Context> ContextStack;
-    
-    std::vector<NodeVariant> NodeStack;
-    std::vector<Closer> GroupStack;
-    
-    TriviaSeq trivia1;
-    TriviaSeq trivia2;
-    
-    void handleFirstLine(FirstLineBehavior firstLineBehavior);
-    
-public:
-    
-    Parser();
-    
-    void init();
-    
-    void deinit();
-    
-    void nextToken(Token Tok);
-    
-    Token nextToken0(NextPolicy policy);
-    
-    Token currentToken(NextPolicy policy) const;
-    
-    Token currentToken_stringifyAsTag() const;
-    Token currentToken_stringifyAsFile() const;
+void Parser_handleFirstLine(ParserSessionPtr session);
 
-    void eatTrivia(Token& firstTok, NextPolicy policy);
-    void eatTrivia(Token& firstTok, NextPolicy policy, TriviaSeq& Args);
-    void eatTrivia_stringifyAsFile(Token& firstTok);
-    void eatTrivia_stringifyAsFile(Token& firstTok, TriviaSeq& Args);
-    void eatTriviaButNotToplevelNewlines(Token& firstTok, NextPolicy policy);
-    void eatTriviaButNotToplevelNewlines(Token& firstTok, NextPolicy policy, TriviaSeq& Args);
-    void eatTriviaButNotToplevelNewlines_stringifyAsFile(Token& firstTok, TriviaSeq& Args);
-    
-    void shift();
-    
-    Context& pushContext(Precedence Prec);
-    void pushContextV(Precedence Prec);
-    void pushContextAndShift(Precedence Prec);
-    NodeSeq popContext();
-    void popContextV();
-    Context& topContext();
-    size_t getContextStackSize() const;
-    bool isContextStackEmpty() const;
-    
-    void appendLeaf(Token N);
-    void appendTriviaSeq(TriviaSeq& T);
-    size_t getArgsStackSize() const;
-    
-    NodeVariant& topNode();
-    void pushLeaf(Token T);
-    void pushNode(Node *N);
-    NodeVariant popNode();
-    void popNodeV();
-    size_t getNodeStackSize() const;
-    bool isNodeStackEmpty() const;
-    
-    void pushGroup(Closer Closr);
-    void popGroup();
-    size_t getGroupDepth() const;
-    bool checkGroup(Closer Closr) const;
-    
-    Precedence topPrecedence();
-    void setPrecedence(Precedence Prec);
-    
-    bool checkPatternPrecedence() const;
-    ColonLHS checkColonLHS() const;
-    bool checkTilde() const;
-    
-    TriviaSeq& getTrivia1();
-    TriviaSeq& getTrivia2();
-    
-    void pushLeafAndNext(Token Tok);
-    void appendLeafArgAndNext(Token Tok);
-    
-    bool isQuiescent() const;
-};
+void Parser_nextToken(ParserSessionPtr session, Token Tok);
 
-void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);
-void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2);
-void Parser_identity(ParseletPtr P, Token firstTok);
+Token Parser_nextToken0(ParserSessionPtr session, NextPolicy policy);
 
-extern ParserPtr TheParser;
+Token Parser_currentToken(ParserSessionPtr session, NextPolicy policy);
+Token Parser_currentToken_stringifyAsTag(ParserSessionPtr session);
+Token Parser_currentToken_stringifyAsFile(ParserSessionPtr session);
+
+void Parser_parseClimb(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2);
+void Parser_tryContinue(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2);
+void Parser_identity(ParserSessionPtr session, ParseletPtr P, Token firstTok);
+
+void Parser_eatTrivia(ParserSessionPtr session, Token& firstTok, NextPolicy policy);
+void Parser_eatTrivia(ParserSessionPtr session, Token& firstTok, NextPolicy policy, TriviaSeq& Args);
+void Parser_eatTrivia_stringifyAsFile(ParserSessionPtr session, Token& firstTok);
+void Parser_eatTrivia_stringifyAsFile(ParserSessionPtr session, Token& firstTok, TriviaSeq& Args);
+void Parser_eatTriviaButNotToplevelNewlines(ParserSessionPtr session, Token& firstTok, NextPolicy policy);
+void Parser_eatTriviaButNotToplevelNewlines(ParserSessionPtr session, Token& firstTok, NextPolicy policy, TriviaSeq& Args);
+void Parser_eatTriviaButNotToplevelNewlines_stringifyAsFile(ParserSessionPtr session, Token& firstTok, TriviaSeq& Args);
+
+Context& Parser_pushContext(ParserSessionPtr session, Precedence Prec);
+NodeSeq Parser_popContext(ParserSessionPtr session);
+Context& Parser_topContext(ParserSessionPtr session);
+bool Parser_isContextStackEmpty(ParserSessionPtr session);
+Precedence Parser_topPrecedence(ParserSessionPtr session);
+void Parser_setPrecedence(ParserSessionPtr session, Precedence Prec);
+
+NodeVariant& Parser_topNode(ParserSessionPtr session);
+void Parser_pushLeaf(ParserSessionPtr session, Token T);
+void Parser_pushLeafAndNext(ParserSessionPtr session, Token Tok);
+void Parser_pushTriviaSeq(ParserSessionPtr session, TriviaSeq& T);
+void Parser_pushNode(ParserSessionPtr session, Node *N);
+NodeVariant Parser_popNode(ParserSessionPtr session);
+bool Parser_isNodeStackEmpty(ParserSessionPtr session);
+
+void Parser_pushGroup(ParserSessionPtr session, Closer Closr);
+void Parser_popGroup(ParserSessionPtr session);
+size_t Parser_getGroupDepth(ParserSessionPtr session);
+bool Parser_checkGroup(ParserSessionPtr session, Closer Closr);
+
+TriviaSeq& Parser_getTrivia1(ParserSessionPtr session);
+TriviaSeq& Parser_getTrivia2(ParserSessionPtr session);
+
+bool Parser_isQuiescent(ParserSessionPtr session);
+
+bool Parser_checkPatternPrecedence(ParserSessionPtr session);
+ColonLHS Parser_checkColonLHS(ParserSessionPtr session);
+bool Parser_checkTilde(ParserSessionPtr session);
+bool Parser_checkSpan(ParserSessionPtr session);

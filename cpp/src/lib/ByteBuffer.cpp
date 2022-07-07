@@ -7,109 +7,28 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
-#if 0
-#ifndef NDEBUG
-#if USE_MATHLINK
-#include "mathlink.h"
-#undef P
-#endif // USE_MATHLINK
-#endif // NDEBUG
-#endif // 0
-
-#if 0
-#ifndef NDEBUG
-#include "WolframLibrary.h"
-#undef True
-#undef False
-#endif // NDEBUG
-#endif // 0
-
 #include <cstddef> // for size_t
 
 
-ByteBuffer::ByteBuffer() : buffer(), end(), wasEOF() {}
-
-void ByteBuffer::init() {
+//
+// Precondition: buffer is pointing to current byte
+// Postcondition: buffer is pointing to 1 byte past current byte
+//
+// Return current byte
+//
+unsigned char ByteBuffer_nextByte0(ParserSessionPtr session) {
     
-    buffer = TheParserSession->bufAndLen.buffer;
+    assert((session->start <= session->buffer && session->buffer <= session->end) && "Fix at call site");
     
-    end = TheParserSession->bufAndLen.end;
-    
-    wasEOF = false;
-    
-#if DIAGNOSTICS
-    ByteBuffer_size = end - buffer;
-#endif // DIAGNOSTICS
-}
-
-
-void ByteBuffer::deinit() {}
-
-
-unsigned char ByteBuffer::nextByte0() {
-    
-    assert((TheParserSession->bufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
-    
-#if 0
-#ifndef NDEBUG
-    size_t oldProgress;
-    if (origBufAndLen.length() != 0) {
-        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
-    }
-#endif // NDEBUG
-#endif // 0
-    
-    if (buffer == end) {
+    if (session->buffer == session->end) {
         
-        wasEOF = true;
+        session->wasEOF = true;
         
         return 0xff;
     }
     
-    auto b = *buffer;
-    ++buffer;
-    
-#if 0
-#ifndef NDEBUG
-    if (origBufAndLen.length() != 0) {
-        
-        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
-        
-        if (progress != oldProgress) {
-            if (libData) {
-#if USE_EXPR_LIB
-#error
-#elif USE_MATHLINK
-                MLINK link = libData->getMathLink(libData);
-                if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET->name(), 1)) {
-                    assert(false);
-                }
-                if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_SETCONCRETEPARSEPROGRESS->name(), 1)) {
-                    assert(false);
-                }
-                if (!MLPutInteger(link, static_cast<int>(progress))) {
-                    assert(false);
-                }
-                if (libData->processMathLink(link)) {
-                    //
-                    // Do not assert here, Abort may cause error code
-                    //
-                    
-                    auto pkt = MLNextPacket(link);
-                    if (pkt == RETURNPKT) {
-                        if (!MLNewPacket(link)) {
-                            assert(false);
-                        }
-                    } else {
-                        assert(false);
-                    }
-                }
-#endif // USE_EXPR_LIB
-            }
-        }
-    }
-#endif // NDEBUG
-#endif // 0
+    auto b = *session->buffer;
+    ++session->buffer;
     
     //
     // if eof, then force 0xff to be returned
@@ -121,77 +40,24 @@ unsigned char ByteBuffer::nextByte0() {
     return b;
 }
 
-void ByteBuffer::nextByte() {
+void ByteBuffer_nextByte(ParserSessionPtr session) {
     
-    assert((TheParserSession->bufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
+    assert((session->start <= session->buffer && session->buffer <= session->end) && "Fix at call site");
     
-#if 0
-#ifndef NDEBUG
-    size_t oldProgress;
-    if (origBufAndLen.length() != 0) {
-        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
-    }
-#endif // NDEBUG
-#endif // 0
-    
-    if (buffer == end) {
+    if (session->buffer == session->end) {
         return;
     }
     
-    ++buffer;
-    
-#if 0
-#ifndef NDEBUG
-    if (origBufAndLen.length() != 0) {
-        
-        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
-        
-        if (progress != oldProgress) {
-            if (libData) {
-#if USE_EXPR_LIB
-#error
-#elif USE_MATHLINK
-                MLINK link = libData->getMathLink(libData);
-                if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET->name(), 1)) {
-                    assert(false);
-                }
-                if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_SETCONCRETEPARSEPROGRESS->name(), 1)) {
-                    assert(false);
-                }
-                if (!MLPutInteger(link, static_cast<int>(progress))) {
-                    assert(false);
-                }
-                if (libData->processMathLink(link)) {
-                    //
-                    // Do not assert here, Abort may cause error code
-                    //
-                    
-                    auto pkt = MLNextPacket(link);
-                    if (pkt == RETURNPKT) {
-                        if (!MLNewPacket(link)) {
-                            assert(false);
-                        }
-                    } else {
-                        assert(false);
-                    }
-                }
-#endif // USE_EXPR_LIB
-            }
-        }
-    }
-#endif // NDEBUG
-#endif // 0
+    ++session->buffer;
 }
 
-unsigned char ByteBuffer::currentByte() {
+unsigned char ByteBuffer_currentByte(ParserSessionPtr session) {
     
-    assert((TheParserSession->bufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
+    assert((session->start <= session->buffer && session->buffer <= session->end) && "Fix at call site");
     
-    if (buffer == end) {
+    if (session->buffer == session->end) {
         return 0xff;
     }
     
-    return *buffer;
+    return *session->buffer;
 }
-
-ByteBufferPtr TheByteBuffer = nullptr;

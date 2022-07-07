@@ -14,26 +14,10 @@
 #endif // DIAGNOSTICS
 
 
-bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
+bool validatePath(WolframLibraryData libData, Buffer inStr);
 
 
-ParserSession::ParserSession() : fatalIssues(), nonFatalIssues(), currentAbortQ(), unsafeCharacterEncodingFlag(), bufAndLen(), libData(), srcConvention(), tabWidth(), firstLineBehavior(), encodingMode() {
-    
-    TheByteBuffer = ByteBufferPtr(new ByteBuffer());
-    TheByteDecoder = ByteDecoderPtr(new ByteDecoder());
-    TheCharacterDecoder = CharacterDecoderPtr(new CharacterDecoder());
-    TheTokenizer = TokenizerPtr(new Tokenizer());
-    TheParser = ParserPtr(new Parser());
-}
-
-ParserSession::~ParserSession() {
-
-    TheParser.reset(nullptr);
-    TheTokenizer.reset(nullptr);
-    TheCharacterDecoder.reset(nullptr);
-    TheByteDecoder.reset(nullptr);
-    TheByteBuffer.reset(nullptr);
-}
+ParserSession::ParserSession() : start(), end(), wasEOF(), buffer(), libData(), srcConvention(), tabWidth(), firstLineBehavior(), encodingMode(), unsafeCharacterEncodingFlag(), srcConventionManager(), SrcLoc(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
 
 void ParserSession::init(
     BufferAndLength bufAndLenIn,
@@ -43,10 +27,11 @@ void ParserSession::init(
     FirstLineBehavior firstLineBehaviorIn,
     EncodingMode encodingModeIn) {
     
-    fatalIssues.clear();
-    nonFatalIssues.clear();
+    start = bufAndLenIn.Buf;
+    end = bufAndLenIn.end();
+    wasEOF = false;
+    buffer = start;
     
-    bufAndLen = bufAndLenIn;
     libData = libDataIn;
     srcConvention = srcConventionIn;
     tabWidth = tabWidthIn;
@@ -55,42 +40,54 @@ void ParserSession::init(
     
     unsafeCharacterEncodingFlag = UNSAFECHARACTERENCODING_OK;
     
-    TheByteBuffer->init();
-    TheByteDecoder->init();
-    TheCharacterDecoder->init();
-    TheTokenizer->init();
-    TheParser->init();
-        
-#if CHECK_ABORT
-    if (libDataIn) {
-        
-        currentAbortQ = [libDataIn]() {
+#if COMPUTE_SOURCE
+    switch (srcConvention) {
+        case SOURCECONVENTION_LINECOLUMN: {
             
-            //
-            // AbortQ() returns a mint
-            //
-            bool res = libDataIn->AbortQ();
+            srcConventionManager = new LineColumnManager();
             
-            return res;
-        };
-        
-    } else {
-        
-        currentAbortQ = nullptr;
+            break;
+        }
+        case SOURCECONVENTION_SOURCECHARACTERINDEX: {
+            
+            srcConventionManager = new SourceCharacterIndexManager();
+            
+            break;
+        }
+        default: {
+            
+            assert(false);
+            
+            break;
+        }
     }
-#endif // CHECK_ABORT
-}
-
-void ParserSession::deinit() {
+    
+    SrcLoc = srcConventionManager->newSourceLocation();
+#endif // COMPUTE_SOURCE
     
     fatalIssues.clear();
     nonFatalIssues.clear();
     
-    TheParser->deinit();
-    TheTokenizer->deinit();
-    TheCharacterDecoder->deinit();
-    TheByteDecoder->deinit();
-    TheByteBuffer->deinit();
+    SimpleLineContinuations.clear();
+    ComplexLineContinuations.clear();
+    EmbeddedNewlines.clear();
+    EmbeddedTabs.clear();
+    
+    NodeStack.clear();
+    ContextStack.clear();
+    GroupStack.clear();
+    
+    trivia1.clear();
+    trivia2.clear();
+    
+    Parser_handleFirstLine(this);
+}
+
+void ParserSession::deinit() {
+    
+#if COMPUTE_SOURCE
+    delete srcConventionManager;
+#endif // COMPUTE_SOURCE
 }
 
 NodeContainerPtr ParserSession::parseExpressions() {
@@ -100,24 +97,23 @@ NodeContainerPtr ParserSession::parseExpressions() {
     DiagnosticsMarkTime();
 #endif // DIAGNOSTICS
     
-    std::vector<NodeVariant> nodes;
+    NodeSeq nodes;
     
     //
     // Collect all expressions
     //
     {
-        std::vector<NodeVariant> exprs;
+        NodeSeq exprs;
         
         while (true) {
             
 #if CHECK_ABORT
-            if (TheParserSession->isAbort()) {
-                
+            if (abortQ()) {
                 break;
             }
 #endif // CHECK_ABORT
             
-            auto peek = TheParser->currentToken(TOPLEVEL);
+            auto peek = Parser_currentToken(this, TOPLEVEL);
             
             if (peek.Tok == TOKEN_ENDOFFILE) {
                 break;
@@ -125,9 +121,9 @@ NodeContainerPtr ParserSession::parseExpressions() {
             
             if (peek.Tok.isTrivia()) {
                 
-                exprs.push_back(peek);
+                exprs.push(peek);
                 
-                TheParser->nextToken(peek);
+                Parser_nextToken(this, peek);
                 
                 continue;
             }
@@ -137,37 +133,41 @@ NodeContainerPtr ParserSession::parseExpressions() {
             //
             if (peek.Tok.isCloser()) {
                 
-                PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, peek);
+                PrefixToplevelCloserParselet_parsePrefix(this, prefixToplevelCloserParselet, peek);
                 
-            } else {
+                exprs.push(Parser_popNode(this));
                 
-                auto P = prefixParselets[peek.Tok.value()];
+                assert(Parser_isQuiescent(this));
                 
-                (P->parsePrefix())(P, peek);
+                continue;
             }
+                
+            auto P = prefixParselets[peek.Tok.value()];
             
-            exprs.push_back(TheParser->popNode());
+            (P->parsePrefix())(this, P, peek);
             
-            assert(TheParser->isQuiescent());
+            exprs.push(Parser_popNode(this));
+            
+            assert(Parser_isQuiescent(this));
             
         } // while (true)
         
-        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
+        auto Collected = new CollectedExpressionsNode(std::move(exprs));
         
-        nodes.push_back(std::move(Collected));
+        nodes.push(Collected);
     }
     
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         
-        std::vector<NodeVariant> exprs;
+        NodeSeq exprs;
         
-        exprs.push_back(NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag)));
+        exprs.push(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
         
-        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
+        auto Collected = new CollectedExpressionsNode(std::move(exprs));
         
-        nodes.push_back(std::move(Collected));
+        nodes.push(Collected);
     }
     
     //
@@ -180,62 +180,23 @@ NodeContainerPtr ParserSession::parseExpressions() {
         //
         if (!fatalIssues.empty()) {
             
-            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(fatalIssues))));
+            nodes.push(new CollectedIssuesNode(fatalIssues));
             
         } else {
             
-            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(nonFatalIssues))));
+            nodes.push(new CollectedIssuesNode(nonFatalIssues));
         }
 #else
         
-        nodes.push_back(NodePtr(new CollectedIssuesNode({})));
+        nodes.push(new CollectedIssuesNode({}));
         
 #endif // CHECK_ISSUES
     }
     
-#if COMPUTE_OOB
-    {
-        auto& SimpleLineContinuations = TheCharacterDecoder->getSimpleLineContinuations();
-
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(SimpleLineContinuations))));
-    }
-    
-    {
-        auto& ComplexLineContinuations = TheCharacterDecoder->getComplexLineContinuations();
-        
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(ComplexLineContinuations))));
-    }
-    
-    {
-        auto& EmbeddedNewlines = TheTokenizer->getEmbeddedNewlines();
-
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedNewlines))));
-    }
-    
-    {
-        std::set<SourceLocation> tabs;
-        
-        auto& TokenizerEmbeddedTabs = TheTokenizer->getEmbeddedTabs();
-        for (auto& T : TokenizerEmbeddedTabs) {
-            tabs.insert(T);
-        }
-        
-        auto& CharacterDecoderEmbeddedTabs = TheCharacterDecoder->getEmbeddedTabs();
-        for (auto& T : CharacterDecoderEmbeddedTabs) {
-            tabs.insert(T);
-        }
-        
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
-    }
-#else
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-    
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-    
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-    
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-#endif // COMPUTE_OOB
+    nodes.push(new CollectedSourceLocationsNode(SimpleLineContinuations));
+    nodes.push(new CollectedSourceLocationsNode(ComplexLineContinuations));
+    nodes.push(new CollectedSourceLocationsNode(EmbeddedNewlines));
+    nodes.push(new CollectedSourceLocationsNode(EmbeddedTabs));
     
     auto C = new NodeContainer(std::move(nodes));
     
@@ -249,25 +210,25 @@ NodeContainerPtr ParserSession::parseExpressions() {
 
 NodeContainerPtr ParserSession::tokenize() {
     
-    std::vector<NodeVariant> nodes;
+    NodeSeq nodes;
     
     while (true) {
         
 #if CHECK_ABORT
-        if (TheParserSession->isAbort()) {
+        if (abortQ()) {
             break;
         }
 #endif // CHECK_ABORT
         
-        auto Tok = TheTokenizer->currentToken(TOPLEVEL);
+        auto Tok = Tokenizer_currentToken(this, TOPLEVEL);
         
         if (Tok.Tok == TOKEN_ENDOFFILE) {
             break;
         }
         
-        nodes.push_back(Tok);
+        nodes.push(Tok);
         
-        TheTokenizer->nextToken(Tok);
+        Tokenizer_nextToken(this, Tok);
         
     } // while (true)
     
@@ -275,14 +236,12 @@ NodeContainerPtr ParserSession::tokenize() {
         
         nodes.clear();
         
-        auto N = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
 
-        nodes.push_back(std::move(N));
+        nodes.push(N);
     }
     
-    auto C = new NodeContainer(std::move(nodes));
-    
-    return C;
+    return new NodeContainer(std::move(nodes));
 }
 
 
@@ -290,62 +249,51 @@ NodeVariant ParserSession::concreteParseLeaf0(int mode) {
     
     switch (mode) {
         case STRINGIFYMODE_NORMAL: {
-            
-            auto Tok = TheTokenizer->nextToken0(TOPLEVEL);
-            
-            return Tok;
+            return Tokenizer_nextToken0(this, TOPLEVEL);
         }
         case STRINGIFYMODE_TAG: {
-            
-            auto Tok = TheTokenizer->nextToken0_stringifyAsTag();
-            
-            return Tok;
+            return Tokenizer_nextToken0_stringifyAsTag(this);
         }
         case STRINGIFYMODE_FILE: {
-            
-            auto Tok = TheTokenizer->nextToken0_stringifyAsFile();
-            
-            return Tok;
-        }
-        default: {
-            
-            assert(false);
-            
-            return nullptr;
+            return Tokenizer_nextToken0_stringifyAsFile(this);
         }
     }
+    
+    assert(false);
+    
+    return nullptr;
 }
 
 NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
     
-    std::vector<NodeVariant> nodes;
+    NodeSeq nodes;
     
     //
     // Collect all expressions
     //
     {
-        std::vector<NodeVariant> exprs;
+        NodeSeq exprs;
         
-        exprs.push_back(concreteParseLeaf0(mode));
+        exprs.push(concreteParseLeaf0(mode));
         
-        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
+        auto Collected = new CollectedExpressionsNode(std::move(exprs));
         
-        nodes.push_back(std::move(Collected));
+        nodes.push(Collected);
     }
     
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         
-        std::vector<NodeVariant> exprs;
+        NodeSeq exprs;
         
-        auto node = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
+        auto node = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
         
-        exprs.push_back(std::move(node));
+        exprs.push(std::move(node));
         
-        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
+        auto Collected = new CollectedExpressionsNode(std::move(exprs));
         
-        nodes.push_back(std::move(Collected));
+        nodes.push(std::move(Collected));
     }
     
 #if CHECK_ISSUES
@@ -358,79 +306,38 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
         //
         if (!fatalIssues.empty()) {
             
-            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(fatalIssues))));
+            nodes.push(new CollectedIssuesNode(fatalIssues));
             
         } else {
             
-            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(nonFatalIssues))));
+            nodes.push(new CollectedIssuesNode(nonFatalIssues));
         }
     }
 #else
     {
         
-        nodes.push_back(NodePtr(new CollectedIssuesNode({})));
+        nodes.push(new CollectedIssuesNode({}));
     }
 #endif // CHECK_ISSUES
     
-#if COMPUTE_OOB
-    {
-        auto& SimpleLineContinuations = TheCharacterDecoder->getSimpleLineContinuations();
-        
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(SimpleLineContinuations))));
-    }
+    nodes.push(new CollectedSourceLocationsNode(SimpleLineContinuations));
+    nodes.push(new CollectedSourceLocationsNode(ComplexLineContinuations));
+    nodes.push(new CollectedSourceLocationsNode(EmbeddedNewlines));
+    nodes.push(new CollectedSourceLocationsNode(EmbeddedTabs));
     
-    {
-        auto& ComplexLineContinuations = TheCharacterDecoder->getComplexLineContinuations();
-        
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(ComplexLineContinuations))));
-    }
-    
-    {
-        auto& EmbeddedNewlines = TheTokenizer->getEmbeddedNewlines();
-        
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedNewlines))));
-    }
-    
-    {
-        std::set<SourceLocation> tabs;
-        
-        auto& TokenizerEmbeddedTabs = TheTokenizer->getEmbeddedTabs();
-        for (auto& T : TokenizerEmbeddedTabs) {
-            tabs.insert(T);
-        }
-        
-        auto& CharacterDecoderEmbeddedTabs = TheCharacterDecoder->getEmbeddedTabs();
-        for (auto& T : CharacterDecoderEmbeddedTabs) {
-            tabs.insert(T);
-        }
-        
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
-    }
-#else
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-    
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-    
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-    
-    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
-#endif // COMPUTE_OOB
-    
-    auto C = new NodeContainer(std::move(nodes));
-    
-    return C;
+    return new NodeContainer(std::move(nodes));
 }
 
 NodeContainerPtr ParserSession::safeString() {
     
-    std::vector<NodeVariant> nodes;
+    NodeSeq nodes;
     
     //
     // read all characters, just to set unsafeCharacterEncoding flag if necessary
     //
     while (true) {
         
-        auto Char = TheByteDecoder->nextSourceCharacter0(TOPLEVEL);
+        auto Char = ByteDecoder_nextSourceCharacter0(this, TOPLEVEL);
         
         if (Char.isEndOfFile()) {
             break;
@@ -438,22 +345,20 @@ NodeContainerPtr ParserSession::safeString() {
         
     } // while (true)
     
-    auto N = NodePtr(new SafeStringNode(bufAndLen));
+    auto N = new SafeStringNode(BufferAndLength(start, end - start));
     
-    nodes.push_back(std::move(N));
+    nodes.push(std::move(N));
     
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         
-        auto N = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
 
-        nodes.push_back(std::move(N));
+        nodes.push(std::move(N));
     }
     
-    auto C = new NodeContainer(std::move(nodes));
-    
-    return C;
+    return new NodeContainer(std::move(nodes));
 }
 
 void ParserSession::releaseContainer(NodeContainerPtr C) {
@@ -463,6 +368,8 @@ void ParserSession::releaseContainer(NodeContainerPtr C) {
     DiagnosticsMarkTime();
 #endif // DIAGNOSTICS
     
+    C->release();
+    
     delete C;
     
 #if DIAGNOSTICS
@@ -471,13 +378,16 @@ void ParserSession::releaseContainer(NodeContainerPtr C) {
 #endif // DIAGNOSTICS
 }
 
-bool ParserSession::isAbort() const {
+bool ParserSession::abortQ() const {
     
-    if (!currentAbortQ) {
+    if (!libData) {
         return false;
     }
-
-    return currentAbortQ();
+    
+    //
+    // AbortQ() returns a mint
+    //
+    return libData->AbortQ();
 }
 
 void ParserSession::setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag) {
@@ -499,22 +409,47 @@ void ParserSession::addIssue(IssuePtr I) {
             return;
         }
 
-        fatalIssues.insert(std::move(I));
+        fatalIssues.insert(I);
 
     } else {
-
-        nonFatalIssues.insert(std::move(I));
+        
+        nonFatalIssues.insert(I);
     }
 }
 
+void ParserSession::addSimpleLineContinuation(SourceLocation Loc) {
+    SimpleLineContinuations.insert(Loc);
+}
 
-ParserSessionPtr TheParserSession = nullptr;
+void ParserSession::addComplexLineContinuation(SourceLocation Loc) {
+    ComplexLineContinuations.insert(Loc);
+}
 
+void ParserSession::addEmbeddedNewline(SourceLocation Loc) {
+    EmbeddedNewlines.insert(Loc);
+}
+
+void ParserSession::addEmbeddedTab(SourceLocation Loc) {
+    EmbeddedTabs.insert(Loc);
+}
+
+#if USE_MATHLINK
+MLINK ParserSession::getMathLink() const {
+    return libData->getMathLink(libData);
+}
+
+bool ParserSession::processMathLink() const {
+    
+    auto link = getMathLink();
+    
+    return libData->processMathLink(link);
+}
+#endif // USE_MATHLINK
 
 //
 // Does the file currently have permission to be read?
 //
-bool validatePath(WolframLibraryData libData, BufferAndLength bufAndLen) {
+bool validatePath(WolframLibraryData libData, Buffer inStr) {
     
     if (!libData) {
         //
@@ -523,10 +458,9 @@ bool validatePath(WolframLibraryData libData, BufferAndLength bufAndLen) {
         return true;
     }
     
-    auto inStr1 = reinterpret_cast<const char *>(bufAndLen.buffer);
+    auto inStr1 = reinterpret_cast<const char *>(inStr);
     
     auto inStr2 = const_cast<char *>(inStr1);
     
-    auto valid = libData->validatePath(inStr2, 'R');
-    return valid;
+    return libData->validatePath(inStr2, 'R');
 }

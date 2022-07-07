@@ -4,13 +4,12 @@
 #include "Source.h"
 
 #include <set>
-#include <memory> // for unique_ptr
 
-class ByteDecoder;
 class SourceConventionManager;
+class ParserSession;
 
-using ByteDecoderPtr = std::unique_ptr<ByteDecoder>;
-using SourceConventionManagerPtr = std::unique_ptr<SourceConventionManager>;
+using SourceConventionManagerPtr = SourceConventionManager *;
+using ParserSessionPtr = ParserSession *;
 
 
 //
@@ -21,13 +20,13 @@ public:
     
     virtual SourceLocation newSourceLocation() = 0;
     
-    virtual void newline(SourceLocation& loc) = 0;
+    virtual void newline(ParserSessionPtr session, SourceLocation& loc) = 0;
     
-    virtual void windowsNewline(SourceLocation& loc) = 0;
+    virtual void windowsNewline(ParserSessionPtr session, SourceLocation& loc) = 0;
     
-    void increment(SourceLocation& loc);
+    void increment(ParserSessionPtr session, SourceLocation& loc);
     
-    virtual void tab(SourceLocation& loc) = 0;
+    virtual void tab(ParserSessionPtr session, SourceLocation& loc) = 0;
     
     virtual ~SourceConventionManager() {}
 };
@@ -45,11 +44,11 @@ public:
     
     SourceLocation newSourceLocation() override;
     
-    void newline(SourceLocation& loc) override;
+    void newline(ParserSessionPtr session, SourceLocation& loc) override;
     
-    void windowsNewline(SourceLocation& loc) override;
+    void windowsNewline(ParserSessionPtr session, SourceLocation& loc) override;
     
-    void tab(SourceLocation& loc) override;
+    void tab(ParserSessionPtr session, SourceLocation& loc) override;
 };
 
 //
@@ -60,78 +59,30 @@ class SourceCharacterIndexManager : public SourceConventionManager {
     
     SourceLocation newSourceLocation() override;
     
-    void newline(SourceLocation& loc) override;
+    void newline(ParserSessionPtr session, SourceLocation& loc) override;
     
-    void windowsNewline(SourceLocation& loc) override;
+    void windowsNewline(ParserSessionPtr session, SourceLocation& loc) override;
     
-    void tab(SourceLocation& loc) override;
+    void tab(ParserSessionPtr session, SourceLocation& loc) override;
 };
+
 
 //
 // Decode a sequence of UTF-8 encoded bytes into Source characters
 //
-class ByteDecoder {
-private:
-    
-    SourceConventionManagerPtr srcConventionManager;
-    
-    void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
-    
-    void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
-    
-    SourceCharacter validStrange(codepoint decoded, NextPolicy policy);
-    
-    SourceCharacter validMB(codepoint decoded, NextPolicy policy);
-    
-    SourceCharacter incomplete1ByteSequence(SourceLocation errSrcLoc, NextPolicy policy);
-    
-    SourceCharacter incomplete2ByteSequence(SourceLocation errSrcLoc, NextPolicy policy);
-    
-    SourceCharacter incomplete3ByteSequence(SourceLocation errSrcLoc, NextPolicy policy);
-    
-    SourceCharacter straySurrogate(SourceLocation errSrcLoc, NextPolicy policy);
-    
-    SourceCharacter bom(SourceLocation errSrcLoc, NextPolicy policy);
-    
-    SourceCharacter nextSourceCharacter0_uncommon(NextPolicy policy);
-    
-public:
-    
-    Buffer lastBuf;
-    SourceLocation lastLoc;
-    
-    SourceLocation SrcLoc;
-    
-    
-    ByteDecoder();
-    
-    void init();
-    
-    void deinit();
-    
-    //
-    // Precondition: buffer is pointing to current SourceCharacter
-    // Postcondition: buffer is pointing to next SourceCharacter
-    //
-    // return the SourceCharacter that was current
-    //
-    // Decode UTF-8 byte sequences
-    //
-    // Also decode \r\n into a single SourceCharacter
-    //
-    // \r\n is akin to a 2-byte UTF-8 sequence
-    //
-    // Also warn about \r line endings
-    //
-    // Do not decode unsafe character encodings: incomplete sequences, stray surrogates, or BOM
-    //
-    SourceCharacter nextSourceCharacter0(NextPolicy policy);
-    
-    //
-    // Postcondition: lastBuf is set to the last value of buffer
-    // Postcondition: lastLoc is set to the last value of SrcLoc
-    //
-    SourceCharacter currentSourceCharacter(NextPolicy policy);
-};
 
-extern ByteDecoderPtr TheByteDecoder;
+SourceCharacter ByteDecoder_nextSourceCharacter0(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_currentSourceCharacter(ParserSessionPtr session, NextPolicy policy);
+
+void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
+void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
+
+SourceCharacter ByteDecoder_validStrange(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
+SourceCharacter ByteDecoder_validMB(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
+
+SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
+SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
+SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
+SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
+SourceCharacter ByteDecoder_bom(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);

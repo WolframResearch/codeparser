@@ -13,8 +13,12 @@
 #endif // USE_MUSTTAIL
 
 
-Token InfixParselet::processImplicitTimes(Token TokIn) const {
+Token InfixParselet::processImplicitTimes(ParserSessionPtr session, Token TokIn) const {
     return TokIn;
+}
+
+Symbol InfixParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
 }
 
 
@@ -22,12 +26,12 @@ ParseFunction LeafParselet::parsePrefix() const {
     return LeafParselet_reduceLeaf;
 }
 
-void LeafParselet_reduceLeaf(ParseletPtr Ignored, Token TokIn) {
+void LeafParselet_reduceLeaf(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, TokIn/*ignored*/);
+    return Parser_parseClimb(session, Ignored, TokIn/*ignored*/);
 }
 
 
@@ -35,14 +39,14 @@ ParseFunction PrefixErrorParselet::parsePrefix() const {
     return PrefixErrorParselet_parsePrefix;
 }
 
-void PrefixErrorParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PrefixErrorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     assert(TokIn.Tok.isError());
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     MUSTTAIL
-    return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
 }
 
 
@@ -50,14 +54,14 @@ ParseFunction PrefixCloserParselet::parsePrefix() const {
     return PrefixCloserParselet_parsePrefix;
 }
 
-void PrefixCloserParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PrefixCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     assert(TokIn.Tok.isCloser());
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
@@ -67,25 +71,25 @@ void PrefixCloserParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     
     Token createdToken;
     
-    if (TheParser->topPrecedence() == PRECEDENCE_COMMA) {
+    if (Parser_topPrecedence(session) == PRECEDENCE_COMMA) {
         
-        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.BufLen.buffer, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.Buf, TokIn.Src.Start);
         
     } else {
         
-        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start);
     }
     
-    TheParser->pushLeaf(createdToken);
+    Parser_pushLeaf(session, createdToken);
     
     //
     // Do not take the closer.
     // Delay taking the closer until necessary. This allows  { 1 + }  to be parsed as a GroupNode
     //
-    TheParser->currentToken(TOPLEVEL);
+    Parser_currentToken(session, TOPLEVEL);
     
     MUSTTAIL
-    return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
 }
 
 
@@ -93,14 +97,14 @@ ParseFunction PrefixToplevelCloserParselet::parsePrefix() const {
     return PrefixToplevelCloserParselet_parsePrefix;
 }
 
-void PrefixToplevelCloserParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PrefixToplevelCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     assert(TokIn.Tok.isCloser());
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
@@ -108,12 +112,12 @@ void PrefixToplevelCloserParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) 
     // if we are at the top, then make sure to take the token and report it
     //
     
-    TheParser->pushLeaf(Token(TOKEN_ERROR_UNEXPECTEDCLOSER, TokIn.BufLen, TokIn.Src));
+    Parser_pushLeaf(session, Token(TOKEN_ERROR_UNEXPECTEDCLOSER, TokIn.bufLen(), TokIn.Src));
     
-    TheParser->nextToken(TokIn);
+    Parser_nextToken(session, TokIn);
     
     MUSTTAIL
-    return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
 }
 
 
@@ -121,34 +125,34 @@ ParseFunction PrefixEndOfFileParselet::parsePrefix() const {
     return PrefixEndOfFileParselet_parsePrefix;
 }
 
-void PrefixEndOfFileParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PrefixEndOfFileParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  a+<EOF>
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
     Token createdToken;
     
-    if (TheParser->topPrecedence() == PRECEDENCE_COMMA) {
+    if (Parser_topPrecedence(session) == PRECEDENCE_COMMA) {
             
-        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.BufLen.buffer, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.Buf, TokIn.Src.Start);
         
     } else {
         
-        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start);
     }
     
-    TheParser->pushLeaf(createdToken);
+    Parser_pushLeaf(session, createdToken);
     
     MUSTTAIL
-    return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
 }
 
 
@@ -156,21 +160,21 @@ ParseFunction PrefixUnsupportedTokenParselet::parsePrefix() const {
     return PrefixUnsupportedTokenParselet_parsePrefix;
 }
 
-void PrefixUnsupportedTokenParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PrefixUnsupportedTokenParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeaf(Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.BufLen, TokIn.Src));
+    Parser_pushLeaf(session, Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.bufLen(), TokIn.Src));
     
-    TheParser->nextToken(TokIn);
+    Parser_nextToken(session, TokIn);
     
     MUSTTAIL
-    return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
 }
 
 
@@ -178,7 +182,7 @@ ParseFunction PrefixCommaParselet::parsePrefix() const {
     return PrefixCommaParselet_parsePrefix;
 }
 
-void PrefixCommaParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PrefixCommaParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // if the input is  f[a@,2]  then we want to return TOKEN_ERROR_EXPECTEDOPERAND
@@ -187,27 +191,27 @@ void PrefixCommaParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
     Token createdToken;
     
-    if (TheParser->topPrecedence() == PRECEDENCE_LOWEST) {
+    if (Parser_topPrecedence(session) == PRECEDENCE_LOWEST) {
         
-        createdToken = Token(TOKEN_ERROR_PREFIXIMPLICITNULL, TokIn.BufLen.buffer, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_PREFIXIMPLICITNULL, TokIn.Buf, TokIn.Src.Start);
         
     } else {
         
-        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start);
     }
     
-    TheParser->pushLeaf(createdToken);
+    Parser_pushLeaf(session, createdToken);
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, TokIn/*ignored*/);
+    return Parser_parseClimb(session, Ignored, TokIn/*ignored*/);
 }
 
 
@@ -215,27 +219,27 @@ ParseFunction PrefixUnhandledParselet::parsePrefix() const {
     return PrefixUnhandledParselet_parsePrefix;
 }
 
-void PrefixUnhandledParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PrefixUnhandledParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     assert(!TokIn.Tok.isPossibleBeginning() && "handle at call site");
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeaf(Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start));
     
     //
     // Do not take next token
     //
-    TheParser->currentToken(TOPLEVEL);
+    Parser_currentToken(session, TOPLEVEL);
     
     auto I = infixParselets[TokIn.Tok.value()];
     
-    auto TokenPrecedence = I->getPrecedence();
+    auto TokenPrecedence = I->getPrecedence(session);
     
     //
     // if (Ctxt.Prec > TokenPrecedence)
@@ -243,7 +247,7 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
     //   goto prefixUnhandledParseletRet;
     //
-    if ((TheParser->topPrecedence() | 0x1) > TokenPrecedence) {
+    if ((Parser_topPrecedence(session) | 0x1) > TokenPrecedence) {
         
         //
         // Something like  a + | 2
@@ -252,7 +256,7 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
         //
         
         MUSTTAIL
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
     
     //
@@ -261,20 +265,16 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     // We want to make EXPECTEDOPERAND the first arg of the Operator node.
     //
     
-    TheParser->pushContextAndShift(TokenPrecedence);
+    Parser_pushContext(session, TokenPrecedence);
 
     auto P2 = infixParselets[TokIn.Tok.value()];
     
     MUSTTAIL
-    return (P2->parseInfix())(P2, TokIn);
+    return (P2->parseInfix())(session, P2, TokIn);
 }
 
 
-Symbol InfixToplevelNewlineParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence InfixToplevelNewlineParselet::getPrecedence() const {
+Precedence InfixToplevelNewlineParselet::getPrecedence(ParserSessionPtr session) const {
     //
     // Do not do Implicit Times across top-level newlines
     //
@@ -285,7 +285,7 @@ ParseFunction InfixToplevelNewlineParselet::parseInfix() const {
     return InfixToplevelNewlineParselet_parseInfix;
 }
 
-void InfixToplevelNewlineParselet_parseInfix(ParseletPtr Ignored, Token firstTok) {
+void InfixToplevelNewlineParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token firstTok) {
     
     assert(false);
     
@@ -297,22 +297,22 @@ ParseFunction SymbolParselet::parsePrefix() const {
     return SymbolParselet_parsePrefix;
 }
 
-void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void SymbolParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  x  or x_
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
     //
     // if we are here, then we know that Sym could bind to _
@@ -325,16 +325,16 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a_
             //
             
-            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+            Parser_pushContext(session, PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
             //
             
-            UnderParselet_parseInfixContextSensitive(under1Parselet, Tok);
+            UnderParselet_parseInfixContextSensitive(session, under1Parselet, Tok);
             
             MUSTTAIL
-            return SymbolParselet_reducePatternBlank(under1Parselet, Tok);
+            return SymbolParselet_reducePatternBlank(session, under1Parselet, Tok/*ignored*/);
         }
         case TOKEN_UNDERUNDER.value(): {
             
@@ -342,16 +342,16 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a__
             //
             
-            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+            Parser_pushContext(session, PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
             //
             
-            UnderParselet_parseInfixContextSensitive(under2Parselet, Tok);
+            UnderParselet_parseInfixContextSensitive(session, under2Parselet, Tok);
             
             MUSTTAIL
-            return SymbolParselet_reducePatternBlank(under2Parselet, Tok);
+            return SymbolParselet_reducePatternBlank(session, under2Parselet, Tok/*ignored*/);
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
@@ -359,16 +359,16 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a___
             //
             
-            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+            Parser_pushContext(session, PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
             //
             
-            UnderParselet_parseInfixContextSensitive(under3Parselet, Tok);
+            UnderParselet_parseInfixContextSensitive(session, under3Parselet, Tok);
             
             MUSTTAIL
-            return SymbolParselet_reducePatternBlank(under3Parselet, Tok);
+            return SymbolParselet_reducePatternBlank(session, under3Parselet, Tok/*ignored*/);
         }
         case TOKEN_UNDERDOT.value(): {
             
@@ -376,30 +376,28 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a_.
             //
             
-            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+            Parser_pushContext(session, PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
             //
             
-            UnderDotParselet_parseInfixContextSensitive(underDotParselet, Tok);
+            UnderDotParselet_parseInfixContextSensitive(session, underDotParselet, Tok);
             
             MUSTTAIL
-            return SymbolParselet_reducePatternOptionalDefault(underDotParselet, Tok);
+            return SymbolParselet_reducePatternOptionalDefault(session, underDotParselet, Tok/*ignored*/);
         }
-        default: {
-            
-            //
-            // Something like  a
-            //
-            
-            MUSTTAIL
-            return Parser_parseClimb(Ignored, TokIn/*ignored*/);
-        }
-    }
+    } // switch
+    
+    //
+    // Something like  a
+    //
+    
+    MUSTTAIL
+    return Parser_parseClimb(session, Ignored, TokIn/*ignored*/);
 }
 
-void SymbolParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokIn) {
+void SymbolParselet_parseInfixContextSensitive(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  _b
@@ -407,8 +405,8 @@ void SymbolParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokIn)
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
         return;
     }
 #endif // CHECK_ABORT
@@ -419,35 +417,31 @@ void SymbolParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokIn)
     // Just push this symbol
     //
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     // no call needed here
     return;
 }
 
-void SymbolParselet_reducePatternBlank(ParseletPtr P, Token Ignored) {
+void SymbolParselet_reducePatternBlank(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<UnderParselet *>(P));
     
-    TheParser->shift();
-    
     auto PBOp = dynamic_cast<UnderParselet *>(P)->getPBOp();
     
-    TheParser->pushNode(new CompoundNode(PBOp, TheParser->popContext()));
+    Parser_pushNode(session, new CompoundNode(PBOp, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, Ignored);
+    return Parser_parseClimb(session, P/*ignored*/, Ignored);
 }
 
-void SymbolParselet_reducePatternOptionalDefault(ParseletPtr Ignored, Token Ignored2) {
+void SymbolParselet_reducePatternOptionalDefault(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, TheParser->popContext()));
+    Parser_pushNode(session, new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
@@ -465,64 +459,56 @@ ParseFunction PrefixOperatorParselet::parsePrefix() const {
     return PrefixOperatorParselet_parsePrefix;
 }
 
-void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
+void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
     assert(dynamic_cast<PrefixOperatorParselet *>(P));
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto& Ctxt = TheParser->pushContext(dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
+    auto& Ctxt = Parser_pushContext(session, dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
     
-    TheParser->shift();
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
-    
-    assert(Ctxt.F == nullptr);
-    assert(Ctxt.P == nullptr);
+    assert(!Ctxt.F);
+    assert(!Ctxt.P);
     Ctxt.F = PrefixOperatorParselet_reducePrefixOperator;
     Ctxt.P = P;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void PrefixOperatorParselet_reducePrefixOperator(ParseletPtr P, Token Ignored) {
+void PrefixOperatorParselet_reducePrefixOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<PrefixOperatorParselet *>(P));
     
-    TheParser->shift();
-    
     auto Op = dynamic_cast<PrefixOperatorParselet *>(P)->getOp();
     
-    TheParser->pushNode(new PrefixNode(Op, TheParser->popContext()));
+    Parser_pushNode(session, new PrefixNode(Op, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, Ignored);
+    return Parser_parseClimb(session, P/*ignored*/, Ignored);
 }
 
-
-Symbol InfixImplicitTimesParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
 
 ParseFunction InfixImplicitTimesParselet::parseInfix() const {
     return InfixImplicitTimesParselet_parseInfix;
 }
 
-void InfixImplicitTimesParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void InfixImplicitTimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     assert(false);
     
@@ -530,7 +516,7 @@ void InfixImplicitTimesParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
 }
 
 
-Precedence InfixImplicitTimesParselet::getPrecedence() const {
+Precedence InfixImplicitTimesParselet::getPrecedence(ParserSessionPtr session) const {
     
     assert(false && "The last token may not have been added to InfixParselets");
     
@@ -538,16 +524,12 @@ Precedence InfixImplicitTimesParselet::getPrecedence() const {
 }
 
 
-Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn) const {
-    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+Token InfixImplicitTimesParselet::processImplicitTimes(ParserSessionPtr session, Token TokIn) const {
+    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, TokIn.Src.Start);
 }
 
 
-Symbol InfixAssertFalseParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence InfixAssertFalseParselet::getPrecedence() const {
+Precedence InfixAssertFalseParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_LOWEST;
 }
 
@@ -555,7 +537,7 @@ ParseFunction InfixAssertFalseParselet::parseInfix() const {
     return InfixAssertFalseParselet_parseInfix;
 }
 
-void InfixAssertFalseParselet_parseInfix(ParseletPtr Ignored, Token firstTok) {
+void InfixAssertFalseParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token firstTok) {
     
     assert(false);
     
@@ -565,7 +547,7 @@ void InfixAssertFalseParselet_parseInfix(ParseletPtr Ignored, Token firstTok) {
 
 BinaryOperatorParselet::BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
 
-Precedence BinaryOperatorParselet::getPrecedence() const {
+Precedence BinaryOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
 }
 
@@ -577,55 +559,53 @@ ParseFunction BinaryOperatorParselet::parseInfix() const {
     return BinaryOperatorParselet_parseInfix;
 }
 
-void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
+void BinaryOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
 
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
-    assert(Ctxt.P == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
+    assert(!Ctxt.P);
     Ctxt.F = BinaryOperatorParselet_reduceBinaryOperator;
     Ctxt.P = P;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void BinaryOperatorParselet_reduceBinaryOperator(ParseletPtr P, Token Ignored) {
+void BinaryOperatorParselet_reduceBinaryOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<BinaryOperatorParselet *>(P));
     
-    TheParser->shift();
-    
     auto Op = dynamic_cast<BinaryOperatorParselet *>(P)->getOp();
     
-    TheParser->pushNode(new BinaryNode(Op, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(Op, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, Ignored);
+    return Parser_parseClimb(session, P/*ignored*/, Ignored);
 }
 
 
 InfixOperatorParselet::InfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
 
-Precedence InfixOperatorParselet::getPrecedence() const {
+Precedence InfixOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
 }
 
@@ -637,43 +617,43 @@ ParseFunction InfixOperatorParselet::parseInfix() const {
     return InfixOperatorParselet_parseInfix;
 }
 
-void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
+void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     
-    auto Tok2 = TheParser->currentToken(TOPLEVEL);
+    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL);
+    Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
 #if !USE_MUSTTAIL
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
-    assert(Ctxt.P == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
+    assert(!Ctxt.P);
     Ctxt.F = Parser_identity;
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-    (P2->parsePrefix())(P2, Tok2);
+    (P2->parsePrefix())(session, P2, Tok2);
     
-    return InfixOperatorParselet_parseLoop(P, TokIn/*ignored*/);
+    return InfixOperatorParselet_parseLoop(session, P, TokIn/*ignored*/);
 #else
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
-    assert(Ctxt.P == nullptr);
+    auto& Ctxt = Parser_topContext();
+    assert(!Ctxt.F);
+    assert(!Ctxt.P);
     Ctxt.F = InfixOperatorParselet_parseLoop;
     Ctxt.P = P;
     
@@ -684,7 +664,7 @@ void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
 #endif // !USE_MUSTTAIL
 }
 
-void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
+void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<InfixOperatorParselet *>(P));
@@ -694,18 +674,19 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
 #endif // !USE_MUSTTAIL
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, Ignored);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, Ignored);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
-    auto Tok1 = TheParser->currentToken(TOPLEVEL);
-    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
+        
+        Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
     auto I = infixParselets[Tok1.Tok.value()];
     
@@ -730,33 +711,31 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
         // Tok.Tok != TokIn.Tok, so break
         //
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return InfixOperatorParselet_reduceInfixOperator(P, Ignored);
+        return InfixOperatorParselet_reduceInfixOperator(session, P, Ignored);
     }
     
-    TheParser->shift();
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    TheParser->appendTriviaSeq(Trivia1);
-    
-    TheParser->appendLeafArgAndNext(Tok1);
+    Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = TheParser->currentToken(TOPLEVEL);
+    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL);
+    Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
 #if !USE_MUSTTAIL
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == Parser_identity);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
         
-    (P2->parsePrefix())(P2, Tok2);
+    (P2->parsePrefix())(session, P2, Tok2);
     
     } // while (true)
 #else
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext();
     assert(Ctxt.F == InfixOperatorParselet_parseLoop);
     assert(Ctxt.P == P);
     
@@ -767,25 +746,23 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
 #endif // !USE_MUSTTAIL
 }
 
-void InfixOperatorParselet_reduceInfixOperator(ParseletPtr P, Token Ignored) {
+void InfixOperatorParselet_reduceInfixOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<InfixOperatorParselet *>(P));
     
-    TheParser->shift();
-    
     auto Op = dynamic_cast<InfixOperatorParselet *>(P)->getOp();
     
-    TheParser->pushNode(new InfixNode(Op, TheParser->popContext()));
+    Parser_pushNode(session, new InfixNode(Op, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, Ignored);
+    return Parser_parseClimb(session, P/*ignored*/, Ignored);
 }
 
 
 PostfixOperatorParselet::PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
 
-Precedence PostfixOperatorParselet::getPrecedence() const {
+Precedence PostfixOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
 }
 
@@ -797,29 +774,27 @@ ParseFunction PostfixOperatorParselet::parseInfix() const {
     return PostfixOperatorParselet_parseInfix;
 }
 
-void PostfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
+void PostfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     MUSTTAIL
-    return PostfixOperatorParselet_reducePostfixOperator(P, TokIn/*Ignored*/);
+    return PostfixOperatorParselet_reducePostfixOperator(session, P, TokIn/*Ignored*/);
 }
 
-void PostfixOperatorParselet_reducePostfixOperator(ParseletPtr P, Token Ignored) {
+void PostfixOperatorParselet_reducePostfixOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<PostfixOperatorParselet *>(P));
     
-    TheParser->shift();
-    
     auto Op = dynamic_cast<PostfixOperatorParselet *>(P)->getOp();
     
-    TheParser->pushNode(new PostfixNode(Op, TheParser->popContext()));
+    Parser_pushNode(session, new PostfixNode(Op, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, Ignored);
+    return Parser_parseClimb(session, P/*ignored*/, Ignored);
 }
 
 
@@ -837,32 +812,32 @@ ParseFunction GroupParselet::parsePrefix() const {
     return GroupParselet_parsePrefix;
 }
 
-void GroupParselet_parsePrefix(ParseletPtr P, Token TokIn) {
+void GroupParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    TheParser->pushGroup(GroupOpenerToCloser(TokIn.Tok));
+    Parser_pushGroup(session, GroupOpenerToCloser(TokIn.Tok));
     
-    auto& Ctxt = TheParser->pushContext(PRECEDENCE_LOWEST);
+    auto& Ctxt = Parser_pushContext(session, PRECEDENCE_LOWEST);
     
 #if !USE_MUSTTAIL
-    assert(Ctxt.F == nullptr);
-    assert(Ctxt.P == nullptr);
+    assert(!Ctxt.F);
+    assert(!Ctxt.P);
     Ctxt.F = Parser_identity;
     
-    return GroupParselet_parseLoop(P, TokIn/*Ignored*/);
+    return GroupParselet_parseLoop(session, P, TokIn/*Ignored*/);
 #else
-    assert(Ctxt.F == nullptr);
-    assert(Ctxt.P == nullptr);
+    assert(!Ctxt.F);
+    assert(!Ctxt.P);
     Ctxt.F = GroupParselet_parseLoop;
     Ctxt.P = P;
     
@@ -871,7 +846,7 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token TokIn) {
 #endif // !USE_MUSTTAIL
 }
 
-void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
+void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<GroupParselet *>(P));
@@ -881,12 +856,12 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
 #endif // !USE_MUSTTAIL
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->popGroup();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, Ignored);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_popGroup(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, Ignored);
     }
 #endif // CHECK_ABORT
     
@@ -900,11 +875,11 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     auto Closr = dynamic_cast<GroupParselet *>(P)->getCloser();
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
+    Parser_eatTrivia(session, Tok, TOPLEVEL, Trivia1);
     
     if (TokenToCloser(Tok.Tok) == Closr) {
         
@@ -912,14 +887,12 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
         // Everything is good
         //
         
-        TheParser->shift();
+        Parser_pushTriviaSeq(session, Trivia1);
         
-        TheParser->appendTriviaSeq(Trivia1);
-        
-        TheParser->pushLeafAndNext(Tok);
+        Parser_pushLeafAndNext(session, Tok);
         
         MUSTTAIL
-        return GroupParselet_reduceGroup(P, Ignored);
+        return GroupParselet_reduceGroup(session, P, Ignored);
     }
     
     if (Tok.Tok.isCloser()) {
@@ -928,7 +901,7 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
         // some other closer
         //
         
-        if (TheParser->checkGroup(TokenToCloser(Tok.Tok))) {
+        if (Parser_checkGroup(session, TokenToCloser(Tok.Tok))) {
             
             //
             // Something like  { ( }
@@ -939,10 +912,10 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
             // Do not consume the bad closer now
             //
             
-            Trivia1.reset();
+            Trivia1.reset(session);
             
             MUSTTAIL
-            return GroupParselet_reduceMissingCloser(P, Ignored);
+            return GroupParselet_reduceMissingCloser(session, P, Ignored);
         }
             
         //
@@ -950,12 +923,10 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
         //                   ^
         //
         
-        TheParser->shift();
-        
-        TheParser->appendTriviaSeq(Trivia1);
+        Parser_pushTriviaSeq(session, Trivia1);
         
 #if !USE_MUSTTAIL
-        PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, Tok);
+        PrefixToplevelCloserParselet_parsePrefix(session, prefixToplevelCloserParselet, Tok);
         
         continue;
 #else
@@ -970,31 +941,29 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
         // Handle something like   { a EOF
         //
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return GroupParselet_reduceUnterminatedGroup(P, Ignored);
+        return GroupParselet_reduceUnterminatedGroup(session, P, Ignored);
     }
 
     //
     // Handle the expression
     //
     
-    TheParser->shift();
-    
-    TheParser->appendTriviaSeq(Trivia1);
+    Parser_pushTriviaSeq(session, Trivia1);
     
 #if !USE_MUSTTAIL
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == Parser_identity);
     
     auto P2 = prefixParselets[Tok.Tok.value()];
         
-    (P2->parsePrefix())(P2, Tok);
+    (P2->parsePrefix())(session, P2, Tok);
     
     } // while (true)
 #else
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext();
     assert(Ctxt.F == GroupParselet_parseLoop);
     assert(Ctxt.P == P);
     
@@ -1005,69 +974,59 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
 #endif // !USE_MUSTTAIL
 }
 
-void GroupParselet_reduceGroup(ParseletPtr P, Token Ignored) {
+void GroupParselet_reduceGroup(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<GroupParselet *>(P));
     
-    TheParser->shift();
-    
     auto Op = dynamic_cast<GroupParselet *>(P)->getOp();
     
-    TheParser->pushNode(new GroupNode(Op, TheParser->popContext()));
+    Parser_pushNode(session, new GroupNode(Op, Parser_popContext(session)));
     
-    TheParser->popGroup();
+    Parser_popGroup(session);
     
     MUSTTAIL
-    return Parser_parseClimb(P/*ignored*/, Ignored);
+    return Parser_parseClimb(session, P/*ignored*/, Ignored);
 }
 
-void GroupParselet_reduceMissingCloser(ParseletPtr P, Token Ignored) {
+void GroupParselet_reduceMissingCloser(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<GroupParselet *>(P));
     
-    TheParser->shift();
-    
     auto Op = dynamic_cast<GroupParselet *>(P)->getOp();
     
-    TheParser->pushNode(new GroupMissingCloserNode(Op, TheParser->popContext()));
+    Parser_pushNode(session, new GroupMissingCloserNode(Op, Parser_popContext(session)));
     
-    TheParser->popGroup();
+    Parser_popGroup(session);
     
     MUSTTAIL
-    return Parser_tryContinue(P/*ignored*/, Ignored);
+    return Parser_tryContinue(session, P/*ignored*/, Ignored);
 }
 
-void GroupParselet_reduceUnterminatedGroup(ParseletPtr P, Token Ignored) {
+void GroupParselet_reduceUnterminatedGroup(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
     assert(dynamic_cast<GroupParselet *>(P));
     
-    TheParser->shift();
-    
     auto Op = dynamic_cast<GroupParselet *>(P)->getOp();
     
-    TheParser->pushNode(new UnterminatedGroupNeedsReparseNode(Op, TheParser->popContext()));
+    Parser_pushNode(session, new UnterminatedGroupNeedsReparseNode(Op, Parser_popContext(session)));
     
-    TheParser->popGroup();
+    Parser_popGroup(session);
     
     MUSTTAIL
-    return Parser_tryContinue(P/*ignored*/, Ignored);
+    return Parser_tryContinue(session, P/*ignored*/, Ignored);
 }
 
 
-CallParselet::CallParselet(PrefixParseletPtr GP) : GP(std::move(GP)) {}
-
-Symbol CallParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
+CallParselet::CallParselet(PrefixParseletPtr GP) : GP(GP) {}
 
 PrefixParseletPtr CallParselet::getGP() const {
     return GP;
 }
 
-Precedence CallParselet::getPrecedence() const {
+Precedence CallParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_CALL;
 }
 
@@ -1075,16 +1034,16 @@ ParseFunction CallParselet::parseInfix() const {
     return CallParselet_parseInfix;
 }
 
-void CallParselet_parseInfix(ParseletPtr P, Token TokIn) {
+void CallParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
     assert(dynamic_cast<CallParselet *>(P));
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, P/*ignored*/, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
@@ -1092,45 +1051,44 @@ void CallParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
     //
     
-    TheParser->setPrecedence(PRECEDENCE_HIGHEST);
-    
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
     Ctxt.F = CallParselet_reduceCall;
+    Ctxt.Prec = PRECEDENCE_HIGHEST;
     
     auto GP = dynamic_cast<CallParselet *>(P)->getGP();
     
     MUSTTAIL
-    return (GP->parsePrefix())(GP, TokIn);
+    return (GP->parsePrefix())(session, GP, TokIn);
 }
 
-void CallParselet_reduceCall(ParseletPtr Ignored, Token Ignored2) {
+void CallParselet_reduceCall(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->pushNode(new CallNode(TheParser->popContext(), TheParser->popNode()));
+    {
+        auto Body = Parser_popNode(session);
+        
+        Parser_pushNode(session, new CallNode(Parser_popContext(session), std::move(Body)));
+    }
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-
-Symbol TildeParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
 
 ParseFunction TildeParselet::parseInfix() const {
     return TildeParselet_parseInfix;
 }
 
-Precedence TildeParselet::getPrecedence() const {
+Precedence TildeParselet::getPrecedence(ParserSessionPtr session) const {
     
-    if (TheParser->checkTilde()) {
+    if (Parser_checkTilde(session)) {
         return PRECEDENCE_LOWEST;
     }
     
     return PRECEDENCE_TILDE;
 }
 
-void TildeParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void TildeParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  a ~f~ b
@@ -1139,47 +1097,46 @@ void TildeParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto FirstTok = TheParser->currentToken(TOPLEVEL);
+    auto FirstTok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(FirstTok, TOPLEVEL);
+    Parser_eatTrivia(session, FirstTok, TOPLEVEL);
     
-    TheParser->setPrecedence(PRECEDENCE_LOWEST);
-    
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
     Ctxt.F = TildeParselet_parse1;
+    Ctxt.Prec = PRECEDENCE_LOWEST;
     
     auto P2 = prefixParselets[FirstTok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, FirstTok);
+    return (P2->parsePrefix())(session, P2, FirstTok);
 }
 
-void TildeParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
+void TildeParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
-    auto Tok1 = TheParser->currentToken(TOPLEVEL);
+    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
     if (Tok1.Tok != TOKEN_TILDE) {
         
@@ -1189,181 +1146,157 @@ void TildeParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
         // Not structurally correct, so return SyntaxErrorNode
         //
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return TildeParselet_reduceError(Ignored, Ignored2);
+        return TildeParselet_reduceError(session, Ignored, Ignored2);
     }
     
-    TheParser->shift();
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    TheParser->appendTriviaSeq(Trivia1);
-    
-    TheParser->appendLeafArgAndNext(Tok1);
+    Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = TheParser->currentToken(TOPLEVEL);
+    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL);
+    Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
     //
     // Reset back to "outside" precedence
     //
     
-    TheParser->setPrecedence(PRECEDENCE_TILDE);
-    
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == TildeParselet_parse1);
     Ctxt.F = TildeParselet_reduceTilde;
+    Ctxt.Prec = PRECEDENCE_TILDE;
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok2);
+    return (P2->parsePrefix())(session, P2, Tok2);
 }
 
-void TildeParselet_reduceTilde(ParseletPtr Ignored, Token Ignored2) {
+void TildeParselet_reduceTilde(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new TernaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, TheParser->popContext()));
+    Parser_pushNode(session, new TernaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void TildeParselet_reduceError(ParseletPtr Ignored, Token Ignored2) {
+void TildeParselet_reduceError(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, TheParser->popContext()));
+    Parser_pushNode(session, new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_tryContinue(Ignored, Ignored2);
+    return Parser_tryContinue(session, Ignored, Ignored2);
 }
 
-
-Symbol ColonParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
 
 ParseFunction ColonParselet::parseInfix() const {
     return ColonParselet_parseInfix;
 }
 
-Precedence ColonParselet::getPrecedence() const {
+Precedence ColonParselet::getPrecedence(ParserSessionPtr session) const {
     
-    if (TheParser->checkPatternPrecedence()) {
+    if (Parser_checkPatternPrecedence(session)) {
         return PRECEDENCE_FAKE_OPTIONALCOLON;
     }
     
     return PRECEDENCE_HIGHEST;
 }
 
-void ColonParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void ColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  symbol:object  or  pattern:optional
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    auto colonLHS = TheParser->checkColonLHS();
+    auto colonLHS = Parser_checkColonLHS(session);
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
     switch (colonLHS) {
         case COLONLHS_PATTERN: {
             
-            TheParser->setPrecedence(PRECEDENCE_FAKE_PATTERNCOLON);
-            
-            auto& Ctxt = TheParser->topContext();
-            assert(Ctxt.F == nullptr);
+            auto& Ctxt = Parser_topContext(session);
+            assert(!Ctxt.F);
             Ctxt.F = ColonParselet_reducePattern;
+            Ctxt.Prec = PRECEDENCE_FAKE_PATTERNCOLON;
             
             auto P2 = prefixParselets[Tok.Tok.value()];
             
             MUSTTAIL
-            return (P2->parsePrefix())(P2, Tok);
+            return (P2->parsePrefix())(session, P2, Tok);
         }
         case COLONLHS_OPTIONAL: {
             
-            TheParser->setPrecedence(PRECEDENCE_FAKE_OPTIONALCOLON);
-            
-            auto& Ctxt = TheParser->topContext();
-            assert(Ctxt.F == nullptr);
+            auto& Ctxt = Parser_topContext(session);
+            assert(!Ctxt.F);
             Ctxt.F = ColonParselet_reduceOptional;
+            Ctxt.Prec = PRECEDENCE_FAKE_OPTIONALCOLON;
             
             auto P2 = prefixParselets[Tok.Tok.value()];
 
             MUSTTAIL
-            return (P2->parsePrefix())(P2, Tok);
+            return (P2->parsePrefix())(session, P2, Tok);
         }
         case COLONLHS_ERROR: {
             
-            TheParser->setPrecedence(PRECEDENCE_FAKE_PATTERNCOLON);
-            
-            auto& Ctxt = TheParser->topContext();
-            assert(Ctxt.F == nullptr);
+            auto& Ctxt = Parser_topContext(session);
+            assert(!Ctxt.F);
             Ctxt.F = ColonParselet_reduceError;
+            Ctxt.Prec = PRECEDENCE_FAKE_PATTERNCOLON;
             
             auto P2 = prefixParselets[Tok.Tok.value()];
             
             MUSTTAIL
-            return (P2->parsePrefix())(P2, Tok);
+            return (P2->parsePrefix())(session, P2, Tok);
         }
         default: {
+            
             assert(false);
-            break;
         }
     }
 }
 
-void ColonParselet_reducePattern(ParseletPtr Ignored, Token Ignored2) {
+void ColonParselet_reducePattern(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_PATTERN, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(SYMBOL_PATTERN, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void ColonParselet_reduceError(ParseletPtr Ignored, Token Ignored2) {
+void ColonParselet_reduceError(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL, TheParser->popContext()));
+    Parser_pushNode(session, new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void ColonParselet_reduceOptional(ParseletPtr Ignored, Token Ignored2) {
+void ColonParselet_reduceOptional(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_OPTIONAL, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(SYMBOL_OPTIONAL, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
-Symbol SlashColonParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence SlashColonParselet::getPrecedence() const {
+Precedence SlashColonParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_SLASHCOLON;
 }
 
@@ -1371,7 +1304,7 @@ ParseFunction SlashColonParselet::parseInfix() const {
     return SlashColonParselet_parseInfix;
 }
 
-void SlashColonParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void SlashColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // a /: b := c  is handled here
@@ -1390,109 +1323,86 @@ void SlashColonParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
     Ctxt.F = SlashColonParselet_parse1;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void SlashColonParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
+void SlashColonParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
-    
-    switch (Tok.Tok.value()) {
-        case TOKEN_EQUAL.value(): {
-            
-            TheParser->shift();
-            
-            TheParser->appendTriviaSeq(Trivia1);
-            
-            break;
-        }
-        case TOKEN_COLONEQUAL.value(): {
-            
-            TheParser->shift();
-            
-            TheParser->appendTriviaSeq(Trivia1);
-            
-            break;
-        }
-        default: {
-            
-            Trivia1.reset();
-            
-            break;
-        }
-    }
+    Parser_eatTrivia(session, Tok, TOPLEVEL, Trivia1);
     
     switch (Tok.Tok.value()) {
         case TOKEN_EQUAL.value(): {
             
-            TheParser->setPrecedence(PRECEDENCE_EQUAL);
+            Parser_pushTriviaSeq(session, Trivia1);
+            
+            Parser_setPrecedence(session, PRECEDENCE_EQUAL);
             
             MUSTTAIL
-            return EqualParselet_parseInfixTag(equalParselet, Tok);
+            return EqualParselet_parseInfixTag(session, equalParselet, Tok);
         }
         case TOKEN_COLONEQUAL.value(): {
             
-            TheParser->setPrecedence(PRECEDENCE_COLONEQUAL);
+            Parser_pushTriviaSeq(session, Trivia1);
+            
+            Parser_setPrecedence(session, PRECEDENCE_COLONEQUAL);
             
             MUSTTAIL
-            return ColonEqualParselet_parseInfixTag(colonEqualParselet, Tok);
+            return ColonEqualParselet_parseInfixTag(session, colonEqualParselet, Tok);
         }
-        default: {
-            
-            //
-            // Anything other than:
-            // a /: b = c
-            // a /: b := c
-            // a /: b =.
-            //
-            
-            MUSTTAIL
-            return SlashColonParselet_reduceError(Ignored, Ignored2);
-        }
-    }
-}
-
-void SlashColonParselet_reduceError(ParseletPtr Ignored, Token Ignored2) {
+    } // switch
     
-    TheParser->shift();
+    Trivia1.reset(session);
     
-    TheParser->pushNode(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSET, TheParser->popContext()));
+    //
+    // Anything other than:
+    // a /: b = c
+    // a /: b := c
+    // a /: b =.
+    //
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return SlashColonParselet_reduceError(session, Ignored, Ignored2);
+}
+
+void SlashColonParselet_reduceError(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+    
+    Parser_pushNode(session, new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSET, Parser_popContext(session)));
+    
+    MUSTTAIL
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
@@ -1502,21 +1412,21 @@ ParseFunction EqualParselet::parseInfix() const {
     return EqualParselet_parseInfix;
 }
 
-void EqualParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void EqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_DOT) {
         
@@ -1527,41 +1437,41 @@ void EqualParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
         // Spaces to Avoid
         //
         
-        TheParser->pushLeafAndNext(Tok);
+        Parser_pushLeafAndNext(session, Tok);
         
         MUSTTAIL
-        return EqualParselet_reduceUnset(Ignored, TokIn/*Ignored*/);
+        return EqualParselet_reduceUnset(session, Ignored, TokIn/*Ignored*/);
     }
     
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
     Ctxt.F = EqualParselet_reduceSet;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void EqualParselet_parseInfixTag(ParseletPtr Ignored, Token TokIn) {
+void EqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // a /: b = c  and  a /: b = .  are handled here
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_DOT) {
         
@@ -1572,60 +1482,52 @@ void EqualParselet_parseInfixTag(ParseletPtr Ignored, Token TokIn) {
         // Spaces to Avoid
         //
         
-        TheParser->pushLeafAndNext(Tok);
+        Parser_pushLeafAndNext(session, Tok);
         
         MUSTTAIL
-        return EqualParselet_reduceTagUnset(Ignored, TokIn/*Ignored*/);
+        return EqualParselet_reduceTagUnset(session, Ignored, TokIn/*Ignored*/);
     }
     
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == SlashColonParselet_parse1);
     Ctxt.F = EqualParselet_reduceTagSet;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void EqualParselet_reduceSet(ParseletPtr Ignored, Token Ignored2) {
+void EqualParselet_reduceSet(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_SET, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(SYMBOL_SET, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void EqualParselet_reduceUnset(ParseletPtr Ignored, Token Ignored2) {
+void EqualParselet_reduceUnset(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_UNSET, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(SYMBOL_UNSET, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void EqualParselet_reduceTagSet(ParseletPtr Ignored, Token Ignored2) {
+void EqualParselet_reduceTagSet(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new TernaryNode(SYMBOL_TAGSET, TheParser->popContext()));
+    Parser_pushNode(session, new TernaryNode(SYMBOL_TAGSET, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void EqualParselet_reduceTagUnset(ParseletPtr Ignored, Token Ignored2) {
+void EqualParselet_reduceTagUnset(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new TernaryNode(SYMBOL_TAGUNSET, TheParser->popContext()));
+    Parser_pushNode(session, new TernaryNode(SYMBOL_TAGUNSET, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
@@ -1635,76 +1537,72 @@ ParseFunction ColonEqualParselet::parseInfix() const {
     return ColonEqualParselet_parseInfix;
 }
 
-void ColonEqualParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void ColonEqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
     Ctxt.F = ColonEqualParselet_reduceSetDelayed;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void ColonEqualParselet_parseInfixTag(ParseletPtr Ignored, Token TokIn) {
+void ColonEqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == SlashColonParselet_parse1);
     Ctxt.F = ColonEqualParselet_reduceTagSetDelayed;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void ColonEqualParselet_reduceSetDelayed(ParseletPtr Ignored, Token Ignored2) {
+void ColonEqualParselet_reduceSetDelayed(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_SETDELAYED, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(SYMBOL_SETDELAYED, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void ColonEqualParselet_reduceTagSetDelayed(ParseletPtr Ignored, Token Ignored2) {
+void ColonEqualParselet_reduceTagSetDelayed(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new TernaryNode(SYMBOL_TAGSETDELAYED, TheParser->popContext()));
+    Parser_pushNode(session, new TernaryNode(SYMBOL_TAGSETDELAYED, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
@@ -1712,101 +1610,91 @@ ParseFunction IntegralParselet::parsePrefix() const {
     return IntegralParselet_parsePrefix;
 }
 
-void IntegralParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  \[Integral] f \[DifferentialD] x
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    auto& Ctxt = TheParser->pushContext(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    auto& Ctxt = Parser_pushContext(session, PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
     
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL);
+    Parser_eatTrivia(session, Tok, TOPLEVEL);
     
-    assert(Ctxt.F == nullptr);
+    assert(!Ctxt.F);
     Ctxt.F = IntegralParselet_parse1;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void IntegralParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
+void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
 
-    auto Tok = TheParser->currentToken(TOPLEVEL);
+    auto Tok = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
+    Parser_eatTrivia(session, Tok, TOPLEVEL, Trivia1);
     
     if (!(Tok.Tok == TOKEN_LONGNAME_DIFFERENTIALD || Tok.Tok == TOKEN_LONGNAME_CAPITALDIFFERENTIALD)) {
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return IntegralParselet_reduceIntegral(Ignored, Ignored2);
+        return IntegralParselet_reduceIntegral(session, Ignored, Ignored2);
     }
     
-    TheParser->shift();
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    TheParser->appendTriviaSeq(Trivia1);
-    
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == IntegralParselet_parse1);
     Ctxt.F = IntegralParselet_reduceIntegrate;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void IntegralParselet_reduceIntegrate(ParseletPtr Ignored, Token Ignored2) {
+void IntegralParselet_reduceIntegrate(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new PrefixBinaryNode(SYMBOL_INTEGRATE, TheParser->popContext()));
+    Parser_pushNode(session, new PrefixBinaryNode(SYMBOL_INTEGRATE, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
-void IntegralParselet_reduceIntegral(ParseletPtr Ignored, Token Ignored2) {
+void IntegralParselet_reduceIntegral(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new PrefixNode(SYMBOL_INTEGRAL, TheParser->popContext()));
+    Parser_pushNode(session, new PrefixNode(SYMBOL_INTEGRAL, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
-Symbol CommaParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence CommaParselet::getPrecedence() const {
+Precedence CommaParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_COMMA;
 }
 
@@ -1814,25 +1702,25 @@ ParseFunction CommaParselet::parseInfix() const {
     return CommaParselet_parseInfix;
 }
 
-void CommaParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     
-    auto Tok2 = TheParser->currentToken(TOPLEVEL);
+    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL);
+    Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_COMMA || Tok2.Tok == TOKEN_LONGNAME_INVISIBLECOMMA) {
         
@@ -1840,17 +1728,17 @@ void CommaParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
         // Something like  a,,
         //
         
-        TheParser->pushLeaf(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
         
 #if !USE_MUSTTAIL
-        auto& Ctxt = TheParser->topContext();
-        assert(Ctxt.F == nullptr);
+        auto& Ctxt = Parser_topContext(session);
+        assert(!Ctxt.F);
         Ctxt.F = Parser_identity;
         
-        return CommaParselet_parseLoop(Ignored, TokIn/*ignored*/);
+        return CommaParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-        auto& Ctxt = TheParser->topContext();
-        assert(Ctxt.F == nullptr);
+        auto& Ctxt = Parser_topContext();
+        assert(!Ctxt.F);
         Ctxt.F = CommaParselet_parseLoop;
         
         MUSTTAIL
@@ -1859,18 +1747,18 @@ void CommaParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     }
     
 #if !USE_MUSTTAIL
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext(session);
+    assert(!Ctxt.F);
     Ctxt.F = Parser_identity;
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-    (P2->parsePrefix())(P2, Tok2);
+    (P2->parsePrefix())(session, P2, Tok2);
     
-    return CommaParselet_parseLoop(Ignored, TokIn/*ignored*/);
+    return CommaParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-    auto& Ctxt = TheParser->topContext();
-    assert(Ctxt.F == nullptr);
+    auto& Ctxt = Parser_topContext();
+    assert(!Ctxt.F);
     Ctxt.F = CommaParselet_parseLoop;
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
@@ -1880,48 +1768,46 @@ void CommaParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
 #endif // !USE_MUSTTAIL
 }
 
-void CommaParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
+void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if !USE_MUSTTAIL
     while (true) {
 #endif // !USE_MUSTTAIL
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
 
-    auto Tok1 = TheParser->currentToken(TOPLEVEL);
+    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
     if (!(Tok1.Tok == TOKEN_COMMA || Tok1.Tok == TOKEN_LONGNAME_INVISIBLECOMMA)) {
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return CommaParselet_reduceComma(Ignored, Ignored2);
+        return CommaParselet_reduceComma(session, Ignored, Ignored2);
     }
 
     //
     // Something like  a,b
     //
     
-    TheParser->shift();
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    TheParser->appendTriviaSeq(Trivia1);
-    
-    TheParser->appendLeafArgAndNext(Tok1);
+    Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = TheParser->currentToken(TOPLEVEL);
+    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL);
+    Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_COMMA || Tok2.Tok == TOKEN_LONGNAME_INVISIBLECOMMA) {
 
@@ -1929,7 +1815,7 @@ void CommaParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
         // Something like  a,,
         //
         
-        TheParser->pushLeaf(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
         
 #if !USE_MUSTTAIL
         continue;
@@ -1940,16 +1826,16 @@ void CommaParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
     }
         
 #if !USE_MUSTTAIL
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == Parser_identity);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
         
-    (P2->parsePrefix())(P2, Tok2);
+    (P2->parsePrefix())(session, P2, Tok2);
         
     } // while (true)
 #else
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext();
     assert(Ctxt.F == CommaParselet_parseLoop);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
@@ -1959,11 +1845,9 @@ void CommaParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
 #endif // !USE_MUSTTAIL
 }
 
-void CommaParselet_reduceComma(ParseletPtr Ignored, Token Ignored2) {
+void CommaParselet_reduceComma(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new InfixNode(SYMBOL_CODEPARSER_COMMA, TheParser->popContext()));
+    Parser_pushNode(session, new InfixNode(SYMBOL_CODEPARSER_COMMA, Parser_popContext(session)));
     
     //
     // was:
@@ -1972,21 +1856,17 @@ void CommaParselet_reduceComma(ParseletPtr Ignored, Token Ignored2) {
 //    return Parser_parseClimb(Ignored, Ignored2);
     
     //
-    // but take advantage of fact that Comma has lowest operator precedence and there is nothing a,b,c that will continue that expression
+    // but take advantage of fact that Comma has lowest operator precedence and there is nothing after a,b,c that will continue that expression
     //
     // so call Parser_tryContinue directly
     //
     
     MUSTTAIL
-    return Parser_tryContinue(Ignored, Ignored2);
+    return Parser_tryContinue(session, Ignored, Ignored2);
 }
 
 
-Symbol SemiParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence SemiParselet::getPrecedence() const {
+Precedence SemiParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_SEMI;
 }
 
@@ -1994,28 +1874,28 @@ ParseFunction SemiParselet::parseInfix() const {
     return SemiParselet_parseInfix;
 }
 
-void SemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     
-    auto Tok2 = TheParser->currentToken(TOPLEVEL);
+    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
     
     //
     // CompoundExpression should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL);
+    Parser_eatTriviaButNotToplevelNewlines(session, Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_SEMI) {
         
@@ -2023,21 +1903,21 @@ void SemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
         // Something like  a; ;
         //
         
-        TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
         
         //
         // nextToken() is not needed after an implicit token
         //
         
 #if !USE_MUSTTAIL
-        auto& Ctxt = TheParser->topContext();
-        assert(Ctxt.F == nullptr);
+        auto& Ctxt = Parser_topContext(session);
+        assert(!Ctxt.F);
         Ctxt.F = Parser_identity;
         
-        return SemiParselet_parseLoop(Ignored, TokIn/*ignored*/);
+        return SemiParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-        auto& Ctxt = TheParser->topContext();
-        assert(Ctxt.F == nullptr);
+        auto& Ctxt = Parser_topContext();
+        assert(!Ctxt.F);
         Ctxt.F = SemiParselet_parseLoop;
         
         MUSTTAIL
@@ -2052,18 +1932,18 @@ void SemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
         //
         
 #if !USE_MUSTTAIL
-        auto& Ctxt = TheParser->topContext();
-        assert(Ctxt.F == nullptr);
+        auto& Ctxt = Parser_topContext(session);
+        assert(!Ctxt.F);
         Ctxt.F = Parser_identity;
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
-        (P2->parsePrefix())(P2, Tok2);
+        (P2->parsePrefix())(session, P2, Tok2);
         
-        return SemiParselet_parseLoop(Ignored, TokIn/*ignored*/);
+        return SemiParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-        auto& Ctxt = TheParser->topContext();
-        assert(Ctxt.F == nullptr);
+        auto& Ctxt = Parser_topContext();
+        assert(!Ctxt.F);
         Ctxt.F = SemiParselet_parseLoop;
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
@@ -2079,36 +1959,36 @@ void SemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     // For example:  a;&
     //
     
-    TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
     
     //
     // nextToken() is not needed after an implicit token
     //
     
     MUSTTAIL
-    return SemiParselet_reduceCompoundExpression(Ignored, TokIn/*Ignored*/);
+    return SemiParselet_reduceCompoundExpression(session, Ignored, TokIn/*Ignored*/);
 }
 
-void SemiParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
+void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if !USE_MUSTTAIL
     while (true) {
 #endif // !USE_MUSTTAIL
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
-    auto Tok1 = TheParser->currentToken(TOPLEVEL);
+    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
     if (Tok1.Tok != TOKEN_SEMI) {
         
@@ -2116,28 +1996,26 @@ void SemiParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
         // Something like  a;b
         //
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return SemiParselet_reduceCompoundExpression(Ignored, Ignored2);
+        return SemiParselet_reduceCompoundExpression(session, Ignored, Ignored2);
     }
     
     //
     // Something like  a;b
     //
     
-    TheParser->shift();
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    TheParser->appendTriviaSeq(Trivia1);
-    
-    TheParser->appendLeafArgAndNext(Tok1);
+    Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = TheParser->currentToken(TOPLEVEL);
+    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
     
     //
     // CompoundExpression should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL);
+    Parser_eatTriviaButNotToplevelNewlines(session, Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_SEMI) {
 
@@ -2145,7 +2023,7 @@ void SemiParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
         // Something like  a;b; ;
         //
         
-        TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
         
         //
         // nextToken() is not needed after an implicit token
@@ -2166,16 +2044,16 @@ void SemiParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
         //
         
 #if !USE_MUSTTAIL
-        auto& Ctxt = TheParser->topContext();
+        auto& Ctxt = Parser_topContext(session);
         assert(Ctxt.F == Parser_identity);
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
-        (P2->parsePrefix())(P2, Tok2);
+        (P2->parsePrefix())(session, P2, Tok2);
         
         continue;
 #else
-        auto& Ctxt = TheParser->topContext();
+        auto& Ctxt = Parser_topContext();
         assert(Ctxt.F == SemiParselet_parseLoop);
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
@@ -2191,36 +2069,30 @@ void SemiParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
     // For example:  a;b;&
     //
     
-    TheParser->pushLeaf(Token(TOKEN_FAKE_IMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
     
     //
     // nextToken() is not needed after an implicit token
     //
     
     MUSTTAIL
-    return SemiParselet_reduceCompoundExpression(Ignored, Ignored2);
+    return SemiParselet_reduceCompoundExpression(session, Ignored, Ignored2);
         
 #if !USE_MUSTTAIL
     } // while (true)
 #endif // !USE_MUSTTAIL
 }
 
-void SemiParselet_reduceCompoundExpression(ParseletPtr Ignored, Token Ignored2) {
+void SemiParselet_reduceCompoundExpression(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new InfixNode(SYMBOL_COMPOUNDEXPRESSION, TheParser->popContext()));
+    Parser_pushNode(session, new InfixNode(SYMBOL_COMPOUNDEXPRESSION, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
-Symbol ColonColonParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence ColonColonParselet::getPrecedence() const {
+Precedence ColonColonParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_COLONCOLON;
 }
 
@@ -2228,21 +2100,21 @@ ParseFunction ColonColonParselet::parseInfix() const {
     return ColonColonParselet_parseInfix;
 }
 
-void ColonColonParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void ColonColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // a::b
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
@@ -2251,56 +2123,54 @@ void ColonColonParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok2 = TheParser->currentToken_stringifyAsTag();
+    auto Tok2 = Parser_currentToken_stringifyAsTag(session);
     
-    TheParser->pushLeafAndNext(Tok2);
+    Parser_pushLeafAndNext(session, Tok2);
     
     MUSTTAIL
-    return ColonColonParselet_parseLoop(Ignored, TokIn/*ignored*/);
+    return ColonColonParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 }
 
-void ColonColonParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
+void ColonColonParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
 #if !USE_MUSTTAIL
     while (true) {
 #endif // !USE_MUSTTAIL
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popNodeV();
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, Ignored2);
+    if (session->abortQ()) {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, Ignored2);
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = TheParser->getTrivia1();
+    auto& Trivia1 = Parser_getTrivia1(session);
     
-    auto Tok1 = TheParser->currentToken(TOPLEVEL);
+    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
     
-    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
     if (Tok1.Tok != TOKEN_COLONCOLON) {
         
-        Trivia1.reset();
+        Trivia1.reset(session);
         
         MUSTTAIL
-        return ColonColonParselet_reduceMessageName(Ignored, Ignored2);
+        return ColonColonParselet_reduceMessageName(session, Ignored, Ignored2);
     }
     
-    TheParser->shift();
+    Parser_pushTriviaSeq(session, Trivia1);
     
-    TheParser->appendTriviaSeq(Trivia1);
-    
-    TheParser->appendLeafArgAndNext(Tok1);
+    Parser_pushLeafAndNext(session, Tok1);
     
     //
     // Special tokenization, so must do parsing here
     //
 
-    auto Tok2 = TheParser->currentToken_stringifyAsTag();
+    auto Tok2 = Parser_currentToken_stringifyAsTag(session);
 
-    TheParser->pushLeafAndNext(Tok2);
+    Parser_pushLeafAndNext(session, Tok2);
     
 #if !USE_MUSTTAIL
     } // while (true)
@@ -2310,22 +2180,16 @@ void ColonColonParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
 #endif // !USE_MUSTTAIL
 }
 
-void ColonColonParselet_reduceMessageName(ParseletPtr Ignored, Token Ignored2) {
+void ColonColonParselet_reduceMessageName(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new InfixNode(SYMBOL_MESSAGENAME, TheParser->popContext()));
+    Parser_pushNode(session, new InfixNode(SYMBOL_MESSAGENAME, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
-Symbol GreaterGreaterParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence GreaterGreaterParselet::getPrecedence() const {
+Precedence GreaterGreaterParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_GREATERGREATER;
 }
 
@@ -2333,17 +2197,17 @@ ParseFunction GreaterGreaterParselet::parseInfix() const {
     return GreaterGreaterParselet_parseInfix;
 }
 
-void GreaterGreaterParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void GreaterGreaterParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // a>>b
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
@@ -2351,34 +2215,28 @@ void GreaterGreaterParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     // Special tokenization, so must do parsing here
     //
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken_stringifyAsFile();
+    auto Tok = Parser_currentToken_stringifyAsFile(session);
     
-    TheParser->eatTrivia_stringifyAsFile(Tok);
+    Parser_eatTrivia_stringifyAsFile(session, Tok);
     
-    TheParser->pushLeafAndNext(Tok);
-    
-    MUSTTAIL
-    return GreaterGreaterParselet_reducePut(Ignored, TokIn/*Ignored*/);
-}
-
-void GreaterGreaterParselet_reducePut(ParseletPtr Ignored, Token Ignored2) {
-    
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_PUT, TheParser->popContext()));
+    Parser_pushLeafAndNext(session, Tok);
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return GreaterGreaterParselet_reducePut(session, Ignored, TokIn/*Ignored*/);
+}
+
+void GreaterGreaterParselet_reducePut(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+    
+    Parser_pushNode(session, new BinaryNode(SYMBOL_PUT, Parser_popContext(session)));
+    
+    MUSTTAIL
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
-Symbol GreaterGreaterGreaterParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
-Precedence GreaterGreaterGreaterParselet::getPrecedence() const {
+Precedence GreaterGreaterGreaterParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_GREATERGREATERGREATER;
 }
 
@@ -2386,17 +2244,17 @@ ParseFunction GreaterGreaterGreaterParselet::parseInfix() const {
     return GreaterGreaterGreaterParselet_parseInfix;
 }
 
-void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+void GreaterGreaterGreaterParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // a>>>b
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->popContextV();
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_popContext(session);
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
@@ -2404,26 +2262,24 @@ void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr Ignored, Token TokIn) 
     // Special tokenization, so must do parsing here
     //
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken_stringifyAsFile();
+    auto Tok = Parser_currentToken_stringifyAsFile(session);
     
-    TheParser->eatTrivia_stringifyAsFile(Tok);
+    Parser_eatTrivia_stringifyAsFile(session, Tok);
     
-    TheParser->pushLeafAndNext(Tok);
+    Parser_pushLeafAndNext(session, Tok);
     
     MUSTTAIL
-    return GreaterGreaterGreaterParselet_reducePutAppend(Ignored, TokIn/*Ignored*/);
+    return GreaterGreaterGreaterParselet_reducePutAppend(session, Ignored, TokIn/*Ignored*/);
 }
 
-void GreaterGreaterGreaterParselet_reducePutAppend(ParseletPtr Ignored, Token Ignored2) {
+void GreaterGreaterGreaterParselet_reducePutAppend(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new BinaryNode(SYMBOL_PUTAPPEND, TheParser->popContext()));
+    Parser_pushNode(session, new BinaryNode(SYMBOL_PUTAPPEND, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
@@ -2431,16 +2287,16 @@ ParseFunction LessLessParselet::parsePrefix() const {
     return LessLessParselet_parsePrefix;
 }
 
-void LessLessParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void LessLessParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // <<a
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
@@ -2448,34 +2304,32 @@ void LessLessParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     // Special tokenization, so must do parsing here
     //
     
-    TheParser->pushContextV(PRECEDENCE_HIGHEST);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    TheParser->appendLeafArgAndNext(TokIn);
+    Parser_pushContext(session, PRECEDENCE_HIGHEST);
     
-    auto Tok = TheParser->currentToken_stringifyAsFile();
+    auto Tok = Parser_currentToken_stringifyAsFile(session);
     
-    TheParser->eatTrivia_stringifyAsFile(Tok);
+    Parser_eatTrivia_stringifyAsFile(session, Tok);
     
-    TheParser->pushLeafAndNext(Tok);
-    
-    MUSTTAIL
-    return LessLessParselet_reduceGet(Ignored, TokIn/*Ignored*/);
-}
-
-void LessLessParselet_reduceGet(ParseletPtr Ignored, Token Ignored2) {
-    
-    TheParser->shift();
-    
-    TheParser->pushNode(new PrefixNode(SYMBOL_GET, TheParser->popContext()));
+    Parser_pushLeafAndNext(session, Tok);
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return LessLessParselet_reduceGet(session, Ignored, TokIn/*Ignored*/);
+}
+
+void LessLessParselet_reduceGet(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+    
+    Parser_pushNode(session, new PrefixNode(SYMBOL_GET, Parser_popContext(session)));
+    
+    MUSTTAIL
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
-Precedence InfixDifferentialDParselet::getPrecedence() const {
+Precedence InfixDifferentialDParselet::getPrecedence(ParserSessionPtr session) const {
     
-    if (TheParser->topPrecedence() == PRECEDENCE_CLASS_INTEGRATIONOPERATORS) {
+    if (Parser_topPrecedence(session) == PRECEDENCE_CLASS_INTEGRATIONOPERATORS) {
 
         //
         // Inside \[Integral], so \[DifferentialD] is treated specially
@@ -2487,9 +2341,9 @@ Precedence InfixDifferentialDParselet::getPrecedence() const {
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
-Token InfixDifferentialDParselet::processImplicitTimes(Token TokIn) const {
+Token InfixDifferentialDParselet::processImplicitTimes(ParserSessionPtr session, Token TokIn) const {
     
-    if (TheParser->topPrecedence() == PRECEDENCE_CLASS_INTEGRATIONOPERATORS) {
+    if (Parser_topPrecedence(session) == PRECEDENCE_CLASS_INTEGRATIONOPERATORS) {
 
         //
         // Inside \[Integral], so \[DifferentialD] is treated specially
@@ -2498,7 +2352,14 @@ Token InfixDifferentialDParselet::processImplicitTimes(Token TokIn) const {
         return TokIn;
     }
     
-    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, TokIn.Src.Start);
+}
+
+ParseFunction InfixDifferentialDParselet::parseInfix() const {
+    
+    assert(false);
+    
+    return nullptr;
 }
 
 
@@ -2506,7 +2367,7 @@ ParseFunction HashParselet::parsePrefix() const {
     return HashParselet_parsePrefix;
 }
 
-void HashParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void HashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  #  or  #1  or  #abc  or  #"abc"
@@ -2523,42 +2384,39 @@ void HashParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(INSIDE_SLOT);
+    auto Tok = Parser_currentToken(session, INSIDE_SLOT);
     
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value():
         case TOKEN_STRING.value(): {
             
-            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+            Parser_pushContext(session, PRECEDENCE_HIGHEST);
             
-            TheParser->pushLeafAndNext(Tok);
+            Parser_pushLeafAndNext(session, Tok);
             
             MUSTTAIL
-            return HashParselet_reduceSlot(Ignored, TokIn/*Ignored*/);
-        }
-        default: {
-            MUSTTAIL
-            return Parser_parseClimb(Ignored, TokIn/*ignored*/);
+            return HashParselet_reduceSlot(session, Ignored, TokIn/*Ignored*/);
         }
     }
-}
-
-void HashParselet_reduceSlot(ParseletPtr Ignored, Token Ignored2) {
-    
-    TheParser->shift();
-    
-    TheParser->pushNode(new CompoundNode(SYMBOL_SLOT, TheParser->popContext()));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, TokIn/*ignored*/);
+}
+
+void HashParselet_reduceSlot(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+    
+    Parser_pushNode(session, new CompoundNode(SYMBOL_SLOT, Parser_popContext(session)));
+    
+    MUSTTAIL
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
@@ -2566,51 +2424,45 @@ ParseFunction HashHashParselet::parsePrefix() const {
     return HashHashParselet_parsePrefix;
 }
 
-void HashHashParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void HashHashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  ##  or  ##1
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(INSIDE_SLOTSEQUENCE);
+    auto Tok = Parser_currentToken(session, INSIDE_SLOTSEQUENCE);
     
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value(): {
             
-            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+            Parser_pushContext(session, PRECEDENCE_HIGHEST);
             
-            TheParser->pushLeafAndNext(Tok);
-            
-            MUSTTAIL
-            return HashHashParselet_reduceSlotSequence(Ignored, TokIn/*ignored*/);
-        }
-        default: {
+            Parser_pushLeafAndNext(session, Tok);
             
             MUSTTAIL
-            return Parser_parseClimb(Ignored, TokIn/*ignored*/);
+            return HashHashParselet_reduceSlotSequence(session, Ignored, TokIn/*ignored*/);
         }
     }
     
-    
+    MUSTTAIL
+    return Parser_parseClimb(session, Ignored, TokIn/*ignored*/);
 }
 
-void HashHashParselet_reduceSlotSequence(ParseletPtr Ignored, Token Ignored2) {
+void HashHashParselet_reduceSlotSequence(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
     
-    TheParser->shift();
-    
-    TheParser->pushNode(new CompoundNode(SYMBOL_SLOTSEQUENCE, TheParser->popContext()));
+    Parser_pushNode(session, new CompoundNode(SYMBOL_SLOTSEQUENCE, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }
 
 
@@ -2618,46 +2470,43 @@ ParseFunction PercentParselet::parsePrefix() const {
     return PercentParselet_parsePrefix;
 }
 
-void PercentParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+void PercentParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
     //
     // Something like  %  or  %1
     //
     
 #if CHECK_ABORT
-    if (TheParserSession->isAbort()) {
-        TheParser->pushNode(new AbortNode());
-        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    if (session->abortQ()) {
+        Parser_pushNode(session, new AbortNode());
+        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
-    TheParser->pushLeafAndNext(TokIn);
+    Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = TheParser->currentToken(INSIDE_OUT);
+    auto Tok = Parser_currentToken(session, INSIDE_OUT);
     
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value(): {
             
-            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
+            Parser_pushContext(session, PRECEDENCE_HIGHEST);
             
-            TheParser->pushLeafAndNext(Tok);
+            Parser_pushLeafAndNext(session, Tok);
             
             MUSTTAIL
-            return PercentParselet_reduceOut(Ignored, TokIn/*ignored*/);
-        }
-        default: {
-            MUSTTAIL
-            return Parser_parseClimb(Ignored, TokIn/*ignored*/);
+            return PercentParselet_reduceOut(session, Ignored, TokIn/*ignored*/);
         }
     }
-}
-
-void PercentParselet_reduceOut(ParseletPtr Ignored, Token Ignored2) {
-    
-    TheParser->shift();
-    
-    TheParser->pushNode(new CompoundNode(SYMBOL_OUT, TheParser->popContext()));
     
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_parseClimb(session, Ignored, TokIn/*ignored*/);
+}
+
+void PercentParselet_reduceOut(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+    
+    Parser_pushNode(session, new CompoundNode(SYMBOL_OUT, Parser_popContext(session)));
+    
+    MUSTTAIL
+    return Parser_parseClimb(session, Ignored, Ignored2);
 }

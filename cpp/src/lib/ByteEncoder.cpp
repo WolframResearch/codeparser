@@ -8,48 +8,43 @@
 size_t ByteEncoder::size(codepoint val) {
 
     if (val == CODEPOINT_CRLF) {
-
         return 2;
     }
     
     if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE) {
-        
         return 1;
     }
     
     if (val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE) {
-        
         return 2;
     }
     
     if (val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
-        
         return 3;
     }
     
     assert(val >= 0);
     
     if (val <= 0x7f) {
-
         return 1;
 
-    } else if (val <= 0x7ff) {
-
+    }
+    
+    if (val <= 0x7ff) {
         return 2;
-
-    } else if (val <= 0xffff) {
+    }
+    
+    if (val <= 0xffff) {
         
         assert(val != CODEPOINT_BOM);
         assert(!Utils::isStraySurrogate(val));
         
         return 3;
-
-    } else {
-        
-        assert(val <= 0x10ffff);
-        
-        return 4;
     }
+    
+    assert(val <= 0x10ffff);
+    
+    return 4;
 }
 
 void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderState *state) {
@@ -90,7 +85,10 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         
         stream.put(firstByte);
         
-    } else if (val <= 0x7ff) {
+        return;
+    }
+    
+    if (val <= 0x7ff) {
         
         //
         // 2 byte UTF-8 sequence
@@ -102,7 +100,10 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         stream.put(firstByte);
         stream.put(secondByte);
         
-    } else if (val <= 0xffff) {
+        return;
+    }
+    
+    if (val <= 0xffff) {
         
         //
         // 3 byte UTF-8 sequence
@@ -119,24 +120,24 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         stream.put(secondByte);
         stream.put(thirdByte);
         
-    } else {
-        
-        //
-        // 4 byte UTF-8 sequence
-        //
-        
-        assert(val <= 0x10ffff);
-        
-        auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
-        auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);
-        auto thirdByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
-        auto fourthByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
-        
-        stream.put(firstByte);
-        stream.put(secondByte);
-        stream.put(thirdByte);
-        stream.put(fourthByte);
+        return;
     }
+    
+    //
+    // 4 byte UTF-8 sequence
+    //
+    
+    assert(val <= 0x10ffff);
+    
+    auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
+    auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);
+    auto thirdByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
+    auto fourthByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
+    
+    stream.put(firstByte);
+    stream.put(secondByte);
+    stream.put(thirdByte);
+    stream.put(fourthByte);
 }
 
 void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, ByteEncoderState *state) {
@@ -177,7 +178,10 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, 
         
         arr[0] = firstByte;
         
-    } else if (val <= 0x7ff) {
+        return;
+    }
+    
+    if (val <= 0x7ff) {
         
         //
         // 2 byte UTF-8 sequence
@@ -189,7 +193,10 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, 
         arr[0] = firstByte;
         arr[1] = secondByte;
         
-    } else if (val <= 0xffff) {
+        return;
+    }
+    
+    if (val <= 0xffff) {
         
         //
         // 3 byte UTF-8 sequence
@@ -206,22 +213,22 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, 
         arr[1] = secondByte;
         arr[2] = thirdByte;
         
-    } else {
-        
-        //
-        // 4 byte UTF-8 sequence
-        //
-        
-        assert(val <= 0x10ffff);
-        
-        auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
-        auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);
-        auto thirdByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
-        auto fourthByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
-        
-        arr[0] = firstByte;
-        arr[1] = secondByte;
-        arr[2] = thirdByte;
-        arr[3] = fourthByte;
+        return;
     }
+    
+    //
+    // 4 byte UTF-8 sequence
+    //
+    
+    assert(val <= 0x10ffff);
+    
+    auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
+    auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);
+    auto thirdByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
+    auto fourthByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
+    
+    arr[0] = firstByte;
+    arr[1] = secondByte;
+    arr[2] = thirdByte;
+    arr[3] = fourthByte;
 }

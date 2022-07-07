@@ -26,36 +26,41 @@
 #endif // USE_MUSTTAIL
 
 
-CharacterDecoder::CharacterDecoder() : SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedTabs(), lastBuf(), lastLoc() {}
+typedef WLCharacter (*HandlerFunction)(ParserSessionPtr session, Buffer startBuf, SourceLocation startLoc, NextPolicy policy);
 
-void CharacterDecoder::init() {
-    
-#if COMPUTE_OOB
-    SimpleLineContinuations.clear();
-    ComplexLineContinuations.clear();
-    EmbeddedTabs.clear();
-#endif // COMPUTE_OOB
-    
-    lastBuf = nullptr;
-    lastLoc = SourceLocation();
-}
+#define U CharacterDecoder_handleUncommon
+#define A CharacterDecoder_handleAssertFalse
 
+std::array<HandlerFunction, 128> CharacterDecoderHandlerTable = {
+    A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A,
+    U, U, CharacterDecoder_handleStringMetaDoubleQuote, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, CharacterDecoder_handleStringMetaOpen, U, CharacterDecoder_handleStringMetaClose, U,
+    U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, CharacterDecoder_handleStringMetaBackslash, U, U, U,
+    U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, A,
+};
 
-void CharacterDecoder::deinit() {
-    
-#if COMPUTE_OOB
-    SimpleLineContinuations.clear();
-    ComplexLineContinuations.clear();
-    EmbeddedTabs.clear();
-#endif // COMPUTE_OOB
-}
+#undef U
+#undef A
 
 
-WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
+// Precondition: buffer is pointing to current WLCharacter
+// Postcondition: buffer is pointing to next WLCharacter
+//
+// Example:
+// memory: 1+\[Alpha]-2
+//           ^
+//           buffer
+//
+// after calling nextWLCharacter:
+// memory: 1+\[Alpha]-2
+//                   ^
+//                   buffer
+// return \[Alpha]
+//
+WLCharacter CharacterDecoder_nextWLCharacter0(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
-    auto curSource = TheByteDecoder->nextSourceCharacter0(policy);
+    auto curSource = ByteDecoder_nextSourceCharacter0(session, policy);
     
-    if (curSource.to_point() != '\\') {
+    if (!curSource.isBackslash()) {
         
 #if DIAGNOSTICS
         CharacterDecoder_UnescapedCount++;
@@ -76,78 +81,161 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
         // There was a \
         //
         
-        auto escapedBuf = TheByteBuffer->buffer;
-        auto escapedLoc = TheByteDecoder->SrcLoc;
+        auto escapedBuf = session->buffer;
+        auto escapedLoc = session->SrcLoc;
         
-        curSource = TheByteDecoder->currentSourceCharacter(policy);
+        curSource = ByteDecoder_currentSourceCharacter(session, policy);
         
-        switch (curSource.to_point()) {
-            case '[': {
-                
-                TheByteDecoder->nextSourceCharacter0(policy);
-                
-                MUSTTAIL
-                return handleLongName(escapedBuf, escapedLoc, policy);
-            }
-            case '\n':
-            case '\r':
-            case CODEPOINT_CRLF: {
+        auto point = curSource.to_point();
+        
+        if (!(0x20 <= point && point <= 0x7e)) {
+            
+            switch (point) {
+                case '\n':
+                case '\r':
+                case CODEPOINT_CRLF: {
+                    
+                    ByteDecoder_nextSourceCharacter0(session, policy);
 
-                TheByteDecoder->nextSourceCharacter0(policy);
+                    curSource = CharacterDecoder_handleLineContinuation(session, tokenStartBuf, tokenStartLoc, policy);
 
-                curSource = handleLineContinuation(tokenStartBuf, tokenStartLoc, policy);
+                    if (curSource.to_point() != '\\') {
 
-                if (curSource.to_point() != '\\') {
+                        return WLCharacter(curSource.to_point());
+                    }
 
-                    return WLCharacter(curSource.to_point());
+                    //
+                    // Do not return
+                    // loop around again
+                    //
+                    continue;
                 }
-
-                //
-                // Do not return
-                // loop around again
-                //
-                continue;
             }
-            case ':': {
-                
-                TheByteDecoder->nextSourceCharacter0(policy);
-                
-                MUSTTAIL
-                return handle4Hex(escapedBuf, escapedLoc, policy);
-            }
-            default: {
-                
-                //
-                // all other escapes are uncommon and go here
-                //
-                
-                MUSTTAIL
-                return handleUncommon(escapedBuf, escapedLoc, policy);
-            }
-        } // switch
+            
+//            MUSTTAIL
+            return CharacterDecoder_handleUncommon(session, escapedBuf, escapedLoc, policy);
+        }
+        
+        return CharacterDecoderHandlerTable[point](session, escapedBuf, escapedLoc, policy);
+        
     } // while (true)
 }
 
-
-WLCharacter CharacterDecoder::currentWLCharacter(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
+//
+// Postcondition: lastBuf is set to the last value of buffer
+// Postcondition: lastLoc is set to the last value of SrcLoc
+//
+WLCharacter CharacterDecoder_currentWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
-    auto resetBuf = TheByteBuffer->buffer;
-    auto resetEOF = TheByteBuffer->wasEOF;
-    auto resetLoc = TheByteDecoder->SrcLoc;
+    auto resetBuf = session->buffer;
+    auto resetEOF = session->wasEOF;
+    auto resetLoc = session->SrcLoc;
     
-    auto c = nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
+    auto c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
     
-    lastBuf = TheByteBuffer->buffer;
-    lastLoc = TheByteDecoder->SrcLoc;
-    
-    TheByteBuffer->buffer = resetBuf;
-    TheByteBuffer->wasEOF = resetEOF;
-    TheByteDecoder->SrcLoc = resetLoc;
+    session->buffer = resetBuf;
+    session->wasEOF = resetEOF;
+    session->SrcLoc = resetLoc;
     
     return c;
 }
 
-WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleStringMetaDoubleQuote(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+#if DIAGNOSTICS
+    CharacterDecoder_StringMetaDoubleQuoteCount++;
+#endif // DIAGNOSTICS
+                
+    ByteDecoder_nextSourceCharacter0(session, policy);
+    
+    return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
+}
+
+//
+// \\ \" \< \>
+//
+// String meta characters
+// What are \< and \> ?
+// https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
+// https://stackoverflow.com/q/6065887
+//
+WLCharacter CharacterDecoder_handleStringMetaOpen(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+    
+#if DIAGNOSTICS
+    CharacterDecoder_StringMetaOpenCount++;
+#endif // DIAGNOSTICS
+                
+    ByteDecoder_nextSourceCharacter0(session, policy);
+    
+    auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
+                
+#if CHECK_ISSUES
+    {
+        auto graphicalStr = c.graphicalString();
+        
+        auto currentWLCharacterStartLoc = escapedLoc.previous();
+        
+        auto currentWLCharacterEndLoc = session->SrcLoc;
+        
+        auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+        
+        //
+        // matched reduced severity of unexpected characters inside strings or comments
+        //
+        
+        auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."});
+        
+        session->addIssue(I);
+    }
+#endif // CHECK_ISSUES
+                
+    return c;
+}
+
+WLCharacter CharacterDecoder_handleStringMetaClose(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+    
+#if DIAGNOSTICS
+    CharacterDecoder_StringMetaCloseCount++;
+#endif // DIAGNOSTICS
+                
+    ByteDecoder_nextSourceCharacter0(session, policy);
+    
+    auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
+    
+#if CHECK_ISSUES
+    {
+        auto graphicalStr = c.graphicalString();
+        
+        auto currentWLCharacterStartLoc = escapedLoc.previous();
+        
+        auto currentWLCharacterEndLoc = session->SrcLoc;
+        
+        auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+        
+        //
+        // matched reduced severity of unexpected characters inside strings or comments
+        //
+        
+        auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."});
+        
+        session->addIssue(I);
+    }
+#endif // CHECK_ISSUES
+                
+    return c;
+}
+
+WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+#if DIAGNOSTICS
+    CharacterDecoder_StringMetaBackslashCount++;
+#endif // DIAGNOSTICS
+                
+    ByteDecoder_nextSourceCharacter0(session, policy);
+    
+//    MUSTTAIL
+    return CharacterDecoder_handleBackslash(session, escapedBuf, escapedLoc, policy);
+}
+
+WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
     
     assert(*openSquareBuf == '[');
     
@@ -158,9 +246,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
     //
     // Do not write leading \[ or trailing ] to LongName
     //
-    auto longNameStartBuf = TheByteBuffer->buffer;
+    auto longNameStartBuf = session->buffer;
     
-    auto curSource = TheByteDecoder->currentSourceCharacter(policy);
+    auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
     
     auto wellFormed = false;
     
@@ -175,19 +263,17 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
         
         atleast1DigitOrAlpha = true;
         
-        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+        ByteDecoder_nextSourceCharacter0(session, policy);
         
-        curSource = TheByteDecoder->currentSourceCharacter(policy);
+        curSource = ByteDecoder_currentSourceCharacter(session, policy);
         
         while (true) {
             
             if (curSource.isAlphaOrDigit()) {
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                ByteDecoder_nextSourceCharacter0(session, policy);
                 
-                curSource = TheByteDecoder->currentSourceCharacter(policy);
+                curSource = ByteDecoder_currentSourceCharacter(session, policy);
                 
             } else if (curSource == SourceCharacter(']')) {
                 
@@ -213,10 +299,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
         // Handle \[]
         //
         
-        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+        ByteDecoder_nextSourceCharacter0(session, policy);
         
-        curSource = TheByteDecoder->currentSourceCharacter(policy);
+        curSource = ByteDecoder_currentSourceCharacter(session, policy);
     }
     
     if (!wellFormed) {
@@ -230,13 +315,13 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             
             auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
-            auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
-            auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+            auto currentWLCharacterEndBuf = session->buffer;
+            auto currentWLCharacterEndLoc = session->SrcLoc;
             
             auto longNameEndBuf = currentWLCharacterEndBuf;
             
             auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
-            auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length());
+            auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.Buf), longNameBufAndLen.length());
             
             if (atleast1DigitOrAlpha) {
                 
@@ -246,19 +331,19 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
                 // Make the warning message a little more relevant
                 //
                 
-                auto suggestion = longNameSuggestion(longNameStr);
+                auto suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
                 
                 CodeActionPtrVector Actions;
                 
                 auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), longNameStr);
                 auto found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
                 if (found) {
-                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert ``]`` to form ``\\[" + suggestion + "]``", Source(currentWLCharacterEndLoc), "]")));
+                    Actions.push_back(new InsertTextCodeAction("Insert ``]`` to form ``\\[" + suggestion + "]``", Source(currentWLCharacterEndLoc), "]"));
                 }
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
                 
             } else {
                 
@@ -271,29 +356,17 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
                 
                 CodeActionPtrVector Actions;
                 
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\[" + longNameStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\[" + longNameStr)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\\\[" + longNameStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\[" + longNameStr));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
         }
-        //
-        // TODO: Should we report "\\[]" as unlikely?
-        //
-#if 0
-        else if (unlikelyEscapeChecking) {
-
-            xxx;
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "``", STRING_REMARK, Source(CharacterStart-1, Loc), 0.33));
-
-            Issues.push_back(std::move(I));
-        }
-#endif // 0
 #endif // CHECK_ISSUES
         
-        TheByteBuffer->buffer = openSquareBuf;
-        TheByteDecoder->SrcLoc = openSquareLoc;
+        session->buffer = openSquareBuf;
+        session->SrcLoc = openSquareLoc;
         
         return WLCharacter('\\');
     }
@@ -306,10 +379,10 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
     // if unlikelyEscapeChecking, then make sure to append all of the Source characters again
     //
     
-    auto longNameEndBuf = TheByteBuffer->buffer;
+    auto longNameEndBuf = session->buffer;
     
     auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
-    auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length());
+    auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.Buf), longNameBufAndLen.length());
     
     auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), longNameStr);
     auto found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
@@ -322,7 +395,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
 #if CHECK_ISSUES
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
             
-            auto longNameEndLoc = TheByteDecoder->SrcLoc;
+            auto longNameEndLoc = session->SrcLoc;
             
             auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
@@ -331,24 +404,24 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             //
             auto currentWLCharacterEndLoc = longNameEndLoc.next();
             
-            auto suggestion = longNameSuggestion(longNameStr);
+            auto suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
             
             CodeActionPtrVector Actions;
             
             if (!suggestion.empty()) {
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]"));
             }
             
             //
             // More specifically: Unrecognized
             //
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "]``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {"``" + longNameStr + "`` is not a recognized long name."}));
+            auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "]``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {"``" + longNameStr + "`` is not a recognized long name."});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
             
-            auto longNameEndLoc = TheByteDecoder->SrcLoc;
+            auto longNameEndLoc = session->SrcLoc;
             
             auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
@@ -359,22 +432,22 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             
             auto previousBackslashLoc = currentWLCharacterStartLoc.previous();
             
-            auto suggestion = longNameSuggestion(longNameStr);
+            auto suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
             
             CodeActionPtrVector Actions;
             
             if (!suggestion.empty()) {
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]"));
             }
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
 #endif // CHECK_ISSUES
         
-        TheByteBuffer->buffer = openSquareBuf;
-        TheByteDecoder->SrcLoc = openSquareLoc;
+        session->buffer = openSquareBuf;
+        session->SrcLoc = openSquareLoc;
         
         return WLCharacter('\\');
     }
@@ -392,7 +465,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
         // If found and unlikelyEscapeChecking, then still come in here.
         //
         
-        auto longNameEndLoc = TheByteDecoder->SrcLoc;
+        auto longNameEndLoc = session->SrcLoc;
         
         auto currentWLCharacterStartLoc = openSquareLoc.previous();
         
@@ -403,22 +476,21 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
         
         auto previousBackslashLoc = currentWLCharacterStartLoc.previous();
         
-        auto suggestion = longNameSuggestion(longNameStr);
+        auto suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
         
         CodeActionPtrVector Actions;
         
         if (!suggestion.empty()) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]"));
         }
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions), {}));
+        auto I = new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, Actions, {});
         
-        TheParserSession->addIssue(std::move(I));
+        session->addIssue(I);
     }
 #endif // CHECK_ISSUES
     
-    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+    ByteDecoder_nextSourceCharacter0(session, policy);
     
     auto idx = it - LongNameToCodePointMap_names.begin();
     auto point = LongNameToCodePointMap_points[idx];
@@ -427,7 +499,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
         
         auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
-        auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length());
+        auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.Buf), longNameBufAndLen.length());
         
         if (Utils::isStrange(point)) {
             
@@ -438,7 +510,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             
             auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
-            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            auto currentSourceCharacterEndLoc = session->SrcLoc;
             
             auto graphicalStr = c.graphicalString();
             
@@ -447,7 +519,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             CodeActionPtrVector Actions;
             
             for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-                Actions.push_back(std::move(A));
+                Actions.push_back(A);
             }
             
             //
@@ -458,7 +530,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             // any ASCII replacements
             //
             for (const auto& r : LongNames::asciiReplacements(point)) {
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
             }
             
             if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -467,9 +539,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
                 // reduce severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
                 
             } else if (c.isStrangeWhitespace()) {
                 
@@ -477,9 +549,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
                 
             } else {
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
             
         } else if (Utils::isMBStrange(point)) {
@@ -491,7 +563,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             
             auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
-            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            auto currentSourceCharacterEndLoc = session->SrcLoc;
             
             auto graphicalStr = c.graphicalString();
             
@@ -500,7 +572,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             CodeActionPtrVector Actions;
             
             for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-                Actions.push_back(std::move(A));
+                Actions.push_back(A);
             }
             
             //
@@ -511,7 +583,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
             // any ASCII replacements
             //
             for (const auto& r : LongNames::asciiReplacements(point)) {
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
             }
             
             if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -520,9 +592,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
                 // reduce severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
                 
             } else if (c.isMBStrangeWhitespace()) {
                 
@@ -530,9 +602,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
                 
             } else {
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
         }
     }
@@ -540,13 +612,13 @@ WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocatio
     
     if (LongNames::isRaw(longNameStr)) {
         return WLCharacter(point, ESCAPE_RAW);
-    } else {
-        return WLCharacter(point, ESCAPE_LONGNAME);
     }
+    
+    return WLCharacter(point, ESCAPE_LONGNAME);
 }
 
 
-WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handle4Hex(ParserSessionPtr session, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy) {
     
     assert(*colonBuf == ':');
     
@@ -554,16 +626,15 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
     CharacterDecoder_4HexCount++;
 #endif // DIAGNOSTICS
     
-    auto hexStartBuf = TheByteBuffer->buffer;
+    auto hexStartBuf = session->buffer;
     
     for (auto i = 0; i < 4; i++) {
         
-        auto curSource = TheByteDecoder->currentSourceCharacter(policy);
+        auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
         
         if (curSource.isHex()) {
             
-            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
         } else {
             
@@ -578,26 +649,26 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
                 
                 auto currentWLCharacterStartLoc = colonLoc.previous();
                 
-                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                auto currentWLCharacterEndBuf = session->buffer;
+                auto currentWLCharacterEndLoc = session->SrcLoc;
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
                 auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
+                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.Buf), hexBufAndLen.length());
                 
                 CodeActionPtrVector Actions;
                 
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\:" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\:" + hexStr)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\\\:" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\:" + hexStr));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\:") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\:") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
 #endif // CHECK_ISSUES
             
-            TheByteBuffer->buffer = colonBuf;
-            TheByteDecoder->SrcLoc = colonLoc;
+            session->buffer = colonBuf;
+            session->SrcLoc = colonLoc;
             
             return WLCharacter('\\');
         }
@@ -634,7 +705,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
         
         auto currentWLCharacterStartLoc = colonLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -643,7 +714,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -654,7 +725,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -663,9 +734,9 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isStrangeWhitespace()) {
             
@@ -673,12 +744,10 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
-        
-        
         
     } else if (Utils::isMBStrange(point)) {
         //
@@ -689,7 +758,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
         
         auto currentWLCharacterStartLoc = colonLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -698,7 +767,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -709,7 +778,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -718,9 +787,9 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isMBStrangeWhitespace()) {
             
@@ -728,9 +797,9 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
     }
 #endif // CHECK_ISSUES
@@ -739,7 +808,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLo
 }
 
 
-WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handle2Hex(ParserSessionPtr session, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy) {
     
     assert(*dotBuf == '.');
     
@@ -747,16 +816,15 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
     CharacterDecoder_2HexCount++;
 #endif // DIAGNOSTICS
     
-    auto hexStartBuf = TheByteBuffer->buffer;
+    auto hexStartBuf = session->buffer;
     
     for (auto i = 0; i < 2; i++) {
         
-        auto curSource = TheByteDecoder->currentSourceCharacter(policy);
+        auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
         
         if (curSource.isHex()) {
             
-            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
         } else {
             
@@ -771,26 +839,26 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
                 
                 auto currentWLCharacterStartLoc = dotLoc.previous();
                 
-                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                auto currentWLCharacterEndBuf = session->buffer;
+                auto currentWLCharacterEndLoc = session->SrcLoc;
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
                 auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
+                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.Buf), hexBufAndLen.length());
                 
                 CodeActionPtrVector Actions;
                 
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\." + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\." + hexStr)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\\\." + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\." + hexStr));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, "Unhandled character: ``\\." + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, "Unhandled character: ``\\." + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
 #endif // CHECK_ISSUES
             
-            TheByteBuffer->buffer = dotBuf;
-            TheByteDecoder->SrcLoc = dotLoc;
+            session->buffer = dotBuf;
+            session->SrcLoc = dotLoc;
             
             return WLCharacter('\\');
         }
@@ -825,7 +893,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
         
         auto currentWLCharacterStartLoc = dotLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -834,7 +902,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -845,7 +913,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -854,9 +922,9 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isStrangeWhitespace()) {
             
@@ -864,9 +932,9 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
         
     } else if (Utils::isMBStrange(point)) {
@@ -878,7 +946,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
         
         auto currentWLCharacterStartLoc = dotLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -887,7 +955,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -898,7 +966,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -907,9 +975,9 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isMBStrangeWhitespace()) {
             
@@ -917,9 +985,9 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
     };
 #endif // CHECK_ISSUES
@@ -928,7 +996,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, N
 }
 
 
-WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleOctal(ParserSessionPtr session, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy) {
     
     assert(SourceCharacter(*firstOctalBuf).isOctal());
     
@@ -940,12 +1008,11 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
     
     for (auto i = 0; i < 3-1; i++) {
         
-        auto curSource = TheByteDecoder->currentSourceCharacter(policy);
+        auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
         
         if (curSource.isOctal()) {
             
-            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
         } else {
             
@@ -960,26 +1027,26 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
                 
                 auto currentWLCharacterStartLoc = firstOctalLoc.previous();
                 
-                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                auto currentWLCharacterEndBuf = session->buffer;
+                auto currentWLCharacterEndLoc = session->SrcLoc;
                 
                 auto octalEndBuf = currentWLCharacterEndBuf;
                 
                 auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf);
-                auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.buffer), octalBufAndLen.length());
+                auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.Buf), octalBufAndLen.length());
                 
                 CodeActionPtrVector Actions;
                 
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + octalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + octalStr)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\\\" + octalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + octalStr));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\") + octalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\") + octalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
 #endif // CHECK_ISSUES
 
-            TheByteBuffer->buffer = firstOctalBuf;
-            TheByteDecoder->SrcLoc = firstOctalLoc;
+            session->buffer = firstOctalBuf;
+            session->SrcLoc = firstOctalLoc;
             
             return WLCharacter('\\');
         }
@@ -1015,7 +1082,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
         
         auto currentWLCharacterStartLoc = firstOctalLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -1024,7 +1091,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -1035,7 +1102,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -1044,9 +1111,9 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isStrangeWhitespace()) {
             
@@ -1054,9 +1121,9 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
         
     } else if (Utils::isMBStrange(point)) {
@@ -1068,7 +1135,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
         
         auto currentWLCharacterStartLoc = firstOctalLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -1077,7 +1144,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -1088,7 +1155,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -1097,9 +1164,9 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isMBStrangeWhitespace()) {
             
@@ -1107,9 +1174,9 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
     };
 #endif // CHECK_ISSUES
@@ -1118,7 +1185,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation f
 }
 
 
-WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handle6Hex(ParserSessionPtr session, Buffer barBuf, SourceLocation barLoc, NextPolicy policy) {
     
     assert(*barBuf == '|');
     
@@ -1126,16 +1193,15 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
     CharacterDecoder_6HexCount++;
 #endif // DIAGNOSTICS
     
-    auto hexStartBuf = TheByteBuffer->buffer;
+    auto hexStartBuf = session->buffer;
     
     for (auto i = 0; i < 6; i++) {
         
-        auto curSource = TheByteDecoder->currentSourceCharacter(policy);
+        auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
         
         if (curSource.isHex()) {
             
-            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
         } else {
             
@@ -1150,26 +1216,26 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
                 
                 auto currentWLCharacterStartLoc = barLoc.previous();
                 
-                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                auto currentWLCharacterEndBuf = session->buffer;
+                auto currentWLCharacterEndLoc = session->SrcLoc;
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
                 auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
+                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.Buf), hexBufAndLen.length());
                 
                 CodeActionPtrVector Actions;
                 
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\|" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\|" + hexStr)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\\\|" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\|" + hexStr));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\|") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\|") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
 #endif // CHECK_ISSUES
 
-            TheByteBuffer->buffer = barBuf;
-            TheByteDecoder->SrcLoc = barLoc;
+            session->buffer = barBuf;
+            session->SrcLoc = barLoc;
             
             return WLCharacter('\\');
         }
@@ -1189,8 +1255,8 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
     
     if (point > 0x10ffff) {
         
-        TheByteBuffer->buffer = barBuf;
-        TheByteDecoder->SrcLoc = barLoc;
+        session->buffer = barBuf;
+        session->SrcLoc = barLoc;
         
         return WLCharacter('\\');
     }
@@ -1201,11 +1267,15 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
     
     switch (point) {
         case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
+            
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            
             break;
         }
         case CODEPOINT_ACTUAL_BACKSLASH: {
+            
             point = CODEPOINT_STRINGMETA_BACKSLASH;
+            
             break;
         }
     }
@@ -1220,7 +1290,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
         
         auto currentWLCharacterStartLoc = barLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -1229,7 +1299,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -1240,7 +1310,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -1249,9 +1319,9 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isStrangeWhitespace()) {
             
@@ -1259,9 +1329,9 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
         
     } else if (Utils::isMBStrange(point)) {
@@ -1273,7 +1343,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
         
         auto currentWLCharacterStartLoc = barLoc.previous();
         
-        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentSourceCharacterEndLoc = session->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
         
@@ -1282,7 +1352,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
         CodeActionPtrVector Actions;
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
-            Actions.push_back(std::move(A));
+            Actions.push_back(A);
         }
         
         //
@@ -1293,7 +1363,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
         // any ASCII replacements
         //
         for (const auto& r : LongNames::asciiReplacements(point)) {
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
         }
         
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
@@ -1302,9 +1372,9 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (c.isMBStrangeWhitespace()) {
             
@@ -1312,9 +1382,9 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
         }
     };
 #endif // CHECK_ISSUES
@@ -1323,7 +1393,12 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, N
 }
 
 
-SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
+//
+// Handling line continuations belongs in some layer strictly above CharacterDecoder and below Tokenizer.
+//
+// Some middle layer that deals with "parts" of a token.
+//
+SourceCharacter CharacterDecoder_handleLineContinuation(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
     //
     // nothing to assert here
@@ -1333,7 +1408,7 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
     CharacterDecoder_LineContinuationCount++;
 #endif // DIAGNOSTICS
     
-    auto c = TheByteDecoder->currentSourceCharacter(policy);
+    auto c = ByteDecoder_currentSourceCharacter(session, policy);
     
     //
     // Even though strings preserve the whitespace after a line continuation, and
@@ -1359,33 +1434,31 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
                 //
                 // Must still count the embedded tab
                 
-                EmbeddedTabs.insert(tokenStartLoc);
+                session->addEmbeddedTab(tokenStartLoc);
             }
         }
 #endif // COMPUTE_OOB
         
-        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+        ByteDecoder_nextSourceCharacter0(session, policy);
         
-        c = TheByteDecoder->currentSourceCharacter(policy);
+        c = ByteDecoder_currentSourceCharacter(session, policy);
     }
     
 #if COMPUTE_OOB
     if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
-        ComplexLineContinuations.insert(tokenStartLoc);
+        session->addComplexLineContinuation(tokenStartLoc);
     } else {
-        SimpleLineContinuations.insert(tokenStartLoc);
+        session->addSimpleLineContinuation(tokenStartLoc);
     }
 #endif // COMPUTE_OOB
     
-    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+    ByteDecoder_nextSourceCharacter0(session, policy);
     
     return c;
 }
 
 
-WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleBackslash(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
     
 #if CHECK_ISSUES
     //
@@ -1395,10 +1468,10 @@ WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation 
     //
     if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
         
-        auto resetBuf = TheByteBuffer->buffer;
-        auto resetLoc = TheByteDecoder->SrcLoc;
+        auto resetBuf = session->buffer;
+        auto resetLoc = session->SrcLoc;
         
-        auto test = TheByteDecoder->currentSourceCharacter(policy);
+        auto test = ByteDecoder_currentSourceCharacter(session, policy);
         
         if (test.to_point() == '[') {
             
@@ -1406,11 +1479,11 @@ WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation 
             
             tmpPolicy &= ~ENABLE_CHARACTER_DECODING_ISSUES;
             
-            handleLongName(resetBuf, resetLoc, tmpPolicy);
+            CharacterDecoder_handleLongName(session, resetBuf, resetLoc, tmpPolicy);
         }
         
-        TheByteBuffer->buffer = resetBuf;
-        TheByteDecoder->SrcLoc = resetLoc;
+        session->buffer = resetBuf;
+        session->SrcLoc = resetLoc;
     }
 #endif // CHECK_ISSUES
     
@@ -1418,7 +1491,7 @@ WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation 
 }
 
 
-WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceLocation unhandledLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buffer unhandledBuf, SourceLocation unhandledLoc, NextPolicy policy) {
     
     //
     // Anything else
@@ -1426,9 +1499,9 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
     // Something like  \A
     //
     
-    auto escapedChar = TheByteDecoder->currentSourceCharacter(policy);
+    auto escapedChar = ByteDecoder_currentSourceCharacter(session, policy);
     
-    TheByteDecoder->nextSourceCharacter0(policy);
+    ByteDecoder_nextSourceCharacter0(session, policy);
     
 #if CHECK_ISSUES
     //
@@ -1439,7 +1512,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
         
         auto currentWLCharacterStartLoc = unhandledLoc.previous();
         
-        auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+        auto currentWLCharacterEndLoc = session->SrcLoc;
         
         if (escapedChar.isUpper()) {
             
@@ -1451,7 +1524,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
             
             alnumRun += escapedChar.to_point();
             
-            auto curSource = TheByteDecoder->currentSourceCharacter(policy);
+            auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
             
             auto wellFormed = false;
             
@@ -1461,15 +1534,13 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
                     
                     alnumRun += curSource.to_point();
                     
-                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                    ByteDecoder_nextSourceCharacter0(session, policy);
                     
-                    curSource = TheByteDecoder->currentSourceCharacter(policy);
+                    curSource = ByteDecoder_currentSourceCharacter(session, policy);
                     
                 } else if (curSource == SourceCharacter(']')) {
                     
-                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                    ByteDecoder_nextSourceCharacter0(session, policy);
                     
                     wellFormed = true;
                     
@@ -1499,17 +1570,17 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
                 // Something like \Alpha]
                 //
                 
-                currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                currentWLCharacterEndLoc = session->SrcLoc;
                 
                 auto curSourceGraphicalStr = alnumRun + "]";
                 
                 CodeActionPtrVector Actions;
                 
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert ``[`` to form ``\\[" + alnumRun + "]``", Source(currentWLCharacterStartLoc.next()), "[")));
+                Actions.push_back(new InsertTextCodeAction("Insert ``[`` to form ``\\[" + alnumRun + "]``", Source(currentWLCharacterStartLoc.next()), "["));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
                 
             } else {
                 
@@ -1519,12 +1590,13 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
                     
                     CodeActionPtrVector Actions;
                     
-                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
-                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "XXX``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "XXX")));
+                    Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]"));
                     
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                    Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "XXX``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "XXX"));
                     
-                    TheParserSession->addIssue(std::move(I));
+                    auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
+                    
+                    session->addIssue(I);
                     
                 } else {
                     
@@ -1532,11 +1604,11 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
                     
                     CodeActionPtrVector Actions;
                     
-                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
+                    Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]"));
                     
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                    auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                     
-                    TheParserSession->addIssue(std::move(I));
+                    session->addIssue(I);
                 }
             }
             
@@ -1546,11 +1618,11 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
             
             CodeActionPtrVector Actions;
             
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "xxx``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "xxx")));
+            Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "xxx``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "xxx"));
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+            auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
             
-            TheParserSession->addIssue(std::move(I));
+            session->addIssue(I);
             
         } else if (escapedChar.isEndOfFile()) {
             
@@ -1585,19 +1657,19 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
                 // Do the simple thing: No actions, and report the character with all escaped backslashes now
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}, {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
                 
             } else {
                 
                 CodeActionPtrVector Actions;
                 
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + curSourceGraphicalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + curSourceGraphicalStr)));
+                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\\\" + curSourceGraphicalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + curSourceGraphicalStr));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
         }
     }
@@ -1614,38 +1686,58 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceL
     // The tokenizer will use the bad character to decide what to do
     //
     
-    TheByteBuffer->buffer = unhandledBuf;
-    TheByteDecoder->SrcLoc = unhandledLoc;
+    session->buffer = unhandledBuf;
+    session->SrcLoc = unhandledLoc;
     
     return WLCharacter('\\');
 }
 
-WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleAssertFalse(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+
+    assert(false);
     
-    auto curSource = TheByteDecoder->currentSourceCharacter(policy);
+    return WLCharacter{0};
+}
+
+WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+    
+    auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
     
     switch (curSource.to_point()) {
+        case '[': {
             
+            ByteDecoder_nextSourceCharacter0(session, policy);
+            
+//            MUSTTAIL
+            return CharacterDecoder_handleLongName(session, escapedBuf, escapedLoc, policy);
+        }
+        case ':': {
+            
+            ByteDecoder_nextSourceCharacter0(session, policy);
+            
+//            MUSTTAIL
+            return CharacterDecoder_handle4Hex(session, escapedBuf, escapedLoc, policy);
+        }
         case '.': {
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
-            MUSTTAIL
-            return handle2Hex(escapedBuf, escapedLoc, policy);
+//            MUSTTAIL
+            return CharacterDecoder_handle2Hex(session, escapedBuf, escapedLoc, policy);
         }
         case '|': {
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
-            MUSTTAIL
-            return handle6Hex(escapedBuf, escapedLoc, policy);
+//            MUSTTAIL
+            return CharacterDecoder_handle6Hex(session, escapedBuf, escapedLoc, policy);
         }
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
-            MUSTTAIL
-            return handleOctal(escapedBuf, escapedLoc, policy);
+//            MUSTTAIL
+            return CharacterDecoder_handleOctal(session, escapedBuf, escapedLoc, policy);
         }
     
             //
@@ -1655,10 +1747,10 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
         case 'b': {
             
 #if DIAGNOSTICS
-            CharacterDecoder_StringMetaBackspace++;
+            CharacterDecoder_StringMetaBackspaceCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
                         
@@ -1668,7 +1760,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
                 
                 auto currentWLCharacterStartLoc = escapedLoc.previous();
                 
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                auto currentWLCharacterEndLoc = session->SrcLoc;
                 
                 auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
                 
@@ -1676,9 +1768,9 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
                 // matched reduced severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
+                auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
 #endif // CHECK_ISSUES
                         
@@ -1692,10 +1784,10 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             //
             
 #if DIAGNOSTICS
-            CharacterDecoder_StringMetaFormFeed++;
+            CharacterDecoder_StringMetaFormFeedCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
             
@@ -1705,7 +1797,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
                 
                 auto currentWLCharacterStartLoc = escapedLoc.previous();
                 
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                auto currentWLCharacterEndLoc = session->SrcLoc;
                 
                 auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
                 
@@ -1713,9 +1805,9 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
                 // matched reduced severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
+                auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {});
                 
-                TheParserSession->addIssue(std::move(I));
+                session->addIssue(I);
             }
 #endif // CHECK_ISSUES
             
@@ -1731,7 +1823,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_StringMetaLineFeedCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
         }
@@ -1742,10 +1834,10 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             //
             
 #if DIAGNOSTICS
-            CharacterDecoder_StringMetaCarriageReturn++;
+            CharacterDecoder_StringMetaCarriageReturnCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
         }
@@ -1756,109 +1848,12 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             //
             
 #if DIAGNOSTICS
-            CharacterDecoder_StringMetaTab++;
+            CharacterDecoder_StringMetaTabCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-        }
-            
-        //
-        // \\ \" \< \>
-        //
-        // String meta characters
-        // What are \< and \> ?
-        // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
-        // https://stackoverflow.com/q/6065887
-        //
-        case '"': {
-            
-#if DIAGNOSTICS
-            CharacterDecoder_StringMetaDoubleQuoteCount++;
-#endif // DIAGNOSTICS
-            
-            TheByteDecoder->nextSourceCharacter0(policy);
-            
-            return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-        }
-                
-        case '\\': {
-            
-#if DIAGNOSTICS
-            CharacterDecoder_StringMetaBackslashCount++;
-#endif // DIAGNOSTICS
-            
-            TheByteDecoder->nextSourceCharacter0(policy);
-            
-            MUSTTAIL
-            return handleBackslash(escapedBuf, escapedLoc, policy);
-        }
-            
-        case '<': {
-            
-#if DIAGNOSTICS
-            CharacterDecoder_StringMetaOpenCount++;
-#endif // DIAGNOSTICS
-            
-            TheByteDecoder->nextSourceCharacter0(policy);
-            
-            auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
-            
-#if CHECK_ISSUES
-            {
-                auto graphicalStr = c.graphicalString();
-                
-                auto currentWLCharacterStartLoc = escapedLoc.previous();
-                
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                
-                //
-                // matched reduced severity of unexpected characters inside strings or comments
-                //
-                
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
-                
-                TheParserSession->addIssue(std::move(I));
-            }
-#endif // CHECK_ISSUES
-            
-            return c;
-        }
-            
-        case '>': {
-            
-#if DIAGNOSTICS
-            CharacterDecoder_StringMetaCloseCount++;
-#endif // DIAGNOSTICS
-            
-            TheByteDecoder->nextSourceCharacter0(policy);
-            
-            auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
-            
-#if CHECK_ISSUES
-            {
-                auto graphicalStr = c.graphicalString();
-                
-                auto currentWLCharacterStartLoc = escapedLoc.previous();
-                
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                
-                //
-                // matched reduced severity of unexpected characters inside strings or comments
-                //
-                
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
-                
-                TheParserSession->addIssue(std::move(I));
-            }
-#endif // CHECK_ISSUES
-            
-            return c;
         }
         //
         // Linear syntax characters
@@ -1870,7 +1865,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxBangCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
         }
@@ -1880,7 +1875,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxPercentCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
         }
@@ -1890,7 +1885,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxAmpCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
         }
@@ -1900,7 +1895,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxOpenParenCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
         }
@@ -1910,7 +1905,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxCloseParenCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
         }
@@ -1920,7 +1915,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxStarCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
         }
@@ -1930,7 +1925,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxPlusCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
         }
@@ -1940,7 +1935,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxSlashCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
         }
@@ -1950,7 +1945,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxAtCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
         }
@@ -1960,7 +1955,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxCaretCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
         }
@@ -1970,7 +1965,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxUnderscoreCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
         }
@@ -1980,7 +1975,7 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxBacktickCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
         }
@@ -1990,42 +1985,35 @@ WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation e
             CharacterDecoder_LinearSyntaxSpaceCount++;
 #endif // DIAGNOSTICS
             
-            TheByteDecoder->nextSourceCharacter0(policy);
+            ByteDecoder_nextSourceCharacter0(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
         }
-            //
-            // Anything else
-            //
-            // Something like \A or \{
-            //
-        default: {
-            
+    } // switch
+    
+    //
+    // Anything else
+    //
+    // Something like \A or \{
+    //
 #if DIAGNOSTICS
-            CharacterDecoder_UnhandledCount++;
+    CharacterDecoder_UnhandledCount++;
 #endif // DIAGNOSTICS
-            
-            MUSTTAIL
-            return handleUnhandledEscape(escapedBuf, escapedLoc, policy);
-        }
-    }
-}
-
-std::set<SourceLocation>& CharacterDecoder::getSimpleLineContinuations() {
-    return SimpleLineContinuations;
-}
-
-std::set<SourceLocation>& CharacterDecoder::getComplexLineContinuations() {
-    return ComplexLineContinuations;
-}
-
-std::set<SourceLocation>& CharacterDecoder::getEmbeddedTabs() {
-    return EmbeddedTabs;
+    
+//    MUSTTAIL
+    return CharacterDecoder_handleUnhandledEscape(session, escapedBuf, escapedLoc, policy);
 }
 
 
+//
+// example:
+// input: Alpa
+// return Alpha
+//
+// Return empty string if no suggestion.
+//
 #if USE_EXPR_LIB
-std::string CharacterDecoder::longNameSuggestion(std::string input) {
+std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::string input) {
     
     auto InputExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(input.c_str()), input.size());
     
@@ -2043,9 +2031,9 @@ std::string CharacterDecoder::longNameSuggestion(std::string input) {
     return suggestion;
 }
 #elif USE_MATHLINK
-std::string CharacterDecoder::longNameSuggestion(std::string input) {
+std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::string input) {
     
-    MLINK link = TheParserSession->libData->getMathLink(TheParserSession->libData);
+    auto link = session->getMathLink();
     
     if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET.name(), 1)) {
         assert(false);
@@ -2059,31 +2047,29 @@ std::string CharacterDecoder::longNameSuggestion(std::string input) {
         assert(false);
     }
     
-    if (!TheParserSession->libData->processMathLink(link)) {
+    if (!session->processMathLink()) {
         assert(false);
     }
     
     auto pkt = MLNextPacket(link);
+    
     if (pkt == RETURNPKT) {
         
         ScopedMLString str(link);
+        
         if (!str.read()) {
             assert(false);
         }
         
         auto cstr = str.get();
         
-        auto suggestion = std::string(cstr);
-        
-        return suggestion;
+        return std::string(cstr);
     }
     
     return "";
 }
 #else
-std::string CharacterDecoder::longNameSuggestion(std::string input) {
+std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::string input) {
     return "";
 }
 #endif // USE_EXPR_LIB
-
-CharacterDecoderPtr TheCharacterDecoder = nullptr;
