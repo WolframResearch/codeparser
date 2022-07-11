@@ -112,7 +112,7 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK 
     
     auto session = CreateParserSession();
     
-    if (!MLPutInteger(link, reinterpret_cast<mint>(session))) {
+    if (!MLPutLongInteger(link, reinterpret_cast<long>(session))) {
         assert(false);
     }
     
@@ -158,8 +158,8 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSession;
-    if (!MLGetInteger(link, &mlSession)) {
+    long mlSession;
+    if (!MLGetLongInteger(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -234,8 +234,8 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK l
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSession;
-    if (!MLGetInteger(link, &mlSession)) {
+    long mlSession;
+    if (!MLGetLongInteger(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -348,8 +348,8 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSession;
-    if (!MLGetInteger(link, &mlSession)) {
+    long mlSession;
+    if (!MLGetLongInteger(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -469,8 +469,8 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSession;
-    if (!MLGetInteger(link, &mlSession)) {
+    long mlSession;
+    if (!MLGetLongInteger(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -590,8 +590,8 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSession;
-    if (!MLGetInteger(link, &mlSession)) {
+    long mlSession;
+    if (!MLGetLongInteger(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     

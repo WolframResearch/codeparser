@@ -27,7 +27,7 @@
 BufferAndLength::BufferAndLength() : Buf(), Len() {}
 
 BufferAndLength::BufferAndLength(Buffer Buf, size_t Len) : Buf(Buf), Len(Len) {
-    assert(Len < 1UL << 48);
+    assert(Len < 1ULL << 48);
 }
 
 size_t BufferAndLength::length() const {

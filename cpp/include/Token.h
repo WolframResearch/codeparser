@@ -43,7 +43,12 @@ struct Token {
 #endif // USE_EXPR_LIB
 };
 
+//
+// Sizes of structs with bit-fields are implementation-dependent
+//
+#ifdef __clang__
 static_assert((SIZEOF_VOID_P == 8 && sizeof(Token) == 32) || (SIZEOF_VOID_P == 4), "Check your assumptions");
+#endif // #ifdef __clang__
 
 bool operator==(Token a, Token b);
 bool operator!=(Token a, Token b);
