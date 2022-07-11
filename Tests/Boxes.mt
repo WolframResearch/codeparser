@@ -1064,3 +1064,19 @@ Test[
 ]
 
 
+(*
+bug 426013
+*)
+Test[
+	CodeConcreteParseBox[""]
+	,
+	ContainerNode[Box, {Missing["EmptyInput"]}, <|SyntaxIssues -> {
+	
+	EncodingIssue["EmptyInput", "Empty input.", "Fatal", <|Source -> {}, ConfidenceLevel -> 1.|>]}|>]
+	,
+	TestID->"Boxes-20220711-Q7R8Q8"
+]
+
+
+
+

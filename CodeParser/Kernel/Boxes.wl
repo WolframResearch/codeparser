@@ -127,6 +127,18 @@ Module[{aggregatedChildren},
 wrapToplevelCompoundExpression[ns_] := ns
 
 
+(*
+bug 426013
+*)
+CodeConcreteParseBox["", opts:OptionsPattern[]] :=
+Catch[
+Module[{},
+
+  ContainerNode[Box, {Missing["EmptyInput"]}, <|
+    SyntaxIssues -> {EncodingIssue["EmptyInput", "Empty input.", "Fatal", <|Source -> {}, ConfidenceLevel -> 1.|>]}
+  |>]
+]]
+
 CodeConcreteParseBox[box_, opts:OptionsPattern[]] :=
 Catch[
 Module[{children, child},

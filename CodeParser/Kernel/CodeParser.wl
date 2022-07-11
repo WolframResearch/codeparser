@@ -1279,7 +1279,7 @@ concreteParseLeafString[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:
 Catch[
 Module[{res},
 
-  res = {{}, {}, {}, {}, {}, {}};
+  res = {{Missing["EmptyInput"]}, {}, {}, {}, {}, {}};
 
   res
 ]]
