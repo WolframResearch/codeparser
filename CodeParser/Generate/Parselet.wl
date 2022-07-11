@@ -2,7 +2,7 @@
 
 If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
 
-BeginPackage["CodeParser`Generate`ParseletRegistration`"]
+BeginPackage["CodeParser`Generate`Parselet`"]
 
 PrefixOperatorToParselet
 
@@ -147,7 +147,7 @@ formatInfix[Parselet`TimesParselet[]] := "timesParselet"
 
 generate[] := (
 
-Print["Generating ParseletRegistration..."];
+Print["Generating Parselet..."];
 
 parseletRegistrationCPPHeader = {
 "
@@ -158,7 +158,7 @@ parseletRegistrationCPPHeader = {
 
 #pragma once
 
-#include \"TokenEnum.h\" // for TOKEN_COUNT
+#include \"TokenEnumRegistration.h\" // for TOKEN_COUNT
 
 #include <array>
 
@@ -215,7 +215,7 @@ parseletRegistrationCPPSource = {
 
 #include \"Parselet.h\" // for SymbolParselet, UnderParselet, etc.
 #include \"ByteDecoder.h\" // for TheByteDecoder
-#include \"Symbol.h\"
+#include \"SymbolRegistration.h\"
 
 #include <cassert>
 
@@ -299,7 +299,7 @@ If[FailureQ[res],
   Quit[1]
 ];
 
-Print["Done ParseletRegistration"]
+Print["Done Parselet"]
 )
 
 If[!StringQ[script],

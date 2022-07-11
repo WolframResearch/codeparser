@@ -49,25 +49,6 @@ struct WLCharacter {
     
     explicit operator int() const noexcept = delete;
     
-    constexpr bool operator==(const WLCharacter& o) const {
-        return valBits == o.valBits &&
-            signBit == o.signBit &&
-            escapeBits == o.escapeBits;
-    }
-    
-    constexpr bool operator!=(const WLCharacter& o) const {
-        return valBits != o.valBits ||
-            signBit != o.signBit ||
-            escapeBits != o.escapeBits;
-    }
-    
-    //
-    // for std::map
-    //
-    constexpr bool operator<(const WLCharacter& o) const {
-        return to_point() < o.to_point();
-    }
-    
     constexpr codepoint to_point() const {
         //
         // Sign extend the value
@@ -83,10 +64,6 @@ struct WLCharacter {
     
     std::string safeAndGraphicalString() const;
     
-    bool isEscaped() const;
-    
-    
-    bool isAlpha() const;
     
     bool isUpper() const;
     
@@ -102,11 +79,7 @@ struct WLCharacter {
     
     bool isStrangeLetterlike() const;
     
-    bool isWhitespace() const;
-    
     bool isStrangeWhitespace() const;
-    
-    bool isNewline() const;
     
     bool isControl() const;
     
@@ -122,7 +95,6 @@ struct WLCharacter {
     bool isMBNewline() const;
     bool isMBStrangeNewline() const;
     bool isMBUninterpretable() const;
-    bool isMBControl() const;
 };
 
 //
@@ -133,8 +105,10 @@ static_assert(sizeof(WLCharacter) == 4, "Check your assumptions");
 #endif // __clang__
 
 std::ostream& operator<<(std::ostream& s, WLCharacter c);
-    
+
+#if BUILD_TESTS
 //
 // For googletest
 //
 void PrintTo(const WLCharacter& c, std::ostream *s);
+#endif // BUILD_TESTS

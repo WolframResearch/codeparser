@@ -13,5 +13,4 @@ using ParserSessionPtr = ParserSession *;
 //
 
 unsigned char ByteBuffer_currentByte(ParserSessionPtr session);
-void ByteBuffer_nextByte(ParserSessionPtr session);
-unsigned char ByteBuffer_nextByte0(ParserSessionPtr session);
+unsigned char ByteBuffer_nextByte(ParserSessionPtr session);

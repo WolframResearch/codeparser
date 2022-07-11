@@ -4,6 +4,8 @@
 #include "ParserSession.h"
 #include "Parser.h"
 #include "ParseletRegistration.h"
+#include "Tokenizer.h"
+#include "SymbolRegistration.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -40,7 +42,7 @@ void TimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
@@ -81,9 +83,9 @@ void TimesParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok1 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
@@ -101,7 +103,7 @@ void TimesParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
 
         Trivia1.reset(session);
 
-        Tok1 = Parser_currentToken(session, TOPLEVEL);
+        Tok1 = Tokenizer_currentToken(session, TOPLEVEL);
 
         Parser_eatTriviaButNotToplevelNewlines(session, Tok1, TOPLEVEL, Trivia1);
 
@@ -135,7 +137,7 @@ void TimesParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     
     Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok2, TOPLEVEL);
     

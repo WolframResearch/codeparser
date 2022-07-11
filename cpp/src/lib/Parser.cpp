@@ -7,6 +7,7 @@
 #include "ParseletRegistration.h"
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
+#include "SymbolRegistration.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -32,7 +33,7 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
             // Handle the optional #! shebang
             //
             
-            auto peek = Parser_currentToken(session, TOPLEVEL);
+            auto peek = Tokenizer_currentToken(session, TOPLEVEL);
             
             if (peek.Tok != TOKEN_HASH) {
                 
@@ -47,9 +48,9 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
                 return;
             }
             
-            Parser_nextToken(session, peek);
+            peek.skip(session);
             
-            peek = Parser_currentToken(session, TOPLEVEL);
+            peek = Tokenizer_currentToken(session, TOPLEVEL);
             
             if (peek.Tok != TOKEN_BANG) {
                 
@@ -68,7 +69,7 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
             // Definitely a shebang
             //
             
-            Parser_nextToken(session, peek);
+            peek.skip(session);
             
             while (true) {
                 
@@ -78,7 +79,7 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
                 }
 #endif // CHECK_ABORT
                 
-                auto peek = Parser_currentToken(session, TOPLEVEL);
+                auto peek = Tokenizer_currentToken(session, TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
                     break;
@@ -86,12 +87,12 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
                 
                 if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
                     
-                    Parser_nextToken(session, peek);
+                    peek.skip(session);
                     
                     break;
                 }
                 
-                Parser_nextToken(session, peek);
+                peek.skip(session);
                 
             } // while (true)
             
@@ -108,7 +109,7 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
             // Handle the #! shebang
             //
             
-            auto peek = Parser_currentToken(session, TOPLEVEL);
+            auto peek = Tokenizer_currentToken(session, TOPLEVEL);
             
             if (peek.Tok != TOKEN_HASH) {
                 
@@ -119,9 +120,9 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
                 return;
             }
             
-            Parser_nextToken(session, peek);
+            peek.skip(session);
             
-            peek = Parser_currentToken(session, TOPLEVEL);
+            peek = Tokenizer_currentToken(session, TOPLEVEL);
             
             if (peek.Tok != TOKEN_BANG) {
                 
@@ -132,7 +133,7 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
                 return;
             }
             
-            Parser_nextToken(session, peek);
+            peek.skip(session);
             
             while (true) {
                 
@@ -142,7 +143,7 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
                 }
 #endif // CHECK_ABORT
                 
-                auto peek = Parser_currentToken(session, TOPLEVEL);
+                auto peek = Tokenizer_currentToken(session, TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
                     break;
@@ -150,61 +151,18 @@ void Parser_handleFirstLine(ParserSessionPtr session) {
                 
                 if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
                     
-                    Parser_nextToken(session, peek);
+                    peek.skip(session);
                     
                     break;
                 }
                 
-                Parser_nextToken(session, peek);
+                peek.skip(session);
                 
             } // while (true)
             
             break;
         }
     }
-}
-
-void Parser_nextToken(ParserSessionPtr session, Token Tok) {
-    Tokenizer_nextToken(session, Tok);
-}
-
-Token Parser_nextToken0(ParserSessionPtr session, NextPolicy policy) {
-    
-    auto insideGroup = !session->GroupStack.empty();
-    
-    //
-    // if insideGroup:
-    //   returnInternalNewlineMask is 0b100
-    // else:
-    //   returnInternalNewlineMask is 0b000
-    //
-    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
-    
-    return Tokenizer_nextToken0(session, policy & ~(returnInternalNewlineMask));
-}
-
-Token Parser_currentToken(ParserSessionPtr session, NextPolicy policy) {
-    
-    auto insideGroup = !session->GroupStack.empty();
-    
-    //
-    // if insideGroup:
-    //   returnInternalNewlineMask is 0b100
-    // else:
-    //   returnInternalNewlineMask is 0b000
-    //
-    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
-    
-    return Tokenizer_currentToken(session, policy & ~(returnInternalNewlineMask));
-}
-
-
-Token Parser_currentToken_stringifyAsTag(ParserSessionPtr session) {
-    return Tokenizer_currentToken_stringifyAsTag(session);
-}
-
-Token Parser_currentToken_stringifyAsFile(ParserSessionPtr session) {
-    return Tokenizer_currentToken_stringifyAsFile(session);
 }
 
 void Parser_parseClimb(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -218,9 +176,9 @@ void Parser_parseClimb(ParserSessionPtr session, ParseletPtr Ignored, Token Igno
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto token = Parser_currentToken(session, TOPLEVEL);
+    auto token = Tokenizer_currentToken(session, TOPLEVEL);
     
     //
     // not in the middle of parsing anything, so toplevel newlines will delimit
@@ -287,9 +245,9 @@ void Parser_eatTrivia(ParserSessionPtr session, Token& T, NextPolicy policy) {
         
         session->NodeStack.push_back(T);
         
-        Parser_nextToken(session, T);
+        T.skip(session);
         
-        T = Parser_currentToken(session, policy);
+        T = Tokenizer_currentToken(session, policy);
     }
 }
 
@@ -299,9 +257,9 @@ void Parser_eatTrivia(ParserSessionPtr session, Token& T, NextPolicy policy, Tri
         
         Args.push(T);
         
-        Parser_nextToken(session, T);
+        T.skip(session);
         
-        T = Parser_currentToken(session, policy);
+        T = Tokenizer_currentToken(session, policy);
     }
 }
 
@@ -311,21 +269,9 @@ void Parser_eatTrivia_stringifyAsFile(ParserSessionPtr session, Token& T) {
         
         session->NodeStack.push_back(T);
         
-        Parser_nextToken(session, T);
+        T.skip(session);
         
-        T = Parser_currentToken_stringifyAsFile(session);
-    }
-}
-
-void Parser_eatTrivia_stringifyAsFile(ParserSessionPtr session, Token& T, TriviaSeq& Args) {
-    
-    while (T.Tok.isTrivia()) {
-        
-        Args.push(T);
-        
-        Parser_nextToken(session, T);
-        
-        T = Parser_currentToken_stringifyAsFile(session);
+        T = Tokenizer_currentToken_stringifyAsFile(session);
     }
 }
 
@@ -335,9 +281,9 @@ void Parser_eatTriviaButNotToplevelNewlines(ParserSessionPtr session, Token& T, 
         
         session->NodeStack.push_back(T);
         
-        Parser_nextToken(session, T);
+        T.skip(session);
         
-        T = Parser_currentToken(session, policy);
+        T = Tokenizer_currentToken(session, policy);
     }
 }
 
@@ -347,21 +293,9 @@ void Parser_eatTriviaButNotToplevelNewlines(ParserSessionPtr session, Token& T, 
         
         Args.push(T);
         
-        Parser_nextToken(session, T);
+        T.skip(session);
         
-        T = Parser_currentToken(session, policy);
-    }
-}
-
-void Parser_eatTriviaButNotToplevelNewlines_stringifyAsFile(ParserSessionPtr session, Token& T, TriviaSeq& Args) {
-    
-    while (T.Tok.isTriviaButNotToplevelNewline()) {
-        
-        Args.push(T);
-        
-        Parser_nextToken(session, T);
-        
-        T = Parser_currentToken_stringifyAsFile(session);
+        T = Tokenizer_currentToken(session, policy);
     }
 }
 
@@ -443,7 +377,7 @@ void Parser_pushLeafAndNext(ParserSessionPtr session, Token Tok) {
     
     session->NodeStack.push_back(Tok);
     
-    Tokenizer_nextToken(session, Tok);
+    Tok.skip(session);
 }
 
 void Parser_pushTriviaSeq(ParserSessionPtr session, TriviaSeq& Seq) {
@@ -452,28 +386,17 @@ void Parser_pushTriviaSeq(ParserSessionPtr session, TriviaSeq& Seq) {
     // Move all trivia from Seq to back of ArgsStack
     //
     
-    std::move(Seq.vec.begin(), Seq.vec.end(), std::back_inserter(session->NodeStack));
+    std::move(Seq.begin(), Seq.end(), std::back_inserter(session->NodeStack));
     
     //
     // Forget about Seq
     //
     
-    Seq.vec.clear();
+    Seq.clear();
 }
 
 void Parser_pushNode(ParserSessionPtr session, Node *N) {
     session->NodeStack.push_back(N);
-}
-
-bool Parser_isNodeStackEmpty(ParserSessionPtr session) {
-    return session->NodeStack.empty();
-}
-
-NodeVariant& Parser_topNode(ParserSessionPtr session) {
-    
-    assert(!session->NodeStack.empty());
-    
-    return session->NodeStack.back();
 }
 
 NodeVariant Parser_popNode(ParserSessionPtr session) {
@@ -496,10 +419,6 @@ void Parser_popGroup(ParserSessionPtr session) {
     assert(!session->GroupStack.empty());
     
     session->GroupStack.pop_back();
-}
-
-size_t Parser_getGroupDepth(ParserSessionPtr session) {
-    return session->GroupStack.size();
 }
 
 bool Parser_checkGroup(ParserSessionPtr session, Closer Closr) {
@@ -608,13 +527,13 @@ ColonLHS Parser_checkColonLHS(ParserSessionPtr session) {
             
             auto Op = C->getOp();
 
-            switch (Op.getId()) {
-                case SYMBOL_CODEPARSER_PATTERNBLANK.getId():
-                case SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE.getId():
-                case SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE.getId():
-                case SYMBOL_BLANK.getId():
-                case SYMBOL_BLANKSEQUENCE.getId():
-                case SYMBOL_BLANKNULLSEQUENCE.getId(): {
+            switch (Op.Id) {
+                case SYMBOL_CODEPARSER_PATTERNBLANK.Id:
+                case SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE.Id:
+                case SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE.Id:
+                case SYMBOL_BLANK.Id:
+                case SYMBOL_BLANKSEQUENCE.Id:
+                case SYMBOL_BLANKNULLSEQUENCE.Id: {
                     return COLONLHS_OPTIONAL;
                 }
             }
@@ -650,7 +569,9 @@ ColonLHS Parser_checkColonLHS(ParserSessionPtr session) {
                 return COLONLHS_OPTIONAL;
             }
             case TOKEN_COLON.value(): {
+                
                 assert(false && "Fix at call site");
+                
                 return COLONLHS_ERROR;
             }
         }
@@ -776,14 +697,6 @@ bool Parser_checkSpan(ParserSessionPtr session) {
     }
     
     return false;
-}
-
-TriviaSeq& Parser_getTrivia1(ParserSessionPtr session) {
-    return session->trivia1;
-}
-
-TriviaSeq& Parser_getTrivia2(ParserSessionPtr session) {
-    return session->trivia2;
 }
 
 bool Parser_isQuiescent(ParserSessionPtr session) {

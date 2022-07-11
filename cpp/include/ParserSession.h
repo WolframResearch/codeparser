@@ -25,10 +25,6 @@ using NodeVariant = std::variant<NodePtr, Token>;
 // A parser session
 //
 class ParserSession {
-private:
-    
-    NodeVariant concreteParseLeaf0(int mode);
-    
 public:
     
     Buffer start;
@@ -48,14 +44,16 @@ public:
     SourceLocation SrcLoc;
     
 private:
+    
     IssuePtrSet fatalIssues;
     IssuePtrSet nonFatalIssues;
     
-public:
     std::set<SourceLocation> SimpleLineContinuations;
     std::set<SourceLocation> ComplexLineContinuations;
     std::set<SourceLocation> EmbeddedNewlines;
     std::set<SourceLocation> EmbeddedTabs;
+    
+public:
     
     std::vector<NodeVariant> NodeStack;
     std::vector<Context> ContextStack;
@@ -64,6 +62,11 @@ public:
     TriviaSeq trivia1;
     TriviaSeq trivia2;
     
+private:
+    
+    NodeVariant concreteParseLeaf0(StringifyMode mode);
+    
+public:
     
     ParserSession();
     
@@ -77,8 +80,6 @@ public:
     NodeContainerPtr tokenize();
     NodeContainerPtr concreteParseLeaf(StringifyMode mode);
     NodeContainerPtr safeString();
-    
-    void releaseContainer(NodeContainerPtr C);
     
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
     

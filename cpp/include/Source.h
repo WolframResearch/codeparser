@@ -4,6 +4,7 @@
 #include "TokenEnum.h" // for TokenEnum
 #include "CodePoint.h" // for codepoint
 #include "MyString.h"
+#include "Symbol.h"
 
 #include <set>
 #include <string>
@@ -37,8 +38,8 @@ using expr = void *;
 //
 struct BufferAndLength {
     
-    Buffer Buf;
-    uint64_t Len : 48;
+    const Buffer Buf;
+    const uint64_t Len : 48;
     
     BufferAndLength();
     BufferAndLength(Buffer buffer, size_t length = 0);
@@ -46,6 +47,9 @@ struct BufferAndLength {
     size_t length() const;
     
     Buffer end() const;
+    
+    bool containsOnlyASCII() const;
+    bool containsTab() const;
     
     void print(std::ostream& s) const;
     
@@ -59,9 +63,6 @@ struct BufferAndLength {
 };
 
 static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 16) || (SIZEOF_VOID_P == 4), "Check your assumptions");
-
-bool operator==(BufferAndLength a, BufferAndLength b);
-bool operator!=(BufferAndLength a, BufferAndLength b);
 
 //
 //
@@ -118,14 +119,7 @@ enum NextPolicyBits : uint8_t {
     //
     STRING_OR_COMMENT = 0x08,
     
-    //
-    // Check for unlikely escape sequences?
-    //
-    // Check for sequences like \\[Alpa] and report them
-    //
-    // Used by CharacterDecoder
-    //
-    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x10,
+    // UNUSED = 0x10,
     
     //
     // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
@@ -179,14 +173,6 @@ struct SourceCharacter {
     
     explicit operator int() const noexcept = delete;
     
-    constexpr bool operator==(const SourceCharacter& o) const {
-        return val == o.val;
-    }
-    
-    constexpr bool operator!=(const SourceCharacter& o) const {
-        return val != o.val;
-    }
-    
     constexpr codepoint to_point() const {
         return val;
     }
@@ -205,46 +191,12 @@ struct SourceCharacter {
     
     bool isEndOfFile() const;
     
-    bool isDigit() const;
-    
     bool isWhitespace() const;
     
     bool isNewline() const;
     
     bool isMBWhitespace() const;
     bool isMBNewline() const;
-    
-    bool isBackslash() const;
-    
-    
-    class SourceCharacter_iterator {
-    public:
-        
-        size_t size;
-        size_t idx;
-        const codepoint val;
-        std::array<unsigned char, 4> arr;
-        
-        SourceCharacter_iterator(codepoint val);
-        
-        unsigned char operator*() {
-            return arr[idx];
-        }
-        
-        bool operator!=(const SourceCharacter_iterator& other) {
-            return val != other.val || idx != other.idx;
-        }
-        
-        SourceCharacter_iterator& operator++() {
-            assert(idx < size);
-            ++idx;
-            return *this;
-        }
-    };
-    
-    SourceCharacter_iterator begin();
-    
-    SourceCharacter_iterator end();
 };
 
 static_assert(sizeof(SourceCharacter) == 4, "Check your assumptions");
@@ -280,11 +232,10 @@ struct SourceLocation {
     uint32_t second;
     
     SourceLocation();
-    
     SourceLocation(uint32_t first, uint32_t second);
     
-    SourceLocation next();
-    SourceLocation previous();
+    SourceLocation next() const;
+    SourceLocation previous() const;
     
 #if USE_MATHLINK
     void put(ParserSessionPtr session) const;
@@ -303,11 +254,14 @@ static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
 // For LineContinuations and EmbeddedNewlines
 //
 bool operator<(SourceLocation a, SourceLocation b);
+bool operator<=(SourceLocation a, SourceLocation b);
 
+#if BUILD_TESTS
 //
 // For googletest
 //
 void PrintTo(const SourceLocation& Loc, std::ostream *s);
+#endif // BUILD_TESTS
 
 //
 //
@@ -318,13 +272,9 @@ struct Source {
     SourceLocation End;
     
     Source();
-    
     Source(SourceLocation only);
-    
     Source(size_t coerced) = delete;
-    
     Source(SourceLocation start, SourceLocation end);
-    
     Source(Source start, Source end);
     
 #if USE_MATHLINK
@@ -342,15 +292,14 @@ struct Source {
 
 static_assert(sizeof(Source) == 16, "Check your assumptions");
 
-bool operator==(Source a, Source b);
-bool operator!=(Source a, Source b);
-
 bool operator<(Source a, Source b);
 
+#if BUILD_TESTS
 //
 // For googletest
 //
 void PrintTo(const Source& Src, std::ostream *s);
+#endif // BUILD_TESTS
 
 
 //

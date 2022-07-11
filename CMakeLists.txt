@@ -131,20 +131,18 @@ set(GENERATED_WL_PACLET_RESOURCES_SOURCES
 )
 
 set(GENERATED_CPP_INCLUDES
-	${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/LongNamesRegistration.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/MyStringRegistration.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/ParseletRegistration.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/SymbolRegistration.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnumRegistration.h
 )
 
 set(GENERATED_CPP_LIB_SOURCES
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNamesRegistration.cpp
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/ParseletRegistration.cpp
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnumRegistration.cpp
 )
 
 
@@ -299,8 +297,8 @@ endforeach()
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
-		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
+		${PROJECT_BINARY_DIR}/generated/cpp/include/LongNamesRegistration.h
+		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNamesRegistration.cpp
 		${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/LongNames.wl
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/LongNames.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -322,8 +320,8 @@ add_custom_command(
 # TokenEnum files
 #
 set(GENERATED_TOKENENUM_OUTPUT
-	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnumRegistration.h
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnumRegistration.cpp
 	${PROJECT_BINARY_DIR}/generated/wl/Kernel/TokenEnum.wl
 )
 
@@ -347,7 +345,7 @@ add_custom_command(
 )
 
 #
-# ParseletRegistration files
+# Parselet files
 #
 set(GENERATED_PARSELETREGISTRATION_OUTPUT
 	${PROJECT_BINARY_DIR}/generated/cpp/include/ParseletRegistration.h
@@ -358,11 +356,11 @@ add_custom_command(
 	OUTPUT
 		${GENERATED_PARSELETREGISTRATION_OUTPUT}
 	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ParseletRegistration.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Parselet.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/InfixParselets.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/PrefixParselets.wl
-		${PROJECT_SOURCE_DIR}/CodeParser/Generate/ParseletRegistration.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Parselet.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${GENERATED_TOKENENUM_OUTPUT}
@@ -423,8 +421,7 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
-		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
+		${PROJECT_BINARY_DIR}/generated/cpp/include/SymbolRegistration.h
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
@@ -444,8 +441,7 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
-		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
+		${PROJECT_BINARY_DIR}/generated/cpp/include/MyStringRegistration.h
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/String.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
@@ -569,12 +565,16 @@ set(STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/ByteEncoder.h
 	${PROJECT_SOURCE_DIR}/cpp/include/CharacterDecoder.h
 	${PROJECT_SOURCE_DIR}/cpp/include/CodePoint.h
+	${PROJECT_SOURCE_DIR}/cpp/include/LongNames.h
+	${PROJECT_SOURCE_DIR}/cpp/include/MyString.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Node.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Parselet.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Parser.h
 	${PROJECT_SOURCE_DIR}/cpp/include/ParserSession.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Source.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Symbol.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Token.h
+	${PROJECT_SOURCE_DIR}/cpp/include/TokenEnum.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Tokenizer.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Utils.h
 	${PROJECT_SOURCE_DIR}/cpp/include/WLCharacter.h
@@ -600,14 +600,18 @@ set(STATIC_CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/LongNames.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/MyString.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Node.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parser.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/ParserSession.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Source.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Symbol.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/TimesParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Token.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/TokenEnum.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/UnderParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Utils.cpp
@@ -765,18 +769,32 @@ endif()
 
 if(USE_MUSTTAIL)
 target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=1)
+else()
+target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=0)
 endif()
 
 if(${TRANSPORT} STREQUAL MathLink)
 target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
+else()
+target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=0)
 endif()
 
 if(${TRANSPORT} STREQUAL ExprLib)
 target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=1)
+else()
+target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=0)
 endif()
 
 if(DIAGNOSTICS)
 target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=1)
+else()
+target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=0)
+endif()
+
+if(BUILD_TESTS)
+target_compile_definitions(codeparser-lib PUBLIC BUILD_TESTS=1)
+else()
+target_compile_definitions(codeparser-lib PUBLIC BUILD_TESTS=0)
 endif()
 
 target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})

@@ -38,11 +38,10 @@ struct NumberTokenizationContext {
 // Tokenizer takes a stream of WL characters and tokenizes them
 //
 
-void Tokenizer_nextToken(ParserSessionPtr session, Token Tok);
-Token Tokenizer_nextToken0(ParserSessionPtr session, NextPolicy policy);
-Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy);
-Token Tokenizer_nextToken0_stringifyAsTag(ParserSessionPtr session);
-Token Tokenizer_nextToken0_stringifyAsFile(ParserSessionPtr session);
+Token Tokenizer_nextToken(ParserSessionPtr session, NextPolicy policy);
+Token Tokenizer_nextToken_uncommon(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy);
+Token Tokenizer_nextToken_stringifyAsTag(ParserSessionPtr session);
+Token Tokenizer_nextToken_stringifyAsFile(ParserSessionPtr session);
 
 Token Tokenizer_currentToken(ParserSessionPtr session, NextPolicy policy);
 Token Tokenizer_currentToken_stringifyAsTag(ParserSessionPtr session);

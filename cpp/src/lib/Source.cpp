@@ -4,10 +4,11 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteEncoder.h" // for ByteEncoder
 #include "ByteBuffer.h" // for ByteBuffer
-#include "Symbol.h" // for SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE, etc.
+#include "SymbolRegistration.h" // for SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE, etc.
 #include "Utils.h" // for isMBNewline, etc.
-#include "LongNames.h" // for CodePointToLongNameMap
-#include "MyString.h"
+#include "LongNamesRegistration.h" // for CodePointToLongNameMap
+#include "LongNames.h"
+#include "MyStringRegistration.h"
 #include "ParserSession.h"
 
 #if USE_MATHLINK
@@ -38,6 +39,34 @@ Buffer BufferAndLength::end() const {
     return Buf + Len;
 }
 
+bool BufferAndLength::containsOnlyASCII() const {
+    
+    for (auto p = Buf; p < end(); p++) {
+        
+        auto c = *p;
+        
+        if (c > 0x7f) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool BufferAndLength::containsTab() const {
+    
+    for (auto p = Buf; p < end(); p++) {
+        
+        auto c = *p;
+        
+        if (c == 0x09) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 void BufferAndLength::print(std::ostream& s) const {
     s.write(reinterpret_cast<const char *>(Buf), length());
 }
@@ -58,16 +87,6 @@ expr BufferAndLength::toExpr(ParserSessionPtr session) const {
     return Expr_UTF8BytesToStringExpr(Buf, static_cast<int>(length()));
 }
 #endif // USE_EXPR_LIB
-
-
-bool operator==(BufferAndLength a, BufferAndLength b) {
-    return a.Buf == b.Buf && a.Len == b.Len;
-}
-
-bool operator!=(BufferAndLength a, BufferAndLength b) {
-    return a.Buf != b.Buf || a.Len != b.Len;
-}
-
 
 
 bool IssuePtrCompare::operator()(const IssuePtr& L, const IssuePtr& R) const {
@@ -197,52 +216,54 @@ SourceLocation::SourceLocation() : first(0), second(0) {}
 
 SourceLocation::SourceLocation(uint32_t first, uint32_t second) : first(first), second(second) {}
 
-bool operator==(SourceLocation a, SourceLocation b) {
-    return a.first == b.first && a.second == b.second;
-}
-
-bool operator!=(SourceLocation a, SourceLocation b) {
-    return a.first != b.first || a.second != b.second;
-}
-
 bool operator<(SourceLocation a, SourceLocation b) {
     
     if (a.first < b.first) {
         return true;
     }
     
-    if (a.first == b.first) {
-        
-        if (a.second < b.second) {
-            return true;
-        }
+    if (a.first != b.first) {
+        return false;
     }
     
+    if (a.second < b.second) {
+        return true;
+    }
+
     return false;
 }
 
 bool operator<=(SourceLocation a, SourceLocation b) {
-
+    
     if (a.first < b.first) {
         return true;
     }
-
-    if (a.first == b.first) {
-
-        if (a.second <= b.second) {
-            return true;
-        }
+    
+    if (a.first != b.first) {
+        return false;
+    }
+    
+    if (a.second <= b.second) {
+        return true;
     }
 
     return false;
 }
 
-SourceLocation SourceLocation::next() {
+SourceLocation SourceLocation::next() const {
+#if COMPUTE_SOURCE
     return SourceLocation(first, second + 1);
+#else
+    return SourceLocation();
+#endif // COMPUTE_SOURCE
 }
 
-SourceLocation SourceLocation::previous() {
+SourceLocation SourceLocation::previous() const {
+#if COMPUTE_SOURCE
     return SourceLocation(first, second - 1);
+#else
+    return SourceLocation();
+#endif // COMPUTE_SOURCE
 }
 
 void SourceLocation::print(std::ostream& s) const {
@@ -252,12 +273,14 @@ void SourceLocation::print(std::ostream& s) const {
     s << second;
 }
 
+#if BUILD_TESTS
 //
 // For googletest
 //
 void PrintTo(const SourceLocation& Loc, std::ostream *s) {
     Loc.print(*s);
 }
+#endif // BUILD_TESTS
 
 
 
@@ -275,14 +298,6 @@ Source::Source(SourceLocation start, SourceLocation end) : Start(start), End(end
 
 Source::Source(Source start, Source end) : Start(start.Start), End(end.End) {
     assert(Start <= End);
-}
-
-bool operator==(Source a, Source b) {
-    return a.Start == b.Start && a.End == b.End;
-}
-
-bool operator!=(Source a, Source b) {
-    return a.Start != b.Start || a.End != b.End;
 }
 
 bool operator<(Source a, Source b) {
@@ -303,12 +318,14 @@ size_t Source::size() const {
     return End.second - Start.second;
 }
 
+#if BUILD_TESTS
 //
 // For googletest
 //
 void PrintTo(const Source& Src, std::ostream *s) {
     Src.print(*s);
 }
+#endif // BUILD_TESTS
 
 
 
@@ -352,15 +369,6 @@ bool SourceCharacter::isUpper() const {
     return std::isupper(val);
 }
 
-bool SourceCharacter::isDigit() const {
-    
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
-    }
-    
-    return std::isdigit(val);
-}
-
 bool SourceCharacter::isEndOfFile() const {
     return val == EOF;
 }
@@ -385,10 +393,6 @@ bool SourceCharacter::isWhitespace() const {
     }
     
     return false;
-}
-
-bool SourceCharacter::isBackslash() const {
-    return val == '\\';
 }
 
 bool SourceCharacter::isMBNewline() const {
@@ -423,16 +427,10 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     if (!graphicalFlag) {
 
-        if (c.isEndOfFile()) {
-            //
-            // Do not print anything for EOF
-            //
-            return stream;
-        }
-
         auto val = c.to_point();
 
         assert(val != CODEPOINT_ASSERTFALSE);
+        assert(val != CODEPOINT_ENDOFFILE);
         
         ByteEncoderState state;
 
@@ -450,14 +448,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     switch (val) {
         case CODEPOINT_ENDOFFILE: {
             
-            //
-            // Invent something for EOF
-            //
-            stream << SourceCharacter('<');
-            stream << SourceCharacter('E');
-            stream << SourceCharacter('O');
-            stream << SourceCharacter('F');
-            stream << SourceCharacter('>');
+            assert(false);
             
             return stream;
         }
@@ -496,31 +487,46 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         }
         case CODEPOINT_STRINGMETA_LINEFEED: {
             
-            stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
+            //
+            // no single SourceCharacter for \<LF>
+            //
+            assert(false);
             
             return stream;
         }
         case CODEPOINT_STRINGMETA_CARRIAGERETURN: {
             
-            stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
+            //
+            // no single SourceCharacter for \<CR>
+            //
+            assert(false);
             
             return stream;
         }
         case CODEPOINT_STRINGMETA_TAB: {
             
-            stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
+            //
+            // no single SourceCharacter for \t
+            //
+            assert(false);
             
             return stream;
         }
         case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
             
-            stream << WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
+            //
+            // no single SourceCharacter for \"
+            //
+            assert(false);
             
             return stream;
         }
         case CODEPOINT_STRINGMETA_BACKSLASH: {
             
-            stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
+            //
+            // no single SourceCharacter for \\
+            //
+            assert(false);
             
             return stream;
         }
@@ -605,7 +611,10 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         }
         case CODEPOINT_LINEARSYNTAX_SPACE: {
             
-            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
+            //
+            // no single SourceCharacter for \<space>
+            //
+            assert(false);
             
             return stream;
         }
@@ -653,6 +662,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
         
         if (it != CodePointToLongNameMap_points.end() && *it == val) {
+            
             //
             // Use LongName if available
             //
@@ -671,6 +681,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
         
         if (it != CodePointToLongNameMap_points.end() && *it == val) {
+            
             //
             // Use LongName if available
             //
@@ -716,52 +727,12 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 }
 
 
-
-//
-// SourceCharacter_iterator
-//
-
-SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(codepoint val) : size(0), idx(0), val(val), arr() {
-    
-    size = ByteEncoder::size(val);
-    
-    ByteEncoderState state;
-    
-    ByteEncoder::encodeBytes(arr, val, &state);
-}
-
-SourceCharacter::SourceCharacter_iterator SourceCharacter::begin() {
-    
-    assert(!isEndOfFile());
-    
-    auto it = SourceCharacter_iterator(val);
-    
-    it.idx = 0;
-    
-    return it;
-}
-
-SourceCharacter::SourceCharacter_iterator SourceCharacter::end() {
-    
-    assert(!isEndOfFile());
-    
-    auto it = SourceCharacter_iterator(val);
-    
-    //
-    // 1 past
-    //
-    it.idx = it.size;
-    
-    return it;
-}
-
-
 #if USE_MATHLINK
 void Issue::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, MakeSym.name(), 4)) {
+    if (!MLPutFunction(link, MakeSym.Name, 4)) {
         assert(false);
     }
     
@@ -774,14 +745,14 @@ void Issue::put(ParserSessionPtr session) const {
     Sev.put(session);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
             assert(false);
         }
         
         Src.put(session);
         
         {
-            if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
                 assert(false);
             }
             
@@ -794,13 +765,13 @@ void Issue::put(ParserSessionPtr session) const {
         
         if (!Actions.empty()) {
             
-            if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
                 assert(false);
             }
             
             SYMBOL_CODEPARSER_CODEACTIONS.put(session);
             
-            if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(Actions.size()))) {
+            if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(Actions.size()))) {
                 assert(false);
             }
             
@@ -811,13 +782,13 @@ void Issue::put(ParserSessionPtr session) const {
         
         if (!AdditionalDescriptions.empty()) {
             
-            if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
                 assert(false);
             }
             
             STRING_ADDITIONALDESCRIPTIONS.put(session);
             
-            if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(AdditionalDescriptions.size()))) {
+            if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(AdditionalDescriptions.size()))) {
                 assert(false);
             }
             
@@ -836,7 +807,7 @@ void ReplaceTextCodeAction::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
         assert(false);
     }
     
@@ -847,13 +818,13 @@ void ReplaceTextCodeAction::put(ParserSessionPtr session) const {
     SYMBOL_CODEPARSER_REPLACETEXT.put(session);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 2)) {
             assert(false);
         }
         
         Src.put(session);
         
-        if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
             assert(false);
         }
         
@@ -871,7 +842,7 @@ void InsertTextCodeAction::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
         assert(false);
     }
     
@@ -882,13 +853,13 @@ void InsertTextCodeAction::put(ParserSessionPtr session) const {
     SYMBOL_CODEPARSER_INSERTTEXT.put(session);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 2)) {
             assert(false);
         }
         
         Src.put(session);
         
-        if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
+        if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
             assert(false);
         }
         
@@ -906,7 +877,7 @@ void DeleteTextCodeAction::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
         assert(false);
     }
     
@@ -917,7 +888,7 @@ void DeleteTextCodeAction::put(ParserSessionPtr session) const {
     SYMBOL_CODEPARSER_DELETETEXT.put(session);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
+        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
             assert(false);
         }
         
@@ -931,7 +902,7 @@ void SourceLocation::put(ParserSessionPtr session) const {
 
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
+    if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
         assert(false);
     }
 
@@ -950,7 +921,7 @@ void Source::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_RULE.name(), 2)) {
+    if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
         assert(false);
     }
     
@@ -959,11 +930,11 @@ void Source::put(ParserSessionPtr session) const {
     switch (session->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             
-            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
 
-            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
             
@@ -975,7 +946,7 @@ void Source::put(ParserSessionPtr session) const {
                 assert(false);
             }
             
-            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
             
@@ -991,7 +962,7 @@ void Source::put(ParserSessionPtr session) const {
         }
         case SOURCECONVENTION_SOURCECHARACTERINDEX: {
             
-            if (!MLPutFunction(link, SYMBOL_LIST.name(), 2)) {
+            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
             

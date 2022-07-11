@@ -292,6 +292,7 @@ isError[Token`Error`UnterminatedLinearSyntaxBlob] = True
 isError[Token`Error`PrefixImplicitNull] = True
 isError[Token`Error`InfixImplicitNull] = True
 isError[Token`Error`UnsafeCharacterEncoding] = True
+isError[Token`Error`UnexpectedCommentCloser] = True
 isError[Token`Error`End] = True
 
 isError[_] = False
@@ -376,7 +377,7 @@ generate[] := (
 
 Print["Generating TokenEnum..."];
 
-tokenCPPHeader = {
+tokenEnumRegistrationCPPHeader = {
 "
 //
 // AUTO GENERATED FILE
@@ -385,130 +386,10 @@ tokenCPPHeader = {
 
 #pragma once
 
+#include \"TokenEnum.h\"
+
 #include \"Symbol.h\"
 
-#include <cstdint> // for uint16_t
-
-
-//
-// All group closers
-//
-enum Closer : uint8_t {
-    CLOSER_BARGREATER,
-    CLOSER_CLOSECURLY,
-    CLOSER_CLOSEPAREN,
-    CLOSER_CLOSESQUARE,
-    CLOSER_LONGNAME_CLOSECURLYDOUBLEQUOTE,
-    CLOSER_LONGNAME_CLOSECURLYQUOTE,
-    CLOSER_LONGNAME_RIGHTANGLEBRACKET,
-    CLOSER_LONGNAME_RIGHTASSOCIATION,
-    CLOSER_LONGNAME_RIGHTBRACKETINGBAR,
-    CLOSER_LONGNAME_RIGHTCEILING,
-    CLOSER_LONGNAME_RIGHTDOUBLEBRACKET,
-    CLOSER_LONGNAME_RIGHTDOUBLEBRACKETINGBAR,
-    CLOSER_LONGNAME_RIGHTFLOOR,
-    // UNUSED
-    CLOSER_ASSERTFALSE,
-};
-
-//
-// Representing a token enum, with various properties exposed
-//
-struct TokenEnum {
-
-  uint16_t T;
-
-  constexpr TokenEnum() : T(0) {}
-
-  constexpr TokenEnum(uint16_t T) : T(T) {}
-
-  constexpr uint16_t value() const {
-    return (T & 0x1ff);
-  }
-
-  constexpr uint16_t t() const {
-    return T;
-  }
-
-  //
-  // All trivia matches: 0b0_0000_1xxx (x is unknown)
-  //
-  //         Mask off 0b1_1111_1000 (0x1f8)
-  // And test against 0b0_0000_1000 (0x08)
-  //
-  constexpr bool isTrivia() const {
-      return static_cast<bool>((T & 0x1f8) == 0x08);
-  }
-
-  //
-  // All trivia but ToplevelNewline matches: 0b0_0000_10xx (x is unknown)
-  //
-  //         Mask off 0b1_1111_1100 (0x1fc)
-  // And test against 0b0_0000_1000 (0x08)
-  //
-  constexpr bool isTriviaButNotToplevelNewline() const {
-      return static_cast<bool>((T & 0x1fc) == 0x08);
-  }
-
-  //
-  // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-  //
-  //         Mask off 0b0000_0110_0000_0000 (0x600)
-  // And test against 0b0000_0010_0000_0000 (0x200)
-  //
-  constexpr bool isPossibleBeginning() const {
-      return static_cast<bool>((T & 0x600) == 0x200);
-  }
-  
-  //
-  // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-  //
-  //         Mask off 0b0000_0110_0000_0000 (0x600)
-  // And test against 0b0000_0100_0000_0000 (0x400)
-  //
-  constexpr bool isCloser() const {
-      return static_cast<bool>((T & 0x600) == 0x400);
-  }
-  
-  //
-  // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-  //
-  //         Mask off 0b0000_0110_0000_0000 (0x600)
-  // And test against 0b0000_0110_0000_0000 (0x600)
-  //
-  constexpr bool isError() const {
-      return static_cast<bool>((T & 0x600) == 0x600);
-  }
-
-  //
-  // isUnterminated value matches: 0b0000_000x_xxxx_xxxx (x is unknown)
-  //
-  // Only valid if already checked isError
-  //
-  //         Mask off 0b0000_0000_0001_1100 (0x1c)
-  // And test against 0b0000_0000_0001_1100 (0x1c)
-  //
-  constexpr bool isUnterminated() const {
-      return static_cast<bool>((T & 0x1c) == 0x1c);
-  }
-
-  //
-  // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
-  //
-  //         Mask off 0b0001_1000_0000_0000 (0x1800)
-  // And test against 0b0000_1000_0000_0000 (0x0800)
-  //
-  constexpr bool isEmpty() const {
-      return static_cast<bool>((T & 0x1800) == 0x0800);
-  }
-};
-
-bool operator==(TokenEnum a, TokenEnum b);
-
-bool operator!=(TokenEnum a, TokenEnum b);
-
-Closer GroupOpenerToCloser(TokenEnum T);
-Closer TokenToCloser(TokenEnum T);
 
 Symbol TokenToSymbol(TokenEnum T);
 
@@ -528,8 +409,8 @@ KeyValueMap[(
 ] ~Join~ {
 };
 
-Print["exporting TokenEnum.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"];
+Print["exporting TokenEnumRegistration.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnumRegistration.h"}], Column[tokenEnumRegistrationCPPHeader], "String"];
 
 Print[res];
 
@@ -538,17 +419,17 @@ If[FailureQ[res],
 ];
 
 
-tokenCPPSource = {
+tokenEnumRegistrationCPPSource = {
 "
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
 //
 
-#include \"TokenEnum.h\"
+#include \"TokenEnumRegistration.h\"
 
-#include \"Symbol.h\"
-#include \"Token.h\"
+#include \"SymbolRegistration.h\"
+#include \"TokenEnum.h\" // for Closer
 
 #include <cassert>
 
@@ -567,49 +448,24 @@ static_assert(TOKEN_TOPLEVELNEWLINE.value() == 0xc, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
 
 //
-// TOKEN_ERROR_UNTERMINATEDCOMMENT must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
+// TOKEN_ERROR_UNTERMINATED_FIRST must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
 //
-static_assert(TOKEN_ERROR_UNTERMINATEDCOMMENT.value() == 0x1c, \"Check your assumptions\");
-static_assert(TOKEN_ERROR_UNSUPPORTEDTOKEN.value() == 0x20, \"Check your assumptions\");
+static_assert(TOKEN_ERROR_UNTERMINATED_FIRST.value() == 0x1c, \"Check your assumptions\");
+static_assert(TOKEN_ERROR_UNTERMINATED_END.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
+
 {"Symbol TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~
 tokenToSymbolCases ~Join~
-{"default:"} ~Join~
-{"assert(false && \"Unhandled token type\"); return SYMBOL_TOKEN_UNKNOWN;"} ~Join~
-{"}"} ~Join~
-{"}"} ~Join~
-{""} ~Join~
-{"bool operator==(TokenEnum a, TokenEnum b) {
-  return a.value() == b.value();
-}
-
-bool operator!=(TokenEnum a, TokenEnum b) {
-  return a.value() != b.value();
-}
-"} ~Join~
-
-{"Closer GroupOpenerToCloser(TokenEnum T) {"} ~Join~
-{"switch (T.value()) {"} ~Join~
-Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
-{"default: assert(false && \"Unhandled token\"); return CLOSER_ASSERTFALSE;",
-"}"} ~Join~
-{"}"} ~Join~
-
-{""} ~Join~
-
-{"Closer TokenToCloser(TokenEnum T) {"} ~Join~
-{"switch (T.value()) {"} ~Join~
-Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[TokenToCloser]] ~Join~
-{"default: return CLOSER_ASSERTFALSE;",
-"}"} ~Join~
-{"}"} ~Join~
-
-{""};
+{"}",
+"assert(false && \"Unhandled token type\");",
+"return SYMBOL_TOKEN_UNKNOWN;",
+"}",
+""};
 
 
-Print["exporting TokenEnum.cpp"];
-res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"];
+Print["exporting TokenEnumRegistration.cpp"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnumRegistration.cpp"}], Column[tokenEnumRegistrationCPPSource], "String"];
 
 Print[res];
 
@@ -617,7 +473,7 @@ If[FailureQ[res],
   Quit[1]
 ];
 
-tokenWL = {
+tokenEnumWL = {
 "
 (*
 AUTO GENERATED FILE
@@ -645,7 +501,7 @@ EndPackage[]
 "};
 
 Print["exporting TokenEnum.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "Kernel", "TokenEnum.wl"}], Column[tokenWL], "String"];
+res = Export[FileNameJoin[{generatedWLDir, "Kernel", "TokenEnum.wl"}], Column[tokenEnumWL], "String"];
 
 Print[res];
 

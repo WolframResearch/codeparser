@@ -69,10 +69,13 @@ Any buffers before unterminateds and after unterminateds serve the purpose of gi
 value to unterminateds to allow fast checking with a bit mask.
 *)
 Token`Error`UnterminatedComment -> Next, (*28*)
+Token`Error`Unterminated`First -> Token`Error`UnterminatedComment,
 Token`Error`UnterminatedString -> Next,
 Token`Error`UnterminatedFileString -> Next,
 Token`Error`UnterminatedLinearSyntaxBlob -> Next,
 Token`Error`UnsupportedToken -> Next, (*32*)
+Token`Error`Unterminated`End -> Token`Error`UnsupportedToken,
+Token`Error`UnexpectedCommentCloser -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)

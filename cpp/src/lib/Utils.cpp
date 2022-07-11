@@ -2,7 +2,7 @@
 #include "Utils.h"
 
 #include "Tokenizer.h" // for Tokenizer
-#include "LongNames.h" // for CodePointToLongNameMap
+#include "LongNamesRegistration.h" // for CodePointToLongNameMap
 
 #include <cassert>
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
@@ -238,7 +238,7 @@ uint8_t Utils::toDigit(unsigned char val) {
 
 bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
     
-    if (c >= 128) {
+    if (c > 0x7f) {
         return true;
     }
     //

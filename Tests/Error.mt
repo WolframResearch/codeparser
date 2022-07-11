@@ -98,9 +98,36 @@ Test[
 ]
 
 
+Test[
+	CodeConcreteParse["\\\\[Alpa]"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`UnhandledCharacter, "\\\\", <|Source -> {{1, 1}, {1, 3}}|>],
+		GroupNode[GroupSquare, {
+			LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 3}, {1, 4}}|>],
+			LeafNode[Symbol, "Alpa", <|Source -> {{1, 4}, {1, 8}}|>],
+			LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 3}, {1, 9}}|>]}, <|SyntaxIssues -> {
+		
+		SyntaxIssue["UnhandledCharacter", "Unhandled character: ``\\[Alpa]``.", "Fatal", <|Source -> {{1, 2}, {1, 9}}, ConfidenceLevel -> 1., CodeActions -> {CodeAction["Replace with ``\\[Alpha]``", ReplaceText, <|Source -> {{1, 2}, {1, 9}}, "ReplacementText" -> "\\[Alpha]"|>]}, "AdditionalDescriptions" -> {"``Alpa`` is not a recognized long name."}|>]}, Source -> {{1, 1}, {1, 9}}|>]
+	,
+	TestID->"Error-20220709-M4Y7Z3"
+]
 
-
-
+(*
+no warning
+*)
+Test[
+	CodeConcreteParse["RegularExpression[\"\\\\[a-zA-Z0-9]+\\\\]\"]"]
+	,
+	ContainerNode[String, {
+		CallNode[{LeafNode[Symbol, "RegularExpression", <|Source -> {{1, 1}, {1, 18}}|>]},
+			GroupNode[GroupSquare, {
+				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 18}, {1, 19}}|>],
+				LeafNode[String, "\"\\\\[a-zA-Z0-9]+\\\\]\"", <|Source -> {{1, 19}, {1, 38}}|>],
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 38}, {1, 39}}|>]}, <|Source -> {{1, 18}, {1, 39}}|>], <|Source -> {{1, 1}, {1, 39}}|>]}, <|Source -> {{1, 1}, {1, 39}}|>]
+	,
+	TestID->"Error-20220711-I6O1H4"
+]
 
 
 

@@ -3,19 +3,12 @@
 
 #include "ParserSession.h"
 #include "Node.h"
+#include "SymbolRegistration.h"
 
 #if USE_EXPR_LIB
 #include "ExprLibrary.h"
 #include "WolframNumericArrayLibrary.h"
 #endif // USE_EXPR_LIB
-
-#ifdef WINDOWS_MATHLINK
-#else
-#include <signal.h> // for SIGINT
-#endif // WINDOWS_MATHLINK
-
-#if USE_MATHLINK
-#endif // USE_MATHLINK
 
 
 ParserSessionPtr CreateParserSession() {
@@ -53,8 +46,11 @@ NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session) {
     return session->safeString();
 }
 
-void ParserSessionReleaseContainer(ParserSessionPtr session, NodeContainerPtr C) {
-    session->releaseContainer(C);
+void ReleaseNodeContainer(NodeContainerPtr C) {
+    
+    C->release();
+    
+    delete C;
 }
 
 
@@ -65,6 +61,18 @@ void NodeContainerPrint(NodeContainerPtr C, std::ostream& s) {
 int NodeContainerCheck(NodeContainerPtr C) {
     return C->check();
 }
+
+#if USE_EXPR_LIB
+expr NodeContainerToExpr(ParserSessionPtr session, NodeContainerPtr C) {
+    return C->toExpr(session);
+}
+#endif // USE_EXPR_LIB
+
+#if USE_MATHLINK
+void NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C) {
+    C->put(session);
+}
+#endif // USE_MATHLINK
 
 
 mint WolframLibrary_getVersion() {
@@ -100,7 +108,7 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK 
     
     int mlLen;
         
-    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_LIST.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -137,7 +145,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, mint 
     // cannot use session after this
     //
     
-    auto e = Expr_MEncodedStringToSymbolExpr(SYMBOL_NULL.name());
+    auto e = Expr_MEncodedStringToSymbolExpr(SYMBOL_NULL.Name);
     
     MArgument_setInteger(Res, reinterpret_cast<mint>(e));
 
@@ -148,7 +156,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
     
     int mlLen;
         
-    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_LIST.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -171,7 +179,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
     // cannot use session after this
     //
     
-    if (!MLPutSymbol(link, SYMBOL_NULL.name())) {
+    if (!MLPutSymbol(link, SYMBOL_NULL.Name)) {
       assert(false);
     }
     
@@ -209,9 +217,9 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
 
     auto C = ParserSessionParseExpressions(session);
 
-    auto e = C->toExpr(session);
+    auto e = NodeContainerToExpr(session, C);
 
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
 
     ParserSessionDeinit(session);
     
@@ -224,7 +232,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK l
     
     int mlLen;
         
-    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_LIST.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -241,7 +249,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK l
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -283,9 +291,9 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK l
     
     auto C = ParserSessionParseExpressions(session);
     
-    C->put(session);
+    NodeContainerPut(session, C);
     
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
     
     ParserSessionDeinit(session);
     
@@ -323,9 +331,9 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
 
     auto C = ParserSessionTokenize(session);
 
-    auto e = C->toExpr(session);
+    auto e = NodeContainerToExpr(session, C);
 
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
 
     ParserSessionDeinit(session);
     
@@ -338,7 +346,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     int mlLen;
     
-    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_LIST.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -355,7 +363,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -397,9 +405,9 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     auto C = ParserSessionTokenize(session);
     
-    C->put(session);
+    NodeContainerPut(session, C);
     
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
     
     ParserSessionDeinit(session);
     
@@ -442,9 +450,9 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
 
     auto C = ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode));
 
-    auto e = C->toExpr(session);
+    auto e = NodeContainerToExpr(session, C);
 
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
 
     ParserSessionDeinit(session);
     
@@ -459,7 +467,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     std::string unescaped;
     
-    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen))  {
+    if (!MLTestHead(link, SYMBOL_LIST.Name, &mlLen))  {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -476,7 +484,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -534,9 +542,9 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     auto C = ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode));
     
-    C->put(session);
+    NodeContainerPut(session, C);
     
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
     
     ParserSessionDeinit(session);
     
@@ -565,9 +573,9 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
 
     auto C = ParserSessionSafeString(session);
 
-    auto e = C->toExpr(session);
+    auto e = NodeContainerToExpr(session, C);
 
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
 
     ParserSessionDeinit(session);
     
@@ -580,7 +588,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     int mlLen;
     
-    if (!MLTestHead(link, SYMBOL_LIST.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_LIST.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -597,7 +605,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (!MLTestHead(link, SYMBOL_BYTEARRAY.name(), &mlLen)) {
+    if (!MLTestHead(link, SYMBOL_BYTEARRAY.Name, &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -620,9 +628,9 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     auto C = ParserSessionSafeString(session);
     
-    C->put(session);
+    NodeContainerPut(session, C);
     
-    ParserSessionReleaseContainer(session, C);
+    ReleaseNodeContainer(C);
     
     ParserSessionDeinit(session);
     
@@ -631,30 +639,65 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
 #endif // USE_EXPR_LIB
 
 
-#if USE_MATHLINK
-ScopedMLUTF8String::ScopedMLUTF8String(MLINK link) : link(link), buf(NULL), b(), c() {}
-
-ScopedMLUTF8String::~ScopedMLUTF8String() {
+ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(), inited(false) {
     
-    if (!buf) {
+    auto inStr = reinterpret_cast<const char *>(inStrIn);
+    
+    FILE *file = fopen(inStr, "rb");
+    
+    if (!file) {
         return;
     }
     
-    MLReleaseUTF8String(link, buf, b);
+    if (fseek(file, 0, SEEK_END)) {
+        return;
+    }
+    
+    auto res = ftell(file);
+    
+    if (res < 0) {
+        return;
+    }
+    len = res;
+    
+    rewind(file);
+    
+    buf = new unsigned char[len];
+    
+    inited = true;
+    
+    auto r = fread(buf, sizeof(unsigned char), len, file);
+    
+    if (r != len) {
+        
+        inited = false;
+        
+        delete[] buf;
+    }
+    
+    fclose(file);
 }
 
-bool ScopedMLUTF8String::read() {
-    return MLGetUTF8String(link, &buf, &b, &c);
+ScopedFileBuffer::~ScopedFileBuffer() {
+
+    if (!inited) {
+        return;
+    }
+
+    delete[] buf;
 }
 
-Buffer ScopedMLUTF8String::get() const {
+Buffer ScopedFileBuffer::getBuf() const {
     return buf;
 }
 
-size_t ScopedMLUTF8String::getByteCount() const {
-    return b;
+size_t ScopedFileBuffer::getLen() const {
+    return len;
 }
-#endif // USE_MATHLINK
+
+bool ScopedFileBuffer::fail() const {
+    return !inited;
+}
 
 
 #if USE_MATHLINK
@@ -680,51 +723,6 @@ const char *ScopedMLString::get() const {
 
 
 #if USE_MATHLINK
-ScopedMLSymbol::ScopedMLSymbol(MLINK link) : link(link), sym(NULL) {}
-
-ScopedMLSymbol::~ScopedMLSymbol() {
-    if (sym != NULL) {
-        MLReleaseSymbol(link, sym);
-    }
-}
-
-bool ScopedMLSymbol::read() {
-    return MLGetSymbol(link, &sym);
-}
-
-const char *ScopedMLSymbol::get() const {
-    return sym;
-}
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-ScopedMLFunction::ScopedMLFunction(MLINK link) : link(link), func(NULL), count() {}
-
-ScopedMLFunction::~ScopedMLFunction() {
-    
-    if (!func) {
-        return;
-    }
-    
-    MLReleaseSymbol(link, func);
-}
-
-bool ScopedMLFunction::read() {
-    return MLGetFunction(link, &func, &count);
-}
-
-const char *ScopedMLFunction::getHead() const {
-    return func;
-}
-
-int ScopedMLFunction::getArgCount() const {
-    return count;
-}
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
 ScopedMLByteArray::ScopedMLByteArray(MLINK link) : link(link), buf(NULL), dims(), heads(), depth() {}
 
 ScopedMLByteArray::~ScopedMLByteArray() {
@@ -745,61 +743,7 @@ Buffer ScopedMLByteArray::get() const {
 }
 
 size_t ScopedMLByteArray::getByteCount() const {
-    return dims[0];
-}
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-ScopedMLEnvironmentParameter::ScopedMLEnvironmentParameter() : p(MLNewParameters(MLREVISION, MLAPIREVISION)) {}
-
-ScopedMLEnvironmentParameter::~ScopedMLEnvironmentParameter() {
-    MLReleaseParameters(p);
-}
-
-MLEnvironmentParameter ScopedMLEnvironmentParameter::get() const {
-    return p;
-}
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-ScopedMLLoopbackLink::ScopedMLLoopbackLink() : link(NULL), ep(NULL) {
-    
-    ScopedMLEnvironmentParameter p;
-    
-    int err;
-    
-#ifdef WINDOWS_MATHLINK
-#else
-    //
-    // Needed because MathLink intercepts all signals
-    //
-    MLDoNotHandleSignalParameter(p.get(), SIGINT);
-#endif // WINDOWS_MATHLINK
-    
-    ep = MLInitialize(p.get());
-    
-    if (ep == (MLENV)0) {
-        return;
-    }
-    
-    link = MLLoopbackOpen(ep, &err);
-}
-
-ScopedMLLoopbackLink::~ScopedMLLoopbackLink() {
-    
-    if (!link) {
-        return;
-    }
-    
-    MLClose(link);
-    
-    MLDeinitialize(ep);
-}
-
-MLINK ScopedMLLoopbackLink::get() const {
-    return link;
+    return *dims;
 }
 #endif // USE_MATHLINK
 

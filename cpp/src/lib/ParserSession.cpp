@@ -8,6 +8,7 @@
 #include "CharacterDecoder.h" // for CharacterDecoder
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
+#include "MyStringRegistration.h"
 
 #if DIAGNOSTICS
 #include "Diagnostics.h"
@@ -102,60 +103,59 @@ NodeContainerPtr ParserSession::parseExpressions() {
     //
     // Collect all expressions
     //
-    {
-        NodeSeq exprs;
-        
-        while (true) {
+    
+    NodeSeq exprs;
+    
+    while (true) {
             
 #if CHECK_ABORT
-            if (abortQ()) {
-                break;
-            }
+        if (abortQ()) {
+            break;
+        }
 #endif // CHECK_ABORT
             
-            auto peek = Parser_currentToken(this, TOPLEVEL);
+        auto peek = Tokenizer_currentToken(this, TOPLEVEL);
+        
+        if (peek.Tok == TOKEN_ENDOFFILE) {
+            break;
+        }
+        
+        if (peek.Tok.isTrivia()) {
             
-            if (peek.Tok == TOKEN_ENDOFFILE) {
-                break;
-            }
+            exprs.push(peek);
             
-            if (peek.Tok.isTrivia()) {
-                
-                exprs.push(peek);
-                
-                Parser_nextToken(this, peek);
-                
-                continue;
-            }
+            peek.skip(this);
             
-            //
-            // special top-level handling of stray closers
-            //
-            if (peek.Tok.isCloser()) {
-                
-                PrefixToplevelCloserParselet_parsePrefix(this, prefixToplevelCloserParselet, peek);
-                
-                exprs.push(Parser_popNode(this));
-                
-                assert(Parser_isQuiescent(this));
-                
-                continue;
-            }
-                
-            auto P = prefixParselets[peek.Tok.value()];
+            continue;
+        }
+        
+        //
+        // special top-level handling of stray closers
+        //
+        if (peek.Tok.isCloser()) {
             
-            (P->parsePrefix())(this, P, peek);
+            PrefixToplevelCloserParselet_parsePrefix(this, prefixToplevelCloserParselet, peek);
             
             exprs.push(Parser_popNode(this));
             
             assert(Parser_isQuiescent(this));
             
-        } // while (true)
+            continue;
+        }
+            
+        auto P = prefixParselets[peek.Tok.value()];
         
-        auto Collected = new CollectedExpressionsNode(std::move(exprs));
+        (P->parsePrefix())(this, P, peek);
         
-        nodes.push(Collected);
-    }
+        exprs.push(Parser_popNode(this));
+        
+        assert(Parser_isQuiescent(this));
+        
+    } // while (true)
+    
+    auto Collected = new CollectedExpressionsNode(std::move(exprs));
+    
+    nodes.push(Collected);
     
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
@@ -173,24 +173,17 @@ NodeContainerPtr ParserSession::parseExpressions() {
     //
     // Now handle the out-of-band expressions, i.e., issues and metadata
     //
-    {
-#if CHECK_ISSUES
-        //
-        // if there are fatal issues, then only send fatal issues
-        //
-        if (!fatalIssues.empty()) {
-            
-            nodes.push(new CollectedIssuesNode(fatalIssues));
-            
-        } else {
-            
-            nodes.push(new CollectedIssuesNode(nonFatalIssues));
-        }
-#else
+    
+    //
+    // if there are fatal issues, then only send fatal issues
+    //
+    if (!fatalIssues.empty()) {
         
-        nodes.push(new CollectedIssuesNode({}));
+        nodes.push(new CollectedIssuesNode(fatalIssues));
         
-#endif // CHECK_ISSUES
+    } else {
+        
+        nodes.push(new CollectedIssuesNode(nonFatalIssues));
     }
     
     nodes.push(new CollectedSourceLocationsNode(SimpleLineContinuations));
@@ -228,7 +221,7 @@ NodeContainerPtr ParserSession::tokenize() {
         
         nodes.push(Tok);
         
-        Tokenizer_nextToken(this, Tok);
+        Tok.skip(this);
         
     } // while (true)
     
@@ -245,17 +238,17 @@ NodeContainerPtr ParserSession::tokenize() {
 }
 
 
-NodeVariant ParserSession::concreteParseLeaf0(int mode) {
+NodeVariant ParserSession::concreteParseLeaf0(StringifyMode mode) {
     
     switch (mode) {
         case STRINGIFYMODE_NORMAL: {
-            return Tokenizer_nextToken0(this, TOPLEVEL);
+            return Tokenizer_nextToken(this, TOPLEVEL);
         }
         case STRINGIFYMODE_TAG: {
-            return Tokenizer_nextToken0_stringifyAsTag(this);
+            return Tokenizer_nextToken_stringifyAsTag(this);
         }
         case STRINGIFYMODE_FILE: {
-            return Tokenizer_nextToken0_stringifyAsFile(this);
+            return Tokenizer_nextToken_stringifyAsFile(this);
         }
     }
     
@@ -271,15 +264,14 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
     //
     // Collect all expressions
     //
-    {
-        NodeSeq exprs;
-        
-        exprs.push(concreteParseLeaf0(mode));
-        
-        auto Collected = new CollectedExpressionsNode(std::move(exprs));
-        
-        nodes.push(Collected);
-    }
+    
+    NodeSeq exprs;
+    
+    exprs.push(concreteParseLeaf0(mode));
+    
+    auto Collected = new CollectedExpressionsNode(std::move(exprs));
+    
+    nodes.push(Collected);
     
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
@@ -296,29 +288,21 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
         nodes.push(std::move(Collected));
     }
     
-#if CHECK_ISSUES
     //
     // Collect all issues from the various components
     //
-    {
-        //
-        // if there are fatal issues, then only send fatal issues
-        //
-        if (!fatalIssues.empty()) {
-            
-            nodes.push(new CollectedIssuesNode(fatalIssues));
-            
-        } else {
-            
-            nodes.push(new CollectedIssuesNode(nonFatalIssues));
-        }
-    }
-#else
-    {
+    
+    //
+    // if there are fatal issues, then only send fatal issues
+    //
+    if (!fatalIssues.empty()) {
         
-        nodes.push(new CollectedIssuesNode({}));
+        nodes.push(new CollectedIssuesNode(fatalIssues));
+        
+    } else {
+        
+        nodes.push(new CollectedIssuesNode(nonFatalIssues));
     }
-#endif // CHECK_ISSUES
     
     nodes.push(new CollectedSourceLocationsNode(SimpleLineContinuations));
     nodes.push(new CollectedSourceLocationsNode(ComplexLineContinuations));
@@ -337,7 +321,7 @@ NodeContainerPtr ParserSession::safeString() {
     //
     while (true) {
         
-        auto Char = ByteDecoder_nextSourceCharacter0(this, TOPLEVEL);
+        auto Char = ByteDecoder_nextSourceCharacter(this, TOPLEVEL);
         
         if (Char.isEndOfFile()) {
             break;
@@ -359,23 +343,6 @@ NodeContainerPtr ParserSession::safeString() {
     }
     
     return new NodeContainer(std::move(nodes));
-}
-
-void ParserSession::releaseContainer(NodeContainerPtr C) {
-    
-#if DIAGNOSTICS
-    DiagnosticsLog("before delete C");
-    DiagnosticsMarkTime();
-#endif // DIAGNOSTICS
-    
-    C->release();
-    
-    delete C;
-    
-#if DIAGNOSTICS
-    DiagnosticsLog("after delete C");
-    DiagnosticsLogTime();
-#endif // DIAGNOSTICS
 }
 
 bool ParserSession::abortQ() const {

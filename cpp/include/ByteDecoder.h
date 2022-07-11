@@ -36,11 +36,9 @@ public:
 // Handle next newline by incrementing line.
 //
 class LineColumnManager : public SourceConventionManager {
-    
 public:
     
     LineColumnManager() {}
-    
     
     SourceLocation newSourceLocation() override;
     
@@ -56,6 +54,7 @@ public:
 // Handle next newline by incrementing index.
 //
 class SourceCharacterIndexManager : public SourceConventionManager {
+public:
     
     SourceLocation newSourceLocation() override;
     
@@ -71,8 +70,8 @@ class SourceCharacterIndexManager : public SourceConventionManager {
 // Decode a sequence of UTF-8 encoded bytes into Source characters
 //
 
-SourceCharacter ByteDecoder_nextSourceCharacter0(ParserSessionPtr session, NextPolicy policy);
-SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_nextSourceCharacter(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr session, NextPolicy policy);
 SourceCharacter ByteDecoder_currentSourceCharacter(ParserSessionPtr session, NextPolicy policy);
 
 void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);

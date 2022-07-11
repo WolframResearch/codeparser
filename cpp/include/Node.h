@@ -32,12 +32,16 @@ using expr = void *;
 // Used mainly for collecting trivia that has been eaten
 //
 class TriviaSeq {
-public:
+private:
     
     std::vector<Token> vec;
     
+public:
     
     TriviaSeq();
+    
+    std::vector<Token>::iterator begin();
+    std::vector<Token>::iterator end();
     
     void reset(ParserSessionPtr session);
     
@@ -58,10 +62,11 @@ public:
 // So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
 //
 class NodeSeq {
-public:
+private:
     
     std::vector<NodeVariant> vec;
     
+public:
     
     NodeSeq();
     NodeSeq(std::vector<NodeVariant>::iterator Begin, std::vector<NodeVariant>::iterator End);
@@ -504,6 +509,7 @@ public:
 //
 //
 class NodeContainer {
+private:
     
     NodeSeq Nodes;
     

@@ -5,8 +5,9 @@
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for strangeLetterlikeWarning
-#include "MyString.h"
+#include "MyStringRegistration.h"
 #include "ParserSession.h"
+#include "TokenEnumRegistration.h"
 
 #if DIAGNOSTICS
 #include "Diagnostics.h"
@@ -23,7 +24,7 @@
 
 typedef Token (*HandlerFunction)(ParserSessionPtr session, Buffer startBuf, SourceLocation startLoc, WLCharacter c, NextPolicy policy);
 
-#define U Tokenizer_nextToken0_uncommon
+#define U Tokenizer_nextToken_uncommon
 
 std::array<HandlerFunction, 128> TokenizerHandlerTable = {
     U, U, U, U, U, U, U, U, U, U, Tokenizer_handleLineFeed, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U,
@@ -49,24 +50,24 @@ std::array<HandlerFunction, 128> TokenizerHandlerTable = {
 //                   buffer
 // return \[Alpha]
 //
-Token Tokenizer_nextToken0(ParserSessionPtr session, NextPolicy policy) {
+Token Tokenizer_nextToken(ParserSessionPtr session, NextPolicy policy) {
     
     auto tokenStartBuf = session->buffer;
     auto tokenStartLoc = session->SrcLoc;
     
-    auto c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+    auto c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
     auto point = c.to_point();
     
     if (!(0x00 <= point && point <= 0x7f)) {
-        return Tokenizer_nextToken0_uncommon(session, tokenStartBuf, tokenStartLoc, c, policy);
+        return Tokenizer_nextToken_uncommon(session, tokenStartBuf, tokenStartLoc, c, policy);
     }
     
     return (TokenizerHandlerTable[point])(session, tokenStartBuf, tokenStartLoc, c, policy);
 }
 
 
-Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
+Token Tokenizer_nextToken_uncommon(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
             
     switch (c.to_point()) {
             
@@ -88,11 +89,9 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
             return Tokenizer_handleSymbol(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         case CODEPOINT_BEL: case CODEPOINT_DEL: {
-            
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case '\t': {
-            
             return Token(TOKEN_WHITESPACE, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case '\v': case '\f': {
@@ -109,7 +108,7 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case '(': {
             
@@ -229,11 +228,9 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
             return Tokenizer_handleTilde(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         case CODEPOINT_ENDOFFILE: {
-            
             return Token(TOKEN_ENDOFFILE, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case CODEPOINT_LINEARSYNTAX_BANG: {
-            
             return Token(TOKEN_LINEARSYNTAX_BANG, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case CODEPOINT_LINEARSYNTAX_OPENPAREN: {
@@ -260,7 +257,6 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
     }
     
     if (c.isMBUninterpretable()) {
-        
         return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
     
@@ -272,7 +268,6 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
     }
     
     if (c.isMBWhitespace()) {
-        
         return Token(TOKEN_WHITESPACE, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
     
@@ -287,7 +282,7 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
         //
         // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
-        return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+        return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
     
     if (c.isMBPunctuation()) {
@@ -297,7 +292,6 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
     }
     
     if (c.isMBStringMeta()) {
-        
         return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
         
@@ -312,14 +306,14 @@ Token Tokenizer_nextToken0_uncommon(ParserSessionPtr session, Buffer tokenStartB
 }
 
 
-Token Tokenizer_nextToken0_stringifyAsTag(ParserSessionPtr session) {
+Token Tokenizer_nextToken_stringifyAsTag(ParserSessionPtr session) {
     
     auto tokenStartBuf = session->buffer;
     auto tokenStartLoc = session->SrcLoc;
     
     auto policy = INSIDE_STRINGIFY_AS_TAG;
     
-    auto c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+    auto c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE: {
@@ -339,7 +333,6 @@ Token Tokenizer_nextToken0_stringifyAsTag(ParserSessionPtr session) {
             return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
         }
         case '"': {
-            
             return Tokenizer_handleString(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
     }
@@ -350,18 +343,17 @@ Token Tokenizer_nextToken0_stringifyAsTag(ParserSessionPtr session) {
 //
 // Use SourceCharacters here, not WLCharacters
 //
-Token Tokenizer_nextToken0_stringifyAsFile(ParserSessionPtr session) {
+Token Tokenizer_nextToken_stringifyAsFile(ParserSessionPtr session) {
     
     auto tokenStartBuf = session->buffer;
     auto tokenStartLoc = session->SrcLoc;
     
     auto policy = INSIDE_STRINGIFY_AS_FILE;
     
-    auto c = ByteDecoder_nextSourceCharacter0(session, policy);
+    auto c = ByteDecoder_nextSourceCharacter(session, policy);
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE: {
-            
             return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
         }
         case '\n': case '\r': case CODEPOINT_CRLF: {
@@ -380,7 +372,7 @@ Token Tokenizer_nextToken0_stringifyAsFile(ParserSessionPtr session) {
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case ' ': case '\t': {
             
@@ -403,21 +395,25 @@ Token Tokenizer_nextToken0_stringifyAsFile(ParserSessionPtr session) {
 }
 
 
-void Tokenizer_nextToken(ParserSessionPtr session, Token Tok) {
-    
-    session->buffer = Tok.end();
-    session->wasEOF = (Tok.Tok == TOKEN_ENDOFFILE);
-    session->SrcLoc = Tok.Src.End;
-}
-
-
 Token Tokenizer_currentToken(ParserSessionPtr session, NextPolicy policy) {
+    
+    auto insideGroup = !session->GroupStack.empty();
+    
+    //
+    // if insideGroup:
+    //   returnInternalNewlineMask is 0b100
+    // else:
+    //   returnInternalNewlineMask is 0b000
+    //
+    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
+    
+    policy &= ~(returnInternalNewlineMask);
     
     auto resetBuf = session->buffer;
     auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
     
-    auto Tok = Tokenizer_nextToken0(session, policy);
+    auto Tok = Tokenizer_nextToken(session, policy);
     
     session->buffer = resetBuf;
     session->wasEOF = resetEOF;
@@ -433,7 +429,7 @@ Token Tokenizer_currentToken_stringifyAsTag(ParserSessionPtr session) {
     auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
     
-    auto Tok = Tokenizer_nextToken0_stringifyAsTag(session);
+    auto Tok = Tokenizer_nextToken_stringifyAsTag(session);
     
     session->buffer = resetBuf;
     session->wasEOF = resetEOF;
@@ -448,7 +444,7 @@ Token Tokenizer_currentToken_stringifyAsFile(ParserSessionPtr session) {
     auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
     
-    auto Tok = Tokenizer_nextToken0_stringifyAsFile(session);
+    auto Tok = Tokenizer_nextToken_stringifyAsFile(session);
     
     session->buffer = resetBuf;
     session->wasEOF = resetEOF;
@@ -475,7 +471,7 @@ Token Tokenizer_handleLineFeed(ParserSessionPtr session, Buffer tokenStartBuf, S
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+    return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
 }
 
 Token Tokenizer_handleOpenSquare(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy) {
@@ -563,7 +559,7 @@ inline Token Tokenizer_handleComment(ParserSessionPtr session, Buffer tokenStart
     
     assert(c.to_point() == '*');
     
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
 #if DIAGNOSTICS
     Tokenizer_CommentCount++;
@@ -573,7 +569,7 @@ inline Token Tokenizer_handleComment(ParserSessionPtr session, Buffer tokenStart
     
     auto depth = 1;
     
-    c = ByteDecoder_nextSourceCharacter0(session, policy);
+    c = ByteDecoder_nextSourceCharacter(session, policy);
     
     while (true) {
         
@@ -584,20 +580,20 @@ inline Token Tokenizer_handleComment(ParserSessionPtr session, Buffer tokenStart
         switch (c.to_point()) {
             case '(': {
                 
-                c = ByteDecoder_nextSourceCharacter0(session, policy);
+                c = ByteDecoder_nextSourceCharacter(session, policy);
                 
                 if (c.to_point() == '*') {
                     
                     depth = depth + 1;
                     
-                    c = ByteDecoder_nextSourceCharacter0(session, policy);
+                    c = ByteDecoder_nextSourceCharacter(session, policy);
                 }
                 
                 break;
             }
             case '*': {
                 
-                c = ByteDecoder_nextSourceCharacter0(session, policy);
+                c = ByteDecoder_nextSourceCharacter(session, policy);
                 
                 if (c.to_point() == ')') {
                     
@@ -606,11 +602,10 @@ inline Token Tokenizer_handleComment(ParserSessionPtr session, Buffer tokenStart
                     depth = depth - 1;
                     
                     if (depth == 0) {
-                        
                         return Token(TOKEN_COMMENT, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                     }
                     
-                    c = ByteDecoder_nextSourceCharacter0(session, policy);
+                    c = ByteDecoder_nextSourceCharacter(session, policy);
                 }
                 break;
             }
@@ -624,7 +619,7 @@ inline Token Tokenizer_handleComment(ParserSessionPtr session, Buffer tokenStart
                 session->addEmbeddedNewline(tokenStartLoc);
 #endif // COMPUTE_OOB
                 
-                c = ByteDecoder_nextSourceCharacter0(session, policy);
+                c = ByteDecoder_nextSourceCharacter(session, policy);
                 
                 break;
             }
@@ -634,13 +629,13 @@ inline Token Tokenizer_handleComment(ParserSessionPtr session, Buffer tokenStart
                 session->addEmbeddedTab(tokenStartLoc);
 #endif // COMPUTE_OOB
                 
-                c = ByteDecoder_nextSourceCharacter0(session, policy);
+                c = ByteDecoder_nextSourceCharacter(session, policy);
                 
                 break;
             }
             default: {
                 
-                c = ByteDecoder_nextSourceCharacter0(session, policy);
+                c = ByteDecoder_nextSourceCharacter(session, policy);
                 
                 break;
             }
@@ -655,7 +650,7 @@ inline Token Tokenizer_handleMBLinearSyntaxBlob(ParserSessionPtr session, Buffer
     
     auto depth = 1;
     
-    c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+    c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
     while (true) {
         
@@ -664,7 +659,7 @@ inline Token Tokenizer_handleMBLinearSyntaxBlob(ParserSessionPtr session, Buffer
                 
                 depth = depth + 1;
                 
-                c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 break;
             }
@@ -673,21 +668,19 @@ inline Token Tokenizer_handleMBLinearSyntaxBlob(ParserSessionPtr session, Buffer
                 depth = depth - 1;
                 
                 if (depth == 0) {
-                    
                     return Token(TOKEN_LINEARSYNTAXBLOB, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                 }
                 
-                c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 break;
             }
             case CODEPOINT_ENDOFFILE: {
-                
                 return Token(TOKEN_ERROR_UNTERMINATEDLINEARSYNTAXBLOB, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
             default: {
                 
-                c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 break;
             }
@@ -744,7 +737,7 @@ inline Token Tokenizer_handleSymbol(ParserSessionPtr session, Buffer tokenStartB
             auto letterlikeBuf = session->buffer;
             auto letterlikeLoc = session->SrcLoc;
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = Tokenizer_handleSymbolSegment(session, tokenStartBuf, tokenStartLoc, letterlikeBuf, letterlikeLoc, c, policy);
             
@@ -760,13 +753,10 @@ inline Token Tokenizer_handleSymbol(ParserSessionPtr session, Buffer tokenStartB
     } // while
     
     if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
-        
         return Token(TOKEN_STRING, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
-        
-    } else {
-        
-        return Token(TOKEN_SYMBOL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
+        
+    return Token(TOKEN_SYMBOL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
 }
 
 //
@@ -831,7 +821,7 @@ inline WLCharacter Tokenizer_handleSymbolSegment(ParserSessionPtr session, Buffe
         
         if (c.isDigit()) {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             charLoc = session->SrcLoc;
             
@@ -839,7 +829,7 @@ inline WLCharacter Tokenizer_handleSymbolSegment(ParserSessionPtr session, Buffe
             
         } else if (c.isLetterlike() || c.isMBLetterlike()) {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
 #if CHECK_ISSUES
             if (c.to_point() == '$') {
@@ -895,12 +885,11 @@ inline WLCharacter Tokenizer_handleSymbolSegment(ParserSessionPtr session, Buffe
             // Advance past trailing `
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             break;
             
         } else {
-            
             break;
         }
         
@@ -1028,15 +1017,13 @@ inline Token Tokenizer_handleString(ParserSessionPtr session, Buffer tokenStartB
     
     while (true) {
         
-        c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         switch (c.to_point()) {
             case '"': {
-                
                 return Token(TOKEN_STRING, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
             case CODEPOINT_ENDOFFILE: {
-                
                 return Token(TOKEN_ERROR_UNTERMINATEDSTRING, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
 #if COMPUTE_OOB
@@ -1128,7 +1115,6 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
 
             switch (handled) {
                 case UNTERMINATED_FILESTRING: {
-
                     return Token(TOKEN_ERROR_UNTERMINATEDFILESTRING, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                 }
             }
@@ -1136,6 +1122,7 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
             break;
         }
         default: {
+            
             //
             // Something like  <<EOF
             //
@@ -1143,7 +1130,7 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
             //
             // So invent source
             //
-
+            
             return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
         }
     }
@@ -1171,7 +1158,7 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             case '$': case '`': case '/': case '.': case '\\': case '!': case '-': case '_': case ':': case '*': case '~': case '?': {
                 
-                ByteDecoder_nextSourceCharacter0(session, policy);
+                ByteDecoder_nextSourceCharacter(session, policy);
                 
                 c = ByteDecoder_currentSourceCharacter(session, policy);
                 
@@ -1181,7 +1168,7 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
                 
                 // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
                 
-                ByteDecoder_nextSourceCharacter0(session, policy);
+                ByteDecoder_nextSourceCharacter(session, policy);
                 
                 int handled;
                 
@@ -1189,7 +1176,6 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
                 
                 switch (handled) {
                     case UNTERMINATED_FILESTRING: {
-                        
                         return Token(TOKEN_ERROR_UNTERMINATEDFILESTRING, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                     }
                 }
@@ -1197,7 +1183,6 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
                 break;
             }
             default: {
-                
                 return Token(TOKEN_STRING, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
         }
@@ -1256,7 +1241,7 @@ inline SourceCharacter Tokenizer_handleFileOpsBrackets(ParserSessionPtr session,
                 
                 depth = depth + 1;
                 
-                ByteDecoder_nextSourceCharacter0(session, policy);
+                ByteDecoder_nextSourceCharacter(session, policy);
                 
                 c = ByteDecoder_currentSourceCharacter(session, policy);
                 
@@ -1266,7 +1251,7 @@ inline SourceCharacter Tokenizer_handleFileOpsBrackets(ParserSessionPtr session,
                 
                 depth = depth - 1;
                 
-                ByteDecoder_nextSourceCharacter0(session, policy);
+                ByteDecoder_nextSourceCharacter(session, policy);
                 
                 c = ByteDecoder_currentSourceCharacter(session, policy);
                 
@@ -1288,7 +1273,7 @@ inline SourceCharacter Tokenizer_handleFileOpsBrackets(ParserSessionPtr session,
                     return c;
                 }
                 
-                ByteDecoder_nextSourceCharacter0(session, policy);
+                ByteDecoder_nextSourceCharacter(session, policy);
                 
                 c = ByteDecoder_currentSourceCharacter(session, policy);
                 
@@ -1454,7 +1439,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                 // Preserve c, but advance buffer to next character
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 break;
             }
@@ -1505,7 +1490,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
             // Must be a number
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             if (nonZeroStartBuf == caret1Buf) {
                 
@@ -1567,7 +1552,9 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                     
                     switch (leadingDigitsCount) {
                         case BAILOUT: {
+                            
                             assert(false);
+                            
                             break;
                         }
                     }
@@ -1593,7 +1580,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                             // Preserve c, but advance buffer to next character
                             //
 
-                            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                             
                             break;
                         }
@@ -1625,7 +1612,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                     // Preserve c, but advance buffer to next character
                     //
 
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     break;
                 }
@@ -1639,7 +1626,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                     // Make sure that bad character is read
                     //
 
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
@@ -1656,7 +1643,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                     // Make sure that bad character is read
                     //
                     
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
@@ -1732,7 +1719,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                         // Preserve c, but advance buffer to next character
                         //
                         
-                        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                         
                         break;
                     }
@@ -1776,7 +1763,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                         // Preserve c, but advance buffer to next character
                         //
                         
-                        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                         
                         break;
                     }
@@ -1821,7 +1808,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
         
         if (c.to_point() == '`') {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -1844,7 +1831,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                 // Eat the sign
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
@@ -1916,7 +1903,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                             // Something like  1.2``->3
                             //
                             
-                            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                             
                             // nee TOKEN_ERROR_EXPECTEDACCURACY
                             return Token(TOKEN_ERROR_NUMBER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -2006,7 +1993,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                     
                     // look ahead
                     
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     auto NextChar = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
@@ -2018,7 +2005,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                             // Something like  123``.EOF
                             //
                             
-                            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                             
                             // TOKEN_ERROR_EXPECTEDDIGIT
                             return Token(TOKEN_ERROR_NUMBER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -2030,7 +2017,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                             // Something like  123`.+4
                             //
                             
-                            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                             
                             // nee TOKEN_ERROR_EXPECTEDDIGIT
                             return Token(TOKEN_ERROR_NUMBER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -2068,7 +2055,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                     // actual decimal point
                     //
                     
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 }
@@ -2094,7 +2081,9 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                             // Something like  6`5..
                             //
                             
+                            //
                             // Success!
+                            //
                             
                             return Token(Ctxt.computeTok(), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                         }
@@ -2107,7 +2096,9 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                             
                             Tokenizer_backupAndWarn(session, signBuf, signLoc);
                             
+                            //
                             // Success!
+                            //
                             
                             return Token(Ctxt.computeTok(), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                         }
@@ -2120,7 +2111,9 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                         break;
                     }
                     default: {
+                        
                         precOrAccSupplied = true;
+                        
                         break;
                     }
                 }
@@ -2131,7 +2124,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                     // Something like  1`+.a
                     //
                     
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
@@ -2159,7 +2152,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                         // Something like  123.45``*^6
                         //
                         
-                        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                         
                         c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                         
@@ -2177,7 +2170,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                 // Preserve c, but advance buffer to next character
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 break;
             }
@@ -2191,7 +2184,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
                         // Something like  123``EOF
                         //
                         
-                        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                         
                         c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                         
@@ -2241,7 +2234,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
     // So now examine *^ notation
     //
     
-    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
     c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
@@ -2254,7 +2247,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
             //
         case '+': {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -2268,7 +2261,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
         // Something like  123*^-<EOF>
         //
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         // TOKEN_ERROR_EXPECTEDEXPONENT
         return Token(TOKEN_ERROR_NUMBER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -2287,7 +2280,6 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
     }
     
     if (c.isDigit()) {
-        
         c = Tokenizer_handleDigits(session, tokenStartBuf, tokenStartLoc, policy, c, &Ctxt.NonZeroExponentDigitCount);
     }
     
@@ -2307,7 +2299,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
     
     assert(Utils::ifASCIIWLCharacter(*dotBuf, '.'));
     
-    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
@@ -2337,7 +2329,7 @@ inline Token Tokenizer_handleNumber(ParserSessionPtr session, Buffer tokenStartB
             // Make this an error; do NOT make this Dot[123*^0, 5]
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             // nee TOKEN_ERROR_EXPECTEDEXPONENT
             return Token(TOKEN_ERROR_NUMBER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -2367,7 +2359,6 @@ TokenEnum NumberTokenizationContext::computeTok() {
     }
     
     if (Real) {
-        
         return TOKEN_REAL;
     }
     
@@ -2438,11 +2429,10 @@ inline WLCharacter Tokenizer_handlePossibleFractionalPartPastDot(ParserSessionPt
             case BAILOUT: {
                 
                 assert(false);
-                break;
                 
+                break;
             }
             case 0: {
-                
                 return c;
             }
             default: {
@@ -2512,7 +2502,7 @@ inline WLCharacter Tokenizer_handleZeros(ParserSessionPtr session, Buffer tokenS
             break;
         }
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
@@ -2545,7 +2535,7 @@ inline WLCharacter Tokenizer_handleDigits(ParserSessionPtr session, Buffer token
             break;
         }
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
@@ -2592,7 +2582,7 @@ inline WLCharacter Tokenizer_handleAlphaOrDigits(ParserSessionPtr session, Buffe
             
         }
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
@@ -2614,7 +2604,7 @@ inline Token Tokenizer_handleColon(ParserSessionPtr session, Buffer tokenStartBu
     switch (c.to_point()) {
         case ':': {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -2624,7 +2614,7 @@ inline Token Tokenizer_handleColon(ParserSessionPtr session, Buffer tokenStartBu
                 // ::[
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_COLONCOLONOPENSQUARE, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -2641,7 +2631,7 @@ inline Token Tokenizer_handleColon(ParserSessionPtr session, Buffer tokenStartBu
             // :=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_COLONEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -2655,7 +2645,7 @@ inline Token Tokenizer_handleColon(ParserSessionPtr session, Buffer tokenStartBu
             Tokenizer_ColonGreaterCount++;
 #endif // DIAGNOSTICS
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_COLONGREATER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -2722,7 +2712,7 @@ inline Token Tokenizer_handleDot(ParserSessionPtr session, Buffer tokenStartBuf,
     
     if (c.to_point() == '.') {
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
@@ -2732,7 +2722,7 @@ inline Token Tokenizer_handleDot(ParserSessionPtr session, Buffer tokenStartBuf,
             // ...
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_DOTDOTDOT, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -2760,7 +2750,7 @@ inline Token Tokenizer_handleEqual(ParserSessionPtr session, Buffer tokenStartBu
     switch (c.to_point()) {
         case '=': {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -2770,7 +2760,7 @@ inline Token Tokenizer_handleEqual(ParserSessionPtr session, Buffer tokenStartBu
                 // ===
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_EQUALEQUALEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -2786,7 +2776,7 @@ inline Token Tokenizer_handleEqual(ParserSessionPtr session, Buffer tokenStartBu
             auto bangBuf = session->buffer;
             auto bangLoc = session->SrcLoc;
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -2796,7 +2786,7 @@ inline Token Tokenizer_handleEqual(ParserSessionPtr session, Buffer tokenStartBu
                 // =!=
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_EQUALBANGEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -2833,7 +2823,7 @@ inline Token Tokenizer_handleUnder(ParserSessionPtr session, Buffer tokenStartBu
             // __
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -2843,7 +2833,7 @@ inline Token Tokenizer_handleUnder(ParserSessionPtr session, Buffer tokenStartBu
                 // ___
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_UNDERUNDERUNDER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -2856,7 +2846,7 @@ inline Token Tokenizer_handleUnder(ParserSessionPtr session, Buffer tokenStartBu
             // _.
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
 #if CHECK_ISSUES
             {
@@ -2913,7 +2903,7 @@ inline Token Tokenizer_handleLess(ParserSessionPtr session, Buffer tokenStartBuf
             // <|
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_LESSBAR, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -2923,7 +2913,7 @@ inline Token Tokenizer_handleLess(ParserSessionPtr session, Buffer tokenStartBuf
             // <<
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_LESSLESS, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -2933,7 +2923,7 @@ inline Token Tokenizer_handleLess(ParserSessionPtr session, Buffer tokenStartBuf
             // <>
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_LESSGREATER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -2943,7 +2933,7 @@ inline Token Tokenizer_handleLess(ParserSessionPtr session, Buffer tokenStartBuf
             // <=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_LESSEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -2952,7 +2942,7 @@ inline Token Tokenizer_handleLess(ParserSessionPtr session, Buffer tokenStartBuf
             auto minusBuf = session->buffer;
             auto minusLoc = session->SrcLoc;
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -2962,7 +2952,7 @@ inline Token Tokenizer_handleLess(ParserSessionPtr session, Buffer tokenStartBuf
                 // <->
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_LESSMINUSGREATER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -2999,7 +2989,7 @@ inline Token Tokenizer_handleGreater(ParserSessionPtr session, Buffer tokenStart
             // >>
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -3009,7 +2999,7 @@ inline Token Tokenizer_handleGreater(ParserSessionPtr session, Buffer tokenStart
                 // >>>
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_GREATERGREATERGREATER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -3022,7 +3012,7 @@ inline Token Tokenizer_handleGreater(ParserSessionPtr session, Buffer tokenStart
             // >=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_GREATEREQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3061,7 +3051,7 @@ inline Token Tokenizer_handleMinus(ParserSessionPtr session, Buffer tokenStartBu
             Tokenizer_MinusGreaterCount++;
 #endif // DIAGNOSTICS
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_MINUSGREATER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3071,7 +3061,7 @@ inline Token Tokenizer_handleMinus(ParserSessionPtr session, Buffer tokenStartBu
             // --
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
 #if CHECK_ISSUES
             {
@@ -3137,7 +3127,7 @@ inline Token Tokenizer_handleMinus(ParserSessionPtr session, Buffer tokenStartBu
             // -=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_MINUSEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3167,7 +3157,7 @@ inline Token Tokenizer_handleBar(ParserSessionPtr session, Buffer tokenStartBuf,
             // |>
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
 #if CHECK_ISSUES
             {
@@ -3202,7 +3192,7 @@ inline Token Tokenizer_handleBar(ParserSessionPtr session, Buffer tokenStartBuf,
             // ||
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_BARBAR, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3211,7 +3201,7 @@ inline Token Tokenizer_handleBar(ParserSessionPtr session, Buffer tokenStartBuf,
             auto barBuf = session->buffer;
             auto barLoc = session->SrcLoc;
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -3221,7 +3211,7 @@ inline Token Tokenizer_handleBar(ParserSessionPtr session, Buffer tokenStartBuf,
                 // |->
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_BARMINUSGREATER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -3257,7 +3247,7 @@ inline Token Tokenizer_handleSemi(ParserSessionPtr session, Buffer tokenStartBuf
         // ;;
         //
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         return Token(TOKEN_SEMISEMI, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
@@ -3282,7 +3272,7 @@ inline Token Tokenizer_handleBang(ParserSessionPtr session, Buffer tokenStartBuf
             // !=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_BANGEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3292,7 +3282,7 @@ inline Token Tokenizer_handleBang(ParserSessionPtr session, Buffer tokenStartBuf
             // !!
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_BANGBANG, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3317,7 +3307,7 @@ inline Token Tokenizer_handleHash(ParserSessionPtr session, Buffer tokenStartBuf
         // ##
         //
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         return Token(TOKEN_HASHHASH, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
@@ -3353,7 +3343,7 @@ inline Token Tokenizer_handlePercent(ParserSessionPtr session, Buffer tokenStart
                 break;
             }
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -3381,7 +3371,7 @@ inline Token Tokenizer_handleAmp(ParserSessionPtr session, Buffer tokenStartBuf,
         // &&
         //
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         return Token(TOKEN_AMPAMP, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
@@ -3410,7 +3400,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
             // /@
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_SLASHAT, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3420,7 +3410,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
             // /;
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_SLASHSEMI, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3429,7 +3419,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
             auto dotBuf = session->buffer;
             auto dotLoc = session->SrcLoc;
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -3458,7 +3448,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
             // //
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -3469,7 +3459,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
                     // //.
                     //
                     
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     return Token(TOKEN_SLASHSLASHDOT, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                 }
@@ -3479,7 +3469,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
                     // //@
                     //
                     
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     return Token(TOKEN_SLASHSLASHAT, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                 }
@@ -3489,7 +3479,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
                     // //=
                     //
                     
-                    CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
                     return Token(TOKEN_SLASHSLASHEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
                 }
@@ -3507,7 +3497,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
             // /:
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_SLASHCOLON, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3517,7 +3507,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
             // /=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_SLASHEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3527,7 +3517,7 @@ inline Token Tokenizer_handleSlash(ParserSessionPtr session, Buffer tokenStartBu
             // /*
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_SLASHSTAR, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3549,7 +3539,7 @@ inline Token Tokenizer_handleAt(ParserSessionPtr session, Buffer tokenStartBuf, 
     switch (c.to_point()) {
         case '@': {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -3559,7 +3549,7 @@ inline Token Tokenizer_handleAt(ParserSessionPtr session, Buffer tokenStartBuf, 
                 // @@@
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_ATATAT, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -3576,7 +3566,7 @@ inline Token Tokenizer_handleAt(ParserSessionPtr session, Buffer tokenStartBuf, 
             // @*
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_ATSTAR, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3602,7 +3592,7 @@ inline Token Tokenizer_handlePlus(ParserSessionPtr session, Buffer tokenStartBuf
             // ++
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
 #if CHECK_ISSUES
             {
@@ -3635,7 +3625,7 @@ inline Token Tokenizer_handlePlus(ParserSessionPtr session, Buffer tokenStartBuf
             // +=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_PLUSEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3664,7 +3654,7 @@ inline Token Tokenizer_handleTilde(ParserSessionPtr session, Buffer tokenStartBu
         // ~~
         //
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         return Token(TOKEN_TILDETILDE, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
@@ -3688,7 +3678,7 @@ inline Token Tokenizer_handleQuestion(ParserSessionPtr session, Buffer tokenStar
         // ??
         //
         
-        CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+        CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         
         return Token(TOKEN_QUESTIONQUESTION, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
     }
@@ -3713,7 +3703,7 @@ inline Token Tokenizer_handleStar(ParserSessionPtr session, Buffer tokenStartBuf
             // *=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_STAREQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3723,9 +3713,19 @@ inline Token Tokenizer_handleStar(ParserSessionPtr session, Buffer tokenStartBuf
             // **
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_STARSTAR, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+        }
+        case ')': {
+            
+            //
+            // *)
+            //
+            
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
+            
+            return Token(TOKEN_ERROR_UNEXPECTEDCOMMENTCLOSER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
     }
     
@@ -3745,7 +3745,7 @@ inline Token Tokenizer_handleCaret(ParserSessionPtr session, Buffer tokenStartBu
     switch (c.to_point()) {
         case ':': {
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             c = CharacterDecoder_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
@@ -3755,7 +3755,7 @@ inline Token Tokenizer_handleCaret(ParserSessionPtr session, Buffer tokenStartBu
                 // ^:=
                 //
                 
-                CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 return Token(TOKEN_CARETCOLONEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
@@ -3764,7 +3764,7 @@ inline Token Tokenizer_handleCaret(ParserSessionPtr session, Buffer tokenStartBu
             // Has to be ^:=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_ERROR_EXPECTEDEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3774,7 +3774,7 @@ inline Token Tokenizer_handleCaret(ParserSessionPtr session, Buffer tokenStartBu
             // ^=
             //
             
-            CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             return Token(TOKEN_CARETEQUAL, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
@@ -3800,7 +3800,7 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
     
     assert(c.to_point() == '\\');
     
-    c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+    c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
     switch (c.to_point()) {
         case '[': {
@@ -3812,7 +3812,7 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
             auto resetBuf = session->buffer;
             auto resetLoc = session->SrcLoc;
             
-            c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             auto wellFormed = false;
             
@@ -3821,7 +3821,7 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
                 resetBuf = session->buffer;
                 resetLoc = session->SrcLoc;
                 
-                c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 
                 while (true) {
                     
@@ -3830,21 +3830,22 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
                         resetBuf = session->buffer;
                         resetLoc = session->SrcLoc;
                         
-                        c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                        c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                         
-                    } else if (c.to_point() == ']') {
+                        continue;
+                    }
+                    
+                    if (c.to_point() == ']') {
                         
                         wellFormed = true;
-                        
-                        break;
                         
                     } else {
                         
                         session->buffer = resetBuf;
                         session->SrcLoc = resetLoc;
-                        
-                        break;
                     }
+                    
+                    break;
                 }
             }
             
@@ -3853,9 +3854,9 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
                 // More specifically: Unrecognized
                 //
                 return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
-            } else {
-                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
             }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case ':': {
             
@@ -3866,7 +3867,7 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
             auto resetBuf = session->buffer;
             auto resetLoc = session->SrcLoc;
             
-            c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 4; i++) {
                 
@@ -3875,15 +3876,15 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
                     resetBuf = session->buffer;
                     resetLoc = session->SrcLoc;
                     
-                    c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
-                } else {
-                    
-                    session->buffer = resetBuf;
-                    session->SrcLoc = resetLoc;
-                    
-                    break;
+                    continue;
                 }
+                
+                session->buffer = resetBuf;
+                session->SrcLoc = resetLoc;
+                
+                break;
             }
             
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -3897,7 +3898,7 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
             auto resetBuf = session->buffer;
             auto resetLoc = session->SrcLoc;
             
-            c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 2; i++) {
                 
@@ -3906,15 +3907,15 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
                     resetBuf = session->buffer;
                     resetLoc = session->SrcLoc;
                     
-                    c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
-                } else {
-                    
-                    session->buffer = resetBuf;
-                    session->SrcLoc = resetLoc;
-                    
-                    break;
+                    continue;
                 }
+                
+                session->buffer = resetBuf;
+                session->SrcLoc = resetLoc;
+                
+                break;
             }
             
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -3928,7 +3929,7 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
             auto resetBuf = session->buffer;
             auto resetLoc = session->SrcLoc;
             
-            c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 3; i++) {
                 
@@ -3937,15 +3938,15 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
                     resetBuf = session->buffer;
                     resetLoc = session->SrcLoc;
                     
-                    c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
-                } else {
-                    
-                    session->buffer = resetBuf;
-                    session->SrcLoc = resetLoc;
-                    
-                    break;
+                    continue;
                 }
+                
+                session->buffer = resetBuf;
+                session->SrcLoc = resetLoc;
+                
+                break;
             }
             
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
@@ -3959,7 +3960,7 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
             auto resetBuf = session->buffer;
             auto resetLoc = session->SrcLoc;
             
-            c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+            c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 6; i++) {
                 
@@ -3968,21 +3969,20 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
                     resetBuf = session->buffer;
                     resetLoc = session->SrcLoc;
                     
-                    c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+                    c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     
-                } else {
-                    
-                    session->buffer = resetBuf;
-                    session->SrcLoc = resetLoc;
-                    
-                    break;
+                    continue;
                 }
+                
+                session->buffer = resetBuf;
+                session->SrcLoc = resetLoc;
+                
+                break;
             }
             
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         case CODEPOINT_ENDOFFILE: {
-            
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
     } // switch
@@ -4017,7 +4017,7 @@ inline Token Tokenizer_handleMBStrangeNewline(ParserSessionPtr session, Buffer t
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+    return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
 }
 
 inline Token Tokenizer_handleMBStrangeWhitespace(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {

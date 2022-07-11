@@ -39,6 +39,15 @@ Test[
 ]
 
 
+Test[
+	CodeTokenize["*)"]
+	,
+	{ErrorNode[Token`Error`UnexpectedCommentCloser, "*)", <|Source -> {{1, 1}, {1, 3}}|>]}
+	,
+	TestID->"Tokenize-20220709-J1V7W8"
+]
+
+
 
 
 

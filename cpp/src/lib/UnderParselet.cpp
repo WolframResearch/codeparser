@@ -5,6 +5,7 @@
 #include "Symbol.h"
 #include "Parser.h"
 #include "ParserSession.h"
+#include "Tokenizer.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -44,7 +45,7 @@ void UnderParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token To
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
@@ -103,7 +104,7 @@ void UnderParselet_parseInfixContextSensitive(ParserSessionPtr session, Parselet
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         

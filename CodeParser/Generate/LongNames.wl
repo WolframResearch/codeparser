@@ -132,7 +132,7 @@ Module[{res},
 
 
 (*
-Yes, this slower than it needs to be
+Yes, this is slower than it needs to be
 But it is simple and reliable
 *)
 bubbleLexSort[listIn_] :=
@@ -222,211 +222,116 @@ insertNewlines[strings_] :=
 
 
 longNameToCodePointMapNames = {
-"//",
-"//",
-"//",
-"std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names {{"} ~Join~
+  "//",
+  "//",
+  "//",
+  "std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{escapeString[#], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
-  {"}};", ""};
+  {"}};",
+  ""}
 
 longNameToCodePointMapPoints = {
-"//",
-"//",
-"//",
-"std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points {{"} ~Join~
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
-  {"}};", ""};
+  {"}};",
+  ""}
 
 codePointToLongNameMapPoints = {
-"//",
-"//",
-"//",
-"std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"}};", ""};
+  {"}};",
+  ""}
 
 codePointToLongNameMapNames = {
-"//",
-"//",
-"//",
-"std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
+  "//",
+  "//",
+  "//",
+  "std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{escapeString[#], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"}};", ""};
+  {"}};",
+  ""}
 
 rawSet = {
-"//",
-"//",
-"//",
-"std::array<std::string, RAWLONGNAMES_COUNT> RawSet {{"} ~Join~
-(Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{"{", "\""<>#<>"\"", "}", ",", " "}& /@ lexSort[importedRawLongNames]]]], "\n"]) ~Join~
-{"}};",
-"
-//
-//
-//
-bool LongNames::isRaw(std::string LongNameStr) {
-  auto it =  std::lower_bound(RawSet.begin(), RawSet.end(), LongNameStr);
-  return it != RawSet.end() && *it == LongNameStr;
-}
-"};
+  "//",
+  "//",
+  "//",
+  "std::array<std::string, RAWLONGNAMES_COUNT> RawSet {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{"{", "\""<>#<>"\"", "}", ",", " "}& /@ lexSort[importedRawLongNames]]]], "\n"]) ~Join~
+  {"}};",
+  ""}
 
+notStrangeLetterlikeSource = {
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT> mbNotStrangeLetterlikeCodePoints {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedNotStrangeLetterlikeLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
+  {"}};",
+  ""}
 
+asciiReplacementsSource = {
+  "//",
+  "//",
+  "//",
+  "std::map<codepoint, std::vector<std::string>> asciiReplacementsMap {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{"{", toGlobal["CodePoint`LongName`"<>#[[1]]], ", ", escapeString[#[[2]]], "}", ",", " "}& /@ SortBy[importedASCIIReplacements, longNameToCharacterCode[#[[1]]]&]]]], "\n"]) ~Join~
+  {"}};",
+  ""}
 
-notStrangeLetterlikeSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "std::array<codepoint, MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT> mbNotStrangeLetterlikeCodePoints {{"} ~Join~
-    (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedNotStrangeLetterlikeLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-    {"}};",
-    "",
-    "//",
-    "//",
-    "//",
-    "bool LongNames::isMBNotStrangeLetterlike(codepoint point) { ",
-    "auto it = std::lower_bound(mbNotStrangeLetterlikeCodePoints.begin(), mbNotStrangeLetterlikeCodePoints.end(), point);",
-    "return it != mbNotStrangeLetterlikeCodePoints.end() && *it == point;",
-    "}",
-    ""
-  };
+punctuationSource = {
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, MBPUNCTUATIONCODEPOINTS_COUNT> mbPunctuationCodePoints {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedPunctuationLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
+  {"}};",
+  ""};
 
-asciiReplacementsSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "std::map<codepoint, std::vector<std::string>> asciiReplacementsMap {{"} ~Join~
-    (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{"{", toGlobal["CodePoint`LongName`"<>#[[1]]], ", ", escapeString[#[[2]]], "}", ",", " "}& /@ SortBy[importedASCIIReplacements, longNameToCharacterCode[#[[1]]]&]]]], "\n"]) ~Join~
-    {"}};",
-    "",
-    "//",
-    "//",
-    "//",
-    "std::vector<std::string> LongNames::asciiReplacements(codepoint point) { ",
-    "auto it = asciiReplacementsMap.find(point);",
-    "return (it != asciiReplacementsMap.end()) ? it->second : std::vector<std::string>{};",
-    "}", ""};
+whitespaceSource = {
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, MBWHITESPACECODEPOINTS_COUNT> mbWhitespaceCodePoints {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedWhitespaceLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
+  {"}};",
+  ""};
 
-replacementGraphicalSource =
-  {
-    "//",
-    "//",
-    "//",
-    "std::string LongNames::replacementGraphical(std::string replacement) {",
-    "  if (replacement == \" \") {",
-    "    //",
-    "    // \\[SpaceIndicator]",
-    "    //",
-    "",
-    "    // this was:",
-    "    // return \"\\u2423\";",
-    "    //",
-    "    // But MSVC gave:",
-    "    // warning C4566: character represented by universal-character-name '\\u2423' cannot be represented in the current code page (1252)",
-    "    //",
-    "",
-    "    //",
-    "    // UTF-8 bytes for U+2423",
-    "    //",
-    "    return \"\\xe2\\x90\\xa3\";",
-    "  } else if (replacement == \"\\n\") {",
-    "    return \"\\\\n\";",
-    "  } else {",
-    "    return replacement;",
-    "  }",
-    "}",
-    ""
-  };
+newlineSource = {
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, MBNEWLINECODEPOINTS_COUNT> mbNewlineCodePoints {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{#, ",", " "}& /@ mbNewlines]]], "\n"]) ~Join~
+  {"}};",
+  ""};
 
-punctuationSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "std::array<codepoint, MBPUNCTUATIONCODEPOINTS_COUNT> mbPunctuationCodePoints {{"} ~Join~
-    (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedPunctuationLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-    {"}};", "",
-    "//",
-    "//",
-    "//",
-    "bool LongNames::isMBPunctuation(codepoint point) { ",
-    "auto it = std::lower_bound(mbPunctuationCodePoints.begin(), mbPunctuationCodePoints.end(), point);",
-    "return it != mbPunctuationCodePoints.end() && *it == point;",
-    "}",
-    ""
-  };
+uninterpretableSource = {
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, MBUNINTERPRETABLECODEPOINTS_COUNT> mbUninterpretableCodePoints {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedUninterpretableLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
+  {"}};",
+  ""};
 
-whitespaceSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "std::array<codepoint, MBWHITESPACECODEPOINTS_COUNT> mbWhitespaceCodePoints {{"} ~Join~
-    (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedWhitespaceLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-    {"}};", "",
-    "//",
-    "//",
-    "//",
-    "bool LongNames::isMBWhitespace(codepoint point) {",
-    "auto it = std::lower_bound(mbWhitespaceCodePoints.begin(), mbWhitespaceCodePoints.end(), point);",
-    "return it != mbWhitespaceCodePoints.end() && *it == point;",
-    "}",
-    ""
-  };
-
-newlineSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "std::array<codepoint, MBNEWLINECODEPOINTS_COUNT> mbNewlineCodePoints {{"} ~Join~
-    (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{#, ",", " "}& /@ mbNewlines]]], "\n"]) ~Join~
-    {"}};", "",
-    "//",
-    "//",
-    "//",
-    "bool LongNames::isMBNewline(codepoint point) {",
-    "auto it = std::lower_bound(mbNewlineCodePoints.begin(), mbNewlineCodePoints.end(), point);",
-    "return it != mbNewlineCodePoints.end() && *it == point;",
-    "}",
-    ""
-  };
-
-uninterpretableSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "std::array<codepoint, MBUNINTERPRETABLECODEPOINTS_COUNT> mbUninterpretableCodePoints {{"} ~Join~
-    (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedUninterpretableLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-    {"}};", "",
-    "//",
-    "//",
-    "//",
-    "bool LongNames::isMBUninterpretable(codepoint point) {",
-    "auto it = std::lower_bound(mbUninterpretableCodePoints.begin(), mbUninterpretableCodePoints.end(), point);",
-    "return it != mbUninterpretableCodePoints.end() && *it == point;",
-    "}",
-    ""
-  };
-
-LongNameCodePointToOperatorSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "TokenEnum LongNameCodePointToOperator(codepoint c) {",
-    "switch (c) {"} ~Join~
-    (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
-    {
-      "default:",
-      "assert(false && \"Need to add operator\");",
-      "return TOKEN_UNKNOWN;",
-      "}",
-      "}"
-  };
-
+LongNameCodePointToOperatorSource = {
+  "//",
+  "//",
+  "//",
+  "TokenEnum LongNameCodePointToOperator(codepoint c) {",
+  "switch (c) {"} ~Join~
+  (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
+  {"}",
+  "assert(false && \"Need to add operator\");",
+  "return TOKEN_UNKNOWN;",
+  "}",
+  ""};
 
 
 generate[] := (
@@ -434,7 +339,7 @@ generate[] := (
 Print["Generating LongNames..."];
 
 
-longNamesCPPHeader = {
+longNamesRegistrationCPPHeader = {
 "
 //
 // AUTO GENERATED FILE
@@ -461,36 +366,65 @@ constexpr size_t MBWHITESPACECODEPOINTS_COUNT = " <> ToString[Length[importedWhi
 constexpr size_t MBNEWLINECODEPOINTS_COUNT = " <> ToString[Length[mbNewlines]] <> ";
 constexpr size_t MBUNINTERPRETABLECODEPOINTS_COUNT = " <> ToString[Length[importedUninterpretableLongNames]] <> ";
 
+//
+//
+//
 extern std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names;
+
+//
+//
+//
 extern std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points;
+
+//
+//
+//
 extern std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points;
+
+//
+//
+//
 extern std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names;
 
 //
-// Collection of utility functions for codepoints and long names
 //
-class LongNames {
-public:
-    
-    static bool isMBNotStrangeLetterlike(codepoint point);
+//
+extern std::array<std::string, RAWLONGNAMES_COUNT> RawSet;
 
-    static bool isMBPunctuation(codepoint point);
+//
+//
+//
+extern std::array<codepoint, MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT> mbNotStrangeLetterlikeCodePoints;
 
-    static bool isMBWhitespace(codepoint point);
+//
+//
+//
+extern std::map<codepoint, std::vector<std::string>> asciiReplacementsMap;
 
-    static bool isMBNewline(codepoint point);
+//
+//
+//
+extern std::array<codepoint, MBPUNCTUATIONCODEPOINTS_COUNT> mbPunctuationCodePoints;
 
-    static bool isMBUninterpretable(codepoint point);
+//
+//
+//
+extern std::array<codepoint, MBWHITESPACECODEPOINTS_COUNT> mbWhitespaceCodePoints;
 
-    //
-    // Is this \\[Raw] something?
-    //
-    static bool isRaw(std::string LongNameStr);
+//
+//
+//
+extern std::array<codepoint, MBNEWLINECODEPOINTS_COUNT> mbNewlineCodePoints;
 
-    static std::vector<std::string> asciiReplacements(codepoint point);
+//
+//
+//
+extern std::array<codepoint, MBUNINTERPRETABLECODEPOINTS_COUNT> mbUninterpretableCodePoints;
 
-    static std::string replacementGraphical(std::string replacement);
-};
+//
+//
+//
+TokenEnum LongNameCodePointToOperator(codepoint c);
 
 //
 // All long name code points
@@ -498,8 +432,8 @@ public:
 longNameDefines ~Join~
 {""};
 
-Print["exporting LongNames.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNames.h"}], Column[longNamesCPPHeader], "String"];
+Print["exporting LongNamesRegistration.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNamesRegistration.h"}], Column[longNamesRegistrationCPPHeader], "String"];
 
 Print[res];
 
@@ -508,14 +442,17 @@ If[FailureQ[res],
 ];
 
 
-longNamesCPPSource = {
+longNamesRegistrationCPPSource = {
 "
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
 //
 
-#include \"LongNames.h\"
+#include \"LongNamesRegistration.h\"
+
+#include \"TokenEnum.h\"
+#include \"TokenEnumRegistration.h\"
 
 #include <algorithm> // for lower_bound
 #include <cassert>
@@ -527,15 +464,14 @@ codePointToLongNameMapNames ~Join~
 rawSet ~Join~
 notStrangeLetterlikeSource ~Join~
 asciiReplacementsSource ~Join~
-replacementGraphicalSource ~Join~
 punctuationSource ~Join~
 whitespaceSource ~Join~
 newlineSource ~Join~
 uninterpretableSource ~Join~
 LongNameCodePointToOperatorSource;
 
-Print["exporting LongNames.cpp"];
-res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNames.cpp"}], Column[longNamesCPPSource], "String"];
+Print["exporting LongNamesRegistration.cpp"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNamesRegistration.cpp"}], Column[longNamesRegistrationCPPSource], "String"];
 
 Print[res];
 

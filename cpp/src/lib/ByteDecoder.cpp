@@ -5,7 +5,7 @@
 #include "Utils.h" // for isMBStrange, etc.
 #include "CodePoint.h" // for CODEPOINT_CRLF, etc.
 #include "LongNames.h"
-#include "MyString.h"
+#include "MyStringRegistration.h"
 #include "ParserSession.h"
 
 #if DIAGNOSTICS
@@ -52,7 +52,7 @@
 //
 // Do not decode unsafe character encodings: incomplete sequences, stray surrogates, or BOM
 //
-SourceCharacter ByteDecoder_nextSourceCharacter0(ParserSessionPtr session, NextPolicy policy) {
+SourceCharacter ByteDecoder_nextSourceCharacter(ParserSessionPtr session, NextPolicy policy) {
     
     auto firstByte = ByteBuffer_currentByte(session);
     
@@ -66,7 +66,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0(ParserSessionPtr session, NextP
         ByteDecoder_PrintableCount++;
 #endif // DIAGNOSTICS
         
-        ByteBuffer_nextByte0(session);
+        ByteBuffer_nextByte(session);
         
 #if COMPUTE_SOURCE
         session->srcConventionManager->increment(session, session->SrcLoc);
@@ -85,7 +85,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0(ParserSessionPtr session, NextP
         ByteDecoder_LineFeedCount++;
 #endif // DIAGNOSTICS
         
-        ByteBuffer_nextByte0(session);
+        ByteBuffer_nextByte(session);
         
 #if COMPUTE_SOURCE
         session->srcConventionManager->newline(session, session->SrcLoc);
@@ -94,12 +94,12 @@ SourceCharacter ByteDecoder_nextSourceCharacter0(ParserSessionPtr session, NextP
         return SourceCharacter(firstByte);
     }
         
-    return ByteDecoder_nextSourceCharacter0_uncommon(session, policy);
+    return ByteDecoder_nextSourceCharacter_uncommon(session, policy);
 }
 
-SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr session, NextPolicy policy) {
+SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr session, NextPolicy policy) {
     
-    auto firstByte = ByteBuffer_nextByte0(session);
+    auto firstByte = ByteBuffer_nextByte(session);
     
     switch (firstByte) {
         case 0x09: {
@@ -204,7 +204,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             auto resetEOF = session->wasEOF;
             auto resetLoc = session->SrcLoc;
             
-            auto tmp = ByteBuffer_nextByte0(session);
+            auto tmp = ByteBuffer_nextByte(session);
                 
             if (session->wasEOF) {
                 
@@ -257,7 +257,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             auto resetEOF = session->wasEOF;
             auto resetLoc = session->SrcLoc;
             
-            auto tmp = ByteBuffer_nextByte0(session);
+            auto tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -289,7 +289,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -347,7 +347,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             auto resetEOF = session->wasEOF;
             auto resetLoc = session->SrcLoc;
             
-            auto tmp = ByteBuffer_nextByte0(session);
+            auto tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -379,7 +379,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -454,7 +454,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             auto resetEOF = session->wasEOF;
             auto resetLoc = session->SrcLoc;
             
-            auto tmp = ByteBuffer_nextByte0(session);
+            auto tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -486,7 +486,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -522,7 +522,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -579,7 +579,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             auto resetEOF = session->wasEOF;
             auto resetLoc = session->SrcLoc;
             
-            auto tmp = ByteBuffer_nextByte0(session);
+            auto tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -611,7 +611,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -647,7 +647,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
             
             if (session->wasEOF) {
                 
@@ -704,7 +704,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             auto resetEOF = session->wasEOF;
             auto resetLoc = session->SrcLoc;
             
-            auto tmp = ByteBuffer_nextByte0(session);
+            auto tmp = ByteBuffer_nextByte(session);
                 
             if (session->wasEOF) {
                 
@@ -736,7 +736,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
                 
             if (session->wasEOF) {
                 
@@ -772,7 +772,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter0_uncommon(ParserSessionPtr sessi
             resetEOF = session->wasEOF;
             resetLoc = session->SrcLoc;
             
-            tmp = ByteBuffer_nextByte0(session);
+            tmp = ByteBuffer_nextByte(session);
                 
             if (session->wasEOF) {
                 
@@ -864,7 +864,7 @@ SourceCharacter ByteDecoder_currentSourceCharacter(ParserSessionPtr session, Nex
     auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
     
-    auto c = ByteDecoder_nextSourceCharacter0(session, policy);
+    auto c = ByteDecoder_nextSourceCharacter(session, policy);
     
     session->buffer = resetBuf;
     session->wasEOF = resetEOF;
@@ -901,7 +901,6 @@ void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, Sou
     // any ASCII replacements
     //
     for (const auto& r : LongNames::asciiReplacements(decoded)) {
-        
         Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
     }
     
@@ -941,7 +940,6 @@ void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded, So
     Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + graphicalStr + "``", Src, graphicalStr));
     
     for (const auto& r : LongNames::asciiReplacements(decoded)) {
-        
         Actions.push_back(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r));
     }
     

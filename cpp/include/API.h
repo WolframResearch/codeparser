@@ -37,6 +37,10 @@ class ParserSession;
 using NodeContainerPtr = NodeContainer *;
 using ParserSessionPtr = ParserSession *;
 
+#if USE_EXPR_LIB
+using expr = void *;
+#endif // USE_EXPR_LIB
+
 
 //
 // The modes that stringifying could happen in
@@ -118,10 +122,19 @@ EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions(ParserSessionP
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionTokenize(ParserSessionPtr session);
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode);
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session);
-EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(ParserSessionPtr session, NodeContainerPtr C);
+EXTERN_C DLLEXPORT void ReleaseNodeContainer(NodeContainerPtr C);
 
-EXTERN_C DLLEXPORT void NodeContainerPrint(NodeContainerPtr C, std::ostream& s);
 EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainerPtr C);
+
+DLLEXPORT void NodeContainerPrint(NodeContainerPtr C, std::ostream& s);
+
+#if USE_EXPR_LIB
+EXTERN_C DLLEXPORT expr NodeContainerToExpr(ParserSessionPtr session, NodeContainerPtr C);
+#endif // USE_EXPR_LIB
+
+#if USE_MATHLINK
+EXTERN_C DLLEXPORT void NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C);
+#endif // USE_MATHLINK
 
 
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
@@ -166,29 +179,30 @@ EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, mint A
 EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK link);
 #endif // USE_EXPR_LIB
 
-#if USE_MATHLINK
+
 //
-// A UTF8 String from MathLink that has lexical scope
 //
-class ScopedMLUTF8String {
-    MLINK link;
-    Buffer buf;
-    int b;
-    int c;
+//
+class ScopedFileBuffer {
+private:
     
+    MBuffer buf;
+    size_t len;
+
+    bool inited;
+
 public:
-    
-    ScopedMLUTF8String(MLINK link);
-    
-    ~ScopedMLUTF8String();
-    
-    bool read();
-    
-    Buffer get() const;
-    
-    size_t getByteCount() const;
+
+    DLLEXPORT ScopedFileBuffer(Buffer inStrIn, size_t inLen);
+
+    DLLEXPORT ~ScopedFileBuffer();
+
+    DLLEXPORT Buffer getBuf() const;
+
+    DLLEXPORT size_t getLen() const;
+
+    DLLEXPORT bool fail() const;
 };
-#endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
@@ -196,6 +210,8 @@ public:
 // A String from MathLink that has lexical scope
 //
 class ScopedMLString {
+private:
+    
     MLINK link;
     const char *buf;
     
@@ -214,54 +230,11 @@ public:
 
 #if USE_MATHLINK
 //
-// A Symbol from MathLink that has lexical scope
-//
-class ScopedMLSymbol {
-    MLINK link;
-    const char *sym;
-    
-public:
-    
-    ScopedMLSymbol(MLINK link);
-    
-    ~ScopedMLSymbol();
-    
-    bool read();
-    
-    const char *get() const;
-};
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-//
-// A Function from MathLink that has lexical scope
-//
-class ScopedMLFunction {
-    MLINK link;
-    const char *func;
-    int count;
-    
-public:
-    
-    ScopedMLFunction(MLINK link);
-    
-    ~ScopedMLFunction();
-    
-    bool read();
-    
-    const char *getHead() const;
-    
-    int getArgCount() const;
-};
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-//
 // A ByteArray from MathLink that has lexical scope
 //
 class ScopedMLByteArray {
+private:
+    
     MLINK link;
     MBuffer buf;
     int *dims;
@@ -283,48 +256,12 @@ public:
 #endif // USE_MATHLINK
 
 
-#if USE_MATHLINK
-//
-// An EnvironmentParameter from MathLink that has lexical scope
-//
-class ScopedMLEnvironmentParameter {
-    
-    MLEnvironmentParameter p;
-    
-public:
-    ScopedMLEnvironmentParameter();
-    
-    ~ScopedMLEnvironmentParameter();
-    
-    MLEnvironmentParameter get() const;
-};
-#endif // USE_MATHLINK
-
-
-#if USE_MATHLINK
-//
-// A Loopback Link from MathLink that has lexical scope
-//
-class ScopedMLLoopbackLink {
-    
-    MLINK link;
-    MLENV ep;
-    
-public:
-    ScopedMLLoopbackLink();
-    
-    ~ScopedMLLoopbackLink();
-    
-    MLINK get() const;
-};
-#endif // USE_MATHLINK
-
-
 #if USE_EXPR_LIB
 //
 //
 //
 class ScopedNumericArray {
+private:
     
     WolframLibraryData libData;
     MNumericArray arr;

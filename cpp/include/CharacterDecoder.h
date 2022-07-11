@@ -16,7 +16,7 @@ using ParserSessionPtr = ParserSession *;
 // sequences of Source Characters such as \[Alpha] into a single WL character
 //
 
-WLCharacter CharacterDecoder_nextWLCharacter0(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
 WLCharacter CharacterDecoder_currentWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
 
 WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy);

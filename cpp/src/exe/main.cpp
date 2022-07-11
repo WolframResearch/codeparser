@@ -12,11 +12,6 @@
 #include <cstddef> // for size_t
 
 
-class ScopedFileBuffer;
-
-using ScopedFileBufferPtr = ScopedFileBuffer *;
-
-
 enum APIMode {
     EXPRESSION,
     TOKENIZE,
@@ -35,27 +30,6 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
 
 int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
 
-class ScopedFileBuffer {
-
-    MBuffer buf;
-    size_t len;
-
-    bool inited;
-
-public:
-
-    ScopedFileBuffer(Buffer inStrIn, size_t inLen);
-
-    ~ScopedFileBuffer();
-
-    Buffer getBuf() const;
-
-    size_t getLen() const;
-
-    bool fail() const;
-
-};
-
 
 int main(int argc, char *argv[]) {
     
@@ -69,7 +43,9 @@ int main(int argc, char *argv[]) {
     std::string fileInput;
     
     for (int i = 1; i < argc; i++) {
+        
         auto arg = std::string(argv[i]);
+        
         if (arg == "-file") {
             
             file = true;
@@ -95,6 +71,7 @@ int main(int argc, char *argv[]) {
             outputMode = CHECK;
             
         } else {
+            
             return EXIT_FAILURE;
         }
     }
@@ -169,7 +146,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 }
             }
             
-            ParserSessionReleaseContainer(session, C);
+            ReleaseNodeContainer(C);
             
             ParserSessionDeinit(session);
             
@@ -208,7 +185,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 }
             }
             
-            ParserSessionReleaseContainer(session, C);
+            ReleaseNodeContainer(C);
             
             ParserSessionDeinit(session);
             
@@ -260,7 +237,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 }
             }
             
-            ParserSessionReleaseContainer(session, C);
+            ReleaseNodeContainer(C);
             
             ParserSessionDeinit(session);
             
@@ -278,9 +255,10 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
 
 int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
     
-    auto fb = ScopedFileBufferPtr(new ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size()));
+    auto fb = ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size());
 
-    if (fb->fail()) {
+    if (fb.fail()) {
+        
         switch (outputMode) {
             case PRINT: {
                 
@@ -289,14 +267,13 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
             }
             case PRINT_DRYRUN: {
-                
                 break;
             }
             case NONE: case CHECK: {
-                
                 break;
             }
         }
+        
         return EXIT_FAILURE;
     }
     
@@ -308,7 +285,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
     
     if (mode == TOKENIZE) {
         
-        ParserSessionInit(session, fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto C = ParserSessionTokenize(session);
         
@@ -332,12 +309,11 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
             }
             case NONE: case CHECK: {
-                
                 break;
             }
         }
         
-        ParserSessionReleaseContainer(session, C);
+        ReleaseNodeContainer(C);
         
         ParserSessionDeinit(session);
         
@@ -347,7 +323,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else if (mode == LEAF) {
         
-        ParserSessionInit(session, fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -373,12 +349,11 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
             }
             case NONE: case CHECK: {
-                
                 break;
             }
         }
         
-        ParserSessionReleaseContainer(session, C);
+        ReleaseNodeContainer(C);
         
         ParserSessionDeinit(session);
         
@@ -388,7 +363,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else {
         
-        ParserSessionInit(session, fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto C = ParserSessionParseExpressions(session);
         
@@ -412,7 +387,6 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
             }
             case NONE: {
-                
                 break;
             }
             case CHECK: {
@@ -425,7 +399,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             }
         }
         
-        ParserSessionReleaseContainer(session, C);
+        ReleaseNodeContainer(C);
         
         ParserSessionDeinit(session);
         
@@ -437,63 +411,4 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
     DestroyParserSession(session);
     
     return result;
-}
-
-ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(), inited(false) {
-    
-    auto inStr = reinterpret_cast<const char *>(inStrIn);
-    
-    FILE *file = fopen(inStr, "rb");
-    
-    if (!file) {
-        return;
-    }
-    
-    if (fseek(file, 0, SEEK_END)) {
-        return;
-    }
-    
-    auto res = ftell(file);
-    if (res < 0) {
-        return;
-    }
-    len = res;
-    
-    rewind(file);
-    
-    buf = new unsigned char[len];
-    
-    inited = true;
-    
-    auto r = fread(buf, sizeof(unsigned char), len, file);
-    
-    if (r != len) {
-        
-        inited = false;
-        
-        delete[] buf;
-    }
-    
-    fclose(file);
-}
-
-ScopedFileBuffer::~ScopedFileBuffer() {
-
-    if (!inited) {
-        return;
-    }
-
-    delete[] buf;
-}
-
-Buffer ScopedFileBuffer::getBuf() const {
-    return buf;
-}
-
-size_t ScopedFileBuffer::getLen() const {
-    return len;
-}
-
-bool ScopedFileBuffer::fail() const {
-    return !inited;
 }

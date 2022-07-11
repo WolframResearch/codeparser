@@ -14,7 +14,7 @@ PacletManager will find e.g. CodeParser/Kernel/TokenEnum.wl when asked to find C
 related issues: PACMAN-54
 *)
 Block[{Internal`PacletFindFile = Null&},
-Needs["CodeParser`Generate`ParseletRegistration`"];
+Needs["CodeParser`Generate`Parselet`"];
 Needs["CodeParser`Generate`TokenEnum`"]; (* for tokens *)
 Needs["CodeParser`Generate`Common`"];
 Needs["CodeTools`Generate`GenerateSources`"];
@@ -68,76 +68,76 @@ Module[{ctxt},
 
 
 symbols = Union[Join[
-    {Blank, BlankSequence, BlankNullSequence, ByteArray,
-      ConfidenceLevel, EndOfFile, EvaluatePacket, Integer, Integral,
-      Integrate, Missing, Null, Out, Optional, Pattern, Rational,
-      Real, Rule, Slot, SlotSequence, String, Symbol, TagSet,
-      TagSetDelayed, TagUnset, Unset, Whitespace, $Aborted},
-    {CodeParser`Source},
-    {CodeParser`LeafNode,
-      CodeParser`ErrorNode, CodeParser`UnterminatedTokenErrorNeedsReparseNode,
-      CodeParser`PrefixNode,
-      CodeParser`BinaryNode, CodeParser`InfixNode,
-      CodeParser`TernaryNode, CodeParser`PostfixNode, CodeParser`CallNode,
-      CodeParser`GroupNode,
-      CodeParser`CompoundNode,
-      CodeParser`SyntaxErrorNode,
-      CodeParser`GroupMissingCloserNode, CodeParser`UnterminatedGroupNeedsReparseNode,
-      CodeParser`PrefixBinaryNode},
-    {CodeParser`SyntaxIssue, CodeParser`FormatIssue, CodeParser`EncodingIssue,
-      CodeParser`ReplaceText, CodeParser`DeleteText, CodeParser`InsertText,
-      CodeParser`CodeActions, CodeParser`CodeAction},
-    {CodeParser`Library`LongNameSuggestion, CodeParser`Library`SetConcreteParseProgress},
-    {CodeParser`InternalInvalid, CodeParser`PatternBlank, CodeParser`PatternBlankSequence,
-      CodeParser`PatternBlankNullSequence, CodeParser`PatternOptionalDefault},
-    {SyntaxError`ExpectedSet, SyntaxError`ExpectedTilde, SyntaxError`ExpectedSymbol},
-    {Token`Newline},
-    DownValues[PrefixOperatorToParselet][[All, 2]] /. {
-      Parselet`PrefixOperatorParselet[_, _, op_] :> op,
-      Parselet`GroupParselet[_, op_] :> op,
-      Parselet`LeafParselet[] :> Nothing,
-      Parselet`UnderParselet[_] :> Nothing,
-      Parselet`IntegralParselet[] :> Nothing,
-      Parselet`LessLessParselet[] :> Get,
-      Parselet`PrefixNullPointerParselet[] :> Nothing,
-      Parselet`PrefixCloserParselet[] :> Nothing,
-      Parselet`PrefixEndOfFileParselet[] :> Nothing,
-      Parselet`PrefixErrorParselet[] :> Nothing,
-      Parselet`PrefixUnhandledParselet[] :> Nothing,
-      Parselet`PrefixCommaParselet[] :> Nothing,
-      Parselet`PrefixUnsupportedTokenParselet[] :> Nothing,
-      Parselet`SymbolParselet[] :> Nothing,
-      Parselet`UnderDotParselet[] :> Nothing,
-      Parselet`HashParselet[] :> Nothing,
-      Parselet`HashHashParselet[] :> Nothing,
-      Parselet`PercentParselet[] :> Nothing,
-      Parselet`PercentPercentParselet[] :> Nothing,
-      Parselet`SemiSemiParselet[] :> Span
-    },
-    DownValues[InfixOperatorToParselet][[All, 2]] /. {
-      Parselet`BinaryOperatorParselet[_, _, op_] :> op,
-      Parselet`CallParselet[_] :> Nothing,
-      Parselet`InfixOperatorParselet[_, _, op_] :> op,
-      Parselet`TimesParselet[] :> Times,
-      Parselet`PostfixOperatorParselet[_, _, op_] :> op,
-      Parselet`ColonColonParselet[] :> MessageName,
-      Parselet`ColonEqualParselet[] :> SetDelayed,
-      Parselet`ColonParselet[] :> Nothing,
-      Parselet`EqualParselet[] :> Set,
-      Parselet`GreaterGreaterGreaterParselet[] :> PutAppend,
-      Parselet`GreaterGreaterParselet[] :> Put,
-      Parselet`InfixAssertFalseParselet[] :> Nothing,
-      Parselet`InfixNullPointerParselet[] :> Nothing,
-      Parselet`InfixDifferentialDParselet[] :> Nothing,
-      Parselet`InfixImplicitTimesParselet[] :> Nothing,
-      Parselet`InfixToplevelNewlineParselet[] :> Nothing,
-      Parselet`SlashColonParselet[] :> Nothing,
-      Parselet`TildeParselet[] :> CodeParser`TernaryTilde,
-      Parselet`CommaParselet[] :> CodeParser`Comma,
-      Parselet`SemiParselet[] :> CompoundExpression,
-      Parselet`SemiSemiParselet[] :> Span
-    },
-    tokens
+  {Blank, BlankSequence, BlankNullSequence, ByteArray,
+    ConfidenceLevel, EndOfFile, EvaluatePacket, Integer, Integral,
+    Integrate, Missing, Null, Out, Optional, Pattern, Rational,
+    Real, Rule, Slot, SlotSequence, String, Symbol, TagSet,
+    TagSetDelayed, TagUnset, Unset, Whitespace, $Aborted},
+  {CodeParser`Source},
+  {CodeParser`LeafNode,
+    CodeParser`ErrorNode, CodeParser`UnterminatedTokenErrorNeedsReparseNode,
+    CodeParser`PrefixNode,
+    CodeParser`BinaryNode, CodeParser`InfixNode,
+    CodeParser`TernaryNode, CodeParser`PostfixNode, CodeParser`CallNode,
+    CodeParser`GroupNode,
+    CodeParser`CompoundNode,
+    CodeParser`SyntaxErrorNode,
+    CodeParser`GroupMissingCloserNode, CodeParser`UnterminatedGroupNeedsReparseNode,
+    CodeParser`PrefixBinaryNode},
+  {CodeParser`SyntaxIssue, CodeParser`FormatIssue, CodeParser`EncodingIssue,
+    CodeParser`ReplaceText, CodeParser`DeleteText, CodeParser`InsertText,
+    CodeParser`CodeActions, CodeParser`CodeAction},
+  {CodeParser`Library`LongNameSuggestion, CodeParser`Library`SetConcreteParseProgress},
+  {CodeParser`InternalInvalid, CodeParser`PatternBlank, CodeParser`PatternBlankSequence,
+    CodeParser`PatternBlankNullSequence, CodeParser`PatternOptionalDefault},
+  {SyntaxError`ExpectedSet, SyntaxError`ExpectedTilde, SyntaxError`ExpectedSymbol},
+  {Token`Newline},
+  DownValues[PrefixOperatorToParselet][[All, 2]] /. {
+    Parselet`PrefixOperatorParselet[_, _, op_] :> op,
+    Parselet`GroupParselet[_, op_] :> op,
+    Parselet`LeafParselet[] :> Nothing,
+    Parselet`UnderParselet[_] :> Nothing,
+    Parselet`IntegralParselet[] :> Nothing,
+    Parselet`LessLessParselet[] :> Get,
+    Parselet`PrefixNullPointerParselet[] :> Nothing,
+    Parselet`PrefixCloserParselet[] :> Nothing,
+    Parselet`PrefixEndOfFileParselet[] :> Nothing,
+    Parselet`PrefixErrorParselet[] :> Nothing,
+    Parselet`PrefixUnhandledParselet[] :> Nothing,
+    Parselet`PrefixCommaParselet[] :> Nothing,
+    Parselet`PrefixUnsupportedTokenParselet[] :> Nothing,
+    Parselet`SymbolParselet[] :> Nothing,
+    Parselet`UnderDotParselet[] :> Nothing,
+    Parselet`HashParselet[] :> Nothing,
+    Parselet`HashHashParselet[] :> Nothing,
+    Parselet`PercentParselet[] :> Nothing,
+    Parselet`PercentPercentParselet[] :> Nothing,
+    Parselet`SemiSemiParselet[] :> Span
+  },
+  DownValues[InfixOperatorToParselet][[All, 2]] /. {
+    Parselet`BinaryOperatorParselet[_, _, op_] :> op,
+    Parselet`CallParselet[_] :> Nothing,
+    Parselet`InfixOperatorParselet[_, _, op_] :> op,
+    Parselet`TimesParselet[] :> Times,
+    Parselet`PostfixOperatorParselet[_, _, op_] :> op,
+    Parselet`ColonColonParselet[] :> MessageName,
+    Parselet`ColonEqualParselet[] :> SetDelayed,
+    Parselet`ColonParselet[] :> Nothing,
+    Parselet`EqualParselet[] :> Set,
+    Parselet`GreaterGreaterGreaterParselet[] :> PutAppend,
+    Parselet`GreaterGreaterParselet[] :> Put,
+    Parselet`InfixAssertFalseParselet[] :> Nothing,
+    Parselet`InfixNullPointerParselet[] :> Nothing,
+    Parselet`InfixDifferentialDParselet[] :> Nothing,
+    Parselet`InfixImplicitTimesParselet[] :> Nothing,
+    Parselet`InfixToplevelNewlineParselet[] :> Nothing,
+    Parselet`SlashColonParselet[] :> Nothing,
+    Parselet`TildeParselet[] :> CodeParser`TernaryTilde,
+    Parselet`CommaParselet[] :> CodeParser`Comma,
+    Parselet`SemiParselet[] :> CompoundExpression,
+    Parselet`SemiSemiParselet[] :> Span
+  },
+  tokens
 ]]
 
 
@@ -146,7 +146,7 @@ generate[] := (
 
 Print["Generating Symbol..."];
 
-symbolCPPHeader = {
+symbolRegistrationCPPHeader = {
 "
 //
 // AUTO GENERATED FILE
@@ -155,51 +155,7 @@ symbolCPPHeader = {
 
 #pragma once
 
-#include <ostream>
-
-class ParserSession;
-
-using ParserSessionPtr = ParserSession *;
-
-#if USE_EXPR_LIB
-using expr = void *;
-#endif // USE_EXPR_LIB
-
-
-//
-// A kernel symbol
-//
-class Symbol {
-
-  const char *Name;
-  const int Id;
-
-public:
-
-  constexpr Symbol(const char *Name, int Id) : Name(Name), Id(Id) {}
-  
-  constexpr const char *name() const {
-    return Name;
-  }
-
-  constexpr int getId() const {
-    return Id;
-  }
-
-  void print(std::ostream& s) const;
-
-#if USE_MATHLINK
-  void put(ParserSessionPtr session) const;
-#endif // USE_MATHLINK
-
-#if USE_EXPR_LIB
-  expr toExpr(ParserSessionPtr session) const;
-#endif // USE_EXPR_LIB
-};
-
-bool operator==(Symbol a, Symbol b);
-
-bool operator!=(Symbol a, Symbol b);
+#include \"Symbol.h\"
 
 
 //
@@ -215,8 +171,8 @@ If[#1 === String && $WorkaroundBug321344,
   Row[{"constexpr Symbol", " ", toGlobal["Symbol`"<>ToString[#1]], "(", "\"", stringifyForTransmitting[#1], "\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]]&, symbols] ~Join~
 {""};
 
-Print["exporting Symbol.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], Column[symbolCPPHeader], "String"];
+Print["exporting SymbolRegistration.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "SymbolRegistration.h"}], Column[symbolRegistrationCPPHeader], "String"];
 
 Print[res];
 
@@ -224,7 +180,7 @@ If[FailureQ[res],
   Quit[1]
 ];
 
-symbolCPPSource = {
+symbolRegistrationCPPSource = {
 "
 //
 // AUTO GENERATED FILE
@@ -249,11 +205,11 @@ symbolCPPSource = {
 
 
 bool operator==(Symbol a, Symbol b) {
-  return a.getId() == b.getId();
+  return a.Id == b.Id;
 }
 
 bool operator!=(Symbol a, Symbol b) {
-  return a.getId() != b.getId();
+  return a.Id != b.Id;
 }
 
 void Symbol::print(std::ostream& s) const {
@@ -278,8 +234,8 @@ expr Symbol::toExpr(ParserSessionPtr session) const {
 #endif // USE_EXPR_LIB
 "};
 
-Print["exporting Symbol.cpp"];
-res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"];
+Print["exporting SymbolRegistration.cpp"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "SymbolRegistration.cpp"}], Column[symbolRegistrationCPPSource], "String"];
 
 Print[res];
 

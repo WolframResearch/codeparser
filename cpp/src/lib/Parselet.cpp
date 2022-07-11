@@ -2,9 +2,10 @@
 #include "Parselet.h"
 
 #include "ParseletRegistration.h" // for infixParselets, etc.
-#include "Symbol.h"
+#include "SymbolRegistration.h"
 #include "Parser.h"
 #include "ParserSession.h"
+#include "Tokenizer.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -86,7 +87,7 @@ void PrefixCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Igno
     // Do not take the closer.
     // Delay taking the closer until necessary. This allows  { 1 + }  to be parsed as a GroupNode
     //
-    Parser_currentToken(session, TOPLEVEL);
+    Tokenizer_currentToken(session, TOPLEVEL);
     
     MUSTTAIL
     return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
@@ -114,7 +115,7 @@ void PrefixToplevelCloserParselet_parsePrefix(ParserSessionPtr session, Parselet
     
     Parser_pushLeaf(session, Token(TOKEN_ERROR_UNEXPECTEDCLOSER, TokIn.bufLen(), TokIn.Src));
     
-    Parser_nextToken(session, TokIn);
+    TokIn.skip(session);
     
     MUSTTAIL
     return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
@@ -171,7 +172,7 @@ void PrefixUnsupportedTokenParselet_parsePrefix(ParserSessionPtr session, Parsel
     
     Parser_pushLeaf(session, Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.bufLen(), TokIn.Src));
     
-    Parser_nextToken(session, TokIn);
+    TokIn.skip(session);
     
     MUSTTAIL
     return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
@@ -235,7 +236,7 @@ void PrefixUnhandledParselet_parsePrefix(ParserSessionPtr session, ParseletPtr I
     //
     // Do not take next token
     //
-    Parser_currentToken(session, TOPLEVEL);
+    Tokenizer_currentToken(session, TOPLEVEL);
     
     auto I = infixParselets[TokIn.Tok.value()];
     
@@ -282,6 +283,9 @@ Precedence InfixToplevelNewlineParselet::getPrecedence(ParserSessionPtr session)
 }
 
 ParseFunction InfixToplevelNewlineParselet::parseInfix() const {
+    
+    assert(false);
+    
     return InfixToplevelNewlineParselet_parseInfix;
 }
 
@@ -312,7 +316,7 @@ void SymbolParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, T
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     //
     // if we are here, then we know that Sym could bind to _
@@ -475,7 +479,7 @@ void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P,
     
     auto& Ctxt = Parser_pushContext(session, dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -505,6 +509,9 @@ void PrefixOperatorParselet_reducePrefixOperator(ParserSessionPtr session, Parse
 
 
 ParseFunction InfixImplicitTimesParselet::parseInfix() const {
+    
+    assert(false);
+    
     return InfixImplicitTimesParselet_parseInfix;
 }
 
@@ -534,6 +541,9 @@ Precedence InfixAssertFalseParselet::getPrecedence(ParserSessionPtr session) con
 }
 
 ParseFunction InfixAssertFalseParselet::parseInfix() const {
+    
+    assert(false);
+    
     return InfixAssertFalseParselet_parseInfix;
 }
 
@@ -573,7 +583,7 @@ void BinaryOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, 
     
     Parser_pushLeafAndNext(session, TokIn);
 
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -635,7 +645,7 @@ void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, T
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
@@ -682,11 +692,11 @@ void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, To
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok1 = Tokenizer_currentToken(session, TOPLEVEL);
         
-        Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
+    Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
     auto I = infixParselets[Tok1.Tok.value()];
     
@@ -721,7 +731,7 @@ void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, To
     
     Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
@@ -875,9 +885,9 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
     
     auto Closr = dynamic_cast<GroupParselet *>(P)->getCloser();
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL, Trivia1);
     
@@ -1106,7 +1116,7 @@ void TildeParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto FirstTok = Parser_currentToken(session, TOPLEVEL);
+    auto FirstTok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, FirstTok, TOPLEVEL);
     
@@ -1132,9 +1142,9 @@ void TildeParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token I
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok1 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
@@ -1156,7 +1166,7 @@ void TildeParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token I
     
     Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
@@ -1223,11 +1233,17 @@ void ColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
     switch (colonLHS) {
+        case COLONLHS_NONE: {
+            
+            assert(false);
+            
+            return;
+        }
         case COLONLHS_PATTERN: {
             
             auto& Ctxt = Parser_topContext(session);
@@ -1264,11 +1280,9 @@ void ColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
             MUSTTAIL
             return (P2->parsePrefix())(session, P2, Tok);
         }
-        default: {
-            
-            assert(false);
-        }
     }
+    
+    assert(false);
 }
 
 void ColonParselet_reducePattern(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -1332,7 +1346,7 @@ void SlashColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -1357,9 +1371,9 @@ void SlashColonParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, To
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL, Trivia1);
     
@@ -1424,7 +1438,7 @@ void EqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -1469,7 +1483,7 @@ void EqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Ignored, 
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -1549,7 +1563,7 @@ void ColonEqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -1575,7 +1589,7 @@ void ColonEqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Igno
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -1627,7 +1641,7 @@ void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     
     auto& Ctxt = Parser_pushContext(session, PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
     
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
@@ -1651,9 +1665,9 @@ void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
 
-    auto Tok = Parser_currentToken(session, TOPLEVEL);
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok, TOPLEVEL, Trivia1);
     
@@ -1718,7 +1732,7 @@ void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
@@ -1783,9 +1797,9 @@ void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
 
-    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok1 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
@@ -1805,7 +1819,7 @@ void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     
     Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok2, TOPLEVEL);
     
@@ -1890,7 +1904,7 @@ void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Toke
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     //
     // CompoundExpression should not cross toplevel newlines
@@ -1984,9 +1998,9 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok1 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
@@ -2010,7 +2024,7 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
     
     Parser_pushLeafAndNext(session, Tok1);
 
-    auto Tok2 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok2 = Tokenizer_currentToken(session, TOPLEVEL);
     
     //
     // CompoundExpression should not cross toplevel newlines
@@ -2123,7 +2137,7 @@ void ColonColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok2 = Parser_currentToken_stringifyAsTag(session);
+    auto Tok2 = Tokenizer_currentToken_stringifyAsTag(session);
     
     Parser_pushLeafAndNext(session, Tok2);
     
@@ -2146,9 +2160,9 @@ void ColonColonParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored,
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto Tok1 = Parser_currentToken(session, TOPLEVEL);
+    auto Tok1 = Tokenizer_currentToken(session, TOPLEVEL);
     
     Parser_eatTrivia(session, Tok1, TOPLEVEL, Trivia1);
     
@@ -2168,7 +2182,7 @@ void ColonColonParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored,
     // Special tokenization, so must do parsing here
     //
 
-    auto Tok2 = Parser_currentToken_stringifyAsTag(session);
+    auto Tok2 = Tokenizer_currentToken_stringifyAsTag(session);
 
     Parser_pushLeafAndNext(session, Tok2);
     
@@ -2217,7 +2231,7 @@ void GreaterGreaterParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ign
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken_stringifyAsFile(session);
+    auto Tok = Tokenizer_currentToken_stringifyAsFile(session);
     
     Parser_eatTrivia_stringifyAsFile(session, Tok);
     
@@ -2264,7 +2278,7 @@ void GreaterGreaterGreaterParselet_parseInfix(ParserSessionPtr session, Parselet
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken_stringifyAsFile(session);
+    auto Tok = Tokenizer_currentToken_stringifyAsFile(session);
     
     Parser_eatTrivia_stringifyAsFile(session, Tok);
     
@@ -2308,7 +2322,7 @@ void LessLessParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     
     Parser_pushContext(session, PRECEDENCE_HIGHEST);
     
-    auto Tok = Parser_currentToken_stringifyAsFile(session);
+    auto Tok = Tokenizer_currentToken_stringifyAsFile(session);
     
     Parser_eatTrivia_stringifyAsFile(session, Tok);
     
@@ -2392,7 +2406,7 @@ void HashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, INSIDE_SLOT);
+    auto Tok = Tokenizer_currentToken(session, INSIDE_SLOT);
     
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value():
@@ -2439,7 +2453,7 @@ void HashHashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, INSIDE_SLOTSEQUENCE);
+    auto Tok = Tokenizer_currentToken(session, INSIDE_SLOTSEQUENCE);
     
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value(): {
@@ -2485,7 +2499,7 @@ void PercentParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, 
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto Tok = Parser_currentToken(session, INSIDE_OUT);
+    auto Tok = Tokenizer_currentToken(session, INSIDE_OUT);
     
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value(): {

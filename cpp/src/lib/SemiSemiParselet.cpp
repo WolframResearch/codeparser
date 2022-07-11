@@ -2,9 +2,10 @@
 #include "Parselet.h"
 #include "ParseletRegistration.h" // for prefixParselets
 #include "ParserSession.h"
-#include "Symbol.h"
+#include "SymbolRegistration.h"
 #include "MyString.h"
 #include "Parser.h"
+#include "Tokenizer.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -89,7 +90,7 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     }
 #endif // CHECK_ABORT
     
-    auto SecondTok = Parser_currentToken(session, TOPLEVEL);
+    auto SecondTok = Tokenizer_currentToken(session, TOPLEVEL);
     
     //
     // Span should not cross toplevel newlines
@@ -142,15 +143,11 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     
     Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, SecondTok.Buf, SecondTok.Src.Start));
     
-    //
-    // nextToken() is not needed after an implicit token
-    //
+    SecondTok.skip(session);
     
-    Parser_nextToken(session, SecondTok);
+    auto ThirdTok = Tokenizer_currentToken(session, TOPLEVEL);
     
-    auto ThirdTok = Parser_currentToken(session, TOPLEVEL);
-    
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
     //
     // Span should not cross toplevel newlines
@@ -210,9 +207,9 @@ void SemiSemiParselet_parse2(ParserSessionPtr session, ParseletPtr Ignored, Toke
     }
 #endif // CHECK_ABORT
     
-    auto& Trivia1 = Parser_getTrivia1(session);
+    auto& Trivia1 = session->trivia1;
     
-    auto ThirdTok = Parser_currentToken(session, TOPLEVEL);
+    auto ThirdTok = Tokenizer_currentToken(session, TOPLEVEL);
     
     //
     // Span should not cross toplevel newlines
@@ -242,11 +239,11 @@ void SemiSemiParselet_parse2(ParserSessionPtr session, ParseletPtr Ignored, Toke
     //     ^~ThirdTok
     //
     
-    Parser_nextToken(session, ThirdTok);
+    ThirdTok.skip(session);
     
-    auto& Trivia2 = Parser_getTrivia2(session);
+    auto& Trivia2 = session->trivia2;
     
-    auto FourthTok = Parser_currentToken(session, TOPLEVEL);
+    auto FourthTok = Tokenizer_currentToken(session, TOPLEVEL);
     
     //
     // Span should not cross toplevel newlines

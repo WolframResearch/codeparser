@@ -29,6 +29,7 @@ struct Token {
     Buffer end() const;
     
     void reset(ParserSessionPtr session);
+    void skip(ParserSessionPtr session);
     
     void print(std::ostream& s) const;
     
@@ -50,10 +51,9 @@ struct Token {
 static_assert((SIZEOF_VOID_P == 8 && sizeof(Token) == 32) || (SIZEOF_VOID_P == 4), "Check your assumptions");
 #endif // #ifdef __clang__
 
-bool operator==(Token a, Token b);
-bool operator!=(Token a, Token b);
-
+#if BUILD_TESTS
 //
 // For googletest
 //
 void PrintTo(const Token& T, std::ostream *stream);
+#endif // BUILD_TESTS

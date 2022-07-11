@@ -4,9 +4,10 @@
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for isMBStrange, etc.
-#include "LongNames.h" // for LongNameToCodePointMap, etc.
-#include "MyString.h"
-#include "Symbol.h"
+#include "LongNamesRegistration.h" // for LongNameToCodePointMap, etc.
+#include "LongNames.h"
+#include "MyStringRegistration.h"
+#include "SymbolRegistration.h"
 #include "ParserSession.h"
 
 #if USE_EXPR_LIB
@@ -56,11 +57,11 @@ std::array<HandlerFunction, 128> CharacterDecoderHandlerTable = {
 //                   buffer
 // return \[Alpha]
 //
-WLCharacter CharacterDecoder_nextWLCharacter0(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
-    auto curSource = ByteDecoder_nextSourceCharacter0(session, policy);
+    auto curSource = ByteDecoder_nextSourceCharacter(session, policy);
     
-    if (!curSource.isBackslash()) {
+    if (curSource.to_point() != '\\') {
         
 #if DIAGNOSTICS
         CharacterDecoder_UnescapedCount++;
@@ -95,7 +96,7 @@ WLCharacter CharacterDecoder_nextWLCharacter0(ParserSessionPtr session, Buffer t
                 case '\r':
                 case CODEPOINT_CRLF: {
                     
-                    ByteDecoder_nextSourceCharacter0(session, policy);
+                    ByteDecoder_nextSourceCharacter(session, policy);
 
                     curSource = CharacterDecoder_handleLineContinuation(session, tokenStartBuf, tokenStartLoc, policy);
 
@@ -131,7 +132,7 @@ WLCharacter CharacterDecoder_currentWLCharacter(ParserSessionPtr session, Buffer
     auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
     
-    auto c = CharacterDecoder_nextWLCharacter0(session, tokenStartBuf, tokenStartLoc, policy);
+    auto c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     
     session->buffer = resetBuf;
     session->wasEOF = resetEOF;
@@ -145,7 +146,7 @@ WLCharacter CharacterDecoder_handleStringMetaDoubleQuote(ParserSessionPtr sessio
     CharacterDecoder_StringMetaDoubleQuoteCount++;
 #endif // DIAGNOSTICS
                 
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
     return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
 }
@@ -164,7 +165,7 @@ WLCharacter CharacterDecoder_handleStringMetaOpen(ParserSessionPtr session, Buff
     CharacterDecoder_StringMetaOpenCount++;
 #endif // DIAGNOSTICS
                 
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
     auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
                 
@@ -197,7 +198,7 @@ WLCharacter CharacterDecoder_handleStringMetaClose(ParserSessionPtr session, Buf
     CharacterDecoder_StringMetaCloseCount++;
 #endif // DIAGNOSTICS
                 
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
     auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
     
@@ -229,7 +230,7 @@ WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session,
     CharacterDecoder_StringMetaBackslashCount++;
 #endif // DIAGNOSTICS
                 
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
 //    MUSTTAIL
     return CharacterDecoder_handleBackslash(session, escapedBuf, escapedLoc, policy);
@@ -263,7 +264,7 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
         
         atleast1DigitOrAlpha = true;
         
-        ByteDecoder_nextSourceCharacter0(session, policy);
+        ByteDecoder_nextSourceCharacter(session, policy);
         
         curSource = ByteDecoder_currentSourceCharacter(session, policy);
         
@@ -271,11 +272,11 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
             
             if (curSource.isAlphaOrDigit()) {
                 
-                ByteDecoder_nextSourceCharacter0(session, policy);
+                ByteDecoder_nextSourceCharacter(session, policy);
                 
                 curSource = ByteDecoder_currentSourceCharacter(session, policy);
                 
-            } else if (curSource == SourceCharacter(']')) {
+            } else if (curSource.to_point() == ']') {
                 
                 wellFormed = true;
                 
@@ -299,7 +300,7 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
         // Handle \[]
         //
         
-        ByteDecoder_nextSourceCharacter0(session, policy);
+        ByteDecoder_nextSourceCharacter(session, policy);
         
         curSource = ByteDecoder_currentSourceCharacter(session, policy);
     }
@@ -382,10 +383,13 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
     auto longNameEndBuf = session->buffer;
     
     auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
+    
     auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.Buf), longNameBufAndLen.length());
     
     auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), longNameStr);
+    
     auto found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
+    
     if (!found) {
         
         //
@@ -419,30 +423,6 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
             
             session->addIssue(I);
             
-        } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
-            
-            auto longNameEndLoc = session->SrcLoc;
-            
-            auto currentWLCharacterStartLoc = openSquareLoc.previous();
-            
-            //
-            // Accomodate the ] character
-            //
-            auto currentWLCharacterEndLoc = longNameEndLoc.next();
-            
-            auto previousBackslashLoc = currentWLCharacterStartLoc.previous();
-            
-            auto suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
-            
-            CodeActionPtrVector Actions;
-            
-            if (!suggestion.empty()) {
-                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]"));
-            }
-            
-            auto I = new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, Actions, {});
-            
-            session->addIssue(I);
         }
 #endif // CHECK_ISSUES
         
@@ -456,41 +436,7 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
     // Success!
     //
     
-#if CHECK_ISSUES
-    if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
-        
-        //
-        // Unexpected escape sequence
-        //
-        // If found and unlikelyEscapeChecking, then still come in here.
-        //
-        
-        auto longNameEndLoc = session->SrcLoc;
-        
-        auto currentWLCharacterStartLoc = openSquareLoc.previous();
-        
-        //
-        // Accomodate the ] character
-        //
-        auto currentWLCharacterEndLoc = longNameEndLoc.next();
-        
-        auto previousBackslashLoc = currentWLCharacterStartLoc.previous();
-        
-        auto suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
-        
-        CodeActionPtrVector Actions;
-        
-        if (!suggestion.empty()) {
-            Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]"));
-        }
-        
-        auto I = new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, Actions, {});
-        
-        session->addIssue(I);
-    }
-#endif // CHECK_ISSUES
-    
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
     auto idx = it - LongNameToCodePointMap_names.begin();
     auto point = LongNameToCodePointMap_points[idx];
@@ -634,7 +580,7 @@ WLCharacter CharacterDecoder_handle4Hex(ParserSessionPtr session, Buffer colonBu
         
         if (curSource.isHex()) {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
         } else {
             
@@ -824,7 +770,7 @@ WLCharacter CharacterDecoder_handle2Hex(ParserSessionPtr session, Buffer dotBuf,
         
         if (curSource.isHex()) {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
         } else {
             
@@ -1012,7 +958,7 @@ WLCharacter CharacterDecoder_handleOctal(ParserSessionPtr session, Buffer firstO
         
         if (curSource.isOctal()) {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
         } else {
             
@@ -1201,7 +1147,7 @@ WLCharacter CharacterDecoder_handle6Hex(ParserSessionPtr session, Buffer barBuf,
         
         if (curSource.isHex()) {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
         } else {
             
@@ -1439,7 +1385,7 @@ SourceCharacter CharacterDecoder_handleLineContinuation(ParserSessionPtr session
         }
 #endif // COMPUTE_OOB
         
-        ByteDecoder_nextSourceCharacter0(session, policy);
+        ByteDecoder_nextSourceCharacter(session, policy);
         
         c = ByteDecoder_currentSourceCharacter(session, policy);
     }
@@ -1452,7 +1398,7 @@ SourceCharacter CharacterDecoder_handleLineContinuation(ParserSessionPtr session
     }
 #endif // COMPUTE_OOB
     
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
     return c;
 }
@@ -1462,24 +1408,66 @@ WLCharacter CharacterDecoder_handleBackslash(ParserSessionPtr session, Buffer es
     
 #if CHECK_ISSUES
     //
-    // if inside a string, then test whether this \ is the result of the "feature" of
+    // test whether this \ is the result of the "feature" of
     // converting "\[Alpa]" into "\\[Alpa]", copying that, and then never giving any further warnings
     // when dealing with "\\[Alpa]"
     //
-    if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
-        
+    {
         auto resetBuf = session->buffer;
         auto resetLoc = session->SrcLoc;
         
-        auto test = ByteDecoder_currentSourceCharacter(session, policy);
+        //
+        // will be resetting any way, so just use nextSourceCharacter here
+        //
+        auto c = ByteDecoder_nextSourceCharacter(session, policy);
         
-        if (test.to_point() == '[') {
+        if (c.to_point() == '[') {
             
-            auto tmpPolicy = policy;
+            //
+            // Try to reconstruct \[XXX]
+            //
+            // If well-formed, then warn
+            //
             
-            tmpPolicy &= ~ENABLE_CHARACTER_DECODING_ISSUES;
+            auto longNameStartBuf = session->buffer;
+            auto longNameStartLoc = session->SrcLoc;
             
-            CharacterDecoder_handleLongName(session, resetBuf, resetLoc, tmpPolicy);
+            c = ByteDecoder_nextSourceCharacter(session, policy);
+            
+            auto wellFormed = false;
+            
+            if (c.isUpper()) {
+                
+                c = ByteDecoder_nextSourceCharacter(session, policy);
+                
+                while (true) {
+                    
+                    if (c.isAlphaOrDigit()) {
+                        
+                        c = ByteDecoder_nextSourceCharacter(session, policy);
+                        
+                        continue;
+                    }
+                    
+                    if (c.to_point() == ']') {
+                        wellFormed = true;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            if (wellFormed) {
+                
+                auto tmpPolicy = policy;
+                
+                tmpPolicy |= ENABLE_CHARACTER_DECODING_ISSUES;
+                
+                session->buffer = longNameStartBuf;
+                session->SrcLoc = longNameStartLoc;
+                
+                CharacterDecoder_handleLongName(session, resetBuf, resetLoc, tmpPolicy);
+            }
         }
         
         session->buffer = resetBuf;
@@ -1501,7 +1489,7 @@ WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buf
     
     auto escapedChar = ByteDecoder_currentSourceCharacter(session, policy);
     
-    ByteDecoder_nextSourceCharacter0(session, policy);
+    ByteDecoder_nextSourceCharacter(session, policy);
     
 #if CHECK_ISSUES
     //
@@ -1534,13 +1522,13 @@ WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buf
                     
                     alnumRun += curSource.to_point();
                     
-                    ByteDecoder_nextSourceCharacter0(session, policy);
+                    ByteDecoder_nextSourceCharacter(session, policy);
                     
                     curSource = ByteDecoder_currentSourceCharacter(session, policy);
                     
-                } else if (curSource == SourceCharacter(']')) {
+                } else if (curSource.to_point() == ']') {
                     
-                    ByteDecoder_nextSourceCharacter0(session, policy);
+                    ByteDecoder_nextSourceCharacter(session, policy);
                     
                     wellFormed = true;
                     
@@ -1706,35 +1694,35 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
     switch (curSource.to_point()) {
         case '[': {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
 //            MUSTTAIL
             return CharacterDecoder_handleLongName(session, escapedBuf, escapedLoc, policy);
         }
         case ':': {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
 //            MUSTTAIL
             return CharacterDecoder_handle4Hex(session, escapedBuf, escapedLoc, policy);
         }
         case '.': {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
 //            MUSTTAIL
             return CharacterDecoder_handle2Hex(session, escapedBuf, escapedLoc, policy);
         }
         case '|': {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
 //            MUSTTAIL
             return CharacterDecoder_handle6Hex(session, escapedBuf, escapedLoc, policy);
         }
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
 //            MUSTTAIL
             return CharacterDecoder_handleOctal(session, escapedBuf, escapedLoc, policy);
@@ -1750,7 +1738,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_StringMetaBackspaceCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
                         
@@ -1787,7 +1775,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_StringMetaFormFeedCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
             
@@ -1823,7 +1811,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_StringMetaLineFeedCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
         }
@@ -1837,7 +1825,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_StringMetaCarriageReturnCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
         }
@@ -1851,7 +1839,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_StringMetaTabCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
         }
@@ -1865,7 +1853,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxBangCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
         }
@@ -1875,7 +1863,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxPercentCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
         }
@@ -1885,7 +1873,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxAmpCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
         }
@@ -1895,7 +1883,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxOpenParenCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
         }
@@ -1905,7 +1893,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxCloseParenCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
         }
@@ -1915,7 +1903,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxStarCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
         }
@@ -1925,7 +1913,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxPlusCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
         }
@@ -1935,7 +1923,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxSlashCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
         }
@@ -1945,7 +1933,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxAtCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
         }
@@ -1955,7 +1943,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxCaretCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
         }
@@ -1965,7 +1953,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxUnderscoreCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
         }
@@ -1975,7 +1963,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxBacktickCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
         }
@@ -1985,7 +1973,7 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
             CharacterDecoder_LinearSyntaxSpaceCount++;
 #endif // DIAGNOSTICS
             
-            ByteDecoder_nextSourceCharacter0(session, policy);
+            ByteDecoder_nextSourceCharacter(session, policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
         }
@@ -2035,11 +2023,11 @@ std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::s
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET.Name, 1)) {
         assert(false);
     }
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION.Name, 1)) {
         assert(false);
     }
     

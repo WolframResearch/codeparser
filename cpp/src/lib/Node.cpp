@@ -5,8 +5,8 @@
 #include "ByteEncoder.h" // for ByteEncoder
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
-#include "Symbol.h"
-#include "MyString.h"
+#include "SymbolRegistration.h"
+#include "MyStringRegistration.h"
 #include "ParserSession.h"
 
 #if USE_EXPR_LIB
@@ -149,6 +149,14 @@ bool NodeSeq::check() const {
 
 
 TriviaSeq::TriviaSeq() : vec() {}
+
+std::vector<Token>::iterator TriviaSeq::begin() {
+    return vec.begin();
+}
+
+std::vector<Token>::iterator TriviaSeq::end() {
+    return vec.end();
+}
 
 void TriviaSeq::reset(ParserSessionPtr session) {
     
@@ -395,7 +403,7 @@ void SyntaxErrorNode::print(std::ostream& s) const {
     SYMBOL_CODEPARSER_SYNTAXERRORNODE.print(s);
     s << "[";
     
-    s << Err.name();
+    s << Err.Name;
     s << ", ";
         
     Children.print(s);
@@ -484,7 +492,6 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
     s << "[";
     
     for (auto& L : SourceLocs) {
-        
         L.print(s);
         s << ", ";
     }
@@ -561,7 +568,6 @@ void SafeStringNode::print(std::ostream& s) const {
 NodeContainer::NodeContainer(NodeSeq&& Nodes) : Nodes(Nodes) {}
 
 void NodeContainer::release() {
-    
     Nodes.release();
 }
 
@@ -579,7 +585,7 @@ void NodeSeq::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(vec.size()))) {
+    if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(vec.size()))) {
         assert(false);
     }
     
@@ -603,7 +609,7 @@ void OperatorNode::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, MakeSym.name(), 3)) {
+    if (!MLPutFunction(link, MakeSym.Name, 3)) {
         assert(false);
     }
     
@@ -611,7 +617,7 @@ void OperatorNode::put(ParserSessionPtr session) const {
     
     Children.put(session);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
@@ -632,7 +638,7 @@ void CallNode::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CALLNODE.name(), 3)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CALLNODE.Name, 3)) {
         assert(false);
     }
         
@@ -640,7 +646,7 @@ void CallNode::put(ParserSessionPtr session) const {
     
     std::visit(PutVisitor{session}, Body);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
@@ -654,7 +660,7 @@ void SyntaxErrorNode::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_SYNTAXERRORNODE.name(), 3)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_SYNTAXERRORNODE.Name, 3)) {
         assert(false);
     }
     
@@ -662,7 +668,7 @@ void SyntaxErrorNode::put(ParserSessionPtr session) const {
     
     Children.put(session);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
@@ -683,7 +689,7 @@ void CollectedIssuesNode::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(Issues.size()))) {
+    if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(Issues.size()))) {
         assert(false);
     }
     
@@ -699,7 +705,7 @@ void CollectedSourceLocationsNode::put(ParserSessionPtr session) const {
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_LIST.name(), static_cast<int>(SourceLocs.size()))) {
+    if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(SourceLocs.size()))) {
         assert(false);
     }
     
@@ -715,7 +721,7 @@ void MissingBecauseUnsafeCharacterEncodingNode::put(ParserSessionPtr session) co
     
     auto link = session->getMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_MISSING.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_MISSING.Name, 1)) {
         assert(false);
     }
     

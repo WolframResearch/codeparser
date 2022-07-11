@@ -1,10 +1,11 @@
 
 #include "Token.h"
 
-#include "Symbol.h"
+#include "SymbolRegistration.h"
 #include "ByteBuffer.h"
 #include "ByteDecoder.h"
 #include "ParserSession.h"
+#include "TokenEnumRegistration.h"
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -18,9 +19,6 @@
 #include <cassert>
 
 
-bool containsOnlyASCII(BufferAndLength BufLen);
-bool containsTab(BufferAndLength BufLen);
-
 Token::Token() : Src(), Buf(), Len(), Tok() {}
 
 Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(BufLen.Buf), Len(BufLen.length()), Tok(Tok) {
@@ -33,6 +31,9 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
     
     switch (Tok.value()) {
         case TOKEN_UNKNOWN.value(): {
+            
+            assert(false);
+            
             break;
         }
             //
@@ -53,7 +54,9 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
                        //
                        (BufLen.Buf[0] == '\\' && SourceCharacter(BufLen.Buf[1]).isNewline()));
             } else {
+                
                 assert(BufLen.length() > 0);
+                
                 //
                 // This is all just to do an assert.
                 // But it's a good assert because it catches problems.
@@ -69,18 +72,17 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
                     //
                     ;
                     
-                } else {
-                    if (Src.Start.first == Src.End.first) {
-                        if (Src.size() != BufLen.length()) {
-                            //
-                            // If the sizes do not match, then check if there are multi-byte characters
-                            // If there are multi-bytes characters, then it is too complicated to compare sizes
-                            //
-                            // Note that this also catches changes in character representation, e.g.,
-                            // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
-                            //
-                            assert(!containsOnlyASCII(BufLen) || containsTab(BufLen));
-                        }
+                } else if (Src.Start.first == Src.End.first) {
+                    
+                    if (Src.size() != BufLen.length()) {
+                        //
+                        // If the sizes do not match, then check if there are multi-byte characters
+                        // If there are multi-bytes characters, then it is too complicated to compare sizes
+                        //
+                        // Note that this also catches changes in character representation, e.g.,
+                        // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
+                        //
+                        assert(!BufLen.containsOnlyASCII() || BufLen.containsTab());
                     }
                 }
             }
@@ -89,37 +91,6 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
         }
     }
 #endif // NDEBUG
-    
-}
-
-bool containsOnlyASCII(BufferAndLength BufLen) {
-    
-    for (auto p = BufLen.Buf; p < BufLen.end(); p++) {
-        auto c = *p;
-        //
-        // Take care to cast to int before comparing
-        //
-        if ((static_cast<int>(c) & 0xff) >= 0x80) {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-bool containsTab(BufferAndLength BufLen) {
-    
-    for (auto p = BufLen.Buf; p < BufLen.end(); p++) {
-        auto c = *p;
-        //
-        // Take care to cast to int before comparing
-        //
-        if ((static_cast<int>(c) & 0xff) == 0x09) {
-            return true;
-        }
-    }
-    
-    return false;
 }
 
 BufferAndLength Token::bufLen() const {
@@ -130,14 +101,6 @@ Buffer Token::end() const {
     return Buf + Len;
 }
 
-bool operator==(Token a, Token b) {
-    return a.Tok == b.Tok && a.Buf == b.Buf && a.Len == b.Len && a.Src == b.Src;
-}
-
-bool operator!=(Token a, Token b) {
-    return a.Tok != b.Tok || a.Buf != b.Buf || a.Len != b.Len || a.Src != b.Src;
-}
-
 void Token::reset(ParserSessionPtr session) {
     
     //
@@ -146,8 +109,14 @@ void Token::reset(ParserSessionPtr session) {
     //
     
     session->buffer = Buf;
-    
     session->SrcLoc = Src.Start;
+}
+
+void Token::skip(ParserSessionPtr session) {
+    
+    session->buffer = end();
+    session->wasEOF = (Tok == TOKEN_ENDOFFILE);
+    session->SrcLoc = Src.End;
 }
 
 bool Token::check() const {
@@ -180,7 +149,7 @@ void Token::print(std::ostream& s) const {
     
     s << "[";
     
-    s << Sym.name();
+    s << Sym.Name;
     s << ", ";
     
     bufLen().print(s);
@@ -190,12 +159,15 @@ void Token::print(std::ostream& s) const {
     s << "]";
 }
 
+#if BUILD_TESTS
 //
 // For googletest
 //
 void PrintTo(const Token& T, std::ostream *s) {
     T.print(*s);
 }
+#endif // BUILD_TESTS
+
 
 #if USE_MATHLINK
 void Token::put(ParserSessionPtr session) const {
@@ -206,13 +178,13 @@ void Token::put(ParserSessionPtr session) const {
         
         if (Tok.isUnterminated()) {
             
-            if (!MLPutFunction(link, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.name(), 3)) {
+            if (!MLPutFunction(link, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.Name, 3)) {
                 assert(false);
             }
             
         } else {
             
-            if (!MLPutFunction(link, SYMBOL_CODEPARSER_ERRORNODE.name(), 3)) {
+            if (!MLPutFunction(link, SYMBOL_CODEPARSER_ERRORNODE.Name, 3)) {
                 assert(false);
             }
         }
@@ -223,7 +195,7 @@ void Token::put(ParserSessionPtr session) const {
         // These are Symbols, Strings, Integers, Reals, Rationals.
         //
         
-        if (!MLPutFunction(link, SYMBOL_CODEPARSER_LEAFNODE.name(), 3)) {
+        if (!MLPutFunction(link, SYMBOL_CODEPARSER_LEAFNODE.Name, 3)) {
             assert(false);
         }
     }
@@ -234,7 +206,7 @@ void Token::put(ParserSessionPtr session) const {
 
     bufLen().put(session);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
