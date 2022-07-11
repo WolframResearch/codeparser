@@ -333,6 +333,8 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
     }
     
     assert(false);
+    
+    return s;
 }
 
 std::string WLCharacter::graphicalString() const {

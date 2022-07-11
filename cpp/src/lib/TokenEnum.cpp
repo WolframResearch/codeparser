@@ -3,6 +3,8 @@
 
 #include "TokenEnumRegistration.h"
 
+#include <cassert>
+
 
 bool operator==(TokenEnum a, TokenEnum b) {
 	return a.T == b.T;

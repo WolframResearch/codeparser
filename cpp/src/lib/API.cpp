@@ -10,6 +10,8 @@
 #include "WolframNumericArrayLibrary.h"
 #endif // USE_EXPR_LIB
 
+#include <cstdio> // for fopen
+
 
 ParserSessionPtr CreateParserSession() {
     return new ParserSession();
