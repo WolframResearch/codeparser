@@ -661,7 +661,7 @@ void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, T
     
     return InfixOperatorParselet_parseLoop(session, P, TokIn/*ignored*/);
 #else
-    auto& Ctxt = Parser_topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(!Ctxt.F);
     assert(!Ctxt.P);
     Ctxt.F = InfixOperatorParselet_parseLoop;
@@ -670,7 +670,7 @@ void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, T
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok2);
+    return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -745,14 +745,14 @@ void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, To
     
     } // while (true)
 #else
-    auto& Ctxt = Parser_topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == InfixOperatorParselet_parseLoop);
     assert(Ctxt.P == P);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok2);
+    return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -852,7 +852,7 @@ void GroupParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token To
     Ctxt.P = P;
     
     MUSTTAIL
-    return GroupParselet_parseLoop(P, TokIn/*Ignored*/);
+    return GroupParselet_parseLoop(session, P, TokIn/*Ignored*/);
 #endif // !USE_MUSTTAIL
 }
 
@@ -941,7 +941,7 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
         continue;
 #else
         MUSTTAIL
-        return PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, Tok);
+        return PrefixToplevelCloserParselet_parsePrefix(session, prefixToplevelCloserParselet, Tok);
 #endif
     }
 
@@ -973,14 +973,14 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
     
     } // while (true)
 #else
-    auto& Ctxt = Parser_topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == GroupParselet_parseLoop);
     assert(Ctxt.P == P);
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok);
+    return (P2->parsePrefix())(session, P2, Tok);
 #endif // !USE_MUSTTAIL
 }
 
@@ -1751,12 +1751,12 @@ void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
         
         return CommaParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-        auto& Ctxt = Parser_topContext();
+        auto& Ctxt = Parser_topContext(session);
         assert(!Ctxt.F);
         Ctxt.F = CommaParselet_parseLoop;
         
         MUSTTAIL
-        return CommaParselet_parseLoop(Ignored, TokIn/*ignored*/);
+        return CommaParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #endif // !USE_MUSTTAIL
     }
     
@@ -1771,14 +1771,14 @@ void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     return CommaParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-    auto& Ctxt = Parser_topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(!Ctxt.F);
     Ctxt.F = CommaParselet_parseLoop;
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok2);
+    return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -1835,7 +1835,7 @@ void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
         continue;
 #else
         MUSTTAIL
-        return CommaParselet_parseLoop(Ignored, Ignored2);
+        return CommaParselet_parseLoop(session, Ignored, Ignored2);
 #endif // !USE_MUSTTAIL
     }
         
@@ -1849,13 +1849,13 @@ void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
         
     } // while (true)
 #else
-    auto& Ctxt = Parser_topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == CommaParselet_parseLoop);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok2);
+    return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -1930,12 +1930,12 @@ void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Toke
         
         return SemiParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-        auto& Ctxt = Parser_topContext();
+        auto& Ctxt = Parser_topContext(session);
         assert(!Ctxt.F);
         Ctxt.F = SemiParselet_parseLoop;
         
         MUSTTAIL
-        return SemiParselet_parseLoop(Ignored, TokIn/*ignored*/);
+        return SemiParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #endif // !USE_MUSTTAIL
     }
     
@@ -1956,14 +1956,14 @@ void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Toke
         
         return SemiParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-        auto& Ctxt = Parser_topContext();
+        auto& Ctxt = Parser_topContext(session);
         assert(!Ctxt.F);
         Ctxt.F = SemiParselet_parseLoop;
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
         MUSTTAIL
-        return (P2->parsePrefix())(P2, Tok2);
+        return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
     }
     
@@ -2047,7 +2047,7 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
         continue;
 #else
         MUSTTAIL
-        return SemiParselet_parseLoop(Ignored, Ignored2);
+        return SemiParselet_parseLoop(session, Ignored, Ignored2);
 #endif // !USE_MUSTTAIL
     }
     
@@ -2067,13 +2067,13 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
         
         continue;
 #else
-        auto& Ctxt = Parser_topContext();
+        auto& Ctxt = Parser_topContext(session);
         assert(Ctxt.F == SemiParselet_parseLoop);
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
         MUSTTAIL
-        return (P2->parsePrefix())(P2, Tok2);
+        return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
     }
 
@@ -2190,7 +2190,7 @@ void ColonColonParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored,
     } // while (true)
 #else
     MUSTTAIL
-    return ColonColonParselet_parseLoop(Ignored, Ignored2);
+    return ColonColonParselet_parseLoop(session, Ignored, Ignored2);
 #endif // !USE_MUSTTAIL
 }
 

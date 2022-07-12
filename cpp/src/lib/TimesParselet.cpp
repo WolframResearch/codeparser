@@ -57,14 +57,14 @@ void TimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     return TimesParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(!Ctxt.F);
     Ctxt.F = TimesParselet_parseLoop;
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok2);
+    return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -151,13 +151,13 @@ void TimesParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     
     } // while (true)
 #else
-    auto& Ctxt = TheParser->topContext();
+    auto& Ctxt = Parser_topContext(session);
     assert(Ctxt.F == TimesParselet_parseLoop);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(P2, Tok2);
+    return (P2->parsePrefix())(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
