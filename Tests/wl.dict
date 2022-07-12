@@ -125,6 +125,9 @@ real_accuracy="``"
 unhandled_backslash="\\"
 string_quote="\""
 
+#
+# Punctuation characters
+#
 Token_LongName_Not="\\[Not]"
 Token_LongName_PlusMinus="\\[PlusMinus]"
 Token_LongName_CenterDot="\\[CenterDot]"
@@ -429,3 +432,4 @@ Token_LongName_DifferentialD="\\[DifferentialD]"
 Token_LongName_InvisibleComma="\\[InvisibleComma]"
 Token_LongName_InvisibleApplication="\\[InvisibleApplication]"
 Token_LongName_LongEqual="\\[LongEqual]"
+Token_LongName_Application="\\[Application]"
