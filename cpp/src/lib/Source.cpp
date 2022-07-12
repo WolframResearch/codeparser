@@ -421,6 +421,10 @@ std::string SourceCharacter::safeAndGraphicalString() const {
     return String.str();
 }
 
+bool operator==(SourceCharacter a, SourceCharacter b) {
+    return a.val == b.val;
+}
+
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     auto graphicalFlag = stream.iword(get_graphical_i()) == 1;

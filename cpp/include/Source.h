@@ -201,6 +201,11 @@ struct SourceCharacter {
 
 static_assert(sizeof(SourceCharacter) == 4, "Check your assumptions");
 
+//
+// Used by GTest
+//
+bool operator==(SourceCharacter a, SourceCharacter b);
+
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 
 //

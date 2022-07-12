@@ -21,11 +21,11 @@ void DestroyParserSession(ParserSessionPtr session) {
     delete session;
 }
 
-void ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
+int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
     
     BufferAndLength bufAndLen = BufferAndLength(buf, bufLen);
     
-    session->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    return session->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
 }
 
 void ParserSessionDeinit(ParserSessionPtr session) {
@@ -48,11 +48,8 @@ NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session) {
     return session->safeString();
 }
 
-void ReleaseNodeContainer(NodeContainerPtr C) {
-    
-    C->release();
-    
-    delete C;
+void ParserSessionReleaseNodeContainer(ParserSessionPtr session, NodeContainerPtr C) {
+    session->releaseNodeContainer(C);
 }
 
 
@@ -221,7 +218,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
 
     auto e = NodeContainerToExpr(session, C);
 
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
 
     ParserSessionDeinit(session);
     
@@ -295,7 +292,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK l
     
     NodeContainerPut(session, C);
     
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
     
     ParserSessionDeinit(session);
     
@@ -335,7 +332,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
 
     auto e = NodeContainerToExpr(session, C);
 
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
 
     ParserSessionDeinit(session);
     
@@ -409,7 +406,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     NodeContainerPut(session, C);
     
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
     
     ParserSessionDeinit(session);
     
@@ -454,7 +451,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
 
     auto e = NodeContainerToExpr(session, C);
 
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
 
     ParserSessionDeinit(session);
     
@@ -546,7 +543,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     NodeContainerPut(session, C);
     
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
     
     ParserSessionDeinit(session);
     
@@ -577,7 +574,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
 
     auto e = NodeContainerToExpr(session, C);
 
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
 
     ParserSessionDeinit(session);
     
@@ -632,7 +629,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
     
     NodeContainerPut(session, C);
     
-    ReleaseNodeContainer(C);
+    ParserSessionReleaseNodeContainer(session, C);
     
     ParserSessionDeinit(session);
     

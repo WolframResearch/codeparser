@@ -115,14 +115,14 @@ enum UnsafeCharacterEncodingFlag {
 EXTERN_C DLLEXPORT ParserSessionPtr CreateParserSession();
 EXTERN_C DLLEXPORT void DestroyParserSession(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT void ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
+EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
 EXTERN_C DLLEXPORT void ParserSessionDeinit(ParserSessionPtr session);
 
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions(ParserSessionPtr session);
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionTokenize(ParserSessionPtr session);
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode);
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session);
-EXTERN_C DLLEXPORT void ReleaseNodeContainer(NodeContainerPtr C);
+EXTERN_C DLLEXPORT void ParserSessionReleaseNodeContainer(ParserSessionPtr session, NodeContainerPtr C);
 
 EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainerPtr C);
 

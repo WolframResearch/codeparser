@@ -21,6 +21,9 @@ using NodePtr = Node *;
 using NodeVariant = std::variant<NodePtr, Token>;
 
 
+constexpr int PARSERSESSIONINIT_OK = 1;
+constexpr int PARSERSESSIONINIT_ERROR = 1;
+
 //
 // A parser session
 //
@@ -43,8 +46,6 @@ public:
     SourceConventionManagerPtr srcConventionManager;
     SourceLocation SrcLoc;
     
-private:
-    
     IssuePtrSet fatalIssues;
     IssuePtrSet nonFatalIssues;
     
@@ -52,8 +53,6 @@ private:
     std::set<SourceLocation> ComplexLineContinuations;
     std::set<SourceLocation> EmbeddedNewlines;
     std::set<SourceLocation> EmbeddedTabs;
-    
-public:
     
     std::vector<NodeVariant> NodeStack;
     std::vector<Context> ContextStack;
@@ -70,7 +69,7 @@ public:
     
     ParserSession();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
+    int init(BufferAndLength bufAndLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
     
     void deinit();
     
@@ -80,6 +79,8 @@ public:
     NodeContainerPtr tokenize();
     NodeContainerPtr concreteParseLeaf(StringifyMode mode);
     NodeContainerPtr safeString();
+    
+    void releaseNodeContainer(NodeContainerPtr C);
     
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
     

@@ -20,13 +20,7 @@ bool validatePath(WolframLibraryData libData, Buffer inStr);
 
 ParserSession::ParserSession() : start(), end(), wasEOF(), buffer(), libData(), srcConvention(), tabWidth(), firstLineBehavior(), encodingMode(), unsafeCharacterEncodingFlag(), srcConventionManager(), SrcLoc(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
 
-void ParserSession::init(
-    BufferAndLength bufAndLenIn,
-    WolframLibraryData libDataIn,
-    SourceConvention srcConventionIn,
-    uint32_t tabWidthIn,
-    FirstLineBehavior firstLineBehaviorIn,
-    EncodingMode encodingModeIn) {
+int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn, SourceConvention srcConventionIn, uint32_t tabWidthIn, FirstLineBehavior firstLineBehaviorIn, EncodingMode encodingModeIn) {
     
     start = bufAndLenIn.Buf;
     end = bufAndLenIn.end();
@@ -56,10 +50,7 @@ void ParserSession::init(
             break;
         }
         default: {
-            
-            assert(false);
-            
-            break;
+            return PARSERSESSIONINIT_ERROR;
         }
     }
     
@@ -82,6 +73,8 @@ void ParserSession::init(
     trivia2.clear();
     
     Parser_handleFirstLine(this);
+    
+    return PARSERSESSIONINIT_OK;
 }
 
 void ParserSession::deinit() {
@@ -343,6 +336,13 @@ NodeContainerPtr ParserSession::safeString() {
     }
     
     return new NodeContainer(std::move(nodes));
+}
+
+void ParserSession::releaseNodeContainer(NodeContainerPtr C) {
+    
+    C->release();
+    
+    delete C;
 }
 
 bool ParserSession::abortQ() const {

@@ -146,7 +146,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 }
             }
             
-            ReleaseNodeContainer(C);
+            ParserSessionReleaseNodeContainer(session, C);
             
             ParserSessionDeinit(session);
             
@@ -185,7 +185,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 }
             }
             
-            ReleaseNodeContainer(C);
+            ParserSessionReleaseNodeContainer(session, C);
             
             ParserSessionDeinit(session);
             
@@ -237,7 +237,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 }
             }
             
-            ReleaseNodeContainer(C);
+            ParserSessionReleaseNodeContainer(session, C);
             
             ParserSessionDeinit(session);
             
@@ -313,7 +313,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             }
         }
         
-        ReleaseNodeContainer(C);
+        ParserSessionReleaseNodeContainer(session, C);
         
         ParserSessionDeinit(session);
         
@@ -353,7 +353,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             }
         }
         
-        ReleaseNodeContainer(C);
+        ParserSessionReleaseNodeContainer(session, C);
         
         ParserSessionDeinit(session);
         
@@ -399,7 +399,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             }
         }
         
-        ReleaseNodeContainer(C);
+        ParserSessionReleaseNodeContainer(session, C);
         
         ParserSessionDeinit(session);
         
