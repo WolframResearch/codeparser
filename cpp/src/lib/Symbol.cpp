@@ -17,30 +17,30 @@
 
 
 bool operator==(Symbol a, Symbol b) {
-  return a.Id == b.Id;
+    return a.Id == b.Id;
 }
 
 bool operator!=(Symbol a, Symbol b) {
-  return a.Id != b.Id;
+    return a.Id != b.Id;
 }
 
 void Symbol::print(std::ostream& s) const {
-  s << Name;
+    s << Name;
 }
 
 #if USE_MATHLINK
 void Symbol::put(ParserSessionPtr session) const {
 
-  auto link = session->getMathLink();
+    auto link = session->getMathLink();
 
-  if (!MLPutSymbol(link, Name)) {
-    assert(false);
-  }
+    if (!MLPutSymbol(link, Name)) {
+        assert(false);
+    }
 }
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
 expr Symbol::toExpr(ParserSessionPtr session) const {
-  return Expr_MEncodedStringToSymbolExpr(Name);
+    return Expr_MEncodedStringToSymbolExpr(Name);
 }
 #endif // USE_EXPR_LIB
