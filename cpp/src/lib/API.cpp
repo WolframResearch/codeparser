@@ -124,7 +124,7 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK 
         assert(false);
     }
 #elif SIZEOF_VOID_P == 4
-    if (!MLPutInteger32(link, reinterpret_cast<mlint32>(session))) {
+    if (!MLPutInteger32(link, reinterpret_cast<int>(session))) {
         assert(false);
     }
 #endif // SIZEOF_VOID_P == 8
@@ -177,7 +177,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
         return LIBRARY_FUNCTION_ERROR;
     }
 #elif SIZEOF_VOID_P == 4
-    mlint32 mlSession;
+    int mlSession;
     if (!MLGetInteger32(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -260,7 +260,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK l
         return LIBRARY_FUNCTION_ERROR;
     }
 #elif SIZEOF_VOID_P == 4
-    mlint32 mlSession;
+    int mlSession;
     if (!MLGetInteger32(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -381,7 +381,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
 #elif SIZEOF_VOID_P == 4
-    mlint32 mlSession;
+    int mlSession;
     if (!MLGetInteger32(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -509,7 +509,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
 #elif SIZEOF_VOID_P == 4
-    mlint32 mlSession;
+    int mlSession;
     if (!MLGetInteger32(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -637,7 +637,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
 #elif SIZEOF_VOID_P == 4
-    mlint32 mlSession;
+    int mlSession;
     if (!MLGetInteger32(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
