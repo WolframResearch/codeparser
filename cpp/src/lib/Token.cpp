@@ -101,6 +101,10 @@ Buffer Token::end() const {
     return Buf + Len;
 }
 
+bool operator==(Token a, Token b) {
+    return a.Tok == b.Tok && a.Buf == b.Buf && a.Len == b.Len && a.Src == b.Src;
+}
+
 void Token::reset(ParserSessionPtr session) {
     
     //

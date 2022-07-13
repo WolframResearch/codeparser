@@ -218,6 +218,10 @@ SourceLocation::SourceLocation() : first(0), second(0) {}
 
 SourceLocation::SourceLocation(uint32_t first, uint32_t second) : first(first), second(second) {}
 
+bool operator==(SourceLocation a, SourceLocation b) {
+    return a.first == b.first && a.second == b.second;
+}
+
 bool operator<(SourceLocation a, SourceLocation b) {
     
     if (a.first < b.first) {
@@ -300,6 +304,10 @@ Source::Source(SourceLocation start, SourceLocation end) : Start(start), End(end
 
 Source::Source(Source start, Source end) : Start(start.Start), End(end.End) {
     assert(Start <= End);
+}
+
+bool operator==(Source a, Source b) {
+    return a.Start == b.Start && a.End == b.End;
 }
 
 bool operator<(Source a, Source b) {

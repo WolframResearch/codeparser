@@ -98,6 +98,21 @@ WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, NextPolic
     return CharacterDecoderHandlerTable[point](session, escapedBuf, escapedLoc, policy);
 }
 
+WLCharacter CharacterDecoder_currentWLCharacter(ParserSessionPtr session, NextPolicy policy) {
+    
+    auto resetBuf = session->buffer;
+    auto resetEOF = session->wasEOF;
+    auto resetLoc = session->SrcLoc;
+    
+    auto c = CharacterDecoder_nextWLCharacter(session, policy);
+    
+    session->buffer = resetBuf;
+    session->wasEOF = resetEOF;
+    session->SrcLoc = resetLoc;
+    
+    return c;
+}
+
 WLCharacter CharacterDecoder_handleStringMetaDoubleQuote(ParserSessionPtr session, Buffer Ignored1, SourceLocation Ignored2, NextPolicy policy) {
 #if DIAGNOSTICS
     CharacterDecoder_StringMetaDoubleQuoteCount++;

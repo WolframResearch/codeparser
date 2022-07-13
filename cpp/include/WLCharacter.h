@@ -49,6 +49,12 @@ struct WLCharacter {
     
     explicit operator int() const noexcept = delete;
     
+    constexpr bool operator==(const WLCharacter& o) const {
+        return valBits == o.valBits &&
+            signBit == o.signBit &&
+            escapeBits == o.escapeBits;
+    }
+    
     constexpr codepoint to_point() const {
         //
         // Sign extend the value

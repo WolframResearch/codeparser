@@ -259,6 +259,7 @@ struct SourceLocation {
 
 static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
 
+bool operator==(SourceLocation a, SourceLocation b);
 //
 // For LineContinuations and EmbeddedNewlines
 //
@@ -300,6 +301,7 @@ struct Source {
 
 static_assert(sizeof(Source) == 16, "Check your assumptions");
 
+bool operator==(Source a, Source b);
 bool operator<(Source a, Source b);
 
 #if BUILD_TESTS

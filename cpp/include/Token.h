@@ -51,6 +51,8 @@ struct Token {
 static_assert((SIZEOF_VOID_P == 8 && sizeof(Token) == 32) || (SIZEOF_VOID_P == 4), "Check your assumptions");
 #endif // #ifdef __clang__
 
+bool operator==(Token a, Token b);
+
 #if BUILD_TESTS
 //
 // For googletest

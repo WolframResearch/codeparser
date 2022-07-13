@@ -17,6 +17,7 @@ using ParserSessionPtr = ParserSession *;
 //
 
 WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, NextPolicy policy);
+WLCharacter CharacterDecoder_currentWLCharacter(ParserSessionPtr session, NextPolicy policy);
 
 WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy);
 WLCharacter CharacterDecoder_handle2Hex(ParserSessionPtr session, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy);

@@ -410,6 +410,13 @@ NodeVariant Parser_popNode(ParserSessionPtr session) {
     return top;
 }
 
+NodeVariant& Parser_topNode(ParserSessionPtr session) {
+    
+    assert(!session->NodeStack.empty());
+    
+    return session->NodeStack.back();
+}
+
 void Parser_pushGroup(ParserSessionPtr session, Closer Closr) {
     session->GroupStack.push_back(Closr);
 }

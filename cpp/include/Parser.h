@@ -62,6 +62,7 @@ void Parser_pushLeafAndNext(ParserSessionPtr session, Token Tok);
 void Parser_pushTriviaSeq(ParserSessionPtr session, TriviaSeq& T);
 void Parser_pushNode(ParserSessionPtr session, Node *N);
 NodeVariant Parser_popNode(ParserSessionPtr session);
+NodeVariant& Parser_topNode(ParserSessionPtr session);
 
 void Parser_pushGroup(ParserSessionPtr session, Closer Closr);
 void Parser_popGroup(ParserSessionPtr session);
