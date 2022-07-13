@@ -57,91 +57,48 @@ std::array<HandlerFunction, 128> CharacterDecoderHandlerTable = {
 //                   buffer
 // return \[Alpha]
 //
-WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, NextPolicy policy) {
     
     auto curSource = ByteDecoder_nextSourceCharacter(session, policy);
     
-    if (curSource.to_point() != '\\') {
+    auto point = curSource.to_point();
+    
+    if (point != '\\') {
         
 #if DIAGNOSTICS
         CharacterDecoder_UnescapedCount++;
 #endif // DIAGNOSTICS
         
-        return WLCharacter(curSource.to_point());
+        return WLCharacter(point);
     }
     
     //
     // Handle \
     //
-    // handle escapes like line continuation and special characters
+    // handle escapes like special characters
+    //
+        
+    //
+    // There was a \
     //
     
-    while (true) {
+    auto escapedBuf = session->buffer;
+    auto escapedLoc = session->SrcLoc;
+    
+    curSource = ByteDecoder_currentSourceCharacter(session, policy);
+    
+    point = curSource.to_point();
+    
+    if (!(0x20 <= point && point <= 0x7e)) {
         
-        //
-        // There was a \
-        //
-        
-        auto escapedBuf = session->buffer;
-        auto escapedLoc = session->SrcLoc;
-        
-        curSource = ByteDecoder_currentSourceCharacter(session, policy);
-        
-        auto point = curSource.to_point();
-        
-        if (!(0x20 <= point && point <= 0x7e)) {
-            
-            switch (point) {
-                case '\n':
-                case '\r':
-                case CODEPOINT_CRLF: {
-                    
-                    ByteDecoder_nextSourceCharacter(session, policy);
-
-                    curSource = CharacterDecoder_handleLineContinuation(session, tokenStartBuf, tokenStartLoc, policy);
-
-                    if (curSource.to_point() != '\\') {
-
-                        return WLCharacter(curSource.to_point());
-                    }
-
-                    //
-                    // Do not return
-                    // loop around again
-                    //
-                    continue;
-                }
-            }
-            
 //            MUSTTAIL
-            return CharacterDecoder_handleUncommon(session, escapedBuf, escapedLoc, policy);
-        }
-        
-        return CharacterDecoderHandlerTable[point](session, escapedBuf, escapedLoc, policy);
-        
-    } // while (true)
+        return CharacterDecoder_handleUncommon(session, escapedBuf, escapedLoc, policy);
+    }
+    
+    return CharacterDecoderHandlerTable[point](session, escapedBuf, escapedLoc, policy);
 }
 
-//
-// Postcondition: lastBuf is set to the last value of buffer
-// Postcondition: lastLoc is set to the last value of SrcLoc
-//
-WLCharacter CharacterDecoder_currentWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
-    
-    auto resetBuf = session->buffer;
-    auto resetEOF = session->wasEOF;
-    auto resetLoc = session->SrcLoc;
-    
-    auto c = CharacterDecoder_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
-    
-    session->buffer = resetBuf;
-    session->wasEOF = resetEOF;
-    session->SrcLoc = resetLoc;
-    
-    return c;
-}
-
-WLCharacter CharacterDecoder_handleStringMetaDoubleQuote(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleStringMetaDoubleQuote(ParserSessionPtr session, Buffer Ignored1, SourceLocation Ignored2, NextPolicy policy) {
 #if DIAGNOSTICS
     CharacterDecoder_StringMetaDoubleQuoteCount++;
 #endif // DIAGNOSTICS
@@ -225,7 +182,7 @@ WLCharacter CharacterDecoder_handleStringMetaClose(ParserSessionPtr session, Buf
     return c;
 }
 
-WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session, Buffer Ignored1, SourceLocation Ignored2, NextPolicy policy) {
 #if DIAGNOSTICS
     CharacterDecoder_StringMetaBackslashCount++;
 #endif // DIAGNOSTICS
@@ -233,7 +190,7 @@ WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session,
     ByteDecoder_nextSourceCharacter(session, policy);
     
 //    MUSTTAIL
-    return CharacterDecoder_handleBackslash(session, escapedBuf, escapedLoc, policy);
+    return CharacterDecoder_handleBackslash(session, policy);
 }
 
 WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
@@ -1339,72 +1296,7 @@ WLCharacter CharacterDecoder_handle6Hex(ParserSessionPtr session, Buffer barBuf,
 }
 
 
-//
-// Handling line continuations belongs in some layer strictly above CharacterDecoder and below Tokenizer.
-//
-// Some middle layer that deals with "parts" of a token.
-//
-SourceCharacter CharacterDecoder_handleLineContinuation(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
-    
-    //
-    // nothing to assert here
-    //
-    
-#if DIAGNOSTICS
-    CharacterDecoder_LineContinuationCount++;
-#endif // DIAGNOSTICS
-    
-    auto c = ByteDecoder_currentSourceCharacter(session, policy);
-    
-    //
-    // Even though strings preserve the whitespace after a line continuation, and
-    // e.g., integers do NOT preserve the whitespace after a line continuation,
-    // we do not need to worry about that here.
-    //
-    // There are no choices to be made here.
-    // All whitespace after a line continuation can be ignored for the purposes of tokenization
-    //
-    while (c.isWhitespace()) {
-        
-#if COMPUTE_OOB
-        if (c.to_point() == '\t') {
-            if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
-                
-                //
-                // It is possible to have e.g.:
-                //
-                //"a\
-                //<tab>b"
-                //
-                // where the embedded tab gets consumed by the whitespace loop after the line continuation.
-                //
-                // Must still count the embedded tab
-                
-                session->addEmbeddedTab(tokenStartLoc);
-            }
-        }
-#endif // COMPUTE_OOB
-        
-        ByteDecoder_nextSourceCharacter(session, policy);
-        
-        c = ByteDecoder_currentSourceCharacter(session, policy);
-    }
-    
-#if COMPUTE_OOB
-    if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
-        session->addComplexLineContinuation(tokenStartLoc);
-    } else {
-        session->addSimpleLineContinuation(tokenStartLoc);
-    }
-#endif // COMPUTE_OOB
-    
-    ByteDecoder_nextSourceCharacter(session, policy);
-    
-    return c;
-}
-
-
-WLCharacter CharacterDecoder_handleBackslash(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder_handleBackslash(ParserSessionPtr session, NextPolicy policy) {
     
 #if CHECK_ISSUES
     //
@@ -1547,8 +1439,11 @@ WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buf
             }
             
             auto wellFormedAndFound = false;
+            
             if (wellFormed) {
+                
                 auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), alnumRun);
+                
                 wellFormedAndFound = (it != LongNameToCodePointMap_names.end() && *it == alnumRun);
             }
             
@@ -1618,7 +1513,7 @@ WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buf
             // Do not know what a good suggestion would be for \<EOF>
             //
             
-        } else if (escapedChar.to_point() == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || escapedChar.to_point() == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || escapedChar.to_point() == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
+        } else if (escapedChar.isMBUnsafeUTF8Sequence()) {
             
             //
             // Do not know what a good suggestion would be for \<0xa9>
@@ -1692,6 +1587,24 @@ WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer esc
     auto curSource = ByteDecoder_currentSourceCharacter(session, policy);
     
     switch (curSource.to_point()) {
+        case '\n': {
+            
+            ByteDecoder_nextSourceCharacter(session, policy);
+            
+            return WLCharacter(CODEPOINT_LINECONTINUATION_LINEFEED, ESCAPE_SINGLE);
+        }
+        case '\r': {
+            
+            ByteDecoder_nextSourceCharacter(session, policy);
+            
+            return WLCharacter(CODEPOINT_LINECONTINUATION_CARRIAGERETURN, ESCAPE_SINGLE);
+        }
+        case CODEPOINT_CRLF: {
+            
+            ByteDecoder_nextSourceCharacter(session, policy);
+            
+            return WLCharacter(CODEPOINT_LINECONTINUATION_CRLF, ESCAPE_SINGLE);
+        }
         case '[': {
             
             ByteDecoder_nextSourceCharacter(session, policy);

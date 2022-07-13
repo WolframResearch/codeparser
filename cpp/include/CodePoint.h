@@ -103,5 +103,9 @@ constexpr codepoint CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE(-14);
 constexpr codepoint CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE(-15);
 constexpr codepoint CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE(-16);
 
+constexpr codepoint CODEPOINT_LINECONTINUATION_LINEFEED(-17);
+constexpr codepoint CODEPOINT_LINECONTINUATION_CARRIAGERETURN(-18);
+constexpr codepoint CODEPOINT_LINECONTINUATION_CRLF(-19);
+
 TokenEnum LongNameCodePointToOperator(codepoint c);
 codepoint LongNameOperatorToCodePoint(TokenEnum t);

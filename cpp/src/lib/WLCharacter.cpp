@@ -94,6 +94,25 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
                     
                     return s;
                 }
+                case CODEPOINT_LINECONTINUATION_LINEFEED: {
+                    
+                    s << SourceCharacter('\n');
+                    
+                    return s;
+                }
+                case CODEPOINT_LINECONTINUATION_CARRIAGERETURN: {
+                    
+                    s << SourceCharacter('\r');
+                    
+                    return s;
+                }
+                case CODEPOINT_LINECONTINUATION_CRLF: {
+                    
+                    s << SourceCharacter('\r');
+                    s << SourceCharacter('\n');
+                    
+                    return s;
+                }
                 case CODEPOINT_LINEARSYNTAX_BANG: {
                     
                     s << SourceCharacter('!');
@@ -415,6 +434,19 @@ bool WLCharacter::isStrangeLetterlike() const {
     return false;
 }
 
+bool WLCharacter::isWhitespace() const {
+    
+    auto val = to_point();
+    
+    switch (val) {
+        case ' ': case '\t': case '\v': case '\f': {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 bool WLCharacter::isStrangeWhitespace() const {
     
     auto val = to_point();
@@ -612,6 +644,10 @@ bool WLCharacter::isMBLetterlike() const {
         return false;
     }
     
+    if (isMBLineContinuation()) {
+        return false;
+    }
+    
     if (isMBLinearSyntax()) {
         return false;
     }
@@ -632,7 +668,7 @@ bool WLCharacter::isMBLetterlike() const {
         return false;
     }
     
-    if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
+    if (isMBUnsafeUTF8Sequence()) {
         return false;
     }
     
@@ -737,6 +773,36 @@ bool WLCharacter::isMBUninterpretable() const {
     auto val = to_point();
     
     return LongNames::isMBUninterpretable(val);
+}
+
+bool WLCharacter::isMBLineContinuation() const {
+    
+    auto val = to_point();
+    
+    switch (val) {
+        case CODEPOINT_LINECONTINUATION_LINEFEED:
+        case CODEPOINT_LINECONTINUATION_CARRIAGERETURN:
+        case CODEPOINT_LINECONTINUATION_CRLF: {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+bool WLCharacter::isMBUnsafeUTF8Sequence() const {
+    
+    auto val = to_point();
+    
+    switch (val) {
+        case CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE: {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 char fromDigitLookup[] = {

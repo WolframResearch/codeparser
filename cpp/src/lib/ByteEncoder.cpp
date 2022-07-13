@@ -49,28 +49,31 @@ size_t ByteEncoder::size(codepoint val) {
 
 void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderState *state) {
     
-    if (val == CODEPOINT_CRLF) {
-        
-        stream.put('\r');
-        stream.put('\n');
-        
-        return;
-    }
-    
-    //
-    // e.g., GTest was trying to print
-    //
-    if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
-        
+    switch (val) {
+        case CODEPOINT_CRLF: {
+            
+            stream.put('\r');
+            stream.put('\n');
+            
+            return;
+        }
         //
-        // Print U+FFFD (REPLACEMENT CHARACTER)
+        // e.g., GTest was trying to print
         //
-        
-        stream.put('\xef');
-        stream.put('\xbf');
-        stream.put('\xbd');
-        
-        return;
+        case CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE: {
+            
+            //
+            // Print U+FFFD (REPLACEMENT CHARACTER)
+            //
+            
+            stream.put('\xef');
+            stream.put('\xbf');
+            stream.put('\xbd');
+            
+            return;
+        }
     }
     
     assert(val >= 0);
@@ -142,28 +145,31 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
 
 void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, ByteEncoderState *state) {
     
-    if (val == CODEPOINT_CRLF) {
-        
-        arr[0] = '\r';
-        arr[1] = '\n';
-        
-        return;
-    }
-    
-    //
-    // e.g., GTest was trying to print
-    //
-    if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
-        
+    switch (val) {
+        case CODEPOINT_CRLF: {
+            
+            arr[0] = '\r';
+            arr[1] = '\n';
+            
+            return;
+        }
         //
-        // Print U+FFFD (REPLACEMENT CHARACTER)
+        // e.g., GTest was trying to print
         //
-        
-        arr[0] = '\xef';
-        arr[1] = '\xbf';
-        arr[2] = '\xbd';
-        
-        return;
+        case CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE: {
+            
+            //
+            // Print U+FFFD (REPLACEMENT CHARACTER)
+            //
+            
+            arr[0] = '\xef';
+            arr[1] = '\xbf';
+            arr[2] = '\xbd';
+            
+            return;
+        }
     }
     
     assert(val >= 0);

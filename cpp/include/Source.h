@@ -197,6 +197,7 @@ struct SourceCharacter {
     
     bool isMBWhitespace() const;
     bool isMBNewline() const;
+    bool isMBUnsafeUTF8Sequence() const;
 };
 
 static_assert(sizeof(SourceCharacter) == 4, "Check your assumptions");

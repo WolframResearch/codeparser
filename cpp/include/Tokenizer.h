@@ -47,6 +47,9 @@ Token Tokenizer_currentToken(ParserSessionPtr session, NextPolicy policy);
 Token Tokenizer_currentToken_stringifyAsTag(ParserSessionPtr session);
 Token Tokenizer_currentToken_stringifyAsFile(ParserSessionPtr session);
 
+WLCharacter Tokenizer_nextWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
+WLCharacter Tokenizer_currentWLCharacter(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
+
 Token Tokenizer_handleColon(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
 Token Tokenizer_handleOpenParen(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
 Token Tokenizer_handleDot(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);

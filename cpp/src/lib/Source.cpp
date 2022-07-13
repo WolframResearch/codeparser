@@ -403,6 +403,19 @@ bool SourceCharacter::isMBWhitespace() const {
     return LongNames::isMBWhitespace(val);
 }
 
+bool SourceCharacter::isMBUnsafeUTF8Sequence() const {
+    
+    switch (val) {
+        case CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE: {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 std::string SourceCharacter::graphicalString() const {
     
     std::ostringstream String;
