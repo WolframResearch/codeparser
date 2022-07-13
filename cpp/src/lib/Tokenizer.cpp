@@ -536,10 +536,16 @@ WLCharacter Tokenizer_nextWLCharacter(ParserSessionPtr session, Buffer tokenStar
         }
 
 #if COMPUTE_OOB
-        if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
-            session->addComplexLineContinuation(tokenStartLoc);
-        } else {
-            session->addSimpleLineContinuation(tokenStartLoc);
+        if ((policy & TRACK_LC) == TRACK_LC) {
+            
+            if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+                
+                session->addComplexLineContinuation(tokenStartLoc);
+                
+            } else {
+                
+                session->addSimpleLineContinuation(tokenStartLoc);
+            }
         }
 #endif // COMPUTE_OOB
     
@@ -553,6 +559,11 @@ WLCharacter Tokenizer_currentWLCharacter(ParserSessionPtr session, Buffer tokenS
     auto resetBuf = session->buffer;
     auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
+    
+    //
+    //
+    //
+    policy &= ~(TRACK_LC);
     
     auto c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     

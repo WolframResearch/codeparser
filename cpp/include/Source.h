@@ -70,8 +70,6 @@ static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 16) || (SIZEOF_V
 //
 enum NextPolicyBits : uint8_t {
     
-//     UNUSED = 0x01,
-    
     //
     // Enable character decoding issues
     //
@@ -83,10 +81,15 @@ enum NextPolicyBits : uint8_t {
     //
     // Used By ByteDecoder, CharacterDecoder
     //
-    ENABLE_CHARACTER_DECODING_ISSUES = 0x02,
+    ENABLE_CHARACTER_DECODING_ISSUES = 0x01,
     
     //
-    // Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE
+    // when inside Tokenizer_currentWLCharacter, then do not track line continuations
+    // since Tokenizer_currentWLCharacter is implemented as Tokenizer_nextWLCharacter that is then reset, there should be no side-effects
+    //
+    TRACK_LC = 0x02,
+    
+    //
     //
     // Used by Tokenizer
     //
@@ -120,8 +123,6 @@ enum NextPolicyBits : uint8_t {
     //
     STRING_OR_COMMENT = 0x08,
     
-    // UNUSED = 0x10,
-    
     //
     // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
     //
@@ -131,7 +132,7 @@ enum NextPolicyBits : uint8_t {
     //
     // Used by Tokenizer
     //
-    SLOT_BEHAVIOR_FOR_STRINGS = 0x20,
+    SLOT_BEHAVIOR_FOR_STRINGS = 0x10,
     
     //
     // When tokenizing numbers, return immediately when an integer has been tokenized
@@ -140,25 +141,26 @@ enum NextPolicyBits : uint8_t {
     //
     // For example, we must consider  #2.c  to be Slot[2] . c  and NOT  Slot[1] 2. c
     //
-    INTEGER_SHORT_CIRCUIT = 0x40,
-    
-//    UNUSED = 0x80,
+    INTEGER_SHORT_CIRCUIT = 0x20,
 };
+
+static_assert(RETURN_TOPLEVELNEWLINE == 0x04, "Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE");
+
 
 using NextPolicy = uint8_t;
 
-const NextPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
+const NextPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
 
-const NextPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
+const NextPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
 
-const NextPolicy INSIDE_STRINGIFY_AS_TAG = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
+const NextPolicy INSIDE_STRINGIFY_AS_TAG = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
 const NextPolicy INSIDE_STRINGIFY_AS_FILE = RETURN_TOPLEVELNEWLINE;
 
-const NextPolicy INSIDE_SLOT = RETURN_TOPLEVELNEWLINE | SLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT;
+const NextPolicy INSIDE_SLOT = RETURN_TOPLEVELNEWLINE | SLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
-const NextPolicy INSIDE_SLOTSEQUENCE = RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT;
+const NextPolicy INSIDE_SLOTSEQUENCE = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
-const NextPolicy INSIDE_OUT = RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT;
+const NextPolicy INSIDE_OUT = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
 
 //
