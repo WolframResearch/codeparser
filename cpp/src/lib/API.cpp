@@ -118,10 +118,16 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK 
     }
     
     auto session = CreateParserSession();
-    
-    if (!MLPutLongInteger(link, reinterpret_cast<long>(session))) {
+
+#if SIZEOF_VOID_P == 8
+    if (!MLPutInteger64(link, reinterpret_cast<mlint64>(session))) {
         assert(false);
     }
+#elif SIZEOF_VOID_P == 4
+    if (!MLPutInteger32(link, reinterpret_cast<mlint32>(session))) {
+        assert(false);
+    }
+#endif // SIZEOF_VOID_P == 8
     
     return LIBRARY_NO_ERROR;
 }
@@ -165,10 +171,17 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    long mlSession;
-    if (!MLGetLongInteger(link, &mlSession)) {
+#if SIZEOF_VOID_P == 8
+    mlint64 mlSession;
+    if (!MLGetInteger64(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+#elif SIZEOF_VOID_P == 4
+    mlint32 mlSession;
+    if (!MLGetInteger32(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+#endif // SIZEOF_VOID_P == 8
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
@@ -241,10 +254,17 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK l
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    long mlSession;
-    if (!MLGetLongInteger(link, &mlSession)) {
+#if SIZEOF_VOID_P == 8
+    mlint64 mlSession;
+    if (!MLGetInteger64(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+#elif SIZEOF_VOID_P == 4
+    mlint32 mlSession;
+    if (!MLGetInteger32(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+#endif // SIZEOF_VOID_P == 8
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
@@ -355,10 +375,17 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    long mlSession;
-    if (!MLGetLongInteger(link, &mlSession)) {
+#if SIZEOF_VOID_P == 8
+    mlint64 mlSession;
+    if (!MLGetInteger64(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+#elif SIZEOF_VOID_P == 4
+    mlint32 mlSession;
+    if (!MLGetInteger32(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+#endif // SIZEOF_VOID_P == 8
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
@@ -476,10 +503,17 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    long mlSession;
-    if (!MLGetLongInteger(link, &mlSession)) {
+#if SIZEOF_VOID_P == 8
+    mlint64 mlSession;
+    if (!MLGetInteger64(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+#elif SIZEOF_VOID_P == 4
+    mlint32 mlSession;
+    if (!MLGetInteger32(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+#endif // SIZEOF_VOID_P == 8
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
@@ -597,10 +631,17 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK link) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    long mlSession;
-    if (!MLGetLongInteger(link, &mlSession)) {
+#if SIZEOF_VOID_P == 8
+    mlint64 mlSession;
+    if (!MLGetInteger64(link, &mlSession)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+#elif SIZEOF_VOID_P == 4
+    mlint32 mlSession;
+    if (!MLGetInteger32(link, &mlSession)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+#endif // SIZEOF_VOID_P == 8
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
