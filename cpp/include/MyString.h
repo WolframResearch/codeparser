@@ -20,8 +20,9 @@ struct MyString {
 
     const char *Val;
     const size_t Len;
+    const int Id;
 
-    constexpr MyString(const char *Val, size_t Len) : Val(Val), Len(Len) {}
+    constexpr MyString(const char *Val, size_t Len, int Id) : Val(Val), Len(Len), Id(Id) {}
 
     void print(std::ostream& s) const;
 

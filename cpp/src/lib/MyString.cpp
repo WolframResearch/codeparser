@@ -19,34 +19,34 @@ using Buffer = const unsigned char *;
 
 
 bool operator==(MyString a, MyString b) {
-  return a.Val == b.Val;
+    return a.Id == b.Id;
 }
 
 bool operator!=(MyString a, MyString b) {
-  return a.Val != b.Val;
+    return a.Id != b.Id;
 }
 
 bool operator<(MyString a, MyString b) {
-  return strcmp(a.Val, b.Val);
+    return strcmp(a.Val, b.Val);
 }
 
 void MyString::print(std::ostream& s) const {
-  s << Val;
+    s << Val;
 }
 
 #if USE_MATHLINK
 void MyString::put(ParserSessionPtr session) const {
 
-  auto link = session->getMathLink();
+    auto link = session->getMathLink();
 
-  if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Val), static_cast<int>(Len))) {
-    assert(false);
-  }
+    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Val), static_cast<int>(Len))) {
+        assert(false);
+    }
 }
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
 expr MyString::toExpr(ParserSessionPtr session) const {
-  return Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Val), Len);
+    return Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Val), Len);
 }
 #endif // USE_EXPR_LIB

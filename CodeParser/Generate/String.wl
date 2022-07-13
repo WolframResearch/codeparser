@@ -72,7 +72,7 @@ myStringRegistrationCPPHeader = {
 //
 // All strings that are used by CodeParser
 //"} ~Join~
-MapIndexed[Row[{"constexpr", " ", "MyString", " ", toGlobal["String`"<>#1], "(", "\"", #, "\"", ",", " ", StringLength[#], ")", ";"}]&, strings] ~Join~
+MapIndexed[Row[{"constexpr", " ", "MyString", " ", toGlobal["String`"<>#1], "(", "\"", #, "\"", ",", " ", StringLength[#1], ",", " ", ToString[#2[[1]]-1], ")", ";"}]&, strings] ~Join~
 {""};
 
 Print["exporting MyStringRegistration.h"];
