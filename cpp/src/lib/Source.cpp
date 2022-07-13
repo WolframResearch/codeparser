@@ -542,18 +542,20 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
             
             //
-            // no single SourceCharacter for \"
+            // Coming from \[RawDoubleQuote]
             //
-            assert(false);
+            
+            stream << WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
             
             return stream;
         }
         case CODEPOINT_STRINGMETA_BACKSLASH: {
             
             //
-            // no single SourceCharacter for \\
+            // Coming from \[RawBackslash]
             //
-            assert(false);
+            
+            stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
             
             return stream;
         }
