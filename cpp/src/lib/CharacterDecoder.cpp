@@ -27,6 +27,24 @@
 #endif // USE_MUSTTAIL
 
 
+WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handle2Hex(ParserSessionPtr session, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handle4Hex(ParserSessionPtr session, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handle6Hex(ParserSessionPtr session, Buffer barBuf, SourceLocation barLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handleOctal(ParserSessionPtr session, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buffer unhandledBuf, SourceLocation unhandledLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handleBackslash(ParserSessionPtr session, NextPolicy policy);
+
+WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handleAssertFalse(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handleStringMetaDoubleQuote(ParserSessionPtr session, Buffer Ignored1, SourceLocation Ignored2, NextPolicy policy);
+WLCharacter CharacterDecoder_handleStringMetaOpen(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handleStringMetaClose(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
+WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session, Buffer Ignored1, SourceLocation Ignored2, NextPolicy policy);
+
+std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::string input);
+
+
 typedef WLCharacter (*HandlerFunction)(ParserSessionPtr session, Buffer startBuf, SourceLocation startLoc, NextPolicy policy);
 
 #define U CharacterDecoder_handleUncommon

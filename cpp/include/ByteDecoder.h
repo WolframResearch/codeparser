@@ -71,17 +71,4 @@ public:
 //
 
 SourceCharacter ByteDecoder_nextSourceCharacter(ParserSessionPtr session, NextPolicy policy);
-SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr session, NextPolicy policy);
 SourceCharacter ByteDecoder_currentSourceCharacter(ParserSessionPtr session, NextPolicy policy);
-
-void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
-void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
-
-SourceCharacter ByteDecoder_validStrange(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
-SourceCharacter ByteDecoder_validMB(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
-
-SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_bom(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);

@@ -2,7 +2,6 @@
 #include "API.h"
 
 #include "Token.h"
-#include "ByteDecoder.h" // for SourceConventionManager
 #include "Parser.h" // for Context
 
 #include <set>
@@ -13,12 +12,14 @@ class ParserSession;
 class Issue;
 class IssueCompare;
 class Node;
+class SourceConventionManager;
 
 using IssuePtr = Issue *;
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
 using ParserSessionPtr = ParserSession *;
 using NodePtr = Node *;
 using NodeVariant = std::variant<NodePtr, Token>;
+using SourceConventionManagerPtr = SourceConventionManager *;
 
 
 constexpr int PARSERSESSIONINIT_OK = 1;

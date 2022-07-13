@@ -53,7 +53,6 @@ void Parser_eatTriviaButNotToplevelNewlines(ParserSessionPtr session, Token& fir
 Context& Parser_pushContext(ParserSessionPtr session, Precedence Prec);
 NodeSeq Parser_popContext(ParserSessionPtr session);
 Context& Parser_topContext(ParserSessionPtr session);
-bool Parser_isContextStackEmpty(ParserSessionPtr session);
 Precedence Parser_topPrecedence(ParserSessionPtr session);
 void Parser_setPrecedence(ParserSessionPtr session, Precedence Prec);
 

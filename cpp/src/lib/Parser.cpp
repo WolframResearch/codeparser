@@ -16,6 +16,9 @@
 #endif // USE_MUSTTAIL
 
 
+bool Parser_isContextStackEmpty(ParserSessionPtr session);
+
+
 Context::Context(size_t Index, Precedence Prec) : F(), P(), Index(Index), Prec(Prec) {}
 
 
