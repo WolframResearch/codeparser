@@ -74,11 +74,11 @@ void PrefixCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Igno
     
     if (Parser_topPrecedence(session) == PRECEDENCE_COMMA) {
         
-        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.Buf, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
         
     } else {
         
-        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
     }
     
     Parser_pushLeaf(session, createdToken);
@@ -143,11 +143,11 @@ void PrefixEndOfFileParselet_parsePrefix(ParserSessionPtr session, ParseletPtr I
     
     if (Parser_topPrecedence(session) == PRECEDENCE_COMMA) {
             
-        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.Buf, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
         
     } else {
         
-        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
     }
     
     Parser_pushLeaf(session, createdToken);
@@ -202,11 +202,11 @@ void PrefixCommaParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignor
     
     if (Parser_topPrecedence(session) == PRECEDENCE_LOWEST) {
         
-        createdToken = Token(TOKEN_ERROR_PREFIXIMPLICITNULL, TokIn.Buf, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_PREFIXIMPLICITNULL, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
         
     } else {
         
-        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start);
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
     }
     
     Parser_pushLeaf(session, createdToken);
@@ -231,7 +231,7 @@ void PrefixUnhandledParselet_parsePrefix(ParserSessionPtr session, ParseletPtr I
     }
 #endif // CHECK_ABORT
     
-    Parser_pushLeaf(session, Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.Buf, TokIn.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start)));
     
     //
     // Do not take next token
@@ -532,7 +532,7 @@ Precedence InfixImplicitTimesParselet::getPrecedence(ParserSessionPtr session) c
 
 
 Token InfixImplicitTimesParselet::processImplicitTimes(ParserSessionPtr session, Token TokIn) const {
-    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, TokIn.Src.Start);
+    return Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
 }
 
 
@@ -1742,7 +1742,7 @@ void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
         // Something like  a,,
         //
         
-        Parser_pushLeaf(session, Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(Tok2.Buf), Source(Tok2.Src.Start)));
         
 #if !USE_MUSTTAIL
         auto& Ctxt = Parser_topContext(session);
@@ -1829,7 +1829,7 @@ void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
         // Something like  a,,
         //
         
-        Parser_pushLeaf(session, Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(Tok2.Buf), Source(Tok2.Src.Start)));
         
 #if !USE_MUSTTAIL
         continue;
@@ -1917,7 +1917,7 @@ void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Toke
         // Something like  a; ;
         //
         
-        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(Tok2.Buf), Source(Tok2.Src.Start)));
         
         //
         // nextToken() is not needed after an implicit token
@@ -1973,7 +1973,7 @@ void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Toke
     // For example:  a;&
     //
     
-    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(Tok2.Buf), Source(Tok2.Src.Start)));
     
     //
     // nextToken() is not needed after an implicit token
@@ -2037,7 +2037,7 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
         // Something like  a;b; ;
         //
         
-        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(Tok2.Buf), Source(Tok2.Src.Start)));
         
         //
         // nextToken() is not needed after an implicit token
@@ -2083,7 +2083,7 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
     // For example:  a;b;&
     //
     
-    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, Tok2.Buf, Tok2.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(Tok2.Buf), Source(Tok2.Src.Start)));
     
     //
     // nextToken() is not needed after an implicit token
@@ -2366,7 +2366,7 @@ Token InfixDifferentialDParselet::processImplicitTimes(ParserSessionPtr session,
         return TokIn;
     }
     
-    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, TokIn.Src.Start);
+    return Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
 }
 
 ParseFunction InfixDifferentialDParselet::parseInfix() const {

@@ -42,7 +42,8 @@ struct BufferAndLength {
     const uint64_t Len : 48;
     
     BufferAndLength();
-    BufferAndLength(Buffer buffer, size_t length = 0);
+    explicit BufferAndLength(Buffer buffer);
+    BufferAndLength(Buffer buffer, size_t length);
     
     size_t length() const;
     
@@ -278,8 +279,7 @@ struct Source {
     SourceLocation End;
     
     Source();
-    Source(SourceLocation only);
-    Source(size_t coerced) = delete;
+    explicit Source(SourceLocation only);
     Source(SourceLocation start, SourceLocation end);
     Source(Source start, Source end);
     

@@ -29,7 +29,7 @@ Token SemiSemiParselet::processImplicitTimes(ParserSessionPtr session, Token Tok
     //
     
     if (Parser_checkSpan(session)) {
-        return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, TokIn.Src.Start);
+        return Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
     }
     
     return TokIn;
@@ -48,7 +48,7 @@ void SemiSemiParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     }
 #endif // CHECK_ABORT
     
-    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, TokIn.Buf, TokIn.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start)));
     
     Parser_pushContext(session, PRECEDENCE_SEMISEMI);
     
@@ -109,7 +109,7 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
         //    ^SecondTok
         //
         
-        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, SecondTok.Buf, SecondTok.Src.Start));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(SecondTok.Buf), Source(SecondTok.Src.Start)));
         
         //
         // nextToken() is not needed after an implicit token
@@ -141,7 +141,7 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     //    ^~SecondTok
     //
     
-    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, SecondTok.Buf, SecondTok.Src.Start));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(SecondTok.Buf), Source(SecondTok.Src.Start)));
     
     SecondTok.skip(session);
     

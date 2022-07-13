@@ -322,7 +322,7 @@ Token Tokenizer_nextToken_stringifyAsTag(ParserSessionPtr session) {
             // EndOfFile is special, so invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
+            return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         }
         case '\n': case '\r': case CODEPOINT_CRLF: {
             
@@ -330,7 +330,7 @@ Token Tokenizer_nextToken_stringifyAsTag(ParserSessionPtr session) {
             // Newline is special, so invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
+            return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         }
         case '"': {
             return Tokenizer_handleString(session, tokenStartBuf, tokenStartLoc, c, policy);
@@ -354,7 +354,7 @@ Token Tokenizer_nextToken_stringifyAsFile(ParserSessionPtr session) {
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE: {
-            return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
+            return Token(TOKEN_ERROR_EXPECTEDFILE, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         }
         case '\n': case '\r': case CODEPOINT_CRLF: {
             
@@ -1181,7 +1181,7 @@ inline Token Tokenizer_handleString_stringifyAsTag(ParserSessionPtr session, Buf
     // Something like  a::5
     //
     
-    return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
+    return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
 }
 
 
@@ -1242,7 +1242,7 @@ inline Token Tokenizer_handleString_stringifyAsFile(ParserSessionPtr session, Bu
             // So invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
+            return Token(TOKEN_ERROR_EXPECTEDFILE, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         }
     }
     

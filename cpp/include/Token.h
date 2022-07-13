@@ -22,7 +22,7 @@ struct Token {
     TokenEnum Tok;
     
     Token();
-    Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
+    explicit Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
     BufferAndLength bufLen() const;
     

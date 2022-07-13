@@ -27,6 +27,8 @@
 
 BufferAndLength::BufferAndLength() : Buf(), Len() {}
 
+BufferAndLength::BufferAndLength(Buffer Buf) : Buf(Buf), Len(0) {}
+
 BufferAndLength::BufferAndLength(Buffer Buf, size_t Len) : Buf(Buf), Len(Len) {
     assert(Len < 1ULL << 48);
 }
@@ -290,7 +292,7 @@ void PrintTo(const SourceLocation& Loc, std::ostream *s) {
 
 Source::Source() : Start(), End() {}
 
-Source::Source(SourceLocation loc) : Start(loc), End(loc) {}
+Source::Source(SourceLocation only) : Start(only), End(only) {}
 
 Source::Source(SourceLocation start, SourceLocation end) : Start(start), End(end) {
     assert(start <= end);
