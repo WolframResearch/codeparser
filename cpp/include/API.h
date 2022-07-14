@@ -133,7 +133,7 @@ EXTERN_C DLLEXPORT expr NodeContainerToExpr(ParserSessionPtr session, NodeContai
 #endif // USE_EXPR_LIB
 
 #if USE_MATHLINK
-EXTERN_C DLLEXPORT void NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C);
+EXTERN_C DLLEXPORT void NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C, MLINK callLink);
 #endif // USE_MATHLINK
 
 

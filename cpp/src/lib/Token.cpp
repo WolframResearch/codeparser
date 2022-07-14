@@ -174,21 +174,19 @@ void PrintTo(const Token& T, std::ostream *s) {
 
 
 #if USE_MATHLINK
-void Token::put(ParserSessionPtr session) const {
-    
-    auto link = session->getMathLink();
+void Token::put(ParserSessionPtr session, MLINK callLink) const {
     
     if (Tok.isError()) {
         
         if (Tok.isUnterminated()) {
             
-            if (!MLPutFunction(link, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.Name, 3)) {
+            if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.Name, 3)) {
                 assert(false);
             }
             
         } else {
             
-            if (!MLPutFunction(link, SYMBOL_CODEPARSER_ERRORNODE.Name, 3)) {
+            if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_ERRORNODE.Name, 3)) {
                 assert(false);
             }
         }
@@ -199,22 +197,22 @@ void Token::put(ParserSessionPtr session) const {
         // These are Symbols, Strings, Integers, Reals, Rationals.
         //
         
-        if (!MLPutFunction(link, SYMBOL_CODEPARSER_LEAFNODE.Name, 3)) {
+        if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_LEAFNODE.Name, 3)) {
             assert(false);
         }
     }
     
     auto Sym = TokenToSymbol(Tok);
 
-    Sym.put(session);
+    Sym.put(session, callLink);
 
-    bufLen().put(session);
+    bufLen().put(session, callLink);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
+    if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
-    Src.put(session);
+    Src.put(session, callLink);
 }
 #endif // USE_MATHLINK
 

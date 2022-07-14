@@ -1967,29 +1967,29 @@ std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::s
 #elif USE_MATHLINK
 std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::string input) {
     
-    auto link = session->getMathLink();
+    auto sessionLink = session->getSessionMathLink();
     
-    if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET.Name, 1)) {
+    if (!MLPutFunction(sessionLink, SYMBOL_EVALUATEPACKET.Name, 1)) {
         assert(false);
     }
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION.Name, 1)) {
+    if (!MLPutFunction(sessionLink, SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION.Name, 1)) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(input.c_str()), static_cast<int>(input.size()))) {
+    if (!MLPutUTF8String(sessionLink, reinterpret_cast<Buffer>(input.c_str()), static_cast<int>(input.size()))) {
         assert(false);
     }
     
-    if (!session->processMathLink()) {
+    if (!session->libData->processMathLink(sessionLink)) {
         assert(false);
     }
     
-    auto pkt = MLNextPacket(link);
+    auto pkt = MLNextPacket(sessionLink);
     
     if (pkt == RETURNPKT) {
         
-        ScopedMLString str(link);
+        ScopedMLString str(sessionLink);
         
         if (!str.read()) {
             assert(false);

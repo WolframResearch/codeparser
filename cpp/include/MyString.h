@@ -1,6 +1,11 @@
 
 #pragma once
 
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+
 #include <ostream>
 #include <cstddef> // for size_t
 
@@ -27,7 +32,7 @@ struct MyString {
     void print(std::ostream& s) const;
 
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB

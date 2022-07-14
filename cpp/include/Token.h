@@ -4,6 +4,11 @@
 #include "Source.h" // for BufferAndLength, Source
 #include "TokenEnum.h" // for TokenEnum
 
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+
 #include <ostream>
 
 #if USE_EXPR_LIB
@@ -36,7 +41,7 @@ struct Token {
     bool check() const;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
 #if USE_EXPR_LIB

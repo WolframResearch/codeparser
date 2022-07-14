@@ -6,6 +6,11 @@
 #include "MyString.h"
 #include "Symbol.h"
 
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+
 #include <set>
 #include <string>
 #include <cassert>
@@ -55,7 +60,7 @@ struct BufferAndLength {
     void print(std::ostream& s) const;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
 #if USE_EXPR_LIB
@@ -247,7 +252,7 @@ struct SourceLocation {
     SourceLocation previous() const;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
@@ -287,7 +292,7 @@ struct Source {
     Source(Source start, Source end);
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
@@ -339,7 +344,7 @@ public:
     Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
@@ -366,7 +371,7 @@ public:
     CodeAction(std::string Label, Source Src);
     
 #if USE_MATHLINK
-    virtual void put(ParserSessionPtr session) const = 0;
+    virtual void put(ParserSessionPtr session, MLINK callLink) const = 0;
 #endif // USE_MATHLINK
     
     virtual void print(std::ostream& s) const = 0;
@@ -392,7 +397,7 @@ public:
     ReplaceTextCodeAction(std::string Label, Source Src, std::string ReplacementText) : CodeAction(Label, Src), ReplacementText(ReplacementText) {}
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -415,7 +420,7 @@ public:
     InsertTextCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -434,7 +439,7 @@ public:
     DeleteTextCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;

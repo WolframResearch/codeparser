@@ -6,6 +6,11 @@
 #include "API.h" // for UnsafeCharacterEncodingFlag
 #include "Precedence.h"
 
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+
 #include <vector>
 #include <set>
 #include <ostream>
@@ -88,7 +93,7 @@ public:
     const NodeVariant& last() const;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
@@ -117,7 +122,7 @@ public:
     virtual Source getSource() const = 0;
     
 #if USE_MATHLINK
-    virtual void put(ParserSessionPtr session) const = 0;
+    virtual void put(ParserSessionPtr session, MLINK callLink) const = 0;
 #endif // USE_MATHLINK
     
     virtual bool check() const;
@@ -149,7 +154,7 @@ public:
     bool check() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -170,7 +175,7 @@ public:
     AbortNode();
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -273,7 +278,7 @@ public:
     virtual bool check() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -334,7 +339,7 @@ public:
     bool check() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -387,7 +392,7 @@ public:
     Source getSource() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -414,7 +419,7 @@ public:
     void release() override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -443,7 +448,7 @@ public:
     Source getSource() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -470,7 +475,7 @@ public:
     bool check() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -495,7 +500,7 @@ public:
     Source getSource() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const override;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
@@ -520,7 +525,7 @@ public:
     void release();
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session) const;
+    void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;

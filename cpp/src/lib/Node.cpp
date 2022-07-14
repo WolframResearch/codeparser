@@ -69,12 +69,13 @@ struct ToExprVisitor {
 struct PutVisitor {
     
     ParserSessionPtr session;
+    MLINK callLink;
     
-    PutVisitor(ParserSessionPtr session) : session(session) {};
+    PutVisitor(ParserSessionPtr session, MLINK callLink) : session(session), callLink(callLink) {};
     
-    void operator()(const NodePtr& N) { N->put(session); }
+    void operator()(const NodePtr& N) { N->put(session, callLink); }
     
-    void operator()(const Token& L) { L.put(session); }
+    void operator()(const Token& L) { L.put(session, callLink); }
 };
 #endif // USE_MATHLINK
 
@@ -581,11 +582,9 @@ bool NodeContainer::check() const {
 
 
 #if USE_MATHLINK
-void NodeSeq::put(ParserSessionPtr session) const {
+void NodeSeq::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(vec.size()))) {
+    if (!MLPutFunction(callLink, SYMBOL_LIST.Name, static_cast<int>(vec.size()))) {
         assert(false);
     }
     
@@ -593,155 +592,143 @@ void NodeSeq::put(ParserSessionPtr session) const {
         
 #if CHECK_ABORT
         if (session->abortQ()) {
-            SYMBOL__ABORTED.put(session);
+            SYMBOL__ABORTED.put(session, callLink);
             continue;
         }
 #endif // CHECK_ABORT
         
-        std::visit(PutVisitor{session}, C);
+        std::visit(PutVisitor{session, callLink}, C);
     }
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void OperatorNode::put(ParserSessionPtr session) const {
+void OperatorNode::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, MakeSym.Name, 3)) {
+    if (!MLPutFunction(callLink, MakeSym.Name, 3)) {
         assert(false);
     }
     
-    Op.put(session);
+    Op.put(session, callLink);
     
-    Children.put(session);
+    Children.put(session, callLink);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
+    if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
-    Src.put(session);
+    Src.put(session, callLink);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void AbortNode::put(ParserSessionPtr session) const {
-    SYMBOL__ABORTED.put(session);
+void AbortNode::put(ParserSessionPtr session, MLINK callLink) const {
+    SYMBOL__ABORTED.put(session, callLink);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CallNode::put(ParserSessionPtr session) const {
+void CallNode::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CALLNODE.Name, 3)) {
+    if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_CALLNODE.Name, 3)) {
         assert(false);
     }
         
-    Head.put(session);
+    Head.put(session, callLink);
     
-    std::visit(PutVisitor{session}, Body);
+    std::visit(PutVisitor{session, callLink}, Body);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
+    if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
-    Src.put(session);
+    Src.put(session, callLink);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void SyntaxErrorNode::put(ParserSessionPtr session) const {
+void SyntaxErrorNode::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_SYNTAXERRORNODE.Name, 3)) {
+    if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_SYNTAXERRORNODE.Name, 3)) {
         assert(false);
     }
     
-    Err.put(session);
+    Err.put(session, callLink);
     
-    Children.put(session);
+    Children.put(session, callLink);
     
-    if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
+    if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
     }
     
-    Src.put(session);
+    Src.put(session, callLink);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CollectedExpressionsNode::put(ParserSessionPtr session) const {
-    Exprs.put(session);
+void CollectedExpressionsNode::put(ParserSessionPtr session, MLINK callLink) const {
+    Exprs.put(session, callLink);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CollectedIssuesNode::put(ParserSessionPtr session) const {
+void CollectedIssuesNode::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(Issues.size()))) {
+    if (!MLPutFunction(callLink, SYMBOL_LIST.Name, static_cast<int>(Issues.size()))) {
         assert(false);
     }
     
     for (auto& I : Issues) {
-        I->put(session);
+        I->put(session, callLink);
     }
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void CollectedSourceLocationsNode::put(ParserSessionPtr session) const {
+void CollectedSourceLocationsNode::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(SourceLocs.size()))) {
+    if (!MLPutFunction(callLink, SYMBOL_LIST.Name, static_cast<int>(SourceLocs.size()))) {
         assert(false);
     }
     
     for (auto& L : SourceLocs) {
-        L.put(session);
+        L.put(session, callLink);
     }
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void MissingBecauseUnsafeCharacterEncodingNode::put(ParserSessionPtr session) const {
+void MissingBecauseUnsafeCharacterEncodingNode::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_MISSING.Name, 1)) {
+    if (!MLPutFunction(callLink, SYMBOL_MISSING.Name, 1)) {
         assert(false);
     }
     
     auto reason = unsafeCharacterEncodingReason(flag);
     
-    reason.put(session);
+    reason.put(session, callLink);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void SafeStringNode::put(ParserSessionPtr session) const {
-    bufAndLen.put(session);
+void SafeStringNode::put(ParserSessionPtr session, MLINK callLink) const {
+    bufAndLen.put(session, callLink);
 }
 #endif // USE_MATHLINK
 
 
 #if USE_MATHLINK
-void NodeContainer::put(ParserSessionPtr session) const {
-    Nodes.put(session);
+void NodeContainer::put(ParserSessionPtr session, MLINK callLink) const {
+    Nodes.put(session, callLink);
 }
 #endif // USE_MATHLINK
 

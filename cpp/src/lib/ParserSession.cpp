@@ -401,15 +401,8 @@ void ParserSession::addEmbeddedTab(SourceLocation Loc) {
 }
 
 #if USE_MATHLINK
-MLINK ParserSession::getMathLink() const {
+MLINK ParserSession::getSessionMathLink() const {
     return libData->getMathLink(libData);
-}
-
-bool ParserSession::processMathLink() const {
-    
-    auto link = getMathLink();
-    
-    return libData->processMathLink(link);
 }
 #endif // USE_MATHLINK
 

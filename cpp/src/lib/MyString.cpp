@@ -35,11 +35,8 @@ void MyString::print(std::ostream& s) const {
 }
 
 #if USE_MATHLINK
-void MyString::put(ParserSessionPtr session) const {
-
-    auto link = session->getMathLink();
-
-    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Val), static_cast<int>(Len))) {
+void MyString::put(ParserSessionPtr session, MLINK callLink) const {
+    if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(Val), static_cast<int>(Len))) {
         assert(false);
     }
 }

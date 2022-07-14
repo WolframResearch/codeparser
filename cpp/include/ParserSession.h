@@ -4,6 +4,11 @@
 #include "Token.h"
 #include "Parser.h" // for Context
 
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+
 #include <set>
 #include <variant>
 #include <vector>
@@ -22,7 +27,7 @@ using NodeVariant = std::variant<NodePtr, Token>;
 using SourceConventionManagerPtr = SourceConventionManager *;
 
 
-constexpr int PARSERSESSIONINIT_OK = 1;
+constexpr int PARSERSESSIONINIT_OK = 0;
 constexpr int PARSERSESSIONINIT_ERROR = 1;
 
 //
@@ -93,8 +98,6 @@ public:
     void addEmbeddedTab(SourceLocation Loc);
     
 #if USE_MATHLINK
-    MLINK getMathLink() const;
-    
-    bool processMathLink() const;
+    MLINK getSessionMathLink() const;
 #endif // USE_MATHLINK
 };

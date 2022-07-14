@@ -29,11 +29,8 @@ void Symbol::print(std::ostream& s) const {
 }
 
 #if USE_MATHLINK
-void Symbol::put(ParserSessionPtr session) const {
-
-    auto link = session->getMathLink();
-
-    if (!MLPutSymbol(link, Name)) {
+void Symbol::put(ParserSessionPtr session, MLINK callLink) const {
+    if (!MLPutSymbol(callLink, Name)) {
         assert(false);
     }
 }

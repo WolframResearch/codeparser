@@ -74,11 +74,8 @@ void BufferAndLength::print(std::ostream& s) const {
 }
 
 #if USE_MATHLINK
-void BufferAndLength::put(ParserSessionPtr session) const {
-    
-    auto link = session->getMathLink();
-    
-    if (!MLPutUTF8String(link, Buf, static_cast<int>(length()))) {
+void BufferAndLength::put(ParserSessionPtr session, MLINK callLink) const {
+    if (!MLPutUTF8String(callLink, Buf, static_cast<int>(length()))) {
         assert(false);
     }
 }
@@ -757,72 +754,70 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 
 
 #if USE_MATHLINK
-void Issue::put(ParserSessionPtr session) const {
+void Issue::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, MakeSym.Name, 4)) {
+    if (!MLPutFunction(callLink, MakeSym.Name, 4)) {
         assert(false);
     }
     
-    Tag.put(session);
+    Tag.put(session, callLink);
     
-    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
+    if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
         assert(false);
     }
     
-    Sev.put(session);
+    Sev.put(session, callLink);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
+        if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
             assert(false);
         }
         
-        Src.put(session);
+        Src.put(session, callLink);
         
         {
-            if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
+            if (!MLPutFunction(callLink, SYMBOL_RULE.Name, 2)) {
                 assert(false);
             }
             
-            SYMBOL_CONFIDENCELEVEL.put(session);
+            SYMBOL_CONFIDENCELEVEL.put(session, callLink);
             
-            if (!MLPutReal(link, Val)) {
+            if (!MLPutReal(callLink, Val)) {
                 assert(false);
             }
         }
         
         if (!Actions.empty()) {
             
-            if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
+            if (!MLPutFunction(callLink, SYMBOL_RULE.Name, 2)) {
                 assert(false);
             }
             
-            SYMBOL_CODEPARSER_CODEACTIONS.put(session);
+            SYMBOL_CODEPARSER_CODEACTIONS.put(session, callLink);
             
-            if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(Actions.size()))) {
+            if (!MLPutFunction(callLink, SYMBOL_LIST.Name, static_cast<int>(Actions.size()))) {
                 assert(false);
             }
             
             for (auto& A : Actions) {
-                A->put(session);
+                A->put(session, callLink);
             }
         }
         
         if (!AdditionalDescriptions.empty()) {
             
-            if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
+            if (!MLPutFunction(callLink, SYMBOL_RULE.Name, 2)) {
                 assert(false);
             }
             
-            STRING_ADDITIONALDESCRIPTIONS.put(session);
+            STRING_ADDITIONALDESCRIPTIONS.put(session, callLink);
             
-            if (!MLPutFunction(link, SYMBOL_LIST.Name, static_cast<int>(AdditionalDescriptions.size()))) {
+            if (!MLPutFunction(callLink, SYMBOL_LIST.Name, static_cast<int>(AdditionalDescriptions.size()))) {
                 assert(false);
             }
             
             for (auto& D : AdditionalDescriptions) {
-                if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
+                if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
                     assert(false);
                 }
             }
@@ -832,34 +827,32 @@ void Issue::put(ParserSessionPtr session) const {
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void ReplaceTextCodeAction::put(ParserSessionPtr session) const {
+void ReplaceTextCodeAction::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
+    if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
+    if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_REPLACETEXT.put(session);
+    SYMBOL_CODEPARSER_REPLACETEXT.put(session, callLink);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 2)) {
+        if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 2)) {
             assert(false);
         }
         
-        Src.put(session);
+        Src.put(session, callLink);
         
-        if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
+        if (!MLPutFunction(callLink, SYMBOL_RULE.Name, 2)) {
             assert(false);
         }
         
-        STRING_REPLACEMENTTEXT.put(session);
+        STRING_REPLACEMENTTEXT.put(session, callLink);
         
-        if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()))) {
+        if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()))) {
             assert(false);
         }
     }
@@ -867,34 +860,32 @@ void ReplaceTextCodeAction::put(ParserSessionPtr session) const {
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void InsertTextCodeAction::put(ParserSessionPtr session) const {
+void InsertTextCodeAction::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
+    if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
+    if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_INSERTTEXT.put(session);
+    SYMBOL_CODEPARSER_INSERTTEXT.put(session, callLink);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 2)) {
+        if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 2)) {
             assert(false);
         }
         
-        Src.put(session);
+        Src.put(session, callLink);
         
-        if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
+        if (!MLPutFunction(callLink, SYMBOL_RULE.Name, 2)) {
             assert(false);
         }
         
-        STRING_INSERTIONTEXT.put(session);
+        STRING_INSERTIONTEXT.put(session, callLink);
         
-        if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()))) {
+        if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()))) {
             assert(false);
         }
     }
@@ -902,88 +893,82 @@ void InsertTextCodeAction::put(ParserSessionPtr session) const {
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void DeleteTextCodeAction::put(ParserSessionPtr session) const {
+void DeleteTextCodeAction::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
+    if (!MLPutFunction(callLink, SYMBOL_CODEPARSER_CODEACTION.Name, 3)) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
+    if (!MLPutUTF8String(callLink, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_DELETETEXT.put(session);
+    SYMBOL_CODEPARSER_DELETETEXT.put(session, callLink);
     
     {
-        if (!MLPutFunction(link, SYMBOL_ASSOCIATION.Name, 1)) {
+        if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 1)) {
             assert(false);
         }
         
-        Src.put(session);
+        Src.put(session, callLink);
     }
 }
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void SourceLocation::put(ParserSessionPtr session) const {
-
-    auto link = session->getMathLink();
+void SourceLocation::put(ParserSessionPtr session, MLINK callLink) const {
     
-    if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
+    if (!MLPutFunction(callLink, SYMBOL_LIST.Name, 2)) {
         assert(false);
     }
 
-    if (!MLPutInteger(link, static_cast<int>(first))) {
+    if (!MLPutInteger(callLink, static_cast<int>(first))) {
         assert(false);
     }
     
-    if (!MLPutInteger(link, static_cast<int>(second))) {
+    if (!MLPutInteger(callLink, static_cast<int>(second))) {
         assert(false);
     }
 }
 #endif // USE_MATHLINK
 
 #if USE_MATHLINK
-void Source::put(ParserSessionPtr session) const {
+void Source::put(ParserSessionPtr session, MLINK callLink) const {
     
-    auto link = session->getMathLink();
-    
-    if (!MLPutFunction(link, SYMBOL_RULE.Name, 2)) {
+    if (!MLPutFunction(callLink, SYMBOL_RULE.Name, 2)) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_SOURCE.put(session);
+    SYMBOL_CODEPARSER_SOURCE.put(session, callLink);
     
     switch (session->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             
-            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
+            if (!MLPutFunction(callLink, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
 
-            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
+            if (!MLPutFunction(callLink, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
             
-            if (!MLPutInteger(link, static_cast<int>(Start.first))) {
+            if (!MLPutInteger(callLink, static_cast<int>(Start.first))) {
                 assert(false);
             }
             
-            if (!MLPutInteger(link, static_cast<int>(Start.second))) {
+            if (!MLPutInteger(callLink, static_cast<int>(Start.second))) {
                 assert(false);
             }
             
-            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
+            if (!MLPutFunction(callLink, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
             
-            if (!MLPutInteger(link, static_cast<int>(End.first))) {
+            if (!MLPutInteger(callLink, static_cast<int>(End.first))) {
                 assert(false);
             }
             
-            if (!MLPutInteger(link, static_cast<int>(End.second))) {
+            if (!MLPutInteger(callLink, static_cast<int>(End.second))) {
                 assert(false);
             }
             
@@ -991,15 +976,15 @@ void Source::put(ParserSessionPtr session) const {
         }
         case SOURCECONVENTION_SOURCECHARACTERINDEX: {
             
-            if (!MLPutFunction(link, SYMBOL_LIST.Name, 2)) {
+            if (!MLPutFunction(callLink, SYMBOL_LIST.Name, 2)) {
                 assert(false);
             }
             
-            if (!MLPutInteger(link, static_cast<int>(Start.second))) {
+            if (!MLPutInteger(callLink, static_cast<int>(Start.second))) {
                 assert(false);
             }
             
-            if (!MLPutInteger(link, static_cast<int>(End.second-1))) {
+            if (!MLPutInteger(callLink, static_cast<int>(End.second-1))) {
                 assert(false);
             }
             
