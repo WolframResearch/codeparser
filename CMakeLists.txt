@@ -1,9 +1,9 @@
 
 #
-# https://cmake.org/cmake/help/latest/release/3.15.html
-# The cmake(1) command gained a new --install option. This may be used after building a project to run installation without using the generated build system or the native build tool.
+# https://cmake.org/cmake/help/latest/release/3.17.html
+# cmake(1) gained a -E rm command-line tool that can be used to remove directories and files. This supersedes the existing -E remove and -E remove_directory tools and has better semantics.
 #
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.17)
 
 project(codeparser
 	LANGUAGES
@@ -300,6 +300,13 @@ add_custom_command(
 		${PROJECT_BINARY_DIR}/generated/cpp/include/LongNamesRegistration.h
 		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNamesRegistration.cpp
 		${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/LongNames.wl
+	#
+	# remove old files that may cause conflicts
+	#
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/LongNames.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -328,6 +335,13 @@ set(GENERATED_TOKENENUM_OUTPUT
 add_custom_command(
 	OUTPUT
 		${GENERATED_TOKENENUM_OUTPUT}
+	#
+	# remove old files that may cause conflicts
+	#
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -422,6 +436,13 @@ add_custom_command(
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/SymbolRegistration.h
+	#
+	# remove old files that may cause conflicts
+	#
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
@@ -442,6 +463,13 @@ add_custom_command(
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/MyStringRegistration.h
+	#
+	# remove old files that may cause conflicts
+	#
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/String.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
