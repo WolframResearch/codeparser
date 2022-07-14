@@ -42,7 +42,7 @@ set_target_properties(test-exe PROPERTIES
 	OUTPUT_NAME
 		test
 	CXX_STANDARD
-		11
+		17
 	CXX_STANDARD_REQUIRED
 		ON
 	INSTALL_RPATH

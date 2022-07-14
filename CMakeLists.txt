@@ -697,8 +697,6 @@ set_target_properties(codeparser-lib PROPERTIES
 		17
 	CXX_STANDARD_REQUIRED
 		ON
-	CXX_VISIBILITY_PRESET
-		hidden
 	#
 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
 	#
@@ -735,6 +733,13 @@ set_target_properties(codeparser-lib PROPERTIES
 	PREFIX
 		""
 )
+
+if(NOT BUILD_TESTS)
+set_target_properties(codeparser-lib PROPERTIES
+	CXX_VISIBILITY_PRESET
+		hidden
+)
+endif()
 
 
 if(CHECK_ISSUES)

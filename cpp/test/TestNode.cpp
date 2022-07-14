@@ -1,13 +1,15 @@
 
 #include "Node.h"
-
-#include "ByteDecoder.h"
-#include "ByteBuffer.h"
-#include "Source.h"
+#include "ParserSession.h"
+#include "TokenEnumRegistration.h"
+#include "SymbolRegistration.h"
 
 #include "gtest/gtest.h"
 
-#include <sstream>
+class ParserSession;
+
+using ParserSessionPtr = ParserSession *;
+
 
 class NodeTest : public ::testing::Test {
 protected:
@@ -20,17 +22,15 @@ TEST_F(NodeTest, Bug1) {
 
     std::string input = "a_.";
     
-    TheByteBuffer = std::unique_ptr<ByteBuffer>(new ByteBuffer);
-    TheByteDecoder = std::unique_ptr<ByteDecoder>(new ByteDecoder);
+    ParserSession session;
     
-    TheByteBuffer->init(BufferAndLength(Buffer(input.c_str() + 0), 3));
-    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
+    session.init(BufferAndLength(Buffer(input.c_str() + 0), 3), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1), Source(SourceLocation(1, 1), SourceLocation(1, 2)));
-    Args.append(std::unique_ptr<Node>(new LeafNode(T1)));
+    Args.push(T1);
     
     auto T2 = Token(TOKEN_UNDERDOT, BufferAndLength(Buffer(input.c_str() + 1), 2), Source(SourceLocation(1, 2), SourceLocation(1, 4)));
-    Args.append(std::unique_ptr<Node>(new LeafNode(T2)));
+    Args.push(T2);
 
     auto N = std::unique_ptr<Node>(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
 
@@ -39,6 +39,8 @@ TEST_F(NodeTest, Bug1) {
     EXPECT_EQ(NSource.Start, SourceLocation(1, 1));
     EXPECT_EQ(NSource.End, SourceLocation(1, 4));
     
-    TheByteDecoder->deinit();
-    TheByteBuffer->deinit();
+    EXPECT_EQ(session.nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session.fatalIssues.size(), 0u);
+    
+    session.deinit();
 }

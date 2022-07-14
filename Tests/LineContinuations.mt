@@ -235,6 +235,19 @@ Test[
 ]
 
 
+(*
+illustrates interesting phenomenon:
 
+if a file ends with a line continuation, then that line continuation is considered the start of the EOF token, and is not included in the Source!
+
+*)
+Test[
+	CodeConcreteParse["1\\\n"]
+	,
+	ContainerNode[String, {
+		LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>]}, <|"SimpleLineContinuations" -> {{1, 2}}, Source -> {{1, 1}, {1, 2}}|>]
+	,
+	TestID->"LineContinuations-20220713-O3P5D6"
+]
 
 

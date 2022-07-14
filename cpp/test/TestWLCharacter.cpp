@@ -1,16 +1,15 @@
 
 #include "WLCharacter.h"
-
-#include "LongNames.h"
+#include "LongNamesRegistration.h"
 
 #include "gtest/gtest.h"
 
-#include <sstream>
 
 class WLCharacterTest : public ::testing::Test {
 protected:
 
 };
+
 
 TEST_F(WLCharacterTest, Bug1) {
 

@@ -1,27 +1,29 @@
 
-#include "Parser.h"
 #include "Tokenizer.h"
-#include "API.h"
 #include "ParseletRegistration.h"
-#include "Parselet.h" // for Parselet impls
+#include "Parselet.h"
+#include "ParserSession.h"
 
 #include "gtest/gtest.h"
 
-#include <sstream>
+class ParserSession;
 
+using ParserSessionPtr = ParserSession *;
 
 
 class ParseletTest : public ::testing::Test {
 protected:
     
+    static ParserSessionPtr session;
+    
     static void SetUpTestSuite() {
         
-        TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
+        session = new ParserSession();
     }
     
     static void TearDownTestSuite() {
         
-        TheParserSession.reset(nullptr);
+        delete session;
     }
     
     void SetUp() override {
@@ -29,46 +31,56 @@ protected:
     }
     
     void TearDown() override {
-        TheParserSession->deinit();
+        
+        session->deinit();
     }
 
 };
 
+ParserSessionPtr ParseletTest::session;
+
+
 TEST_F(ParseletTest, Bug1) {
     
     auto strIn = std::string("a /: b := c");
-    
+
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+
+    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
+
+    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+
+    auto& N = Parser_topNode(session);
+
+    EXPECT_TRUE(std::holds_alternative<NodePtr>(N));
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    auto& P = std::get<NodePtr>(N);
     
-    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
+    EXPECT_TRUE(dynamic_cast<TernaryNode *>(P));
     
-    ParserContext Ctxt;
-    
-    auto NP = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
-    
-    auto N = NP.get();
-    
-    EXPECT_TRUE(dynamic_cast<TernaryNode*>(N));
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
 }
 
 //
 // This used to assert
 //
 TEST_F(ParseletTest, Bug2) {
-    
+//
     auto strIn = std::string("a<b ");
-    
+
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-    
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
-    
-    ParserContext Ctxt;
-    
-    prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
+
+    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
+
+    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
     SUCCEED();
 }
@@ -79,16 +91,17 @@ TEST_F(ParseletTest, Bug2) {
 TEST_F(ParseletTest, Bug3) {
     
     auto strIn = std::string("a\\[Integral]b\\[Integral]c ");
-    
+
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-    
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
-    
-    ParserContext Ctxt;
-    
-    prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
+
+    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
+
+    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
     SUCCEED();
 }
@@ -99,16 +112,17 @@ TEST_F(ParseletTest, Bug3) {
 TEST_F(ParseletTest, Bug4) {
     
     auto strIn = std::string("\\[RawLeftBrace]*\\[RawRightBrace]");
-    
+
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-    
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
-    
-    ParserContext Ctxt;
-    
-    prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
+
+    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
+
+    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
     SUCCEED();
 }

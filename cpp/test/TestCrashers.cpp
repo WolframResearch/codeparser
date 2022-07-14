@@ -1,26 +1,28 @@
 
 #include "Tokenizer.h"
-#include "CharacterDecoder.h"
-#include "ByteDecoder.h"
-#include "ByteBuffer.h"
-#include "API.h"
-#include "CodePoint.h"
+#include "ParserSession.h"
+#include "TokenEnumRegistration.h"
 
 #include "gtest/gtest.h"
 
-#include <sstream>
+class ParserSession;
+
+using ParserSessionPtr = ParserSession *;
 
 
 class CrashTest : public ::testing::Test {
 protected:
+    
+    static ParserSessionPtr session;
+    
     static void SetUpTestSuite() {
         
-        TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
+        session = new ParserSession();
     }
     
     static void TearDownTestSuite() {
         
-        TheParserSession.reset(nullptr);
+        delete session;
     }
     
     void SetUp() override {
@@ -32,60 +34,34 @@ protected:
     }
 };
 
-TEST_F(CrashTest, Crash0_characters) {
-    
-    const unsigned char arr[] = {'1', '\\', '\n'};
-    
-    auto bufAndLen = BufferAndLength(arr, 3);
-    
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto policy = TOPLEVEL;
-    
-    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, policy);
-    
-    EXPECT_EQ(c.to_point(), '1');
-    
-    EXPECT_EQ(TheCharacterDecoder->lastBuf, arr + 1);
-    EXPECT_EQ(TheCharacterDecoder->lastLoc, SourceLocation(1, 2));
-    
-    
-    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-    
-    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, policy);
-    
-    EXPECT_EQ(c.to_point(), CODEPOINT_ENDOFFILE);
-    
-    TheParserSession->deinit();
-    
-    SUCCEED();
-}
+ParserSessionPtr CrashTest::session;
+
 
 TEST_F(CrashTest, Crash0_tokens) {
     
     const unsigned char arr[] = {'1', '\\', '\n'};
-    
+
     auto bufAndLen = BufferAndLength(arr, 3);
-    
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
+
+    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
     auto policy = TOPLEVEL;
+
+    auto Tok = Tokenizer_currentToken(session, policy);
+
+    EXPECT_EQ(Tok, Token(TOKEN_INTEGER, BufferAndLength(arr, 1), Source(SourceLocation(1, 1), SourceLocation(1, 2))));
     
-    auto Tok = TheTokenizer->currentToken(policy);
+    Tokenizer_nextToken(session, policy);
     
-    EXPECT_EQ(Tok.Tok.value(), TOKEN_INTEGER);
-    EXPECT_EQ(Tok.Src, Source(SourceLocation(1, 1), SourceLocation(1, 2)));
+    Tok = Tokenizer_currentToken(session, policy);
+
+    EXPECT_EQ(Tok, Token(TOKEN_ENDOFFILE, BufferAndLength(arr + 1, 2), Source(SourceLocation(1, 2), SourceLocation(2, 1))));
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
-    TheTokenizer->nextToken(Tok);
-    
-    Tok = TheTokenizer->currentToken(policy);
-    
-    EXPECT_EQ(Tok.Tok.value(), TOKEN_ENDOFFILE);
-    EXPECT_EQ(Tok.Src, Source(SourceLocation(1, 2), SourceLocation(2, 1)));
-    
-    TheParserSession->deinit();
-    
+    session->deinit();
+
     SUCCEED();
 }
 
@@ -95,13 +71,16 @@ TEST_F(CrashTest, Crash1) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto N = TheParserSession->parseExpressions();
+    auto N = session->parseExpressions();
     
-    TheParserSession->releaseNode(N);
+    session->releaseNodeContainer(N);
     
-    TheParserSession->deinit();
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
+    
+    session->deinit();
     
     SUCCEED();
 }
@@ -116,11 +95,14 @@ TEST_F(CrashTest, StackOverflow1) {
     
     auto bufAndLen = BufferAndLength(arr, 1600);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN);
     
     auto N = TheParserSession->parseExpressions();
     
     TheParserSession->releaseNode(N);
+    
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
     TheParserSession->deinit();
     
@@ -131,68 +113,80 @@ TEST_F(CrashTest, StackOverflow1) {
 TEST_F(CrashTest, Crash2) {
     
     const unsigned char arr[] = {'\\', ':', 'f', 'e', 'f', 'f'};
-    
+
     auto bufAndLen = BufferAndLength(arr, 6);
+
+    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto N = session->parseExpressions();
+
+    session->releaseNodeContainer(N);
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 1u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto N = TheParserSession->parseExpressions();
-    
-    TheParserSession->releaseNode(N);
-    
-    TheParserSession->deinit();
-    
+    session->deinit();
+
     SUCCEED();
 }
 
 TEST_F(CrashTest, Crash3) {
     
     const unsigned char arr[] = {'a', ':', 'b', '~', '1', ':', '2'};
-    
+
     auto bufAndLen = BufferAndLength(arr, 7);
+
+    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto N = session->parseExpressions();
+
+    session->releaseNodeContainer(N);
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto N = TheParserSession->parseExpressions();
-    
-    TheParserSession->releaseNode(N);
-    
-    TheParserSession->deinit();
-    
+    session->deinit();
+
     SUCCEED();
 }
 
 TEST_F(CrashTest, Crash4) {
     
     const unsigned char arr[] = {'\\', '[', 'I', 'n', 't', 'e', 'g', 'r', 'a', 'l', ']', '\\', '[', 'S', 'u', 'm', ']'};
-    
+
     auto bufAndLen = BufferAndLength(arr, 17);
+
+    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto N = session->parseExpressions();
+
+    session->releaseNodeContainer(N);
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto N = TheParserSession->parseExpressions();
-    
-    TheParserSession->releaseNode(N);
-    
-    TheParserSession->deinit();
-    
+    session->deinit();
+
     SUCCEED();
 }
 
 TEST_F(CrashTest, Crash5) {
     
     const unsigned char arr[] = {'{', '\t', '1', '\\', '\n', '^'};
-    
+
     auto bufAndLen = BufferAndLength(arr, 6);
+
+    session->init(bufAndLen, nullptr, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+
+    auto N = session->parseExpressions();
+
+    session->releaseNodeContainer(N);
+
+    EXPECT_EQ(session->nonFatalIssues.size(), 0u);
+    EXPECT_EQ(session->fatalIssues.size(), 0u);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
-    
-    auto N = TheParserSession->parseExpressions();
-    
-    TheParserSession->releaseNode(N);
-    
-    TheParserSession->deinit();
-    
+    session->deinit();
+
     SUCCEED();
 }
 

@@ -3,7 +3,6 @@
 
 #include "gtest/gtest.h"
 
-#include <sstream>
 
 class SourceCharacterTest : public ::testing::Test {
 protected:
