@@ -542,8 +542,8 @@ ParseWolframLibraryHeader()
 
 message(STATUS "WOLFRAMLIBRARY_VERSION: ${WOLFRAMLIBRARY_VERSION}")
 
-if(${WOLFRAMLIBRARY_VERSION} GREATER ${MAX_EXPECTED_WOLFRAMLIBRARY_VERSION})
-message(WARNING "WOLFRAMLIBRARY_VERSION (${WOLFRAMLIBRARY_VERSION}) is greater than max expected value (${MAX_EXPECTED_WOLFRAMLIBRARY_VERSION}); Please make necessary changes")
+if(${WOLFRAMLIBRARY_VERSION} GREATER_EQUAL 7)
+message(WARNING "WOLFRAMLIBRARY_VERSION >= 7 is only compatible with Wolfram System 13.1+ and will not work with earlier versions.")
 endif()
 
 if(${TRANSPORT} STREQUAL MathLink)

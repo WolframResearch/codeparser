@@ -1,9 +1,4 @@
 
-#
-# Update this value as needed
-#
-set(MAX_EXPECTED_WOLFRAMLIBRARY_VERSION 6 CACHE STRING "Max expected WolframLibrary version")
-
 macro(ParseWolframLibraryHeader)
 
 	if(NOT EXISTS ${WOLFRAMLIBRARY_INCLUDE_DIR})
