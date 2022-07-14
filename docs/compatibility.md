@@ -18,7 +18,7 @@ Building with Wolfram 11.0+ and running with the same version should always work
 
 Building and running with different Wolfram versions will not always work.
 
-Building with the latest Wolfram version is only guaranteed to work back to Wolfram 12.1+
+Building with the latest Wolfram version (which is 13.1) is only guaranteed to work back to Wolfram 13.1+.
 
 This is due to various issues including LibraryLink versioning and rpath changes on MacOSX.
 

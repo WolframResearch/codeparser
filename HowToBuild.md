@@ -42,3 +42,18 @@ cmake --install .
 ```
 
 This starts a kernel and calls `PacletInstall` with the built .paclet file.
+
+
+## Troubleshooting
+
+### "building for macOS-arm64 but attempting to link with file built for macOS-x86_64"
+
+You see this error during building:
+```
+ld: warning: ignoring file /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/mathlink.framework/mathlink, building for macOS-arm64 but attempting to link with file built for macOS-x86_64
+```
+
+You most likely need to specify:
+```
+-DCMAKE_OSX_ARCHITECTURES=x86_64
+```

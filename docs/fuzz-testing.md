@@ -15,7 +15,7 @@ the install of AFL++ assumes to be using `install` command from coreutils
 
 this is the bad `install`:
 ```
-brenton@brenton2maclap github-development % which install
+% which install
 /usr/bin/install
 ```
 
@@ -32,12 +32,17 @@ If you need to use these commands with their normal names, you can add a "gnubin
 
 do what it says:
 ```
-brenton@brenton2maclap github-development % export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+% export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+```
+
+or:
+```
+% export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
 ```
 
 this is the good `install`:
 ```
-brenton@brenton2maclap github-development % which install                                              
+% which install                                              
 /usr/local/opt/coreutils/libexec/gnubin/install
 ```
 
@@ -48,7 +53,7 @@ AFL++ assumes to be using LLVM clang and NOT Apple clang
 
 this is the bad clang:
 ```
-brenton@brenton2maclap AFLplusplus % which clang
+% which clang
 /usr/bin/clang
 ```
 
@@ -64,12 +69,17 @@ If you need to have llvm first in your PATH, run:
 
 do what it says:
 ```
-export PATH="/usr/local/opt/llvm/bin:$PATH"
+% export PATH="/usr/local/opt/llvm/bin:$PATH"
+```
+
+or:
+```
+% export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
 ```
 
 this is the good `clang`:
 ```
-brenton@brenton2maclap AFLplusplus % which clang                                
+% which clang                                
 /usr/local/opt/llvm/bin/clang
 ```
 
@@ -93,7 +103,7 @@ sudo make install
 
 Verify afl-fuzz is installed:
 ```
-brenton@brenton2maclap build-afl % which afl-fuzz                                                                                                                                     
+% which afl-fuzz                                                                                                                                     
 /usr/local/bin/afl-fuzz
 ```
 
@@ -105,7 +115,7 @@ mkdir build-afl
 
 cd build-afl
 
-cmake -DUSE_MATHLINK=OFF -DBUILD_EXE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=afl-clang-fast  -DCMAKE_CXX_COMPILER=afl-clang-fast++ -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica130.app/Contents ..
+cmake -DTRANSPORT=None-DBUILD_EXE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=afl-clang-fast  -DCMAKE_CXX_COMPILER=afl-clang-fast++ -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica.app/Contents ..
 
 cmake --build . --target codeparser-exe
 ```
@@ -118,7 +128,7 @@ cd build-afl
 
 rm -rf afl_out
 
-afl-fuzz -i /Users/brenton/development/stash/COD/codeparser/Tests/files/small -o afl_out/ -x ../Tests/wl.dict -D -- cpp/src/exe/codeparser -file @@
+afl-fuzz -i ../Tests/files/small -o afl_out/ -x ../Tests/wl.dict -D -- cpp/src/exe/codeparser -file @@
 ```
 
 
