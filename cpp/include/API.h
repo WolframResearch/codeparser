@@ -221,7 +221,7 @@ public:
     
     ~ScopedMLString();
     
-    bool read();
+    int read();
     
     const char *get() const;
 };
@@ -247,7 +247,7 @@ public:
     
     ~ScopedMLByteArray();
     
-    bool read();
+    int read();
     
     Buffer get() const;
     

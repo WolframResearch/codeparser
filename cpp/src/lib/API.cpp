@@ -752,7 +752,7 @@ ScopedMLString::~ScopedMLString() {
     MLReleaseString(link, buf);
 }
 
-bool ScopedMLString::read() {
+int ScopedMLString::read() {
     return MLGetString(link, &buf);
 }
 
@@ -774,7 +774,7 @@ ScopedMLByteArray::~ScopedMLByteArray() {
     MLReleaseByteArray(link, buf, dims, heads, depth);
 }
 
-bool ScopedMLByteArray::read() {
+int ScopedMLByteArray::read() {
     return MLGetByteArray(link, &buf, &dims, &heads, &depth);
 }
 
