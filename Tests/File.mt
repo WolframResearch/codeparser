@@ -273,7 +273,7 @@ TestMatch[
 				LeafNode[Token`CloseCurly, "\\\n}", <|Source -> {{2, 3}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]
 		},
 		<|
-			"SimpleLineContinuations" -> {{2, 2}, {2, 3}},
+			"SimpleLineContinuations" -> {{2, 3}},
 			Source -> {{1, 1}, {3, 2}},
 			"FileName" -> continuation
 		|>
