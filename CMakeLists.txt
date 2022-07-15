@@ -444,6 +444,8 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/SymbolRegistration.cpp
+	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
