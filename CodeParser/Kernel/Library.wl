@@ -49,6 +49,8 @@ CodeParser::old2 = "ExprLibrary functionality is only supported in versions 13.1
 
 CodeParser::notransport = "No transport specified."
 
+CodeParser::exprlib = "ExprLib could not be loaded. `1`"
+
 
 
 (*
@@ -67,13 +69,28 @@ $ParserSession := $ParserSession =
 
 $CodeParserLib := $CodeParserLib =
 Catch[
-Module[{res},
+Module[{lib},
 
-  res = FindLibrary["CodeParser"];
-  If[FailureQ[res],
-    Throw[Failure["CodeParserNativeLibraryNotFound", <||>]]
+  lib = FileNameJoin[{libraryResources, "CodeParser."<>$sharedExt}];
+
+  If[!FileExistsQ[lib],
+    Throw[Failure["CodeParserNativeLibraryNotFound", <| "ExpectedLocation" -> lib |>]]
   ];
-  res
+
+  lib
+]]
+
+$ExprLib := $ExprLib =
+Catch[
+Module[{lib},
+
+  lib = FileNameJoin[{libraryResources, "expr."<>$sharedExt}];
+
+  If[!FileExistsQ[lib],
+    Throw[Failure["ExprNativeLibraryNotFound", <| "ExpectedLocation" -> lib |>]]
+  ];
+
+  lib
 ]]
 
 
@@ -92,7 +109,11 @@ Catch[
 Module[{res, loaded, linkObject},
 
   If[FailureQ[$CodeParserLib],
-    Throw[$CodeParserLib]
+    With[{fail = $CodeParserLib},
+      Throw[
+        Function[fail]
+      ]
+    ]
   ];
 
   If[{params, ret} =!= {LinkObject, LinkObject},
@@ -103,7 +124,11 @@ Module[{res, loaded, linkObject},
     loaded = LibraryFunctionLoad[$CodeParserLib, name, params, ret];
 
     If[Head[loaded] =!= LibraryFunction,
-      Throw[Failure["LibraryFunctionLoad", <| "Result" -> loaded |>]]
+      With[{fail = Failure["LibraryFunctionLoad", <| "Arguments" -> {$CodeParserLib, name, params, ret}, "Result" -> loaded |>]},
+        Throw[
+          Function[fail]
+        ]
+      ]
     ];
 
     (*
@@ -131,17 +156,29 @@ Module[{res, loaded, linkObject},
   res = newestLinkObject[LibraryFunctionLoad[$CodeParserLib, name, params, ret]];
 
   If[FailureQ[res],
-    Throw[res]
+    With[{fail = res},
+      Throw[
+        Function[fail]
+      ]
+    ]
   ];
 
   {loaded, linkObject} = res;
 
   If[FailureQ[loaded],
-    Throw[loaded]
+    With[{fail = loaded},
+      Throw[
+        Function[fail]
+      ]
+    ]
   ];
 
   If[Head[loaded] =!= LibraryFunction,
-    Throw[Failure["LibraryFunctionLoad",  <| "Result" -> loaded |>]]
+    With[{fail = Failure["LibraryFunctionLoad",  <| "Arguments" -> {$CodeParserLib, name, params, ret}, "Result" -> loaded |>]},
+      Throw[
+        Function[fail]
+      ]
+    ]
   ];
 
   (*
@@ -224,13 +261,17 @@ Module[{pacletInfo, pacletInfoFile, transport},
 
 
 loadExprLibFuncs[] :=
-Module[{exprLib, exprCompiledLib},
+Catch[
+Module[{exprCompiledLib},
+  
+  If[FailureQ[$ExprLib],
+    Message[CodeParser::exprlib, $ExprLib];
+    Throw[Null]
+  ];
 
   Needs["CompiledLibrary`"];
 
-  exprLib = FileNameJoin[{libraryResources, "expr."<>$sharedExt}];
-
-  exprCompiledLib = CompiledLibrary`CompiledLibrary[exprLib];
+  exprCompiledLib = CompiledLibrary`CompiledLibrary[$ExprLib];
 
   If[$VersionNumber < 13.1,
     Message[CodeParser::old2]
@@ -239,7 +280,7 @@ Module[{exprLib, exprCompiledLib},
   $exprCompiledLibFuns = CompiledLibrary`CompiledLibraryLoadFunctions[exprCompiledLib];
 
   Null
-]
+]]
 
 
 fromPointerA[f_?FailureQ] :=
