@@ -909,7 +909,7 @@ size_t ScopedMLByteArray::getByteCount() const {
 
 
 #if USE_EXPR_LIB
-ScopedNumericArray::ScopedNumericArray(WolframLibraryData libData, MArgument Arg) : libData(libData) {
+ScopedNumericArray::ScopedNumericArray(WolframLibraryData libData, MArgument Arg) : libData(libData), arr() {
     arr = MArgument_getMNumericArray(Arg);
 }
     
