@@ -7,6 +7,12 @@ BeginPackage["CodeParser`Generate`Symbol`"]
 Begin["`Private`"]
 
 (*
+auto-load any symbols that require the PacletManager that may appear later
+System`MapApply evaluates in CodeParser`Generate`Parselet` because InfixParselets.wl is loaded
+this prevents e.g. "Get::noopen: Cannot open MapApplyCompatibility`." messages when building
+*)
+System`MapApply
+(*
 Do not allow PacletManager to participate in finding `Generate` files
 
 PacletManager will find e.g. CodeParser/Kernel/TokenEnum.wl when asked to find CodeParser`Generate`TokenEnum`
