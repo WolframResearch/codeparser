@@ -151,3 +151,19 @@ Test[
 	,
 	TestID->"TopLevel-20220122-G7R4U6"
 ]
+
+
+Test[
+	CodeParse["a::b=1"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Set", <||>], {
+			CallNode[LeafNode[Symbol, "MessageName", <||>], {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+				LeafNode[String, "\"b\"", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>],
+			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>]},
+		
+			<|Source -> {{1, 1}, {1, 7}}, "AdditionalDefinitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	,
+	TestID->"TopLevel-20220808-I5K1K1"
+]

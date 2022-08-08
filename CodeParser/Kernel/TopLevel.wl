@@ -774,7 +774,7 @@ insert "AdditionalDefinitions" metadata for a
 *)
 process[
   CallNode[head:LeafNode[Symbol, "Set" | "SetDelayed", _], children:{
-    CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", data_], {child1_}, _], _}, _] /; DefinitionSymbols[child1] != {},
+    CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", _], {child1_}, _], _}, data_] /; DefinitionSymbols[child1] != {},
   operatorStack_,
   nodeListStack_
 ] :=
@@ -791,7 +791,7 @@ insert "AdditionalDefinitions" metadata for a
 *)
 process[
   CallNode[head:LeafNode[Symbol, "Set" | "SetDelayed", _], children:{
-    CallNode[LeafNode[Symbol, "MessageName", data_], {child1_, ___}, _], _}, _] /; DefinitionSymbols[child1] != {},
+    CallNode[LeafNode[Symbol, "MessageName", _], {child1_, ___}, _], _}, data_] /; DefinitionSymbols[child1] != {},
   operatorStack_,
   nodeListStack_
 ] :=
