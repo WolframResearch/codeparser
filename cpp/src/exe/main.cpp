@@ -16,6 +16,7 @@ enum APIMode {
     EXPRESSION,
     TOKENIZE,
     LEAF,
+    SAFESTRING,
 };
 
 enum OutputMode {
@@ -36,6 +37,7 @@ int main(int argc, char *argv[]) {
     auto file = false;
     auto tokenize = false;
     auto leaf = false;
+    auto safeString = false;
     auto outputMode = PRINT;
     auto firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
     auto encodingMode = ENCODINGMODE_NORMAL;
@@ -83,6 +85,8 @@ int main(int argc, char *argv[]) {
             result = readFile(fileInput, LEAF, outputMode, firstLineBehavior, encodingMode);
         } else if (tokenize) {
             result = readFile(fileInput, TOKENIZE, outputMode, firstLineBehavior, encodingMode);
+        } else if (safeString) {
+            result = readFile(fileInput, SAFESTRING, outputMode, firstLineBehavior, encodingMode);
         } else {
             result = readFile(fileInput, EXPRESSION, outputMode, firstLineBehavior, encodingMode);
         }
@@ -91,6 +95,8 @@ int main(int argc, char *argv[]) {
             result = readStdIn(LEAF, outputMode, firstLineBehavior, encodingMode);
         } else if (tokenize) {
             result = readStdIn(TOKENIZE, outputMode, firstLineBehavior, encodingMode);
+        } else if (safeString) {
+            result = readStdIn(SAFESTRING, outputMode, firstLineBehavior, encodingMode);
         } else {
             result = readStdIn(EXPRESSION, outputMode, firstLineBehavior, encodingMode);
         }
@@ -159,6 +165,47 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             auto stringifyMode = STRINGIFYMODE_NORMAL;
             
             auto C = ParserSessionConcreteParseLeaf(session, stringifyMode);
+        
+            switch (outputMode) {
+                case PRINT: {
+                    
+                    NodeContainerPrint(C, std::cout);
+                    
+                    std::cout << "\n";
+                    
+                    break;
+                }
+                case PRINT_DRYRUN: {
+                    
+                    std::ofstream nullStream;
+                    
+                    NodeContainerPrint(C, nullStream);
+                    
+                    nullStream << "\n";
+                    
+                    break;
+                }
+                case NONE: case CHECK: {
+                    
+                    break;
+                }
+            }
+            
+            ParserSessionReleaseNodeContainer(session, C);
+            
+            ParserSessionDeinit(session);
+            
+#if DIAGNOSTICS
+            DiagnosticsPrint();
+#endif // DIAGNOSTICS
+            
+        } else if (mode == SAFESTRING) {
+            
+            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
+            
+            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            
+            auto C = ParserSessionSafeString(session);
         
             switch (outputMode) {
                 case PRINT: {
@@ -328,6 +375,44 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
         auto C = ParserSessionConcreteParseLeaf(session, stringifyMode);
+    
+        switch (outputMode) {
+            case PRINT: {
+                
+                NodeContainerPrint(C, std::cout);
+                
+                std::cout << "\n";
+                
+                break;
+            }
+            case PRINT_DRYRUN: {
+                
+                std::ofstream nullStream;
+                
+                NodeContainerPrint(C, nullStream);
+                
+                nullStream << "\n";
+                
+                break;
+            }
+            case NONE: case CHECK: {
+                break;
+            }
+        }
+        
+        ParserSessionReleaseNodeContainer(session, C);
+        
+        ParserSessionDeinit(session);
+        
+#if DIAGNOSTICS
+        DiagnosticsPrint();
+#endif // DIAGNOSTICS
+        
+    } else if (mode == SAFESTRING) {
+        
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        
+        auto C = ParserSessionSafeString(session);
     
         switch (outputMode) {
             case PRINT: {
