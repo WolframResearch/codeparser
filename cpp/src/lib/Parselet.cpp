@@ -1645,6 +1645,17 @@ void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     
     Parser_eatTrivia(session, Tok, TOPLEVEL);
     
+    if (Tok.Tok == TOKEN_LONGNAME_DIFFERENTIALD || Tok.Tok == TOKEN_LONGNAME_CAPITALDIFFERENTIALD) {
+        
+        //
+        // \[Integral] \[DifferentialD] x
+        //
+        
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(Tok.Buf), Source(Tok.Src.Start)));
+        
+        return IntegralParselet_parse1(session, Ignored, Tok);
+    }
+    
     assert(!Ctxt.F);
     Ctxt.F = IntegralParselet_parse1;
     
@@ -1682,7 +1693,6 @@ void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     Parser_pushTriviaSeq(session, Trivia1);
     
     auto& Ctxt = Parser_topContext(session);
-    assert(Ctxt.F == IntegralParselet_parse1);
     Ctxt.F = IntegralParselet_reduceIntegrate;
     
     auto P2 = prefixParselets[Tok.Tok.value()];

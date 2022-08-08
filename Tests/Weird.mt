@@ -102,7 +102,15 @@ Test[
 
 
 
-
+Test[
+	"\\[Integral] \\[DifferentialD] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20220808-C0V6P1"
+]
 
 
 
