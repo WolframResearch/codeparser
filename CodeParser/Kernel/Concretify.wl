@@ -86,7 +86,17 @@ structure[ctor_Function, _, _]["ctor"] := ctor
 
 structure[_, op_?FailureQ, _]["op"] := op
 
+(*
+maybe op matches:
+LeafNode[Token`Equal, "=", <||>]
+*)
 structure[_, op:_[_, _, _], _]["op"] := op
+
+(*
+maybe op matches:
+{LeafNode[Token`Equal, "=", <||>], LeafNode[Token`Dot, ".", <||>]}
+*)
+structure[_, op:{_[_, _, _], _[_, _, _]}, _]["op"] := op
 
 structure[_, _, prec_Symbol]["prec"] := prec
 
