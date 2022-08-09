@@ -26,6 +26,8 @@ precedenceFile = FileNameJoin[{location, "Resources", "Generated", "Precedence.w
 
 $precedence = Get[precedenceFile]
 
+lookupPrecedence[prec_?FailureQ] := prec
+
 lookupPrecedence[prec_] :=
   If[KeyExistsQ[$precedence, prec],
     $precedence[prec]
@@ -102,11 +104,29 @@ structure[_, _, prec_Symbol]["prec"] := prec
 
 
 
+precedenceGreater[a_?FailureQ, b_] := 
+  a
+
+precedenceGreater[a_, b_?FailureQ] := 
+  b
+
 precedenceGreater[a_, b_] := 
   lookupPrecedence[a] > lookupPrecedence[b]
 
+precedenceLess[a_?FailureQ, b_] := 
+  a
+
+precedenceLess[a_, b_?FailureQ] := 
+  b
+
 precedenceLess[a_, b_] := 
   lookupPrecedence[a] < lookupPrecedence[b]
+
+precedenceEqual[a_?FailureQ, b_] :=
+  a
+
+precedenceEqual[a_, b_?FailureQ] :=
+  b
 
 precedenceEqual[a_, b_] :=
   lookupPrecedence[a] == lookupPrecedence[b]
@@ -590,6 +610,9 @@ precCTR[PrefixNode[PrefixLinearSyntaxBang, _, _]] = Precedence`LinearSyntax`Bang
 
 precCTL[ErrorNode[_, _, _]] = Precedence`Highest
 precCTR[ErrorNode[_, _, _]] = Precedence`Highest
+
+precCTL[cst_?FailureQ] := cst
+precCTR[cst_?FailureQ] := cst
 
 precCTL[cst_] :=
   Failure["unhandled precCTL: ", <| "cst" -> cst |>]

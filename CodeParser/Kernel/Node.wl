@@ -84,6 +84,7 @@ Module[{num, den, e},
   CallNode[LeafNode[Symbol, "Rational", <||>], {ToNode[num], ToNode[den]}, <||>]
 ]]
 
+ToNode[f_?FailureQ] := f
 
 ToNode[args___] :=
   Failure["Unhandled", <| "Function" -> ToNode, "Arguments" -> HoldForm[{args}] |>]
@@ -111,6 +112,7 @@ FromNode[LeafNode[Real, r_, _]] :=
 FromNode[LeafNode[Rational, r_, _]] :=
   ToExpression[r]
 
+FromNode[f_?FailureQ] := f
 
 FromNode[args___] :=
   Failure["Unhandled", <| "Function" -> FromNode, "Arguments" -> HoldForm[{args}] |>]
