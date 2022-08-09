@@ -597,3 +597,11 @@ End[]"
 	,
 	TestID->"Concretify-20220614-N4T1I5"
 ]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a=."]]]
+    ,
+    "a=."
+	,
+	TestID->"Concretify-20220809-G0E2O5"
+]
