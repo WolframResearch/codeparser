@@ -107,6 +107,7 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Quirks.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Scoping.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Shims.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Trees.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/TopLevel.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/ToString.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Utils.wl
