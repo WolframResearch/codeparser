@@ -366,6 +366,10 @@ Module[{res},
     ]
   ];
 
+  If[MatchQ[res, _libFunc],
+    Throw[Failure["Unevaluated", <| "Result" -> res |>]]
+  ];
+
   res
 ]]
 
