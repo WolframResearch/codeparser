@@ -155,7 +155,12 @@ CheckWolframKernel()
 CheckPacletInfo()
 
 if(${TRANSPORT} STREQUAL Automatic)
-if(${VERSION_NUMBER} GREATER_EQUAL 1310)
+if(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+#
+# bug 426325: Transport ExprLib does not yet work on Linux
+#
+set(TRANSPORT MathLink)
+elseif(${VERSION_NUMBER} GREATER_EQUAL 1310)
 set(TRANSPORT ExprLib)
 else()
 set(TRANSPORT MathLink)
