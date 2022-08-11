@@ -636,6 +636,7 @@ set(STATIC_CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/IntegralParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/LongNames.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/MyString.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Node.cpp
