@@ -39,7 +39,5 @@ TEST(TokenEnumTest, Unterminated) {
 
 TEST(TokenEnumTest, Empty) {
     
-    EXPECT_TRUE(TOKEN_ENDOFFILE.isEmpty());
-    
     EXPECT_TRUE(TOKEN_ERROR_EXPECTEDOPERAND.isEmpty());
 }

@@ -42,20 +42,27 @@ TEST_F(CrashTest, Crash0_tokens) {
     const unsigned char arr[] = {'1', '\\', '\n'};
 
     auto bufAndLen = BufferAndLength(arr, 3);
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto policy = TOPLEVEL;
 
     auto Tok = Tokenizer_currentToken(session, policy);
 
-    EXPECT_EQ(Tok, Token(TOKEN_INTEGER, BufferAndLength(arr, 1), Source(SourceLocation(1, 1), SourceLocation(1, 2))));
+    EXPECT_EQ(Tok, Token(TOKEN_INTEGER, BufferAndLength(session->start + 0, 1), Source(SourceLocation(1, 1), SourceLocation(1, 2))));
     
     Tokenizer_nextToken(session, policy);
     
     Tok = Tokenizer_currentToken(session, policy);
 
-    EXPECT_EQ(Tok, Token(TOKEN_ENDOFFILE, BufferAndLength(arr + 1, 2), Source(SourceLocation(1, 2), SourceLocation(2, 1))));
+    EXPECT_EQ(Tok, Token(TOKEN_ENDOFFILE, BufferAndLength(session->start + 1, 3), Source(SourceLocation(1, 2), SourceLocation(2, 1))));
 
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -71,7 +78,14 @@ TEST_F(CrashTest, Crash1) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
     
     auto N = session->parseExpressions();
     
@@ -115,8 +129,15 @@ TEST_F(CrashTest, Crash2) {
     const unsigned char arr[] = {'\\', ':', 'f', 'e', 'f', 'f'};
 
     auto bufAndLen = BufferAndLength(arr, 6);
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
@@ -135,8 +156,15 @@ TEST_F(CrashTest, Crash3) {
     const unsigned char arr[] = {'a', ':', 'b', '~', '1', ':', '2'};
 
     auto bufAndLen = BufferAndLength(arr, 7);
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
@@ -155,8 +183,15 @@ TEST_F(CrashTest, Crash4) {
     const unsigned char arr[] = {'\\', '[', 'I', 'n', 't', 'e', 'g', 'r', 'a', 'l', ']', '\\', '[', 'S', 'u', 'm', ']'};
 
     auto bufAndLen = BufferAndLength(arr, 17);
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
@@ -175,8 +210,15 @@ TEST_F(CrashTest, Crash5) {
     const unsigned char arr[] = {'{', '\t', '1', '\\', '\n', '^'};
 
     auto bufAndLen = BufferAndLength(arr, 6);
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_SOURCECHARACTERINDEX;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 

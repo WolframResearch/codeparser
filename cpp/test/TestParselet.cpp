@@ -45,8 +45,15 @@ TEST_F(ParseletTest, Bug1) {
     auto strIn = std::string("a /: b := c");
 
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
@@ -72,8 +79,15 @@ TEST_F(ParseletTest, Bug2) {
     auto strIn = std::string("a<b ");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
@@ -93,8 +107,15 @@ TEST_F(ParseletTest, Bug3) {
     auto strIn = std::string("a\\[Integral]b\\[Integral]c ");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
@@ -114,8 +135,15 @@ TEST_F(ParseletTest, Bug4) {
     auto strIn = std::string("\\[RawLeftBrace]*\\[RawRightBrace]");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 

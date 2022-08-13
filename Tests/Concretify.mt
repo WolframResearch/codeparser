@@ -1,7 +1,7 @@
 
 Needs["CodeParser`"]
 Needs["CodeParser`Concretify`"]
-
+Needs["CodeParser`Utils`"]
 
 
 Test[
@@ -573,26 +573,26 @@ Test[
 ]
 
 Test[
-	ToSourceCharacterString[Concretify[CodeParse["
+	ToSourceCharacterString[Concretify[CodeParse["\
 BeginPackage[\"Foo`\"]
 EndPackage[]
 "]]]
     ,
     "\
-BeginPackage[\"Foo`\"]
+BeginPackage[\"Foo`\"]" <> $systemNewline <> "\
 EndPackage[]"
 	,
 	TestID->"Concretify-20220614-F0A1F4"
 ]
 
 Test[
-	ToSourceCharacterString[Concretify[CodeParse["
+	ToSourceCharacterString[Concretify[CodeParse["\
 Begin[\"Foo`\"]
 End[]
 "]]]
     ,
     "\
-Begin[\"Foo`\"]
+Begin[\"Foo`\"]" <> $systemNewline <> "\
 End[]"
 	,
 	TestID->"Concretify-20220614-N4T1I5"

@@ -24,7 +24,14 @@ TEST_F(NodeTest, Bug1) {
     
     ParserSession session;
     
-    session.init(BufferAndLength(Buffer(input.c_str() + 0), 3), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session.init(BufferAndLength(Buffer(input.c_str() + 0), 3), nullptr, opts);
     
     auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1), Source(SourceLocation(1, 1), SourceLocation(1, 2)));
     Args.push(T1);

@@ -42,8 +42,15 @@ TEST_F(CharacterDecoderTest, Basic1) {
     auto strIn = std::string("1+2");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -76,8 +83,15 @@ TEST_F(CharacterDecoderTest, LongName) {
     auto strIn = std::string("1+\\[Alpha]");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -110,8 +124,15 @@ TEST_F(CharacterDecoderTest, 4Hex) {
     auto strIn = std::string("1+\\:03b1");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -144,8 +165,15 @@ TEST_F(CharacterDecoderTest, 2Hex) {
     auto strIn = std::string("1+\\.f2");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -178,8 +206,15 @@ TEST_F(CharacterDecoderTest, Octal) {
     auto strIn = std::string("1+\\333");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -212,8 +247,15 @@ TEST_F(CharacterDecoderTest, 6Hex) {
     auto strIn = std::string("1+\\|0000f2");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -246,8 +288,15 @@ TEST_F(CharacterDecoderTest, Raw) {
     auto strIn = std::string("1+\\[RawWedge]");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -280,8 +329,15 @@ TEST_F(CharacterDecoderTest, LongNameError1) {
     auto strIn = std::string("1+\\[Alpha+2");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -362,8 +418,15 @@ TEST_F(CharacterDecoderTest, LongNameError2) {
     auto strIn = std::string("1+\\[Alpa]+2");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -444,8 +507,15 @@ TEST_F(CharacterDecoderTest, 4HexError1) {
     auto strIn = std::string("1+\\:03b+1");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -518,7 +588,14 @@ TEST_F(CharacterDecoderTest, UnexpectedEscapeSequence) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
     
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
     

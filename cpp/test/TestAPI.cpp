@@ -47,8 +47,15 @@ TEST_F(APITest, Bug1) {
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
 
     auto bufAndLen = BufferAndLength(str, strIn.size());
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->concreteParseLeaf(STRINGIFYMODE_NORMAL);
 
@@ -72,8 +79,15 @@ TEST_F(APITest, Hang1) {
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
 
     auto bufAndLen = BufferAndLength(str, strIn.size());
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
@@ -97,8 +111,15 @@ TEST_F(APITest, Crash1) {
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
 
     auto bufAndLen = BufferAndLength(str, strIn.size());
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
@@ -123,7 +144,14 @@ TEST_F(APITest, Crash2) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
     
     auto N = session->parseExpressions();
     
@@ -148,7 +176,14 @@ TEST_F(APITest, Crash3) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
     
     auto N = session->parseExpressions();
     
@@ -172,8 +207,15 @@ TEST_F(APITest, Crash4) {
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
 
     auto bufAndLen = BufferAndLength(str, strIn.size());
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
@@ -197,8 +239,15 @@ TEST_F(APITest, Crash5) {
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
 
     auto bufAndLen = BufferAndLength(str, strIn.size());
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
@@ -223,7 +272,14 @@ TEST_F(APITest, Crash6) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
     
     auto N = session->parseExpressions();
     
@@ -253,7 +309,15 @@ TEST_F(APITest, Crash7) {
     // but 0 is now SOURCECONVENTION_LINECOLUMN
     // so make up a bogus SourceConvention of 2
     //
-    auto res = session->init(bufAndLen, nullptr, static_cast<SourceConvention>(2), DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = static_cast<SourceConvention>(2);
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    auto res = session->init(bufAndLen, nullptr, opts);
     
     EXPECT_EQ(res, PARSERSESSIONINIT_ERROR);
 
@@ -270,8 +334,15 @@ TEST_F(APITest, Crash8) {
     const unsigned char arr[] = {'(', '*', '\r', '\n', '*', ')'};
 
     auto bufAndLen = BufferAndLength(arr, 6);
-
-    session->init(bufAndLen, nullptr, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_SOURCECHARACTERINDEX;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    opts.alreadyHasEOFSentinel = false;
+    
+    session->init(bufAndLen, nullptr, opts);
 
     auto N = session->parseExpressions();
 
