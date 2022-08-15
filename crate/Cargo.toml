@@ -1,0 +1,33 @@
+[package]
+name = "wolfram-code-parse"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# This crate can be used as Rust dependency, or as a dynamic library.
+crate-type = ["rlib", "cdylib"]
+
+
+[features]
+COMPUTE_SOURCE = []
+CHECK_ISSUES = []
+COMPUTE_OOB = []
+
+# Features used when building the LibraryLink dynamic library.
+USE_MATHLINK = ["wolfram-library-link"]
+CHECK_ABORT = []
+
+default = ["COMPUTE_SOURCE", "CHECK_ISSUES", "COMPUTE_OOB"]
+
+
+[dependencies]
+once_cell = "1.13.0"
+ordered-float = "3.0"
+
+wolfram-library-link = { version = "0.2.9", optional = true, default-features = false }
+
+
+[dev-dependencies]
+pretty_assertions = "1.2.1"

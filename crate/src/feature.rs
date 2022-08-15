@@ -1,0 +1,43 @@
+//! Constants that are true if the associated cargo feature is enabled.
+//!
+//! The constants in this module are intended to be used as:
+//!
+//! ```ignore
+//! if feature::COMPUTE_OOB {
+//!     // ...
+//! }
+//! ```
+//!
+//! Using these constants is preferred over the standard alternatives of:
+//!
+//! ```ignore
+//! #[cfg(feature = "COMPUTE_OOB")]
+//! // ...
+//! ```
+//!
+//! or:
+//!
+//! ```ignore
+//! if cfg!(feature = "COMPUTE_OOB") {
+//!     // ...
+//! }
+//! ```
+//!
+//! which have the disadvantage that the `feature = "..."` is not validated to
+//! correspond to a feature that is declared in Cargo.toml.
+//!
+//! More generally, using a constant instead of a parse-time `#[cfg(..)]` to
+//! disable sections of code has the advantage that the code inside the
+//! condition is still validated and type checked, which doesn't have if
+//! `#[cfg(..)]` is used.
+//!
+//! This makes code controlled by feature flags easier to keep up-to-date as
+//! refactoring occurs.
+
+pub(crate) const COMPUTE_OOB: bool = cfg!(feature = "COMPUTE_OOB");
+
+pub(crate) const COMPUTE_SOURCE: bool = cfg!(feature = "COMPUTE_SOURCE");
+
+pub(crate) const CHECK_ISSUES: bool = cfg!(feature = "CHECK_ISSUES");
+
+pub(crate) const CHECK_ABORT: bool = cfg!(feature = "CHECK_ABORT");

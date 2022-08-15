@@ -1,0 +1,5 @@
+max_width = 100
+# use_small_heuristics = "off"
+match_block_trailing_comma = true
+blank_lines_upper_bound = 3
+merge_derives = false

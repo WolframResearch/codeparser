@@ -38,9 +38,9 @@ uppercases and replaces ` with _
 toGlobal[n_] :=
   StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
-generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
-generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
-generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
+generatedCPPDir = FileNameJoin[{buildDir, "generated", "rust"}]
+generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir}]
+generatedCPPSrcDir = FileNameJoin[{generatedCPPDir}]
 
 dataDir := dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 

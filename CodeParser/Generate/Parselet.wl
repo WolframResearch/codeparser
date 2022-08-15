@@ -57,148 +57,101 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 
 
 
-formatPrefix[Parselet`PrefixEndOfFileParselet[]] := "prefixEndOfFileParselet"
+formatPrefix[Parselet`PrefixEndOfFileParselet[]] := "&prefixEndOfFileParselet"
 
-formatPrefix[Parselet`PrefixErrorParselet[]] := "prefixErrorParselet"
+formatPrefix[Parselet`PrefixNullPointerParselet[]] := "&PrefixAssertFalseParselet {}"
 
-formatPrefix[Parselet`PrefixCloserParselet[]] := "prefixCloserParselet"
+formatPrefix[Parselet`PrefixErrorParselet[]] := "&prefixErrorParselet"
 
-formatPrefix[Parselet`PrefixUnsupportedTokenParselet[]] := "prefixUnsupportedTokenParselet"
+formatPrefix[Parselet`PrefixCloserParselet[]] := "&prefixCloserParselet"
 
-formatPrefix[Parselet`PrefixUnhandledParselet[]] := "prefixUnhandledParselet"
+formatPrefix[Parselet`PrefixUnsupportedTokenParselet[]] := "&prefixUnsupportedTokenParselet"
 
-formatPrefix[Parselet`PrefixCommaParselet[]] := "prefixCommaParselet"
+formatPrefix[Parselet`PrefixUnhandledParselet[]] := "&prefixUnhandledParselet"
 
-formatPrefix[Parselet`LeafParselet[]] := "leafParselet"
+formatPrefix[Parselet`PrefixCommaParselet[]] := "&prefixCommaParselet"
 
-formatPrefix[Parselet`SymbolParselet[]] := "symbolParselet"
+formatPrefix[Parselet`LeafParselet[]] := "&leafParselet"
 
-formatPrefix[Parselet`UnderParselet[1]] := "under1Parselet"
+formatPrefix[Parselet`SymbolParselet[]] := "&symbolParselet"
 
-formatPrefix[Parselet`UnderParselet[2]] := "under2Parselet"
+formatPrefix[Parselet`UnderParselet[1]] := "&under1Parselet"
 
-formatPrefix[Parselet`UnderParselet[3]] := "under3Parselet"
+formatPrefix[Parselet`UnderParselet[2]] := "&under2Parselet"
 
-formatPrefix[Parselet`UnderDotParselet[]] := "underDotParselet"
+formatPrefix[Parselet`UnderParselet[3]] := "&under3Parselet"
 
-formatPrefix[Parselet`HashParselet[]] := "new HashParselet()"
+formatPrefix[Parselet`UnderDotParselet[]] := "&underDotParselet"
 
-formatPrefix[Parselet`HashHashParselet[]] := "new HashHashParselet()"
+formatPrefix[Parselet`HashParselet[]] := "&HashParselet {}"
 
-formatPrefix[Parselet`PercentParselet[]] := "new PercentParselet()"
+formatPrefix[Parselet`HashHashParselet[]] := "&HashHashParselet {}"
 
-formatPrefix[Parselet`LessLessParselet[]] := "new LessLessParselet()"
+formatPrefix[Parselet`PercentParselet[]] := "&PercentParselet {}"
 
-formatPrefix[Parselet`SemiSemiParselet[]] := "semiSemiParselet"
+formatPrefix[Parselet`LessLessParselet[]] := "&(LessLessParselet {})"
 
-formatPrefix[Parselet`IntegralParselet[op1_, op2_]] := "new IntegralParselet(" <> "SYMBOL_" <> toGlobal[op1] <> ", " <> "SYMBOL_" <> toGlobal[op2] <> ")"
+formatPrefix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
 
-formatPrefix[Parselet`PrefixOperatorParselet[precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatPrefix[Parselet`IntegralParselet[op1_, op2_]] := "&IntegralParselet::new(" <> "SYMBOL_" <> toGlobal[op1] <> ", " <> "SYMBOL_" <> toGlobal[op2] <> ")"
 
-formatPrefix[Parselet`GroupParselet[tok_, op_]] := "new GroupParselet(" <> toGlobal[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatPrefix[Parselet`PrefixOperatorParselet[precedence_, op_]] := "&PrefixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+
+formatPrefix[Parselet`GroupParselet[Token`OpenSquare, CodeParser`GroupSquare]] := "&squareGroupParselet"
+
+formatPrefix[Parselet`GroupParselet[Token`LongName`LeftDoubleBracket, CodeParser`GroupDoubleBracket]] := "&doubleBracketGroupParselet"
+
+formatPrefix[Parselet`GroupParselet[tok_, op_]] := "&GroupParselet::new(" <> toGlobal[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 
-formatInfix[Parselet`InfixAssertFalseParselet[]] := "infixAssertFalseParselet"
+formatInfix[Parselet`InfixAssertFalseParselet[]] := "&infixAssertFalseParselet"
 
-formatInfix[Parselet`InfixImplicitTimesParselet[]] := "infixImplicitTimesParselet"
+formatInfix[Parselet`InfixNullPointerParselet[]] := "&infixAssertFalseParselet"
+
+formatInfix[Parselet`InfixImplicitTimesParselet[]] := "&infixImplicitTimesParselet"
 
 
 
-formatInfix[Parselet`BinaryOperatorParselet[precedence_, op_]] := "new BinaryOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatInfix[Parselet`BinaryOperatorParselet[precedence_, op_]] := "&BinaryOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatInfix[Parselet`InfixOperatorParselet[precedence_, op_]] := "new InfixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatInfix[Parselet`InfixOperatorParselet[precedence_, op_]] := "&InfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatInfix[Parselet`PostfixOperatorParselet[precedence_, op_]] := "new PostfixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatInfix[Parselet`PostfixOperatorParselet[precedence_, op_]] := "&PostfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatInfix[Parselet`ColonParselet[]] := "colonParselet"
+formatInfix[Parselet`ColonParselet[]] := "&colonParselet"
 
-formatInfix[Parselet`CallParselet[groupParselet_]] := "new CallParselet(" <> formatPrefix[groupParselet] <> ")"
+formatInfix[Parselet`CallParselet[groupParselet_]] := "&(CallParselet::new(" <> formatPrefix[groupParselet] <> "))"
 
-formatInfix[Parselet`EqualParselet[]] := "equalParselet"
+formatInfix[Parselet`EqualParselet[]] := "&equalParselet"
 
-formatInfix[Parselet`ColonEqualParselet[]] := "colonEqualParselet"
+formatInfix[Parselet`ColonEqualParselet[]] := "&colonEqualParselet"
 
-formatInfix[Parselet`TildeParselet[]] := "new TildeParselet()"
+formatInfix[Parselet`TildeParselet[]] := "(&TildeParselet {})"
 
-formatInfix[Parselet`SlashColonParselet[]] := "slashColonParselet"
+formatInfix[Parselet`SlashColonParselet[]] := "&slashColonParselet"
 
-formatInfix[Parselet`CommaParselet[]] := "commaParselet"
+formatInfix[Parselet`CommaParselet[]] := "&commaParselet"
 
-formatInfix[Parselet`SemiParselet[]] := "semiParselet"
+formatInfix[Parselet`SemiParselet[]] := "&semiParselet"
 
-formatInfix[Parselet`SemiSemiParselet[]] := "semiSemiParselet"
+formatInfix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
 
-formatInfix[Parselet`ColonColonParselet[]] := "new ColonColonParselet()"
+formatInfix[Parselet`ColonColonParselet[]] := "(&ColonColonParselet {})"
 
-formatInfix[Parselet`GreaterGreaterParselet[]] := "new GreaterGreaterParselet()"
+formatInfix[Parselet`GreaterGreaterParselet[]] := "(&GreaterGreaterParselet {})"
 
-formatInfix[Parselet`GreaterGreaterGreaterParselet[]] := "new GreaterGreaterGreaterParselet()"
+formatInfix[Parselet`GreaterGreaterGreaterParselet[]] := "(&GreaterGreaterGreaterParselet {})"
 
-formatInfix[Parselet`InfixDifferentialDParselet[]] := "infixDifferentialDParselet"
+formatInfix[Parselet`InfixDifferentialDParselet[]] := "&infixDifferentialDParselet"
 
-formatInfix[Parselet`InfixToplevelNewlineParselet[]] := "new InfixToplevelNewlineParselet()"
+formatInfix[Parselet`InfixToplevelNewlineParselet[]] := "&(InfixToplevelNewlineParselet {})"
 
-formatInfix[Parselet`TimesParselet[]] := "timesParselet"
+formatInfix[Parselet`TimesParselet[]] := "&timesParselet"
 
 
 generate[] := (
 
 Print["Generating Parselet..."];
-
-parseletRegistrationCPPHeader = {
-"
-//
-// AUTO GENERATED FILE
-// DO NOT MODIFY
-//
-
-#pragma once
-
-#include \"TokenEnumRegistration.h\" // for TOKEN_COUNT
-
-#include <array>
-
-class PrefixParselet;
-class InfixParselet;
-class SymbolParselet;
-class UnderParselet;
-class UnderDotParselet;
-class ColonParselet;
-class SlashColonParselet;
-class EqualParselet;
-class ColonEqualParselet;
-class PrefixToplevelCloserParselet;
-class TimesParselet;
-
-using PrefixParseletPtr = PrefixParselet *;
-using InfixParseletPtr = InfixParselet *;
-
-
-extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
-extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
-
-extern SymbolParselet *symbolParselet;
-extern UnderParselet *under1Parselet;
-extern UnderParselet *under2Parselet;
-extern UnderParselet *under3Parselet;
-extern UnderDotParselet *underDotParselet;
-extern ColonParselet *colonParselet;
-extern SlashColonParselet *slashColonParselet;
-extern EqualParselet *equalParselet;
-extern ColonEqualParselet *colonEqualParselet;
-extern PrefixToplevelCloserParselet *prefixToplevelCloserParselet;
-extern TimesParselet *timesParselet;
-"};
-
-Print["exporting ParseletRegistration.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "ParseletRegistration.h"}], Column[parseletRegistrationCPPHeader], "String"];
-
-Print[res];
-
-If[FailureQ[res],
-  Quit[1]
-];
-
 
 parseletRegistrationCPPSource = {
 "
@@ -207,83 +160,85 @@ parseletRegistrationCPPSource = {
 // DO NOT MODIFY
 //
 
-#include \"ParseletRegistration.h\"
+use crate::{
+	token_enum_registration::TokenEnum::*,
+	symbol_registration::*,
+	precedence::*,
+	parselet::{*}
+};
 
-#include \"Parselet.h\" // for SymbolParselet, UnderParselet, etc.
-#include \"ByteDecoder.h\" // for TheByteDecoder
-#include \"SymbolRegistration.h\"
+pub(crate) const symbolParselet: SymbolParselet = SymbolParselet {};
 
+pub(crate) const leafParselet: LeafParselet = LeafParselet {};
 
-SymbolParselet *symbolParselet = new SymbolParselet();
+pub(crate) const prefixEndOfFileParselet: PrefixEndOfFileParselet = PrefixEndOfFileParselet {};
 
-UnderParselet *under1Parselet = new UnderParselet(SYMBOL_BLANK, SYMBOL_CODEPARSER_PATTERNBLANK);
+pub(crate) const prefixErrorParselet: PrefixErrorParselet = PrefixErrorParselet {};
 
-UnderParselet *under2Parselet = new UnderParselet(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE);
+pub(crate) const prefixCloserParselet: PrefixCloserParselet = PrefixCloserParselet {};
 
-UnderParselet *under3Parselet = new UnderParselet(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE);
+pub(crate) const prefixToplevelCloserParselet: PrefixToplevelCloserParselet = PrefixToplevelCloserParselet {};
 
-UnderDotParselet *underDotParselet = new UnderDotParselet();
+pub(crate) const prefixUnsupportedTokenParselet: PrefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet {};
 
-ColonParselet *colonParselet = new ColonParselet();
+pub(crate) const prefixUnhandledParselet: PrefixUnhandledParselet = PrefixUnhandledParselet {};
 
-SlashColonParselet *slashColonParselet = new SlashColonParselet();
+pub(crate) const prefixCommaParselet: PrefixCommaParselet = PrefixCommaParselet {};
 
-EqualParselet *equalParselet = new EqualParselet();
+pub(crate) const infixAssertFalseParselet: InfixAssertFalseParselet = InfixAssertFalseParselet {};
 
-ColonEqualParselet *colonEqualParselet = new ColonEqualParselet();
+pub(crate) const infixImplicitTimesParselet: InfixImplicitTimesParselet = InfixImplicitTimesParselet {};
 
-PrefixToplevelCloserParselet *prefixToplevelCloserParselet = new PrefixToplevelCloserParselet();
+pub(crate) const commaParselet: CommaParselet = CommaParselet {};
 
-TimesParselet *timesParselet = new TimesParselet();
+pub(crate) const semiParselet: SemiParselet = SemiParselet {};
 
+pub(crate) const semiSemiParselet: SemiSemiParselet = SemiSemiParselet {};
 
-auto leafParselet = new LeafParselet();
+pub(crate) const slashColonParselet: SlashColonParselet = SlashColonParselet {};
 
-auto prefixEndOfFileParselet = new PrefixEndOfFileParselet();
+pub(crate) const colonParselet: ColonParselet = ColonParselet {};
 
-auto prefixErrorParselet = new PrefixErrorParselet();
+pub(crate) const equalParselet: EqualParselet = EqualParselet::new();
 
-auto prefixCloserParselet = new PrefixCloserParselet();
+pub(crate) const colonEqualParselet: ColonEqualParselet = ColonEqualParselet::new();
 
-auto prefixUnsupportedTokenParselet = new PrefixUnsupportedTokenParselet();
+pub(crate) const infixDifferentialDParselet: InfixDifferentialDParselet = InfixDifferentialDParselet {};
 
-auto prefixUnhandledParselet = new PrefixUnhandledParselet();
+pub(crate) const under1Parselet: UnderParselet = UnderParselet::new(SYMBOL_BLANK, SYMBOL_CODEPARSER_PATTERNBLANK);
+pub(crate) const under2Parselet: UnderParselet = UnderParselet::new(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE);
+pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE);
 
-auto prefixCommaParselet = new PrefixCommaParselet();
+pub(crate) const underDotParselet: UnderDotParselet = UnderDotParselet {};
 
-auto infixAssertFalseParselet = new InfixAssertFalseParselet();
+pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TOKEN_OPENSQUARE, SYMBOL_CODEPARSER_GROUPSQUARE);
 
-auto infixImplicitTimesParselet = new InfixImplicitTimesParselet();
+pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TOKEN_LONGNAME_LEFTDOUBLEBRACKET, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
 
-auto commaParselet = new CommaParselet();
-
-auto semiParselet = new SemiParselet();
-
-auto semiSemiParselet = new SemiSemiParselet();
-
-auto infixDifferentialDParselet = new InfixDifferentialDParselet();
+pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 
 //
 //
 //
-std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets {{"} ~Join~
+
+pub(crate) const prefixParselets: [PrefixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
 
 (Row[{"  ", formatPrefix[PrefixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
-{"}};
+{"];
 
 //
 //
 //
-std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets {{"} ~Join~
+pub(crate) const infixParselets: [InfixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
 
 (Row[{"  ", formatInfix[InfixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
-{"}};
+{"];
 "};
 
 Print["exporting ParseletRegistration.cpp"];
-res = Export[FileNameJoin[{generatedCPPSrcDir, "ParseletRegistration.cpp"}], Column[parseletRegistrationCPPSource], "String"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "parselet_registration.rs"}], Column[parseletRegistrationCPPSource], "String"];
 
 Print[res];
 

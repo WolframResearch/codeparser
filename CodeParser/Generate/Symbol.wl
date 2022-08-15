@@ -155,9 +155,9 @@ symbolRegistrationCPPHeader = {
 // DO NOT MODIFY
 //
 
-#pragma once
+#![allow(dead_code)]
 
-#include \"Symbol.h\"
+use crate::symbol::Symbol;
 
 
 //
@@ -168,13 +168,13 @@ If[#1 === String && $WorkaroundBug321344,
   (*
   handle String specially because of bug 321344
   *)
-  Row[{"constexpr Symbol", " ", "SYMBOL_STRING", "(", "\"String\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]
+  Row[{"pub const SYMBOL_STRING: Symbol = Symbol::new(", "\"String\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]
   ,
-  Row[{"constexpr Symbol", " ", toGlobal["Symbol`"<>ToString[#1]], "(", "\"", stringifyForTransmitting[#1], "\"", ",", " ", ToString[StringLength[stringifyForTransmitting[#1]]], ",", " ", ToString[#2[[1]]-1], ")", ";"}]]&, symbols] ~Join~
+  Row[{"pub const ", toGlobal["Symbol`"<>ToString[#1]], ": Symbol = Symbol::new(", "\"", stringifyForTransmitting[#1], "\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]]&, symbols] ~Join~
 {""};
 
 Print["exporting SymbolRegistration.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "SymbolRegistration.h"}], Column[symbolRegistrationCPPHeader], "String"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "symbol_registration.rs"}], Column[symbolRegistrationCPPHeader], "String"];
 
 Print[res];
 

@@ -331,9 +331,11 @@ $isEmptyTokens = {
   (*
   EndOfFile is not empty
   It is a single byte 0xff
+  FIXME: Update the Rust port to use this optimization (and benchmark it)
+  *)
 
   Token`EndOfFile,
-  *)
+
   Token`Fake`ImplicitTimes,
   Token`Error`Aborted,
   Token`Fake`ImplicitNull,
@@ -375,7 +377,7 @@ Which[
 ]
 
 
-tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
+tokenToSymbolCases = Row[{toGlobal[#], " => return ", toGlobal[tokenToSymbol[#]], ","}]& /@ tokens
 
 
 tokenIsEmptyCases = Row[{"tokenIsEmpty", "[", ToString[#], "]", " ", "=", " ", "True"}]& /@ $isEmptyTokens
@@ -392,81 +394,85 @@ tokenEnumRegistrationCPPHeader = {
 // DO NOT MODIFY
 //
 
-#pragma once
-
-#include \"TokenEnum.h\"
-
-#include \"Symbol.h\"
-
-
-Symbol TokenToSymbol(TokenEnum T);
+use crate::symbol::Symbol;
 
 //
 // All token enums
-//"} ~Join~
-KeyValueMap[
-  Row[{"constexpr TokenEnum ", toGlobal[#1], "(", #2, ", ", group1Bits[#1], ", ", group2Bits[#1], ");"}]&
+//
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[repr(u16)]
+pub enum TokenEnum {"} ~Join~
+KeyValueMap[(
+  (* Row[{"    ",   StringReplace[ToString[#], {"`" -> "_", "$" -> "_"}], " = ", *)
+  Row[{"    ",   toGlobal[#1], " = ",
+    BitOr[
+      group2Bits[#1],
+      group1Bits[#1],
+      #2
+    ], ", // { group2Bits:", group2Bits[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, ", ", StringJoin["0b", {StringTake[#, {1, 1}], "_", StringTake[#, {2, 5}], "_", StringTake[#, {6, 9}]}&[IntegerString[#2, 2, 9]]], " }"
+  }])&
   ,
-  enumMap
+  KeyDrop[enumMap, Token`Error`First]
 ] ~Join~ {
+	"}"
 };
 
-Print["exporting TokenEnumRegistration.h"];
+(* Print["exporting TokenEnumRegistration.h"];
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnumRegistration.h"}], Column[tokenEnumRegistrationCPPHeader], "String"];
 
 Print[res];
 
 If[FailureQ[res],
   Quit[1]
-];
+]; *)
 
 
-tokenEnumRegistrationCPPSource = {
+tokenEnumRegistrationCPPSource = tokenEnumRegistrationCPPHeader ~Join~ {
 "
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
 //
 
-#include \"TokenEnumRegistration.h\"
+use crate::symbol_registration::*;
 
-#include \"SymbolRegistration.h\"
-#include \"TokenEnum.h\" // for Closer
-
-#include <cassert>
+use self::TokenEnum::*;
 
 //
 // TOKEN_INTEGER must be 0x4 to allow setting the 0b1 bit to convert to TOKEN_REAL, and 0b10 bit to convert to TOKEN_RATIONAL
 //
-static_assert(TOKEN_INTEGER.value() == 0x4, \"Check your assumptions\");
-static_assert(TOKEN_REAL.value() == 0x5, \"Check your assumptions\");
-static_assert(TOKEN_RATIONAL.value() == 0x6, \"Check your assumptions\");
+const _: () = assert!(TOKEN_INTEGER.value() == 0x4, \"Check your assumptions\");
+const _: () = assert!(TOKEN_REAL.value() == 0x5, \"Check your assumptions\");
+const _: () = assert!(TOKEN_RATIONAL.value() == 0x6, \"Check your assumptions\");
 
 //
 // TOKEN_TOPLEVELNEWLINE must be 0xc to allow hard-coding in TokenEnum.h
 //
-static_assert(TOKEN_TOPLEVELNEWLINE.value() == 0xc, \"Check your assumptions\");
-static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
+const _: () = assert!(TOKEN_INTERNALNEWLINE.value() == 0b1000, \"Check your assumptions\");
+const _: () = assert!(TOKEN_TOPLEVELNEWLINE.value() == 0b1100, \"Check your assumptions\");
+//const _: () = assert!(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
 
 //
 // TOKEN_ERROR_UNTERMINATED_FIRST must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
 //
-static_assert(TOKEN_ERROR_UNTERMINATED_FIRST.value() == 0x1c, \"Check your assumptions\");
-static_assert(TOKEN_ERROR_UNTERMINATED_END.value() == 0x20, \"Check your assumptions\");
+const _: () = assert!(TOKEN_ERROR_UNTERMINATED_FIRST.value() == 0x1c, \"Check your assumptions\");
+const _: () = assert!(TOKEN_ERROR_UNTERMINATED_END.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
 
-{"Symbol TokenToSymbol(TokenEnum T) {"} ~Join~
-{"switch (T.value()) {"} ~Join~
+{"
+#[allow(dead_code)]
+pub(crate) fn TokenToSymbol(token: TokenEnum) -> Symbol {"} ~Join~
+{"match token {"} ~Join~
 tokenToSymbolCases ~Join~
+{ "_ => panic!(\"Unhandled token type\"),"} ~Join~
 {"}",
-"assert(false && \"Unhandled token type\");",
-"return SYMBOL_TOKEN_UNKNOWN;",
 "}",
 ""};
 
 
 Print["exporting TokenEnumRegistration.cpp"];
-res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnumRegistration.cpp"}], Column[tokenEnumRegistrationCPPSource], "String"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "token_enum_registration.rs"}], Column[tokenEnumRegistrationCPPSource], "String"];
 
 Print[res];
 

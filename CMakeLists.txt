@@ -10,6 +10,8 @@ project(codeparser
 		CXX
 )
 
+include(ExternalProject)
+
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(WolframKernel)
 include(PacletInfo)
@@ -30,7 +32,6 @@ set(PACLET_LAYOUT_DIR "paclet" CACHE FILEPATH "Path to complete, built paclet la
 set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_PACLET ON CACHE BOOL "Build paclet")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
-set(BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(TRANSPORT Automatic CACHE STRING "Transport to use")
 set(CHECK_ISSUES ON CACHE BOOL "CHECK_ISSUES")
 set(CHECK_ABORT ON CACHE BOOL "CHECK_ABORT")
@@ -74,7 +75,6 @@ message(STATUS "PACLET_LAYOUT_DIR: ${PACLET_LAYOUT_DIR}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_PACLET: ${BUILD_PACLET}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
-message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
 message(STATUS "TRANSPORT: ${TRANSPORT}")
 message(STATUS "CHECK_ISSUES: ${CHECK_ISSUES}")
 message(STATUS "CHECK_ABORT: ${CHECK_ABORT}")
@@ -147,22 +147,6 @@ set(GENERATED_WL_PACLET_RESOURCES_SOURCES
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl
 )
 
-set(GENERATED_CPP_INCLUDES
-	${PROJECT_BINARY_DIR}/generated/cpp/include/LongNamesRegistration.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/MyStringRegistration.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/ParseletRegistration.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/SymbolRegistration.h
-	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnumRegistration.h
-)
-
-set(GENERATED_CPP_LIB_SOURCES
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNamesRegistration.cpp
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/ParseletRegistration.cpp
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnumRegistration.cpp
-)
-
-
 
 #
 # Set VERSION_NUMBER, SYSTEMID, and PACLET_VERSION
@@ -172,7 +156,10 @@ CheckPacletInfo()
 
 if(TRANSPORT STREQUAL Automatic)
 if(VERSION_NUMBER GREATER_EQUAL 1310)
-set(TRANSPORT ExprLib)
+# TODO: I've reset the default transport to MathLink during the port to Rust.
+#       Change this back to ExprLib once that code is ported implemented.
+# set(TRANSPORT ExprLib)
+set(TRANSPORT MathLink)
 else()
 set(TRANSPORT MathLink)
 endif()
@@ -218,8 +205,6 @@ endif()
 
 file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/paclet/${PACLET}
-	${PROJECT_BINARY_DIR}/generated/cpp/include/
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/
 	${PROJECT_BINARY_DIR}/pdb-output/
 )
 
@@ -292,16 +277,15 @@ endforeach()
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/cpp/include/LongNamesRegistration.h
-		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNamesRegistration.cpp
+		${PROJECT_BINARY_DIR}/generated/rust/long_names_registration.rs
 		${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl
 	#
 	# remove old files that may cause conflicts
 	#
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/LongNames.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -323,9 +307,8 @@ add_custom_command(
 # TokenEnum files
 #
 set(GENERATED_TOKENENUM_OUTPUT
-	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnumRegistration.h
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnumRegistration.cpp
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
+	${PROJECT_BINARY_DIR}/generated/rust/token_enum_registration.rs
 )
 
 add_custom_command(
@@ -335,9 +318,9 @@ add_custom_command(
 	# remove old files that may cause conflicts
 	#
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -359,8 +342,7 @@ add_custom_command(
 # Parselet files
 #
 set(GENERATED_PARSELETREGISTRATION_OUTPUT
-	${PROJECT_BINARY_DIR}/generated/cpp/include/ParseletRegistration.h
-	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/ParseletRegistration.cpp
+	${PROJECT_BINARY_DIR}/generated/rust/parselet_registration.rs
 )
 
 add_custom_command(
@@ -387,8 +369,8 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
 		${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl
+		${PROJECT_BINARY_DIR}/generated/rust/precedence.rs
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Precedence.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -433,16 +415,16 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/cpp/include/SymbolRegistration.h
+		${PROJECT_BINARY_DIR}/generated/rust/symbol_registration.rs
 	#
 	# remove old files that may cause conflicts
 	#
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/SymbolRegistration.cpp
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/SymbolRegistration.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
@@ -463,14 +445,14 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/cpp/include/MyStringRegistration.h
+		${PROJECT_BINARY_DIR}/generated/rust/my_string_registration.rs
 	#
 	# remove old files that may cause conflicts
 	#
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
 	COMMAND
-		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
+		# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/String.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
@@ -565,6 +547,40 @@ add_dependencies(expr-lib expr-lib-custom)
 endif(TRANSPORT STREQUAL ExprLib)
 
 
+#
+# Build the Rust crate and copy the dylib into the paclet
+#
+
+set(RUST_TARGET_DIR ${PROJECT_SOURCE_DIR}/crate/target)
+
+set(CODEPARSE_DYLIB ${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}/CodeParser${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+add_custom_command(
+	OUTPUT
+		${CODEPARSE_DYLIB}
+	WORKING_DIRECTORY
+		${PROJECT_SOURCE_DIR}
+	COMMAND
+		cd crate
+		&& cargo build
+			$<$<CONFIG:Release>:--release>
+			--features=USE_MATHLINK,CHECK_ABORT
+
+	COMMAND
+		${CMAKE_COMMAND} -E copy
+			${RUST_TARGET_DIR}/$<IF:$<CONFIG:Release>,release,debug>/${CMAKE_SHARED_LIBRARY_PREFIX}wolfram_code_parse${CMAKE_SHARED_LIBRARY_SUFFIX}
+			${CODEPARSE_DYLIB}
+	DEPENDS
+		${PROJECT_BINARY_DIR}/generated/rust/symbol_registration.rs
+		${PROJECT_BINARY_DIR}/generated/rust/precedence.rs
+		${PROJECT_BINARY_DIR}/generated/rust/my_string_registration.rs
+		${PROJECT_BINARY_DIR}/generated/rust/parselet_registration.rs
+		${PROJECT_BINARY_DIR}/generated/rust/long_names_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/*
+		${PROJECT_SOURCE_DIR}/crate/src/*
+)
+
+
 
 #
 # Build CodeParser library
@@ -582,89 +598,21 @@ message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 
 endif(TRANSPORT STREQUAL MathLink)
 
-set(STATIC_CPP_INCLUDES
-	${PROJECT_SOURCE_DIR}/cpp/include/API.h
-	${PROJECT_SOURCE_DIR}/cpp/include/ByteBuffer.h
-	${PROJECT_SOURCE_DIR}/cpp/include/ByteDecoder.h
-	${PROJECT_SOURCE_DIR}/cpp/include/ByteEncoder.h
-	${PROJECT_SOURCE_DIR}/cpp/include/CharacterDecoder.h
-	${PROJECT_SOURCE_DIR}/cpp/include/CodePoint.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Issue.h
-	${PROJECT_SOURCE_DIR}/cpp/include/LongNames.h
-	${PROJECT_SOURCE_DIR}/cpp/include/MyString.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Node.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Parselet.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Parser.h
-	${PROJECT_SOURCE_DIR}/cpp/include/ParserSession.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Source.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Symbol.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Token.h
-	${PROJECT_SOURCE_DIR}/cpp/include/TokenEnum.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Tokenizer.h
-	${PROJECT_SOURCE_DIR}/cpp/include/Utils.h
-	${PROJECT_SOURCE_DIR}/cpp/include/WLCharacter.h
-)
-
-if(TRANSPORT STREQUAL ExprLib)
-list(APPEND STATIC_CPP_INCLUDES
-	${PROJECT_SOURCE_DIR}/cpp/include/ExprLibrary.h
-)
-endif()
-
-if(DIAGNOSTICS)
-list(APPEND STATIC_CPP_INCLUDES
-	${PROJECT_SOURCE_DIR}/cpp/include/Diagnostics.h
-)
-endif()
 
 
+# add_library(codeparser-lib SHARED
+# 	${STATIC_CPP_INCLUDES}
+# 	${STATIC_CPP_LIB_SOURCES}
+# 	${GENERATED_CPP_INCLUDES}
+# 	${GENERATED_CPP_LIB_SOURCES}
+# )
 
-set(STATIC_CPP_LIB_SOURCES
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/API.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteBuffer.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/IntegralParselet.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Issue.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/LongNames.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/MyString.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Node.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parser.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/ParserSession.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Source.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Symbol.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/TimesParselet.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Token.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/TokenEnum.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/UnderParselet.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Utils.cpp
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
-)
-
-if(DIAGNOSTICS)
-list(APPEND STATIC_CPP_INCLUDES
-	${PROJECT_SOURCE_DIR}/cpp/src/lib/Diagnostics.cpp
-)
-endif()
-
-
-add_library(codeparser-lib SHARED
-	${STATIC_CPP_INCLUDES}
-	${STATIC_CPP_LIB_SOURCES}
-	${GENERATED_CPP_INCLUDES}
-	${GENERATED_CPP_LIB_SOURCES}
-)
-
-target_include_directories(codeparser-lib
-	PRIVATE ${PROJECT_SOURCE_DIR}/cpp/include
-	PRIVATE ${PROJECT_BINARY_DIR}/generated/cpp/include
-	PRIVATE ${MATHLINK_INCLUDE_DIR}
-	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
-)
+# target_include_directories(codeparser-lib
+# 	PRIVATE ${PROJECT_SOURCE_DIR}/cpp/include
+# 	PRIVATE ${PROJECT_BINARY_DIR}/generated/cpp/include
+# 	PRIVATE ${MATHLINK_INCLUDE_DIR}
+# 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
+# )
 
 
 
@@ -677,7 +625,7 @@ if(TRANSPORT STREQUAL MathLink)
 #
 if(SYSTEMWORDLENGTH EQUAL 32)
 
-target_compile_definitions(codeparser-lib PUBLIC MINT_32=1)
+# target_compile_definitions(codeparser-lib PUBLIC MINT_32=1)
 
 set(MATHLINK_LIB_NAMES
 	ml32i4
@@ -709,71 +657,75 @@ find_library(MATHLINK_LIB
 
 message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
 
-target_link_libraries(codeparser-lib ${MATHLINK_LIB})
+set(CRATE_NAME wolfram-code-parse)
+set(CRATE_SOURCE_DIR ${PROJECT_SOURCE_DIR}/crate/)
+
+# target_link_libraries(codeparser-lib ${MATHLINK_LIB})
 
 endif(TRANSPORT STREQUAL MathLink)
 
-if(TRANSPORT STREQUAL ExprLib)
-target_link_libraries(codeparser-lib expr-lib)
-endif(TRANSPORT STREQUAL ExprLib)
+if(${TRANSPORT} STREQUAL ExprLib)
+# target_link_libraries(codeparser-lib expr-lib)
+endif()
 
-set_target_properties(codeparser-lib PROPERTIES
-	OUTPUT_NAME
-		CodeParser
-	CXX_STANDARD
-		17
-	CXX_STANDARD_REQUIRED
-		ON
-	#
-	# prevent
-	# /Volumes/TeamCity/work/4466f913884ff7b4/MathLink/CompilerAdditions
-	# from being added to rpath
-	#
-	SKIP_BUILD_RPATH
-		ON
-	#
-	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
-	#
-	LIBRARY_OUTPUT_DIRECTORY
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	#
-	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
-	#
-	LIBRARY_OUTPUT_DIRECTORY_DEBUG
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	LIBRARY_OUTPUT_DIRECTORY_RELEASE
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	#
-	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#archive-output-artifacts
-	#
-	ARCHIVE_OUTPUT_DIRECTORY
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	ARCHIVE_OUTPUT_DIRECTORY_RELEASE
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	#
-	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#runtime-output-artifacts
-	#
-	RUNTIME_OUTPUT_DIRECTORY
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE
-		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	PDB_OUTPUT_DIRECTORY
-		${PROJECT_BINARY_DIR}/pdb-output
-	PDB_OUTPUT_DIRECTORY_DEBUG
-		${PROJECT_BINARY_DIR}/pdb-output
-	PDB_OUTPUT_DIRECTORY_RELEASE
-		${PROJECT_BINARY_DIR}/pdb-output
-	#
-	# WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
-	#
-	PREFIX
-		""
-)
+# set_target_properties(codeparser-lib PROPERTIES
+# 	OUTPUT_NAME
+# 		CodeParser
+# 	CXX_STANDARD
+# 		17
+# 	CXX_STANDARD_REQUIRED
+# 		ON
+# 	#
+# 	# prevent
+# 	# /Volumes/TeamCity/work/4466f913884ff7b4/MathLink/CompilerAdditions
+# 	# from being added to rpath
+# 	#
+# 	SKIP_BUILD_RPATH
+# 		ON
+# 	#
+# 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
+# 	#
+# 	LIBRARY_OUTPUT_DIRECTORY
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	#
+# 	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
+# 	#
+# 	LIBRARY_OUTPUT_DIRECTORY_DEBUG
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	LIBRARY_OUTPUT_DIRECTORY_RELEASE
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	#
+# 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#archive-output-artifacts
+# 	#
+# 	ARCHIVE_OUTPUT_DIRECTORY
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	ARCHIVE_OUTPUT_DIRECTORY_DEBUG
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	ARCHIVE_OUTPUT_DIRECTORY_RELEASE
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	#
+# 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#runtime-output-artifacts
+# 	#
+# 	RUNTIME_OUTPUT_DIRECTORY
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	RUNTIME_OUTPUT_DIRECTORY_DEBUG
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	RUNTIME_OUTPUT_DIRECTORY_RELEASE
+# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+# 	PDB_OUTPUT_DIRECTORY
+# 		${PROJECT_BINARY_DIR}/pdb-output
+# 	PDB_OUTPUT_DIRECTORY_DEBUG
+# 		${PROJECT_BINARY_DIR}/pdb-output
+# 	PDB_OUTPUT_DIRECTORY_RELEASE
+# 		${PROJECT_BINARY_DIR}/pdb-output
+# 	#
+# 	# WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
+# 	#
+# 	PREFIX
+# 		""
+# )
 
+#[[ FIXME: Adjust this for the Rust CodeParser.dylib
 if(TRANSPORT STREQUAL ExprLib)
 
 #
@@ -795,82 +747,73 @@ endif(NOT APPLE)
 
 endif(TRANSPORT STREQUAL ExprLib)
 
+]]
 
-if(NOT BUILD_TESTS)
-set_target_properties(codeparser-lib PROPERTIES
-	CXX_VISIBILITY_PRESET
-		hidden
-	#
-	# see page 23 of:
-	# https://github.com/CppCon/CppCon2019/blob/master/Presentations/deep_cmake_for_library_authors/deep_cmake_for_library_authors__craig_scott__cppcon_2019.pdf
-	#
-	VISIBILITY_INLINES_HIDDEN
-		ON
-)
-endif()
+# if(NOT BUILD_TESTS)
+# set_target_properties(codeparser-lib PROPERTIES
+# 	CXX_VISIBILITY_PRESET
+# 		hidden
+# 	VISIBILITY_INLINES_HIDDEN
+# 		ON
+# )
+# endif()
 
 
-if(CHECK_ISSUES)
-target_compile_definitions(codeparser-lib PUBLIC CHECK_ISSUES=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC CHECK_ISSUES=0)
-endif()
+# if(CHECK_ISSUES)
+# target_compile_definitions(codeparser-lib PUBLIC CHECK_ISSUES=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC CHECK_ISSUES=0)
+# endif()
 
-if(CHECK_ABORT)
-target_compile_definitions(codeparser-lib PUBLIC CHECK_ABORT=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC CHECK_ABORT=0)
-endif()
+# if(CHECK_ABORT)
+# target_compile_definitions(codeparser-lib PUBLIC CHECK_ABORT=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC CHECK_ABORT=0)
+# endif()
 
-if(COMPUTE_OOB)
-target_compile_definitions(codeparser-lib PUBLIC COMPUTE_OOB=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC COMPUTE_OOB=0)
-endif()
+# if(COMPUTE_OOB)
+# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_OOB=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_OOB=0)
+# endif()
 
-if(COMPUTE_SOURCE)
-target_compile_definitions(codeparser-lib PUBLIC COMPUTE_SOURCE=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC COMPUTE_SOURCE=0)
-endif()
+# if(COMPUTE_SOURCE)
+# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_SOURCE=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_SOURCE=0)
+# endif()
 
-if(FAST_STRING_SCAN)
-target_compile_definitions(codeparser-lib PUBLIC FAST_STRING_SCAN=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC FAST_STRING_SCAN=0)
-endif()
+# if(FAST_STRING_SCAN)
+# target_compile_definitions(codeparser-lib PUBLIC FAST_STRING_SCAN=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC FAST_STRING_SCAN=0)
+# endif()
 
-if(USE_MUSTTAIL)
-target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=0)
-endif()
+# if(USE_MUSTTAIL)
+# target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=0)
+# endif()
 
-if(TRANSPORT STREQUAL MathLink)
-target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=0)
-endif()
+# if(TRANSPORT STREQUAL MathLink)
+# target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=0)
+# endif()
 
-if(TRANSPORT STREQUAL ExprLib)
-target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=0)
-endif()
+# if(TRANSPORT STREQUAL ExprLib)
+# target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=0)
+# endif()
 
-if(DIAGNOSTICS)
-target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=0)
-endif()
+# if(DIAGNOSTICS)
+# target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=1)
+# else()
+# target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=0)
+# endif()
 
-if(BUILD_TESTS)
-target_compile_definitions(codeparser-lib PUBLIC BUILD_TESTS=1)
-else()
-target_compile_definitions(codeparser-lib PUBLIC BUILD_TESTS=0)
-endif()
-
-target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
+# target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
 
 
 if(MSVC)
@@ -895,15 +838,15 @@ if(ENABLE_WARNINGS)
 #
 # https://www.foonathan.net/2018/10/cmake-warnings/
 #
-if(MSVC)
-target_compile_options(codeparser-lib
-	PRIVATE /W4 /wd4100
-)
-else(MSVC)
-target_compile_options(codeparser-lib
-	PRIVATE -pedantic-errors -Wall -Wextra -Wconversion -Wsign-conversion -Wno-unused-parameter
-)
-endif(MSVC)
+# if(MSVC)
+# 	target_compile_options(codeparser-lib
+# 		PRIVATE /W4 /wd4100
+# 	)
+# else(MSVC)
+# 	target_compile_options(codeparser-lib
+# 		PRIVATE -pedantic-errors -Wall -Wextra -Wconversion -Wsign-conversion -Wno-unused-parameter
+# 	)
+# endif(MSVC)
 
 endif(ENABLE_WARNINGS)
 
@@ -933,10 +876,11 @@ if(BUILD_PACLET)
 
 set(PACLET_SOURCES
 	${REPLACED_PACLETINFO}
+	# TODO(cleanup): Remove COPIED_WL_PACLET_SOURCES?
 	${COPIED_WL_PACLET_SOURCES}
 	${GENERATED_WL_PACLET_KERNEL_SOURCES}
 	${GENERATED_WL_PACLET_RESOURCES_SOURCES}
-	codeparser-lib
+	${CODEPARSE_DYLIB}
 )
 
 if(TRANSPORT STREQUAL ExprLib)
