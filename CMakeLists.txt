@@ -782,6 +782,8 @@ if(NOT BUILD_TESTS)
 set_target_properties(codeparser-lib PROPERTIES
 	CXX_VISIBILITY_PRESET
 		hidden
+	VISIBILITY_INLINES_HIDDEN
+		ON
 )
 endif()
 
