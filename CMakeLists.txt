@@ -13,6 +13,7 @@ project(codeparser
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(WolframKernel)
 include(PacletInfo)
+include(WolframLibrary)
 
 #
 # Used for quickly reporting syntax errors in WL source files
@@ -91,6 +92,19 @@ message(STATUS "CODEPARSER_EXE: ${CODEPARSER_EXE}")
 if(NOT CODEPARSER_EXE)
 message(STATUS "Optional tool CODEPARSER_EXE was not found; skipping")
 endif()
+
+set(WOLFRAMLIBRARY_INCLUDE_DIR ${WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT} CACHE FILEPATH "Path to WolframLibrary.h")
+
+message(STATUS "WOLFRAMLIBRARY_INCLUDE_DIR: ${WOLFRAMLIBRARY_INCLUDE_DIR}")
+
+ParseWolframLibraryHeader()
+
+message(STATUS "WOLFRAMLIBRARY_VERSION: ${WOLFRAMLIBRARY_VERSION}")
+
+if(${WOLFRAMLIBRARY_VERSION} GREATER_EQUAL 7)
+message(WARNING "WOLFRAMLIBRARY_VERSION >= 7 is only compatible with Wolfram System 13.1+ and will not work with earlier versions.")
+endif()
+
 
 set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Abstract.wl
@@ -567,20 +581,6 @@ endif(${TRANSPORT} STREQUAL ExprLib)
 #
 # Build CodeParser library
 #
-
-set(WOLFRAMLIBRARY_INCLUDE_DIR ${WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT} CACHE FILEPATH "Path to WolframLibrary.h")
-
-message(STATUS "WOLFRAMLIBRARY_INCLUDE_DIR: ${WOLFRAMLIBRARY_INCLUDE_DIR}")
-
-include(WolframLibrary)
-
-ParseWolframLibraryHeader()
-
-message(STATUS "WOLFRAMLIBRARY_VERSION: ${WOLFRAMLIBRARY_VERSION}")
-
-if(${WOLFRAMLIBRARY_VERSION} GREATER_EQUAL 7)
-message(WARNING "WOLFRAMLIBRARY_VERSION >= 7 is only compatible with Wolfram System 13.1+ and will not work with earlier versions.")
-endif()
 
 if(${TRANSPORT} STREQUAL MathLink)
 
