@@ -941,7 +941,7 @@ void Source::put(ParserSessionPtr session, MLINK callLink) const {
     
     SYMBOL_CODEPARSER_SOURCE.put(session, callLink);
     
-    switch (session->srcConvention) {
+    switch (session->opts.srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             
             if (!MLPutFunction(callLink, SYMBOL_LIST.Name, 2)) {
@@ -1245,7 +1245,7 @@ expr Source::toExpr(ParserSessionPtr session) const {
     auto SourceSymExpr = SYMBOL_CODEPARSER_SOURCE.toExpr(session);
     Expr_InsertA(e, 0 + 1, SourceSymExpr);
     
-    switch (session->srcConvention) {
+    switch (session->opts.srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             
             auto head = SYMBOL_LIST.toExpr(session);

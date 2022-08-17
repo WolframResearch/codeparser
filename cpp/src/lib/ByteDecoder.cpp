@@ -994,7 +994,7 @@ inline SourceCharacter ByteDecoder_validMB(ParserSessionPtr session, codepoint d
             
             ByteDecoder_strangeWarning(session, decoded, currentSourceCharacterStartLoc, policy);
             
-        } else if (session->encodingMode == ENCODINGMODE_NORMAL) {
+        } else if (session->opts.encodingMode == ENCODINGMODE_NORMAL) {
             
             ByteDecoder_nonASCIIWarning(session, decoded, currentSourceCharacterStartLoc);
         }
@@ -1176,9 +1176,9 @@ void LineColumnManager::windowsNewline(ParserSessionPtr session, SourceLocation&
 
 void LineColumnManager::tab(ParserSessionPtr session, SourceLocation& loc) {
     
-    auto currentTabStop = session->tabWidth * ((loc.second - 1) / session->tabWidth) + 1;
+    auto currentTabStop = session->opts.tabWidth * ((loc.second - 1) / session->opts.tabWidth) + 1;
     
-    loc.second = currentTabStop + session->tabWidth;
+    loc.second = currentTabStop + session->opts.tabWidth;
 };
 
 

@@ -111,11 +111,18 @@ enum UnsafeCharacterEncodingFlag {
     UNSAFECHARACTERENCODING_BOM = 3,
 };
 
+struct ParserSessionOptions {
+    SourceConvention srcConvention;
+    uint32_t tabWidth;
+    FirstLineBehavior firstLineBehavior;
+    EncodingMode encodingMode;
+};
+
 
 EXTERN_C DLLEXPORT ParserSessionPtr CreateParserSession();
 EXTERN_C DLLEXPORT void DestroyParserSession(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
+EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, ParserSessionOptions opts);
 EXTERN_C DLLEXPORT void ParserSessionDeinit(ParserSessionPtr session);
 
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions(ParserSessionPtr session);

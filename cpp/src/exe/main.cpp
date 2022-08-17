@@ -27,9 +27,9 @@ enum OutputMode {
 };
 
 
-int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
+int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts);
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
+int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessionOptions opts);
 
 
 int main(int argc, char *argv[]) {
@@ -78,34 +78,40 @@ int main(int argc, char *argv[]) {
         }
     }
     
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = firstLineBehavior;
+    opts.encodingMode = encodingMode;
+    
     int result;
     
     if (file) {
         if (leaf) {
-            result = readFile(fileInput, LEAF, outputMode, firstLineBehavior, encodingMode);
+            result = readFile(fileInput, LEAF, outputMode, opts);
         } else if (tokenize) {
-            result = readFile(fileInput, TOKENIZE, outputMode, firstLineBehavior, encodingMode);
+            result = readFile(fileInput, TOKENIZE, outputMode, opts);
         } else if (safeString) {
-            result = readFile(fileInput, SAFESTRING, outputMode, firstLineBehavior, encodingMode);
+            result = readFile(fileInput, SAFESTRING, outputMode, opts);
         } else {
-            result = readFile(fileInput, EXPRESSION, outputMode, firstLineBehavior, encodingMode);
+            result = readFile(fileInput, EXPRESSION, outputMode, opts);
         }
     } else {
         if (leaf) {
-            result = readStdIn(LEAF, outputMode, firstLineBehavior, encodingMode);
+            result = readStdIn(LEAF, outputMode, opts);
         } else if (tokenize) {
-            result = readStdIn(TOKENIZE, outputMode, firstLineBehavior, encodingMode);
+            result = readStdIn(TOKENIZE, outputMode, opts);
         } else if (safeString) {
-            result = readStdIn(SAFESTRING, outputMode, firstLineBehavior, encodingMode);
+            result = readStdIn(SAFESTRING, outputMode, opts);
         } else {
-            result = readStdIn(EXPRESSION, outputMode, firstLineBehavior, encodingMode);
+            result = readStdIn(EXPRESSION, outputMode, opts);
         }
     }
     
     return result;
 }
 
-int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
+int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
     
     WolframLibraryData libData = nullptr;
     
@@ -123,7 +129,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            ParserSessionInit(session, inputStr, input.size(), libData, opts);
         
             auto C = ParserSessionTokenize(session);
             
@@ -160,7 +166,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            ParserSessionInit(session, inputStr, input.size(), libData, opts);
             
             auto stringifyMode = STRINGIFYMODE_NORMAL;
             
@@ -203,7 +209,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            ParserSessionInit(session, inputStr, input.size(), libData, opts);
             
             auto C = ParserSessionSafeString(session);
         
@@ -244,7 +250,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            ParserSessionInit(session, inputStr, input.size(), libData, opts);
             
             auto C = ParserSessionParseExpressions(session);
             
@@ -300,7 +306,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
     return result;
 }
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
+int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
     
     auto fb = ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size());
 
@@ -332,7 +338,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
     
     if (mode == TOKENIZE) {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
         
         auto C = ParserSessionTokenize(session);
         
@@ -370,7 +376,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else if (mode == LEAF) {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -410,7 +416,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else if (mode == SAFESTRING) {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
         
         auto C = ParserSessionSafeString(session);
     
@@ -448,7 +454,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
         
         auto C = ParserSessionParseExpressions(session);
         

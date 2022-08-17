@@ -18,9 +18,9 @@
 bool validatePath(WolframLibraryData libData, Buffer inStr);
 
 
-ParserSession::ParserSession() : start(), end(), wasEOF(), buffer(), libData(), srcConvention(), tabWidth(), firstLineBehavior(), encodingMode(), unsafeCharacterEncodingFlag(), srcConventionManager(), SrcLoc(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
+ParserSession::ParserSession() : start(), end(), wasEOF(), buffer(), libData(), opts(), unsafeCharacterEncodingFlag(), srcConventionManager(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
 
-int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn, SourceConvention srcConventionIn, uint32_t tabWidthIn, FirstLineBehavior firstLineBehaviorIn, EncodingMode encodingModeIn) {
+int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn, ParserSessionOptions optsIn) {
     
     start = bufAndLenIn.Buf;
     end = bufAndLenIn.end();
@@ -28,15 +28,12 @@ int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataI
     buffer = start;
     
     libData = libDataIn;
-    srcConvention = srcConventionIn;
-    tabWidth = tabWidthIn;
-    firstLineBehavior = firstLineBehaviorIn;
-    encodingMode = encodingModeIn;
+    opts = optsIn;
     
     unsafeCharacterEncodingFlag = UNSAFECHARACTERENCODING_OK;
     
 #if COMPUTE_SOURCE
-    switch (srcConvention) {
+    switch (opts.srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             
             srcConventionManager = new LineColumnManager();

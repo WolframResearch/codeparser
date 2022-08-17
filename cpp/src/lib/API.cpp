@@ -21,11 +21,11 @@ void DestroyParserSession(ParserSessionPtr session) {
     delete session;
 }
 
-int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
+int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, ParserSessionOptions opts) {
     
     BufferAndLength bufAndLen = BufferAndLength(buf, bufLen);
     
-    return session->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    return session->init(bufAndLen, libData, opts);
 }
 
 void ParserSessionDeinit(ParserSessionPtr session) {
@@ -236,8 +236,14 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
     auto numBytes = arr.size();
 
     auto data = arr.data();
-
-    if (ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL)) {
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = srcConvention;
+    opts.tabWidth = tabWidth;
+    opts.firstLineBehavior = firstLineBehavior;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    
+    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
 
@@ -344,7 +350,13 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
         assert(false);
     }
     
-    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL)) {
+    ParserSessionOptions opts;
+    opts.srcConvention = srcConvention;
+    opts.tabWidth = tabWidth;
+    opts.firstLineBehavior = firstLineBehavior;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    
+    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -385,8 +397,14 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     auto numBytes = arr.size();
 
     auto data = arr.data();
-
-    if (ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL)) {
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = srcConvention;
+    opts.tabWidth = tabWidth;
+    opts.firstLineBehavior = firstLineBehavior;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    
+    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
 
@@ -493,7 +511,13 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
-    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL)) {
+    ParserSessionOptions opts;
+    opts.srcConvention = srcConvention;
+    opts.tabWidth = tabWidth;
+    opts.firstLineBehavior = firstLineBehavior;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    
+    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -539,8 +563,14 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     auto numBytes = arr.size();
 
     auto data = arr.data();
-
-    if (ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode)) {
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = srcConvention;
+    opts.tabWidth = tabWidth;
+    opts.firstLineBehavior = firstLineBehavior;
+    opts.encodingMode = encodingMode;
+    
+    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
 
@@ -673,7 +703,13 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto data = arr.get();
     
-    if (ParserSessionInit(session, data, numBytes, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode)) {
+    ParserSessionOptions opts;
+    opts.srcConvention = srcConvention;
+    opts.tabWidth = tabWidth;
+    opts.firstLineBehavior = firstLineBehavior;
+    opts.encodingMode = encodingMode;
+    
+    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -705,8 +741,14 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
     auto numBytes = arr.size();
 
     auto data = arr.data();
-
-    if (ParserSessionInit(session, data, numBytes, libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL)) {
+    
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    
+    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
 
@@ -782,7 +824,13 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
-    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL)) {
+    ParserSessionOptions opts;
+    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
+    opts.tabWidth = DEFAULT_TAB_WIDTH;
+    opts.firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    opts.encodingMode = ENCODINGMODE_NORMAL;
+    
+    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     

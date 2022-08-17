@@ -42,10 +42,7 @@ public:
     Buffer buffer;
     
     WolframLibraryData libData;
-    SourceConvention srcConvention;
-    uint32_t tabWidth;
-    FirstLineBehavior firstLineBehavior;
-    EncodingMode encodingMode;
+    ParserSessionOptions opts;
     
     UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
     
@@ -75,7 +72,7 @@ public:
     
     ParserSession();
     
-    int init(BufferAndLength bufAndLen, WolframLibraryData libData, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
+    int init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionOptions opts);
     
     void deinit();
     

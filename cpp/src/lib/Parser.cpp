@@ -24,7 +24,7 @@ Context::Context(size_t Index, Precedence Prec) : F(), P(), Index(Index), Prec(P
 
 void Parser_handleFirstLine(ParserSessionPtr session) {
     
-    auto firstLineBehavior = session->firstLineBehavior;
+    auto firstLineBehavior = session->opts.firstLineBehavior;
     
     switch (firstLineBehavior) {
         case FIRSTLINEBEHAVIOR_NOTSCRIPT: {
