@@ -510,7 +510,7 @@ add_custom_command(
 #
 if(${TRANSPORT} STREQUAL ExprLib)
 
-set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libexpr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 set(EXPR_LIB_OUTPUTS
 	${EXPR_LIB}
@@ -532,7 +532,7 @@ set_property(
 #
 if(CMAKE_HOST_WIN32 OR CYGWIN)
 
-set(EXPR_IMPLIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr.lib)
+set(EXPR_IMPLIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libexpr.lib)
 
 list(APPEND EXPR_LIB_OUTPUTS
 	${EXPR_IMPLIB}
@@ -556,6 +556,13 @@ add_custom_target(expr-lib-custom
 add_custom_command(
 	OUTPUT
 		${EXPR_LIB_OUTPUTS}
+	#
+	# remove old files that may cause conflicts
+	#
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX}
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr.lib
 	COMMAND
 		${CMAKE_COMMAND} -E echo "EXPR_LIB_OUTPUTS: ${EXPR_LIB_OUTPUTS}"
 	COMMAND

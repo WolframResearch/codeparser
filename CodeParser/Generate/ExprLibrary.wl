@@ -222,7 +222,7 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
 
   compLib =
     CompileToLibrary[prog,
-      "LibraryName" -> "expr",
+      "LibraryName" -> "libexpr",
       "EntryFunctionName" -> "Main",
       "TargetDirectory" -> targetDir,
       "TraceFunction" -> Print,

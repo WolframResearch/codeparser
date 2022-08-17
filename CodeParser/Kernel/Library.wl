@@ -84,7 +84,7 @@ $ExprLib := $ExprLib =
 Catch[
 Module[{lib},
 
-  lib = FileNameJoin[{libraryResources, "expr."<>$sharedExt}];
+  lib = FileNameJoin[{libraryResources, "libexpr."<>$sharedExt}];
 
   If[!FileExistsQ[lib],
     Throw[Failure["ExprNativeLibraryNotFound", <| "ExpectedLocation" -> lib |>]]
