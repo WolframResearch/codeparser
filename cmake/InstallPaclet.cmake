@@ -4,6 +4,7 @@ message(FATAL_ERROR "WOLFRAMKERNEL does not exist. WOLFRAMKERNEL: ${WOLFRAMKERNE
 endif()
 
 set(CODE "\
+Print[OutputForm[\"Calling PacletInstall...\"]]\;
 Check[
 res = PacletInstall[\"${PACLET_OUTPUT}\", ForceVersionInstall -> True]\;
 ,
@@ -15,6 +16,7 @@ res
 {PacletInstall::compat}
 ]\;
 Print[res //OutputForm]\;
+Print[OutputForm[\"Done PacletInstall\"]]\;
 If[!PacletObjectQ[res],
   Exit[1]
 ]\;

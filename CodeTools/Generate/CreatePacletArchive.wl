@@ -19,20 +19,10 @@ If[$VersionNumber < 12.1,
   Needs["PacletManager`"]
 ]
 
-pacletFlagPosition = FirstPosition[$CommandLine, "-paclet"]
+checkBuildDir[]
+checkPaclet[]
+checkPacletLayoutDir[]
 
-paclet = $CommandLine[[pacletFlagPosition[[1]] + 1]]
-
-pacletDir = FileNameJoin[{buildDir, "paclet", paclet}]
-
-
-retryFlagPosition = FirstPosition[$CommandLine, "-retry"]
-
-If[!MissingQ[retryFlagPosition],
-  retry = True
-  ,
-  retry = False
-]
 
 If[retry,
   (*
@@ -49,22 +39,12 @@ If[retry,
 
 generate[] := (
 
-If[MissingQ[pacletFlagPosition],
-  Print["Cannot proceed; Unsupported paclet"];
-  Quit[1]
-];
-
-If[!DirectoryQ[pacletDir],
-  Print["Cannot proceed; Unsupported paclet directory"];
-  Quit[1]
-];
-
 Print["Calling CreatePacletArchive..."];
 
 If[$VersionNumber >= 12.1,
-  res = System`CreatePacletArchive[pacletDir]
+  res = System`CreatePacletArchive[FileNameJoin[{pacletLayoutDir, paclet}], FileNameJoin[{buildDir, "paclet"}]]
   ,
-  res = PacletManager`PackPaclet[pacletDir]
+  res = PacletManager`PackPaclet[FileNameJoin[{pacletLayoutDir, paclet}], FileNameJoin[{buildDir, "paclet"}]]
 ];
 
 Print[res];

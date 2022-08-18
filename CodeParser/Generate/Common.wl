@@ -31,6 +31,9 @@ Block[{Internal`PacletFindFile = Null&},
 Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
+checkBuildDir[]
+checkSrcDir[]
+
 
 (*
 uppercases and replaces ` with _
