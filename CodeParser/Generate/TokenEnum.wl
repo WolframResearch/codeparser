@@ -325,7 +325,12 @@ isTrivia[_] = False
 
 
 $isEmptyTokens = {
+  (*
+  EndOfFile is not empty
+  It is a single byte 0xff
+
   Token`EndOfFile,
+  *)
   Token`Fake`ImplicitTimes,
   Token`Error`Aborted,
   Token`Fake`ImplicitNull,

@@ -33,7 +33,6 @@ WLCharacter CharacterDecoder_handle4Hex(ParserSessionPtr session, Buffer colonBu
 WLCharacter CharacterDecoder_handle6Hex(ParserSessionPtr session, Buffer barBuf, SourceLocation barLoc, NextPolicy policy);
 WLCharacter CharacterDecoder_handleOctal(ParserSessionPtr session, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy);
 WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buffer unhandledBuf, SourceLocation unhandledLoc, NextPolicy policy);
-WLCharacter CharacterDecoder_handleBackslash(ParserSessionPtr session, NextPolicy policy);
 
 WLCharacter CharacterDecoder_handleUncommon(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
 WLCharacter CharacterDecoder_handleAssertFalse(ParserSessionPtr session, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
@@ -119,13 +118,11 @@ WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, NextPolic
 WLCharacter CharacterDecoder_currentWLCharacter(ParserSessionPtr session, NextPolicy policy) {
     
     auto resetBuf = session->buffer;
-    auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
     
     auto c = CharacterDecoder_nextWLCharacter(session, policy);
     
     session->buffer = resetBuf;
-    session->wasEOF = resetEOF;
     session->SrcLoc = resetLoc;
     
     return c;
@@ -216,14 +213,83 @@ WLCharacter CharacterDecoder_handleStringMetaClose(ParserSessionPtr session, Buf
 }
 
 WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session, Buffer Ignored1, SourceLocation Ignored2, NextPolicy policy) {
+    
 #if DIAGNOSTICS
     CharacterDecoder_StringMetaBackslashCount++;
 #endif // DIAGNOSTICS
                 
     ByteDecoder_nextSourceCharacter(session, policy);
     
-//    MUSTTAIL
-    return CharacterDecoder_handleBackslash(session, policy);
+#if CHECK_ISSUES
+    //
+    // test whether this \ is the result of the "feature" of
+    // converting "\[Alpa]" into "\\[Alpa]", copying that, and then never giving any further warnings
+    // when dealing with "\\[Alpa]"
+    //
+    {
+        auto resetBuf = session->buffer;
+        auto resetLoc = session->SrcLoc;
+        
+        //
+        // will be resetting any way, so just use nextSourceCharacter here
+        //
+        auto c = ByteDecoder_nextSourceCharacter(session, policy);
+        
+        if (c.to_point() == '[') {
+            
+            //
+            // Try to reconstruct \[XXX]
+            //
+            // If well-formed, then warn
+            //
+            
+            auto longNameStartBuf = session->buffer;
+            auto longNameStartLoc = session->SrcLoc;
+            
+            c = ByteDecoder_nextSourceCharacter(session, policy);
+            
+            auto wellFormed = false;
+            
+            if (c.isUpper()) {
+                
+                c = ByteDecoder_nextSourceCharacter(session, policy);
+                
+                while (true) {
+                    
+                    if (c.isAlphaOrDigit()) {
+                        
+                        c = ByteDecoder_nextSourceCharacter(session, policy);
+                        
+                        continue;
+                    }
+                    
+                    if (c.to_point() == ']') {
+                        wellFormed = true;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            if (wellFormed) {
+                
+                auto tmpPolicy = policy;
+                
+                tmpPolicy |= ENABLE_CHARACTER_DECODING_ISSUES;
+                
+                session->buffer = longNameStartBuf;
+                session->SrcLoc = longNameStartLoc;
+                
+                CharacterDecoder_handleLongName(session, resetBuf, resetLoc, tmpPolicy);
+            }
+        }
+        
+        session->buffer = resetBuf;
+        session->SrcLoc = resetLoc;
+    }
+#endif // CHECK_ISSUES
+    
+    return WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
 }
 
 WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
@@ -1326,81 +1392,6 @@ WLCharacter CharacterDecoder_handle6Hex(ParserSessionPtr session, Buffer barBuf,
 #endif // CHECK_ISSUES
     
     return WLCharacter(point, ESCAPE_6HEX);
-}
-
-
-WLCharacter CharacterDecoder_handleBackslash(ParserSessionPtr session, NextPolicy policy) {
-    
-#if CHECK_ISSUES
-    //
-    // test whether this \ is the result of the "feature" of
-    // converting "\[Alpa]" into "\\[Alpa]", copying that, and then never giving any further warnings
-    // when dealing with "\\[Alpa]"
-    //
-    {
-        auto resetBuf = session->buffer;
-        auto resetLoc = session->SrcLoc;
-        
-        //
-        // will be resetting any way, so just use nextSourceCharacter here
-        //
-        auto c = ByteDecoder_nextSourceCharacter(session, policy);
-        
-        if (c.to_point() == '[') {
-            
-            //
-            // Try to reconstruct \[XXX]
-            //
-            // If well-formed, then warn
-            //
-            
-            auto longNameStartBuf = session->buffer;
-            auto longNameStartLoc = session->SrcLoc;
-            
-            c = ByteDecoder_nextSourceCharacter(session, policy);
-            
-            auto wellFormed = false;
-            
-            if (c.isUpper()) {
-                
-                c = ByteDecoder_nextSourceCharacter(session, policy);
-                
-                while (true) {
-                    
-                    if (c.isAlphaOrDigit()) {
-                        
-                        c = ByteDecoder_nextSourceCharacter(session, policy);
-                        
-                        continue;
-                    }
-                    
-                    if (c.to_point() == ']') {
-                        wellFormed = true;
-                    }
-                    
-                    break;
-                }
-            }
-            
-            if (wellFormed) {
-                
-                auto tmpPolicy = policy;
-                
-                tmpPolicy |= ENABLE_CHARACTER_DECODING_ISSUES;
-                
-                session->buffer = longNameStartBuf;
-                session->SrcLoc = longNameStartLoc;
-                
-                CharacterDecoder_handleLongName(session, resetBuf, resetLoc, tmpPolicy);
-            }
-        }
-        
-        session->buffer = resetBuf;
-        session->SrcLoc = resetLoc;
-    }
-#endif // CHECK_ISSUES
-    
-    return WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
 }
 
 

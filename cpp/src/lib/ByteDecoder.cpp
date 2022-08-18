@@ -36,19 +36,20 @@
 //   U+FEFF                  EF      BB          BF
 //
 
+
 SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr session, NextPolicy policy);
 
-void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
-void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
+void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
+void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded);
 
 SourceCharacter ByteDecoder_validStrange(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
 SourceCharacter ByteDecoder_validMB(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
 
-SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
-SourceCharacter ByteDecoder_bom(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy);
+SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, NextPolicy policy);
+SourceCharacter ByteDecoder_bom(ParserSessionPtr session, NextPolicy policy);
 
 
 //
@@ -211,28 +212,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             ByteDecoder_2ByteCount++;
 #endif // DIAGNOSTICS
             
-            //
-            // Buffer is possibly already pointing to EOF
-            //
-            
-            auto resetBuf = session->buffer;
-            auto resetEOF = session->wasEOF;
-            auto resetLoc = session->SrcLoc;
-            
-            auto tmp = ByteBuffer_nextByte(session);
-                
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
-            }
-            
-            // Continue
-            
-            auto secondByte = tmp;
+            auto secondByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= secondByte && secondByte <= 0xbf)) {
                 
@@ -240,18 +220,20 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, policy);
             }
+            
+            //
+            // Continue
+            //
+            
+            ByteBuffer_nextByte(session);
             
             //
             // Valid
             //
             
-            const auto decoded = (((firstByte & 0x1f) << 6) | (secondByte & 0x3f));
+            auto decoded = (((firstByte & 0x1f) << 6) | (secondByte & 0x3f));
             
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -264,28 +246,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             ByteDecoder_3ByteCount++;
 #endif // DIAGNOSTICS
             
-            //
-            // Buffer is possibly already pointing to EOF
-            //
-            
-            auto resetBuf = session->buffer;
-            auto resetEOF = session->wasEOF;
-            auto resetLoc = session->SrcLoc;
-            
-            auto tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
-            }
-            
-            // Continue
-            
-            auto secondByte = tmp;
+            auto secondByte = ByteBuffer_currentByte(session);
             
             if (!(0xa0 <= secondByte && secondByte <= 0xbf)) {
                 
@@ -293,35 +254,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto thirdByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto thirdByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
                 
@@ -329,18 +271,20 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, policy);
             }
+            
+            //
+            // Continue
+            //
+            
+            ByteBuffer_nextByte(session);
             
             //
             // Valid
             //
             
-            const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (thirdByte & 0x3f));
+            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (thirdByte & 0x3f));
             
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -354,28 +298,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             ByteDecoder_3ByteCount++;
 #endif // DIAGNOSTICS
             
-            //
-            // Buffer is possibly already pointing to EOF
-            //
-            
-            auto resetBuf = session->buffer;
-            auto resetEOF = session->wasEOF;
-            auto resetLoc = session->SrcLoc;
-            
-            auto tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
-            }
-            
-            // Continue
-            
-            auto secondByte = tmp;
+            auto secondByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= secondByte && secondByte <= 0xbf)) {
                 
@@ -383,35 +306,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto thirdByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto thirdByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
                 
@@ -419,18 +323,20 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, policy);
             }
+            
+            //
+            // Continue
+            //
+            
+            ByteBuffer_nextByte(session);
             
             //
             // Valid
             //
             
-            const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (thirdByte & 0x3f));
+            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (thirdByte & 0x3f));
             
             if (Utils::isStraySurrogate(decoded)) {
 
@@ -438,7 +344,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Stray surrogate
                 //
 
-                return ByteDecoder_straySurrogate(session, resetLoc, policy);
+                return ByteDecoder_straySurrogate(session, policy);
             }
             
             if (decoded == CODEPOINT_BOM) {
@@ -447,7 +353,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // BOM
                 //
                 
-                return ByteDecoder_bom(session, resetLoc, policy);
+                return ByteDecoder_bom(session, policy);
             }
             
             return ByteDecoder_validMB(session, decoded, policy);
@@ -461,28 +367,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             ByteDecoder_4ByteCount++;
 #endif // DIAGNOSTICS
             
-            //
-            // Buffer is possibly already pointing to EOF
-            //
-            
-            auto resetBuf = session->buffer;
-            auto resetEOF = session->wasEOF;
-            auto resetLoc = session->SrcLoc;
-            
-            auto tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
-            }
-            
-            // Continue
-            
-            auto secondByte = tmp;
+            auto secondByte = ByteBuffer_currentByte(session);
             
             if (!(0x90 <= secondByte && secondByte <= 0xbf)) {
                 
@@ -490,35 +375,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto thirdByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto thirdByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
                 
@@ -526,35 +392,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto fourthByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto fourthByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= fourthByte && fourthByte <= 0xbf)) {
                 
@@ -562,18 +409,20 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, policy);
             }
+            
+            //
+            // Continue
+            //
+            
+            ByteBuffer_nextByte(session);
             
             //
             // Valid
             //
             
-            const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
+            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
             
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -586,28 +435,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             ByteDecoder_4ByteCount++;
 #endif // DIAGNOSTICS
             
-            //
-            // Buffer is possibly already pointing to EOF
-            //
-            
-            auto resetBuf = session->buffer;
-            auto resetEOF = session->wasEOF;
-            auto resetLoc = session->SrcLoc;
-            
-            auto tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
-            }
-            
-            // Continue
-            
-            auto secondByte = tmp;
+            auto secondByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= secondByte && secondByte <= 0xbf)) {
                 
@@ -615,35 +443,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto thirdByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto thirdByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
                 
@@ -651,35 +460,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-            
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto fourthByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto fourthByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= fourthByte && fourthByte <= 0xbf)) {
                 
@@ -687,18 +477,20 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, policy);
             }
+            
+            //
+            // Continue
+            //
+            
+            ByteBuffer_nextByte(session);
             
             //
             // Valid
             //
             
-            const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
+            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
             
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -711,28 +503,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             ByteDecoder_4ByteCount++;
 #endif // DIAGNOSTICS
             
-            //
-            // Buffer is possibly already pointing to EOF
-            //
-            
-            auto resetBuf = session->buffer;
-            auto resetEOF = session->wasEOF;
-            auto resetLoc = session->SrcLoc;
-            
-            auto tmp = ByteBuffer_nextByte(session);
-                
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
-            }
-            
-            // Continue
-            
-            auto secondByte = tmp;
+            auto secondByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= secondByte && secondByte <= 0x8f)) {
                 
@@ -740,35 +511,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-                
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto thirdByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto thirdByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
                 
@@ -776,35 +528,16 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, policy);
             }
             
-            resetBuf = session->buffer;
-            resetEOF = session->wasEOF;
-            resetLoc = session->SrcLoc;
-            
-            tmp = ByteBuffer_nextByte(session);
-                
-            if (session->wasEOF) {
-                
-                //
-                // EOF
-                //
-                
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
-            }
-            
+            //
             // Continue
+            //
             
-            auto fourthByte = tmp;
+            ByteBuffer_nextByte(session);
+            
+            auto fourthByte = ByteBuffer_currentByte(session);
             
             if (!(0x80 <= fourthByte && fourthByte <= 0xbf)) {
                 
@@ -812,18 +545,20 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
                 // Incomplete
                 //
                 
-                session->buffer = resetBuf;
-                session->wasEOF = resetEOF;
-                session->SrcLoc = resetLoc;
-                
-                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, policy);
             }
+            
+            //
+            // Continue
+            //
+            
+            ByteBuffer_nextByte(session);
             
             //
             // Valid
             //
             
-            const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
+            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
             
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -836,8 +571,10 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             ByteDecoder_FFCount++;
 #endif // DIAGNOSTICS
             
-            if (session->wasEOF) {
+            if (session->buffer == session->end) {
                 
+                //
+                // EOF
                 //
                 // Do not increment Column
                 //
@@ -849,7 +586,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             // Incomplete
             //
             
-            return ByteDecoder_incomplete1ByteSequence(session, session->SrcLoc, policy);
+            return ByteDecoder_incomplete1ByteSequence(session, policy);
         }
             //
             // Not a valid UTF-8 start
@@ -864,7 +601,7 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             // Incomplete
             //
             
-            return ByteDecoder_incomplete1ByteSequence(session, session->SrcLoc, policy);
+            return ByteDecoder_incomplete1ByteSequence(session, policy);
         }
     }
 }
@@ -876,13 +613,11 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
 SourceCharacter ByteDecoder_currentSourceCharacter(ParserSessionPtr session, NextPolicy policy) {
     
     auto resetBuf = session->buffer;
-    auto resetEOF = session->wasEOF;
     auto resetLoc = session->SrcLoc;
     
     auto c = ByteDecoder_nextSourceCharacter(session, policy);
     
     session->buffer = resetBuf;
-    session->wasEOF = resetEOF;
     session->SrcLoc = resetLoc;
     
     return c;
@@ -965,14 +700,14 @@ void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded, So
 
 inline SourceCharacter ByteDecoder_validStrange(ParserSessionPtr session, codepoint decoded, NextPolicy policy) {
     
+    auto currentSourceCharacterStartLoc = session->SrcLoc;
+    
 #if COMPUTE_SOURCE
     session->srcConventionManager->increment(session, session->SrcLoc);
 #endif // COMPUTE_SOURCE
     
 #if CHECK_ISSUES
     {
-        auto currentSourceCharacterStartLoc = session->SrcLoc.previous();
-        
         ByteDecoder_strangeWarning(session, decoded, currentSourceCharacterStartLoc, policy);
     }
 #endif // CHECK_ISSUES
@@ -982,14 +717,14 @@ inline SourceCharacter ByteDecoder_validStrange(ParserSessionPtr session, codepo
 
 inline SourceCharacter ByteDecoder_validMB(ParserSessionPtr session, codepoint decoded, NextPolicy policy) {
     
+    auto currentSourceCharacterStartLoc = session->SrcLoc;
+    
 #if COMPUTE_SOURCE
     session->srcConventionManager->increment(session, session->SrcLoc);
 #endif // COMPUTE_SOURCE
     
 #if CHECK_ISSUES
     {
-        auto currentSourceCharacterStartLoc = session->SrcLoc.previous();
-        
         if (Utils::isMBStrange(decoded)) {
             
             ByteDecoder_strangeWarning(session, decoded, currentSourceCharacterStartLoc, policy);
@@ -1004,7 +739,9 @@ inline SourceCharacter ByteDecoder_validMB(ParserSessionPtr session, codepoint d
     return SourceCharacter(decoded);
 }
 
-SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy) {
+SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, NextPolicy policy) {
+    
+    auto startLoc = session->SrcLoc;
     
 #if COMPUTE_SOURCE
     session->srcConventionManager->increment(session, session->SrcLoc);
@@ -1016,7 +753,7 @@ SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, So
         // No CodeAction here
         //
         
-        auto I = new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {});
+        auto I = new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(startLoc, session->SrcLoc), 1.0, {}, {});
         
         session->addIssue(I);
     }
@@ -1034,7 +771,9 @@ SourceCharacter ByteDecoder_incomplete1ByteSequence(ParserSessionPtr session, So
     return SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE);
 }
 
-SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy) {
+SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, NextPolicy policy) {
+    
+    auto startLoc = session->SrcLoc;
     
 #if COMPUTE_SOURCE
     session->srcConventionManager->increment(session, session->SrcLoc);
@@ -1046,7 +785,7 @@ SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, So
         // No CodeAction here
         //
         
-        auto I = new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {});
+        auto I = new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(startLoc, session->SrcLoc), 1.0, {}, {});
         
         session->addIssue(I);
     }
@@ -1064,7 +803,9 @@ SourceCharacter ByteDecoder_incomplete2ByteSequence(ParserSessionPtr session, So
     return SourceCharacter(CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE);
 }
 
-SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy) {
+SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, NextPolicy policy) {
+    
+    auto startLoc = session->SrcLoc;
     
 #if COMPUTE_SOURCE
     session->srcConventionManager->increment(session, session->SrcLoc);
@@ -1076,7 +817,7 @@ SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, So
         // No CodeAction here
         //
         
-        auto I = new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {});
+        auto I = new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(startLoc, session->SrcLoc), 1.0, {}, {});
         
         session->addIssue(I);
     }
@@ -1097,7 +838,9 @@ SourceCharacter ByteDecoder_incomplete3ByteSequence(ParserSessionPtr session, So
 //
 // Related bugs: 376155
 //
-SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy) {
+SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, NextPolicy policy) {
+    
+    auto startLoc = session->SrcLoc;
     
 #if COMPUTE_SOURCE
     session->srcConventionManager->increment(session, session->SrcLoc);
@@ -1109,7 +852,7 @@ SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, SourceLocat
         // No CodeAction here
         //
         
-        auto I = new EncodingIssue(STRING_STRAYSURROGATE, "Stray surrogate.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {});
+        auto I = new EncodingIssue(STRING_STRAYSURROGATE, "Stray surrogate.", STRING_FATAL, Source(startLoc, session->SrcLoc), 1.0, {}, {});
         
         session->addIssue(I);
     }
@@ -1127,7 +870,9 @@ SourceCharacter ByteDecoder_straySurrogate(ParserSessionPtr session, SourceLocat
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
 
-SourceCharacter ByteDecoder_bom(ParserSessionPtr session, SourceLocation errSrcLoc, NextPolicy policy) {
+SourceCharacter ByteDecoder_bom(ParserSessionPtr session, NextPolicy policy) {
+    
+    auto startLoc = session->SrcLoc;
     
 #if COMPUTE_SOURCE
     session->srcConventionManager->increment(session, session->SrcLoc);
@@ -1139,7 +884,7 @@ SourceCharacter ByteDecoder_bom(ParserSessionPtr session, SourceLocation errSrcL
         // No CodeAction here
         //
         
-        auto I = new EncodingIssue(STRING_BOM, "BOM.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {});
+        auto I = new EncodingIssue(STRING_BOM, "BOM.", STRING_FATAL, Source(startLoc, session->SrcLoc), 1.0, {}, {});
         
         session->addIssue(I);
     }

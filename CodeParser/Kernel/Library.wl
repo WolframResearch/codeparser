@@ -13,7 +13,9 @@ library functions calling INTO lib
 createParserSessionFunc
 destroyParserSessionFunc
 concreteParseBytesFunc
+concreteParseFileFunc
 tokenizeBytesFunc
+tokenizeFileFunc
 concreteParseLeafFunc
 safeStringFunc
 
@@ -234,7 +236,11 @@ Module[{pacletInfo, pacletInfoFile, transport},
 
       concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
 
+      concreteParseFileFunc := concreteParseFileFunc = fromPointerA @* loadFunc["ConcreteParseFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer];
+
       tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+
+      tokenizeFileFunc := tokenizeFileFunc = fromPointerA @* loadFunc["TokenizeFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer];
 
       concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* loadFunc["ConcreteParseLeaf_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, Integer, Integer }, Integer];
 
@@ -248,7 +254,11 @@ Module[{pacletInfo, pacletInfoFile, transport},
 
       concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
 
+      concreteParseFileFunc := concreteParseFileFunc = loadFunc["ConcreteParseFile_LibraryLink", LinkObject, LinkObject];
+
       tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject];
+
+      tokenizeFileFunc := tokenizeFileFunc = loadFunc["TokenizeFile_LibraryLink", LinkObject, LinkObject];
 
       concreteParseLeafFunc := concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject];
 

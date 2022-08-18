@@ -119,7 +119,6 @@ void Token::reset(ParserSessionPtr session) {
 void Token::skip(ParserSessionPtr session) {
     
     session->buffer = end();
-    session->wasEOF = (Tok == TOKEN_ENDOFFILE);
     session->SrcLoc = Src.End;
 }
 

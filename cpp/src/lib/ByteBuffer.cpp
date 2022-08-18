@@ -16,25 +16,16 @@
 //
 unsigned char ByteBuffer_nextByte(ParserSessionPtr session) {
     
-    assert((session->start <= session->buffer && session->buffer <= session->end) && "Fix at call site");
-    
-    if (session->buffer == session->end) {
-        
-        session->wasEOF = true;
-        
-        return 0xff;
-    }
+    assert(session->start <= session->buffer);
+    assert(session->buffer < session->end);
     
     return *(session->buffer++);
 }
 
 unsigned char ByteBuffer_currentByte(ParserSessionPtr session) {
     
-    assert((session->start <= session->buffer && session->buffer <= session->end) && "Fix at call site");
-    
-    if (session->buffer == session->end) {
-        return 0xff;
-    }
+    assert(session->start <= session->buffer);
+    assert(session->buffer <= session->end);
     
     return *(session->buffer);
 }

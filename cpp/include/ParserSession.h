@@ -38,7 +38,6 @@ public:
     
     Buffer start;
     Buffer end;
-    bool wasEOF;
     Buffer buffer;
     
     WolframLibraryData libData;

@@ -116,6 +116,7 @@ struct ParserSessionOptions {
     uint32_t tabWidth;
     FirstLineBehavior firstLineBehavior;
     EncodingMode encodingMode;
+    bool alreadyHasEOFSentinel;
 };
 
 
@@ -169,9 +170,21 @@ EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK link);
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
 EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 #elif USE_MATHLINK
 EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK link);
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK link);
 #endif // USE_EXPR_LIB
 
 #if USE_EXPR_LIB
@@ -213,6 +226,36 @@ public:
 
 
 #if USE_MATHLINK
+//
+// A UTF8 String from MathLink that has lexical scope
+//
+class ScopedMLUTF8String {
+private:
+    
+    MLINK link;
+    Buffer buf;
+    //
+    // used by MLReleaseUTF8String
+    //
+    // not exposed publicly, to stay consistent with other strings
+    //
+    int b;
+    //
+    // unused
+    //
+    int c;
+    
+public:
+    
+    ScopedMLUTF8String(MLINK link);
+    
+    ~ScopedMLUTF8String();
+    
+    bool read();
+    
+    Buffer get() const;
+};
+
 //
 // A String from MathLink that has lexical scope
 //
@@ -264,6 +307,24 @@ public:
 
 
 #if USE_EXPR_LIB
+//
+//
+//
+class ScopedUTF8String {
+private:
+    
+    WolframLibraryData libData;
+    Buffer str;
+    
+public:
+    ScopedUTF8String(WolframLibraryData libData, MArgument Arg);
+    
+    ~ScopedUTF8String();
+    
+    Buffer data() const;
+};
+
+
 //
 //
 //

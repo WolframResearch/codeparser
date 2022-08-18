@@ -14,21 +14,47 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
+#include <cstring> // for memcpy
+
 
 bool validatePath(WolframLibraryData libData, Buffer inStr);
 
 
-ParserSession::ParserSession() : start(), end(), wasEOF(), buffer(), libData(), opts(), unsafeCharacterEncodingFlag(), srcConventionManager(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
+ParserSession::ParserSession() : start(), end(), buffer(), libData(), opts(), unsafeCharacterEncodingFlag(), srcConventionManager(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
 
 int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn, ParserSessionOptions optsIn) {
     
-    start = bufAndLenIn.Buf;
-    end = bufAndLenIn.end();
-    wasEOF = false;
-    buffer = start;
-    
     libData = libDataIn;
     opts = optsIn;
+    
+    if (opts.alreadyHasEOFSentinel) {
+        
+        start = bufAndLenIn.Buf;
+        end = bufAndLenIn.end();
+        buffer = start;
+        
+    } else {
+        
+        //
+        // make private copy of bufAndLenIn for modifying
+        //
+        
+        //
+        // add 1 byte at end for EOF sentinel
+        //
+        start = new unsigned char[bufAndLenIn.length() + 1];
+        end = start + bufAndLenIn.length() + 1;
+        buffer = start;
+        
+        memcpy(const_cast<MBuffer>(start), bufAndLenIn.Buf, bufAndLenIn.length());
+            
+        auto last = const_cast<MBuffer>(end) - 1;
+        
+        //
+        // EOF sentinel
+        //
+        *last = 0xff;
+    }
     
     unsafeCharacterEncodingFlag = UNSAFECHARACTERENCODING_OK;
     
@@ -75,6 +101,11 @@ int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataI
 }
 
 void ParserSession::deinit() {
+    
+    if (!opts.alreadyHasEOFSentinel) {
+        
+        delete[] start;
+    }
     
 #if COMPUTE_SOURCE
     delete srcConventionManager;
@@ -319,7 +350,10 @@ NodeContainerPtr ParserSession::safeString() {
         
     } // while (true)
     
-    auto N = new SafeStringNode(BufferAndLength(start, end - start));
+    //
+    // remove EOF sentinel
+    //
+    auto N = new SafeStringNode(BufferAndLength(start, end - start - 1));
     
     nodes.push(std::move(N));
     

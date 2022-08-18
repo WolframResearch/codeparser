@@ -113,6 +113,8 @@ int main(int argc, char *argv[]) {
 
 int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
     
+    opts.alreadyHasEOFSentinel = false;
+    
     WolframLibraryData libData = nullptr;
     
     auto session = CreateParserSession();
@@ -329,6 +331,8 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessio
         
         return EXIT_FAILURE;
     }
+    
+    opts.alreadyHasEOFSentinel = true;
     
     WolframLibraryData libData = nullptr;
     
