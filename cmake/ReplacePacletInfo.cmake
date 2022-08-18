@@ -1,5 +1,5 @@
 
-file(READ ${COPIED_PACLETINFO} filedata)
+file(READ ${REPLACED_PACLETINFO} filedata)
 
 string(TIMESTAMP DATESTRING "%a %d %b %Y %H:%M:%S")
 
@@ -25,4 +25,4 @@ string(REGEX REPLACE ",\n([ \t]*)\\{\"Documentation\"[a-zA-Z0-9 ->\"/]*\\}(,|)" 
 
 endif()
 
-file(WRITE ${COPIED_PACLETINFO} "${filedata}")
+file(WRITE ${REPLACED_PACLETINFO} "${filedata}")
