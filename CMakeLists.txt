@@ -171,12 +171,7 @@ CheckWolframKernel()
 CheckPacletInfo()
 
 if(${TRANSPORT} STREQUAL Automatic)
-if(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
-#
-# bug 426325: Transport ExprLib does not yet work on Linux
-#
-set(TRANSPORT MathLink)
-elseif(${VERSION_NUMBER} GREATER_EQUAL 1310)
+if(${VERSION_NUMBER} GREATER_EQUAL 1310)
 set(TRANSPORT ExprLib)
 else()
 set(TRANSPORT MathLink)
@@ -529,12 +524,16 @@ set(EXPR_LIB_OUTPUTS
 
 add_library(expr-lib SHARED IMPORTED)
 
-set_property(
-	TARGET
-		expr-lib
-	PROPERTY
+set_target_properties(expr-lib PROPERTIES
 	IMPORTED_LOCATION
 		${EXPR_LIB}
+	# IMPORTED_NO_SONAME is meant only to tell CMake that a .so doesn't have a SONAME field.
+	# If such a .so is passed by file path to the linker, some linkers will put the path to the .so in the NEEDED field of consumers.
+	# As a workaround, CMake switches to linking via -l<name>, in which case the library must be found by the linker's normal search rules.
+	# On UNIX platforms, that means it needs to be named lib<name>.so.
+	# https://gitlab.kitware.com/cmake/cmake/-/issues/22703
+	IMPORTED_NO_SONAME
+		ON
 )
 
 
@@ -795,6 +794,19 @@ set_target_properties(codeparser-lib PROPERTIES
 	PREFIX
 		""
 )
+
+#
+# see page 100 of:
+# https://github.com/CppCon/CppCon2019/blob/master/Presentations/deep_cmake_for_library_authors/deep_cmake_for_library_authors__craig_scott__cppcon_2019.pdf
+#
+if(NOT APPLE)
+set_target_properties(codeparser-lib PROPERTIES
+	INSTALL_RPATH
+		$ORIGIN
+	BUILD_WITH_INSTALL_RPATH
+		ON
+)
+endif()
 
 if(NOT BUILD_TESTS)
 set_target_properties(codeparser-lib PROPERTIES
