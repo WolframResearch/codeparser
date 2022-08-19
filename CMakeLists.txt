@@ -886,21 +886,24 @@ endif()
 target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
 
 
+if(ENABLE_WARNINGS)
 
 #
 # Setup warnings
 #
+# https://www.foonathan.net/2018/10/cmake-warnings/
+#
 if(MSVC)
 	target_compile_options(codeparser-lib
-		# specify /MT to statically link runtime on Windows
-		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
-		PRIVATE /W3 /EHsc /MT
+		PRIVATE /W4 /wd4100
 	)
 else(MSVC)
 	target_compile_options(codeparser-lib
-		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
+		PRIVATE -pedantic-errors -Wall -Wextra -Wconversion -Wsign-conversion -Wno-unused-parameter
 	)
 endif(MSVC)
+
+endif(ENABLE_WARNINGS)
 
 
 

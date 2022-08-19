@@ -23,7 +23,7 @@ using codepoint = int32_t;
 // Used to just be Escape, but this was observed:
 // c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\CharacterDecoder.h(37): error C2061: syntax error: identifier 'Escape'
 //
-enum EscapeStyle {
+enum EscapeStyle : uint8_t {
     ESCAPE_NONE,
     ESCAPE_RAW,
     ESCAPE_SINGLE,

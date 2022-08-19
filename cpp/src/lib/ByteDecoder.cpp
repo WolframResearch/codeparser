@@ -898,47 +898,47 @@ SourceCharacter ByteDecoder_bom(ParserSessionPtr session, NextPolicy policy) {
 
 void SourceConventionManager::increment(ParserSessionPtr session, SourceLocation& loc) {
     loc.second++;
-};
+}
 
 
 SourceLocation LineColumnManager::newSourceLocation() {
     return SourceLocation(1, 1);
-};
+}
 
 void LineColumnManager::newline(ParserSessionPtr session, SourceLocation& loc) {
     
     loc.first++;
     
     loc.second = 1;
-};
+}
 
 void LineColumnManager::windowsNewline(ParserSessionPtr session, SourceLocation& loc) {
     
     loc.first++;
     
     loc.second = 1;
-};
+}
 
 void LineColumnManager::tab(ParserSessionPtr session, SourceLocation& loc) {
     
     auto currentTabStop = session->opts.tabWidth * ((loc.second - 1) / session->opts.tabWidth) + 1;
     
     loc.second = currentTabStop + session->opts.tabWidth;
-};
+}
 
 
 SourceLocation SourceCharacterIndexManager::newSourceLocation() {
     return SourceLocation(0, 1);
-};
+}
 
 void SourceCharacterIndexManager::newline(ParserSessionPtr session, SourceLocation& loc) {
     loc.second++;
-};
+}
 
 void SourceCharacterIndexManager::windowsNewline(ParserSessionPtr session, SourceLocation& loc) {
     loc.second+=2;
-};
+}
 
 void SourceCharacterIndexManager::tab(ParserSessionPtr session, SourceLocation& loc) {
     loc.second++;
-};
+}

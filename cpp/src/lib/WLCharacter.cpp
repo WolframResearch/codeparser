@@ -234,11 +234,11 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
                 }
             }
             
-            int8_t o0 = i % 8;
+            auto o0 = static_cast<uint8_t>(i) % 8u;
             i /= 8;
-            int8_t o1 = i % 8;
+            auto o1 = static_cast<uint8_t>(i) % 8u;
             i /= 8;
-            int8_t o2 = i % 8;
+            auto o2 = static_cast<uint8_t>(i) % 8u;
             
             s << SourceCharacter('\\');
             s << SourceCharacter(fromDigit(o2));
@@ -264,9 +264,9 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
                 }
             }
             
-            int8_t x0 = i % 16;
+            auto x0 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x1 = i % 16;
+            auto x1 = static_cast<uint8_t>(i) % 16u;
             
             s << SourceCharacter('\\');
             s << SourceCharacter('.');
@@ -292,13 +292,13 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
                 }
             }
             
-            int8_t x0 = i % 16;
+            auto x0 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x1 = i % 16;
+            auto x1 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x2 = i % 16;
+            auto x2 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x3 = i % 16;
+            auto x3 = static_cast<uint8_t>(i) % 16u;
             
             s << SourceCharacter('\\');
             s << SourceCharacter(':');
@@ -326,17 +326,17 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
                 }
             }
             
-            int8_t x0 = i % 16;
+            auto x0 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x1 = i % 16;
+            auto x1 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x2 = i % 16;
+            auto x2 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x3 = i % 16;
+            auto x3 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x4 = i % 16;
+            auto x4 = static_cast<uint8_t>(i) % 16u;
             i /= 16;
-            int8_t x5 = i % 16;
+            auto x5 = static_cast<uint8_t>(i) % 16u;
             
             s << SourceCharacter('\\');
             s << SourceCharacter('|');

@@ -36,7 +36,7 @@ struct NumberTokenizationContext {
     //
     // Use the convention that base of 0 means the default, unspecified base
     //
-    int Base;
+    size_t Base;
     
     NumberTokenizationContext() : InvalidBase(false), UnrecognizedDigit(false), NegativeExponent(false), Real(false), NonZeroExponentDigitCount(0), Base(0) {}
     
@@ -583,7 +583,7 @@ WLCharacter Tokenizer_nextWLCharacter(ParserSessionPtr session, Buffer tokenStar
                     //
                     // It is possible to have e.g.:
                     //
-                    //"a\
+                    //"a<backslash>
                     //<tab>b"
                     //
                     // where the embedded tab gets consumed by the whitespace loop after the line continuation.

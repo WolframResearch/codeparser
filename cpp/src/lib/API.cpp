@@ -332,10 +332,12 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int tabWidth;
-    if (!MLGetInteger(callLink, &tabWidth)) {
+    int mlTabWidth;
+    if (!MLGetInteger(callLink, &mlTabWidth)) {
         assert(false);
     }
+    
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
     if (MLGetType(callLink) != MLTKINT) {
         return LIBRARY_FUNCTION_ERROR;
@@ -487,10 +489,12 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int tabWidth;
-    if (!MLGetInteger(callLink, &tabWidth)) {
+    int mlTabWidth;
+    if (!MLGetInteger(callLink, &mlTabWidth)) {
         assert(false);
     }
+    
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
     if (MLGetType(callLink) != MLTKINT) {
         return LIBRARY_FUNCTION_ERROR;
@@ -549,7 +553,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
 
     auto mlTabWidth = MArgument_getInteger(Args[3]);
-    auto tabWidth = static_cast<int>(mlTabWidth);
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
 
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
@@ -652,10 +656,12 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int tabWidth;
-    if (!MLGetInteger(callLink, &tabWidth)) {
+    int mlTabWidth;
+    if (!MLGetInteger(callLink, &mlTabWidth)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
     if (MLGetType(callLink) != MLTKINT) {
         return LIBRARY_FUNCTION_ERROR;
@@ -712,7 +718,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
 
     auto mlTabWidth = MArgument_getInteger(Args[3]);
-    auto tabWidth = static_cast<int>(mlTabWidth);
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
 
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
@@ -807,10 +813,12 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int tabWidth;
-    if (!MLGetInteger(callLink, &tabWidth)) {
+    int mlTabWidth;
+    if (!MLGetInteger(callLink, &mlTabWidth)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
     if (MLGetType(callLink) != MLTKINT) {
         return LIBRARY_FUNCTION_ERROR;
@@ -871,7 +879,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
 
     auto mlTabWidth = MArgument_getInteger(Args[4]);
-    auto tabWidth = static_cast<int>(mlTabWidth);
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
 
     auto mlFirstLineBehavior = MArgument_getInteger(Args[5]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
@@ -988,10 +996,12 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int tabWidth;
-    if (!MLGetInteger(callLink, &tabWidth)) {
+    int mlTabWidth;
+    if (!MLGetInteger(callLink, &mlTabWidth)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
     if (MLGetType(callLink) != MLTKINT) {
         return LIBRARY_FUNCTION_ERROR;

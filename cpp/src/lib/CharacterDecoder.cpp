@@ -90,13 +90,13 @@ WLCharacter CharacterDecoder_nextWLCharacter(ParserSessionPtr session, NextPolic
     }
     
     //
-    // Handle \
+    // Handle backslash
     //
     // handle escapes like special characters
     //
         
     //
-    // There was a \
+    // There was a backslash
     //
     
     auto escapedBuf = session->buffer;
