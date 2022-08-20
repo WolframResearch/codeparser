@@ -222,6 +222,7 @@ file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/
 	${PROJECT_BINARY_DIR}/generated/wl/Kernel/
 	${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/
+	${PROJECT_BINARY_DIR}/pdb-output/
 )
 
 
@@ -523,10 +524,6 @@ if(${TRANSPORT} STREQUAL ExprLib)
 
 set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libexpr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
-set(EXPR_LIB_OUTPUTS
-	${EXPR_LIB}
-)
-
 add_library(expr-lib SHARED IMPORTED)
 
 set_target_properties(expr-lib PROPERTIES
@@ -549,10 +546,6 @@ if(CMAKE_HOST_WIN32 OR CYGWIN)
 
 set(EXPR_IMPLIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libexpr.lib)
 
-list(APPEND EXPR_LIB_OUTPUTS
-	${EXPR_IMPLIB}
-)
-
 set_property(
 	TARGET
 		expr-lib
@@ -565,12 +558,12 @@ endif(CMAKE_HOST_WIN32 OR CYGWIN)
 
 add_custom_target(expr-lib-custom
 	DEPENDS
-		${EXPR_LIB_OUTPUTS}
+		${EXPR_LIB}
 )
 
 add_custom_command(
 	OUTPUT
-		${EXPR_LIB_OUTPUTS}
+		${EXPR_LIB}
 	#
 	# remove old files that may cause conflicts
 	#
@@ -579,7 +572,7 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr.lib
 	COMMAND
-		${CMAKE_COMMAND} -E echo "EXPR_LIB_OUTPUTS: ${EXPR_LIB_OUTPUTS}"
+		${CMAKE_COMMAND} -E echo "EXPR_LIB: ${EXPR_LIB}"
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ExprLibrary.wl -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
@@ -595,8 +588,6 @@ add_custom_command(
 add_dependencies(expr-lib expr-lib-custom)
 
 endif(${TRANSPORT} STREQUAL ExprLib)
-
-
 
 
 
@@ -793,6 +784,12 @@ set_target_properties(codeparser-lib PROPERTIES
 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE
 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	PDB_OUTPUT_DIRECTORY
+		${PROJECT_BINARY_DIR}/pdb-output
+	PDB_OUTPUT_DIRECTORY_DEBUG
+		${PROJECT_BINARY_DIR}/pdb-output
+	PDB_OUTPUT_DIRECTORY_RELEASE
+		${PROJECT_BINARY_DIR}/pdb-output
 	#
 	# WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
 	#

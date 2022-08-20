@@ -20,6 +20,7 @@ Needs["CodeTools`Generate`GenerateSources`"];
 Print["Needs[\"Compile`\"]... \[WatchIcon]"];
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
+Needs["CCompilerDriver`"]
 
 
 checkBuildDir[]
@@ -190,9 +191,12 @@ Module[{},
 generate[] :=
 Catch[
 Catch[
-Module[{targetDir, prog, compLib, compStart, compEnd, env},
+Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
+  env},
 
   Print["Generating ExprLibrary..."];
+
+  workingDir = FileNameJoin[{ buildDir, "ccompilerdriver-working" }];
 
   targetDir = FileNameJoin[{ buildDir, "paclet", "CodeParser", "LibraryResources", $SystemID }];
 
@@ -222,6 +226,24 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
   Print["Calling CompileToLibrary[]... \[WatchIcon]"];
 
   compStart = Now;
+
+  (*
+  set options that CompileToLibrary does not support
+  *)
+  Switch[DefaultCCompiler[],
+    CCompilerDriver`ClangCompiler`ClangCompiler,
+      SetOptions[CCompilerDriver`ClangCompiler`ClangCompiler, "WorkingDirectory" -> workingDir];
+    ,
+    CCompilerDriver`GCCCompiler`GCCCompiler,
+      SetOptions[CCompilerDriver`GCCCompiler`GCCCompiler, "WorkingDirectory" -> workingDir];
+    ,
+    CCompilerDriver`VisualStudioCompiler`VisualStudioCompiler,
+      SetOptions[CCompilerDriver`VisualStudioCompiler`VisualStudioCompiler, "WorkingDirectory" -> workingDir];
+    ,
+    _,
+      Print["unhandled DefaultCCompiler[]: ", DefaultCCompiler[]];
+      Quit[1]
+  ];
 
   compLib =
     CompileToLibrary[prog,
