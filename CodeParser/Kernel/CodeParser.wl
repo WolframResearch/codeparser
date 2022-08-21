@@ -344,7 +344,8 @@ Options[CodeConcreteParse] = {
   (*
   more obscure options
   *)
-  ContainerNode -> Automatic
+  ContainerNode -> Automatic,
+  "AlreadyHasEOFSentinel" -> False
 }
 
 
@@ -465,7 +466,7 @@ Module[{res, convention, container, tabWidth,
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], False];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -759,11 +760,21 @@ Module[{res, container, containerWasAutomatic},
 
 concreteParseBytes[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, container, tabWidth, containerWasAutomatic},
+Module[{res, convention, container, tabWidth, containerWasAutomatic,
+  alreadyHasEOFSentinel},
 
   convention = OptionValue[func, {opts}, SourceConvention];
   container = OptionValue[func, {opts}, ContainerNode];
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  alreadyHasEOFSentinel = OptionValue[func, {opts}, "AlreadyHasEOFSentinel"];
+
+  If[!MatchQ[alreadyHasEOFSentinel, True | False],
+    Throw[Failure["AlreadyHasEOFSentinelIsNotTrueOrFalse", <| "AlreadyHasEOFSentinel" -> alreadyHasEOFSentinel |>]]
+  ];
+
+  If[alreadyHasEOFSentinel && bytes[[-1]] != 255,
+    Throw[Failure["EOFSentinelIsNotPresent", <||>]]
+  ];
 
   (*
   The <||> will be filled in with Source later
@@ -784,7 +795,7 @@ Module[{res, convention, container, tabWidth, containerWasAutomatic},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], alreadyHasEOFSentinel];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -821,7 +832,8 @@ Options[CodeParse] = {
   (*
   more obscure options
   *)
-  ContainerNode -> Automatic
+  ContainerNode -> Automatic,
+  "AlreadyHasEOFSentinel" -> False
 }
 
 
@@ -879,7 +891,8 @@ Options[CodeTokenize] = {
   CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   "TabWidth" -> 1,
-  "FileFormat" -> Automatic
+  "FileFormat" -> Automatic,
+  "AlreadyHasEOFSentinel" -> False
 }
 
 
@@ -932,7 +945,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], False];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1079,16 +1092,25 @@ tokenizeBytes[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPat
 
 tokenizeBytes[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, tabWidth},
+Module[{res, convention, tabWidth, alreadyHasEOFSentinel},
 
   convention = OptionValue[func, {opts}, SourceConvention];
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  alreadyHasEOFSentinel = OptionValue[func, {opts}, "AlreadyHasEOFSentinel"];
+
+  If[!MatchQ[alreadyHasEOFSentinel, True | False],
+    Throw[Failure["AlreadyHasEOFSentinelIsNotTrueOrFalse", <| "AlreadyHasEOFSentinel" -> alreadyHasEOFSentinel |>]]
+  ];
+
+  If[alreadyHasEOFSentinel && bytes[[-1]] != 255,
+    Throw[Failure["EOFSentinelIsNotPresent", <||>]]
+  ];
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], alreadyHasEOFSentinel];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;

@@ -280,6 +280,26 @@ public:
     
     const char *get() const;
 };
+
+//
+// A Symbol from MathLink that has lexical scope
+//
+class ScopedMLSymbol {
+private:
+    
+    MLINK link;
+    const char *buf;
+    
+public:
+    
+    ScopedMLSymbol(MLINK link);
+    
+    ~ScopedMLSymbol();
+    
+    int read();
+    
+    const char *get() const;
+};
 #endif // USE_MATHLINK
 
 

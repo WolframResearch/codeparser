@@ -320,7 +320,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
 #if USE_EXPR_LIB
 DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (Argc != 5) {
+    if (Argc != 6) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
@@ -342,12 +342,15 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
+    auto mlAlreadyHasEOFSentinel = MArgument_getBoolean(Args[5]);
+    auto alreadyHasEOFSentinel = static_cast<bool>(mlAlreadyHasEOFSentinel);
+
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
     opts.firstLineBehavior = firstLineBehavior;
     opts.encodingMode = ENCODINGMODE_NORMAL;
-    opts.alreadyHasEOFSentinel = false;
+    opts.alreadyHasEOFSentinel = alreadyHasEOFSentinel;
     
     if (ParserSessionInit(session, arr.data(), arr.size(), libData, opts)) {
         
@@ -406,7 +409,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 5) {
+    if (len != 6) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         fprintf(stderr, "len: %lu\n", len);
@@ -537,6 +540,13 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
+    auto mlAlreadyHasEOFSentinel = ScopedMLSymbol(callLink);
+    if (!mlAlreadyHasEOFSentinel.read()) {
+        assert(false);
+    }
+    
+    auto alreadyHasEOFSentinel = (strcmp(mlAlreadyHasEOFSentinel.get(), "True") == 0);
+    
     if (!MLNewPacket(callLink)) {
         assert(false);
     }
@@ -546,7 +556,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     opts.tabWidth = tabWidth;
     opts.firstLineBehavior = firstLineBehavior;
     opts.encodingMode = ENCODINGMODE_NORMAL;
-    opts.alreadyHasEOFSentinel = false;
+    opts.alreadyHasEOFSentinel = alreadyHasEOFSentinel;
     
     if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         
@@ -832,7 +842,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
 #if USE_EXPR_LIB
 int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (Argc != 5) {
+    if (Argc != 6) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
@@ -854,12 +864,15 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
+    auto mlAlreadyHasEOFSentinel = MArgument_getBoolean(Args[5]);
+    auto alreadyHasEOFSentinel = static_cast<bool>(mlAlreadyHasEOFSentinel);
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
     opts.firstLineBehavior = firstLineBehavior;
     opts.encodingMode = ENCODINGMODE_NORMAL;
-    opts.alreadyHasEOFSentinel = false;
+    opts.alreadyHasEOFSentinel = alreadyHasEOFSentinel;
     
     if (ParserSessionInit(session, arr.data(), arr.size(), libData, opts)) {
         
@@ -918,7 +931,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 5) {
+    if (len != 6) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         fprintf(stderr, "len: %lu\n", len);
@@ -1053,6 +1066,13 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
+    auto mlAlreadyHasEOFSentinel = ScopedMLSymbol(callLink);
+    if (!mlAlreadyHasEOFSentinel.read()) {
+        assert(false);
+    }
+    
+    auto alreadyHasEOFSentinel = (strcmp(mlAlreadyHasEOFSentinel.get(), "True") == 0);
+    
     if (!MLNewPacket(callLink) ) {
         assert(false);
     }
@@ -1062,7 +1082,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.tabWidth = tabWidth;
     opts.firstLineBehavior = firstLineBehavior;
     opts.encodingMode = ENCODINGMODE_NORMAL;
-    opts.alreadyHasEOFSentinel = false;
+    opts.alreadyHasEOFSentinel = alreadyHasEOFSentinel;
     
     if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         
@@ -1969,6 +1989,26 @@ int ScopedMLString::read() {
 }
 
 const char *ScopedMLString::get() const {
+    return buf;
+}
+
+
+ScopedMLSymbol::ScopedMLSymbol(MLINK link) : link(link), buf(NULL) {}
+
+ScopedMLSymbol::~ScopedMLSymbol() {
+    
+    if (!buf) {
+        return;
+    }
+    
+    MLReleaseSymbol(link, buf);
+}
+
+int ScopedMLSymbol::read() {
+    return MLGetSymbol(link, &buf);
+}
+
+const char *ScopedMLSymbol::get() const {
     return buf;
 }
 #endif // USE_MATHLINK
