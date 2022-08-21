@@ -970,6 +970,18 @@ add_custom_command(
 		#
 		${CMAKE_COMMAND} -DRETRY_ON_FAILURE=ON -DSCRIPT=${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET_LAYOUT_DIR=${PACLET_LAYOUT_DIR} -DPACLET=${PACLET} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
+		${PACLET_SOURCES}
+		#
+		# prevent this error:
+		#
+		# CMake Error in CMakeLists.txt:
+		#   The custom command generating
+		#     /Users/brenton/development/stash/COD/codeparser/build-xcode/paclet/CodeParser/Kernel/Abstract.wl
+		#   is attached to multiple targets:
+		#     paclet-layout
+		#     create-paclet-archive
+		#   but none of these is a common dependency of the other(s).  This is not
+		#   allowed by the Xcode "new build system".
 		paclet-layout
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
