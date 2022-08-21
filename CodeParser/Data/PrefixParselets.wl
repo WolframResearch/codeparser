@@ -77,15 +77,6 @@ Token`Comma -> Parselet`PrefixCommaParselet[],
 Token`LongName`InvisibleComma -> Parselet`PrefixCommaParselet[],
 
 
-(*
-Integration operators
-*)
-Token`LongName`ContourIntegral -> Parselet`PrefixOperatorParselet[Precedence`Class`IntegrationOperators, ContourIntegral],
-Token`LongName`DoubleContourIntegral -> Parselet`PrefixOperatorParselet[Precedence`Class`IntegrationOperators, DoubleContourIntegral],
-Token`LongName`ClockwiseContourIntegral -> Parselet`PrefixOperatorParselet[Precedence`Class`IntegrationOperators, ClockwiseContourIntegral],
-Token`LongName`CounterClockwiseContourIntegral -> Parselet`PrefixOperatorParselet[Precedence`Class`IntegrationOperators, CounterClockwiseContourIntegral],
-
-
 Token`LongName`Product -> Parselet`PrefixOperatorParselet[Precedence`LongName`Product, Product],
 Token`LongName`ContinuedFractionK -> Parselet`PrefixOperatorParselet[Precedence`LongName`ContinuedFractionK, ContinuedFractionK],
 Token`LongName`CircleTimes -> Parselet`PrefixOperatorParselet[Precedence`Prefix`LongName`CircleTimes, CircleTimes],
@@ -165,7 +156,11 @@ Token`SemiSemi -> Parselet`SemiSemiParselet[],
 (*
 Has to handle \[Integral] f \[DifferentialD] x
 *)
-Token`LongName`Integral -> Parselet`IntegralParselet[],
+Token`LongName`Integral -> Parselet`IntegralParselet[Integrate, Integral],
+Token`LongName`ContourIntegral -> Parselet`IntegralParselet[ContourIntegral, ContourIntegral],
+Token`LongName`DoubleContourIntegral -> Parselet`IntegralParselet[DoubleContourIntegral, DoubleContourIntegral],
+Token`LongName`ClockwiseContourIntegral -> Parselet`IntegralParselet[ClockwiseContourIntegral, ClockwiseContourIntegral],
+Token`LongName`CounterClockwiseContourIntegral -> Parselet`IntegralParselet[CounterClockwiseContourIntegral, CounterClockwiseContourIntegral],
 
 (*
 stringify next token (as a file]

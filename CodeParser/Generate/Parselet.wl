@@ -93,7 +93,7 @@ formatPrefix[Parselet`LessLessParselet[]] := "new LessLessParselet()"
 
 formatPrefix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
 
-formatPrefix[Parselet`IntegralParselet[]] := "new IntegralParselet()"
+formatPrefix[Parselet`IntegralParselet[op1_, op2_]] := "new IntegralParselet(" <> "SYMBOL_" <> toGlobal[op1] <> ", " <> "SYMBOL_" <> toGlobal[op2] <> ")"
 
 formatPrefix[Parselet`PrefixOperatorParselet[precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 

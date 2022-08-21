@@ -76,12 +76,12 @@ Module[{ctxt},
 
 
 
-symbols = Union[Join[
+symbols = Union[Flatten[Join[
   {Blank, BlankSequence, BlankNullSequence, ByteArray,
-    ConfidenceLevel, EndOfFile, EvaluatePacket, Integer, Integral,
-    Integrate, Missing, Null, Out, Optional, Pattern, Rational,
-    Real, Rule, Slot, SlotSequence, String, Symbol, TagSet,
-    TagSetDelayed, TagUnset, Unset, Whitespace, $Aborted},
+    ConfidenceLevel, EndOfFile, EvaluatePacket, Integer, Missing,
+    Null, Out, Optional, Pattern, Rational, Real, Rule, Slot,
+    SlotSequence, String, Symbol, TagSet, TagSetDelayed, TagUnset,
+    Unset, Whitespace, $Aborted},
   {CodeParser`Source},
   {CodeParser`LeafNode,
     CodeParser`ErrorNode, CodeParser`UnterminatedTokenErrorNeedsReparseNode,
@@ -106,7 +106,7 @@ symbols = Union[Join[
     Parselet`GroupParselet[_, op_] :> op,
     Parselet`LeafParselet[] :> Nothing,
     Parselet`UnderParselet[_] :> Nothing,
-    Parselet`IntegralParselet[] :> Nothing,
+    Parselet`IntegralParselet[op1_, op2_] :> {op1, op2},
     Parselet`LessLessParselet[] :> Get,
     Parselet`PrefixNullPointerParselet[] :> Nothing,
     Parselet`PrefixCloserParselet[] :> Nothing,
@@ -147,7 +147,7 @@ symbols = Union[Join[
     Parselet`SemiSemiParselet[] :> Span
   },
   tokens
-]]
+]]]
 
 
 

@@ -266,7 +266,42 @@ Test[
 	TestID->"Weird-20220629-C5X4D3"
 ]
 
+Test[
+	"\\[CountourIntegral] a \\[DifferentialD] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20220821-D0P3C2"
+]
 
+Test[
+	"\\[DoubleCountourIntegral] a \\[DifferentialD] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20220821-H4S8N6"
+]
 
+Test[
+	"\\[ClockwiseCountourIntegral] a \\[DifferentialD] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20220821-C2P4Y0"
+]
 
-
+Test[
+	"\\[CounterClockwiseCountourIntegral] a \\[DifferentialD] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20220821-X2S1Q0"
+]

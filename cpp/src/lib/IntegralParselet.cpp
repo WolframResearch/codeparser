@@ -14,11 +14,21 @@
 #endif // USE_MUSTTAIL
 
 
+IntegralParselet::IntegralParselet(Symbol Op1, Symbol Op2) : Op1(Op1), Op2(Op2) {}
+
+Symbol IntegralParselet::getOp1() const {
+    return Op1;
+}
+
+Symbol IntegralParselet::getOp2() const {
+    return Op2;
+}
+
 ParseFunction IntegralParselet::parsePrefix() const {
     return IntegralParselet_parsePrefix;
 }
 
-void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
+void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     //
     // Something like  \[Integral] f \[DifferentialD] x
@@ -27,7 +37,7 @@ void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
 #if CHECK_ABORT
     if (session->abortQ()) {
         Parser_pushNode(session, new AbortNode());
-        return Parser_tryContinue(session, Ignored, TokIn/*ignored*/);
+        return Parser_tryContinue(session, P, TokIn/*ignored*/);
     }
 #endif // CHECK_ABORT
     
@@ -47,11 +57,13 @@ void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
         
         Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(Tok.Buf), Source(Tok.Src.Start)));
         
-        return IntegralParselet_parse1(session, Ignored, Tok);
+        return IntegralParselet_parse1(session, P, Tok);
     }
     
     assert(!Ctxt.F);
+    assert(!Ctxt.P);
     Ctxt.F = IntegralParselet_parse1;
+    Ctxt.P = P;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -59,14 +71,14 @@ void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
 #if CHECK_ABORT
     if (session->abortQ()) {
         Parser_popNode(session);
         Parser_popContext(session);
         Parser_pushNode(session, new AbortNode());
-        return Parser_tryContinue(session, Ignored, Ignored2);
+        return Parser_tryContinue(session, P, Ignored);
     }
 #endif // CHECK_ABORT
     
@@ -81,13 +93,14 @@ void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
         Trivia1.reset(session);
         
         MUSTTAIL
-        return IntegralParselet_reduceIntegral(session, Ignored, Ignored2);
+        return IntegralParselet_reduceIntegral(session, P, Ignored);
     }
     
     Parser_pushTriviaSeq(session, Trivia1);
     
     auto& Ctxt = Parser_topContext(session);
     Ctxt.F = IntegralParselet_reduceIntegrate;
+    Ctxt.P = P;
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -95,20 +108,30 @@ void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     return (P2->parsePrefix())(session, P2, Tok);
 }
 
-void IntegralParselet_reduceIntegrate(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+void IntegralParselet_reduceIntegrate(ParserSessionPtr session, ParseletPtr P, Token Ignored2) {
     
-    Parser_pushNode(session, new PrefixBinaryNode(SYMBOL_INTEGRATE, Parser_popContext(session)));
+    assert(P);
+    assert(dynamic_cast<IntegralParselet *>(P));
+    
+    auto Op1 = dynamic_cast<IntegralParselet *>(P)->getOp1();
+    
+    Parser_pushNode(session, new PrefixBinaryNode(Op1, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(session, Ignored, Ignored2);
+    return Parser_parseClimb(session, P, Ignored2);
 }
 
-void IntegralParselet_reduceIntegral(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
+void IntegralParselet_reduceIntegral(ParserSessionPtr session, ParseletPtr P, Token Ignored2) {
     
-    Parser_pushNode(session, new PrefixNode(SYMBOL_INTEGRAL, Parser_popContext(session)));
+    assert(P);
+    assert(dynamic_cast<IntegralParselet *>(P));
+    
+    auto Op2 = dynamic_cast<IntegralParselet *>(P)->getOp2();
+    
+    Parser_pushNode(session, new PrefixNode(Op2, Parser_popContext(session)));
     
     MUSTTAIL
-    return Parser_parseClimb(session, Ignored, Ignored2);
+    return Parser_parseClimb(session, P, Ignored2);
 }
 
 

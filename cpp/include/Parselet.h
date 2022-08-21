@@ -464,7 +464,18 @@ void ColonEqualParselet_reduceTagSetDelayed(ParserSessionPtr session, ParseletPt
 
 
 class IntegralParselet : public PrefixParselet {
+private:
+    
+    const Symbol Op1;
+    const Symbol Op2;
+    
 public:
+    
+    IntegralParselet(Symbol Op1, Symbol Op2);
+    
+    Symbol getOp1() const;
+    
+    Symbol getOp2() const;
     
     ParseFunction parsePrefix() const override;
 };
