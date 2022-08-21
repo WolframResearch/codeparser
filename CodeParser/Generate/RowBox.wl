@@ -31,12 +31,12 @@ normalInfixParselets = Normal[importedInfixParselets]
 (*
 Token`Star will be handled specially in the epilog
 *)
-normalInfixParselets = DeleteCases[normalInfixParselets, Token`Star -> Parselet`InfixOperatorParselet[Token`Star, Precedence`Star, Times]]
+normalInfixParselets = DeleteCases[normalInfixParselets, Token`Star -> Parselet`InfixOperatorParselet[Precedence`Star, Times]]
 
 (*
 Token`SingleQuote is not used in boxes
 *)
-normalInfixParselets = DeleteCases[normalInfixParselets, Token`SingleQuote -> Parselet`PostfixOperatorParselet[Token`SingleQuote, Precedence`SingleQuote, Derivative]]
+normalInfixParselets = DeleteCases[normalInfixParselets, Token`SingleQuote -> Parselet`PostfixOperatorParselet[Precedence`SingleQuote, Derivative]]
 
 (*
 Token`Tilde will be handled as Infix
@@ -46,23 +46,23 @@ normalInfixParselets = DeleteCases[normalInfixParselets, Token`Tilde -> Parselet
 (*
 Token`MultiSingleQuote is used in boxes
 *)
-normalInfixParselets = Append[normalInfixParselets, Token`Boxes`MultiSingleQuote -> Parselet`PostfixOperatorParselet[Token`Boxes`MultiSingleQuote, Precedence`SingleQuote, Derivative]]
+normalInfixParselets = Append[normalInfixParselets, Token`Boxes`MultiSingleQuote -> Parselet`PostfixOperatorParselet[Precedence`SingleQuote, Derivative]]
 
 (*
 Token`Tilde will be handled as Infix
 *)
-normalInfixParselets = Append[normalInfixParselets, Token`Tilde -> Parselet`InfixOperatorParselet[Token`Tilde, Precedence`Tilde, InfixTilde]]
+normalInfixParselets = Append[normalInfixParselets, Token`Tilde -> Parselet`InfixOperatorParselet[Precedence`Tilde, InfixTilde]]
 
 
 groupParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`GroupParselet[tok_, op_]] :> {tok, op}]
 
-infixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`InfixOperatorParselet[_, _, op_]] :> {tok, op}]
+infixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`InfixOperatorParselet[_, op_]] :> {tok, op}]
 
-binaryOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`BinaryOperatorParselet[_, _, op_]] :> {tok, op}]
+binaryOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`BinaryOperatorParselet[_, op_]] :> {tok, op}]
 
-prefixOperatorParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`PrefixOperatorParselet[_, _, op_]] :> {tok, op}]
+prefixOperatorParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`PrefixOperatorParselet[_, op_]] :> {tok, op}]
 
-postfixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`PostfixOperatorParselet[_, _, op_]] :> {tok, op}]
+postfixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`PostfixOperatorParselet[_, op_]] :> {tok, op}]
 
 
 

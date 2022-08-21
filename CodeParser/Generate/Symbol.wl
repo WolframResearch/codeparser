@@ -102,7 +102,7 @@ symbols = Union[Join[
   {SyntaxError`ExpectedSet, SyntaxError`ExpectedTilde, SyntaxError`ExpectedSymbol},
   {Token`Newline},
   DownValues[PrefixOperatorToParselet][[All, 2]] /. {
-    Parselet`PrefixOperatorParselet[_, _, op_] :> op,
+    Parselet`PrefixOperatorParselet[_, op_] :> op,
     Parselet`GroupParselet[_, op_] :> op,
     Parselet`LeafParselet[] :> Nothing,
     Parselet`UnderParselet[_] :> Nothing,
@@ -124,11 +124,11 @@ symbols = Union[Join[
     Parselet`SemiSemiParselet[] :> Span
   },
   DownValues[InfixOperatorToParselet][[All, 2]] /. {
-    Parselet`BinaryOperatorParselet[_, _, op_] :> op,
+    Parselet`BinaryOperatorParselet[_, op_] :> op,
     Parselet`CallParselet[_] :> Nothing,
-    Parselet`InfixOperatorParselet[_, _, op_] :> op,
+    Parselet`InfixOperatorParselet[_, op_] :> op,
     Parselet`TimesParselet[] :> Times,
-    Parselet`PostfixOperatorParselet[_, _, op_] :> op,
+    Parselet`PostfixOperatorParselet[_, op_] :> op,
     Parselet`ColonColonParselet[] :> MessageName,
     Parselet`ColonEqualParselet[] :> SetDelayed,
     Parselet`ColonParselet[] :> Nothing,

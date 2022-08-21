@@ -95,7 +95,7 @@ formatPrefix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
 
 formatPrefix[Parselet`IntegralParselet[]] := "new IntegralParselet()"
 
-formatPrefix[Parselet`PrefixOperatorParselet[tok_, precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatPrefix[Parselet`PrefixOperatorParselet[precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 formatPrefix[Parselet`GroupParselet[Token`OpenSquare, CodeParser`GroupSquare]] := "&squareGroupParselet"
 
@@ -112,11 +112,11 @@ formatInfix[Parselet`InfixImplicitTimesParselet[]] := "&infixImplicitTimesParsel
 
 
 
-formatInfix[Parselet`BinaryOperatorParselet[tok_, precedence_, op_]] := "new BinaryOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatInfix[Parselet`BinaryOperatorParselet[precedence_, op_]] := "new BinaryOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatInfix[Parselet`InfixOperatorParselet[tok_, precedence_, op_]] := "new InfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatInfix[Parselet`InfixOperatorParselet[precedence_, op_]] := "new InfixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatInfix[Parselet`PostfixOperatorParselet[tok_, precedence_, op_]] := "new PostfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatInfix[Parselet`PostfixOperatorParselet[precedence_, op_]] := "new PostfixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 formatInfix[Parselet`ColonParselet[]] := "colonParselet"
 

@@ -153,7 +153,7 @@ private:
     
 public:
     
-    PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
+    PrefixOperatorParselet(Precedence precedence, Symbol Op);
     
     ParseFunction parsePrefix() const override;
     
@@ -223,7 +223,7 @@ private:
     
 public:
     
-    BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
+    BinaryOperatorParselet(Precedence precedence, Symbol Op);
     
     ParseFunction parseInfix() const override;
     
@@ -244,7 +244,7 @@ private:
     
 public:
     
-    InfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
+    InfixOperatorParselet(Precedence precedence, Symbol Op);
     
     ParseFunction parseInfix() const override;
     
@@ -284,7 +284,7 @@ private:
     
 public:
     
-    PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
+    PostfixOperatorParselet(Precedence precedence, Symbol Op);
     
     ParseFunction parseInfix() const override;
     

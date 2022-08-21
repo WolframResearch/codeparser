@@ -449,7 +449,7 @@ void SymbolParselet_reducePatternOptionalDefault(ParserSessionPtr session, Parse
 }
 
 
-PrefixOperatorParselet::PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+PrefixOperatorParselet::PrefixOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
 
 Precedence PrefixOperatorParselet::getPrecedence() const {
     return precedence;
@@ -555,7 +555,7 @@ void InfixAssertFalseParselet_parseInfix(ParserSessionPtr session, ParseletPtr I
 }
 
 
-BinaryOperatorParselet::BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+BinaryOperatorParselet::BinaryOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
 
 Precedence BinaryOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
@@ -613,7 +613,7 @@ void BinaryOperatorParselet_reduceBinaryOperator(ParserSessionPtr session, Parse
 }
 
 
-InfixOperatorParselet::InfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+InfixOperatorParselet::InfixOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
 
 Precedence InfixOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
@@ -770,7 +770,7 @@ void InfixOperatorParselet_reduceInfixOperator(ParserSessionPtr session, Parsele
 }
 
 
-PostfixOperatorParselet::PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+PostfixOperatorParselet::PostfixOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
 
 Precedence PostfixOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
@@ -1420,7 +1420,7 @@ void SlashColonParselet_reduceError(ParserSessionPtr session, ParseletPtr Ignore
 }
 
 
-EqualParselet::EqualParselet() : BinaryOperatorParselet(TOKEN_EQUAL, PRECEDENCE_EQUAL, SYMBOL_SET) {}
+EqualParselet::EqualParselet() : BinaryOperatorParselet(PRECEDENCE_EQUAL, SYMBOL_SET) {}
 
 ParseFunction EqualParselet::parseInfix() const {
     return EqualParselet_parseInfix;
@@ -1545,7 +1545,7 @@ void EqualParselet_reduceTagUnset(ParserSessionPtr session, ParseletPtr Ignored,
 }
 
 
-ColonEqualParselet::ColonEqualParselet() : BinaryOperatorParselet(TOKEN_COLONEQUAL, PRECEDENCE_COLONEQUAL, SYMBOL_SETDELAYED) {}
+ColonEqualParselet::ColonEqualParselet() : BinaryOperatorParselet(PRECEDENCE_COLONEQUAL, SYMBOL_SETDELAYED) {}
 
 ParseFunction ColonEqualParselet::parseInfix() const {
     return ColonEqualParselet_parseInfix;
