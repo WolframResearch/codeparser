@@ -1148,7 +1148,7 @@ inline Token Tokenizer_handleString(ParserSessionPtr session, Buffer tokenStartB
     // Bad WLCharacters will not be detected. This means that badly escaped characters will not be reported.
     //
     
-    quotPtr = static_cast<Buffer>(std::memchr(session->byteBuffer->buffer, '"', session->byteBuffer->end - session->byteBuffer->buffer));
+    quotPtr = static_cast<Buffer>(std::memchr(session->buffer, '"', session->end - session->buffer));
     
     if (quotPtr) {
         
