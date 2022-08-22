@@ -27,6 +27,9 @@ Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
 
+checkBuildDir[]
+
+
 (*
 Bug 321344:
 

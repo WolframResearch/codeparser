@@ -25,6 +25,10 @@ Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
 
+checkBuildDir[]
+checkSrcDir[]
+
+
 KeyValueMap[
   Function[{k, v},
     PrefixOperatorToParselet[k] = v;

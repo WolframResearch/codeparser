@@ -31,9 +31,6 @@ Block[{Internal`PacletFindFile = Null&},
 Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
-checkBuildDir[]
-checkSrcDir[]
-
 
 (*
 uppercases and replaces ` with _
@@ -45,7 +42,7 @@ generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
 generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
 
-dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
+dataDir := dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 
 importedPrefixParselets := importedPrefixParselets = Get[FileNameJoin[{dataDir, "PrefixParselets.wl"}]]
 

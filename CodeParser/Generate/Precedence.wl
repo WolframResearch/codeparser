@@ -19,6 +19,9 @@ Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
 
+checkBuildDir[]
+
+
 associativityToValue[Associativity`NonRight] = 0
 associativityToValue[Associativity`Right] = 1
 

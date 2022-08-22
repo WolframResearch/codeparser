@@ -19,6 +19,9 @@ Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
 
+checkBuildDir[]
+
+
 strings = Union[Join[
   {"AdditionalDescriptions"},
   {"InsertionText", "ReplacementText"},

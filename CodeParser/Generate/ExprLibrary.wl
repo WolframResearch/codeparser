@@ -21,6 +21,8 @@ Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
 
 
+checkBuildDir[]
+
 
 (*
 bug 424474: CreateFile is broken

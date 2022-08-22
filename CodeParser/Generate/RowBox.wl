@@ -20,6 +20,10 @@ Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
 
+checkBuildDir[]
+checkSrcDir[]
+
+
 normalPrefixParselets = Normal[importedPrefixParselets]
 
 normalInfixParselets = Normal[importedInfixParselets]

@@ -235,12 +235,6 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
 )
 
-add_custom_target(replaced-pacletinfo
-	ALL
-	DEPENDS
-		${REPLACED_PACLETINFO}
-)
-
 
 #
 # static Kernel sources
@@ -576,7 +570,7 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -E echo "EXPR_LIB_OUTPUTS: ${EXPR_LIB_OUTPUTS}"
 	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ExprLibrary.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ExprLibrary.wl -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/ExprLibrary.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
@@ -915,12 +909,14 @@ endif(BUILD_TESTS)
 
 
 
+if(BUILD_PACLET)
+
 #
 # paclet layout
 #
 
 set(PACLET_SOURCES
-	replaced-pacletinfo
+	${REPLACED_PACLETINFO}
 	${COPIED_WL_PACLET_SOURCES}
 	codeparser-lib
 )
@@ -931,14 +927,6 @@ list(APPEND PACLET_SOURCES
 )
 endif()
 
-add_custom_target(paclet-layout
-	ALL
-	DEPENDS
-		${PACLET_SOURCES}
-)
-
-
-if(BUILD_PACLET)
 
 #
 # paclet archive
@@ -971,18 +959,6 @@ add_custom_command(
 		${CMAKE_COMMAND} -DRETRY_ON_FAILURE=ON -DSCRIPT=${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET_LAYOUT_DIR=${PACLET_LAYOUT_DIR} -DPACLET=${PACLET} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
 		${PACLET_SOURCES}
-		#
-		# prevent this error:
-		#
-		# CMake Error in CMakeLists.txt:
-		#   The custom command generating
-		#     /Users/brenton/development/stash/COD/codeparser/build-xcode/paclet/CodeParser/Kernel/Abstract.wl
-		#   is attached to multiple targets:
-		#     paclet-layout
-		#     create-paclet-archive
-		#   but none of these is a common dependency of the other(s).  This is not
-		#   allowed by the Xcode "new build system".
-		paclet-layout
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake

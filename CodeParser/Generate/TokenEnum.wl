@@ -23,6 +23,9 @@ Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
 
+checkBuildDir[]
+
+
 GroupOpenerToCloser[Token`OpenCurly] = Closer`CloseCurly
 GroupOpenerToCloser[Token`LessBar] = Closer`BarGreater
 GroupOpenerToCloser[Token`OpenSquare] = Closer`CloseSquare

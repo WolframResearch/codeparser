@@ -19,6 +19,9 @@ Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
 
+checkBuildDir[]
+
+
 (*
 Map into string meta characters
 *)
