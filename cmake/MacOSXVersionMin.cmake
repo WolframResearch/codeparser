@@ -4,10 +4,7 @@ macro(CheckMacOSXVersionMin)
   if(NOT EXISTS ${WOLFRAMKERNEL})
   message(FATAL_ERROR "WOLFRAMKERNEL does not exist. WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
   endif()
-
-  #
-  # if not local build, then get Version from PacletInfo.wl
-  #
+  
   execute_process(
     COMMAND
       ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -nostartuppaclets -run Pause[${KERNEL_PAUSE}]\;Needs["CCompilerDriver`"]\;Print[OutputForm[StringReplace[CCompilerDriver`CCompilerDriverBase`MacOSXVersionMinFlag[],\ "-mmacosx-version-min="\ ->\ ""]]]\;Exit[]
