@@ -15,6 +15,34 @@ macro_rules! incr_diagnostic {
     };
 }
 
+/// Send format string arguments to be displayed using [`Print`][Print].
+///
+/// This function is intended to be used to print debugging output when this
+/// library is used from the Wolfram Language via LibraryLink.
+///
+/// This function accepts the same format arguments structure as [`println!()`].
+///
+/// # Examples
+///
+/// ```ignore
+/// let data = [1, 2, 3];
+///
+/// Print!("The Data: {:?}", data);
+/// ```
+///
+/// [Print]: https://reference.wolfram.com/language/ref/Print
+#[allow(unused_macros)]
+macro_rules! Print {
+    ($fmt:literal $(, $args:expr)*) => {{
+        use wolfram_library_link::expr::{Expr, Symbol};
+        let string: String = format!($fmt $(, $args)*);
+
+        wolfram_library_link::evaluate(
+            &Expr::normal(Symbol::new("System`Print"), vec![Expr::from(string)])
+        );
+    }}
+}
+
 mod character_decoder;
 mod utils;
 
