@@ -144,10 +144,8 @@ macro(CheckWolframKernel)
 	elseif(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
 	if(NOT ${SYSTEMWORDLENGTH} EQUAL 32)
 	message(FATAL_ERROR
-		"CMake is reporting 32-bit; Mathematica is reporting: ${SYSTEMWORDLENGTH}"
-		"\n"
+		"CMake is reporting 32-bit; Mathematica is reporting: ${SYSTEMWORDLENGTH}\n"
 		"HINT: On Windows, you probably need to specify -A x64"
-		"\n"
 	)
 	endif()
 	elseif(${CMAKE_SIZEOF_VOID_P} EQUAL 8)

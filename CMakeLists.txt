@@ -191,16 +191,16 @@ set_property(
 )
 
 
-if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1210)
+if(NOT VERSION_NUMBER GREATER_EQUAL 1210)
 message(WARNING "VERSION_NUMBER is below 1210; ForceVersionInstall was added in 12.1. Installing paclets via CMake may not work. (VERSION_NUMBER is ${VERSION_NUMBER})")
 endif()
 
-if(${TRANSPORT} STREQUAL ExprLib)
+if(TRANSPORT STREQUAL ExprLib)
 # if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1200)
 # message(FATAL_ERROR "VERSION_NUMBER is below 1200; Expr library uses NumericArrays that were added to LibraryLink in version 12.0. (VERSION_NUMBER is ${VERSION_NUMBER})")
 # endif()
-if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1310)
-message(FATAL_ERROR "VERSION_NUMBER is below 1310; Cannot use Expr library before version 13.1. (VERSION_NUMBER is ${VERSION_NUMBER})")
+if(NOT VERSION_NUMBER GREATER_EQUAL 1310)
+message(FATAL_ERROR "VERSION_NUMBER is below 1310; Cannot build Expr library before version 13.1. (VERSION_NUMBER is ${VERSION_NUMBER})")
 endif()
 endif()
 

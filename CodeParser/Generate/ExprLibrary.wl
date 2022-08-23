@@ -17,6 +17,7 @@ Block[{Internal`PacletFindFile = Null&},
 Needs["CodeParser`Generate`Common`"];
 Needs["CodeTools`Generate`GenerateSources`"];
 ]
+Print["Needs[\"Compile`\"]... \[WatchIcon]"];
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
 
@@ -244,6 +245,10 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
   Print["CompileToLibrary[]: ", ToString[compEnd - compStart]];
 
   If[FailureQ[compLib],
+    Quit[1]
+  ];
+
+  If[!MatchQ[compLib, _CompiledLibrary`CompiledLibrary],
     Quit[1]
   ];
 
