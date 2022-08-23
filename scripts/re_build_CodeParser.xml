@@ -52,6 +52,7 @@
 			<arg line='-DMATHLINK_LIB_DIR=${MATHLINK_LIB_DIR}' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${WOLFRAMLIBRARY_INCLUDE_DIR}' />
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
+			<arg line='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/CodeParser' />
 		</re-cmake-exec>

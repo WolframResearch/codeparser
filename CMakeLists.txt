@@ -204,6 +204,17 @@ message(FATAL_ERROR "VERSION_NUMBER is below 1310; Cannot build Expr library bef
 endif()
 endif()
 
+if(APPLE)
+	include(MacOSXVersionMin)
+	CheckMacOSXVersionMin()
+    if(NOT MACOSX_VERSION_MIN STREQUAL CMAKE_OSX_DEPLOYMENT_TARGET)
+    message(WARNING
+    	"MACOSX_VERSION_MIN: ${MACOSX_VERSION_MIN}\n"
+    	"CMAKE_OSX_DEPLOYMENT_TARGET: ${CMAKE_OSX_DEPLOYMENT_TARGET}\n"
+   		"MACOSX_VERSION_MIN and CMAKE_OSX_DEPLOYMENT_TARGET do not match\n"
+   		"HINT: Specify -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_VERSION_MIN} to ensure CodeParser is built with same MacOSXVersionMin as CCompilerDriver libraries.")
+    endif()
+endif()
 
 file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/paclet/${PACLET}
