@@ -47,7 +47,7 @@ Needs["CodeParser`Utils`"]
 Needs["PacletManager`"] (* for PacletInformation *)
 
 
-CodeParser::old2 = "ExprLibrary functionality is only supported in versions 13.1+."
+CodeParser::old2 = "ExprLibrary functionality is only supported in versions 13.1+ and $VersionNumber is `1`."
 
 CodeParser::notransport = "No transport specified."
 
@@ -273,19 +273,20 @@ Module[{pacletInfo, pacletInfoFile, transport},
 loadExprLibFuncs[] :=
 Catch[
 Module[{exprCompiledLib},
-  
+
+  If[$VersionNumber < 13.1,
+    Message[CodeParser::old2, $VersionNumber];
+    Throw[Null]
+  ];
+
   If[FailureQ[$ExprLib],
     Message[CodeParser::exprlib, $ExprLib];
     Throw[Null]
   ];
-
+  
   Needs["CompiledLibrary`"];
 
   exprCompiledLib = CompiledLibrary`CompiledLibrary[$ExprLib];
-
-  If[$VersionNumber < 13.1,
-    Message[CodeParser::old2]
-  ];
 
   $exprCompiledLibFuns = CompiledLibrary`CompiledLibraryLoadFunctions[exprCompiledLib];
 
