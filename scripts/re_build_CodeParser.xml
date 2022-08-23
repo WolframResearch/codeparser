@@ -46,13 +46,25 @@
 			<path location='${re.build.prerequisites.runtimelibrary_directory}/${re.build.prerequisites.runtimelibrary.system_id}' />
 		</pathconvert>
 
+		<switch value='${system_id}'>
+			<case value='MacOSX-x86-64'>
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14' />
+			</case>
+			<case value='MacOSX-ARM64'>
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=11' />
+			</case>
+			<default>
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='' />
+			</default>
+		</switch>
+
 		<re-cmake-exec dir='${build.dir}'>
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
 			<arg line='-DMATHLINK_INCLUDE_DIR=${MATHLINK_INCLUDE_DIR}' />
 			<arg line='-DMATHLINK_LIB_DIR=${MATHLINK_LIB_DIR}' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${WOLFRAMLIBRARY_INCLUDE_DIR}' />
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
-			<arg line='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14' />
+			<arg line='${CMAKE_OSX_DEPLOYMENT_TARGET_LINE}' />
 			<arg line='-DENABLE_WARNINGS=ON' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/CodeParser' />
