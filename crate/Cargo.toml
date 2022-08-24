@@ -32,3 +32,9 @@ wolfram-library-link = { version = "0.2.9", optional = true, default-features = 
 
 [dev-dependencies]
 pretty_assertions = "1.2.1"
+
+criterion = "0.3.6"
+
+[[bench]]
+name = "bench_general"
+harness = false
