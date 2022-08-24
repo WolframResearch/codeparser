@@ -388,13 +388,6 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn nonFatalIssues(&self) -> &IssuePtrSet {
         &self.tokenizer.nonFatalIssues
     }
-
-    /*
-    #[cfg(feature = "USE_MATHLINK")]
-    fn getSessionMathLink(&self) -> MLINK {
-        return libData.getMathLink(libData);
-    }
-    */
 }
 
 //

@@ -419,6 +419,9 @@ SetConcreteParseProgress[prog_] := (
 
 $longNames
 
+(* TODO(cleanup): This has been replaced with a native implementation based on
+	edit-distance. Remove this definition and the ExprLib binding to it?
+	Also remove the generated LongNames.wl file? *)
 LongNameSuggestion[input_String] :=
 Catch[
 Module[{nearest, longNamesFile},

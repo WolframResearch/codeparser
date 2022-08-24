@@ -385,7 +385,7 @@ fn CharacterDecoder_handleLongName(
                 // Make the warning message a little more relevant
                 //
 
-                let suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
+                let suggestion = CharacterDecoder_longNameSuggestion(longNameStr);
 
                 let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -504,7 +504,7 @@ fn CharacterDecoder_handleLongName(
             //
             let currentWLCharacterEndLoc = longNameEndLoc.next();
 
-            let suggestion = CharacterDecoder_longNameSuggestion(session, longNameStr);
+            let suggestion = CharacterDecoder_longNameSuggestion(longNameStr);
 
             let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -2300,7 +2300,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 // Return empty string if no suggestion.
 //
 #[cfg(feature = "USE_EXPR_LIB")]
-fn CharacterDecoder_longNameSuggestion(session: &mut Tokenizer, input: String) -> String {
+fn CharacterDecoder_longNameSuggestion(input: String) -> String {
     let InputExpr = Expr_UTF8BytesToStringExpr(input.c_str(), input.len());
 
     let e = Expr_LongNameSuggestion(InputExpr);
@@ -2317,52 +2317,26 @@ fn CharacterDecoder_longNameSuggestion(session: &mut Tokenizer, input: String) -
     return suggestion;
 }
 
-#[cfg(feature = "USE_MATHLINK")]
-fn CharacterDecoder_longNameSuggestion(session: &mut Tokenizer, input: &str) -> String {
-    todo!("implement CharacterDecoder_longNameSuggestion() using wolfram_library_link::try_evaluate()")
+fn CharacterDecoder_longNameSuggestion(input: &str) -> String {
+    use crate::long_names_registration::CodePointToLongNameMap_names;
+    use edit_distance::edit_distance;
 
-    /*
-    let sessionLink: &mut wolfram_library_link::wstp::Link = session.getSessionMathLink();
+    let closest: Option<&&str> = CodePointToLongNameMap_names
+        .iter()
+        .min_by_key(|name| edit_distance(input, name));
 
-    sessionLink.put_function(SYMBOL_EVALUATEPACKET.name, 1).unwrap();
-
-    sessionLink
-        .put_function(SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION.name, 1)
-        .unwrap();
-
-    sessionLink.put_str(input.as_str()).unwrap();
-
-    if !session.libData.processMathLink(sessionLink) {
-        assert!(false);
+    match closest {
+        Some(closest) => {
+            // If the `closest` long name isn't within an edit distance of 2,
+            // then we aren't confident enough that it might have been the users
+            // intent to write `closest`, so don't suggest it.
+            if edit_distance(input, closest) <= 2 {
+                closest.to_string()
+            } else {
+                String::new()
+            }
+        },
+        // TODO: Return None?
+        _ => String::new(),
     }
-
-    let pkt = sessionLink
-        .raw_next_packet()
-        .expect("failed to read next packet after processing long name suggestion WSTP evaluation");
-
-    if pkt == wstp::sys::RETURNPKT {
-        let str_ = sessionLink
-            .get_string_ref()
-            .expect("expected long name suggestion ReturnPacket to contain string");
-        // ScopedMLString str(sessionLink);
-
-        let cstr = str_.get();
-
-        return str_.as_str().to_owned();
-    }
-
-    // TODO: Return None?
-    return String::new();
-    */
 }
-
-#[cfg(not(feature = "USE_MATHLINK"))]
-fn CharacterDecoder_longNameSuggestion(session: &mut Tokenizer, input: &str) -> String {
-    String::new()
-}
-
-// #else
-// std::string CharacterDecoder_longNameSuggestion(session: &mut ParserSession, std::string input) {
-//     return "";
-// }
-// #endif // USE_EXPR_LIB
