@@ -73,6 +73,7 @@
 		<re-cmake-exec dir='${build.dir}'>
 			<arg line='--build .' />
 			<arg line='--target create-paclet-archive' />
+			<arg line='--verbose' />
 		</re-cmake-exec>
 
 	</target>
