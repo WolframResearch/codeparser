@@ -20,9 +20,6 @@
 using MNodePtr = Node *;
 
 
-bool validatePath(WolframLibraryData libData, Buffer inStr);
-
-
 ParserSession::ParserSession() : start(), end(), buffer(), libData(), opts(), unsafeCharacterEncodingFlag(), srcConventionManager(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
 
 int ParserSession::init(Buffer Buf, size_t Len, WolframLibraryData libDataIn, ParserSessionOptions optsIn) {
@@ -464,22 +461,3 @@ MLINK ParserSession::getSessionMathLink() const {
     return libData->getMathLink(libData);
 }
 #endif // USE_MATHLINK
-
-//
-// Does the file currently have permission to be read?
-//
-bool validatePath(WolframLibraryData libData, Buffer inStr) {
-    
-    if (!libData) {
-        //
-        // If running as a stand-alone executable, then always valid
-        //
-        return true;
-    }
-    
-    auto inStr1 = reinterpret_cast<const char *>(inStr);
-    
-    auto inStr2 = const_cast<char *>(inStr1);
-    
-    return libData->validatePath(inStr2, 'R');
-}

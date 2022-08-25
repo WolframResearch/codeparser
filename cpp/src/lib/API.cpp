@@ -15,6 +15,8 @@
 #include <cassert>
 
 
+bool validatePath(WolframLibraryData libData, Buffer fullIn);
+
 //
 // MathLink sends System`List as List,
 // So need to make sure that any testing of System symbols is sans context.
@@ -615,6 +617,10 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
+    if (!validatePath(libData, full.data())) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
     ParserSessionOptions opts;
@@ -796,6 +802,10 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
     
     if (!MLNewPacket(callLink)) {
         assert(false);
+    }
+    
+    if (!validatePath(libData, full.get())) {
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
@@ -1141,6 +1151,10 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
+    if (!validatePath(libData, full.data())) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
     ParserSessionOptions opts;
@@ -1326,6 +1340,10 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     if (!MLNewPacket(callLink) ) {
         assert(false);
+    }
+    
+    if (!validatePath(libData, full.get())) {
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
@@ -2070,3 +2088,22 @@ Buffer ScopedNumericArray::data() const {
     return reinterpret_cast<Buffer>(libData->numericarrayLibraryFunctions->MNumericArray_getData(arr));
 }
 #endif // USE_EXPR_LIB
+
+//
+// Does the file currently have permission to be read?
+//
+bool validatePath(WolframLibraryData libData, Buffer fullIn) {
+    
+    if (!libData) {
+        //
+        // If running as a stand-alone executable, then always valid
+        //
+        return true;
+    }
+    
+    auto inStr1 = reinterpret_cast<const char *>(fullIn);
+        
+    auto inStr2 = const_cast<char *>(inStr1);
+    
+    return libData->validatePath(inStr2, 'R');
+}
