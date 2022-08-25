@@ -20,7 +20,6 @@ Needs["CodeTools`Generate`GenerateSources`"];
 Print["Needs[\"Compile`\"]... \[WatchIcon]"];
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
-Needs["CCompilerDriver`"]
 
 
 checkBuildDir[]
@@ -202,8 +201,6 @@ Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
 
   prog = ExprLibraryProgram[];
 
-  Print["Exporting expr library..."];
-
   Print["Calling CreateCompilerEnvironment[]... \[WatchIcon]"];
 
   compStart = Now;
@@ -217,34 +214,16 @@ Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
 
   compEnd = Now;
 
-  Print["CreateCompilerEnvironment[] returned"];
-
-  Print["compiler environment: ", env];
-
   Print["CreateCompilerEnvironment[] time: ", ToString[compEnd - compStart]];
 
   Print["Calling CompileToLibrary[]... \[WatchIcon]"];
 
   compStart = Now;
 
-  (*
-  set options that CompileToLibrary does not support
-  *)
-  Switch[DefaultCCompiler[],
-    CCompilerDriver`ClangCompiler`ClangCompiler,
-      SetOptions[CCompilerDriver`ClangCompiler`ClangCompiler, "WorkingDirectory" -> workingDir];
-    ,
-    CCompilerDriver`GCCCompiler`GCCCompiler,
-      SetOptions[CCompilerDriver`GCCCompiler`GCCCompiler, "WorkingDirectory" -> workingDir];
-    ,
-    CCompilerDriver`VisualStudioCompiler`VisualStudioCompiler,
-      SetOptions[CCompilerDriver`VisualStudioCompiler`VisualStudioCompiler, "WorkingDirectory" -> workingDir];
-    ,
-    _,
-      Print["unhandled DefaultCCompiler[]: ", DefaultCCompiler[]];
-      Quit[1]
-  ];
+  Print[];
 
+  Off[CCompilerDriver`CreateLibrary::wddirty];
+  
   compLib =
     CompileToLibrary[prog,
       "LibraryName" -> "libexpr",
@@ -255,16 +234,19 @@ Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
       Turn off abort handling in the generated library
       *)
       "AbortHandling" -> False,
-      CompilerEnvironment -> env
+      CompilerEnvironment -> env,
+      "CreateLibraryOptions" -> {"SystemLibraries" -> {}, "WorkingDirectory" -> workingDir, "CleanIntermediate" -> False}
     ];
 
   compEnd = Now;
 
-  Print["CompileToLibrary[] returned"];
+  Print[];
 
-  Print["compiled library: ", compLib];
+  Print[compLib];
 
-  Print["CompileToLibrary[]: ", ToString[compEnd - compStart]];
+  Print[];
+  
+  Print["CompileToLibrary[] time: ", ToString[compEnd - compStart]];
 
   If[FailureQ[compLib],
     Quit[1]

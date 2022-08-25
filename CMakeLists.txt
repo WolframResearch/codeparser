@@ -797,11 +797,24 @@ set_target_properties(codeparser-lib PROPERTIES
 		""
 )
 
+if(TRANSPORT STREQUAL ExprLib)
+
+#
+# expr lib will be located in the same directory as CodeParser lib
+#
+
 #
 # see page 100 of:
 # https://github.com/CppCon/CppCon2019/blob/master/Presentations/deep_cmake_for_library_authors/deep_cmake_for_library_authors__craig_scott__cppcon_2019.pdf
 #
-if(NOT APPLE)
+if(APPLE)
+set_target_properties(codeparser-lib PROPERTIES
+	INSTALL_RPATH
+		@loader_path
+	BUILD_WITH_INSTALL_RPATH
+		ON
+)
+elseif()
 set_target_properties(codeparser-lib PROPERTIES
 	INSTALL_RPATH
 		$ORIGIN
@@ -809,6 +822,9 @@ set_target_properties(codeparser-lib PROPERTIES
 		ON
 )
 endif()
+
+endif(TRANSPORT STREQUAL ExprLib)
+
 
 if(NOT BUILD_TESTS)
 set_target_properties(codeparser-lib PROPERTIES
@@ -932,7 +948,7 @@ set(PACLET_SOURCES
 	codeparser-lib
 )
 
-if(${TRANSPORT} STREQUAL ExprLib)
+if(TRANSPORT STREQUAL ExprLib)
 list(APPEND PACLET_SOURCES
 	expr-lib
 )
