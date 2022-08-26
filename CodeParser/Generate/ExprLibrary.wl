@@ -288,6 +288,23 @@ Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
       Print["libexpr.lib does not exist"];
       Quit[1]
     ];
+
+    Print["copying ", FileNameJoin[{workingDir, "libexpr.exp"}], " to ", FileNameJoin[{targetDir, "libexpr.exp"}]];
+
+    res = CopyFile[FileNameJoin[{workingDir, "libexpr.exp"}], FileNameJoin[{targetDir, "libexpr.exp"}], OverwriteTarget -> True];
+    
+    If[FailureQ[res],
+      Quit[1]
+    ];
+    
+    If[!StringQ[res],
+      Quit[1]
+    ];
+
+    If[!FileExistsQ[FileNameJoin[{targetDir, "libexpr.exp"}]],
+      Print["libexpr.exp does not exist"];
+      Quit[1]
+    ];
   ];
 
   Print["Done ExprLibrary"]

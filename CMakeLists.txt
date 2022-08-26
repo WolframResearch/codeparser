@@ -543,6 +543,7 @@ set_target_properties(expr-lib PROPERTIES
 if(WIN32)
 
 set(EXPR_IMPLIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libexpr.lib)
+set(EXPR_EXP ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libexpr.exp)
 
 set_property(
 	TARGET
@@ -554,6 +555,7 @@ set_property(
 
 list(APPEND EXPR_LIB_OUTPUTS
 	${EXPR_IMPLIB}
+	${EXPR_EXP}
 )
 endif(WIN32)
 
@@ -573,6 +575,8 @@ add_custom_command(
 		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX}
 	COMMAND
 		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr.lib
+	COMMAND
+		${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr.exp
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ExprLibrary.wl -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
