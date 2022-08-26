@@ -103,7 +103,7 @@ ParseWolframLibraryHeader()
 
 message(STATUS "WOLFRAMLIBRARY_VERSION: ${WOLFRAMLIBRARY_VERSION}")
 
-if(${WOLFRAMLIBRARY_VERSION} GREATER_EQUAL 7)
+if(WOLFRAMLIBRARY_VERSION GREATER_EQUAL 7)
 message(WARNING "WOLFRAMLIBRARY_VERSION >= 7 is only compatible with Wolfram System 13.1+ and will not work with earlier versions.")
 endif()
 
@@ -170,8 +170,8 @@ set(GENERATED_CPP_LIB_SOURCES
 CheckWolframKernel()
 CheckPacletInfo()
 
-if(${TRANSPORT} STREQUAL Automatic)
-if(${VERSION_NUMBER} GREATER_EQUAL 1310)
+if(TRANSPORT STREQUAL Automatic)
+if(VERSION_NUMBER GREATER_EQUAL 1310)
 set(TRANSPORT ExprLib)
 else()
 set(TRANSPORT MathLink)
@@ -518,7 +518,7 @@ add_custom_command(
 #
 # expr lib target
 #
-if(${TRANSPORT} STREQUAL ExprLib)
+if(TRANSPORT STREQUAL ExprLib)
 
 set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libexpr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
@@ -591,7 +591,7 @@ add_custom_command(
 
 add_dependencies(expr-lib expr-lib-custom)
 
-endif(${TRANSPORT} STREQUAL ExprLib)
+endif(TRANSPORT STREQUAL ExprLib)
 
 
 
@@ -599,7 +599,7 @@ endif(${TRANSPORT} STREQUAL ExprLib)
 # Build CodeParser library
 #
 
-if(${TRANSPORT} STREQUAL MathLink)
+if(TRANSPORT STREQUAL MathLink)
 
 set(MATHLINK_INCLUDE_DIR ${MATHLINK_INCLUDE_DIR_DEFAULT} CACHE FILEPATH "Path to mathlink.h")
 
@@ -609,7 +609,7 @@ set(MATHLINK_LIB_DIR ${MATHLINK_LIB_DIR_DEFAULT} CACHE FILEPATH "Path to MathLin
 
 message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 
-endif(${TRANSPORT} STREQUAL MathLink)
+endif(TRANSPORT STREQUAL MathLink)
 
 set(STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/API.h
@@ -633,13 +633,13 @@ set(STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/WLCharacter.h
 )
 
-if(${TRANSPORT} STREQUAL ExprLib)
+if(TRANSPORT STREQUAL ExprLib)
 list(APPEND STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/ExprLibrary.h
 )
 endif()
 
-if(${DIAGNOSTICS})
+if(DIAGNOSTICS)
 list(APPEND STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/Diagnostics.h
 )
@@ -672,7 +672,7 @@ set(STATIC_CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
 
-if(${DIAGNOSTICS})
+if(DIAGNOSTICS)
 list(APPEND STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Diagnostics.cpp
 )
@@ -695,14 +695,14 @@ target_include_directories(codeparser-lib
 
 
 
-if(${TRANSPORT} STREQUAL MathLink)
+if(TRANSPORT STREQUAL MathLink)
 
 #
 # Cannot just have all lib names together in a single list
 # because e.g., Linux may have both 32-bit and 64-bit libs present,
 # and 64-bit builds may happen to find the 32-bit version first and fail.
 #
-if(${SYSTEMWORDLENGTH} EQUAL 32)
+if(SYSTEMWORDLENGTH EQUAL 32)
 
 target_compile_definitions(codeparser-lib PUBLIC MINT_32=1)
 
@@ -711,7 +711,7 @@ set(MATHLINK_LIB_NAMES
 	ML32i4
 	ml32i4m
 )
-elseif(${SYSTEMWORDLENGTH} EQUAL 64)
+elseif(SYSTEMWORDLENGTH EQUAL 64)
 set(MATHLINK_LIB_NAMES
 	#
 	# mathlink is the mathlink.framework on MacOSX
@@ -725,7 +725,7 @@ set(MATHLINK_LIB_NAMES
 	#
 	ml64i4m
 )
-endif()
+endif(SYSTEMWORDLENGTH EQUAL 32)
 
 find_library(MATHLINK_LIB
 	NAMES
@@ -738,11 +738,11 @@ message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
 
 target_link_libraries(codeparser-lib ${MATHLINK_LIB})
 
-endif(${TRANSPORT} STREQUAL MathLink)
+endif(TRANSPORT STREQUAL MathLink)
 
-if(${TRANSPORT} STREQUAL ExprLib)
+if(TRANSPORT STREQUAL ExprLib)
 target_link_libraries(codeparser-lib expr-lib)
-endif()
+endif(TRANSPORT STREQUAL ExprLib)
 
 set_target_properties(codeparser-lib PROPERTIES
 	OUTPUT_NAME
@@ -818,14 +818,14 @@ set_target_properties(codeparser-lib PROPERTIES
 	BUILD_WITH_INSTALL_RPATH
 		ON
 )
-elseif()
+else()
 set_target_properties(codeparser-lib PROPERTIES
 	INSTALL_RPATH
 		$ORIGIN
 	BUILD_WITH_INSTALL_RPATH
 		ON
 )
-endif()
+endif(APPLE)
 
 endif(TRANSPORT STREQUAL ExprLib)
 
@@ -876,13 +876,13 @@ else()
 target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=0)
 endif()
 
-if(${TRANSPORT} STREQUAL MathLink)
+if(TRANSPORT STREQUAL MathLink)
 target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
 else()
 target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=0)
 endif()
 
-if(${TRANSPORT} STREQUAL ExprLib)
+if(TRANSPORT STREQUAL ExprLib)
 target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=1)
 else()
 target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=0)
