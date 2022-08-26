@@ -25,6 +25,15 @@ Needs["TypeFramework`"] (* for MetaData *)
 checkBuildDir[]
 
 
+$sharedExt = 
+  Switch[$OperatingSystem, 
+    "MacOSX", "dylib",
+    "Windows", "dll",
+    _, "so"
+  ]
+
+
+
 (*
 bug 424474: CreateFile is broken
 *)
@@ -191,7 +200,7 @@ generate[] :=
 Catch[
 Catch[
 Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
-  env},
+  env, res},
 
   Print["Generating ExprLibrary..."];
 
@@ -254,6 +263,31 @@ Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
 
   If[!MatchQ[compLib, _CompiledLibrary`CompiledLibrary],
     Quit[1]
+  ];
+
+  If[!FileExistsQ[FileNameJoin[{targetDir, "libexpr."<>$sharedExt}]],
+    Print["libexpr."<>$sharedExt <> " does not exist"];
+    Quit[1]
+  ];
+
+  If[$OperatingSystem == "Windows",
+    
+    Print["copying ", FileNameJoin[{workingDir, "libexpr.lib"}], " to ", FileNameJoin[{targetDir, "libexpr.lib"}]];
+
+    res = CopyFile[FileNameJoin[{workingDir, "libexpr.lib"}], FileNameJoin[{targetDir, "libexpr.lib"}], OverwriteTarget -> True];
+    
+    If[FailureQ[res],
+      Quit[1]
+    ];
+    
+    If[!StringQ[res],
+      Quit[1]
+    ];
+
+    If[!FileExistsQ[FileNameJoin[{targetDir, "libexpr.lib"}]],
+      Print["libexpr.lib does not exist"];
+      Quit[1]
+    ];
   ];
 
   Print["Done ExprLibrary"]

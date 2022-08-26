@@ -1,5 +1,5 @@
 
-file(READ ${REPLACED_PACLETINFO} filedata)
+file(READ ${PACLETINFO_IN_SOURCE} filedata)
 
 string(TIMESTAMP DATESTRING "%a %d %b %Y %H:%M:%S")
 
