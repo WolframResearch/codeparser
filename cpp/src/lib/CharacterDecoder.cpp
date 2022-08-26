@@ -500,9 +500,6 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
 #if CHECK_ISSUES
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
         
-        auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
-        auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.Buf), longNameBufAndLen.length());
-        
         if (Utils::isStrange(point)) {
             
             //
