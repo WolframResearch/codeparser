@@ -978,54 +978,65 @@ Module[{pos1, err},
 Token`ColonColon Good
 *)
 prbDispatch[{_, LeafNode[Token`ColonColon, _, _], _, ___}, handledChildren_, children_, pos_] :=
-  Module[{poss, first, rest},
+Catch[
+Module[{poss, first},
 
-    poss = Position[children, \"::\"];
+  poss = Position[children, \"::\"];
 
-    first = children[[;; poss[[1, 1]]-1]];
+  If[poss == {},
+    (*
+    GIGO
+    Something like RowBox[{\"a\", \":::\", \"b\"}]
+    note the \":::\" that is leaf-parsed as ColonColon
+    we want to give sane output
+    *)
+    Throw[InfixNode[MessageName, handledChildren, <| Source -> pos |>]]
+  ];
 
-    InfixNode[MessageName,
-      MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, first] ~Join~
-      MapIndexed[
-        Switch[#1,
-          \"::\",
-            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
-          ,
-          ws_String /; StringMatchQ[ws, (\" \") ~~ ___],
-            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
-          ,
-          _String,
-            Function[{tag},
-              If[!MatchQ[tag, ErrorNode[Token`Error`ExpectedTag, _, _]],
-                (*
-                everything is fine
-                *)
-                tag
+  first = children[[;; poss[[1, 1]]-1]];
+
+  InfixNode[MessageName,
+    MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, first] ~Join~
+    MapIndexed[
+      Switch[#1,
+        \"::\",
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+        ,
+        ws_String /; StringMatchQ[ws, (\" \") ~~ ___],
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+        ,
+        _String,
+          Function[{tag},
+            If[!MatchQ[tag, ErrorNode[Token`Error`ExpectedTag, _, _]],
+              (*
+              everything is fine
+              *)
+              tag
+              ,
+              (*
+              something like a::111 but 111 cannot be a tag
+
+              so replace with sequence of ErrorNode (which is empty) and regular LeafNode
+              *)
+              Sequence @@ {
+                ErrorNode[Token`Error`ExpectedTag, \"\", <| Source -> Before[Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]|>]
                 ,
                 (*
-                something like a::111 but 111 cannot be a tag
-
-                so replace with sequence of ErrorNode (which is empty) and regular LeafNode
+                parse again WITHOUT \"StringifyMode\" -> 1
                 *)
-                Sequence @@ {
-                  ErrorNode[Token`Error`ExpectedTag, \"\", <| Source -> Before[Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]|>]
-                  ,
-                  (*
-                  parse again WITHOUT \"StringifyMode\" -> 1
-                  *)
-                  parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
-                }
-              ]
-            ][parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1), \"StringifyMode\" -> 1]]
-          ,
-          _,
-            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
-        ]&, children[[poss[[1, 1]];;]]
-      ]
-      ,
-      <| Source -> pos |>
+                parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+              }
+            ]
+          ][parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1), \"StringifyMode\" -> 1]]
+        ,
+        _,
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+      ]&, children[[poss[[1, 1]];;]]
     ]
+    ,
+    <| Source -> pos |>
   ]
+]]
 
 
 (*

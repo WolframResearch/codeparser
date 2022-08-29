@@ -1078,5 +1078,18 @@ Test[
 ]
 
 
-
+(*
+GIGO
+*)
+Test[
+	CodeConcreteParseBox[RowBox[{"a", ":::", "b"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[MessageName, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`ColonColon, "::", <|Source -> {1, 2}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220829-S5T6B6"
+]
 
