@@ -23,8 +23,8 @@ impl IntegralParselet {
 }
 
 impl PrefixParselet for IntegralParselet {
-    fn parsePrefix(&self) -> ParseFunction {
-        return IntegralParselet_parsePrefix;
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
+        IntegralParselet_parsePrefix(session, self, token)
     }
 }
 
@@ -77,7 +77,7 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return (P2.parsePrefix())(session, P2, Tok);
+    return P2.parse_prefix(session, Tok);
 }
 
 fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr, ignored2: Token) {
@@ -107,7 +107,7 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr, ignored2
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return (P2.parsePrefix())(session, P2, Tok);
+    return P2.parse_prefix(session, Tok);
 }
 
 fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr, ignored2: Token) {

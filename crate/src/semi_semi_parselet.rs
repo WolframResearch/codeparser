@@ -50,8 +50,8 @@ impl InfixParselet for SemiSemiParselet {
 }
 
 impl PrefixParselet for SemiSemiParselet {
-    fn parsePrefix(&self) -> ParseFunction {
-        return SemiSemiParselet_parsePrefix;
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
+        SemiSemiParselet_parsePrefix(session, self, token)
     }
 }
 
@@ -140,7 +140,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ig
         let P2 = prefix_parselet(SecondTok.tok);
 
         // MUSTTAIL
-        return (P2.parsePrefix())(session, P2, SecondTok);
+        return P2.parse_prefix(session, SecondTok);
     }
 
     //
@@ -211,7 +211,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ig
     let P2 = prefix_parselet(ThirdTok.tok);
 
     // MUSTTAIL
-    return (P2.parsePrefix())(session, P2, ThirdTok);
+    return P2.parse_prefix(session, ThirdTok);
 }
 
 fn SemiSemiParselet_parse2(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -311,7 +311,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession, ignored: ParseletPtr, ig
     let P2 = prefix_parselet(FourthTok.tok);
 
     // MUSTTAIL
-    return (P2.parsePrefix())(session, P2, FourthTok);
+    return P2.parse_prefix(session, FourthTok);
 }
 
 fn SemiSemiParselet_reduceBinary(

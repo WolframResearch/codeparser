@@ -19,7 +19,7 @@ fn ParseletTest_Bug1() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    (prefix_parselet(Tok.tok).parsePrefix())(&mut session, prefix_parselet(Tok.tok), Tok);
+    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
 
     let P: &mut Node = Parser_topNode(&mut session);
 
@@ -47,7 +47,7 @@ fn ParseletTest_Bug2() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    (prefix_parselet(Tok.tok).parsePrefix())(&mut session, prefix_parselet(Tok.tok), Tok);
+    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -70,7 +70,7 @@ fn ParseletTest_Bug3() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    (prefix_parselet(Tok.tok).parsePrefix())(&mut session, prefix_parselet(Tok.tok), Tok);
+    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -93,7 +93,7 @@ fn ParseletTest_Bug4() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    (prefix_parselet(Tok.tok).parsePrefix())(&mut session, prefix_parselet(Tok.tok), Tok);
+    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

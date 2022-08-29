@@ -27,8 +27,8 @@ impl UnderParselet {
 }
 
 impl PrefixParselet for UnderParselet {
-    fn parsePrefix(&self) -> ParseFunction {
-        return UnderParselet_parsePrefix;
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
+        UnderParselet_parsePrefix(session, self, token)
     }
 }
 
@@ -180,8 +180,8 @@ fn UnderParselet_reduceBlankContextSensitive(
 //======================================
 
 impl PrefixParselet for UnderDotParselet {
-    fn parsePrefix(&self) -> ParseFunction {
-        return UnderDotParselet_parsePrefix;
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
+        UnderDotParselet_parsePrefix(session, self, token)
     }
 }
 

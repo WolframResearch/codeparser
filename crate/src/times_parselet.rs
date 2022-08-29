@@ -53,7 +53,7 @@ fn TimesParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
 
     let P2 = prefix_parselet(Tok2.tok);
 
-    (P2.parsePrefix())(session, P2, Tok2);
+    P2.parse_prefix(session, Tok2);
 
     return TimesParselet_parseLoop(session, ignored, TokIn /*ignored*/);
     // #else
@@ -64,7 +64,7 @@ fn TimesParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
     //     let P2 = prefixParselets[Tok2.tok.value()];
 
     //     // MUSTTAIL
-    //     return (P2.parsePrefix())(session, P2, Tok2);
+    //     return P2.parse_prefix(session, Tok2);
     // #endif // !USE_MUSTTAIL
 }
 
@@ -143,7 +143,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
 
         let P2 = prefix_parselet(Tok2.tok);
 
-        (P2.parsePrefix())(session, P2, Tok2);
+        P2.parse_prefix(session, Tok2);
     } // while (true)
       // #else
       //     auto& Ctxt = Parser_topContext(session);
@@ -152,7 +152,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
     //     let P2 = prefixParselets[Tok2.tok.value()];
 
     //     // MUSTTAIL
-    //     return (P2.parsePrefix())(session, P2, Tok2);
+    //     return P2.parse_prefix(session, Tok2);
     // #endif // !USE_MUSTTAIL
 }
 
