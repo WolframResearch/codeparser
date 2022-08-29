@@ -811,21 +811,14 @@ if(TRANSPORT STREQUAL ExprLib)
 # see page 100 of:
 # https://github.com/CppCon/CppCon2019/blob/master/Presentations/deep_cmake_for_library_authors/deep_cmake_for_library_authors__craig_scott__cppcon_2019.pdf
 #
-if(APPLE)
-set_target_properties(codeparser-lib PROPERTIES
-	INSTALL_RPATH
-		@loader_path
-	BUILD_WITH_INSTALL_RPATH
-		ON
-)
-else()
+if(NOT APPLE)
 set_target_properties(codeparser-lib PROPERTIES
 	INSTALL_RPATH
 		$ORIGIN
 	BUILD_WITH_INSTALL_RPATH
 		ON
 )
-endif(APPLE)
+endif(NOT APPLE)
 
 endif(TRANSPORT STREQUAL ExprLib)
 
