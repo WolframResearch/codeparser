@@ -79,7 +79,7 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, TokIn:
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 pub(crate) fn UnderParselet_parseInfixContextSensitive(
@@ -150,7 +150,7 @@ fn UnderParselet_reduceBlank(session: &mut ParserSession, P: ParseletPtr, Ignore
     Parser_pushNode(session, CompoundNode::new(BOp, context));
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, Ignored);
+    return Parser_parseClimb(session, Ignored);
 }
 
 //
@@ -198,7 +198,7 @@ fn UnderDotParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPt
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 

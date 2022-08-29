@@ -122,7 +122,7 @@ fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr,
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr, ignored2: Token) {
@@ -137,7 +137,7 @@ fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr, 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 impl InfixParselet for InfixDifferentialDParselet {

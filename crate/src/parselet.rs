@@ -385,7 +385,7 @@ fn LeafParselet_reduceLeaf(session: &mut ParserSession, ignored: ParseletPtr, To
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 //======================================
@@ -614,7 +614,7 @@ fn PrefixCommaParselet_parsePrefix(
     Parser_pushLeaf(session, createdToken);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 //======================================
@@ -831,7 +831,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr,
     //
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 pub(crate) fn SymbolParselet_parseInfixContextSensitive(
@@ -871,7 +871,7 @@ fn SymbolParselet_reducePatternBlank(session: &mut ParserSession, P: ParseletPtr
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, ignored);
+    return Parser_parseClimb(session, ignored);
 }
 
 fn SymbolParselet_reducePatternOptionalDefault(
@@ -886,7 +886,7 @@ fn SymbolParselet_reducePatternOptionalDefault(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -966,7 +966,7 @@ fn PrefixOperatorParselet_reducePrefixOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, ignored);
+    return Parser_parseClimb(session, ignored);
 }
 
 //======================================
@@ -1116,7 +1116,7 @@ fn BinaryOperatorParselet_reduceBinaryOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, ignored);
+    return Parser_parseClimb(session, ignored);
 }
 
 //======================================
@@ -1273,7 +1273,7 @@ fn InfixOperatorParselet_reduceInfixOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, ignored);
+    return Parser_parseClimb(session, ignored);
 }
 
 //======================================
@@ -1324,7 +1324,7 @@ fn PostfixOperatorParselet_reducePostfixOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, ignored);
+    return Parser_parseClimb(session, ignored);
 }
 
 //======================================
@@ -1512,7 +1512,7 @@ fn GroupParselet_reduceGroup(session: &mut ParserSession, P: ParseletPtr, ignore
     Parser_popGroup(session);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, P /*ignored*/, ignored);
+    return Parser_parseClimb(session, ignored);
 }
 
 fn GroupParselet_reduceMissingCloser(session: &mut ParserSession, P: ParseletPtr, ignored: Token) {
@@ -1611,7 +1611,7 @@ fn CallParselet_reduceCall(session: &mut ParserSession, ignored: ParseletPtr, ig
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -1710,7 +1710,7 @@ fn TildeParselet_reduceTilde(session: &mut ParserSession, ignored: ParseletPtr, 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn TildeParselet_reduceError(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -1797,7 +1797,7 @@ fn ColonParselet_reducePattern(session: &mut ParserSession, ignored: ParseletPtr
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn ColonParselet_reduceError(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -1808,7 +1808,7 @@ fn ColonParselet_reduceError(session: &mut ParserSession, ignored: ParseletPtr, 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn ColonParselet_reduceOptional(
@@ -1820,7 +1820,7 @@ fn ColonParselet_reduceOptional(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -1926,7 +1926,7 @@ fn SlashColonParselet_reduceError(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2028,7 +2028,7 @@ fn EqualParselet_reduceSet(session: &mut ParserSession, ignored: ParseletPtr, ig
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn EqualParselet_reduceUnset(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -2036,7 +2036,7 @@ fn EqualParselet_reduceUnset(session: &mut ParserSession, ignored: ParseletPtr, 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn EqualParselet_reduceTagSet(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -2044,7 +2044,7 @@ fn EqualParselet_reduceTagSet(session: &mut ParserSession, ignored: ParseletPtr,
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn EqualParselet_reduceTagUnset(
@@ -2056,7 +2056,7 @@ fn EqualParselet_reduceTagUnset(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2136,7 +2136,7 @@ fn ColonEqualParselet_reduceSetDelayed(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn ColonEqualParselet_reduceTagSetDelayed(
@@ -2148,7 +2148,7 @@ fn ColonEqualParselet_reduceTagSetDelayed(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2569,7 +2569,7 @@ fn SemiParselet_reduceCompoundExpression(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2666,7 +2666,7 @@ fn ColonColonParselet_reduceMessageName(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2720,7 +2720,7 @@ fn GreaterGreaterParselet_reducePut(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2774,7 +2774,7 @@ fn GreaterGreaterGreaterParselet_reducePutAppend(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2818,7 +2818,7 @@ fn LessLessParselet_reduceGet(session: &mut ParserSession, ignored: ParseletPtr,
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2866,7 +2866,7 @@ fn HashParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr, T
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 fn HashParselet_reduceSlot(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -2874,7 +2874,7 @@ fn HashParselet_reduceSlot(session: &mut ParserSession, ignored: ParseletPtr, ig
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2912,7 +2912,7 @@ fn HashHashParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPt
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 fn HashHashParselet_reduceSlotSequence(
@@ -2924,7 +2924,7 @@ fn HashHashParselet_reduceSlotSequence(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 //======================================
@@ -2962,7 +2962,7 @@ fn PercentParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, TokIn /*ignored*/);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 fn PercentParselet_reduceOut(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -2970,5 +2970,5 @@ fn PercentParselet_reduceOut(session: &mut ParserSession, ignored: ParseletPtr, 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }

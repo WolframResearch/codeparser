@@ -323,7 +323,7 @@ fn SemiSemiParselet_reduceBinary(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
 
 fn SemiSemiParselet_reduceTernary(
@@ -335,5 +335,5 @@ fn SemiSemiParselet_reduceTernary(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }

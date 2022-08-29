@@ -184,11 +184,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
     }
 }
 
-pub(crate) fn Parser_parseClimb<'i>(
-    session: &mut ParserSession<'i>,
-    Ignored: ParseletPtr,
-    Ignored2: Token,
-) {
+pub(crate) fn Parser_parseClimb<'i>(session: &mut ParserSession<'i>, Ignored2: Token) {
     //
     // Check isAbort() inside loops
     //

@@ -161,5 +161,5 @@ fn TimesParselet_reduceTimes(session: &mut ParserSession, ignored: ParseletPtr, 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored, ignored2);
+    return Parser_parseClimb(session, ignored2);
 }
