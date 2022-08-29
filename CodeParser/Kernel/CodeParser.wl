@@ -349,16 +349,9 @@ Source is a .wls file and there is definitely a #! on first line
 firstLineBehaviorPat = NotScript | Check | Script
 
 
-
-(*
-This uses func := func = def idiom and is fast
-*)
-loadAllFuncs[]
-
 setupQuirks[]
 
 setupShims[]
-
 
 
 (*

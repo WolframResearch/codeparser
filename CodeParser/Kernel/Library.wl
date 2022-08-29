@@ -47,11 +47,11 @@ Needs["CodeParser`Utils`"]
 Needs["PacletManager`"] (* for PacletInformation *)
 
 
-CodeParser::old2 = "ExprLibrary functionality is only supported in versions 13.1+ and $VersionNumber is `1`."
+CodeParser::old2 = "`1` functionality is only supported in versions 13.1+ and $VersionNumber is `2`."
 
 CodeParser::notransport = "No transport specified."
 
-CodeParser::exprlib = "ExprLib could not be loaded. `1`"
+CodeParser::noload = "`1` could not be loaded. `2`"
 
 
 
@@ -62,6 +62,13 @@ location = "Location" /. PacletInformation["CodeParser"]
 
 libraryResources = FileNameJoin[{location, "LibraryResources", $SystemID}]
 
+pacletInfoFile = FileNameJoin[{location, "PacletInfo.wl"}]
+
+Block[{$ContextPath = {"System`"}, $Context = "CodeParser`Library`Private`"},
+  pacletInfo = Get[pacletInfoFile];
+]
+
+transport = Transport /. List @@ pacletInfo
 
 
 $ParserSession := $ParserSession =
@@ -72,6 +79,10 @@ $ParserSession := $ParserSession =
 $CodeParserLib := $CodeParserLib =
 Catch[
 Module[{lib},
+
+  If[$Debug,
+    Print["memoizing $CodeParserLib"]
+  ];
 
   lib = FileNameJoin[{libraryResources, "CodeParser."<>$sharedExt}];
 
@@ -85,6 +96,10 @@ Module[{lib},
 $ExprLib := $ExprLib =
 Catch[
 Module[{lib},
+
+  If[$Debug,
+    Print["memoizing $ExprLib"]
+  ];
 
   lib = FileNameJoin[{libraryResources, "libexpr."<>$sharedExt}];
 
@@ -213,92 +228,81 @@ Module[{res, loaded, linkObject},
 
 
 
+Which[
+  transport === "ExprLib",
 
-loadAllFuncs[] :=
-Module[{pacletInfo, pacletInfoFile, transport},
+    createParserSessionFunc := createParserSessionFunc = fromPointerA @* (If[$Debug, Print["memoizing createParserSessionFunc"]]; $ExprLibCompiledLibFuns; loadFunc["CreateParserSession_LibraryLink", { }, Integer]);
 
-  pacletInfoFile = FileNameJoin[{location, "PacletInfo.wl"}];
+    destroyParserSessionFunc := destroyParserSessionFunc = fromPointerA @* (If[$Debug, Print["memoizing destroyParserSessionFunc"]]; $ExprLibCompiledLibFuns; loadFunc["DestroyParserSession_LibraryLink", { Integer }, Integer]);
 
-  Block[{$ContextPath = {"System`"}, $Context = "CodeParser`Library`Private`"},
-    pacletInfo = Get[pacletInfoFile];
-  ];
+    concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer]);
 
-  transport = Transport /. List @@ pacletInfo;
+    concreteParseFileFunc := concreteParseFileFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseFileFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer]);
 
-  Which[
-    transport === "ExprLib",
+    tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer]);
 
-      loadExprLibFuncs[];
+    tokenizeFileFunc := tokenizeFileFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeFileFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer]);
 
-      createParserSessionFunc := createParserSessionFunc = fromPointerA @* loadFunc["CreateParserSession_LibraryLink", { }, Integer];
+    concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseLeafFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseLeaf_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, Integer, Integer }, Integer]);
 
-      destroyParserSessionFunc := destroyParserSessionFunc = fromPointerA @* loadFunc["DestroyParserSession_LibraryLink", { Integer }, Integer];
+    safeStringFunc := safeStringFunc = fromPointerA @* (If[$Debug, Print["memoizing safeStringFunc"]]; $ExprLibCompiledLibFuns; loadFunc["SafeString_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"} }, Integer]);
+  ,
+  transport === "MathLink",
 
-      concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+    createParserSessionFunc := createParserSessionFunc = (If[$Debug, Print["memoizing createParserSessionFunc"]]; loadFunc["CreateParserSession_LibraryLink", LinkObject, LinkObject]);
 
-      concreteParseFileFunc := concreteParseFileFunc = fromPointerA @* loadFunc["ConcreteParseFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer];
+    destroyParserSessionFunc := destroyParserSessionFunc = (If[$Debug, Print["memoizing destroyParserSessionFunc"]]; loadFunc["DestroyParserSession_LibraryLink", LinkObject, LinkObject]);
 
-      tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+    concreteParseBytesFunc := concreteParseBytesFunc = (If[$Debug, Print["memoizing concreteParseBytesFunc"]]; loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject]);
 
-      tokenizeFileFunc := tokenizeFileFunc = fromPointerA @* loadFunc["TokenizeFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer];
+    concreteParseFileFunc := concreteParseFileFunc = (If[$Debug, Print["memoizing concreteParseFileFunc"]]; loadFunc["ConcreteParseFile_LibraryLink", LinkObject, LinkObject]);
 
-      concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* loadFunc["ConcreteParseLeaf_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, Integer, Integer }, Integer];
+    tokenizeBytesFunc := tokenizeBytesFunc = (If[$Debug, Print["memoizing tokenizeBytesFunc"]]; loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject]);
 
-      safeStringFunc := safeStringFunc = fromPointerA @* loadFunc["SafeString_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"} }, Integer];
-    ,
-    transport === "MathLink",
+    tokenizeFileFunc := tokenizeFileFunc = (If[$Debug, Print["memoizing tokenizeFileFunc"]]; loadFunc["TokenizeFile_LibraryLink", LinkObject, LinkObject]);
 
-      createParserSessionFunc := createParserSessionFunc = loadFunc["CreateParserSession_LibraryLink", LinkObject, LinkObject];
+    concreteParseLeafFunc := concreteParseLeafFunc = (If[$Debug, Print["memoizing concreteParseLeafFunc"]]; loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject]);
 
-      destroyParserSessionFunc := destroyParserSessionFunc = loadFunc["DestroyParserSession_LibraryLink", LinkObject, LinkObject];
-
-      concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
-
-      concreteParseFileFunc := concreteParseFileFunc = loadFunc["ConcreteParseFile_LibraryLink", LinkObject, LinkObject];
-
-      tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject];
-
-      tokenizeFileFunc := tokenizeFileFunc = loadFunc["TokenizeFile_LibraryLink", LinkObject, LinkObject];
-
-      concreteParseLeafFunc := concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject];
-
-      safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
-    ,
-    True,
-      Message[CodeParser::notransport]
-  ]
+    safeStringFunc := safeStringFunc = (If[$Debug, Print["memoizing safeStringFunc"]]; loadFunc["SafeString_LibraryLink", LinkObject, LinkObject]);
+  ,
+  True,
+    Message[CodeParser::notransport]
 ]
 
 
-loadExprLibFuncs[] :=
+
+$ExprLibCompiledLibFuns := $ExprLibCompiledLibFuns =
 Catch[
-Module[{exprCompiledLib},
+Module[{exprLibCompiledLib},
+
+  If[$Debug,
+    Print["memoizing $ExprLibCompiledLibFuns"]
+  ];
 
   If[$VersionNumber < 13.1,
-    Message[CodeParser::old2, $VersionNumber];
-    Throw[Null]
+    Message[CodeParser::old2, "ExprLib", $VersionNumber];
+    Throw[Failure["CodeParserOld2", <||>]]
   ];
 
   If[FailureQ[$ExprLib],
-    Message[CodeParser::exprlib, $ExprLib];
-    Throw[Null]
+    Message[CodeParser::noload, "ExprLib", $ExprLib];
+    Throw[$ExprLib]
   ];
-  
+
   Needs["CompiledLibrary`"];
 
-  exprCompiledLib = CompiledLibrary`CompiledLibrary[$ExprLib];
+  exprLibCompiledLib = CompiledLibrary`CompiledLibrary[$ExprLib];
 
-  $exprCompiledLibFuns = CompiledLibrary`CompiledLibraryLoadFunctions[exprCompiledLib];
-
-  Null
+  CompiledLibrary`CompiledLibraryLoadFunctions[exprLibCompiledLib]
 ]]
+
 
 
 fromPointerA[f_?FailureQ] :=
   f
 
 fromPointerA[res_Integer] :=
-  $exprCompiledLibFuns["Expr_FromPointerA"][res]
+  $ExprLibCompiledLibFuns["Expr_FromPointerA"][res]
 
 
 
