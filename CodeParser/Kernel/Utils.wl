@@ -132,9 +132,6 @@ test that a cursor Source is a Member of a src Source
 SourceMemberQ[src:srcPat, {cursor1:spanPat, cursor2:spanPat}] :=
   SourceMemberQ[src, cursor1] && SourceMemberQ[src, cursor2]
 
-SourceMemberQ[src:srcPat, cursor:spanPat] :=
-  SourceMemberQ[src, cursor]
-
 (*
 Do the actual work
 
