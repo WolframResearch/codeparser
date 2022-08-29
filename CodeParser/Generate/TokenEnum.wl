@@ -509,7 +509,7 @@ EndPackage[]
 "};
 
 Print["exporting TokenEnum.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "Kernel", "TokenEnum.wl"}], Column[tokenEnumWL], "String"];
+res = Export[FileNameJoin[{buildDir, "paclet", "CodeParser", "Kernel", "TokenEnum.wl"}], Column[tokenEnumWL], "String"];
 
 Print[res];
 

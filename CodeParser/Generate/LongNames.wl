@@ -496,7 +496,7 @@ DO NOT MODIFY
 };
 
 Print["exporting LongNames.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "Resources", "Generated", "LongNames.wl"}], Column[longNamesWL], "String"];
+res = Export[FileNameJoin[{buildDir, "paclet", "CodeParser", "Resources", "Generated", "LongNames.wl"}], Column[longNamesWL], "String"];
 
 Print[res];
 

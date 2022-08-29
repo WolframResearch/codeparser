@@ -1797,7 +1797,7 @@ generate[] := (
 Print["Generating RowBox..."];
 
 Print["exporting RowBox.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "Kernel", "RowBox.wl"}], Column[rowBoxWL], "String"];
+res = Export[FileNameJoin[{buildDir, "paclet", "CodeParser", "Kernel", "RowBox.wl"}], Column[rowBoxWL], "String"];
 
 Print[res];
 

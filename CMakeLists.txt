@@ -138,13 +138,13 @@ set(PACLETINFO_IN_SOURCE
 )
 
 set(GENERATED_WL_PACLET_KERNEL_SOURCES
-	${PROJECT_BINARY_DIR}/generated/wl/Kernel/RowBox.wl
-	${PROJECT_BINARY_DIR}/generated/wl/Kernel/TokenEnum.wl
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/RowBox.wl
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
 )
 
 set(GENERATED_WL_PACLET_RESOURCES_SOURCES
-	${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/LongNames.wl
-	${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/Precedence.wl
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl
 )
 
 set(GENERATED_CPP_INCLUDES
@@ -220,8 +220,6 @@ file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/paclet/${PACLET}
 	${PROJECT_BINARY_DIR}/generated/cpp/include/
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/
-	${PROJECT_BINARY_DIR}/generated/wl/Kernel/
-	${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/
 	${PROJECT_BINARY_DIR}/pdb-output/
 )
 
@@ -284,39 +282,6 @@ foreach(SRC ${STATIC_WL_PACLET_RESOURCES_SOURCES})
 	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/${REL})
 endforeach()
 
-#
-# generated Kernel sources
-#
-foreach(SRC ${GENERATED_WL_PACLET_KERNEL_SOURCES})
-	file(RELATIVE_PATH REL ${PROJECT_BINARY_DIR}/generated/wl/Kernel/ ${SRC})
-	add_custom_command(
-		OUTPUT
-			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL}
-		COMMAND
-			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL}
-		DEPENDS
-			${SRC}
-	)
-	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL})
-endforeach()
-
-#
-# generated Resources sources
-#
-foreach(SRC ${GENERATED_WL_PACLET_RESOURCES_SOURCES})
-	file(RELATIVE_PATH REL ${PROJECT_BINARY_DIR}/generated/wl/Resources/ ${SRC})
-	add_custom_command(
-		OUTPUT
-			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/${REL}
-		COMMAND
-			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/${REL}
-		DEPENDS
-			${SRC}
-	)
-	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/${REL})
-endforeach()
-
-
 
 #
 # generated srcs
@@ -329,7 +294,7 @@ add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/LongNamesRegistration.h
 		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNamesRegistration.cpp
-		${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/LongNames.wl
+		${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl
 	#
 	# remove old files that may cause conflicts
 	#
@@ -340,7 +305,7 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/LongNames.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/LongNames.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/LongNames.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
@@ -359,7 +324,7 @@ add_custom_command(
 set(GENERATED_TOKENENUM_OUTPUT
 	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnumRegistration.h
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnumRegistration.cpp
-	${PROJECT_BINARY_DIR}/generated/wl/Kernel/TokenEnum.wl
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
 )
 
 add_custom_command(
@@ -375,7 +340,7 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Kernel/TokenEnum.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
@@ -420,11 +385,11 @@ add_custom_command(
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
-		${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/Precedence.wl
+		${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Precedence.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/Precedence.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/Precedence.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Precedence.wl
@@ -442,11 +407,11 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/wl/Kernel/RowBox.wl
+		${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/RowBox.wl
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/RowBox.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Kernel/RowBox.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/RowBox.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/InfixParselets.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/PrefixParselets.wl
@@ -942,6 +907,8 @@ if(BUILD_PACLET)
 set(PACLET_SOURCES
 	${REPLACED_PACLETINFO}
 	${COPIED_WL_PACLET_SOURCES}
+	${GENERATED_WL_PACLET_KERNEL_SOURCES}
+	${GENERATED_WL_PACLET_RESOURCES_SOURCES}
 	codeparser-lib
 )
 

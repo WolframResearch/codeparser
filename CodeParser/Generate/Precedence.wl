@@ -112,7 +112,7 @@ DO NOT MODIFY
 };
 
 Print["exporting Precedence.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "Resources", "Generated", "Precedence.wl"}], Column[precedenceWL], "String"];
+res = Export[FileNameJoin[{buildDir, "paclet", "CodeParser", "Resources", "Generated", "Precedence.wl"}], Column[precedenceWL], "String"];
 
 Print[res];
 

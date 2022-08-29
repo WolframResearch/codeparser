@@ -10,8 +10,6 @@ srcDir
 
 script
 
-generatedWLDir
-
 pacletFlagPosition
 
 paclet
@@ -47,8 +45,6 @@ srcDir := srcDir = $CommandLine[[srcDirFlagPosition[[1]] + 1]]
 scriptPosition = FirstPosition[$CommandLine, "-script"]
 
 script := script = $CommandLine[[scriptPosition[[1]] + 1]]
-
-generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 pacletFlagPosition = FirstPosition[$CommandLine, "-paclet"]
 
