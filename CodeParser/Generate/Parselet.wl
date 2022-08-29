@@ -57,21 +57,19 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 
 
 
-formatPrefix[Parselet`PrefixNullPointerParselet[]] := "nullptr"
+formatPrefix[Parselet`PrefixEndOfFileParselet[]] := "prefixEndOfFileParselet"
 
-formatPrefix[Parselet`PrefixEndOfFileParselet[]] := "&prefixEndOfFileParselet"
+formatPrefix[Parselet`PrefixErrorParselet[]] := "prefixErrorParselet"
 
-formatPrefix[Parselet`PrefixErrorParselet[]] := "&prefixErrorParselet"
+formatPrefix[Parselet`PrefixCloserParselet[]] := "prefixCloserParselet"
 
-formatPrefix[Parselet`PrefixCloserParselet[]] := "&prefixCloserParselet"
+formatPrefix[Parselet`PrefixUnsupportedTokenParselet[]] := "prefixUnsupportedTokenParselet"
 
-formatPrefix[Parselet`PrefixUnsupportedTokenParselet[]] := "&prefixUnsupportedTokenParselet"
+formatPrefix[Parselet`PrefixUnhandledParselet[]] := "prefixUnhandledParselet"
 
-formatPrefix[Parselet`PrefixUnhandledParselet[]] := "&prefixUnhandledParselet"
+formatPrefix[Parselet`PrefixCommaParselet[]] := "prefixCommaParselet"
 
-formatPrefix[Parselet`PrefixCommaParselet[]] := "&prefixCommaParselet"
-
-formatPrefix[Parselet`LeafParselet[]] := "&leafParselet"
+formatPrefix[Parselet`LeafParselet[]] := "leafParselet"
 
 formatPrefix[Parselet`SymbolParselet[]] := "symbolParselet"
 
@@ -91,24 +89,18 @@ formatPrefix[Parselet`PercentParselet[]] := "new PercentParselet()"
 
 formatPrefix[Parselet`LessLessParselet[]] := "new LessLessParselet()"
 
-formatPrefix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
+formatPrefix[Parselet`SemiSemiParselet[]] := "semiSemiParselet"
 
 formatPrefix[Parselet`IntegralParselet[op1_, op2_]] := "new IntegralParselet(" <> "SYMBOL_" <> toGlobal[op1] <> ", " <> "SYMBOL_" <> toGlobal[op2] <> ")"
 
 formatPrefix[Parselet`PrefixOperatorParselet[precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatPrefix[Parselet`GroupParselet[Token`OpenSquare, CodeParser`GroupSquare]] := "&squareGroupParselet"
-
-formatPrefix[Parselet`GroupParselet[Token`LongName`LeftDoubleBracket, CodeParser`GroupDoubleBracket]] := "&doubleBracketGroupParselet"
-
 formatPrefix[Parselet`GroupParselet[tok_, op_]] := "new GroupParselet(" <> toGlobal[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 
-formatInfix[Parselet`InfixNullPointerParselet[]] := "nullptr"
+formatInfix[Parselet`InfixAssertFalseParselet[]] := "infixAssertFalseParselet"
 
-formatInfix[Parselet`InfixAssertFalseParselet[]] := "&infixAssertFalseParselet"
-
-formatInfix[Parselet`InfixImplicitTimesParselet[]] := "&infixImplicitTimesParselet"
+formatInfix[Parselet`InfixImplicitTimesParselet[]] := "infixImplicitTimesParselet"
 
 
 
@@ -130,11 +122,11 @@ formatInfix[Parselet`TildeParselet[]] := "new TildeParselet()"
 
 formatInfix[Parselet`SlashColonParselet[]] := "slashColonParselet"
 
-formatInfix[Parselet`CommaParselet[]] := "&commaParselet"
+formatInfix[Parselet`CommaParselet[]] := "commaParselet"
 
-formatInfix[Parselet`SemiParselet[]] := "&semiParselet"
+formatInfix[Parselet`SemiParselet[]] := "semiParselet"
 
-formatInfix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
+formatInfix[Parselet`SemiSemiParselet[]] := "semiSemiParselet"
 
 formatInfix[Parselet`ColonColonParselet[]] := "new ColonColonParselet()"
 
@@ -142,7 +134,7 @@ formatInfix[Parselet`GreaterGreaterParselet[]] := "new GreaterGreaterParselet()"
 
 formatInfix[Parselet`GreaterGreaterGreaterParselet[]] := "new GreaterGreaterGreaterParselet()"
 
-formatInfix[Parselet`InfixDifferentialDParselet[]] := "&infixDifferentialDParselet"
+formatInfix[Parselet`InfixDifferentialDParselet[]] := "infixDifferentialDParselet"
 
 formatInfix[Parselet`InfixToplevelNewlineParselet[]] := "new InfixToplevelNewlineParselet()"
 
@@ -225,42 +217,6 @@ parseletRegistrationCPPSource = {
 
 SymbolParselet *symbolParselet = new SymbolParselet();
 
-auto leafParselet = LeafParselet();
-
-auto prefixEndOfFileParselet = PrefixEndOfFileParselet();
-
-auto prefixErrorParselet = PrefixErrorParselet();
-
-auto prefixCloserParselet = PrefixCloserParselet();
-
-PrefixToplevelCloserParselet *prefixToplevelCloserParselet = new PrefixToplevelCloserParselet();
-
-auto prefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet();
-
-auto prefixUnhandledParselet = PrefixUnhandledParselet();
-
-auto prefixCommaParselet = PrefixCommaParselet();
-
-auto infixAssertFalseParselet = InfixAssertFalseParselet();
-
-auto infixImplicitTimesParselet = InfixImplicitTimesParselet();
-
-auto commaParselet = CommaParselet();
-
-auto semiParselet = SemiParselet();
-
-auto semiSemiParselet = SemiSemiParselet();
-
-SlashColonParselet *slashColonParselet = new SlashColonParselet();
-
-ColonParselet *colonParselet = new ColonParselet();
-
-EqualParselet *equalParselet = new EqualParselet();
-
-ColonEqualParselet *colonEqualParselet = new ColonEqualParselet();
-
-auto infixDifferentialDParselet = InfixDifferentialDParselet();
-
 UnderParselet *under1Parselet = new UnderParselet(SYMBOL_BLANK, SYMBOL_CODEPARSER_PATTERNBLANK);
 
 UnderParselet *under2Parselet = new UnderParselet(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE);
@@ -269,11 +225,44 @@ UnderParselet *under3Parselet = new UnderParselet(SYMBOL_BLANKNULLSEQUENCE, SYMB
 
 UnderDotParselet *underDotParselet = new UnderDotParselet();
 
-auto squareGroupParselet = GroupParselet(TOKEN_OPENSQUARE, SYMBOL_CODEPARSER_GROUPSQUARE);
+ColonParselet *colonParselet = new ColonParselet();
 
-auto doubleBracketGroupParselet = GroupParselet(TOKEN_LONGNAME_LEFTDOUBLEBRACKET, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
+SlashColonParselet *slashColonParselet = new SlashColonParselet();
+
+EqualParselet *equalParselet = new EqualParselet();
+
+ColonEqualParselet *colonEqualParselet = new ColonEqualParselet();
+
+PrefixToplevelCloserParselet *prefixToplevelCloserParselet = new PrefixToplevelCloserParselet();
 
 TimesParselet *timesParselet = new TimesParselet();
+
+
+auto leafParselet = new LeafParselet();
+
+auto prefixEndOfFileParselet = new PrefixEndOfFileParselet();
+
+auto prefixErrorParselet = new PrefixErrorParselet();
+
+auto prefixCloserParselet = new PrefixCloserParselet();
+
+auto prefixUnsupportedTokenParselet = new PrefixUnsupportedTokenParselet();
+
+auto prefixUnhandledParselet = new PrefixUnhandledParselet();
+
+auto prefixCommaParselet = new PrefixCommaParselet();
+
+auto infixAssertFalseParselet = new InfixAssertFalseParselet();
+
+auto infixImplicitTimesParselet = new InfixImplicitTimesParselet();
+
+auto commaParselet = new CommaParselet();
+
+auto semiParselet = new SemiParselet();
+
+auto semiSemiParselet = new SemiSemiParselet();
+
+auto infixDifferentialDParselet = new InfixDifferentialDParselet();
 
 //
 //

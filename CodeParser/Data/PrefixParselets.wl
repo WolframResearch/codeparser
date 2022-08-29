@@ -13,10 +13,10 @@ Token`Real -> Parselet`LeafParselet[],
 Token`Rational -> Parselet`LeafParselet[],
 Token`LinearSyntaxBlob -> Parselet`LeafParselet[],
 
-Token`Unknown -> Parselet`PrefixNullPointerParselet[],
-Token`Whitespace -> Parselet`PrefixNullPointerParselet[],
-Token`InternalNewline -> Parselet`PrefixNullPointerParselet[],
-Token`Comment -> Parselet`PrefixNullPointerParselet[],
+Token`Unknown -> Parselet`PrefixErrorParselet[],
+Token`Whitespace -> Parselet`PrefixErrorParselet[],
+Token`InternalNewline -> Parselet`PrefixErrorParselet[],
+Token`Comment -> Parselet`PrefixErrorParselet[],
 
 Token`EndOfFile -> Parselet`PrefixEndOfFileParselet[],
 

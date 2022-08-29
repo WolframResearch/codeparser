@@ -7,10 +7,10 @@ Do not modify this file directly
 
 <|
 
-Token`Unknown -> Parselet`InfixNullPointerParselet[],
-Token`Whitespace -> Parselet`InfixNullPointerParselet[],
-Token`InternalNewline -> Parselet`InfixNullPointerParselet[],
-Token`Comment -> Parselet`InfixNullPointerParselet[],
+Token`Unknown -> Parselet`InfixAssertFalseParselet[],
+Token`Whitespace -> Parselet`InfixAssertFalseParselet[],
+Token`InternalNewline -> Parselet`InfixAssertFalseParselet[],
+Token`Comment -> Parselet`InfixAssertFalseParselet[],
 
 Token`EndOfFile -> Parselet`InfixAssertFalseParselet[],
 
