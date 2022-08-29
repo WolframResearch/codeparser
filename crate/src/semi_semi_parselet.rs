@@ -24,6 +24,10 @@ use crate::{
 //
 
 impl InfixParselet for SemiSemiParselet {
+    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
+        SemiSemiParselet_parseInfix(session, self, token)
+    }
+
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
         return PRECEDENCE_SEMISEMI;
     }
@@ -42,10 +46,6 @@ impl InfixParselet for SemiSemiParselet {
         }
 
         return TokIn;
-    }
-
-    fn parseInfix(&self) -> ParseFunction {
-        return SemiSemiParselet_parseInfix;
     }
 }
 

@@ -231,7 +231,7 @@ pub(crate) fn Parser_parseClimb<'i>(session: &mut ParserSession<'i>, Ignored2: T
     Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
 
     // MUSTTAIL
-    return (I.parseInfix())(session, I, token);
+    return I.parse_infix(session, token);
 }
 
 pub(crate) fn Parser_tryContinue<'i>(session: &mut ParserSession<'i>, Ignored2: Token) {

@@ -1,9 +1,7 @@
-#![feature(trait_upcasting)]
 //
 // Lints
 //
 #![allow(non_camel_case_types)]
-#![allow(incomplete_features)]
 #![allow(unused_assignments, non_snake_case, non_upper_case_globals)] // PRE_COMMIT: Remove these allows
 
 macro_rules! incr_diagnostic {

@@ -20,16 +20,16 @@ use crate::{
 
 
 impl InfixParselet for TimesParselet {
+    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
+        TimesParselet_parseInfix(session, self, token)
+    }
+
     fn getOp(&self) -> Symbol {
         return SYMBOL_TIMES;
     }
 
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
         return PRECEDENCE_STAR;
-    }
-
-    fn parseInfix(&self) -> ParseFunction {
-        return TimesParselet_parseInfix;
     }
 }
 

@@ -141,6 +141,10 @@ fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr, 
 }
 
 impl InfixParselet for InfixDifferentialDParselet {
+    fn parse_infix(&'static self, _session: &mut ParserSession, _token: Token) {
+        panic!("illegal call to InfixDifferentialDParselet::parse_infix()")
+    }
+
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
         if Parser_topPrecedence(session) == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
             //
@@ -167,9 +171,5 @@ impl InfixParselet for InfixDifferentialDParselet {
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
-    }
-
-    fn parseInfix(&self) -> ParseFunction {
-        panic!("illegal call to InfixDifferentialDParselet::parseInfix()")
     }
 }
