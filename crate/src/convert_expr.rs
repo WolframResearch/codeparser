@@ -110,12 +110,6 @@ impl OperatorNode {
     }
 }
 
-impl AbortNode {
-    fn toExpr(&self, session: &ParserSession) -> expr {
-        return SYMBOL__ABORTED.toExpr(session);
-    }
-}
-
 impl CallNode {
     fn toExpr(&self, session: &ParserSession) -> expr {
         let head = SYMBOL_CODEPARSER_CALLNODE.toExpr(session);

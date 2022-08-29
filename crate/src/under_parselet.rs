@@ -1,11 +1,11 @@
 use crate::{
-    feature,
-    node::{AbortNode, CompoundNode},
+    node::CompoundNode,
+    panic_if_aborted,
     parselet::*,
     parselet_registration::*,
     parser::{
         Parser_parseClimb, Parser_popContext, Parser_pushContext, Parser_pushLeafAndNext,
-        Parser_pushNode, Parser_tryContinue,
+        Parser_pushNode,
     },
     parser_session::ParserSession,
     precedence::*,
@@ -39,10 +39,7 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, TokIn:
     // Something like  _  or  _a
     //
 
-    if feature::CHECK_ABORT && session.abortQ() {
-        Parser_pushNode(session, AbortNode::new());
-        return Parser_tryContinue(session, P /*ignored*/, TokIn /*ignored*/);
-    }
+    panic_if_aborted!();
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -98,10 +95,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
 
     // assert!(P);
 
-    if feature::CHECK_ABORT && session.abortQ() {
-        Parser_pushNode(session, AbortNode::new());
-        return;
-    }
+    panic_if_aborted!();
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -198,10 +192,7 @@ fn UnderDotParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPt
     // Something like  _.
     //
 
-    if feature::CHECK_ABORT && session.abortQ() {
-        Parser_pushNode(session, AbortNode::new());
-        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
-    }
+    panic_if_aborted!();
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -224,10 +215,7 @@ pub(crate) fn UnderDotParselet_parseInfixContextSensitive(
     //
     // Something like  a_.
 
-    if feature::CHECK_ABORT && session.abortQ() {
-        Parser_pushNode(session, AbortNode::new());
-        return;
-    }
+    panic_if_aborted!();
 
 
     Parser_pushLeafAndNext(session, TokIn);

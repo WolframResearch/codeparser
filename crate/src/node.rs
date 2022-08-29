@@ -35,7 +35,6 @@ pub enum Node {
     Token(Token),
     Call(CallNode),
     SyntaxError(SyntaxErrorNode),
-    Abort(AbortNode),
     Prefix(PrefixNode),
     Infix(InfixNode),
     Postfix(PostfixNode),
@@ -61,9 +60,6 @@ pub struct OperatorNode {
     pub(crate) Children: NodeSeq,
     pub(crate) Src: Source,
 }
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct AbortNode {}
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
@@ -217,7 +213,6 @@ from_node!(GroupNode => Node::Group);
 from_node!(GroupMissingCloserNode => Node::GroupMissingCloser);
 from_node!(UnterminatedGroupNeedsReparseNode => Node::UnterminatedGroupNeedsReparse);
 from_node!(PrefixBinaryNode => Node::PrefixBinary);
-from_node!(AbortNode => Node::Abort);
 
 impl From<Token> for Node {
     fn from(token: Token) -> Self {
@@ -355,7 +350,6 @@ impl Node {
             Node::Token(token) => token.src,
             Node::Call(node) => node.getSource(),
             Node::SyntaxError(node) => node.getSource(),
-            Node::Abort(node) => node.getSource(),
             Node::CollectedExpressions(node) => node.getSource(),
             Node::CollectedSourceLocations(node) => node.getSource(),
             Node::CollectedIssues(node) => node.getSource(),
@@ -378,7 +372,6 @@ impl Node {
     fn check(&self) -> bool {
         match self {
             Node::Token(token) => token.check(),
-            Node::Abort(node) => node.check(),
             Node::Prefix(PrefixNode { op }) => op.check(),
             Node::Binary(BinaryNode { op }) => op.check(),
             Node::Infix(InfixNode { op }) => op.check(),
@@ -446,37 +439,6 @@ impl OperatorNode {
 
     //     s << "]";
     // }
-}
-
-//======================================
-// AbortNode
-//======================================
-
-impl AbortNode {
-    pub(crate) fn new() -> Self {
-        incr_diagnostic!(Node_AbortNodeCount);
-
-        AbortNode {}
-    }
-
-    // PRE_COMMIT: Display
-    // fn print(std::ostream& s) const {
-    //     SYMBOL__ABORTED.print(s);
-    // }
-
-    fn getSource(&self) -> Source {
-        unimplemented!("AbortNode::getSource()")
-        // return Source::from_location(
-        //     SourceLocation(
-        //         std::numeric_limits<uint32_t>::max(),
-        //         std::numeric_limits<uint32_t>::max()
-        //     )
-        // );
-    }
-
-    pub fn check(&self) -> bool {
-        return false;
-    }
 }
 
 //======================================

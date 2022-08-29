@@ -4,7 +4,7 @@ use crate::{
     my_string::MyString,
     my_string_registration::*,
     node::{
-        unsafeCharacterEncodingReason, AbortNode, BinaryNode, CallNode, CollectedExpressionsNode,
+        unsafeCharacterEncodingReason, BinaryNode, CallNode, CollectedExpressionsNode,
         CollectedIssuesNode, CollectedSourceLocationsNode, CompoundNode, GroupMissingCloserNode,
         GroupNode, InfixNode, MissingBecauseUnsafeCharacterEncodingNode, Node, NodeContainer,
         NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SafeStringNode,
@@ -77,7 +77,6 @@ impl Node {
             Node::Token(token) => token.put(session, link),
             Node::Call(node) => node.put(session, link),
             Node::SyntaxError(node) => node.put(session, link),
-            Node::Abort(node) => node.put(session, link),
             Node::CollectedExpressions(node) => node.put(session, link),
             Node::CollectedSourceLocations(node) => node.put(session, link),
             Node::CollectedIssues(node) => node.put(session, link),
@@ -132,12 +131,6 @@ impl OperatorNode {
         callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
         Src.put(session, callLink);
-    }
-}
-
-impl AbortNode {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
-        SYMBOL__ABORTED.put(session, callLink);
     }
 }
 
