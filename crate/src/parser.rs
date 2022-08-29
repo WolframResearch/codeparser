@@ -227,7 +227,7 @@ pub(crate) fn Parser_parseClimb<'i>(
         Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
         // MUSTTAIL
-        return Parser_tryContinue(session, Ignored, Ignored2);
+        return Parser_tryContinue(session, Ignored2);
     }
 
     Parser_pushContext(session, TokenPrecedence);
@@ -238,11 +238,7 @@ pub(crate) fn Parser_parseClimb<'i>(
     return (I.parseInfix())(session, I, token);
 }
 
-pub(crate) fn Parser_tryContinue<'i>(
-    session: &mut ParserSession<'i>,
-    _: ParseletPtr,
-    Ignored2: Token,
-) {
+pub(crate) fn Parser_tryContinue<'i>(session: &mut ParserSession<'i>, Ignored2: Token) {
     if Parser_isContextStackEmpty(session) {
         // no call needed here
         return;

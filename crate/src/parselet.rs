@@ -408,7 +408,7 @@ fn PrefixErrorParselet_parsePrefix(
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    return Parser_tryContinue(session, TokIn /*ignored*/);
 }
 
 //======================================
@@ -460,7 +460,7 @@ fn PrefixCloserParselet_parsePrefix(
     Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    return Parser_tryContinue(session, TokIn /*ignored*/);
 }
 
 //======================================
@@ -495,7 +495,7 @@ pub(crate) fn PrefixToplevelCloserParselet_parsePrefix(
     TokIn.skip(&mut session.tokenizer);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    return Parser_tryContinue(session, TokIn /*ignored*/);
 }
 
 //======================================
@@ -539,7 +539,7 @@ fn PrefixEndOfFileParselet_parsePrefix(
     Parser_pushLeaf(session, createdToken);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    return Parser_tryContinue(session, TokIn /*ignored*/);
 }
 
 //======================================
@@ -568,7 +568,7 @@ fn PrefixUnsupportedTokenParselet_parsePrefix(
     TokIn.skip(&mut session.tokenizer);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    return Parser_tryContinue(session, TokIn /*ignored*/);
 }
 
 //======================================
@@ -669,7 +669,7 @@ fn PrefixUnhandledParselet_parsePrefix(
         //
 
         // MUSTTAIL
-        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+        return Parser_tryContinue(session, TokIn /*ignored*/);
     }
 
     //
@@ -1529,7 +1529,7 @@ fn GroupParselet_reduceMissingCloser(session: &mut ParserSession, P: ParseletPtr
     Parser_popGroup(session);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, P /*ignored*/, ignored);
+    return Parser_tryContinue(session, ignored);
 }
 
 fn GroupParselet_reduceUnterminatedGroup(
@@ -1550,7 +1550,7 @@ fn GroupParselet_reduceUnterminatedGroup(
     Parser_popGroup(session);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, P /*ignored*/, ignored);
+    return Parser_tryContinue(session, ignored);
 }
 
 //======================================
@@ -1718,7 +1718,7 @@ fn TildeParselet_reduceError(session: &mut ParserSession, ignored: ParseletPtr, 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored, ignored2);
+    return Parser_tryContinue(session, ignored2);
 }
 
 //======================================
@@ -2323,7 +2323,7 @@ fn CommaParselet_reduceComma(session: &mut ParserSession, ignored: ParseletPtr, 
     //
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored, ignored2);
+    return Parser_tryContinue(session, ignored2);
 }
 
 //======================================
