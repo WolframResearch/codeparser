@@ -1,4 +1,11 @@
 
+## 1.7.1 - 5 September, 2022
+
+### Fixes
+
+Fix 426453: `a=.` was not concretifying correctly
+
+
 ## 1.7 - 4 July, 2022
 
 add suggestions for `a->b` and `a:>b` at top-level
