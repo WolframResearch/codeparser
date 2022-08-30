@@ -277,7 +277,7 @@ endforeach()
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/rust/long_names_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/long_names_registration.rs
 		${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl
 	#
 	# remove old files that may cause conflicts
@@ -307,7 +307,7 @@ add_custom_command(
 #
 set(GENERATED_TOKENENUM_OUTPUT
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
-	${PROJECT_BINARY_DIR}/generated/rust/token_enum_registration.rs
+	${PROJECT_SOURCE_DIR}/crate/src/generated/token_enum_registration.rs
 )
 
 add_custom_command(
@@ -340,7 +340,7 @@ add_custom_command(
 # Parselet files
 #
 set(GENERATED_PARSELETREGISTRATION_OUTPUT
-	${PROJECT_BINARY_DIR}/generated/rust/parselet_registration.rs
+	${PROJECT_SOURCE_DIR}/crate/src/generated/parselet_registration.rs
 )
 
 add_custom_command(
@@ -367,7 +367,7 @@ add_custom_command(
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl
-		${PROJECT_BINARY_DIR}/generated/rust/precedence.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/precedence.rs
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Precedence.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -412,7 +412,7 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/rust/symbol_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/symbol_registration.rs
 	#
 	# remove old files that may cause conflicts
 	#
@@ -441,7 +441,7 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/rust/my_string_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/my_string_registration.rs
 	#
 	# remove old files that may cause conflicts
 	#
@@ -581,11 +581,11 @@ add_custom_command(
 			${RUST_TARGET_DIR}/$<IF:$<CONFIG:Release>,release,debug>/${CMAKE_SHARED_LIBRARY_PREFIX}wolfram_code_parse${CMAKE_SHARED_LIBRARY_SUFFIX}
 			${CODEPARSE_DYLIB}
 	DEPENDS
-		${PROJECT_BINARY_DIR}/generated/rust/symbol_registration.rs
-		${PROJECT_BINARY_DIR}/generated/rust/precedence.rs
-		${PROJECT_BINARY_DIR}/generated/rust/my_string_registration.rs
-		${PROJECT_BINARY_DIR}/generated/rust/parselet_registration.rs
-		${PROJECT_BINARY_DIR}/generated/rust/long_names_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/symbol_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/precedence.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/my_string_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/parselet_registration.rs
+		${PROJECT_SOURCE_DIR}/crate/src/generated/long_names_registration.rs
 		${PROJECT_SOURCE_DIR}/crate/*
 		${PROJECT_SOURCE_DIR}/crate/src/*
 )

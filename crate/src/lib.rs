@@ -81,22 +81,22 @@ mod feature;
 // Generated sources
 //===================
 
-#[path = "../../build/generated/rust/symbol_registration.rs"]
+#[path = "generated/symbol_registration.rs"]
 mod symbol_registration;
 
-#[path = "../../build/generated/rust/token_enum_registration.rs"]
+#[path = "generated/token_enum_registration.rs"]
 mod token_enum_registration;
 
-#[path = "../../build/generated/rust/long_names_registration.rs"]
+#[path = "generated/long_names_registration.rs"]
 mod long_names_registration;
 
-#[path = "../../build/generated/rust/my_string_registration.rs"]
+#[path = "generated/my_string_registration.rs"]
 mod my_string_registration;
 
-#[path = "../../build/generated/rust/parselet_registration.rs"]
+#[path = "generated/parselet_registration.rs"]
 mod parselet_registration;
 
-#[path = "../../build/generated/rust/precedence.rs"]
+#[path = "generated/precedence.rs"]
 mod precedence;
 
 
