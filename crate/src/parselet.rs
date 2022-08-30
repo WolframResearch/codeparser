@@ -712,11 +712,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             UnderParselet_parseInfixContextSensitive(session, &under1Parselet, Tok);
 
             // MUSTTAIl
-            return SymbolParselet_reducePatternBlank(
-                session,
-                &under1Parselet,
-                Tok, /*ignored*/
-            );
+            return SymbolParselet_reducePatternBlank(session, &under1Parselet);
         },
         TOKEN_UNDERUNDER => {
             //
@@ -732,11 +728,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             UnderParselet_parseInfixContextSensitive(session, &under2Parselet, Tok);
 
             // MUSTTAIl
-            return SymbolParselet_reducePatternBlank(
-                session,
-                &under2Parselet,
-                Tok, /*ignored*/
-            );
+            return SymbolParselet_reducePatternBlank(session, &under2Parselet);
         },
         TOKEN_UNDERUNDERUNDER => {
             //
@@ -752,11 +744,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             UnderParselet_parseInfixContextSensitive(session, &under3Parselet, Tok);
 
             // MUSTTAIl
-            return SymbolParselet_reducePatternBlank(
-                session,
-                &under3Parselet,
-                Tok, /*ignored*/
-            );
+            return SymbolParselet_reducePatternBlank(session, &under3Parselet);
         },
         TOKEN_UNDERDOT => {
             //
@@ -772,7 +760,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             UnderDotParselet_parseInfixContextSensitive(session, Tok);
 
             // MUSTTAIl
-            return SymbolParselet_reducePatternOptionalDefault(session, Tok /*ignored*/);
+            return SymbolParselet_reducePatternOptionalDefault(session);
         },
         _ => (),
     } // switch
@@ -806,11 +794,7 @@ pub(crate) fn SymbolParselet_parseInfixContextSensitive(session: &mut ParserSess
     return;
 }
 
-fn SymbolParselet_reducePatternBlank(
-    session: &mut ParserSession,
-    P: &UnderParselet,
-    ignored: Token,
-) {
+fn SymbolParselet_reducePatternBlank(session: &mut ParserSession, P: &UnderParselet) {
     let PBOp = P.PBOp;
 
     let node = CompoundNode::new(PBOp, Parser_popContext(session));
@@ -820,7 +804,7 @@ fn SymbolParselet_reducePatternBlank(
     return Parser_parseClimb(session);
 }
 
-fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession, ignored2: Token) {
+fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession) {
     let node = CompoundNode::new(
         SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT,
         Parser_popContext(session),
@@ -1076,7 +1060,7 @@ fn InfixOperatorParselet_parseInfix(
 
     P2.parse_prefix(session, Tok2);
 
-    return InfixOperatorParselet_parseLoop(session, P, TokIn /*ignored*/);
+    return InfixOperatorParselet_parseLoop(session, P);
     // #else
     //     let ref mut Ctxt = Parser_topContext(session);
     //     assert!(Ctxt.f.is_none());
@@ -1091,11 +1075,7 @@ fn InfixOperatorParselet_parseInfix(
     // #endif // !USE_MUSTTAIL
 }
 
-fn InfixOperatorParselet_parseLoop(
-    session: &mut ParserSession,
-    P: &InfixOperatorParselet,
-    ignored: Token,
-) {
+fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: &InfixOperatorParselet) {
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -1134,7 +1114,7 @@ fn InfixOperatorParselet_parseLoop(
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return InfixOperatorParselet_reduceInfixOperator(session, P, ignored);
+            return InfixOperatorParselet_reduceInfixOperator(session, P);
         }
 
         Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
@@ -1168,7 +1148,6 @@ fn InfixOperatorParselet_parseLoop(
 fn InfixOperatorParselet_reduceInfixOperator(
     session: &mut ParserSession,
     P: &InfixOperatorParselet,
-    ignored: Token,
 ) {
     let Op = P.getOp();
 
@@ -1212,13 +1191,12 @@ fn PostfixOperatorParselet_parseInfix(
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
-    return PostfixOperatorParselet_reducePostfixOperator(session, P, TokIn /*ignored*/);
+    return PostfixOperatorParselet_reducePostfixOperator(session, P);
 }
 
 fn PostfixOperatorParselet_reducePostfixOperator(
     session: &mut ParserSession,
     P: &PostfixOperatorParselet,
-    ignored: Token,
 ) {
     let Op = P.getOp();
 
@@ -1271,7 +1249,7 @@ fn GroupParselet_parsePrefix(session: &mut ParserSession, P: &GroupParselet, Tok
     assert!(Ctxt.p.is_none());
     Ctxt.f = Some(Parser_identity);
 
-    return GroupParselet_parseLoop(session, P, TokIn /*ignored*/);
+    return GroupParselet_parseLoop(session, P);
     // #else
     //     assert!(Ctxt.f.is_none());
     //     assert!(Ctxt.p.is_none());
@@ -1283,7 +1261,7 @@ fn GroupParselet_parsePrefix(session: &mut ParserSession, P: &GroupParselet, Tok
     // #endif // !USE_MUSTTAIL
 }
 
-fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet, ignored: Token) {
+fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet) {
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -1317,7 +1295,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet, ignor
             Parser_pushLeafAndNext(session, Tok);
 
             // MUSTTAIL
-            return GroupParselet_reduceGroup(session, P, ignored);
+            return GroupParselet_reduceGroup(session, P);
         }
 
         if Tok.tok.isCloser() {
@@ -1338,7 +1316,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet, ignor
                 Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
                 // MUSTTAIl
-                return GroupParselet_reduceMissingCloser(session, P, ignored);
+                return GroupParselet_reduceMissingCloser(session, P);
             }
 
             //
@@ -1366,7 +1344,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet, ignor
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return GroupParselet_reduceUnterminatedGroup(session, P, ignored);
+            return GroupParselet_reduceUnterminatedGroup(session, P);
         }
 
         //
@@ -1395,7 +1373,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet, ignor
     // #endif // !USE_MUSTTAIL
 }
 
-fn GroupParselet_reduceGroup(session: &mut ParserSession, P: &GroupParselet, ignored: Token) {
+fn GroupParselet_reduceGroup(session: &mut ParserSession, P: &GroupParselet) {
     let Op = P.getOp();
 
     let node = GroupNode::new(Op, Parser_popContext(session));
@@ -1407,11 +1385,7 @@ fn GroupParselet_reduceGroup(session: &mut ParserSession, P: &GroupParselet, ign
     return Parser_parseClimb(session);
 }
 
-fn GroupParselet_reduceMissingCloser(
-    session: &mut ParserSession,
-    P: &GroupParselet,
-    ignored: Token,
-) {
+fn GroupParselet_reduceMissingCloser(session: &mut ParserSession, P: &GroupParselet) {
     let Op = P.getOp();
 
     let node = GroupMissingCloserNode::new(Op, Parser_popContext(session));
@@ -1423,11 +1397,7 @@ fn GroupParselet_reduceMissingCloser(
     return Parser_tryContinue(session);
 }
 
-fn GroupParselet_reduceUnterminatedGroup(
-    session: &mut ParserSession,
-    P: &GroupParselet,
-    ignored: Token,
-) {
+fn GroupParselet_reduceUnterminatedGroup(session: &mut ParserSession, P: &GroupParselet) {
     let Op = P.getOp();
 
     let node = UnterminatedGroupNeedsReparseNode::new(Op, Parser_popContext(session));
@@ -1845,7 +1815,7 @@ fn EqualParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         Parser_pushLeafAndNext(session, Tok);
 
         // MUSTTAIL
-        return EqualParselet_reduceUnset(session, TokIn /*ignored*/);
+        return EqualParselet_reduceUnset(session);
     }
 
     let ref mut Ctxt = Parser_topContext(session);
@@ -1883,7 +1853,7 @@ fn EqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
         Parser_pushLeafAndNext(session, Tok);
 
         // MUSTTAIL
-        return EqualParselet_reduceTagUnset(session, TokIn /*ignored*/);
+        return EqualParselet_reduceTagUnset(session);
     }
 
     let ref mut Ctxt = Parser_topContext(session);
@@ -1904,7 +1874,7 @@ fn EqualParselet_reduceSet(session: &mut ParserSession) {
     return Parser_parseClimb(session);
 }
 
-fn EqualParselet_reduceUnset(session: &mut ParserSession, ignored2: Token) {
+fn EqualParselet_reduceUnset(session: &mut ParserSession) {
     let node = BinaryNode::new(SYMBOL_UNSET, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -1920,7 +1890,7 @@ fn EqualParselet_reduceTagSet(session: &mut ParserSession) {
     return Parser_parseClimb(session);
 }
 
-fn EqualParselet_reduceTagUnset(session: &mut ParserSession, ignored2: Token) {
+fn EqualParselet_reduceTagUnset(session: &mut ParserSession) {
     let node = TernaryNode::new(SYMBOL_TAGUNSET, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2056,7 +2026,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         assert!(Ctxt.f.is_none());
         Ctxt.f = Some(Parser_identity);
 
-        return CommaParselet_parseLoop(session, TokIn /*ignored*/);
+        return CommaParselet_parseLoop(session);
         // #else
         //         let ref mut Ctxt = Parser_topContext(session);
         //         assert!(Ctxt.f.is_none());
@@ -2076,7 +2046,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     P2.parse_prefix(session, Tok2);
 
-    return CommaParselet_parseLoop(session, TokIn /*ignored*/);
+    return CommaParselet_parseLoop(session);
     // #else
     //     let ref mut Ctxt = Parser_topContext(session);
     //     assert!(Ctxt.f.is_none());
@@ -2089,7 +2059,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     // #endif // !USE_MUSTTAIL
 }
 
-fn CommaParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
+fn CommaParselet_parseLoop(session: &mut ParserSession) {
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -2107,7 +2077,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return CommaParselet_reduceComma(session, ignored2);
+            return CommaParselet_reduceComma(session);
         }
 
         //
@@ -2163,7 +2133,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
     // #endif // !USE_MUSTTAIL
 }
 
-fn CommaParselet_reduceComma(session: &mut ParserSession, ignored2: Token) {
+fn CommaParselet_reduceComma(session: &mut ParserSession) {
     let node = InfixNode::new(SYMBOL_CODEPARSER_COMMA, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2238,7 +2208,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         assert!(Ctxt.f.is_none());
         Ctxt.f = Some(Parser_identity);
 
-        return SemiParselet_parseLoop(session, TokIn /*ignored*/);
+        return SemiParselet_parseLoop(session);
         // #else
         //         let ref mut Ctxt = Parser_topContext(session);
         //         assert!(Ctxt.f.is_none());
@@ -2263,7 +2233,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
         P2.parse_prefix(session, Tok2);
 
-        return SemiParselet_parseLoop(session, TokIn /*ignored*/);
+        return SemiParselet_parseLoop(session);
         // #else
         //         let ref mut Ctxt = Parser_topContext(session);
         //         assert!(Ctxt.f.is_none());
@@ -2296,10 +2266,10 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     //
 
     // MUSTTAIL
-    return SemiParselet_reduceCompoundExpression(session, TokIn /*ignored*/);
+    return SemiParselet_reduceCompoundExpression(session);
 }
 
-fn SemiParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
+fn SemiParselet_parseLoop(session: &mut ParserSession) {
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -2321,7 +2291,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return SemiParselet_reduceCompoundExpression(session, ignored2);
+            return SemiParselet_reduceCompoundExpression(session);
         }
 
         //
@@ -2410,14 +2380,14 @@ fn SemiParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
         //
 
         // MUSTTAIL
-        return SemiParselet_reduceCompoundExpression(session, ignored2);
+        return SemiParselet_reduceCompoundExpression(session);
 
         // #if !USE_MUSTTAIL
     } // loop
       // #endif // !USE_MUSTTAIL
 }
 
-fn SemiParselet_reduceCompoundExpression(session: &mut ParserSession, ignored2: Token) {
+fn SemiParselet_reduceCompoundExpression(session: &mut ParserSession) {
     let node = InfixNode::new(SYMBOL_COMPOUNDEXPRESSION, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2462,10 +2432,10 @@ fn ColonColonParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeafAndNext(session, Tok2);
 
     // MUSTTAIL
-    return ColonColonParselet_parseLoop(session, TokIn /*ignored*/);
+    return ColonColonParselet_parseLoop(session);
 }
 
-fn ColonColonParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
+fn ColonColonParselet_parseLoop(session: &mut ParserSession) {
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -2483,7 +2453,7 @@ fn ColonColonParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return ColonColonParselet_reduceMessageName(session, ignored2);
+            return ColonColonParselet_reduceMessageName(session);
         }
 
         Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
@@ -2506,7 +2476,7 @@ fn ColonColonParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
       // #endif // !USE_MUSTTAIL
 }
 
-fn ColonColonParselet_reduceMessageName(session: &mut ParserSession, ignored2: Token) {
+fn ColonColonParselet_reduceMessageName(session: &mut ParserSession) {
     let node = InfixNode::new(SYMBOL_MESSAGENAME, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2549,10 +2519,10 @@ fn GreaterGreaterParselet_parseInfix(session: &mut ParserSession, TokIn: Token) 
     Parser_pushLeafAndNext(session, Tok);
 
     // MUSTTAIL
-    return GreaterGreaterParselet_reducePut(session, TokIn /*ignored*/);
+    return GreaterGreaterParselet_reducePut(session);
 }
 
-fn GreaterGreaterParselet_reducePut(session: &mut ParserSession, ignored2: Token) {
+fn GreaterGreaterParselet_reducePut(session: &mut ParserSession) {
     let node = BinaryNode::new(SYMBOL_PUT, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2595,10 +2565,10 @@ fn GreaterGreaterGreaterParselet_parseInfix(session: &mut ParserSession, TokIn: 
     Parser_pushLeafAndNext(session, Tok);
 
     // MUSTTAIL
-    return GreaterGreaterGreaterParselet_reducePutAppend(session, TokIn /*ignored*/);
+    return GreaterGreaterGreaterParselet_reducePutAppend(session);
 }
 
-fn GreaterGreaterGreaterParselet_reducePutAppend(session: &mut ParserSession, ignored2: Token) {
+fn GreaterGreaterGreaterParselet_reducePutAppend(session: &mut ParserSession) {
     let node = BinaryNode::new(SYMBOL_PUTAPPEND, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2639,10 +2609,10 @@ fn LessLessParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeafAndNext(session, Tok);
 
     // MUSTTAIL
-    return LessLessParselet_reduceGet(session, TokIn /*ignored*/);
+    return LessLessParselet_reduceGet(session);
 }
 
-fn LessLessParselet_reduceGet(session: &mut ParserSession, ignored2: Token) {
+fn LessLessParselet_reduceGet(session: &mut ParserSession) {
     let node = PrefixNode::new(SYMBOL_GET, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2689,7 +2659,7 @@ fn HashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             Parser_pushLeafAndNext(session, Tok);
 
             // MUSTTAIl
-            return HashParselet_reduceSlot(session, TokIn /*ignored*/);
+            return HashParselet_reduceSlot(session);
         },
         _ => (),
     }
@@ -2698,7 +2668,7 @@ fn HashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     return Parser_parseClimb(session);
 }
 
-fn HashParselet_reduceSlot(session: &mut ParserSession, ignored2: Token) {
+fn HashParselet_reduceSlot(session: &mut ParserSession) {
     let node = CompoundNode::new(SYMBOL_SLOT, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2735,7 +2705,7 @@ fn HashHashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             Parser_pushLeafAndNext(session, Tok);
 
             // MUSTTAIl
-            return HashHashParselet_reduceSlotSequence(session, TokIn /*ignored*/);
+            return HashHashParselet_reduceSlotSequence(session);
         },
         _ => (),
     }
@@ -2744,7 +2714,7 @@ fn HashHashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     return Parser_parseClimb(session);
 }
 
-fn HashHashParselet_reduceSlotSequence(session: &mut ParserSession, ignored2: Token) {
+fn HashHashParselet_reduceSlotSequence(session: &mut ParserSession) {
     let node = CompoundNode::new(SYMBOL_SLOTSEQUENCE, Parser_popContext(session));
     Parser_pushNode(session, node);
 
@@ -2781,7 +2751,7 @@ fn PercentParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             Parser_pushLeafAndNext(session, Tok);
 
             // MUSTTAIl
-            return PercentParselet_reduceOut(session, TokIn /*ignored*/);
+            return PercentParselet_reduceOut(session);
         },
         _ => (),
     }
@@ -2790,7 +2760,7 @@ fn PercentParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     return Parser_parseClimb(session);
 }
 
-fn PercentParselet_reduceOut(session: &mut ParserSession, ignored2: Token) {
+fn PercentParselet_reduceOut(session: &mut ParserSession) {
     let node = CompoundNode::new(SYMBOL_OUT, Parser_popContext(session));
     Parser_pushNode(session, node);
 

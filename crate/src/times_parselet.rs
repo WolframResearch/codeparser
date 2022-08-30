@@ -55,7 +55,7 @@ fn TimesParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     P2.parse_prefix(session, Tok2);
 
-    return TimesParselet_parseLoop(session, TokIn /*ignored*/);
+    return TimesParselet_parseLoop(session);
     // #else
     //     auto& Ctxt = Parser_topContext(session);
     //     assert!(!Ctxt.F);
@@ -68,7 +68,7 @@ fn TimesParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     // #endif // !USE_MUSTTAIL
 }
 
-fn TimesParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
+fn TimesParselet_parseLoop(session: &mut ParserSession) {
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -126,7 +126,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return TimesParselet_reduceTimes(session, ignored2);
+            return TimesParselet_reduceTimes(session);
         }
 
         Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
@@ -156,7 +156,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
     // #endif // !USE_MUSTTAIL
 }
 
-fn TimesParselet_reduceTimes(session: &mut ParserSession, ignored2: Token) {
+fn TimesParselet_reduceTimes(session: &mut ParserSession) {
     let node = InfixNode::new(SYMBOL_TIMES, Parser_popContext(session));
     Parser_pushNode(session, node);
 
