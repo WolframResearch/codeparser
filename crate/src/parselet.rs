@@ -38,8 +38,7 @@ pub(crate) type ParseletPtr = &'static dyn Parselet;
 pub(crate) type PrefixParseletPtr = &'static dyn PrefixParselet;
 pub(crate) type InfixParseletPtr = &'static dyn InfixParselet;
 
-pub(crate) type ParseFunction =
-    for<'i> fn(session: &mut ParserSession<'i>, parselet: ParseletPtr, firstTok: Token);
+pub(crate) type ParseFunction = for<'i> fn(session: &mut ParserSession<'i>, parselet: ParseletPtr);
 
 //
 /// Classes that derive from Parselet are responsible for parsing specific kinds of syntax
@@ -381,7 +380,7 @@ fn LeafParselet_reduceLeaf(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, TokIn /*ignored*/);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -400,7 +399,7 @@ fn PrefixErrorParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, TokIn /*ignored*/);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -448,7 +447,7 @@ fn PrefixCloserParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, TokIn /*ignored*/);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -479,7 +478,7 @@ pub(crate) fn PrefixToplevelCloserParselet_parsePrefix(session: &mut ParserSessi
     TokIn.skip(&mut session.tokenizer);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, TokIn /*ignored*/);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -519,7 +518,7 @@ fn PrefixEndOfFileParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
     Parser_pushLeaf(session, createdToken);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, TokIn /*ignored*/);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -544,7 +543,7 @@ fn PrefixUnsupportedTokenParselet_parsePrefix(session: &mut ParserSession, TokIn
     TokIn.skip(&mut session.tokenizer);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, TokIn /*ignored*/);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -586,7 +585,7 @@ fn PrefixCommaParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeaf(session, createdToken);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, TokIn /*ignored*/);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -637,7 +636,7 @@ fn PrefixUnhandledParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
         //
 
         // MUSTTAIL
-        return Parser_tryContinue(session, TokIn /*ignored*/);
+        return Parser_tryContinue(session);
     }
 
     //
@@ -783,7 +782,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     //
 
     // MUSTTAIL
-    return Parser_parseClimb(session, TokIn /*ignored*/);
+    return Parser_parseClimb(session);
 }
 
 pub(crate) fn SymbolParselet_parseInfixContextSensitive(session: &mut ParserSession, TokIn: Token) {
@@ -818,7 +817,7 @@ fn SymbolParselet_reducePatternBlank(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored);
+    return Parser_parseClimb(session);
 }
 
 fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession, ignored2: Token) {
@@ -829,7 +828,7 @@ fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession, igno
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -892,11 +891,7 @@ fn PrefixOperatorParselet_parsePrefix(
     return P2.parse_prefix(session, Tok);
 }
 
-fn PrefixOperatorParselet_reducePrefixOperator(
-    session: &mut ParserSession,
-    P: ParseletPtr,
-    ignored: Token,
-) {
+fn PrefixOperatorParselet_reducePrefixOperator(session: &mut ParserSession, P: ParseletPtr) {
     let P = P
         .as_any()
         .downcast_ref::<PrefixOperatorParselet>()
@@ -908,7 +903,7 @@ fn PrefixOperatorParselet_reducePrefixOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1014,11 +1009,7 @@ fn BinaryOperatorParselet_parseInfix(
     return P2.parse_prefix(session, Tok);
 }
 
-fn BinaryOperatorParselet_reduceBinaryOperator(
-    session: &mut ParserSession,
-    P: ParseletPtr,
-    ignored: Token,
-) {
+fn BinaryOperatorParselet_reduceBinaryOperator(session: &mut ParserSession, P: ParseletPtr) {
     let P = P
         .as_any()
         .downcast_ref::<BinaryOperatorParselet>()
@@ -1030,7 +1021,7 @@ fn BinaryOperatorParselet_reduceBinaryOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1185,7 +1176,7 @@ fn InfixOperatorParselet_reduceInfixOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1235,7 +1226,7 @@ fn PostfixOperatorParselet_reducePostfixOperator(
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1413,7 +1404,7 @@ fn GroupParselet_reduceGroup(session: &mut ParserSession, P: &GroupParselet, ign
     Parser_popGroup(session);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored);
+    return Parser_parseClimb(session);
 }
 
 fn GroupParselet_reduceMissingCloser(
@@ -1429,7 +1420,7 @@ fn GroupParselet_reduceMissingCloser(
     Parser_popGroup(session);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored);
+    return Parser_tryContinue(session);
 }
 
 fn GroupParselet_reduceUnterminatedGroup(
@@ -1445,7 +1436,7 @@ fn GroupParselet_reduceUnterminatedGroup(
     Parser_popGroup(session);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -1483,7 +1474,7 @@ fn CallParselet_parseInfix(session: &mut ParserSession, P: &CallParselet, TokIn:
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _, t| CallParselet_reduceCall(s, t));
+    Ctxt.f = Some(|s, _| CallParselet_reduceCall(s));
     Ctxt.prec = PRECEDENCE_HIGHEST;
 
     let GP = P.getGP();
@@ -1492,7 +1483,7 @@ fn CallParselet_parseInfix(session: &mut ParserSession, P: &CallParselet, TokIn:
     return GP.parse_prefix(session, TokIn);
 }
 
-fn CallParselet_reduceCall(session: &mut ParserSession, ignored2: Token) {
+fn CallParselet_reduceCall(session: &mut ParserSession) {
     {
         let Body = Parser_popNode(session);
 
@@ -1501,7 +1492,7 @@ fn CallParselet_reduceCall(session: &mut ParserSession, ignored2: Token) {
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1540,7 +1531,7 @@ fn TildeParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _, t| TildeParselet_parse1(s, t));
+    Ctxt.f = Some(|s, _| TildeParselet_parse1(s));
     Ctxt.prec = PRECEDENCE_LOWEST;
 
     let P2 = prefix_parselet(FirstTok.tok);
@@ -1549,7 +1540,7 @@ fn TildeParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     return P2.parse_prefix(session, FirstTok);
 }
 
-fn TildeParselet_parse1(session: &mut ParserSession, ignored2: Token) {
+fn TildeParselet_parse1(session: &mut ParserSession) {
     panic_if_aborted!();
 
 
@@ -1569,7 +1560,7 @@ fn TildeParselet_parse1(session: &mut ParserSession, ignored2: Token) {
         Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
         // MUSTTAIL
-        return TildeParselet_reduceError(session, ignored2);
+        return TildeParselet_reduceError(session);
     }
 
     Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
@@ -1586,7 +1577,7 @@ fn TildeParselet_parse1(session: &mut ParserSession, ignored2: Token) {
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.unwrap() as usize == TildeParselet_parse1 as usize);
-    Ctxt.f = Some(|s, _, t| TildeParselet_reduceTilde(s, t));
+    Ctxt.f = Some(|s, _| TildeParselet_reduceTilde(s));
     Ctxt.prec = PRECEDENCE_TILDE;
 
     let P2 = prefix_parselet(Tok2.tok);
@@ -1595,20 +1586,20 @@ fn TildeParselet_parse1(session: &mut ParserSession, ignored2: Token) {
     return P2.parse_prefix(session, Tok2);
 }
 
-fn TildeParselet_reduceTilde(session: &mut ParserSession, ignored2: Token) {
+fn TildeParselet_reduceTilde(session: &mut ParserSession) {
     let node = TernaryNode::new(SYMBOL_CODEPARSER_TERNARYTILDE, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
-fn TildeParselet_reduceError(session: &mut ParserSession, ignored2: Token) {
+fn TildeParselet_reduceError(session: &mut ParserSession) {
     let node = SyntaxErrorNode::new(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored2);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -1649,7 +1640,7 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         ColonLHS::Pattern => {
             let ref mut Ctxt = Parser_topContext(session);
             assert!(Ctxt.f.is_none());
-            Ctxt.f = Some(|s, _, t| ColonParselet_reducePattern(s, t));
+            Ctxt.f = Some(|s, _| ColonParselet_reducePattern(s));
             Ctxt.prec = PRECEDENCE_FAKE_PATTERNCOLON;
 
             let P2 = prefix_parselet(Tok.tok);
@@ -1660,7 +1651,7 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         ColonLHS::Optional => {
             let ref mut Ctxt = Parser_topContext(session);
             assert!(Ctxt.f.is_none());
-            Ctxt.f = Some(|s, _, t| ColonParselet_reduceOptional(s, t));
+            Ctxt.f = Some(|s, _| ColonParselet_reduceOptional(s));
             Ctxt.prec = PRECEDENCE_FAKE_OPTIONALCOLON;
 
             let P2 = prefix_parselet(Tok.tok);
@@ -1671,7 +1662,7 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         ColonLHS::Error => {
             let ref mut Ctxt = Parser_topContext(session);
             assert!(Ctxt.f.is_none());
-            Ctxt.f = Some(|s, _, t| ColonParselet_reduceError(s, t));
+            Ctxt.f = Some(|s, _| ColonParselet_reduceError(s));
             Ctxt.prec = PRECEDENCE_FAKE_PATTERNCOLON;
 
             let P2 = prefix_parselet(Tok.tok);
@@ -1682,15 +1673,15 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     }
 }
 
-fn ColonParselet_reducePattern(session: &mut ParserSession, ignored2: Token) {
+fn ColonParselet_reducePattern(session: &mut ParserSession) {
     let node = BinaryNode::new(SYMBOL_PATTERN, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
-fn ColonParselet_reduceError(session: &mut ParserSession, ignored2: Token) {
+fn ColonParselet_reduceError(session: &mut ParserSession) {
     let node = SyntaxErrorNode::new(
         SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL,
         Parser_popContext(session),
@@ -1698,15 +1689,15 @@ fn ColonParselet_reduceError(session: &mut ParserSession, ignored2: Token) {
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
-fn ColonParselet_reduceOptional(session: &mut ParserSession, ignored2: Token) {
+fn ColonParselet_reduceOptional(session: &mut ParserSession) {
     let node = BinaryNode::new(SYMBOL_OPTIONAL, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1752,7 +1743,7 @@ fn SlashColonParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _, t| SlashColonParselet_parse1(s, t));
+    Ctxt.f = Some(|s, _| SlashColonParselet_parse1(s));
 
     let P2 = prefix_parselet(Tok.tok);
 
@@ -1760,7 +1751,7 @@ fn SlashColonParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     return P2.parse_prefix(session, Tok);
 }
 
-fn SlashColonParselet_parse1(session: &mut ParserSession, ignored2: Token) {
+fn SlashColonParselet_parse1(session: &mut ParserSession) {
     panic_if_aborted!();
 
 
@@ -1800,15 +1791,15 @@ fn SlashColonParselet_parse1(session: &mut ParserSession, ignored2: Token) {
     //
 
     // MUSTTAIL
-    return SlashColonParselet_reduceError(session, ignored2);
+    return SlashColonParselet_reduceError(session);
 }
 
-fn SlashColonParselet_reduceError(session: &mut ParserSession, ignored2: Token) {
+fn SlashColonParselet_reduceError(session: &mut ParserSession) {
     let node = SyntaxErrorNode::new(SYMBOL_SYNTAXERROR_EXPECTEDSET, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1859,7 +1850,7 @@ fn EqualParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _, t| EqualParselet_reduceSet(s, t));
+    Ctxt.f = Some(|s, _| EqualParselet_reduceSet(s));
 
     let P2 = prefix_parselet(Tok.tok);
 
@@ -1897,7 +1888,7 @@ fn EqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
-    Ctxt.f = Some(|s, _, t| EqualParselet_reduceTagSet(s, t));
+    Ctxt.f = Some(|s, _| EqualParselet_reduceTagSet(s));
 
     let P2 = prefix_parselet(Tok.tok);
 
@@ -1905,12 +1896,12 @@ fn EqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
     return P2.parse_prefix(session, Tok);
 }
 
-fn EqualParselet_reduceSet(session: &mut ParserSession, ignored2: Token) {
+fn EqualParselet_reduceSet(session: &mut ParserSession) {
     let node = BinaryNode::new(SYMBOL_SET, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 fn EqualParselet_reduceUnset(session: &mut ParserSession, ignored2: Token) {
@@ -1918,15 +1909,15 @@ fn EqualParselet_reduceUnset(session: &mut ParserSession, ignored2: Token) {
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
-fn EqualParselet_reduceTagSet(session: &mut ParserSession, ignored2: Token) {
+fn EqualParselet_reduceTagSet(session: &mut ParserSession) {
     let node = TernaryNode::new(SYMBOL_TAGSET, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 fn EqualParselet_reduceTagUnset(session: &mut ParserSession, ignored2: Token) {
@@ -1934,7 +1925,7 @@ fn EqualParselet_reduceTagUnset(session: &mut ParserSession, ignored2: Token) {
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -1973,7 +1964,7 @@ fn ColonEqualParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _, t| ColonEqualParselet_reduceSetDelayed(s, t));
+    Ctxt.f = Some(|s, _| ColonEqualParselet_reduceSetDelayed(s));
 
     let P2 = prefix_parselet(Tok.tok);
 
@@ -1993,7 +1984,7 @@ fn ColonEqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
 
     let ref mut Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
-    Ctxt.f = Some(|s, _, t| ColonEqualParselet_reduceTagSetDelayed(s, t));
+    Ctxt.f = Some(|s, _| ColonEqualParselet_reduceTagSetDelayed(s));
 
     let P2 = prefix_parselet(Tok.tok);
 
@@ -2001,20 +1992,20 @@ fn ColonEqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
     return P2.parse_prefix(session, Tok);
 }
 
-fn ColonEqualParselet_reduceSetDelayed(session: &mut ParserSession, ignored2: Token) {
+fn ColonEqualParselet_reduceSetDelayed(session: &mut ParserSession) {
     let node = BinaryNode::new(SYMBOL_SETDELAYED, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
-fn ColonEqualParselet_reduceTagSetDelayed(session: &mut ParserSession, ignored2: Token) {
+fn ColonEqualParselet_reduceTagSetDelayed(session: &mut ParserSession) {
     let node = TernaryNode::new(SYMBOL_TAGSETDELAYED, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2189,7 +2180,7 @@ fn CommaParselet_reduceComma(session: &mut ParserSession, ignored2: Token) {
     //
 
     // MUSTTAIL
-    return Parser_tryContinue(session, ignored2);
+    return Parser_tryContinue(session);
 }
 
 //======================================
@@ -2431,7 +2422,7 @@ fn SemiParselet_reduceCompoundExpression(session: &mut ParserSession, ignored2: 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2520,7 +2511,7 @@ fn ColonColonParselet_reduceMessageName(session: &mut ParserSession, ignored2: T
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2566,7 +2557,7 @@ fn GreaterGreaterParselet_reducePut(session: &mut ParserSession, ignored2: Token
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2612,7 +2603,7 @@ fn GreaterGreaterGreaterParselet_reducePutAppend(session: &mut ParserSession, ig
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2656,7 +2647,7 @@ fn LessLessParselet_reduceGet(session: &mut ParserSession, ignored2: Token) {
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2704,7 +2695,7 @@ fn HashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, TokIn /*ignored*/);
+    return Parser_parseClimb(session);
 }
 
 fn HashParselet_reduceSlot(session: &mut ParserSession, ignored2: Token) {
@@ -2712,7 +2703,7 @@ fn HashParselet_reduceSlot(session: &mut ParserSession, ignored2: Token) {
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2750,7 +2741,7 @@ fn HashHashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, TokIn /*ignored*/);
+    return Parser_parseClimb(session);
 }
 
 fn HashHashParselet_reduceSlotSequence(session: &mut ParserSession, ignored2: Token) {
@@ -2758,7 +2749,7 @@ fn HashHashParselet_reduceSlotSequence(session: &mut ParserSession, ignored2: To
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }
 
 //======================================
@@ -2796,7 +2787,7 @@ fn PercentParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session, TokIn /*ignored*/);
+    return Parser_parseClimb(session);
 }
 
 fn PercentParselet_reduceOut(session: &mut ParserSession, ignored2: Token) {
@@ -2804,5 +2795,5 @@ fn PercentParselet_reduceOut(session: &mut ParserSession, ignored2: Token) {
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session, ignored2);
+    return Parser_parseClimb(session);
 }

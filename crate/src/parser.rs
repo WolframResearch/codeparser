@@ -184,7 +184,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
     }
 }
 
-pub(crate) fn Parser_parseClimb<'i>(session: &mut ParserSession<'i>, Ignored2: Token) {
+pub(crate) fn Parser_parseClimb<'i>(session: &mut ParserSession<'i>) {
     //
     // Check isAbort() inside loops
     //
@@ -223,7 +223,7 @@ pub(crate) fn Parser_parseClimb<'i>(session: &mut ParserSession<'i>, Ignored2: T
         Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
         // MUSTTAIL
-        return Parser_tryContinue(session, Ignored2);
+        return Parser_tryContinue(session);
     }
 
     Parser_pushContext(session, TokenPrecedence);
@@ -234,7 +234,7 @@ pub(crate) fn Parser_parseClimb<'i>(session: &mut ParserSession<'i>, Ignored2: T
     return I.parse_infix(session, token);
 }
 
-pub(crate) fn Parser_tryContinue<'i>(session: &mut ParserSession<'i>, Ignored2: Token) {
+pub(crate) fn Parser_tryContinue<'i>(session: &mut ParserSession<'i>) {
     if Parser_isContextStackEmpty(session) {
         // no call needed here
         return;
@@ -248,10 +248,10 @@ pub(crate) fn Parser_tryContinue<'i>(session: &mut ParserSession<'i>, Ignored2: 
         .unwrap_or_else(|| &crate::parselet::PrefixAssertFalseParselet {});
 
     // MUSTTAIL
-    return F(session, P, Ignored2);
+    return F(session, P);
 }
 
-pub(crate) fn Parser_identity<'i>(_: &mut ParserSession<'i>, _: ParseletPtr, _firstTok: Token) {
+pub(crate) fn Parser_identity<'i>(_: &mut ParserSession<'i>, _: ParseletPtr) {
     return;
 }
 
