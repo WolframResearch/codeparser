@@ -135,7 +135,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession, ignored2: Token) {
 
         let Ctxt = Parser_topContext(session);
         assert!(Ctxt.f.is_none());
-        Ctxt.f = Some(SemiSemiParselet_parse2);
+        Ctxt.f = Some(|s, _, t| SemiSemiParselet_parse2(s, t));
 
         let P2 = prefix_parselet(SecondTok.tok);
 
@@ -206,7 +206,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession, ignored2: Token) {
 
     let Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(SemiSemiParselet_reduceTernary);
+    Ctxt.f = Some(|s, _, t| SemiSemiParselet_reduceTernary(s, t));
 
     let P2 = prefix_parselet(ThirdTok.tok);
 
@@ -214,7 +214,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession, ignored2: Token) {
     return P2.parse_prefix(session, ThirdTok);
 }
 
-fn SemiSemiParselet_parse2(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
+fn SemiSemiParselet_parse2(session: &mut ParserSession, ignored2: Token) {
     panic_if_aborted!();
 
 
@@ -306,7 +306,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession, ignored: ParseletPtr, ig
 
     let Ctxt = Parser_topContext(session);
     assert!(Ctxt.f.unwrap() as usize == SemiSemiParselet_parse2 as usize);
-    Ctxt.f = Some(SemiSemiParselet_reduceTernary);
+    Ctxt.f = Some(|s, _, t| SemiSemiParselet_reduceTernary(s, t));
 
     let P2 = prefix_parselet(FourthTok.tok);
 
@@ -322,11 +322,7 @@ fn SemiSemiParselet_reduceBinary(session: &mut ParserSession, ignored2: Token) {
     return Parser_parseClimb(session, ignored2);
 }
 
-fn SemiSemiParselet_reduceTernary(
-    session: &mut ParserSession,
-    ignored: ParseletPtr,
-    ignored2: Token,
-) {
+fn SemiSemiParselet_reduceTernary(session: &mut ParserSession, ignored2: Token) {
     let node = TernaryNode::new(SYMBOL_SPAN, Parser_popContext(session));
     Parser_pushNode(session, node);
 
