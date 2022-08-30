@@ -21,7 +21,7 @@ use crate::{
 
 impl InfixParselet for TimesParselet {
     fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        TimesParselet_parseInfix(session, self, token)
+        TimesParselet_parseInfix(session, token)
     }
 
     fn getOp(&self) -> Symbol {
@@ -33,7 +33,7 @@ impl InfixParselet for TimesParselet {
     }
 }
 
-fn TimesParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
+fn TimesParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     panic_if_aborted!();
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -55,7 +55,7 @@ fn TimesParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
 
     P2.parse_prefix(session, Tok2);
 
-    return TimesParselet_parseLoop(session, ignored, TokIn /*ignored*/);
+    return TimesParselet_parseLoop(session, TokIn /*ignored*/);
     // #else
     //     auto& Ctxt = Parser_topContext(session);
     //     assert!(!Ctxt.F);
@@ -68,7 +68,7 @@ fn TimesParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
     // #endif // !USE_MUSTTAIL
 }
 
-fn TimesParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
+fn TimesParselet_parseLoop(session: &mut ParserSession, ignored2: Token) {
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -126,7 +126,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return TimesParselet_reduceTimes(session, ignored, ignored2);
+            return TimesParselet_reduceTimes(session, ignored2);
         }
 
         Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
@@ -156,7 +156,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
     // #endif // !USE_MUSTTAIL
 }
 
-fn TimesParselet_reduceTimes(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
+fn TimesParselet_reduceTimes(session: &mut ParserSession, ignored2: Token) {
     let node = InfixNode::new(SYMBOL_TIMES, Parser_popContext(session));
     Parser_pushNode(session, node);
 

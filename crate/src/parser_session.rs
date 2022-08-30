@@ -15,7 +15,6 @@ use crate::{
         TriviaSeq,
     },
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
-    parselet_registration::prefixToplevelCloserParselet,
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     source::{IssuePtrSet, SourceConvention, TOPLEVEL},
     token_enum_registration::TokenEnum::TOKEN_ENDOFFILE,
@@ -153,7 +152,7 @@ impl<'i> ParserSession<'i> {
             // special top-level handling of stray closers
             //
             if peek.tok.isCloser() {
-                PrefixToplevelCloserParselet_parsePrefix(self, &prefixToplevelCloserParselet, peek);
+                PrefixToplevelCloserParselet_parsePrefix(self, peek);
 
                 exprs.push(Parser_popNode(self));
 

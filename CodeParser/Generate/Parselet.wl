@@ -177,8 +177,6 @@ pub(crate) const prefixErrorParselet: PrefixErrorParselet = PrefixErrorParselet 
 
 pub(crate) const prefixCloserParselet: PrefixCloserParselet = PrefixCloserParselet {};
 
-pub(crate) const prefixToplevelCloserParselet: PrefixToplevelCloserParselet = PrefixToplevelCloserParselet {};
-
 pub(crate) const prefixUnsupportedTokenParselet: PrefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet {};
 
 pub(crate) const prefixUnhandledParselet: PrefixUnhandledParselet = PrefixUnhandledParselet {};

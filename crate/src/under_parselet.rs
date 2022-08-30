@@ -171,11 +171,11 @@ fn UnderParselet_reduceBlankContextSensitive(
 
 impl PrefixParselet for UnderDotParselet {
     fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        UnderDotParselet_parsePrefix(session, self, token)
+        UnderDotParselet_parsePrefix(session, token)
     }
 }
 
-fn UnderDotParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
+fn UnderDotParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     //
     // prefix
     //
