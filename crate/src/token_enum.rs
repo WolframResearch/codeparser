@@ -4,6 +4,7 @@ pub(crate) use crate::token_enum_registration::TokenEnum;
 //
 // All group closers
 //
+#[allow(non_camel_case_types)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Closer {

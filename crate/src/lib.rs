@@ -1,7 +1,6 @@
 //
 // Lints
 //
-#![allow(non_camel_case_types)]
 #![allow(unused_assignments, non_snake_case)] // PRE_COMMIT: Remove these allows
 
 macro_rules! incr_diagnostic {
