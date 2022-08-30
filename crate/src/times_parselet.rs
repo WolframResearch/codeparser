@@ -61,7 +61,7 @@ fn TimesParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     //     assert!(!Ctxt.F);
     //     Ctxt.F = TimesParselet_parseLoop;
 
-    //     let P2 = prefixParselets[Tok2.tok.value()];
+    //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
     //     // MUSTTAIL
     //     return P2.parse_prefix(session, Tok2);
@@ -82,7 +82,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 
         Parser_eatTrivia_2(session, &mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
 
-        let mut I: &dyn InfixParselet = infixParselets[usize::from(Tok1.tok.value())];
+        let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
         Tok1 = I.processImplicitTimes(session, Tok1);
 
@@ -104,12 +104,12 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
                 &mut Trivia1.borrow_mut(),
             );
 
-            I = infixParselets[usize::from(Tok1.tok.value())];
+            I = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
             Tok1 = I.processImplicitTimes(session, Tok1);
         }
 
-        I = infixParselets[usize::from(Tok1.tok.value())];
+        I = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
         //
         // Cannot just compare tokens
@@ -149,7 +149,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
       //     auto& Ctxt = Parser_topContext(session);
       //     assert!(Ctxt.F == TimesParselet_parseLoop);
 
-    //     let P2 = prefixParselets[Tok2.tok.value()];
+    //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
     //     // MUSTTAIL
     //     return P2.parse_prefix(session, Tok2);

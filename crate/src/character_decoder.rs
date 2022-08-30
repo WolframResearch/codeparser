@@ -2,7 +2,9 @@ use crate::{
     byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     code_point::{CodePoint::*, *},
     feature, long_names as LongNames,
-    long_names_registration::{LongNameToCodePointMap_names, LongNameToCodePointMap_points},
+    long_names_registration::{
+        LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
+    },
     my_string_registration::{
         STRING_FATAL, STRING_REMARK, STRING_UNEXPECTEDCHARACTER, STRING_WARNING, *,
     },
@@ -387,15 +389,7 @@ fn CharacterDecoder_handleLongName(
 
                 let mut Actions: Vec<CodeAction> = Vec::new();
 
-
-                // let it = std::lower_bound(
-                //     LongNameToCodePointMap_names.begin(),
-                //     LongNameToCodePointMap_names.end(),
-                //     longNameStr,
-                // );
-                // let found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
-
-                let found = LongNameToCodePointMap_names
+                let found = LONGNAME_TO_CODE_POINT_MAP__NAMES
                     .binary_search(&longNameStr)
                     .is_ok();
 
@@ -473,17 +467,10 @@ fn CharacterDecoder_handleLongName(
     // let longNameStr = std::string(reinterpret_cast::<*const i8>(longNameBufAndLen.Buf), longNameBufAndLen.length());
     let longNameStr = longNameBufAndLen.as_str();
 
-    debug_assert!(utils::is_sorted(&LongNameToCodePointMap_names));
-    let found: Option<usize> = LongNameToCodePointMap_names
+    debug_assert!(utils::is_sorted(&LONGNAME_TO_CODE_POINT_MAP__NAMES));
+    let found: Option<usize> = LONGNAME_TO_CODE_POINT_MAP__NAMES
         .binary_search(&longNameStr)
         .ok();
-
-    // let it = std::lower_bound(
-    //     LongNameToCodePointMap_names.begin(),
-    //     LongNameToCodePointMap_names.end(),
-    //     longNameStr,
-    // );
-    // let found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
 
     if found == None {
         //
@@ -591,10 +578,7 @@ fn CharacterDecoder_handleLongName(
 
     ByteDecoder_nextSourceCharacter(session, policy);
 
-    // let idx = it - LongNameToCodePointMap_names.begin();
-    // let point = LongNameToCodePointMap_points[idx];
-
-    let point: CodePoint = LongNameToCodePointMap_points[found];
+    let point: CodePoint = LONGNAME_TO_CODE_POINT_MAP__POINTS[found];
 
     if feature::CHECK_ISSUES
         && (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES
@@ -1843,10 +1827,7 @@ fn CharacterDecoder_handleUnhandledEscape(
             let mut wellFormedAndFound = false;
 
             if wellFormed {
-                // let it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), alnumRun);
-                // wellFormedAndFound = (it != LongNameToCodePointMap_names.end() && *it == alnumRun);
-
-                wellFormedAndFound = LongNameToCodePointMap_names
+                wellFormedAndFound = LONGNAME_TO_CODE_POINT_MAP__NAMES
                     .binary_search(&alnumRun.as_str())
                     .is_ok();
             }
@@ -2364,10 +2345,10 @@ fn CharacterDecoder_longNameSuggestion(input: String) -> String {
 }
 
 fn CharacterDecoder_longNameSuggestion(input: &str) -> String {
-    use crate::long_names_registration::CodePointToLongNameMap_names;
+    use crate::long_names_registration::CODE_POINT_TO_LONGNAME_MAP__NAMES;
     use edit_distance::edit_distance;
 
-    let closest: Option<&&str> = CodePointToLongNameMap_names
+    let closest: Option<&&str> = CODE_POINT_TO_LONGNAME_MAP__NAMES
         .iter()
         .min_by_key(|name| edit_distance(input, name));
 

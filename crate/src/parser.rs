@@ -5,7 +5,7 @@ use crate::{
     node::{BinaryNode, CompoundNode, Node, NodeSeq, TernaryNode, TriviaSeq},
     panic_if_aborted,
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
-    parselet_registration::infixParselets,
+    parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
     parser_session::ParserSession,
     precedence::{Precedence, *},
@@ -204,11 +204,11 @@ pub(crate) fn Parser_parseClimb<'i>(session: &mut ParserSession<'i>) {
         &mut Trivia1.borrow_mut(),
     );
 
-    let mut I: &dyn InfixParselet = infixParselets[usize::from(token.tok.value())];
+    let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(token.tok.value())];
 
     token = I.processImplicitTimes(session, token);
 
-    I = infixParselets[usize::from(token.tok.value())];
+    I = INFIX_PARSELETS[usize::from(token.tok.value())];
 
     let TokenPrecedence = I.getPrecedence(session);
 

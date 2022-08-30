@@ -230,7 +230,7 @@ macro_rules! U {
     };
 }
 
-const TokenizerHandlerTable: [HandlerFunction; 128] = [
+const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = [
     U!(),
     U!(),
     U!(),
@@ -397,7 +397,7 @@ pub fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) 
         return Tokenizer_nextToken_uncommon(session, tokenStartBuf, tokenStartLoc, c, policy);
     }
 
-    let func = TokenizerHandlerTable[usize::try_from(point).unwrap()];
+    let func = TOKENIZER_HANDLER_TABLE[usize::try_from(point).unwrap()];
     return func(session, tokenStartBuf, tokenStartLoc, c, policy);
 }
 

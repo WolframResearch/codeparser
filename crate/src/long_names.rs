@@ -3,33 +3,28 @@
 use crate::{
     code_point::CodePoint,
     long_names_registration::{
-        asciiReplacementsMap, mbNewlineCodePoints, mbNotStrangeLetterlikeCodePoints,
-        mbPunctuationCodePoints, mbUninterpretableCodePoints, mbWhitespaceCodePoints,
-        CodePointToLongNameMap_names, CodePointToLongNameMap_points, RawSet,
+        ASCII_REPLACEMENTS_MAP, CODE_POINT_TO_LONGNAME_MAP__NAMES,
+        CODE_POINT_TO_LONGNAME_MAP__POINTS, MB_NEWLINE_CODE_POINTS,
+        MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS, MB_PUNCTUATION_CODE_POINTS,
+        MB_UNINTERPRETABLE_CODE_POINTS, MB_WHITESPACE_CODE_POINTS, RAW_SET,
     },
     utils,
 };
 
 pub fn code_point_has_long_name(point: CodePoint) -> bool {
-    // debug_assert!(CodePointToLongNameMap_points.is_sorted());
-    // CodePointToLongNameMap_points.binary_search(&point).is_ok()
+    // debug_assert!(CODE_POINT_TO_LONGNAME_MAP__POINTS.is_sorted());
+    // CODE_POINT_TO_LONGNAME_MAP__POINTS.binary_search(&point).is_ok()
 
     // TODO(optimize): This linear search is likely slower than the commented
     //                 out binary_search(). Fix the sorting of this table so
     //                 that the debug_assert!(..is_sorted()) succeeds, and then
     //                 switch back to the binary search code.
-    CodePointToLongNameMap_points.contains(&point)
+    CODE_POINT_TO_LONGNAME_MAP__POINTS.contains(&point)
 }
 
 pub fn code_point_to_long_name(point: CodePoint) -> &'static str {
-    // let it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), i);
-    // assert!(it != CodePointToLongNameMap_points.end());
-    // assert!(*it == i);
-    // let idx = it - CodePointToLongNameMap_points.begin();
-
-
-    // debug_assert!(CodePointToLongNameMap_points.is_sorted());
-    // let idx: usize = CodePointToLongNameMap_points
+    // debug_assert!(CODE_POINT_TO_LONGNAME_MAP__POINTS.is_sorted());
+    // let idx: usize = CODE_POINT_TO_LONGNAME_MAP__POINTS
     //     .binary_search(&point)
     //     .expect("unable to find long name for code point");
 
@@ -37,50 +32,37 @@ pub fn code_point_to_long_name(point: CodePoint) -> &'static str {
     //                 out binary_search(). Fix the sorting of this table so
     //                 that the debug_assert!(..is_sorted()) succeeds, and then
     //                 switch back to the binary search code.
-    let idx: usize = CodePointToLongNameMap_points
+    let idx: usize = CODE_POINT_TO_LONGNAME_MAP__POINTS
         .iter()
         .position(|p| *p == point)
         .expect("unable to find long name for code point");
 
-    let long_name: &str = CodePointToLongNameMap_names[idx];
+    let long_name: &str = CODE_POINT_TO_LONGNAME_MAP__NAMES[idx];
 
     long_name
 }
 
 /// Is this \[Raw] something?
 pub fn isRaw(long_name_str: &str) -> bool {
-    debug_assert!(utils::is_sorted(&RawSet));
-    return RawSet.binary_search(&long_name_str).is_ok();
-
-    // let it = std::lower_bound(RawSet.begin(), RawSet.end(), LongNameStr);
-    // return it != RawSet.end() && *it == LongNameStr;
+    debug_assert!(utils::is_sorted(&RAW_SET));
+    return RAW_SET.binary_search(&long_name_str).is_ok();
 }
 
 pub fn isMBNotStrangeLetterlike(point: CodePoint) -> bool {
-    debug_assert!(utils::is_sorted(&mbNotStrangeLetterlikeCodePoints));
-    return mbNotStrangeLetterlikeCodePoints
+    debug_assert!(utils::is_sorted(&MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS));
+    return MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS
         .binary_search(&point)
         .is_ok();
-
-    // let it = std::lower_bound(
-    //     mbNotStrangeLetterlikeCodePoints.begin(),
-    //     mbNotStrangeLetterlikeCodePoints.end(),
-    //     point,
-    // );
-    // return it != mbNotStrangeLetterlikeCodePoints.end() && *it == point;
 }
 
 pub fn asciiReplacements(point: CodePoint) -> Vec<String> {
-    match asciiReplacementsMap.get(&point) {
+    match ASCII_REPLACEMENTS_MAP.get(&point) {
         Some(replacements) => replacements
             .into_iter()
             .map(|&s: &&str| s.to_owned())
             .collect(),
         None => Vec::new(),
     }
-
-    // let it = asciiReplacementsMap.find(point);
-    // return if it != asciiReplacementsMap.end() { it.second } else { Vec::new() };
 }
 
 pub fn replacementGraphical(replacement: String) -> String {
@@ -110,42 +92,21 @@ pub fn replacementGraphical(replacement: String) -> String {
 }
 
 pub fn isMBPunctuation(point: CodePoint) -> bool {
-    debug_assert!(utils::is_sorted(&mbPunctuationCodePoints));
-    return mbPunctuationCodePoints.binary_search(&point).is_ok();
-
-    // let it = std::lower_bound(mbPunctuationCodePoints.begin(), mbPunctuationCodePoints.end(), point);
-    // return it != mbPunctuationCodePoints.end() && *it == point;
+    debug_assert!(utils::is_sorted(&MB_PUNCTUATION_CODE_POINTS));
+    return MB_PUNCTUATION_CODE_POINTS.binary_search(&point).is_ok();
 }
 
 pub fn isMBWhitespace(point: CodePoint) -> bool {
-    debug_assert!(utils::is_sorted(&mbWhitespaceCodePoints));
-    return mbWhitespaceCodePoints.binary_search(&point).is_ok();
-
-    // let it = mbWhitespaceCodePoints.partition_point(|p| p <)
-    // let it = std::lower_bound(
-    //     mbWhitespaceCodePoints.begin(),
-    //     mbWhitespaceCodePoints.end(),
-    //     point,
-    // );
-    // return it != mbWhitespaceCodePoints.end() && *it == point;
+    debug_assert!(utils::is_sorted(&MB_WHITESPACE_CODE_POINTS));
+    return MB_WHITESPACE_CODE_POINTS.binary_search(&point).is_ok();
 }
 
 pub fn isMBNewline(point: CodePoint) -> bool {
-    debug_assert!(utils::is_sorted(&mbNewlineCodePoints));
-    return mbNewlineCodePoints.binary_search(&point).is_ok();
-
-    // let it = std::lower_bound(
-    //     mbNewlineCodePoints.begin(),
-    //     mbNewlineCodePoints.end(),
-    //     point,
-    // );
-    // return it != mbNewlineCodePoints.end() && *it == point;
+    debug_assert!(utils::is_sorted(&MB_NEWLINE_CODE_POINTS));
+    return MB_NEWLINE_CODE_POINTS.binary_search(&point).is_ok();
 }
 
 pub fn isMBUninterpretable(point: CodePoint) -> bool {
-    debug_assert!(utils::is_sorted(&mbUninterpretableCodePoints));
-    return mbUninterpretableCodePoints.binary_search(&point).is_ok();
-
-    // let it = std::lower_bound(mbUninterpretableCodePoints.begin(), mbUninterpretableCodePoints.end(), point);
-    // return it != mbUninterpretableCodePoints.end() && *it == point;
+    debug_assert!(utils::is_sorted(&MB_UNINTERPRETABLE_CODE_POINTS));
+    return MB_UNINTERPRETABLE_CODE_POINTS.binary_search(&point).is_ok();
 }

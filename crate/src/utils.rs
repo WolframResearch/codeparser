@@ -205,7 +205,7 @@ pub fn isStraySurrogate(point: codepoint) -> bool {
 //     return s;
 // }
 
-const digitLookup: [u8; 256] = [
+const DIGIT_LOOKUP: [u8; 256] = [
     99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
     99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 99, 99, 99, 99, 99, 99, 99, 10, 11, 12, 13, 14, 15, 16, 17, 18,
@@ -221,7 +221,7 @@ const digitLookup: [u8; 256] = [
 
 /// Convert val to the digit that it represents
 pub fn toDigit(val: u8) -> u8 {
-    return digitLookup[usize::from(val)];
+    return DIGIT_LOOKUP[usize::from(val)];
 }
 
 // if c is an ASCII WLCharacter, then compare to test

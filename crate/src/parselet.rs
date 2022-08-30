@@ -6,7 +6,7 @@ use crate::{
         PostfixNode, PrefixNode, SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
-    parselet_registration::{infixParselets, prefixParselets, *},
+    parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
     parser::{
         ColonLHS, Parser_checkColonLHS, Parser_checkGroup, Parser_checkPatternPrecedence,
         Parser_checkTilde, Parser_eatTrivia, Parser_eatTriviaButNotToplevelNewlines,
@@ -78,7 +78,7 @@ pub(crate) trait InfixParselet: Parselet {
 pub(crate) fn prefix_parselet(tok: TokenEnum) -> PrefixParseletPtr {
     let index = usize::from(tok.value());
 
-    prefixParselets[index]
+    PREFIX_PARSELETS[index]
 }
 
 //======================================
@@ -618,7 +618,7 @@ fn PrefixUnhandledParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
     //
     Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    let I = infixParselets[usize::from(TokIn.tok.value())];
+    let I = INFIX_PARSELETS[usize::from(TokIn.tok.value())];
 
     let TokenPrecedence = I.getPrecedence(session);
 
@@ -647,7 +647,7 @@ fn PrefixUnhandledParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
 
     Parser_pushContext(session, TokenPrecedence);
 
-    let P2 = infixParselets[usize::from(TokIn.tok.value())];
+    let P2 = INFIX_PARSELETS[usize::from(TokIn.tok.value())];
 
     // MUSTTAIL
     return P2.parse_infix(session, TokIn);
@@ -1068,7 +1068,7 @@ fn InfixOperatorParselet_parseInfix(
     //     Ctxt.f = Some(InfixOperatorParselet_parseLoop);
     //     Ctxt.p = P;
 
-    //     let P2 = prefixParselets[Tok2.tok.value()];
+    //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
     //     // MUSTTAIL
     //     return P2.parse_prefix(session, Tok2);
@@ -1089,7 +1089,7 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: &InfixOperato
 
         Parser_eatTrivia_2(session, &mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
 
-        let I = infixParselets[usize::from(Tok1.tok.value())];
+        let I = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
         let Op = P.getOp();
 
@@ -1138,7 +1138,7 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: &InfixOperato
       //     assert!(Ctxt.f == InfixOperatorParselet_parseLoop);
       //     assert!(Ctxt.p == P);
 
-    //     let P2 = prefixParselets[Tok2.tok.value()];
+    //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
     //     // MUSTTAIL
     //     return P2.parse_prefix(session, Tok2);
@@ -2052,7 +2052,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     //     assert!(Ctxt.f.is_none());
     //     Ctxt.f = Some(CommaParselet_parseLoop);
 
-    //     let P2 = prefixParselets[Tok2.tok.value()];
+    //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
     //     // MUSTTAIL
     //     return P2.parse_prefix(session, Tok2);
@@ -2126,7 +2126,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
       //     let ref mut Ctxt = Parser_topContext(session);
       //     assert!(Ctxt.f == CommaParselet_parseLoop);
 
-    //     let P2 = prefixParselets[Tok2.tok.value()];
+    //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
     //     // MUSTTAIL
     //     return P2.parse_prefix(session, Tok2);
@@ -2239,7 +2239,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         //         assert!(Ctxt.f.is_none());
         //         Ctxt.f = Some(SemiParselet_parseLoop);
 
-        //         let P2 = prefixParselets[Tok2.tok.value()];
+        //         let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
         //         // MUSTTAIL
         //         return P2.parse_prefix(session, Tok2);
@@ -2353,7 +2353,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
             //         let ref mut Ctxt = Parser_topContext(session);
             //         assert!(Ctxt.f == SemiParselet_parseLoop);
 
-            //         let P2 = prefixParselets[Tok2.tok.value()];
+            //         let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
 
             //         // MUSTTAIL
             //         return P2.parse_prefix(session, Tok2);
