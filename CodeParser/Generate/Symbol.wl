@@ -149,7 +149,7 @@ generate[] := (
 Print["Generating Symbol..."];
 
 symbolRegistrationCPPHeader = {
-"
+"\
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY

@@ -369,7 +369,7 @@ Print["Generating LongNames..."];
 
 
 longNamesRegistrationCPPHeader = {
-"
+"\
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY

@@ -62,7 +62,7 @@ generate[] := (
 Print["Generating String..."];
 
 myStringRegistrationCPPHeader = {
-"
+"\
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY

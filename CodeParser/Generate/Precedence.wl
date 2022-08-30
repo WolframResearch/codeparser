@@ -70,7 +70,7 @@ KeyValueMap[
 
 
 precedenceCPPHeader = {
-"
+"\
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
@@ -85,7 +85,7 @@ pub type Precedence = u8;
 	KeyValueMap[
 		(Row[{
 			"pub const ",
-			toGlobal[#1], ": u8 = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ";", "// prec: ", #2[[1]], ", assoc: ", #2[[2]]
+			toGlobal[#1], ": u8 = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ";", " // prec: ", #2[[1]], ", assoc: ", #2[[2]]
 		}])&,
 		enumMap
 	];

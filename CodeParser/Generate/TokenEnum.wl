@@ -378,7 +378,7 @@ Which[
 ]
 
 
-tokenToSymbolCases = Row[{toGlobal[#], " => return ", toGlobal[tokenToSymbol[#]], ","}]& /@ tokens
+tokenToSymbolCases = Row[{"        ", toGlobal[#], " => return ", toGlobal[tokenToSymbol[#]], ","}]& /@ tokens
 
 
 tokenIsEmptyCases = Row[{"tokenIsEmpty", "[", ToString[#], "]", " ", "=", " ", "True"}]& /@ $isEmptyTokens
@@ -389,7 +389,7 @@ generate[] := (
 Print["Generating TokenEnum..."];
 
 tokenEnumRegistrationCPPHeader = {
-"
+"\
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
@@ -402,6 +402,7 @@ use crate::symbol::Symbol;
 //
 
 #[allow(non_camel_case_types)]
+#[rustfmt::skip]
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u16)]
 pub enum TokenEnum {"} ~Join~
@@ -465,10 +466,10 @@ const _: () = assert!(TOKEN_ERROR_UNTERMINATED_END.value() == 0x20, \"Check your
 {"
 #[allow(dead_code)]
 pub(crate) fn TokenToSymbol(token: TokenEnum) -> Symbol {"} ~Join~
-{"match token {"} ~Join~
+{"    match token {"} ~Join~
 tokenToSymbolCases ~Join~
-{ "_ => panic!(\"Unhandled token type\"),"} ~Join~
-{"}",
+{ "        _ => panic!(\"Unhandled token type\"),"} ~Join~
+{"    }",
 "}",
 ""};
 

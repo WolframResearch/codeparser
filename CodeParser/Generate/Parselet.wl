@@ -154,7 +154,7 @@ generate[] := (
 Print["Generating Parselet..."];
 
 parseletRegistrationCPPSource = {
-"
+"\
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY

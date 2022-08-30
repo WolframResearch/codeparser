@@ -11,6 +11,7 @@ use crate::symbol::Symbol;
 //
 
 #[allow(non_camel_case_types)]
+#[rustfmt::skip]
 #[derive(num_enum::TryFromPrimitive)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u16)]
