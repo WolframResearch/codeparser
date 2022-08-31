@@ -35,8 +35,8 @@ use crate::{
         STRING_NONASCIICHARACTER, STRING_REMARK, STRING_UNEXPECTEDCHARACTER, STRING_WARNING, *,
     },
     source::{
-        CodeAction, CodeActionPtrVector, EncodingIssue, NextPolicy, NextPolicyBits::*, Source,
-        SourceCharacter, SourceConvention, SourceLocation,
+        CodeAction, EncodingIssue, NextPolicy, NextPolicyBits::*, Source, SourceCharacter,
+        SourceConvention, SourceLocation,
     },
     tokenizer::{SourceManager, Tokenizer, UnsafeCharacterEncoding},
     utils,
@@ -905,7 +905,7 @@ fn ByteDecoder_strangeWarning(
 
     let Src = Source::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
 
-    let mut Actions: CodeActionPtrVector = Vec::new();
+    let mut Actions: Vec<CodeAction> = Vec::new();
 
     let c = WLCharacter::new_with_escape(decoded, EscapeStyle::None);
 
@@ -984,7 +984,7 @@ fn ByteDecoder_nonASCIIWarning(
 
     let Src = Source::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
 
-    let mut Actions: CodeActionPtrVector = Vec::new();
+    let mut Actions: Vec<CodeAction> = Vec::new();
 
     Actions.push(CodeAction::replace_text(
         format!("Replace with ``{graphicalStr}``"),

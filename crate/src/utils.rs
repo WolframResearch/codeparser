@@ -1,7 +1,7 @@
 use crate::{
     code_point::{CodePoint::Char, *},
     long_names_registration::*,
-    source::{CodeAction, CodeActionPtrVector, Source},
+    source::{CodeAction, Source},
     wl_character::{EscapeStyle, WLCharacter},
 };
 
@@ -262,8 +262,8 @@ pub fn ifASCIIWLCharacter(c_byte: u8, test: u8) -> bool {
 // \:29F4 -> \[RuleDelayed]
 // \:200B -> \[InvisibleSpace]
 //
-pub fn certainCharacterReplacementActions(c: WLCharacter, src: Source) -> CodeActionPtrVector {
-    let mut Actions: CodeActionPtrVector = Vec::new();
+pub fn certainCharacterReplacementActions(c: WLCharacter, src: Source) -> Vec<CodeAction> {
+    let mut Actions: Vec<CodeAction> = Vec::new();
 
     match c.to_point() {
         CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK => {
