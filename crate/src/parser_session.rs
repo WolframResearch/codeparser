@@ -16,7 +16,7 @@ use crate::{
     },
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
-    source::{IssuePtrSet, SourceConvention, TOPLEVEL},
+    source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
     token_enum_registration::TokenEnum::TOKEN_ENDOFFILE,
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
@@ -37,6 +37,22 @@ pub struct ParserSession<'i> {
     pub(crate) trivia1: Rc<RefCell<TriviaSeq>>,
     pub(crate) trivia2: Rc<RefCell<TriviaSeq>>,
 }
+
+pub(crate) struct ParseResult {
+    /// Tokens or expressions.
+    nodes: NodeSeq,
+
+    unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
+
+    fatal_issues: Vec<Issue>,
+    non_fatal_issues: Vec<Issue>,
+
+    tracked: TrackedSourceLocations,
+}
+
+//======================================
+// Impls
+//======================================
 
 impl<'i> ParserSession<'i> {
     pub fn new(
@@ -167,17 +183,13 @@ impl<'i> ParserSession<'i> {
             assert!(Parser_isQuiescent(self));
         } // while (true)
 
-        let nodes = self.add_extra_nodes(exprs);
-
-        let C = NodeContainer::new(nodes);
-
         #[cfg(feature = "DIAGNOSTICS")]
         {
             DiagnosticsLog("exit parseExpressions");
             DiagnosticsLogTime();
         }
 
-        return C;
+        return self.create_parse_result(exprs).into_node_container();
     }
 
     pub fn tokenize(&mut self) -> NodeContainer {
@@ -229,9 +241,7 @@ impl<'i> ParserSession<'i> {
 
         exprs.push(self.concreteParseLeaf0(mode));
 
-        let nodes = self.add_extra_nodes(exprs);
-
-        return NodeContainer::new(nodes);
+        return self.create_parse_result(exprs).into_node_container();
     }
 
     pub fn safeString(&mut self) -> NodeContainer {
@@ -271,11 +281,52 @@ impl<'i> ParserSession<'i> {
         return NodeContainer::new(nodes);
     }
 
-    fn add_extra_nodes(&self, outer_exprs: NodeSeq) -> NodeSeq {
+    fn create_parse_result(&self, nodes: NodeSeq) -> ParseResult {
+        let result = ParseResult {
+            nodes,
+            unsafe_character_encoding: self.tokenizer.unsafe_character_encoding_flag,
+            fatal_issues: self.fatalIssues().clone(),
+            non_fatal_issues: self.nonFatalIssues().clone(),
+            tracked: self.tokenizer.tracked.clone(),
+        };
+
+        result
+    }
+
+    // fn releaseNodeContainer(C: NodeContainerPtr) {
+    //     C.release();
+
+    //     delete(C);
+    // }
+
+    // TODO(cleanup): This doesn't need to be a method on ParserSession.
+    pub(crate) fn abortQ(&self) -> bool {
+        crate::abortQ()
+    }
+
+    pub(crate) fn fatalIssues(&self) -> &IssuePtrSet {
+        &self.tokenizer.fatalIssues
+    }
+
+    pub(crate) fn nonFatalIssues(&self) -> &IssuePtrSet {
+        &self.tokenizer.nonFatalIssues
+    }
+}
+
+impl ParseResult {
+    fn into_node_container(self) -> NodeContainer {
+        let ParseResult {
+            nodes: outer_exprs,
+            unsafe_character_encoding,
+            fatal_issues,
+            non_fatal_issues,
+            tracked,
+        } = self;
+
         let mut nodes = NodeSeq::new();
         nodes.push(CollectedExpressionsNode::new(outer_exprs));
 
-        if let Some(flag) = self.tokenizer.unsafe_character_encoding_flag {
+        if let Some(flag) = unsafe_character_encoding {
             nodes.clear();
 
             let mut exprs = NodeSeq::new();
@@ -296,35 +347,16 @@ impl<'i> ParserSession<'i> {
         //
         // if there are fatal issues, then only send fatal issues
         //
-        if !self.fatalIssues().is_empty() {
-            nodes.push(CollectedIssuesNode(self.fatalIssues().clone()));
+        if !fatal_issues.is_empty() {
+            nodes.push(CollectedIssuesNode(fatal_issues));
         } else {
-            nodes.push(CollectedIssuesNode(self.nonFatalIssues().clone()));
+            nodes.push(CollectedIssuesNode(non_fatal_issues));
         }
 
-        for node in self.tokenizer.tracked.to_nodes() {
+        for node in tracked.to_nodes() {
             nodes.push(node);
         }
 
-        nodes
-    }
-
-    // fn releaseNodeContainer(C: NodeContainerPtr) {
-    //     C.release();
-
-    //     delete(C);
-    // }
-
-    // TODO(cleanup): This doesn't need to be a method on ParserSession.
-    pub(crate) fn abortQ(&self) -> bool {
-        crate::abortQ()
-    }
-
-    pub(crate) fn fatalIssues(&self) -> &IssuePtrSet {
-        &self.tokenizer.fatalIssues
-    }
-
-    pub(crate) fn nonFatalIssues(&self) -> &IssuePtrSet {
-        &self.tokenizer.nonFatalIssues
+        NodeContainer::new(nodes)
     }
 }

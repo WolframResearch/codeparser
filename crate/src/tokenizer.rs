@@ -57,7 +57,7 @@ pub struct Tokenizer<'i> {
     pub(crate) unsafe_character_encoding_flag: Option<UnsafeCharacterEncoding>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct TrackedSourceLocations {
     pub simple_line_continuations: HashSet<SourceLocation>,
     pub complex_line_continuations: HashSet<SourceLocation>,
