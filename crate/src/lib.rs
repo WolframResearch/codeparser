@@ -162,7 +162,7 @@ pub enum FirstLineBehavior {
 }
 
 /// Different encoding modes
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum EncodingMode {
     /// Generates issues that you would expect if coming from a file or a string
     Normal = 0,
