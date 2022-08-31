@@ -54,7 +54,7 @@ pub struct Tokenizer<'i> {
     pub fatalIssues: IssuePtrSet,
     pub nonFatalIssues: IssuePtrSet,
 
-    pub(crate) unsafeCharacterEncodingFlag: UnsafeCharacterEncoding,
+    pub(crate) unsafe_character_encoding_flag: Option<UnsafeCharacterEncoding>,
 }
 
 #[derive(Debug)]
@@ -80,7 +80,7 @@ pub(crate) struct SourceManager<'t> {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum UnsafeCharacterEncoding {
-    Ok = 0,
+    // Ok = 0,
     IncompleteUTF8Sequence = 1,
     StraySurrogate = 2,
     ///
@@ -123,7 +123,7 @@ impl<'i> Tokenizer<'i> {
     }
 
     pub(crate) fn setUnsafeCharacterEncodingFlag(&mut self, flag: UnsafeCharacterEncoding) {
-        self.unsafeCharacterEncodingFlag = flag;
+        self.unsafe_character_encoding_flag = Some(flag);
     }
 
     pub(crate) fn addIssue(&mut self, issue: Issue) {

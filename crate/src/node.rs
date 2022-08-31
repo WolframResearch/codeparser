@@ -757,9 +757,6 @@ pub(crate) fn unsafeCharacterEncodingReason(flag: UnsafeCharacterEncoding) -> cr
     use crate::my_string_registration::*;
 
     match flag {
-        UnsafeCharacterEncoding::Ok => {
-            panic!("unable to generate unsafe character encoding reason for OK case");
-        },
         UnsafeCharacterEncoding::IncompleteUTF8Sequence => {
             STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE
         },
