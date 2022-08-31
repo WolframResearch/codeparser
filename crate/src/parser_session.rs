@@ -167,41 +167,7 @@ impl<'i> ParserSession<'i> {
             assert!(Parser_isQuiescent(self));
         } // while (true)
 
-        let collected = Node::from(CollectedExpressionsNode::new(exprs));
-
-        let mut nodes = NodeSeq::new();
-        nodes.push(collected);
-
-        if self.tokenizer.unsafeCharacterEncodingFlag != UnsafeCharacterEncoding::Ok {
-            nodes.clear();
-
-            let mut exprs = NodeSeq::new();
-
-            exprs.push(Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(
-                self.tokenizer.unsafeCharacterEncodingFlag,
-            )));
-
-            let Collected = CollectedExpressionsNode::new(exprs);
-
-            nodes.push(Collected);
-        }
-
-        //
-        // Now handle the out-of-band expressions, i.e., issues and metadata
-        //
-
-        //
-        // if there are fatal issues, then only send fatal issues
-        //
-        if !self.fatalIssues().is_empty() {
-            nodes.push(CollectedIssuesNode(self.fatalIssues().clone()));
-        } else {
-            nodes.push(CollectedIssuesNode(self.nonFatalIssues().clone()));
-        }
-
-        for node in self.tokenizer.tracked.to_nodes() {
-            nodes.push(node);
-        }
+        let nodes = self.add_extra_nodes(exprs);
 
         let C = NodeContainer::new(nodes);
 
@@ -265,43 +231,7 @@ impl<'i> ParserSession<'i> {
 
         exprs.push(self.concreteParseLeaf0(mode));
 
-        let Collected = CollectedExpressionsNode::new(exprs);
-
-        let mut nodes = NodeSeq::new();
-        nodes.push(Collected);
-
-        if self.tokenizer.unsafeCharacterEncodingFlag != UnsafeCharacterEncoding::Ok {
-            nodes.clear();
-
-            let mut exprs = NodeSeq::new();
-
-            let node = MissingBecauseUnsafeCharacterEncodingNode::new(
-                self.tokenizer.unsafeCharacterEncodingFlag,
-            );
-
-            exprs.push(node);
-
-            let Collected = CollectedExpressionsNode::new(exprs);
-
-            nodes.push(Collected);
-        }
-
-        //
-        // Collect all issues from the various components
-        //
-
-        //
-        // if there are fatal issues, then only send fatal issues
-        //
-        if !self.fatalIssues().is_empty() {
-            nodes.push(CollectedIssuesNode(self.fatalIssues().clone()));
-        } else {
-            nodes.push(CollectedIssuesNode(self.nonFatalIssues().clone()));
-        }
-
-        for node in self.tokenizer.tracked.to_nodes() {
-            nodes.push(node);
-        }
+        let nodes = self.add_extra_nodes(exprs);
 
         return NodeContainer::new(nodes);
     }
@@ -346,6 +276,46 @@ impl<'i> ParserSession<'i> {
         nodes.push(node);
 
         return NodeContainer::new(nodes);
+    }
+
+    fn add_extra_nodes(&self, outer_exprs: NodeSeq) -> NodeSeq {
+        let mut nodes = NodeSeq::new();
+        nodes.push(CollectedExpressionsNode::new(outer_exprs));
+
+        if self.tokenizer.unsafeCharacterEncodingFlag != UnsafeCharacterEncoding::Ok {
+            nodes.clear();
+
+            let mut exprs = NodeSeq::new();
+
+            let node = MissingBecauseUnsafeCharacterEncodingNode::new(
+                self.tokenizer.unsafeCharacterEncodingFlag,
+            );
+
+            exprs.push(node);
+
+            let Collected = CollectedExpressionsNode::new(exprs);
+
+            nodes.push(Collected);
+        }
+
+        //
+        // Now handle the out-of-band expressions, i.e., issues and metadata
+        //
+
+        //
+        // if there are fatal issues, then only send fatal issues
+        //
+        if !self.fatalIssues().is_empty() {
+            nodes.push(CollectedIssuesNode(self.fatalIssues().clone()));
+        } else {
+            nodes.push(CollectedIssuesNode(self.nonFatalIssues().clone()));
+        }
+
+        for node in self.tokenizer.tracked.to_nodes() {
+            nodes.push(node);
+        }
+
+        nodes
     }
 
     // fn releaseNodeContainer(C: NodeContainerPtr) {
