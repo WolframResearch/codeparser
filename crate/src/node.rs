@@ -389,9 +389,9 @@ impl Node {
             Node::MissingBecauseUnsafeCharacterEncoding(node) => node.check(),
             Node::SafeString(_) => true,
             Node::Call(node) => node.check(),
-            Node::SyntaxError(_) => todo!(),
-            Node::GroupMissingCloser(_) => todo!(),
-            Node::UnterminatedGroupNeedsReparse(_) => todo!(),
+            Node::SyntaxError(node) => node.check(),
+            Node::GroupMissingCloser(node) => node.check(),
+            Node::UnterminatedGroupNeedsReparse(node) => node.check(),
         }
     }
 }
@@ -729,6 +729,7 @@ impl CollectedIssuesNode {
 //======================================
 
 impl CollectedSourceLocationsNode {
+    #[allow(dead_code)]
     pub(crate) fn new(source_locs: HashSet<SourceLocation>) -> Self {
         CollectedSourceLocationsNode { source_locs }
     }
@@ -825,6 +826,7 @@ impl NodeContainer {
     //     Nodes.print(s);
     // }
 
+    #[allow(dead_code)]
     pub(crate) fn check(&self) -> bool {
         let NodeContainer { nodes } = self;
         return nodes.check();

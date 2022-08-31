@@ -222,6 +222,9 @@ impl<'i> ParserSession<'i> {
         return self.create_parse_result(exprs).into_node_container();
     }
 
+    // TODO(cleanup): What is this used for? Perhaps ultimately this is just
+    //                std::str::from_utf8()?
+    #[allow(dead_code)]
     pub fn safeString(&mut self) -> NodeContainer {
         //
         // read all characters, just to set unsafeCharacterEncoding flag if necessary
