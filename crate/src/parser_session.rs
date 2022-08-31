@@ -31,11 +31,11 @@ use crate::{
 pub struct ParserSession<'i> {
     pub(crate) tokenizer: Tokenizer<'i>,
 
-    pub NodeStack: Vec<Node>,
-    pub ContextStack: Vec<Context>,
+    pub(crate) NodeStack: Vec<Node>,
+    pub(crate) ContextStack: Vec<Context>,
 
-    pub trivia1: Rc<RefCell<TriviaSeq>>,
-    pub trivia2: Rc<RefCell<TriviaSeq>>,
+    pub(crate) trivia1: Rc<RefCell<TriviaSeq>>,
+    pub(crate) trivia2: Rc<RefCell<TriviaSeq>>,
 }
 
 impl<'i> ParserSession<'i> {
@@ -50,9 +50,6 @@ impl<'i> ParserSession<'i> {
             tokenizer: Tokenizer {
                 input,
                 offset: 0,
-                // start: bufAndLenIn,
-                // end: bufAndLenIn.end(),
-                // buffer: bufAndLenIn,
                 wasEOF: false,
 
                 tabWidth,

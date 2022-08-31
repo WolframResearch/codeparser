@@ -562,7 +562,7 @@ impl Issue {
     //     s << "]";
     // }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         return self.sev != STRING_FATAL;
     }
 }

@@ -121,13 +121,13 @@ pub struct GroupNode {
 
 /// Any "compound" of tokens:
 ///
-/// a_
-/// _b
-/// a_.
-/// #a
-/// #abc
-/// ##2
-/// %2
+/// * `a_`
+/// * `_b`
+/// * `a_.`
+/// * `#a`
+/// * `#abc`
+/// * `##2`
+/// * `%2`
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompoundNode {
     pub op: OperatorNode,
@@ -179,7 +179,7 @@ pub struct SafeStringNode {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeContainer {
-    pub(crate) nodes: NodeSeq,
+    pub nodes: NodeSeq,
 }
 
 //======================================
@@ -279,7 +279,7 @@ impl NodeSeq {
     //     s << "]";
     // }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         let NodeSeq { vec } = self;
 
         for elem in vec {
@@ -369,6 +369,9 @@ impl Node {
             },
         }
     }
+
+    // TODO(cleanup): Are these check() methods used anywhere? What do they even do?
+    #[allow(dead_code)]
     fn check(&self) -> bool {
         match self {
             Node::Token(token) => token.check(),
@@ -419,7 +422,7 @@ impl OperatorNode {
         return self.Src;
     }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         return self.Children.check();
     }
 
@@ -446,13 +449,13 @@ impl OperatorNode {
 //======================================
 
 impl GroupMissingCloserNode {
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         return false;
     }
 }
 
 impl UnterminatedGroupNeedsReparseNode {
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         return false;
     }
 }
@@ -609,7 +612,7 @@ impl CallNode {
     //     s << "]";
     // }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         let CallNode { head, body, src: _ } = self;
 
         return head.check() && body.check();
@@ -631,7 +634,7 @@ impl SyntaxErrorNode {
         SyntaxErrorNode { err, children, src }
     }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         return false;
     }
 
@@ -671,7 +674,7 @@ impl CollectedExpressionsNode {
     //     Exprs.print(s);
     // }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         let CollectedExpressionsNode { exprs } = self;
         return exprs.check();
     }
@@ -704,7 +707,7 @@ impl CollectedIssuesNode {
     //     s << "]";
     // }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         let CollectedIssuesNode(issues) = self;
 
         for issue in issues {
@@ -778,7 +781,7 @@ impl MissingBecauseUnsafeCharacterEncodingNode {
         panic!("illegal access of getSource() on MissingBecauseUnsafeCharacterEncodingNode");
     }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         return false;
     }
 
@@ -825,7 +828,7 @@ impl NodeContainer {
     //     Nodes.print(s);
     // }
 
-    pub fn check(&self) -> bool {
+    pub(crate) fn check(&self) -> bool {
         let NodeContainer { nodes } = self;
         return nodes.check();
     }

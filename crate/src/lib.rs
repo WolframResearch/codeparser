@@ -115,13 +115,13 @@ pub mod test_utils {
     macro_rules! src {
         // a:b
         ($line:literal : $column:literal) => {
-            Source::from_location(SourceLocation::new($line, $column))
+            crate::Source::from_location(SourceLocation::new($line, $column))
         };
         // a:b-c:d
         ($line1:literal : $column1:literal  -  $line2:literal : $column2:literal) => {
-            crate::source::Source::new(
-                crate::source::SourceLocation::new($line1, $column1),
-                crate::source::SourceLocation::new($line2, $column2),
+            crate::Source::new(
+                crate::SourceLocation::new($line1, $column1),
+                crate::SourceLocation::new($line2, $column2),
             )
         };
     }
@@ -135,11 +135,11 @@ pub mod test_utils {
 
 pub use crate::{
     parser_session::ParserSession,
-    source::SourceConvention,
     // TODO: Should this be a part of the public API as a constant value, or
     //       something else 'symbolic'? E.g. prehaps this shouldn't be a
     //       required parameter of ParserSession::new().
     source::DEFAULT_TAB_WIDTH,
+    source::{Source, SourceConvention, SourceLocation},
 };
 
 /// How `#!` [shebangs](https://en.wikipedia.org/wiki/Shebang_(Unix))
