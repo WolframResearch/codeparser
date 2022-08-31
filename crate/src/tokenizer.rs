@@ -48,15 +48,20 @@ pub struct Tokenizer<'i> {
 
     pub GroupStack: Vec<Closer>,
 
-    pub SimpleLineContinuations: HashSet<SourceLocation>,
-    pub ComplexLineContinuations: HashSet<SourceLocation>,
-    pub EmbeddedNewlines: HashSet<SourceLocation>,
-    pub EmbeddedTabs: HashSet<SourceLocation>,
+    pub(crate) tracked: TrackedSourceLocations,
 
     pub fatalIssues: IssuePtrSet,
     pub nonFatalIssues: IssuePtrSet,
 
     pub(crate) unsafeCharacterEncodingFlag: UnsafeCharacterEncoding,
+}
+
+#[derive(Debug)]
+pub(crate) struct TrackedSourceLocations {
+    pub SimpleLineContinuations: HashSet<SourceLocation>,
+    pub ComplexLineContinuations: HashSet<SourceLocation>,
+    pub EmbeddedNewlines: HashSet<SourceLocation>,
+    pub EmbeddedTabs: HashSet<SourceLocation>,
 }
 
 /// A set of fields of [`Tokenizer`] used to update the current
@@ -163,19 +168,19 @@ impl<'i> Tokenizer<'i> {
     }
 
     fn addSimpleLineContinuation(&mut self, loc: SourceLocation) {
-        self.SimpleLineContinuations.insert(loc);
+        self.tracked.SimpleLineContinuations.insert(loc);
     }
 
     fn addComplexLineContinuation(&mut self, loc: SourceLocation) {
-        self.ComplexLineContinuations.insert(loc);
+        self.tracked.ComplexLineContinuations.insert(loc);
     }
 
     fn addEmbeddedNewline(&mut self, loc: SourceLocation) {
-        self.EmbeddedNewlines.insert(loc);
+        self.tracked.EmbeddedNewlines.insert(loc);
     }
 
     fn addEmbeddedTab(&mut self, loc: SourceLocation) {
-        self.EmbeddedTabs.insert(loc);
+        self.tracked.EmbeddedTabs.insert(loc);
     }
 }
 
