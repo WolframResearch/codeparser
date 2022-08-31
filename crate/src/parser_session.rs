@@ -10,9 +10,8 @@ use crate::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
     feature,
     node::{
-        CollectedExpressionsNode, CollectedIssuesNode, CollectedSourceLocationsNode,
-        MissingBecauseUnsafeCharacterEncodingNode, Node, NodeContainer, NodeSeq, SafeStringNode,
-        TriviaSeq,
+        CollectedExpressionsNode, CollectedIssuesNode, MissingBecauseUnsafeCharacterEncodingNode,
+        Node, NodeContainer, NodeSeq, SafeStringNode, TriviaSeq,
     },
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
@@ -107,27 +106,6 @@ impl<'i> ParserSession<'i> {
     pub fn input(&self) -> &'i [u8] {
         self.tokenizer.input
     }
-
-    // /// Return a slice of the remaining input to be parsed.
-    // pub(crate) fn buffer(&self) -> &'i [u8] {
-    //     if self.offset >= self.input.len() {
-    //         panic!("offset ({}) is greater than length of input ({})", self.offset, self.input.len())
-    //     }
-
-    //     let (_, rest) = self.input.split_at(self.offset);
-    //     rest
-    // }
-
-    // /// Return a slice of the remaining input of length `len` as a string.
-    // ///
-    // /// # Panics
-    // ///
-    // /// This function will panic if `len` is larger than the remaining input,
-    // /// or if the requested slice of inputs is not valid UTF-8.
-    // pub(crate) fn buffer_str(&self, len: usize) -> &str {
-    //     let data = &self.buffer()[..len];
-    //     std::str::from_utf8(data).expect("buffer_str(): unable to parse current input as UTF-8")
-    // }
 
     pub fn parseExpressions(&mut self) -> NodeContainer {
         #[cfg(feature = "DIAGNOSTICS")]
@@ -292,12 +270,6 @@ impl<'i> ParserSession<'i> {
 
         result
     }
-
-    // fn releaseNodeContainer(C: NodeContainerPtr) {
-    //     C.release();
-
-    //     delete(C);
-    // }
 
     // TODO(cleanup): This doesn't need to be a method on ParserSession.
     pub(crate) fn abortQ(&self) -> bool {
