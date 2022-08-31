@@ -1,17 +1,3 @@
-macro_rules! src {
-    // a:b
-    ($line:literal : $column:literal) => {
-        Source::from_location(SourceLocation::new($line, $column))
-    };
-    // a:b-c:d
-    ($line1:literal : $column1:literal  -  $line2:literal : $column2:literal) => {
-        crate::source::Source::new(
-            crate::source::SourceLocation::new($line1, $column1),
-            crate::source::SourceLocation::new($line2, $column2),
-        )
-    };
-}
-
 mod test_api;
 mod test_byte_decoder;
 mod test_character_decoder;
@@ -33,6 +19,7 @@ use crate::{
     },
     parser_session::ParserSession,
     source::{ByteSpan, SourceConvention},
+    src,
     symbol::Symbol,
     token::Token,
     token_enum_registration::TokenEnum::{

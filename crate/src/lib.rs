@@ -104,6 +104,31 @@ mod precedence;
 mod tests;
 
 
+/// Utilties used for unit and integration tests.
+///
+/// This module is semver exempt and no item inside of it should be depended
+/// on by external crates.
+#[doc(hidden)]
+pub mod test_utils {
+    #[macro_export]
+    #[doc(hidden)]
+    macro_rules! src {
+        // a:b
+        ($line:literal : $column:literal) => {
+            Source::from_location(SourceLocation::new($line, $column))
+        };
+        // a:b-c:d
+        ($line1:literal : $column1:literal  -  $line2:literal : $column2:literal) => {
+            crate::source::Source::new(
+                crate::source::SourceLocation::new($line1, $column1),
+                crate::source::SourceLocation::new($line2, $column2),
+            )
+        };
+    }
+
+    pub use src;
+}
+
 //===================
 // API
 //===================
