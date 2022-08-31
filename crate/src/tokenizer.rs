@@ -11,6 +11,7 @@ use crate::{
     },
     feature,
     my_string_registration::*,
+    node::CollectedSourceLocationsNode,
     source::{
         Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssuePtrSet, NextPolicy, Source,
         SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT, INSIDE_STRINGIFY_AS_FILE,
@@ -58,10 +59,10 @@ pub struct Tokenizer<'i> {
 
 #[derive(Debug)]
 pub(crate) struct TrackedSourceLocations {
-    pub SimpleLineContinuations: HashSet<SourceLocation>,
-    pub ComplexLineContinuations: HashSet<SourceLocation>,
-    pub EmbeddedNewlines: HashSet<SourceLocation>,
-    pub EmbeddedTabs: HashSet<SourceLocation>,
+    pub simple_line_continuations: HashSet<SourceLocation>,
+    pub complex_line_continuations: HashSet<SourceLocation>,
+    pub embedded_newlines: HashSet<SourceLocation>,
+    pub embedded_tabs: HashSet<SourceLocation>,
 }
 
 /// A set of fields of [`Tokenizer`] used to update the current
@@ -168,19 +169,38 @@ impl<'i> Tokenizer<'i> {
     }
 
     fn addSimpleLineContinuation(&mut self, loc: SourceLocation) {
-        self.tracked.SimpleLineContinuations.insert(loc);
+        self.tracked.simple_line_continuations.insert(loc);
     }
 
     fn addComplexLineContinuation(&mut self, loc: SourceLocation) {
-        self.tracked.ComplexLineContinuations.insert(loc);
+        self.tracked.complex_line_continuations.insert(loc);
     }
 
     fn addEmbeddedNewline(&mut self, loc: SourceLocation) {
-        self.tracked.EmbeddedNewlines.insert(loc);
+        self.tracked.embedded_newlines.insert(loc);
     }
 
     fn addEmbeddedTab(&mut self, loc: SourceLocation) {
-        self.tracked.EmbeddedTabs.insert(loc);
+        self.tracked.embedded_tabs.insert(loc);
+    }
+}
+
+impl TrackedSourceLocations {
+    #[allow(dead_code)]
+    pub(crate) fn to_nodes(&self) -> [CollectedSourceLocationsNode; 4] {
+        let TrackedSourceLocations {
+            simple_line_continuations,
+            complex_line_continuations,
+            embedded_newlines,
+            embedded_tabs,
+        } = self;
+
+        [
+            CollectedSourceLocationsNode::new(simple_line_continuations.clone()),
+            CollectedSourceLocationsNode::new(complex_line_continuations.clone()),
+            CollectedSourceLocationsNode::new(embedded_newlines.clone()),
+            CollectedSourceLocationsNode::new(embedded_tabs.clone()),
+        ]
     }
 }
 
