@@ -73,7 +73,7 @@ mod convert_wstp;
 mod convert_expr;
 
 #[cfg(feature = "USE_MATHLINK")]
-mod api;
+mod wll_api;
 
 mod feature;
 
