@@ -146,9 +146,9 @@ symbols = Union[Flatten[Join[
 
 generate[] := (
 
-Print["Generating Symbol..."];
+	Print["Generating Symbol..."];
 
-symbolRegistrationCPPHeader = {
+	symbolRegistrationCPPHeader = {
 "\
 //
 // AUTO GENERATED FILE
@@ -162,34 +162,50 @@ use crate::symbol::Symbol;
 
 //
 // All symbols that are used by CodeParser
-//"} ~Join~
-MapIndexed[
-If[#1 === String && $WorkaroundBug321344,
-  (*
-  handle String specially because of bug 321344
-  *)
-  Row[{"pub const SYMBOL_STRING: Symbol = Symbol::new(", "\"String\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]
-  ,
-  Row[{"pub const ", toGlobal["Symbol`"<>ToString[#1]], ": Symbol = Symbol::new(", "\"", stringifyForTransmitting[#1], "\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]]&, symbols] ~Join~
-{""};
+//"
+	} ~Join~ MapIndexed[
+		If[#1 === String && $WorkaroundBug321344,
+			(*
+			handle String specially because of bug 321344
+			*)
+			Row[{
+				"pub const SYMBOL_STRING: Symbol = Symbol::new(", "\"String\"", ",", " ", ToString[#2[[1]]-1], ")", ";"
+			}]
+			,
+			Row[{
+				"pub const ",
+				toGlobal["Symbol`"<>ToString[#1]],
+				": Symbol = Symbol::new(",
+				"\"", stringifyForTransmitting[#1], "\"",
+				",", " ",
+				ToString[#2[[1]]-1],
+				")", ";"
+			}]
+		]&,
+		symbols
+	] ~Join~ {""};
 
-Print["exporting SymbolRegistration.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "symbol_registration.rs"}], Column[symbolRegistrationCPPHeader], "String"];
+	Print["exporting SymbolRegistration.h"];
+	res = Export[
+		FileNameJoin[{generatedCPPIncludeDir, "symbol_registration.rs"}],
+		Column[symbolRegistrationCPPHeader],
+		"String"
+	];
 
-Print[res];
+	Print[res];
 
-If[FailureQ[res],
-  Quit[1]
-];
+	If[FailureQ[res],
+		Quit[1]
+	];
 
-Print["Done Symbol"]
+	Print["Done Symbol"]
 )
 
 If[!StringQ[script],
-  Quit[1]
+	Quit[1]
 ]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
-generate[]
+	generate[]
 ]
 
 End[]
