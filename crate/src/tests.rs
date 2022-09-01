@@ -13,19 +13,17 @@ mod test_wl_character;
 use pretty_assertions::assert_eq;
 
 use crate::{
-    node::{
-        CollectedExpressionsNode, InfixNode, Node, Node::Token as NVToken, NodeContainer, NodeSeq,
-        OperatorNode,
-    },
+    node::{InfixNode, Node, Node::Token as NVToken, NodeContainer, NodeSeq, OperatorNode},
     parser_session::ParserSession,
     source::{ByteSpan, SourceConvention},
     src,
     symbol::Symbol,
     token::Token,
+    token_enum::TokenEnum,
     token_enum_registration::TokenEnum::{
         TOKEN_BANG, TOKEN_INTEGER, TOKEN_PLUS, TOKEN_SYMBOL, TOKEN_WHITESPACE,
     },
-    EncodingMode, FirstLineBehavior,
+    EncodingMode, FirstLineBehavior, Source, DEFAULT_TAB_WIDTH,
 };
 
 fn nodes(input: &str) -> Vec<Node> {
@@ -37,18 +35,10 @@ fn nodes(input: &str) -> Vec<Node> {
         EncodingMode::Normal,
     );
 
-    let NodeContainer {
-        nodes: NodeSeq { vec: nodes },
-    } = session.parseExpressions();
+    let result = session.parseExpressions();
+    let nodes = result.nodes();
 
-    let nodes = match nodes.as_slice() {
-        [Node::CollectedExpressions(CollectedExpressionsNode {
-            exprs: NodeSeq { vec },
-        }), ..] => vec,
-        _ => todo!(),
-    };
-
-    nodes.clone()
+    nodes.to_owned()
 }
 
 fn tokens(input: &str) -> Vec<Node> {
@@ -196,4 +186,35 @@ fn test_something() {
             },
         })]
     );
+}
+
+fn token(kind: TokenEnum, src: Source, span: ByteSpan) -> Node {
+    Node::Token(Token {
+        tok: kind,
+        src,
+        span,
+    })
+}
+
+#[test]
+pub fn test_tokenize_is_not_idempotent() {
+    let mut session = ParserSession::new(
+        "2+2".as_bytes(),
+        SourceConvention::CharacterIndex,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+    );
+
+    assert_eq!(
+        session.tokenize().nodes.vec,
+        vec![
+            token(TOKEN_INTEGER, src!(0:1-0:2), ByteSpan::new(0, 1)),
+            token(TOKEN_PLUS, src!(0:2-0:3), ByteSpan::new(1, 1)),
+            token(TOKEN_INTEGER, src!(0:3-0:4), ByteSpan::new(2, 1))
+        ]
+    );
+
+    // Test that ParserSession::tokenize() is NOT idempotent.
+    assert_eq!(session.tokenize().nodes.vec, vec![])
 }

@@ -2,25 +2,14 @@ use std::{fs, path::Path};
 
 use criterion::{criterion_group, criterion_main, Criterion, SamplingMode};
 
-use wolfram_code_parse::{
-    EncodingMode, FirstLineBehavior, ParserSession, SourceConvention::LineColumn,
-};
+use wolfram_code_parse::ParseOptions;
 
 fn parse_tokens(input: &str) {
     parse_tokens_u8(input.as_bytes())
 }
 
 fn parse_tokens_u8(input: &[u8]) {
-    let tab_width = 4;
-    let mut session = ParserSession::new(
-        input,
-        LineColumn,
-        tab_width,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-    );
-
-    session.tokenize();
+    wolfram_code_parse::tokenize_bytes(input, &ParseOptions::default());
 }
 
 fn benchmark(c: &mut Criterion) {

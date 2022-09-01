@@ -5,6 +5,8 @@ use crate::{
     tokenizer::Tokenizer,
 };
 
+pub use crate::token_enum_registration::TokenEnum as TokenKind;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Token {
     pub tok: TokenEnum,

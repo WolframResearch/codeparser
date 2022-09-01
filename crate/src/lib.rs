@@ -54,11 +54,9 @@ mod byte_encoder;
 mod code_point;
 mod long_names;
 mod my_string;
-mod node;
 mod parselet;
 mod source;
 mod symbol;
-mod token;
 mod token_enum;
 mod tokenizer;
 mod wl_character;
@@ -76,6 +74,9 @@ mod convert_expr;
 mod wll_api;
 
 mod feature;
+
+pub mod node;
+pub mod token;
 
 //===================
 // Generated sources
@@ -129,18 +130,31 @@ pub mod test_utils {
     pub use src;
 }
 
-//===================
+//======================================
 // API
-//===================
+//======================================
+
+//-----------
+// Re-exports
+//-----------
 
 pub use crate::{
-    parser_session::ParserSession,
-    // TODO: Should this be a part of the public API as a constant value, or
-    //       something else 'symbolic'? E.g. prehaps this shouldn't be a
-    //       required parameter of ParserSession::new().
-    source::DEFAULT_TAB_WIDTH,
-    source::{Source, SourceConvention, SourceLocation},
+    parser_session::ParseResult,
+    source::{
+        ByteSpan,
+        Source,
+        SourceConvention,
+        SourceLocation,
+        // TODO: Should this be a part of the public API as a constant value, or
+        //       something else 'symbolic'? E.g. prehaps this shouldn't be a
+        //       required parameter of ParserSession::new().
+        DEFAULT_TAB_WIDTH,
+    },
 };
+
+//-----------
+// Types
+//-----------
 
 /// How `#!` [shebangs](https://en.wikipedia.org/wiki/Shebang_(Unix))
 /// should be treated if they appear in the first line of input.
@@ -177,7 +191,7 @@ pub enum EncodingMode {
 }
 
 /// The modes that stringifying could happen in
-pub enum StringifyMode {
+pub(crate) enum StringifyMode {
     /// Tokens are treated normally
     Normal = 0,
 
@@ -199,6 +213,98 @@ pub enum StringifyMode {
     /// foo >>> bar
     /// ```
     File = 2,
+}
+
+pub struct ParseOptions {
+    first_line_behavior: FirstLineBehavior,
+    src_convention: SourceConvention,
+    encoding_mode: EncodingMode,
+    tab_width: u32,
+}
+
+impl Default for ParseOptions {
+    fn default() -> ParseOptions {
+        ParseOptions {
+            first_line_behavior: FirstLineBehavior::NotScript,
+            src_convention: SourceConvention::LineColumn,
+            encoding_mode: EncodingMode::Normal,
+            tab_width: DEFAULT_TAB_WIDTH,
+        }
+    }
+}
+
+use crate::parser_session::ParserSession;
+
+/// Parse bytes containing Wolfram Language input into a sequence of tokens.
+///
+/// # Examples
+///
+/// Tokenize `2 + 2`:
+///
+/// ```
+/// use wolfram_code_parse::{
+///     tokenize_bytes,
+///     ParseOptions,
+///     node::{NodeContainer, NodeSeq}
+/// };
+///
+/// let nodes = tokenize_bytes(b"2 + 2", &ParseOptions::default());
+///
+/// /* TODO: assert_eq!(nodes, NodeContainer {
+///     nodes: NodeSeq(vec![
+///
+///     ])
+/// }); */
+/// ```
+pub fn tokenize_bytes(input: &[u8], opts: &ParseOptions) -> NodeContainer {
+    let ParseOptions {
+        first_line_behavior,
+        src_convention,
+        encoding_mode,
+        tab_width,
+    } = *opts;
+
+    let mut session = ParserSession::new(
+        input,
+        src_convention,
+        tab_width,
+        first_line_behavior,
+        encoding_mode,
+    );
+
+    session.tokenize()
+}
+
+/// Parse a string containing Wolfram Language input into concrete syntax tree.
+///
+/// # Examples
+///
+/// Parse `2 + 2`:
+///
+/// ```
+/// use wolfram_code_parse::{parse_concrete, ParseOptions};
+///
+/// let result = parse_concrete("2 + 2", &ParseOptions::default());
+///
+/// // TODO: assert_eq!(result.nodes(), &[]);
+/// ```
+pub fn parse_concrete(input: &str, opts: &ParseOptions) -> ParseResult {
+    let ParseOptions {
+        first_line_behavior,
+        src_convention,
+        encoding_mode,
+        tab_width,
+    } = *opts;
+
+    let mut session = ParserSession::new(
+        input.as_bytes(),
+        src_convention,
+        tab_width,
+        first_line_behavior,
+        encoding_mode,
+    );
+
+    session.parseExpressions()
 }
 
 //======================================
@@ -235,4 +341,5 @@ macro_rules! panic_if_aborted {
     };
 }
 
+use node::NodeContainer;
 pub(crate) use panic_if_aborted;

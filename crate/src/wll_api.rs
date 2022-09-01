@@ -1,9 +1,12 @@
 use wolfram_library_link::{self as wll, sys::mint, wstp};
 
 use crate::{
-    node::NodeContainer,
+    node::{
+        CollectedExpressionsNode, CollectedIssuesNode, MissingBecauseUnsafeCharacterEncodingNode,
+        NodeContainer, NodeSeq,
+    },
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
-    EncodingMode, FirstLineBehavior, StringifyMode,
+    EncodingMode, FirstLineBehavior, ParseResult, StringifyMode,
 };
 
 #[cfg(feature = "USE_MATHLINK")]
@@ -320,9 +323,9 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let C = session.parseExpressions();
+    let result = session.parseExpressions();
 
-    NodeContainerPut(&session, &C, link);
+    result.into_node_container().put(&session, link);
 
     drop(session);
 }
@@ -433,7 +436,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
 
     let C = session.parseExpressions();
 
-    C.put(&session, link);
+    C.into_node_container().put(&session, link);
 
     drop(session);
 }
@@ -760,11 +763,12 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
         encodingMode,
     );
 
-    let C = session.concreteParseLeaf(
+    let result = session.concreteParseLeaf(
         StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value"),
     );
 
-    NodeContainerPut(&session, &C, link);
+    result.into_node_container().put(&session, link);
+
 
     drop(session);
 }
@@ -1035,7 +1039,6 @@ struct ScopedNumericArray {
 //     }
 // }
 
-
 /// Does the file currently have permission to be read?
 #[cfg(feature = "USE_MATHLINK")]
 fn validatePath(path: &str) -> bool {
@@ -1049,4 +1052,56 @@ fn validatePath(path: &str) -> bool {
     let is_valid = unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as c_char) } != 0;
 
     return is_valid;
+}
+
+//==========================================================
+// WSTP / ExprLib serialization
+//==========================================================
+
+impl ParseResult {
+    pub(crate) fn into_node_container(self) -> NodeContainer {
+        let ParseResult {
+            nodes: outer_exprs,
+            unsafe_character_encoding,
+            fatal_issues,
+            non_fatal_issues,
+            tracked,
+        } = self;
+
+        let mut nodes = NodeSeq::new();
+        nodes.push(CollectedExpressionsNode::new(outer_exprs));
+
+        if let Some(flag) = unsafe_character_encoding {
+            nodes.clear();
+
+            let mut exprs = NodeSeq::new();
+
+            let node = MissingBecauseUnsafeCharacterEncodingNode::new(flag);
+
+            exprs.push(node);
+
+            let Collected = CollectedExpressionsNode::new(exprs);
+
+            nodes.push(Collected);
+        }
+
+        //
+        // Now handle the out-of-band expressions, i.e., issues and metadata
+        //
+
+        //
+        // if there are fatal issues, then only send fatal issues
+        //
+        if !fatal_issues.is_empty() {
+            nodes.push(CollectedIssuesNode(fatal_issues));
+        } else {
+            nodes.push(CollectedIssuesNode(non_fatal_issues));
+        }
+
+        for node in tracked.to_nodes() {
+            nodes.push(node);
+        }
+
+        NodeContainer::new(nodes)
+    }
 }

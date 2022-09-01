@@ -10,8 +10,8 @@ use crate::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
     feature,
     node::{
-        CollectedExpressionsNode, CollectedIssuesNode, MissingBecauseUnsafeCharacterEncodingNode,
-        Node, NodeContainer, NodeSeq, SafeStringNode, TriviaSeq,
+        MissingBecauseUnsafeCharacterEncodingNode, Node, NodeContainer, NodeSeq, SafeStringNode,
+        TriviaSeq,
     },
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
@@ -37,16 +37,16 @@ pub struct ParserSession<'i> {
     pub(crate) trivia2: Rc<RefCell<TriviaSeq>>,
 }
 
-pub(crate) struct ParseResult {
+pub struct ParseResult {
     /// Tokens or expressions.
-    nodes: NodeSeq,
+    pub(crate) nodes: NodeSeq,
 
-    unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
+    pub(crate) unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
 
-    fatal_issues: Vec<Issue>,
-    non_fatal_issues: Vec<Issue>,
+    pub(crate) fatal_issues: Vec<Issue>,
+    pub(crate) non_fatal_issues: Vec<Issue>,
 
-    tracked: TrackedSourceLocations,
+    pub(crate) tracked: TrackedSourceLocations,
 }
 
 //======================================
@@ -107,7 +107,7 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.input
     }
 
-    pub fn parseExpressions(&mut self) -> NodeContainer {
+    pub fn parseExpressions(&mut self) -> ParseResult {
         #[cfg(feature = "DIAGNOSTICS")]
         {
             DiagnosticsLog("enter parseExpressions");
@@ -167,7 +167,7 @@ impl<'i> ParserSession<'i> {
             DiagnosticsLogTime();
         }
 
-        return self.create_parse_result(exprs).into_node_container();
+        return self.create_parse_result(exprs);
     }
 
     pub fn tokenize(&mut self) -> NodeContainer {
@@ -210,7 +210,8 @@ impl<'i> ParserSession<'i> {
         Node::Token(token)
     }
 
-    pub fn concreteParseLeaf(&mut self, mode: StringifyMode) -> NodeContainer {
+    #[allow(dead_code)]
+    pub(crate) fn concreteParseLeaf(&mut self, mode: StringifyMode) -> ParseResult {
         //
         // Collect all expressions
         //
@@ -219,7 +220,7 @@ impl<'i> ParserSession<'i> {
 
         exprs.push(self.concreteParseLeaf0(mode));
 
-        return self.create_parse_result(exprs).into_node_container();
+        return self.create_parse_result(exprs);
     }
 
     // TODO(cleanup): What is this used for? Perhaps ultimately this is just
@@ -289,49 +290,7 @@ impl<'i> ParserSession<'i> {
 }
 
 impl ParseResult {
-    fn into_node_container(self) -> NodeContainer {
-        let ParseResult {
-            nodes: outer_exprs,
-            unsafe_character_encoding,
-            fatal_issues,
-            non_fatal_issues,
-            tracked,
-        } = self;
-
-        let mut nodes = NodeSeq::new();
-        nodes.push(CollectedExpressionsNode::new(outer_exprs));
-
-        if let Some(flag) = unsafe_character_encoding {
-            nodes.clear();
-
-            let mut exprs = NodeSeq::new();
-
-            let node = MissingBecauseUnsafeCharacterEncodingNode::new(flag);
-
-            exprs.push(node);
-
-            let Collected = CollectedExpressionsNode::new(exprs);
-
-            nodes.push(Collected);
-        }
-
-        //
-        // Now handle the out-of-band expressions, i.e., issues and metadata
-        //
-
-        //
-        // if there are fatal issues, then only send fatal issues
-        //
-        if !fatal_issues.is_empty() {
-            nodes.push(CollectedIssuesNode(fatal_issues));
-        } else {
-            nodes.push(CollectedIssuesNode(non_fatal_issues));
-        }
-
-        for node in tracked.to_nodes() {
-            nodes.push(node);
-        }
-
-        NodeContainer::new(nodes)
+    pub fn nodes(&self) -> &[Node] {
+        &self.nodes.vec
     }
 }
