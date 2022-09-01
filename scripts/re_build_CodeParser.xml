@@ -66,6 +66,7 @@
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
 			<arg line='${CMAKE_OSX_DEPLOYMENT_TARGET_LINE}' />
 			<arg line='-DENABLE_WARNINGS=ON' />
+			<arg line='-DCMAKE_BUILD_TYPE=Release' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/CodeParser' />
 		</re-cmake-exec>
@@ -74,6 +75,7 @@
 			<arg line='--build .' />
 			<arg line='--target create-paclet-archive' />
 			<arg line='--verbose' />
+			<arg line='--config Release' />
 		</re-cmake-exec>
 
 	</target>
