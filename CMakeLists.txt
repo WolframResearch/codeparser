@@ -862,16 +862,19 @@ target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VO
 
 
 if(MSVC)
-	target_compile_options(codeparser-lib
-		#
-		# specify /EHSC to force compiler to assume that functions declared as extern "C" never throw a C++ exception
-		#
-		# specify /MT to statically link runtime on Windows
-		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
-		# and fixes bug 427427
-		PRIVATE /EHsc /MT
-	)
+target_compile_options(codeparser-lib
+	#
+	# specify /EHsc to force compiler to assume that functions declared as extern "C" never throw a C++ exception
+	#
+	# specify /MT to statically link runtime on Windows
+	# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
+	# and fixes bug 427427:
+	# error 126 "The specified module could not be found"
+	# when Visual Studio is not installed
+	PRIVATE /EHsc /MT
+)
 endif(MSVC)
+
 
 if(ENABLE_WARNINGS)
 
@@ -881,13 +884,13 @@ if(ENABLE_WARNINGS)
 # https://www.foonathan.net/2018/10/cmake-warnings/
 #
 if(MSVC)
-	target_compile_options(codeparser-lib
-		PRIVATE /W4 /wd4100
-	)
+target_compile_options(codeparser-lib
+	PRIVATE /W4 /wd4100
+)
 else(MSVC)
-	target_compile_options(codeparser-lib
-		PRIVATE -pedantic-errors -Wall -Wextra -Wconversion -Wsign-conversion -Wno-unused-parameter
-	)
+target_compile_options(codeparser-lib
+	PRIVATE -pedantic-errors -Wall -Wextra -Wconversion -Wsign-conversion -Wno-unused-parameter
+)
 endif(MSVC)
 
 endif(ENABLE_WARNINGS)
