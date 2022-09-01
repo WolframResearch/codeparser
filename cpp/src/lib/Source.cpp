@@ -29,6 +29,8 @@ BufferAndLength::BufferAndLength() : Buf(), Len() {}
 
 BufferAndLength::BufferAndLength(Buffer Buf) : Buf(Buf), Len(0) {}
 
+BufferAndLength::BufferAndLength(CBufferAndLength bufAndLen) : Buf(bufAndLen.Buf), Len(bufAndLen.Len) {}
+
 BufferAndLength::BufferAndLength(Buffer Buf, size_t Len) : Buf(Buf), Len(Len) {
     assert(Len < 1ULL << 48);
 }

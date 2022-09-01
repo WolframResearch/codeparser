@@ -117,7 +117,13 @@ int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
     
     WolframLibraryData libData = nullptr;
     
-    auto session = CreateParserSession();
+    ParserSessionPtr session;
+    
+    auto err = CreateParserSession(&session);
+    
+    if (err) {
+        return EXIT_FAILURE;
+    }
     
     int result = EXIT_SUCCESS;
     
@@ -131,9 +137,23 @@ int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, opts);
-        
-            auto C = ParserSessionTokenize(session);
+            CBufferAndLength bufAndLen;
+            bufAndLen.Buf = inputStr;
+            bufAndLen.Len = input.size();
+            
+            err = ParserSessionInit(session, bufAndLen, libData, opts);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
+            
+            NodeContainerPtr C;
+            
+            err = ParserSessionTokenize(session, &C);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
             
             switch (outputMode) {
                 case PRINT: {
@@ -168,12 +188,26 @@ int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, opts);
+            CBufferAndLength bufAndLen;
+            bufAndLen.Buf = inputStr;
+            bufAndLen.Len = input.size();
+            
+            err = ParserSessionInit(session, bufAndLen, libData, opts);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
             
             auto stringifyMode = STRINGIFYMODE_NORMAL;
             
-            auto C = ParserSessionConcreteParseLeaf(session, stringifyMode);
-        
+            NodeContainerPtr C;
+            
+            auto err = ParserSessionConcreteParseLeaf(session, stringifyMode, &C);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
+            
             switch (outputMode) {
                 case PRINT: {
                     
@@ -211,10 +245,24 @@ int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, opts);
+            CBufferAndLength bufAndLen;
+            bufAndLen.Buf = inputStr;
+            bufAndLen.Len = input.size();
             
-            auto C = ParserSessionSafeString(session);
-        
+            err = ParserSessionInit(session, bufAndLen, libData, opts);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
+            
+            NodeContainerPtr C;
+            
+            auto err = ParserSessionSafeString(session, &C);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
+            
             switch (outputMode) {
                 case PRINT: {
                     
@@ -252,9 +300,23 @@ int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
             
-            ParserSessionInit(session, inputStr, input.size(), libData, opts);
+            CBufferAndLength bufAndLen;
+            bufAndLen.Buf = inputStr;
+            bufAndLen.Len = input.size();
             
-            auto C = ParserSessionParseExpressions(session);
+            err = ParserSessionInit(session, bufAndLen, libData, opts);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
+            
+            NodeContainerPtr C;
+            
+            auto err = ParserSessionParseExpressions(session, &C);
+            
+            if (err) {
+                return EXIT_FAILURE;
+            }
             
             switch (outputMode) {
                 case PRINT: {
@@ -336,15 +398,35 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessio
     
     WolframLibraryData libData = nullptr;
     
-    auto session = CreateParserSession();
+    ParserSessionPtr session;
+    
+    auto err = CreateParserSession(&session);
+    
+    if (err) {
+        return EXIT_FAILURE;
+    }
     
     int result = EXIT_SUCCESS;
     
     if (mode == TOKENIZE) {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
+        CBufferAndLength bufAndLen;
+        bufAndLen.Buf = fb.getBuf();
+        bufAndLen.Len = fb.getLen();
         
-        auto C = ParserSessionTokenize(session);
+        err = ParserSessionInit(session, bufAndLen, libData, opts);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
+        
+        NodeContainerPtr C;
+        
+        err = ParserSessionTokenize(session, &C);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
         
         switch (outputMode) {
             case PRINT: {
@@ -380,12 +462,26 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessio
         
     } else if (mode == LEAF) {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
+        CBufferAndLength bufAndLen;
+        bufAndLen.Buf = fb.getBuf();
+        bufAndLen.Len = fb.getLen();
+        
+        err = ParserSessionInit(session, bufAndLen, libData, opts);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
-        auto C = ParserSessionConcreteParseLeaf(session, stringifyMode);
-    
+        NodeContainerPtr C;
+        
+        auto err = ParserSessionConcreteParseLeaf(session, stringifyMode, &C);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
+        
         switch (outputMode) {
             case PRINT: {
                 
@@ -420,10 +516,24 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessio
         
     } else if (mode == SAFESTRING) {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
+        CBufferAndLength bufAndLen;
+        bufAndLen.Buf = fb.getBuf();
+        bufAndLen.Len = fb.getLen();
         
-        auto C = ParserSessionSafeString(session);
-    
+        err = ParserSessionInit(session, bufAndLen, libData, opts);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
+        
+        NodeContainerPtr C;
+        
+        auto err = ParserSessionSafeString(session, &C);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
+        
         switch (outputMode) {
             case PRINT: {
                 
@@ -458,9 +568,23 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessio
         
     } else {
         
-        ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts);
+        CBufferAndLength bufAndLen;
+        bufAndLen.Buf = fb.getBuf();
+        bufAndLen.Len = fb.getLen();
         
-        auto C = ParserSessionParseExpressions(session);
+        err = ParserSessionInit(session, bufAndLen, libData, opts);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
+        
+        NodeContainerPtr C;
+        
+        auto err = ParserSessionParseExpressions(session, &C);
+        
+        if (err) {
+            return EXIT_FAILURE;
+        }
         
         switch (outputMode) {
             case PRINT: {

@@ -41,6 +41,16 @@ using expr = void *;
 //
 //
 //
+struct CBufferAndLength {
+    
+    Buffer Buf;
+    uint64_t Len;
+};
+
+
+//
+//
+//
 struct BufferAndLength {
     
     const Buffer Buf;
@@ -48,6 +58,7 @@ struct BufferAndLength {
     
     BufferAndLength();
     explicit BufferAndLength(Buffer buffer);
+    BufferAndLength(CBufferAndLength bufAndLen);
     BufferAndLength(Buffer buffer, size_t length);
     
     size_t length() const;
@@ -69,6 +80,7 @@ struct BufferAndLength {
 };
 
 static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 16) || (SIZEOF_VOID_P == 4), "Check your assumptions");
+
 
 //
 //
@@ -220,7 +232,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 //
 //
 //
-enum SourceConvention {
+enum SourceConvention : uint8_t {
     SOURCECONVENTION_LINECOLUMN,
     SOURCECONVENTION_SOURCECHARACTERINDEX
 };

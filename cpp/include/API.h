@@ -80,12 +80,12 @@ enum StringifyMode {
 // NonASCIICharacters
 // Unexpected newline character: \[IndentingNewLine]
 //
-enum EncodingMode {
+enum EncodingMode : uint8_t {
     ENCODINGMODE_NORMAL = 0,
     ENCODINGMODE_BOX = 1,
 };
 
-enum FirstLineBehavior {
+enum FirstLineBehavior : uint8_t {
     //
     // Source is a string or something, so if #! is on first line, then do not treat special
     //
@@ -116,20 +116,20 @@ struct ParserSessionOptions {
     uint32_t tabWidth;
     FirstLineBehavior firstLineBehavior;
     EncodingMode encodingMode;
-    bool alreadyHasEOFSentinel;
+    int8_t alreadyHasEOFSentinel;
 };
 
 
-EXTERN_C DLLEXPORT ParserSessionPtr CreateParserSession();
+EXTERN_C DLLEXPORT int CreateParserSession(ParserSessionPtr *sessionOut);
 EXTERN_C DLLEXPORT void DestroyParserSession(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, ParserSessionOptions opts);
+EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, CBufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionOptions opts);
 EXTERN_C DLLEXPORT void ParserSessionDeinit(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions(ParserSessionPtr session);
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionTokenize(ParserSessionPtr session);
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode);
-EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session);
+EXTERN_C DLLEXPORT int ParserSessionParseExpressions(ParserSessionPtr session, NodeContainerPtr *cOut);
+EXTERN_C DLLEXPORT int ParserSessionTokenize(ParserSessionPtr session, NodeContainerPtr *cOut);
+EXTERN_C DLLEXPORT int ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode, NodeContainerPtr *cOut);
+EXTERN_C DLLEXPORT int ParserSessionSafeString(ParserSessionPtr session, NodeContainerPtr *cOut);
 EXTERN_C DLLEXPORT void ParserSessionReleaseNodeContainer(ParserSessionPtr session, NodeContainerPtr C);
 
 EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainerPtr C);
@@ -137,11 +137,11 @@ EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainerPtr C);
 DLLEXPORT void NodeContainerPrint(NodeContainerPtr C, std::ostream& s);
 
 #if USE_EXPR_LIB
-EXTERN_C DLLEXPORT expr NodeContainerToExpr(ParserSessionPtr session, NodeContainerPtr C);
+EXTERN_C DLLEXPORT int NodeContainerToExpr(ParserSessionPtr session, NodeContainerPtr C, expr *eOut);
 #endif // USE_EXPR_LIB
 
 #if USE_MATHLINK
-EXTERN_C DLLEXPORT void NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C, MLINK callLink);
+EXTERN_C DLLEXPORT int NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C, MLINK callLink);
 #endif // USE_MATHLINK
 
 

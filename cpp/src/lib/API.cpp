@@ -14,18 +14,18 @@
 #include <cstring> // for strlen
 
 
-ParserSessionPtr CreateParserSession() {
-    return new ParserSession();
+int CreateParserSession(ParserSessionPtr *sessionOut) {
+    
+    *sessionOut = new ParserSession();
+    
+    return 0;
 }
 
 void DestroyParserSession(ParserSessionPtr session) {
     delete session;
 }
 
-int ParserSessionInit(ParserSessionPtr session, Buffer buf, size_t bufLen, WolframLibraryData libData, ParserSessionOptions opts) {
-    
-    BufferAndLength bufAndLen = BufferAndLength(buf, bufLen);
-    
+int ParserSessionInit(ParserSessionPtr session, CBufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionOptions opts) {
     return session->init(bufAndLen, libData, opts);
 }
 
@@ -33,20 +33,32 @@ void ParserSessionDeinit(ParserSessionPtr session) {
     session->deinit();
 }
 
-NodeContainerPtr ParserSessionParseExpressions(ParserSessionPtr session) {
-    return session->parseExpressions();
+int ParserSessionParseExpressions(ParserSessionPtr session, NodeContainerPtr *cOut) {
+    
+    *cOut = session->parseExpressions();
+    
+    return 0;
 }
 
-NodeContainerPtr ParserSessionTokenize(ParserSessionPtr session) {
-    return session->tokenize();
+int ParserSessionTokenize(ParserSessionPtr session, NodeContainerPtr *cOut) {
+    
+    *cOut = session->tokenize();
+    
+    return 0;
 }
 
-NodeContainerPtr ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode) {
-    return session->concreteParseLeaf(mode);
+int ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode, NodeContainerPtr *cOut) {
+    
+    *cOut = session->concreteParseLeaf(mode);
+    
+    return 0;
 }
 
-NodeContainerPtr ParserSessionSafeString(ParserSessionPtr session) {
-    return session->safeString();
+int ParserSessionSafeString(ParserSessionPtr session, NodeContainerPtr *cOut) {
+    
+    *cOut = session->safeString();
+    
+    return 0;
 }
 
 void ParserSessionReleaseNodeContainer(ParserSessionPtr session, NodeContainerPtr C) {
@@ -63,14 +75,20 @@ int NodeContainerCheck(NodeContainerPtr C) {
 }
 
 #if USE_EXPR_LIB
-expr NodeContainerToExpr(ParserSessionPtr session, NodeContainerPtr C) {
-    return C->toExpr(session);
+int NodeContainerToExpr(ParserSessionPtr session, NodeContainerPtr C, expr *eOut) {
+    
+    *eOut = C->toExpr(session);
+    
+    return 0;
 }
 #endif // USE_EXPR_LIB
 
 #if USE_MATHLINK
-void NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C, MLINK callLink) {
+int NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C, MLINK callLink) {
+    
     C->put(session, callLink);
+    
+    return 0;
 }
 #endif // USE_MATHLINK
 
@@ -95,7 +113,11 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, mint A
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto session = CreateParserSession();
+    ParserSessionPtr session;
+    
+    if (CreateParserSession(&session)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     auto e = Expr_FromInteger64(reinterpret_cast<mint>(session));
     
@@ -122,7 +144,11 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK 
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto session = CreateParserSession();
+    ParserSessionPtr session;
+    
+    if (CreateParserSession(&session)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
 
 #if SIZEOF_VOID_P == 8
     if (!MLPutInteger64(callLink, reinterpret_cast<mlint64>(session))) {
@@ -233,10 +259,10 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
 
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
-
-    auto numBytes = arr.size();
-
-    auto data = arr.data();
+    
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.data();
+    bufAndLen.Len = arr.size();
     
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
@@ -245,13 +271,21 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
-
-    auto C = ParserSessionParseExpressions(session);
-
-    auto e = NodeContainerToExpr(session, C);
+    
+    NodeContainerPtr C;
+    
+    if (ParserSessionParseExpressions(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    expr e;
+    
+    if(NodeContainerToExpr(session, C, &e)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
 
     ParserSessionReleaseNodeContainer(session, C);
 
@@ -354,6 +388,10 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
         assert(false);
     }
     
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.get();
+    bufAndLen.Len = arr.getByteCount();
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -361,13 +399,19 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto C = ParserSessionParseExpressions(session);
+    NodeContainerPtr C;
     
-    NodeContainerPut(session, C, callLink);
+    if (ParserSessionParseExpressions(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (NodeContainerPut(session, C, callLink)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionReleaseNodeContainer(session, C);
     
@@ -401,9 +445,9 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
-    auto numBytes = fb.getLen();
-
-    auto data = fb.getBuf();
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = fb.getBuf();
+    bufAndLen.Len = fb.getLen();
     
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
@@ -412,13 +456,21 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
-
-    auto C = ParserSessionParseExpressions(session);
-
-    auto e = NodeContainerToExpr(session, C);
+    
+    NodeContainerPtr C;
+    
+    if (ParserSessionParseExpressions(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    expr e;
+    
+    if (NodeContainerToExpr(session, C, &e)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
 
     ParserSessionReleaseNodeContainer(session, C);
 
@@ -513,6 +565,10 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
     
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = fb.getBuf();
+    bufAndLen.Len = fb.getLen();
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -520,13 +576,19 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto C = ParserSessionParseExpressions(session);
+    NodeContainerPtr C;
     
-    NodeContainerPut(session, C, callLink);
+    if (ParserSessionParseExpressions(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (NodeContainerPut(session, C, callLink)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionReleaseNodeContainer(session, C);
     
@@ -557,10 +619,10 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
 
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
-
-    auto numBytes = arr.size();
-
-    auto data = arr.data();
+    
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.data();
+    bufAndLen.Len = arr.size();
     
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
@@ -569,13 +631,21 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
-
-    auto C = ParserSessionTokenize(session);
-
-    auto e = NodeContainerToExpr(session, C);
+    
+    NodeContainerPtr C;
+    
+    if (ParserSessionTokenize(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    expr e;
+    
+    if (NodeContainerToExpr(session, C, &e)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
 
     ParserSessionReleaseNodeContainer(session, C);
 
@@ -678,6 +748,10 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.get();
+    bufAndLen.Len = arr.getByteCount();
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -685,13 +759,19 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto C = ParserSessionTokenize(session);
+    NodeContainerPtr C;
     
-    NodeContainerPut(session, C, callLink);
+    if (ParserSessionTokenize(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (NodeContainerPut(session, C, callLink)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionReleaseNodeContainer(session, C);
     
@@ -725,10 +805,10 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
-    auto numBytes = fb.getLen();
-
-    auto data = fb.getBuf();
-
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = fb.getBuf();
+    bufAndLen.Len = fb.getLen();
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -736,13 +816,21 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
-
-    auto C = ParserSessionTokenize(session);
-
-    auto e = NodeContainerToExpr(session, C);
+    
+    NodeContainerPtr C;
+    
+    if (ParserSessionTokenize(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    expr e;
+    
+    if (NodeContainerToExpr(session, C, &e)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
 
     ParserSessionReleaseNodeContainer(session, C);
 
@@ -837,6 +925,10 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
     
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = fb.getBuf();
+    bufAndLen.Len = fb.getLen();
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -844,13 +936,19 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto C = ParserSessionTokenize(session);
+    NodeContainerPtr C;
     
-    NodeContainerPut(session, C, callLink);
+    if (ParserSessionTokenize(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (NodeContainerPut(session, C, callLink)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionReleaseNodeContainer(session, C);
     
@@ -886,10 +984,10 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
 
     auto mlEncodingMode = MArgument_getInteger(Args[6]);
     auto encodingMode = static_cast<EncodingMode>(mlEncodingMode);
-
-    auto numBytes = arr.size();
-
-    auto data = arr.data();
+    
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.data();
+    bufAndLen.Len = arr.size();
     
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
@@ -898,13 +996,21 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     opts.encodingMode = encodingMode;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
-
-    auto C = ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode));
-
-    auto e = NodeContainerToExpr(session, C);
+    
+    NodeContainerPtr C;
+    
+    if (ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode), &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    expr e;
+    
+    if (NodeContainerToExpr(session, C, &e)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
 
     ParserSessionReleaseNodeContainer(session, C);
 
@@ -1029,9 +1135,9 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
-    auto numBytes = arr.getByteCount();
-    
-    auto data = arr.get();
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.get();
+    bufAndLen.Len = arr.getByteCount();
     
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
@@ -1040,13 +1146,19 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = encodingMode;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto C = ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode));
+    NodeContainerPtr C;
     
-    NodeContainerPut(session, C, callLink);
+    if (ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode), &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (NodeContainerPut(session, C, callLink)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionReleaseNodeContainer(session, C);
     
@@ -1068,10 +1180,10 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
     auto arr = ScopedNumericArray(libData, Args[1]);
-
-    auto numBytes = arr.size();
-
-    auto data = arr.data();
+    
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.data();
+    bufAndLen.Len = arr.size();
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
@@ -1080,13 +1192,21 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, data, numBytes, libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
-
-    auto C = ParserSessionSafeString(session);
-
-    auto e = NodeContainerToExpr(session, C);
+    
+    NodeContainerPtr C;
+    
+    if (ParserSessionSafeString(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    expr e;
+    
+    if (NodeContainerToExpr(session, C, &e)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
 
     ParserSessionReleaseNodeContainer(session, C);
 
@@ -1156,6 +1276,10 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
+    CBufferAndLength bufAndLen;
+    bufAndLen.Buf = arr.get();
+    bufAndLen.Len = arr.getByteCount();
+    
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
     opts.tabWidth = DEFAULT_TAB_WIDTH;
@@ -1163,13 +1287,19 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
+    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto C = ParserSessionSafeString(session);
+    NodeContainerPtr C;
     
-    NodeContainerPut(session, C, callLink);
+    if (ParserSessionSafeString(session, &C)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (NodeContainerPut(session, C, callLink)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionReleaseNodeContainer(session, C);
     
