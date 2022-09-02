@@ -1592,105 +1592,95 @@ fn Tokenizer_handleString(
         session.addIssue(I);
     }
 
-    // let quotPtr: Buffer = std::ptr::null();
-    let fast = false;
-    let _terminated = false;
+    let mut quot_offset: Option<usize> = None;
+    let mut fast = false;
+    let mut terminated = false;
 
-    /* FIXME: Finish porting and re-enable this logic
-    cfg_if::cfg_if! {
-        if #[cfg(
-            all(
-                not(feature = "COMPUTE_OOB"),
-                not(feature = "CHECK_ISSUES"),
-                not(feature = "COMPUTE_SOURCE"),
-                FAST_STRING_SCAN
-            ))] {
+    if feature::FAST_STRING_SCAN
+        && !feature::COMPUTE_OOB
+        && !feature::CHECK_ISSUES
+        && !feature::COMPUTE_SOURCE
+    {
+        //
+        // !CHECK_ISSUES (so do not need to warn about strange SourceCharacters)
+        // !COMPUTE_OOB (so do not need to care about embedded newlines or tabs)
+        // !COMPUTE_SOURCE (so do not need to keep track of line and column information)
+        //
+        // FAST_STRING_SCAN (as a final check that skipping bad SourceCharacters and WLCharacters is ok)
+        //
 
-            //
-            // !CHECK_ISSUES (so do not need to warn about strange SourceCharacters)
-            // !COMPUTE_OOB (so do not need to care about embedded newlines or tabs)
-            // !COMPUTE_SOURCE (so do not need to keep track of line and column information)
-            //
-            // FAST_STRING_SCAN (as a final check that skipping bad SourceCharacters and WLCharacters is ok)
-            //
+        //
+        // The idea is to use memchr to scan for the next '"' character byte and then just jump to it.
+        //
+        // This is faster than explicitly calling TheCharacterDecoder->nextWLCharacter0 over and over again.
+        //
+        // Diagnostics that count SourceCharacters and WLCharacters will not be accurate inside of fast strings.
+        //
+        // Bad SourceCharacters will not be detected. This means that incomplete sequences, stray surrogates, and BOM will not be reported.
+        //
+        // Bad WLCharacters will not be detected. This means that badly escaped characters will not be reported.
+        //
 
-            //
-            // The idea is to use memchr to scan for the next '"' character byte and then just jump to it.
-            //
-            // This is faster than explicitly calling TheCharacterDecoder->nextWLCharacter0 over and over again.
-            //
-            // Diagnostics that count SourceCharacters and WLCharacters will not be accurate inside of fast strings.
-            //
-            // Bad SourceCharacters will not be detected. This means that incomplete sequences, stray surrogates, and BOM will not be reported.
-            //
-            // Bad WLCharacters will not be detected. This means that badly escaped characters will not be reported.
-            //
+        let quot_relative_offset = memchr::memchr(b'"', session.buffer().slice);
 
-            quotPtr = static_cast<Buffer>(std::memchr(session.byteBuffer.buffer, '"', session.byteBuffer.end - session.byteBuffer.buffer));
+        quot_offset = quot_relative_offset.map(|buffer_offset| session.offset + buffer_offset);
 
-            if quotPtr {
+        if let Some(quot_offset) = quot_offset {
+            let prev_char = match quot_offset.checked_sub(1) {
+                Some(index) => Some(session.buffer_at(index)[0]),
+                None => None,
+            };
 
-                if *(quotPtr - 1) != '\\' {
-
-                    //
-                    // first double-quote character is NOT preceded by a backslash character
-                    //
-
-                    fast = true;
-                    terminated = true;
-
-                } else {
-
-                    //
-                    // there is a backslash character, so fall-through to SLOW
-                    //
-
-                    fast = false;
-                    terminated = true;
-                }
-
-            } else {
-
+            if prev_char != Some(b'\\') {
                 //
-                // unterminated, so fall-through to SLOW
+                // first double-quote character is NOT preceded by a backslash character
+                //
+
+                fast = true;
+                terminated = true;
+            } else {
+                //
+                // there is a backslash character, so fall-through to SLOW
                 //
 
                 fast = false;
-                terminated = false;
+                terminated = true;
             }
-
         } else {
+            //
+            // unterminated, so fall-through to SLOW
+            //
+
             fast = false;
+            terminated = false;
         }
     }
-    */
 
     if fast {
-        unimplemented!()
-        // incr_diagnostic!(Tokenizer_StringFastCount);
+        incr_diagnostic!(Tokenizer_StringFastCount);
 
-        // //
-        // // just set buffer to quotPtr + 1
-        // //
+        //
+        // just set buffer to quotPtr + 1
+        //
 
-        // if terminated {
-        //     session.buffer = quotPtr + 1;
+        if terminated {
+            session.offset = quot_offset.unwrap() + 1;
 
-        //     return Token(
-        //         TOKEN_STRING,
-        //         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        //         Tokenizer_getTokenSource(session, tokenStartLoc),
-        //     );
-        // } else {
-        //     session.buffer = session.end;
-        //     session.wasEOF = true;
+            return Token(
+                TOKEN_STRING,
+                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
+                Tokenizer_getTokenSource(session, tokenStartLoc),
+            );
+        } else {
+            session.offset = session.input.len();
+            session.wasEOF = true;
 
-        //     return Token(
-        //         TOKEN_ERROR_UNTERMINATEDSTRING,
-        //         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        //         Tokenizer_getTokenSource(session, tokenStartLoc),
-        //     );
-        // }
+            return Token(
+                TOKEN_ERROR_UNTERMINATEDSTRING,
+                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
+                Tokenizer_getTokenSource(session, tokenStartLoc),
+            );
+        }
     }
 
     //

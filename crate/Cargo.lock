@@ -1083,6 +1083,7 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "edit-distance",
+ "memchr",
  "once_cell",
  "ordered-float",
  "pretty_assertions",
