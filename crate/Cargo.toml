@@ -14,6 +14,7 @@ crate-type = ["rlib", "cdylib"]
 COMPUTE_SOURCE = []
 CHECK_ISSUES = []
 COMPUTE_OOB = []
+FAST_STRING_SCAN = []
 
 # Features used when building the LibraryLink dynamic library.
 USE_MATHLINK = ["wolfram-library-link"]
@@ -38,3 +39,8 @@ criterion = "0.3.6"
 [[bench]]
 name = "bench_general"
 harness = false
+
+[[bench]]
+name = "bench_fast_string_scan"
+harness = false
+required-features = ["FAST_STRING_SCAN"]

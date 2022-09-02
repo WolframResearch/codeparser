@@ -79,6 +79,45 @@ The Wolfram Language tests can be run from the command line using the
 $ wolfram-cli paclet test build/paclet/CodeParser Tests/TestSuite.mt
 ```
 
+## Benchmarks
+
+> Some of the benchmarks test large data files. Those files are tracked in this
+> repository to ensure that benchmarks are always run against identical input.
+> [Git LFS](https://git-lfs.github.com/) is used to ensure that a basic checkout
+> of this repository remains small, which is important in CI/CD builds.
+
+To run the benchmarks, first ensure that the large benchmark files have been
+checked out locally using:
+
+```shell
+$ git lfs pull --exclude="" --include="*"
+```
+
+This will override the default settings in [`.lfsconfig`](./.lfsconfig).
+
+Then, to being running the benchmarks, execute:
+
+```shell
+$ cd crate
+$ cargo bench
+```
+
+### `FAST_STRING_SCAN` benchmarks
+
+The benchmarks that test the optional `FAST_STRING_SCAN` feature must be run
+using:
+
+```shell
+$ cargo bench --no-default-features --features="FAST_STRING_SCAN"
+```
+
+## File Overview
+
+* [crate/benches/data/large/](./crate/benches/data/large/) contains files
+  managed by [`Git LFS`](https://git-lfs.github.com/). The files in this
+  directory are used by the benchmarks. These files should never be modified, to
+  ensure that benchmark comparisions between different revisions of this
+  repository can be meaningfully compared.
 
 # CodeParser
 
