@@ -410,11 +410,11 @@ public:
 class CollectedIssuesNode : public Node {
 private:
     
-    const IssuePtrSet Issues;
+    const IssuePtrVector Issues;
     
 public:
     
-    CollectedIssuesNode(IssuePtrSet Issues);
+    CollectedIssuesNode(IssuePtrVector Issues);
     
     void release() override;
     

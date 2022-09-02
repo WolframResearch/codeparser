@@ -90,20 +90,6 @@ expr BufferAndLength::toExpr(ParserSessionPtr session) const {
 #endif // USE_EXPR_LIB
 
 
-bool IssuePtrCompare::operator()(const IssuePtr& L, const IssuePtr& R) const {
-    
-    if (L->Src < R->Src) {
-        return true;
-    }
-    
-    if (L->Tag < R->Tag) {
-        return true;
-    }
-    
-    return false;
-}
-
-
 Issue::Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(Actions), AdditionalDescriptions(AdditionalDescriptions) {}
 
 void Issue::print(std::ostream& s) const {
@@ -221,6 +207,10 @@ bool operator==(SourceLocation a, SourceLocation b) {
     return a.first == b.first && a.second == b.second;
 }
 
+bool operator!=(SourceLocation a, SourceLocation b) {
+    return a.first != b.first || a.second != b.second;
+}
+
 bool operator<(SourceLocation a, SourceLocation b) {
     
     if (a.first < b.first) {
@@ -307,6 +297,10 @@ Source::Source(Source start, Source end) : Start(start.Start), End(end.End) {
 
 bool operator==(Source a, Source b) {
     return a.Start == b.Start && a.End == b.End;
+}
+
+bool operator!=(Source a, Source b) {
+    return a.Start != b.Start || a.End != b.End;
 }
 
 bool operator<(Source a, Source b) {

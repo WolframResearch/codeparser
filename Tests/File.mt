@@ -212,10 +212,10 @@ TestMatch[
 		},
 		<|
 			SyntaxIssues -> {
-				(* from Tokenizer, strange letterlike *)
-				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\"\.01\" (\\.01)``.", "Warning", _],
 				(* from CharacterDecoder, strange character in general *)
-				EncodingIssue["UnexpectedCharacter", "Unexpected character: ``\"\.01\" (\\.01)``.", "Warning", _]},
+				EncodingIssue["UnexpectedCharacter", "Unexpected character: ``\"\.01\" (\\.01)``.", "Warning", _],
+				(* from Tokenizer, strange letterlike *)
+				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\"\.01\" (\\.01)``.", "Warning", _]},
 			Source -> {{1, 1}, {1, 7}},
 			"FileName" -> strange
 		|>

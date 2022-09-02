@@ -197,10 +197,10 @@ TestMatch[
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {
-		(* from CharacterDecoder *)
-		SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, _],
 		(* from Tokenizer *)
-		SyntaxIssue["UnexpectedCharacter", _, _, _]}]
+		SyntaxIssue["UnexpectedCharacter", _, _, _],
+		(* from CharacterDecoder *)
+		SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-B2V1Z3"
 ]
@@ -359,14 +359,14 @@ Test[
 			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]},
 			
 			<|SyntaxIssues -> {
-				SyntaxIssue["UnexpectedSpaceCharacter", "Unexpected space character: ``\"\[InvisibleSpace]\" (\\[InvisibleSpace])``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>],
 				EncodingIssue["NonASCIICharacter", "Non-ASCII character: ``\"\[InvisibleSpace]\" (\\[InvisibleSpace])``.", "Remark", <|
 					Source -> {{1, 2}, {1, 3}},
 					ConfidenceLevel -> 1.,
 					CodeActions -> {
 						CodeAction["Replace with ``\\[InvisibleSpace]``", ReplaceText, <|Source -> {{1, 2}, {1, 3}}, "ReplacementText" -> "\\[InvisibleSpace]"|>],
 						CodeAction["Replace with ``\[SpaceIndicator]``", ReplaceText, <|Source -> {{1, 2}, {1, 3}}, "ReplacementText" -> " "|>],
-						CodeAction["Replace with ````", ReplaceText, <|Source -> {{1, 2}, {1, 3}}, "ReplacementText" -> ""|>]}|>]}, Source -> {{1, 1}, {1, 4}}|>]
+						CodeAction["Replace with ````", ReplaceText, <|Source -> {{1, 2}, {1, 3}}, "ReplacementText" -> ""|>]}|>],
+				SyntaxIssue["UnexpectedSpaceCharacter", "Unexpected space character: ``\"\[InvisibleSpace]\" (\\[InvisibleSpace])``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>]}, Source -> {{1, 1}, {1, 4}}|>]
 	,
 	TestID->"SyntaxIssues-20200621-C5B3J2"
 ]

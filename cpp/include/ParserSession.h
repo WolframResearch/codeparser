@@ -15,12 +15,11 @@
 
 class ParserSession;
 class Issue;
-class IssueCompare;
 class Node;
 class SourceConventionManager;
 
 using IssuePtr = Issue *;
-using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
+using IssuePtrVector = std::vector<IssuePtr>;
 using ParserSessionPtr = ParserSession *;
 using NodePtr = Node *;
 using NodeVariant = std::variant<NodePtr, Token>;
@@ -48,8 +47,8 @@ public:
     SourceConventionManagerPtr srcConventionManager;
     SourceLocation SrcLoc;
     
-    IssuePtrSet fatalIssues;
-    IssuePtrSet nonFatalIssues;
+    IssuePtrVector fatalIssues;
+    IssuePtrVector nonFatalIssues;
     
     std::set<SourceLocation> SimpleLineContinuations;
     std::set<SourceLocation> ComplexLineContinuations;

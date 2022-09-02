@@ -438,7 +438,7 @@ Source CollectedExpressionsNode::getSource() const {
 }
 
 
-CollectedIssuesNode::CollectedIssuesNode(IssuePtrSet Issues) : Issues(Issues) {}
+CollectedIssuesNode::CollectedIssuesNode(IssuePtrVector Issues) : Issues(Issues) {}
 
 void CollectedIssuesNode::release() {
     for (auto& I : Issues) {

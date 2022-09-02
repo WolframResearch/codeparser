@@ -21,14 +21,13 @@
 
 class Issue;
 class CodeAction;
-class IssuePtrCompare;
 class ParserSession;
 
 using Buffer = const unsigned char *;
 using MBuffer = unsigned char *;
 using IssuePtr = Issue *;
 using CodeActionPtr = CodeAction *;
-using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
+using IssuePtrVector = std::vector<IssuePtr>;
 using CodeActionPtrVector = std::vector<CodeActionPtr>;
 using AdditionalDescriptionVector = std::vector<std::string>;
 using ParserSessionPtr = ParserSession *;
@@ -277,6 +276,7 @@ struct SourceLocation {
 static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
 
 bool operator==(SourceLocation a, SourceLocation b);
+bool operator!=(SourceLocation a, SourceLocation b);
 //
 // For LineContinuations and EmbeddedNewlines
 //
@@ -319,6 +319,7 @@ struct Source {
 static_assert(sizeof(Source) == 16, "Check your assumptions");
 
 bool operator==(Source a, Source b);
+bool operator!=(Source a, Source b);
 bool operator<(Source a, Source b);
 
 #if BUILD_TESTS
@@ -328,15 +329,6 @@ bool operator<(Source a, Source b);
 void PrintTo(const Source& Src, std::ostream *s);
 #endif // BUILD_TESTS
 
-
-//
-// For std::set
-//
-class IssuePtrCompare {
-public:
-    
-    bool operator() (const IssuePtr& L, const IssuePtr& R) const;
-};
 
 //
 //
