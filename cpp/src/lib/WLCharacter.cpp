@@ -44,156 +44,162 @@ std::ostream& operator<<(std::ostream& s, WLCharacter c) {
                     
                     s << SourceCharacter('b');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_FORMFEED: {
                     
                     s << SourceCharacter('f');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_LINEFEED: {
                     
                     s << SourceCharacter('n');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_CARRIAGERETURN: {
                     
                     s << SourceCharacter('r');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_TAB: {
                     
                     s << SourceCharacter('t');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_OPEN: {
                     
                     s << SourceCharacter('<');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_CLOSE: {
                     
                     s << SourceCharacter('>');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
                     
                     s << SourceCharacter('"');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_STRINGMETA_BACKSLASH: {
                     
                     s << SourceCharacter('\\');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINECONTINUATION_LINEFEED: {
                     
                     s << SourceCharacter('\n');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINECONTINUATION_CARRIAGERETURN: {
                     
                     s << SourceCharacter('\r');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINECONTINUATION_CRLF: {
                     
                     s << SourceCharacter('\r');
                     s << SourceCharacter('\n');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_BANG: {
                     
                     s << SourceCharacter('!');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_PERCENT: {
                     
                     s << SourceCharacter('%');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_AMP: {
                     
                     s << SourceCharacter('&');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_OPENPAREN: {
                     
                     s << SourceCharacter('(');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_CLOSEPAREN: {
                     
                     s << SourceCharacter(')');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_STAR: {
                     
                     s << SourceCharacter('*');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_PLUS: {
                     
                     s << SourceCharacter('+');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_SLASH: {
                     
                     s << SourceCharacter('/');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_AT: {
                     
                     s << SourceCharacter('@');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_CARET: {
                     
                     s << SourceCharacter('^');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_UNDER: {
                     
                     s << SourceCharacter('_');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_BACKTICK: {
                     
                     s << SourceCharacter('`');
                     
-                    return s;
+                    break;
                 }
                 case CODEPOINT_LINEARSYNTAX_SPACE: {
                     
                     s << SourceCharacter(' ');
                     
-                    return s;
+                    break;
+                }
+                default: {
+                    
+                    assert(false);
+                    
+                    break;
                 }
             }
             
-            assert(false);
+            return s;
         }
         case ESCAPE_LONGNAME: {
             

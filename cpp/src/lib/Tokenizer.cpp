@@ -3967,7 +3967,7 @@ inline Token Tokenizer_handleCaret(ParserSessionPtr session, Buffer tokenStartBu
 inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     //
-    // Unhandled \
+    // Unhandled backslash
     //
     // Something like  \A  or  \{  or  \<EOF>
     //
