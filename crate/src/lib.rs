@@ -116,13 +116,13 @@ pub mod test_utils {
     macro_rules! src {
         // a:b
         ($line:literal : $column:literal) => {
-            crate::Source::from_location(SourceLocation::new($line, $column))
+            $crate::Source::from_location($crate::SourceLocation::new($line, $column))
         };
         // a:b-c:d
         ($line1:literal : $column1:literal  -  $line2:literal : $column2:literal) => {
-            crate::Source::new(
-                crate::SourceLocation::new($line1, $column1),
-                crate::SourceLocation::new($line2, $column2),
+            $crate::Source::new(
+                $crate::SourceLocation::new($line1, $column1),
+                $crate::SourceLocation::new($line2, $column2),
             )
         };
     }
