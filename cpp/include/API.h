@@ -31,10 +31,10 @@
 
 #include <cstddef> // for size_t
 
-class NodeContainer;
+class Node;
 class ParserSession;
 
-using NodeContainerPtr = NodeContainer *;
+using NodePtr = Node *;
 using ParserSessionPtr = ParserSession *;
 
 #if USE_EXPR_LIB
@@ -124,24 +124,25 @@ EXTERN_C DLLEXPORT int CreateParserSession(ParserSessionPtr *sessionOut);
 EXTERN_C DLLEXPORT void DestroyParserSession(ParserSessionPtr session);
 
 EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, CBufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionOptions opts);
+EXTERN_C DLLEXPORT int ParserSessionInitSimple(ParserSessionPtr session, Buffer Buf, size_t Len, int AlreadyHasEOFSentinel);
 EXTERN_C DLLEXPORT void ParserSessionDeinit(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT int ParserSessionParseExpressions(ParserSessionPtr session, NodeContainerPtr *cOut);
-EXTERN_C DLLEXPORT int ParserSessionTokenize(ParserSessionPtr session, NodeContainerPtr *cOut);
-EXTERN_C DLLEXPORT int ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode, NodeContainerPtr *cOut);
-EXTERN_C DLLEXPORT int ParserSessionSafeString(ParserSessionPtr session, NodeContainerPtr *cOut);
-EXTERN_C DLLEXPORT void ParserSessionReleaseNodeContainer(ParserSessionPtr session, NodeContainerPtr C);
+EXTERN_C DLLEXPORT int ParserSessionConcreteParse(ParserSessionPtr session, NodePtr *nOut);
+EXTERN_C DLLEXPORT int ParserSessionTokenize(ParserSessionPtr session, NodePtr *nOut);
+EXTERN_C DLLEXPORT int ParserSessionConcreteParseLeaf(ParserSessionPtr session, StringifyMode mode, NodePtr *nOut);
+EXTERN_C DLLEXPORT int ParserSessionSafeString(ParserSessionPtr session, NodePtr *nOut);
+EXTERN_C DLLEXPORT void ParserSessionReleaseNode(ParserSessionPtr session, NodePtr N);
 
-EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainerPtr C);
+EXTERN_C DLLEXPORT int NodeCheck(NodePtr N);
 
-DLLEXPORT void NodeContainerPrint(NodeContainerPtr C, std::ostream& s);
+DLLEXPORT void NodePrint(NodePtr N, std::ostream& s);
 
 #if USE_EXPR_LIB
-EXTERN_C DLLEXPORT int NodeContainerToExpr(ParserSessionPtr session, NodeContainerPtr C, expr *eOut);
+EXTERN_C DLLEXPORT int NodeToExpr(ParserSessionPtr session, NodePtr N, expr *eOut);
 #endif // USE_EXPR_LIB
 
 #if USE_MATHLINK
-EXTERN_C DLLEXPORT int NodeContainerPut(ParserSessionPtr session, NodeContainerPtr C, MLINK callLink);
+EXTERN_C DLLEXPORT int NodePut(ParserSessionPtr session, NodePtr N, MLINK callLink);
 #endif // USE_MATHLINK
 
 

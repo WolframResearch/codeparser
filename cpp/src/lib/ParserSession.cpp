@@ -113,7 +113,7 @@ void ParserSession::deinit() {
 #endif // COMPUTE_SOURCE
 }
 
-NodeContainerPtr ParserSession::parseExpressions() {
+NodePtr ParserSession::concreteParse() {
     
 #if DIAGNOSTICS
     DiagnosticsLog("enter parseExpressions");
@@ -223,7 +223,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
     return C;
 }
 
-NodeContainerPtr ParserSession::tokenize() {
+NodePtr ParserSession::tokenize() {
     
     NodeSeq nodes;
     
@@ -260,7 +260,7 @@ NodeContainerPtr ParserSession::tokenize() {
 }
 
 
-NodeVariant ParserSession::concreteParseLeaf0(StringifyMode mode) {
+Token ParserSession::concreteParseLeaf0(StringifyMode mode) {
     
     switch (mode) {
         case STRINGIFYMODE_NORMAL: {
@@ -276,10 +276,10 @@ NodeVariant ParserSession::concreteParseLeaf0(StringifyMode mode) {
     
     assert(false);
     
-    return nullptr;
+    return Token();
 }
 
-NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
+NodePtr ParserSession::concreteParseLeaf(StringifyMode mode) {
     
     NodeSeq nodes;
     
@@ -334,7 +334,7 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
     return new NodeContainer(std::move(nodes));
 }
 
-NodeContainerPtr ParserSession::safeString() {
+NodePtr ParserSession::safeString() {
     
     NodeSeq nodes;
     
@@ -370,11 +370,11 @@ NodeContainerPtr ParserSession::safeString() {
     return new NodeContainer(std::move(nodes));
 }
 
-void ParserSession::releaseNodeContainer(NodeContainerPtr C) {
+void ParserSession::releaseNode(NodePtr N) {
     
-    C->release();
+    N->release();
     
-    delete C;
+    delete N;
 }
 
 bool ParserSession::abortQ() const {

@@ -513,7 +513,7 @@ public:
 //
 //
 //
-class NodeContainer {
+class NodeContainer : public Node {
 private:
     
     NodeSeq Nodes;
@@ -522,17 +522,19 @@ public:
     
     NodeContainer(NodeSeq&& Nodes);
     
-    void release();
+    void release() override;
+    
+    Source getSource() const override;
     
 #if USE_MATHLINK
     void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const;
+    void print(std::ostream& s) const override;
     
-    bool check() const;
+    bool check() const override;
     
 #if USE_EXPR_LIB
-    expr toExpr(ParserSessionPtr session) const;
+    expr toExpr(ParserSessionPtr session) const override;
 #endif // USE_EXPR_LIB
 };

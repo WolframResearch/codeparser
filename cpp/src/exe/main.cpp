@@ -27,20 +27,16 @@ enum OutputMode {
 };
 
 
-int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts);
+int readStdIn(APIMode mode, OutputMode outputMode);
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessionOptions opts);
+int readFile(std::string file, APIMode mode, OutputMode outputMode);
 
 
 int main(int argc, char *argv[]) {
     
     auto file = false;
-    auto tokenize = false;
-    auto leaf = false;
-    auto safeString = false;
+    auto apiMode = EXPRESSION;
     auto outputMode = PRINT;
-    auto firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
-    auto encodingMode = ENCODINGMODE_NORMAL;
     
     std::string fileInput;
     
@@ -51,18 +47,21 @@ int main(int argc, char *argv[]) {
         if (arg == "-file") {
             
             file = true;
-            firstLineBehavior = FIRSTLINEBEHAVIOR_CHECK;
             
             i++;
             fileInput = std::string(argv[i]);
 
         } else if (arg == "-tokenize") {
             
-            tokenize = true;
+            apiMode = TOKENIZE;
             
         } else if (arg == "-leaf") {
             
-            leaf = true;
+            apiMode = LEAF;
+            
+        } else if (arg == "-safestring") {
+            
+            apiMode = SAFESTRING;
             
         } else if (arg == "-n") {
             
@@ -73,59 +72,31 @@ int main(int argc, char *argv[]) {
             outputMode = CHECK;
             
         } else {
-            
             return EXIT_FAILURE;
         }
     }
     
-    ParserSessionOptions opts;
-    opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
-    opts.tabWidth = DEFAULT_TAB_WIDTH;
-    opts.firstLineBehavior = firstLineBehavior;
-    opts.encodingMode = encodingMode;
-    
     int result;
     
     if (file) {
-        if (leaf) {
-            result = readFile(fileInput, LEAF, outputMode, opts);
-        } else if (tokenize) {
-            result = readFile(fileInput, TOKENIZE, outputMode, opts);
-        } else if (safeString) {
-            result = readFile(fileInput, SAFESTRING, outputMode, opts);
-        } else {
-            result = readFile(fileInput, EXPRESSION, outputMode, opts);
-        }
+        
+        result = readFile(fileInput, apiMode, outputMode);
+        
     } else {
-        if (leaf) {
-            result = readStdIn(LEAF, outputMode, opts);
-        } else if (tokenize) {
-            result = readStdIn(TOKENIZE, outputMode, opts);
-        } else if (safeString) {
-            result = readStdIn(SAFESTRING, outputMode, opts);
-        } else {
-            result = readStdIn(EXPRESSION, outputMode, opts);
-        }
+        
+        result = readStdIn(apiMode, outputMode);
     }
     
     return result;
 }
 
-int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
-    
-    opts.alreadyHasEOFSentinel = false;
-    
-    WolframLibraryData libData = nullptr;
+int readStdIn(APIMode mode, OutputMode outputMode) {
     
     ParserSessionPtr session;
     
-    auto err = CreateParserSession(&session);
-    
-    if (err) {
+    if (CreateParserSession(&session)) {
         return EXIT_FAILURE;
     }
-    
-    int result = EXIT_SUCCESS;
     
     while (true) {
         
@@ -133,244 +104,87 @@ int readStdIn(APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
         std::cout << ">>> ";
         std::getline(std::cin, input);
         
-        if (mode == TOKENIZE) {
-            
-            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
-            
-            CBufferAndLength bufAndLen;
-            bufAndLen.Buf = inputStr;
-            bufAndLen.Len = input.size();
-            
-            err = ParserSessionInit(session, bufAndLen, libData, opts);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            NodeContainerPtr C;
-            
-            err = ParserSessionTokenize(session, &C);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            switch (outputMode) {
-                case PRINT: {
-                    
-                    NodeContainerPrint(C, std::cout);
-                    
-                    std::cout << "\n";
-                    
-                    break;
-                }
-                case PRINT_DRYRUN: {
-                    
-                    std::ofstream nullStream;
-                    
-                    NodeContainerPrint(C, nullStream);
-                    
-                    nullStream << "\n";
-                    
-                    break;
-                }
-                case NONE: case CHECK: {
-                    
-                    break;
-                }
-            }
-            
-            ParserSessionReleaseNodeContainer(session, C);
-            
-            ParserSessionDeinit(session);
-            
-        } else if (mode == LEAF) {
-            
-            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
-            
-            CBufferAndLength bufAndLen;
-            bufAndLen.Buf = inputStr;
-            bufAndLen.Len = input.size();
-            
-            err = ParserSessionInit(session, bufAndLen, libData, opts);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            auto stringifyMode = STRINGIFYMODE_NORMAL;
-            
-            NodeContainerPtr C;
-            
-            auto err = ParserSessionConcreteParseLeaf(session, stringifyMode, &C);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            switch (outputMode) {
-                case PRINT: {
-                    
-                    NodeContainerPrint(C, std::cout);
-                    
-                    std::cout << "\n";
-                    
-                    break;
-                }
-                case PRINT_DRYRUN: {
-                    
-                    std::ofstream nullStream;
-                    
-                    NodeContainerPrint(C, nullStream);
-                    
-                    nullStream << "\n";
-                    
-                    break;
-                }
-                case NONE: case CHECK: {
-                    
-                    break;
-                }
-            }
-            
-            ParserSessionReleaseNodeContainer(session, C);
-            
-            ParserSessionDeinit(session);
-            
-#if DIAGNOSTICS
-            DiagnosticsPrint();
-#endif // DIAGNOSTICS
-            
-        } else if (mode == SAFESTRING) {
-            
-            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
-            
-            CBufferAndLength bufAndLen;
-            bufAndLen.Buf = inputStr;
-            bufAndLen.Len = input.size();
-            
-            err = ParserSessionInit(session, bufAndLen, libData, opts);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            NodeContainerPtr C;
-            
-            auto err = ParserSessionSafeString(session, &C);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            switch (outputMode) {
-                case PRINT: {
-                    
-                    NodeContainerPrint(C, std::cout);
-                    
-                    std::cout << "\n";
-                    
-                    break;
-                }
-                case PRINT_DRYRUN: {
-                    
-                    std::ofstream nullStream;
-                    
-                    NodeContainerPrint(C, nullStream);
-                    
-                    nullStream << "\n";
-                    
-                    break;
-                }
-                case NONE: case CHECK: {
-                    
-                    break;
-                }
-            }
-            
-            ParserSessionReleaseNodeContainer(session, C);
-            
-            ParserSessionDeinit(session);
-            
-#if DIAGNOSTICS
-            DiagnosticsPrint();
-#endif // DIAGNOSTICS
-            
-        } else {
-            
-            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
-            
-            CBufferAndLength bufAndLen;
-            bufAndLen.Buf = inputStr;
-            bufAndLen.Len = input.size();
-            
-            err = ParserSessionInit(session, bufAndLen, libData, opts);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            NodeContainerPtr C;
-            
-            auto err = ParserSessionParseExpressions(session, &C);
-            
-            if (err) {
-                return EXIT_FAILURE;
-            }
-            
-            switch (outputMode) {
-                case PRINT: {
-                    
-                    NodeContainerPrint(C, std::cout);
-                    
-                    std::cout << "\n";
-                    
-                    break;
-                }
-                case PRINT_DRYRUN: {
-                    
-                    std::ofstream nullStream;
-                    
-                    NodeContainerPrint(C, nullStream);
-                    
-                    nullStream << "\n";
-                    
-                    break;
-                }
-                case CHECK: {
-                    
-                    if (!NodeContainerCheck(C)) {
-                        
-                        result = EXIT_FAILURE;
-                        
-                        break;
-                    }
-                    
-                    break;
-                }
-                case NONE: {
-                    
-                    break;
-                }
-            }
-            
-            ParserSessionReleaseNodeContainer(session, C);
-            
-            ParserSessionDeinit(session);
-            
-#if DIAGNOSTICS
-            DiagnosticsPrint();
-#endif // DIAGNOSTICS
+        if (ParserSessionInitSimple(session, reinterpret_cast<Buffer>(input.c_str()), input.size(), 0)) {
+            return EXIT_FAILURE;
         }
+        
+        NodePtr N;
+        
+        switch (mode) {
+            case TOKENIZE: {
+                
+                if (ParserSessionTokenize(session, &N)) {
+                    return EXIT_FAILURE;
+                }
+                
+                break;
+            }
+            case LEAF: {
+                
+                if (ParserSessionConcreteParseLeaf(session, STRINGIFYMODE_NORMAL, &N)) {
+                    return EXIT_FAILURE;
+                }
+                
+                break;
+            }
+            case SAFESTRING: {
+                
+                if (ParserSessionSafeString(session, &N)) {
+                    return EXIT_FAILURE;
+                }
+                
+                break;
+            }
+            default: {
+                
+                if (ParserSessionConcreteParse(session, &N)) {
+                    return EXIT_FAILURE;
+                }
+                
+                break;
+            }
+        }
+        
+        switch (outputMode) {
+            case PRINT: {
+                
+                NodePrint(N, std::cout);
+                
+                std::cout << "\n";
+                
+                break;
+            }
+            case PRINT_DRYRUN: {
+                
+                std::ofstream nullStream;
+                
+                NodePrint(N, nullStream);
+                
+                nullStream << "\n";
+                
+                break;
+            }
+            case NONE: case CHECK: {
+                break;
+            }
+        }
+        
+        ParserSessionReleaseNode(session, N);
+        
+        ParserSessionDeinit(session);
+        
+#if DIAGNOSTICS
+        DiagnosticsPrint();
+#endif // DIAGNOSTICS
         
     } // while (true)
     
     DestroyParserSession(session);
     
-    return result;
+    return EXIT_SUCCESS;
 }
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessionOptions opts) {
+int readFile(std::string file, APIMode mode, OutputMode outputMode) {
     
     auto fb = ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size());
 
@@ -394,240 +208,86 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, ParserSessio
         return EXIT_FAILURE;
     }
     
-    opts.alreadyHasEOFSentinel = true;
-    
-    WolframLibraryData libData = nullptr;
-    
     ParserSessionPtr session;
     
-    auto err = CreateParserSession(&session);
-    
-    if (err) {
+    if (CreateParserSession(&session)) {
         return EXIT_FAILURE;
     }
     
-    int result = EXIT_SUCCESS;
-    
-    if (mode == TOKENIZE) {
-        
-        CBufferAndLength bufAndLen;
-        bufAndLen.Buf = fb.getBuf();
-        bufAndLen.Len = fb.getLen();
-        
-        err = ParserSessionInit(session, bufAndLen, libData, opts);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        NodeContainerPtr C;
-        
-        err = ParserSessionTokenize(session, &C);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        switch (outputMode) {
-            case PRINT: {
-                
-                NodeContainerPrint(C, std::cout);
-                
-                std::cout << "\n";
-                
-                break;
-            }
-            case PRINT_DRYRUN: {
-                
-                std::ofstream nullStream;
-                
-                NodeContainerPrint(C, nullStream);
-                
-                nullStream << "\n";
-                
-                break;
-            }
-            case NONE: case CHECK: {
-                break;
-            }
-        }
-        
-        ParserSessionReleaseNodeContainer(session, C);
-        
-        ParserSessionDeinit(session);
-        
-#if DIAGNOSTICS
-        DiagnosticsPrint();
-#endif // DIAGNOSTICS
-        
-    } else if (mode == LEAF) {
-        
-        CBufferAndLength bufAndLen;
-        bufAndLen.Buf = fb.getBuf();
-        bufAndLen.Len = fb.getLen();
-        
-        err = ParserSessionInit(session, bufAndLen, libData, opts);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        auto stringifyMode = STRINGIFYMODE_NORMAL;
-        
-        NodeContainerPtr C;
-        
-        auto err = ParserSessionConcreteParseLeaf(session, stringifyMode, &C);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        switch (outputMode) {
-            case PRINT: {
-                
-                NodeContainerPrint(C, std::cout);
-                
-                std::cout << "\n";
-                
-                break;
-            }
-            case PRINT_DRYRUN: {
-                
-                std::ofstream nullStream;
-                
-                NodeContainerPrint(C, nullStream);
-                
-                nullStream << "\n";
-                
-                break;
-            }
-            case NONE: case CHECK: {
-                break;
-            }
-        }
-        
-        ParserSessionReleaseNodeContainer(session, C);
-        
-        ParserSessionDeinit(session);
-        
-#if DIAGNOSTICS
-        DiagnosticsPrint();
-#endif // DIAGNOSTICS
-        
-    } else if (mode == SAFESTRING) {
-        
-        CBufferAndLength bufAndLen;
-        bufAndLen.Buf = fb.getBuf();
-        bufAndLen.Len = fb.getLen();
-        
-        err = ParserSessionInit(session, bufAndLen, libData, opts);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        NodeContainerPtr C;
-        
-        auto err = ParserSessionSafeString(session, &C);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        switch (outputMode) {
-            case PRINT: {
-                
-                NodeContainerPrint(C, std::cout);
-                
-                std::cout << "\n";
-                
-                break;
-            }
-            case PRINT_DRYRUN: {
-                
-                std::ofstream nullStream;
-                
-                NodeContainerPrint(C, nullStream);
-                
-                nullStream << "\n";
-                
-                break;
-            }
-            case NONE: case CHECK: {
-                break;
-            }
-        }
-        
-        ParserSessionReleaseNodeContainer(session, C);
-        
-        ParserSessionDeinit(session);
-        
-#if DIAGNOSTICS
-        DiagnosticsPrint();
-#endif // DIAGNOSTICS
-        
-    } else {
-        
-        CBufferAndLength bufAndLen;
-        bufAndLen.Buf = fb.getBuf();
-        bufAndLen.Len = fb.getLen();
-        
-        err = ParserSessionInit(session, bufAndLen, libData, opts);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        NodeContainerPtr C;
-        
-        auto err = ParserSessionParseExpressions(session, &C);
-        
-        if (err) {
-            return EXIT_FAILURE;
-        }
-        
-        switch (outputMode) {
-            case PRINT: {
-                
-                NodeContainerPrint(C, std::cout);
-                
-                std::cout << "\n";
-                
-                break;
-            }
-            case PRINT_DRYRUN: {
-                
-                std::ofstream nullStream;
-                
-                NodeContainerPrint(C, nullStream);
-                
-                nullStream << "\n";
-                
-                break;
-            }
-            case NONE: {
-                break;
-            }
-            case CHECK: {
-                
-                if (!NodeContainerCheck(C)) {
-                    result = EXIT_FAILURE;
-                }
-                
-                break;
-            }
-        }
-        
-        ParserSessionReleaseNodeContainer(session, C);
-        
-        ParserSessionDeinit(session);
-        
-#if DIAGNOSTICS
-        DiagnosticsPrint();
-#endif // DIAGNOSTICS
+    if (ParserSessionInitSimple(session, fb.getBuf(), fb.getLen(), 1)) {
+        return EXIT_FAILURE;
     }
+    
+    NodePtr N;
+    
+    switch (mode) {
+        case TOKENIZE: {
+            
+            if (ParserSessionTokenize(session, &N)) {
+                return EXIT_FAILURE;
+            }
+            
+            break;
+        }
+        case LEAF: {
+            
+            if (ParserSessionConcreteParseLeaf(session, STRINGIFYMODE_NORMAL, &N)) {
+                return EXIT_FAILURE;
+            }
+            
+            break;
+        }
+        case SAFESTRING: {
+            
+            if (ParserSessionSafeString(session, &N)) {
+                return EXIT_FAILURE;
+            }
+            
+            break;
+        }
+        default: {
+            
+            if (ParserSessionConcreteParse(session, &N)) {
+                return EXIT_FAILURE;
+            }
+            
+            break;
+        }
+    }
+    
+    switch (outputMode) {
+        case PRINT: {
+            
+            NodePrint(N, std::cout);
+            
+            std::cout << "\n";
+            
+            break;
+        }
+        case PRINT_DRYRUN: {
+            
+            std::ofstream nullStream;
+            
+            NodePrint(N, nullStream);
+            
+            nullStream << "\n";
+            
+            break;
+        }
+        case NONE: case CHECK: {
+            break;
+        }
+    }
+    
+    ParserSessionReleaseNode(session, N);
+    
+    ParserSessionDeinit(session);
+    
+#if DIAGNOSTICS
+    DiagnosticsPrint();
+#endif // DIAGNOSTICS
     
     DestroyParserSession(session);
     
-    return result;
+    return EXIT_SUCCESS;
 }

@@ -568,6 +568,13 @@ void SafeStringNode::print(std::ostream& s) const {
 
 NodeContainer::NodeContainer(NodeSeq&& Nodes) : Nodes(Nodes) {}
 
+Source NodeContainer::getSource() const {
+    
+    assert(false);
+    
+    return Source();
+}
+
 void NodeContainer::release() {
     Nodes.release();
 }

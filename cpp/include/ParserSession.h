@@ -15,14 +15,11 @@
 
 class ParserSession;
 class Issue;
-class Node;
 class SourceConventionManager;
 
 using IssuePtr = Issue *;
 using IssuePtrVector = std::vector<IssuePtr>;
 using ParserSessionPtr = ParserSession *;
-using NodePtr = Node *;
-using NodeVariant = std::variant<NodePtr, Token>;
 using SourceConventionManagerPtr = SourceConventionManager *;
 
 
@@ -64,7 +61,7 @@ public:
     
 private:
     
-    NodeVariant concreteParseLeaf0(StringifyMode mode);
+    Token concreteParseLeaf0(StringifyMode mode);
     
 public:
     
@@ -76,12 +73,12 @@ public:
     
     bool abortQ() const;
     
-    NodeContainerPtr parseExpressions();
-    NodeContainerPtr tokenize();
-    NodeContainerPtr concreteParseLeaf(StringifyMode mode);
-    NodeContainerPtr safeString();
+    NodePtr concreteParse();
+    NodePtr tokenize();
+    NodePtr concreteParseLeaf(StringifyMode mode);
+    NodePtr safeString();
     
-    void releaseNodeContainer(NodeContainerPtr C);
+    void releaseNode(NodePtr N);
     
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
     
