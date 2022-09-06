@@ -393,27 +393,6 @@ void ParserSession::setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag f
     unsafeCharacterEncodingFlag = flag;
 }
 
-
-struct IssueCompare : public std::unary_function<IssuePtr, bool> {
-    
-    IssuePtr baseline;
-    
-    explicit IssueCompare(const IssuePtr &baseline) : baseline(baseline) {}
-    
-    bool operator() (const IssuePtr &arg) {
-        
-        if (arg->Src != baseline->Src) {
-            return false;
-        }
-        
-        if (arg->Tag != baseline->Tag) {
-            return false;
-        }
-        
-        return true;
-    }
-};
-
 void ParserSession::addIssue(IssuePtr I) {
 
     if (I->Sev == STRING_FATAL) {
@@ -429,7 +408,7 @@ void ParserSession::addIssue(IssuePtr I) {
             return;
         }
         
-        auto it = std::find_if(fatalIssues.begin(), fatalIssues.end(), IssueCompare(I));
+        auto it = std::find_if(fatalIssues.begin(), fatalIssues.end(), [I](IssuePtr arg) { return *arg == *I; });
         
         if (it == fatalIssues.end()) {
             
@@ -444,7 +423,7 @@ void ParserSession::addIssue(IssuePtr I) {
 
     } else {
         
-        auto it = std::find_if(nonFatalIssues.begin(), nonFatalIssues.end(), IssueCompare(I));
+        auto it = std::find_if(nonFatalIssues.begin(), nonFatalIssues.end(), [I](IssuePtr arg) { return *arg == *I; });
         
         if (it == nonFatalIssues.end()) {
             

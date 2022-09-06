@@ -129,6 +129,10 @@ bool Issue::check() const {
     return Sev != STRING_FATAL;
 }
 
+bool operator==(Issue a, Issue b) {
+    return a.Src == b.Src && a.Tag == b.Tag;
+}
+
 
 SyntaxIssue::SyntaxIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_SYNTAXISSUE, Tag, Msg, Sev, Src, Val, Actions, AdditionalDescriptions) {}
 

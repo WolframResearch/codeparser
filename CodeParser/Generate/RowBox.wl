@@ -14,8 +14,8 @@ PacletManager will find e.g. CodeParser/Kernel/TokenEnum.wl when asked to find C
 related issues: PACMAN-54
 *)
 Block[{Internal`PacletFindFile = Null&},
-Needs["CodeParser`Generate`Common`"];
 Needs["CodeParser`Generate`TokenEnum`"];
+Needs["CodeParser`Generate`Common`"];
 Needs["CodeTools`Generate`GenerateSources`"];
 ]
 

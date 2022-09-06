@@ -360,6 +360,8 @@ public:
 #endif // USE_EXPR_LIB
 };
 
+bool operator==(Issue a, Issue b);
+
 
 //
 //
