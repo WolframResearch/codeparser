@@ -1,0 +1,4 @@
+[lfs]
+	# Ensure that a default checkout of this repository doesn't download any
+	# large files.
+	fetchexclude = *

@@ -1,0 +1,2 @@
+# Use Git LFS to store all of the files in the files/large/ directory
+large/* filter=lfs diff=lfs merge=lfs -text

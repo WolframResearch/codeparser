@@ -102,3 +102,27 @@ Out[2]= $Failed
 This means that CodeParser was built with a newer version of Wolfram System than your system supports.
 
 To fix this, build CodeParser from source with the version of Wolfram System that you will use.
+
+## Benchmarks
+
+> Some of the benchmarks test large data files. Those files are tracked in this
+> repository to ensure that benchmarks are always run against identical input.
+> [Git LFS](https://git-lfs.github.com/) is used to ensure that a basic checkout
+> of this repository remains small, which is important in CI/CD builds.
+
+To run the benchmarks, first ensure that the large benchmark files have been
+checked out locally using:
+
+```shell
+$ git lfs pull --exclude="" --include="*"
+```
+
+This will override the default settings in [`.lfsconfig`](./.lfsconfig).
+
+## File Overview
+
+* [Tests/files/large/](./Tests/files/large/) contains files
+  managed by [`Git LFS`](https://git-lfs.github.com/). The files in this
+  directory are used by the benchmarks. These files should never be modified, to
+  ensure that benchmark comparisions between different revisions of this
+  repository can be meaningfully compared.
