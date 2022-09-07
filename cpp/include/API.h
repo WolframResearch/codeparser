@@ -34,7 +34,7 @@
 class Node;
 class ParserSession;
 
-using NodePtr = Node *;
+using NodePtr = const Node *;
 using ParserSessionPtr = ParserSession *;
 
 #if USE_EXPR_LIB

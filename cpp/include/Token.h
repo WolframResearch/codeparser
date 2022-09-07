@@ -15,6 +15,9 @@
 using expr = void *;
 #endif // USE_EXPR_LIB
 
+class Node;
+using NodePtr = const Node *;
+using NodeVariant = std::variant<NodePtr, struct Token>;
 
 //
 //
@@ -27,6 +30,7 @@ struct Token {
     TokenEnum Tok;
     
     Token();
+    explicit Token(TokenEnum Tok, BufferAndLength BufLen);
     explicit Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
     BufferAndLength bufLen() const;

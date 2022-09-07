@@ -3,6 +3,7 @@
 
 #include "Token.h" // for Token
 #include "Precedence.h"
+#include "Symbol.h"
 
 class PrefixParselet;
 class Parselet;

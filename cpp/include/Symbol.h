@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "Token.h"
+
 #if USE_MATHLINK
 #include "mathlink.h"
 #undef P
@@ -23,10 +25,13 @@ using expr = void *;
 struct Symbol {
 
     const char *Name;
+    size_t Len;
     const int Id;
 
-    constexpr Symbol(const char *Name, int Id) : Name(Name), Id(Id) {}
-
+    constexpr Symbol(const char *Name, size_t Len, int Id) : Name(Name), Len(Len), Id(Id) {}
+    
+    Token token() const;
+    
     void print(std::ostream& s) const;
 
 #if USE_MATHLINK

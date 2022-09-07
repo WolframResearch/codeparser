@@ -3,6 +3,7 @@
 
 #include "WLCharacter.h" // for WLCharacter
 #include "Source.h" // for Source
+#include "Issue.h"
 
 #include <string>
 #include <unordered_set> // for unordered_set

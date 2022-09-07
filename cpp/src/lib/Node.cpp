@@ -20,6 +20,9 @@
 #include <limits>
 
 
+using MNodePtr = Node *;
+
+
 struct CheckVisitor {
     
     bool operator()(const NodePtr& N) { return N->check(); }
@@ -47,7 +50,7 @@ struct PrintVisitor {
 
 struct ReleaseVisitor {
     
-    void operator()(const NodePtr& N) { N->release(); delete N; }
+    void operator()(const NodePtr& N) { const_cast<MNodePtr>(N)->release(); delete N; }
     
     void operator()(const Token& L) {}
 };
@@ -81,6 +84,8 @@ struct PutVisitor {
 
 
 NodeSeq::NodeSeq() : vec() {}
+
+NodeSeq::NodeSeq(std::vector<NodeVariant> vec) : vec(vec) {}
 
 NodeSeq::NodeSeq(std::vector<NodeVariant>::iterator Begin, std::vector<NodeVariant>::iterator End) : vec(Begin, End) {}
 

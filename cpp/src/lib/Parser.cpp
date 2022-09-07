@@ -511,7 +511,7 @@ ColonLHS Parser_checkColonLHS(ParserSessionPtr session) {
         
         auto& P = std::get<NodePtr>(N);
         
-        if (auto B = dynamic_cast<BinaryNode *>(P)) {
+        if (auto B = dynamic_cast<const BinaryNode *>(P)) {
             
             //
             // Something like  a:b:c
@@ -528,7 +528,7 @@ ColonLHS Parser_checkColonLHS(ParserSessionPtr session) {
             return COLONLHS_ERROR;
         }
 
-        if (auto C = dynamic_cast<CompoundNode *>(P)) {
+        if (auto C = dynamic_cast<const CompoundNode *>(P)) {
             
             //
             // Something like  a_:b
@@ -673,7 +673,7 @@ bool Parser_checkSpan(ParserSessionPtr session) {
         
         auto& NN = std::get<NodePtr>(N);
         
-        if (auto B = dynamic_cast<BinaryNode *>(NN)) {
+        if (auto B = dynamic_cast<const BinaryNode *>(NN)) {
             
             auto Op = B->getOp();
             
@@ -689,7 +689,7 @@ bool Parser_checkSpan(ParserSessionPtr session) {
             return false;
         }
         
-        if (auto T = dynamic_cast<TernaryNode *>(NN)) {
+        if (auto T = dynamic_cast<const TernaryNode *>(NN)) {
             
             auto Op = T->getOp();
             

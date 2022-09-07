@@ -21,6 +21,8 @@
 
 Token::Token() : Src(), Buf(), Len(), Tok() {}
 
+Token::Token(TokenEnum Tok, BufferAndLength BufLen) : Src(), Buf(BufLen.Buf), Len(BufLen.length()), Tok(Tok) {}
+
 Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(BufLen.Buf), Len(BufLen.length()), Tok(Tok) {
 
 #ifndef NDEBUG

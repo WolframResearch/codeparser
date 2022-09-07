@@ -177,7 +177,7 @@ If[#1 === String && $WorkaroundBug321344,
   *)
   Row[{"constexpr Symbol", " ", "SYMBOL_STRING", "(", "\"String\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]
   ,
-  Row[{"constexpr Symbol", " ", toGlobal["Symbol`"<>ToString[#1]], "(", "\"", stringifyForTransmitting[#1], "\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]]&, symbols] ~Join~
+  Row[{"constexpr Symbol", " ", toGlobal["Symbol`"<>ToString[#1]], "(", "\"", stringifyForTransmitting[#1], "\"", ",", " ", ToString[StringLength[stringifyForTransmitting[#1]]], ",", " ", ToString[#2[[1]]-1], ")", ";"}]]&, symbols] ~Join~
 {""};
 
 Print["exporting SymbolRegistration.h"];

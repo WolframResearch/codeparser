@@ -18,6 +18,9 @@
 #include <algorithm>
 
 
+using MNodePtr = Node *;
+
+
 bool validatePath(WolframLibraryData libData, Buffer inStr);
 
 
@@ -372,7 +375,7 @@ NodePtr ParserSession::safeString() {
 
 void ParserSession::releaseNode(NodePtr N) {
     
-    N->release();
+    const_cast<MNodePtr>(N)->release();
     
     delete N;
 }

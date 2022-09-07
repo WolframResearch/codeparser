@@ -5,6 +5,8 @@
 #include "Token.h" // for Token
 #include "API.h" // for UnsafeCharacterEncodingFlag
 #include "Precedence.h"
+#include "Symbol.h"
+#include "Issue.h"
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -21,12 +23,12 @@ class Node;
 class Parselet;
 class ParserSession;
 
-using NodePtr = Node *;
+using NodePtr = const Node *;
 using ParseletPtr = Parselet *;
 using ParserSessionPtr = ParserSession *;
 typedef void (*ParseFunction)(ParserSessionPtr parser, ParseletPtr parselet, Token firstTok);
 
-using NodeVariant = std::variant<NodePtr, Token>;
+using NodeVariant = std::variant<NodePtr, struct Token>;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -74,6 +76,7 @@ private:
 public:
     
     NodeSeq();
+    NodeSeq(std::vector<NodeVariant> vec);
     NodeSeq(std::vector<NodeVariant>::iterator Begin, std::vector<NodeVariant>::iterator End);
     
     void release();
