@@ -1,11 +1,14 @@
 
 #include "Parselet.h"
+
 #include "ParseletRegistration.h" // for prefixParselets
 #include "ParserSession.h"
-#include "SymbolRegistration.h"
 #include "Parser.h"
 #include "Tokenizer.h"
 #include "TokenEnumRegistration.h"
+#include "Node.h"
+
+#include <cassert>
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -55,7 +58,7 @@ void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token
         // \[Integral] \[DifferentialD] x
         //
         
-        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(Tok.Buf), Source(Tok.Src.Start)));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, Tok.Buf, 0, Source(Tok.Src.Start)));
         
         return IntegralParselet_parse1(session, P, Tok);
     }
@@ -160,7 +163,7 @@ Token InfixDifferentialDParselet::processImplicitTimes(ParserSessionPtr session,
         return TokIn;
     }
     
-    return Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
+    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, 0, Source(TokIn.Src.Start));
 }
 
 ParseFunction InfixDifferentialDParselet::parseInfix() const {

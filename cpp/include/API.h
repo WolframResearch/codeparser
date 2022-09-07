@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Source.h" // for BufferAndLength
+#include "Source.h" // for SourceConvention
 
 //
 // Despite being mentioned here:
@@ -30,12 +30,16 @@
 #undef False
 
 #include <cstddef> // for size_t
+#include <cstdint> // for uint_8
+#include <ostream>
 
 class Node;
 class ParserSession;
 
 using NodePtr = const Node *;
 using ParserSessionPtr = ParserSession *;
+using Buffer = const unsigned char *;
+using MBuffer = unsigned char *;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -61,7 +65,7 @@ using expr = void *;
 // foo >> bar
 // foo >>> bar
 //
-enum StringifyMode {
+enum StringifyMode : uint8_t {
     STRINGIFYMODE_NORMAL = 0,
     STRINGIFYMODE_TAG = 1,
     STRINGIFYMODE_FILE = 2,
@@ -104,7 +108,7 @@ enum FirstLineBehavior : uint8_t {
     FIRSTLINEBEHAVIOR_SCRIPT = 2,
 };
 
-enum UnsafeCharacterEncodingFlag {
+enum UnsafeCharacterEncodingFlag : uint8_t {
     UNSAFECHARACTERENCODING_OK = 0,
     UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE = 1,
     UNSAFECHARACTERENCODING_STRAYSURROGATE = 2,
@@ -123,8 +127,8 @@ struct ParserSessionOptions {
 EXTERN_C DLLEXPORT int CreateParserSession(ParserSessionPtr *sessionOut);
 EXTERN_C DLLEXPORT void DestroyParserSession(ParserSessionPtr session);
 
-EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, CBufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionOptions opts);
-EXTERN_C DLLEXPORT int ParserSessionInitSimple(ParserSessionPtr session, Buffer Buf, size_t Len, int AlreadyHasEOFSentinel);
+EXTERN_C DLLEXPORT int ParserSessionInit(ParserSessionPtr session, Buffer buf, uint64_t len, WolframLibraryData libData, ParserSessionOptions opts);
+EXTERN_C DLLEXPORT int ParserSessionInitSimple(ParserSessionPtr session, Buffer Buf, uint64_t Len, int AlreadyHasEOFSentinel);
 EXTERN_C DLLEXPORT void ParserSessionDeinit(ParserSessionPtr session);
 
 EXTERN_C DLLEXPORT int ParserSessionConcreteParse(ParserSessionPtr session, NodePtr *nOut);

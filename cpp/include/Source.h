@@ -1,20 +1,15 @@
 
 #pragma once
 
-#include "CodePoint.h" // for codepoint
-
 #if USE_MATHLINK
 #include "mathlink.h"
 #undef P
 #endif // USE_MATHLINK
 
-#include <set>
 #include <string>
-#include <cassert>
-#include <iterator>
-#include <array>
-#include <vector>
 #include <cstddef> // for size_t
+#include <cstdint>
+#include <ostream>
 
 class Issue;
 class CodeAction;
@@ -23,54 +18,11 @@ class ParserSession;
 using Buffer = const unsigned char *;
 using MBuffer = unsigned char *;
 using ParserSessionPtr = ParserSession *;
+using codepoint = int32_t;
 
 #if USE_EXPR_LIB
 using expr = void *;
 #endif // USE_EXPR_LIB
-
-
-//
-//
-//
-struct CBufferAndLength {
-    
-    Buffer Buf;
-    uint64_t Len;
-};
-
-
-//
-//
-//
-struct BufferAndLength {
-    
-    const Buffer Buf;
-    const uint64_t Len : 48;
-    
-    BufferAndLength();
-    explicit BufferAndLength(Buffer buffer);
-    BufferAndLength(CBufferAndLength bufAndLen);
-    BufferAndLength(Buffer buffer, size_t length);
-    
-    size_t length() const;
-    
-    Buffer end() const;
-    
-    bool containsOnlyASCII() const;
-    bool containsTab() const;
-    
-    void print(std::ostream& s) const;
-    
-#if USE_MATHLINK
-    void put(ParserSessionPtr session, MLINK callLink) const;
-#endif // USE_MATHLINK
-    
-#if USE_EXPR_LIB
-    expr toExpr(ParserSessionPtr session) const;
-#endif // USE_EXPR_LIB
-};
-
-static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 16) || (SIZEOF_VOID_P == 4), "Check your assumptions");
 
 
 //

@@ -1,11 +1,12 @@
 
 #include "Parselet.h"
+
 #include "ParseletRegistration.h" // for prefixParselets
 #include "ParserSession.h"
 #include "SymbolRegistration.h"
-#include "MyString.h"
 #include "Parser.h"
 #include "Tokenizer.h"
+#include "TokenEnumRegistration.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -29,7 +30,7 @@ Token SemiSemiParselet::processImplicitTimes(ParserSessionPtr session, Token Tok
     //
     
     if (Parser_checkSpan(session)) {
-        return Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start));
+        return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, 0, Source(TokIn.Src.Start));
     }
     
     return TokIn;
@@ -48,7 +49,7 @@ void SemiSemiParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     }
 #endif // CHECK_ABORT
     
-    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.Buf), Source(TokIn.Src.Start)));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITONE, TokIn.Buf, 0, Source(TokIn.Src.Start)));
     
     Parser_pushContext(session, PRECEDENCE_SEMISEMI);
     
@@ -109,7 +110,7 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
         //    ^SecondTok
         //
         
-        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(SecondTok.Buf), Source(SecondTok.Src.Start)));
+        Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, SecondTok.Buf, 0, Source(SecondTok.Src.Start)));
         
         //
         // nextToken() is not needed after an implicit token
@@ -141,7 +142,7 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     //    ^~SecondTok
     //
     
-    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(SecondTok.Buf), Source(SecondTok.Src.Start)));
+    Parser_pushLeaf(session, Token(TOKEN_FAKE_IMPLICITALL, SecondTok.Buf, 0, Source(SecondTok.Src.Start)));
     
     SecondTok.skip(session);
     

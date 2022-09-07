@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Source.h" // for BufferAndLength, Source
+#include "Source.h" // for Source
 #include "TokenEnum.h" // for TokenEnum
 
 #if USE_MATHLINK
@@ -10,6 +10,7 @@
 #endif // USE_MATHLINK
 
 #include <ostream>
+#include <variant>
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -30,10 +31,16 @@ struct Token {
     TokenEnum Tok;
     
     Token();
-    explicit Token(TokenEnum Tok, BufferAndLength BufLen);
-    explicit Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
-    
-    BufferAndLength bufLen() const;
+    //
+    // Used during abstracting work
+    //
+    // Usually there is no Source
+    //
+    explicit Token(TokenEnum Tok, Buffer Buf, size_t Len);
+    //
+    // Used when parsing
+    //
+    explicit Token(TokenEnum Tok, Buffer Buf, size_t Len, Source Src);
     
     Buffer end() const;
     

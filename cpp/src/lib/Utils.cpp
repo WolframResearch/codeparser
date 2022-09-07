@@ -1,8 +1,8 @@
 
 #include "Utils.h"
 
-#include "Tokenizer.h" // for Tokenizer
 #include "LongNamesRegistration.h" // for CodePointToLongNameMap
+#include "CodePoint.h"
 
 #include <cassert>
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
@@ -370,4 +370,32 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
     }
     
     return Actions;
+}
+
+bool Utils::containsOnlyASCII(Buffer Buf, size_t Len) {
+
+    for (auto p = Buf; p < Buf + Len; p++) {
+
+        auto c = *p;
+
+        if (c > 0x7f) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Utils::containsTab(Buffer Buf, size_t Len) {
+
+    for (auto p = Buf; p < Buf + Len; p++) {
+
+        auto c = *p;
+
+        if (c == 0x09) {
+            return true;
+        }
+    }
+
+    return false;
 }

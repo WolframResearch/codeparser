@@ -53,7 +53,7 @@ TEST_F(ParseletTest, Bug1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
@@ -65,7 +65,7 @@ TEST_F(ParseletTest, Bug1) {
     
     auto& P = std::get<NodePtr>(N);
     
-    EXPECT_TRUE(dynamic_cast<TernaryNode *>(P));
+    EXPECT_TRUE(dynamic_cast<const TernaryNode *>(P));
     
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -87,7 +87,7 @@ TEST_F(ParseletTest, Bug2) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
@@ -115,7 +115,7 @@ TEST_F(ParseletTest, Bug3) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
@@ -143,7 +143,7 @@ TEST_F(ParseletTest, Bug4) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 

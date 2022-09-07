@@ -1,8 +1,15 @@
 
+#pragma once
+
 #include "API.h"
 
-#include "Token.h"
 #include "Parser.h" // for Context
+#include "Source.h"
+#include "Node.h"
+
+#include "WolframLibrary.h"
+#undef True
+#undef False
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -10,13 +17,13 @@
 #endif // USE_MATHLINK
 
 #include <set>
-#include <variant>
 #include <vector>
 
 class ParserSession;
 class Issue;
 class SourceConventionManager;
 
+using Buffer = const unsigned char *;
 using IssuePtr = Issue *;
 using IssuePtrVector = std::vector<IssuePtr>;
 using ParserSessionPtr = ParserSession *;
@@ -67,7 +74,7 @@ public:
     
     ParserSession();
     
-    int init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionOptions opts);
+    int init(Buffer Buf, size_t Len, WolframLibraryData libData, ParserSessionOptions opts);
     
     void deinit();
     

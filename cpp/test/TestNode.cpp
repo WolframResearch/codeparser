@@ -31,12 +31,12 @@ TEST_F(NodeTest, Bug1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session.init(BufferAndLength(Buffer(input.c_str() + 0), 3), nullptr, opts);
+    session.init(reinterpret_cast<Buffer>(input.c_str()) + 0, 3, nullptr, opts);
     
-    auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1), Source(SourceLocation(1, 1), SourceLocation(1, 2)));
+    auto T1 = Token(TOKEN_SYMBOL, reinterpret_cast<Buffer>(input.c_str()) + 0, 1, Source(SourceLocation(1, 1), SourceLocation(1, 2)));
     Args.push(T1);
     
-    auto T2 = Token(TOKEN_UNDERDOT, BufferAndLength(Buffer(input.c_str() + 1), 2), Source(SourceLocation(1, 2), SourceLocation(1, 4)));
+    auto T2 = Token(TOKEN_UNDERDOT, reinterpret_cast<Buffer>(input.c_str()) + 1, 2, Source(SourceLocation(1, 2), SourceLocation(1, 4)));
     Args.push(T2);
 
     auto N = std::unique_ptr<Node>(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));

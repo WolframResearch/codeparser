@@ -2,8 +2,10 @@
 #include "ByteEncoder.h"
 
 #include "Utils.h" // for isStraySurrogate
+#include "CodePoint.h"
 
 #include <cassert>
+
 
 size_t ByteEncoder::size(codepoint val) {
 

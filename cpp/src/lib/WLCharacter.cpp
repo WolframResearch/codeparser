@@ -9,7 +9,6 @@
 
 #include <cctype> // for isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <sstream> // for ostringstream
-#include <ostream> // for ostream
 #include <cstddef> // for size_t
 #include <algorithm> // for lower_bound
 

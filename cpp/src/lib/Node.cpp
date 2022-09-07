@@ -1,10 +1,6 @@
 
 #include "Node.h"
 
-#include "Parser.h" // for TheParser
-#include "ByteEncoder.h" // for ByteEncoder
-#include "ByteDecoder.h" // for TheByteDecoder
-#include "ByteBuffer.h" // for TheByteBuffer
 #include "SymbolRegistration.h"
 #include "MyStringRegistration.h"
 #include "ParserSession.h"
@@ -17,7 +13,7 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
-#include <limits>
+#include <limits> // for numeric_limits
 
 
 using MNodePtr = Node *;
@@ -557,7 +553,7 @@ void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
 }
 
 
-SafeStringNode::SafeStringNode(BufferAndLength bufAndLen) : bufAndLen(bufAndLen) {}
+SafeStringNode::SafeStringNode(Buffer Buf, size_t Len) : Buf(Buf), Len(Len) {}
 
 Source SafeStringNode::getSource() const {
     
@@ -567,7 +563,7 @@ Source SafeStringNode::getSource() const {
 }
 
 void SafeStringNode::print(std::ostream& s) const {
-    bufAndLen.print(s);
+    s.write(reinterpret_cast<const char *>(Buf), Len);
 }
 
 
@@ -733,7 +729,9 @@ void MissingBecauseUnsafeCharacterEncodingNode::put(ParserSessionPtr session, ML
 
 #if USE_MATHLINK
 void SafeStringNode::put(ParserSessionPtr session, MLINK callLink) const {
-    bufAndLen.put(session, callLink);
+    if (!MLPutUTF8String(callLink, Buf, static_cast<int>(Len))) {
+        assert(false);
+    }
 }
 #endif // USE_MATHLINK
 
@@ -952,7 +950,7 @@ expr MissingBecauseUnsafeCharacterEncodingNode::toExpr(ParserSessionPtr session)
 
 #if USE_EXPR_LIB
 expr SafeStringNode::toExpr(ParserSessionPtr session) const {
-    return bufAndLen.toExpr(session);
+    return Expr_UTF8BytesToStringExpr(Buf, static_cast<int>(Len));
 }
 #endif // USE_EXPR_LIB
 

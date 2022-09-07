@@ -4,11 +4,9 @@
 #include "Node.h" // for LeafSeq
 #include "Token.h" // for Token
 #include "Precedence.h" // for Precedence
-#include "TokenEnum.h" // for TokenEnum
 
-#include <set>
-#include <deque>
-#include <vector>
+#include <cstddef> // for size_t
+#include <cstdint> // for uint8_t
 
 class Parselet;
 class ParserSession;
@@ -31,7 +29,7 @@ struct Context {
     Context(size_t Index, Precedence Prec);
 };
 
-enum ColonLHS {
+enum ColonLHS : uint8_t {
     COLONLHS_NONE,
     COLONLHS_PATTERN,
     COLONLHS_OPTIONAL,

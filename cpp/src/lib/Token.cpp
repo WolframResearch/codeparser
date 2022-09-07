@@ -2,10 +2,9 @@
 #include "Token.h"
 
 #include "SymbolRegistration.h"
-#include "ByteBuffer.h"
-#include "ByteDecoder.h"
 #include "ParserSession.h"
 #include "TokenEnumRegistration.h"
+#include "Utils.h"
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -21,9 +20,9 @@
 
 Token::Token() : Src(), Buf(), Len(), Tok() {}
 
-Token::Token(TokenEnum Tok, BufferAndLength BufLen) : Src(), Buf(BufLen.Buf), Len(BufLen.length()), Tok(Tok) {}
+Token::Token(TokenEnum Tok, Buffer Buf, size_t Len) : Src(), Buf(Buf), Len(Len), Tok(Tok) {}
 
-Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(BufLen.Buf), Len(BufLen.length()), Tok(Tok) {
+Token::Token(TokenEnum Tok, Buffer Buf, size_t Len, Source Src) : Src(Src), Buf(Buf), Len(Len), Tok(Tok) {
 
 #ifndef NDEBUG
     
@@ -49,15 +48,15 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
         default: {
             
             if (Tok.isEmpty()) {
-                assert((BufLen.length() == 0) ||
+                assert((Len == 0) ||
                        //
                        // There could be a line continuation in front.
                        // Token is still empty.
                        //
-                       (BufLen.Buf[0] == '\\' && SourceCharacter(BufLen.Buf[1]).isNewline()));
+                       (Buf[0] == '\\' && SourceCharacter(Buf[1]).isNewline()));
             } else {
                 
-                assert(BufLen.length() > 0);
+                assert(Len > 0);
                 
                 //
                 // This is all just to do an assert.
@@ -76,7 +75,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
                     
                 } else if (Src.Start.first == Src.End.first) {
                     
-                    if (Src.size() != BufLen.length()) {
+                    if (Src.size() != Len) {
                         //
                         // If the sizes do not match, then check if there are multi-byte characters
                         // If there are multi-bytes characters, then it is too complicated to compare sizes
@@ -84,7 +83,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
                         // Note that this also catches changes in character representation, e.g.,
                         // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
                         //
-                        assert(!BufLen.containsOnlyASCII() || BufLen.containsTab());
+                        assert(!Utils::containsOnlyASCII(Buf, Len) || Utils::containsTab(Buf, Len));
                     }
                 }
             }
@@ -93,10 +92,6 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Src(Src), Buf(
         }
     }
 #endif // NDEBUG
-}
-
-BufferAndLength Token::bufLen() const {
-    return BufferAndLength(Buf, Len);
 }
 
 Buffer Token::end() const {
@@ -157,7 +152,7 @@ void Token::print(std::ostream& s) const {
     s << Sym.Name;
     s << ", ";
     
-    bufLen().print(s);
+    s.write(reinterpret_cast<const char *>(Buf), Len);
     s << ", ";
     
     Src.print(s);
@@ -206,8 +201,10 @@ void Token::put(ParserSessionPtr session, MLINK callLink) const {
     auto Sym = TokenToSymbol(Tok);
 
     Sym.put(session, callLink);
-
-    bufLen().put(session, callLink);
+    
+    if (!MLPutUTF8String(callLink, Buf, static_cast<int>(Len))) {
+        assert(false);
+    }
     
     if (!MLPutFunction(callLink, SYMBOL_ASSOCIATION.Name, 1)) {
         assert(false);
@@ -249,7 +246,7 @@ expr Token::toExpr(ParserSessionPtr session) const {
     auto SymExpr = Sym.toExpr(session);
     Expr_InsertA(e, 0 + 1, SymExpr);
     
-    auto TokBufLenExpr = bufLen().toExpr(session);
+    auto TokBufLenExpr = Expr_UTF8BytesToStringExpr(Buf, static_cast<int>(Len));
     Expr_InsertA(e, 1 + 1, TokBufLenExpr);
     
     {

@@ -5,9 +5,8 @@
 #include "Parselet.h" // for SymbolParselet, UnderParselet, etc.
 #include "Tokenizer.h" // for Tokenizer
 #include "ParseletRegistration.h"
-#include "ByteDecoder.h" // for ByteDecoder
-#include "ByteBuffer.h" // for ByteBuffer
 #include "SymbolRegistration.h"
+#include "TokenEnumRegistration.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]

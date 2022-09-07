@@ -1,11 +1,10 @@
 
 #pragma once
 
-#include "CodePoint.h"
-
 #include <string>
 #include <vector>
 
+using codepoint = int32_t;
 
 //
 // Collection of utility functions for codepoints and long names

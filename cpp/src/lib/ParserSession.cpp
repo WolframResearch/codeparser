@@ -1,21 +1,19 @@
 
 #include "ParserSession.h"
 
-#include "Parser.h" // for Parser
 #include "ParseletRegistration.h" // for prefixParselets
 #include "Parselet.h" // for Parselet impls
 #include "Tokenizer.h" // for Tokenizer
-#include "CharacterDecoder.h" // for CharacterDecoder
 #include "ByteDecoder.h" // for ByteDecoder
-#include "ByteBuffer.h" // for ByteBuffer
 #include "MyStringRegistration.h"
+#include "TokenEnumRegistration.h"
 
 #if DIAGNOSTICS
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
 #include <cstring> // for memcpy
-#include <algorithm>
+#include <algorithm> // for find_if
 
 
 using MNodePtr = Node *;
@@ -26,15 +24,15 @@ bool validatePath(WolframLibraryData libData, Buffer inStr);
 
 ParserSession::ParserSession() : start(), end(), buffer(), libData(), opts(), unsafeCharacterEncodingFlag(), srcConventionManager(), fatalIssues(), nonFatalIssues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedNewlines(), EmbeddedTabs(), NodeStack(), ContextStack(), GroupStack(), trivia1(), trivia2() {}
 
-int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn, ParserSessionOptions optsIn) {
+int ParserSession::init(Buffer Buf, size_t Len, WolframLibraryData libDataIn, ParserSessionOptions optsIn) {
     
     libData = libDataIn;
     opts = optsIn;
     
     if (opts.alreadyHasEOFSentinel) {
         
-        start = bufAndLenIn.Buf;
-        end = bufAndLenIn.end();
+        start = Buf;
+        end = Buf + Len;
         buffer = start;
         
     } else {
@@ -46,11 +44,11 @@ int ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataI
         //
         // add 1 byte at end for EOF sentinel
         //
-        start = new unsigned char[bufAndLenIn.length() + 1];
-        end = start + bufAndLenIn.length() + 1;
+        start = new unsigned char[Len + 1];
+        end = start + Len + 1;
         buffer = start;
         
-        memcpy(const_cast<MBuffer>(start), bufAndLenIn.Buf, bufAndLenIn.length());
+        memcpy(const_cast<MBuffer>(start), Buf, Len);
             
         auto last = const_cast<MBuffer>(end) - 1;
         
@@ -357,7 +355,7 @@ NodePtr ParserSession::safeString() {
     //
     // remove EOF sentinel
     //
-    auto N = new SafeStringNode(BufferAndLength(start, end - start - 1));
+    auto N = new SafeStringNode(start, end - start - 1);
     
     nodes.push(std::move(N));
     

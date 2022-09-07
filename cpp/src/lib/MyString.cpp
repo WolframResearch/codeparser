@@ -13,7 +13,7 @@
 #endif // USE_EXPR_LIB
 
 #include <cassert>
-#include <cstring>
+#include <cstring> // for strcmp
 
 using Buffer = const unsigned char *;
 

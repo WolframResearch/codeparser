@@ -6,6 +6,10 @@
 #include "Source.h"
 
 #include <string>
+#include <vector>
+
+class Issue;
+class CodeAction;
 
 using IssuePtr = Issue *;
 using CodeActionPtr = CodeAction *;

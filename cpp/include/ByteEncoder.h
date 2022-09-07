@@ -1,12 +1,11 @@
 
 #pragma once
 
-#include "CodePoint.h" // for codepoint
-
 #include <ostream>
 #include <array>
 #include <cstddef> // for size_t
 
+using codepoint = int32_t;
 
 //
 //

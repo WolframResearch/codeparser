@@ -5,11 +5,11 @@
 #include "Source.h" // for Source
 #include "Issue.h"
 
-#include <string>
-#include <unordered_set> // for unordered_set
 #include <ostream>
 #include <cstdint> // for uint8_t
+#include <cstddef> // for size_t
 
+using Buffer = const unsigned char *;
 
 std::ostream& set_graphical(std::ostream& s);
 
@@ -43,4 +43,8 @@ public:
     //
     //
     static CodeActionPtrVector certainCharacterReplacementActions(WLCharacter c, Source src);
+    
+    static bool containsOnlyASCII(Buffer Buf, size_t Len);
+
+    static bool containsTab(Buffer Buf, size_t Len);
 };

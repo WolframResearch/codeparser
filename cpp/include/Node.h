@@ -4,7 +4,6 @@
 #include "Source.h" // for Source
 #include "Token.h" // for Token
 #include "API.h" // for UnsafeCharacterEncodingFlag
-#include "Precedence.h"
 #include "Symbol.h"
 #include "Issue.h"
 
@@ -494,11 +493,12 @@ public:
 class SafeStringNode : public Node {
 private:
     
-    const BufferAndLength bufAndLen;
+    const Buffer Buf;
+    const size_t Len;
     
 public:
 
-    SafeStringNode(BufferAndLength bufAndLen);
+    SafeStringNode(Buffer Buf, size_t Len);
     
     Source getSource() const override;
     
@@ -530,7 +530,7 @@ public:
     Source getSource() const override;
     
 #if USE_MATHLINK
-    void put(ParserSessionPtr session, MLINK callLink) const;
+    void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;

@@ -1,11 +1,8 @@
 
 #pragma once
 
-#include "WLCharacter.h" // for WLCharacter
 #include "Token.h" // for Token
-
-#include <set>
-#include <cstddef> // for size_t
+#include "Source.h"
 
 class ParserSession;
 

@@ -25,13 +25,11 @@ void DestroyParserSession(ParserSessionPtr session) {
     delete session;
 }
 
-int ParserSessionInit(ParserSessionPtr session, CBufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionOptions opts) {
-    return session->init(bufAndLen, libData, opts);
+int ParserSessionInit(ParserSessionPtr session, Buffer Buf, uint64_t Len, WolframLibraryData libData, ParserSessionOptions opts) {
+    return session->init(Buf, Len, libData, opts);
 }
 
-int ParserSessionInitSimple(ParserSessionPtr session, Buffer Buf, size_t Len, int AlreadyHasEOFSentinel) {
-    
-    auto bufAndLen = BufferAndLength(Buf, Len);
+int ParserSessionInitSimple(ParserSessionPtr session, Buffer Buf, uint64_t Len, int AlreadyHasEOFSentinel) {
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
@@ -40,7 +38,7 @@ int ParserSessionInitSimple(ParserSessionPtr session, Buffer Buf, size_t Len, in
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = AlreadyHasEOFSentinel;
     
-    return session->init(bufAndLen, nullptr, opts);
+    return session->init(Buf, Len, nullptr, opts);
 }
 
 void ParserSessionDeinit(ParserSessionPtr session) {
@@ -275,10 +273,6 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.data();
-    bufAndLen.Len = arr.size();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -286,7 +280,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.data(), arr.size(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -403,10 +397,6 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
         assert(false);
     }
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.get();
-    bufAndLen.Len = arr.getByteCount();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -414,7 +404,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -460,10 +450,6 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = fb.getBuf();
-    bufAndLen.Len = fb.getLen();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -471,7 +457,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -580,10 +566,6 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = fb.getBuf();
-    bufAndLen.Len = fb.getLen();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -591,7 +573,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -635,10 +617,6 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.data();
-    bufAndLen.Len = arr.size();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -646,7 +624,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.data(), arr.size(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -763,10 +741,6 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.get();
-    bufAndLen.Len = arr.getByteCount();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -774,7 +748,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -820,10 +794,6 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = fb.getBuf();
-    bufAndLen.Len = fb.getLen();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -831,7 +801,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -940,10 +910,6 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = fb.getBuf();
-    bufAndLen.Len = fb.getLen();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -951,7 +917,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = true;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, fb.getBuf(), fb.getLen(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -986,8 +952,9 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     
     auto arr = ScopedNumericArray(libData, Args[1]);
 
-    auto stringifyMode = MArgument_getInteger(Args[2]);
-
+    auto mlStringifyMode = MArgument_getInteger(Args[2]);
+    auto stringifyMode = static_cast<StringifyMode>(mlStringifyMode);
+    
     auto mlSrcConvention = MArgument_getInteger(Args[3]);
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
 
@@ -1000,10 +967,6 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     auto mlEncodingMode = MArgument_getInteger(Args[6]);
     auto encodingMode = static_cast<EncodingMode>(mlEncodingMode);
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.data();
-    bufAndLen.Len = arr.size();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -1011,13 +974,13 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     opts.encodingMode = encodingMode;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.data(), arr.size(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     NodePtr N;
     
-    if (ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode), &N)) {
+    if (ParserSessionConcreteParseLeaf(session, stringifyMode, &N)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -1097,10 +1060,12 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int stringifyMode;
-    if (!MLGetInteger(callLink, &stringifyMode)) {
+    int mlStringifyMode;
+    if (!MLGetInteger(callLink, &mlStringifyMode)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto stringifyMode = static_cast<StringifyMode>(mlStringifyMode);
     
     if (MLGetType(callLink) != MLTKINT) {
         return LIBRARY_FUNCTION_ERROR;
@@ -1150,10 +1115,6 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.get();
-    bufAndLen.Len = arr.getByteCount();
-    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -1161,13 +1122,13 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = encodingMode;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     NodePtr N;
     
-    if (ParserSessionConcreteParseLeaf(session, static_cast<StringifyMode>(stringifyMode), &N)) {
+    if (ParserSessionConcreteParseLeaf(session, stringifyMode, &N)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -1196,10 +1157,6 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
     
     auto arr = ScopedNumericArray(libData, Args[1]);
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.data();
-    bufAndLen.Len = arr.size();
-    
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
     opts.tabWidth = DEFAULT_TAB_WIDTH;
@@ -1207,7 +1164,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.data(), arr.size(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -1291,10 +1248,6 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         assert(false);
     }
     
-    CBufferAndLength bufAndLen;
-    bufAndLen.Buf = arr.get();
-    bufAndLen.Len = arr.getByteCount();
-    
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
     opts.tabWidth = DEFAULT_TAB_WIDTH;
@@ -1302,7 +1255,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    if (ParserSessionInit(session, bufAndLen, libData, opts)) {
+    if (ParserSessionInit(session, arr.get(), arr.getByteCount(), libData, opts)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     

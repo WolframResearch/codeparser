@@ -5,11 +5,8 @@
 #include "Utils.h" // for isMBNewline, etc.
 #include "LongNamesRegistration.h" // for CodePointToLongNameMap
 #include "LongNames.h"
-
-#if USE_MATHLINK
-#include "mathlink.h"
-#undef P
-#endif // USE_MATHLINK
+#include "SymbolRegistration.h"
+#include "ParserSession.h"
 
 #if USE_EXPR_LIB
 #include "ExprLibrary.h"
@@ -18,74 +15,6 @@
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <sstream> // for ostringstream
 #include <algorithm> // for lower_bound
-
-
-BufferAndLength::BufferAndLength() : Buf(), Len() {}
-
-BufferAndLength::BufferAndLength(Buffer Buf) : Buf(Buf), Len(0) {}
-
-BufferAndLength::BufferAndLength(CBufferAndLength bufAndLen) : Buf(bufAndLen.Buf), Len(bufAndLen.Len) {}
-
-BufferAndLength::BufferAndLength(Buffer Buf, size_t Len) : Buf(Buf), Len(Len) {
-    assert(Len < 1ULL << 48);
-}
-
-size_t BufferAndLength::length() const {
-    return Len;
-}
-
-Buffer BufferAndLength::end() const {
-    return Buf + Len;
-}
-
-bool BufferAndLength::containsOnlyASCII() const {
-    
-    for (auto p = Buf; p < end(); p++) {
-        
-        auto c = *p;
-        
-        if (c > 0x7f) {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-bool BufferAndLength::containsTab() const {
-    
-    for (auto p = Buf; p < end(); p++) {
-        
-        auto c = *p;
-        
-        if (c == 0x09) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-void BufferAndLength::print(std::ostream& s) const {
-    s.write(reinterpret_cast<const char *>(Buf), length());
-}
-
-#if USE_MATHLINK
-void BufferAndLength::put(ParserSessionPtr session, MLINK callLink) const {
-    if (!MLPutUTF8String(callLink, Buf, static_cast<int>(length()))) {
-        assert(false);
-    }
-}
-#endif // USE_MATHLINK
-
-#if USE_EXPR_LIB
-expr BufferAndLength::toExpr(ParserSessionPtr session) const {
-    return Expr_UTF8BytesToStringExpr(Buf, static_cast<int>(length()));
-}
-#endif // USE_EXPR_LIB
-
-
-
 
 
 //

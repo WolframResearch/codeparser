@@ -3,8 +3,6 @@
 
 #include "Source.h"
 
-#include <set>
-
 class SourceConventionManager;
 class ParserSession;
 

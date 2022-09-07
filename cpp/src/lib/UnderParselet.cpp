@@ -2,10 +2,11 @@
 #include "Parselet.h"
 
 #include "ParseletRegistration.h" // for symbolParselet
-#include "Symbol.h"
 #include "Parser.h"
 #include "ParserSession.h"
 #include "Tokenizer.h"
+#include "Node.h"
+#include "TokenEnumRegistration.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]

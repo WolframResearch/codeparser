@@ -1,10 +1,8 @@
 
 #pragma once
 
-#include "Source.h" // for SourceLocation
+#include "Source.h" // for NextPolicy
 #include "WLCharacter.h" // for WLCharacter
-
-#include <set>
 
 class ParserSession;
 

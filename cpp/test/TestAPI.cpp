@@ -45,8 +45,6 @@ TEST_F(APITest, Bug1) {
     auto strIn = std::string("abc[]");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
@@ -55,11 +53,11 @@ TEST_F(APITest, Bug1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto N = session->concreteParseLeaf(STRINGIFYMODE_NORMAL);
 
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
 
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -77,8 +75,6 @@ TEST_F(APITest, Hang1) {
     auto strIn = std::string("<<rr[R");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
@@ -87,11 +83,11 @@ TEST_F(APITest, Hang1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
 
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
     
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -109,8 +105,6 @@ TEST_F(APITest, Crash1) {
     auto strIn = std::string("0^^");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
@@ -119,11 +113,11 @@ TEST_F(APITest, Crash1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
 
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
     
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -142,8 +136,6 @@ TEST_F(APITest, Crash2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size());
-    
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
     opts.tabWidth = DEFAULT_TAB_WIDTH;
@@ -151,11 +143,11 @@ TEST_F(APITest, Crash2) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
     
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
     
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
     
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -174,8 +166,6 @@ TEST_F(APITest, Crash3) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size());
-    
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
     opts.tabWidth = DEFAULT_TAB_WIDTH;
@@ -183,11 +173,11 @@ TEST_F(APITest, Crash3) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
     
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
     
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
     
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -205,8 +195,6 @@ TEST_F(APITest, Crash4) {
     auto strIn = std::string("12..");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
@@ -215,11 +203,11 @@ TEST_F(APITest, Crash4) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
 
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
 
     EXPECT_EQ(session->nonFatalIssues.size(), 1u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -237,8 +225,6 @@ TEST_F(APITest, Crash5) {
     auto strIn = std::string("123\\\n.45");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
@@ -247,11 +233,11 @@ TEST_F(APITest, Crash5) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
 
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
 
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -270,8 +256,6 @@ TEST_F(APITest, Crash6) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size());
-    
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_LINECOLUMN;
     opts.tabWidth = DEFAULT_TAB_WIDTH;
@@ -279,11 +263,11 @@ TEST_F(APITest, Crash6) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
     
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
     
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
     
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -301,8 +285,6 @@ TEST_F(APITest, Crash7) {
     auto strIn = std::string("1+1");
 
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
-
-    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     //
     // this was originally using SOURCECONVENTION_UNKNOWN, which was 0
@@ -317,7 +299,7 @@ TEST_F(APITest, Crash7) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    auto res = session->init(bufAndLen, nullptr, opts);
+    auto res = session->init(str, strIn.size(), nullptr, opts);
     
     EXPECT_EQ(res, PARSERSESSIONINIT_ERROR);
 
@@ -332,8 +314,6 @@ TEST_F(APITest, Crash7) {
 TEST_F(APITest, Crash8) {
     
     const unsigned char arr[] = {'(', '*', '\r', '\n', '*', ')'};
-
-    auto bufAndLen = BufferAndLength(arr, 6);
     
     ParserSessionOptions opts;
     opts.srcConvention = SOURCECONVENTION_SOURCECHARACTERINDEX;
@@ -342,11 +322,11 @@ TEST_F(APITest, Crash8) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(bufAndLen, nullptr, opts);
+    session->init(arr, 6, nullptr, opts);
 
-    auto N = session->parseExpressions();
+    auto N = session->concreteParse();
 
-    session->releaseNodeContainer(N);
+    session->releaseNode(N);
     
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);

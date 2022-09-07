@@ -9,6 +9,7 @@
 #endif // USE_MATHLINK
 
 #include <ostream>
+#include <cstddef> // for size_t
 
 class ParserSession;
 

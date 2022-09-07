@@ -6,6 +6,8 @@
 #include "ParseletRegistration.h"
 #include "Tokenizer.h"
 #include "SymbolRegistration.h"
+#include "Node.h"
+#include "TokenEnumRegistration.h"
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]

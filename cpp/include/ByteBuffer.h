@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "Source.h" // for BufferAndLength
-
 class ParserSession;
 
 using ParserSessionPtr = ParserSession *;

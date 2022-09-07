@@ -1,6 +1,7 @@
 
 #include "ParserSession.h"
 #include "ByteDecoder.h"
+#include "CodePoint.h"
 
 #include "gtest/gtest.h"
 
@@ -50,7 +51,7 @@ TEST_F(ByteDecoderTest, Basic1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -92,7 +93,7 @@ TEST_F(ByteDecoderTest, Basic2) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 4), nullptr, opts);
+    session->init(arr, 4, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -137,7 +138,7 @@ TEST_F(ByteDecoderTest, Basic3) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 5), nullptr, opts);
+    session->init(arr, 5, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -179,7 +180,7 @@ TEST_F(ByteDecoderTest, Invalid1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 3), nullptr, opts);
+    session->init(arr, 3, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -223,7 +224,7 @@ TEST_F(ByteDecoderTest, Invalid2) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 3), nullptr, opts);
+    session->init(arr, 3, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -265,7 +266,7 @@ TEST_F(ByteDecoderTest, Invalid3) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 3), nullptr, opts);
+    session->init(arr, 3, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -308,7 +309,7 @@ TEST_F(ByteDecoderTest, Invalid4) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 4), nullptr, opts);
+    session->init(arr, 4, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -351,7 +352,7 @@ TEST_F(ByteDecoderTest, Surrogate1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 5), nullptr, opts);
+    session->init(arr, 5, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 
@@ -406,7 +407,7 @@ TEST_F(ByteDecoderTest, Surrogate2) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(arr, 5), nullptr, opts);
+    session->init(arr, 5, nullptr, opts);
 
     auto c = ByteDecoder_currentSourceCharacter(session, TOPLEVEL);
 

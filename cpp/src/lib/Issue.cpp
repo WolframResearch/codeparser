@@ -4,6 +4,10 @@
 #include "MyStringRegistration.h"
 #include "SymbolRegistration.h"
 
+#if USE_EXPR_LIB
+#include "ExprLibrary.h"
+#endif // USE_EXPR_LIB
+
 
 Issue::Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(Actions), AdditionalDescriptions(AdditionalDescriptions) {}
 
@@ -112,11 +116,6 @@ void DeleteTextCodeAction::print(std::ostream& s) const {
     
     s << "]";
 }
-
-
-
-
-
 
 
 #if USE_MATHLINK
@@ -280,10 +279,6 @@ void DeleteTextCodeAction::put(ParserSessionPtr session, MLINK callLink) const {
     }
 }
 #endif // USE_MATHLINK
-
-
-
-
 
 
 #if USE_EXPR_LIB

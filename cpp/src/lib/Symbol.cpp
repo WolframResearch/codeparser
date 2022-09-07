@@ -1,7 +1,6 @@
 
 #include "Symbol.h"
 
-#include "ParserSession.h"
 #include "TokenEnumRegistration.h"
 
 #if USE_MATHLINK
@@ -25,7 +24,7 @@ bool operator!=(Symbol a, Symbol b) {
 }
 
 Token Symbol::token() const {
-    return Token(TOKEN_SYMBOL, BufferAndLength(reinterpret_cast<Buffer>(Name), Len));
+    return Token(TOKEN_SYMBOL, reinterpret_cast<Buffer>(Name), Len);
 }
 
 void Symbol::print(std::ostream& s) const {

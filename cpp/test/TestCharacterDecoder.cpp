@@ -1,6 +1,7 @@
 
 #include "CharacterDecoder.h"
 #include "ParserSession.h"
+#include "CodePoint.h"
 
 #include "gtest/gtest.h"
 
@@ -50,7 +51,7 @@ TEST_F(CharacterDecoderTest, Basic1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -91,7 +92,7 @@ TEST_F(CharacterDecoderTest, LongName) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -132,7 +133,7 @@ TEST_F(CharacterDecoderTest, 4Hex) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -173,7 +174,7 @@ TEST_F(CharacterDecoderTest, 2Hex) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -214,7 +215,7 @@ TEST_F(CharacterDecoderTest, Octal) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -255,7 +256,7 @@ TEST_F(CharacterDecoderTest, 6Hex) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -296,7 +297,7 @@ TEST_F(CharacterDecoderTest, Raw) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -337,7 +338,7 @@ TEST_F(CharacterDecoderTest, LongNameError1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -426,7 +427,7 @@ TEST_F(CharacterDecoderTest, LongNameError2) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -515,7 +516,7 @@ TEST_F(CharacterDecoderTest, 4HexError1) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
 
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
 
@@ -595,7 +596,7 @@ TEST_F(CharacterDecoderTest, UnexpectedEscapeSequence) {
     opts.encodingMode = ENCODINGMODE_NORMAL;
     opts.alreadyHasEOFSentinel = false;
     
-    session->init(BufferAndLength(str, strIn.size()), nullptr, opts);
+    session->init(str, strIn.size(), nullptr, opts);
     
     auto c = CharacterDecoder_currentWLCharacter(session, TOPLEVEL);
     

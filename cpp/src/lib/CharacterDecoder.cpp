@@ -2,7 +2,6 @@
 #include "CharacterDecoder.h"
 
 #include "ByteDecoder.h" // for TheByteDecoder
-#include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for isMBStrange, etc.
 #include "LongNamesRegistration.h" // for LongNameToCodePointMap, etc.
 #include "LongNames.h"
@@ -19,6 +18,7 @@
 #endif // DIAGNOSTICS
 
 #include <algorithm> // for lower_bound
+#include <array>
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
@@ -377,8 +377,7 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
             
             auto longNameEndBuf = currentWLCharacterEndBuf;
             
-            auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
-            auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.Buf), longNameBufAndLen.length());
+            auto longNameStr = std::string(reinterpret_cast<const char *>(longNameStartBuf), longNameEndBuf - longNameStartBuf);
             
             if (atleast1DigitOrAlpha) {
                 
@@ -438,9 +437,7 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
     
     auto longNameEndBuf = session->buffer;
     
-    auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
-    
-    auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.Buf), longNameBufAndLen.length());
+    auto longNameStr = std::string(reinterpret_cast<const char *>(longNameStartBuf), longNameEndBuf - longNameStartBuf);
     
     auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), longNameStr);
     
@@ -653,8 +650,7 @@ WLCharacter CharacterDecoder_handle4Hex(ParserSessionPtr session, Buffer colonBu
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.Buf), hexBufAndLen.length());
+                auto hexStr = std::string(reinterpret_cast<const char *>(hexStartBuf), hexEndBuf - hexStartBuf);
                 
                 CodeActionPtrVector Actions;
                 
@@ -843,8 +839,7 @@ WLCharacter CharacterDecoder_handle2Hex(ParserSessionPtr session, Buffer dotBuf,
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.Buf), hexBufAndLen.length());
+                auto hexStr = std::string(reinterpret_cast<const char *>(hexStartBuf), hexEndBuf - hexStartBuf);
                 
                 CodeActionPtrVector Actions;
                 
@@ -1031,8 +1026,7 @@ WLCharacter CharacterDecoder_handleOctal(ParserSessionPtr session, Buffer firstO
                 
                 auto octalEndBuf = currentWLCharacterEndBuf;
                 
-                auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf);
-                auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.Buf), octalBufAndLen.length());
+                auto octalStr = std::string(reinterpret_cast<const char *>(octalStartBuf), octalEndBuf - octalStartBuf);
                 
                 CodeActionPtrVector Actions;
                 
@@ -1220,8 +1214,7 @@ WLCharacter CharacterDecoder_handle6Hex(ParserSessionPtr session, Buffer barBuf,
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-                auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.Buf), hexBufAndLen.length());
+                auto hexStr = std::string(reinterpret_cast<const char *>(hexStartBuf), hexEndBuf - hexStartBuf);
                 
                 CodeActionPtrVector Actions;
                 
