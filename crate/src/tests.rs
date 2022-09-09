@@ -147,9 +147,9 @@ fn test_something() {
         vec![Node::Infix(InfixNode {
             op: OperatorNode {
                 // Op: Symbol { name: "Plus", id: 514 },
-                Op: crate::symbol_registration::SYMBOL_PLUS,
-                MakeSym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
-                Children: NodeSeq(vec![
+                op: crate::symbol_registration::SYMBOL_PLUS,
+                make_sym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
+                children: NodeSeq(vec![
                     NVToken(Token {
                         tok: TokenKind::Integer,
                         src: src!(1:1-1:2),
@@ -176,7 +176,7 @@ fn test_something() {
                         span: ByteSpan::new(4, 1),
                     }),
                 ]),
-                Src: src!(1:1-1:6),
+                src: src!(1:1-1:6),
             },
         })]
     );

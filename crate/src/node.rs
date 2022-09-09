@@ -53,10 +53,10 @@ pub enum Node {
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
 pub struct OperatorNode {
-    pub(crate) Op: Symbol,
-    pub(crate) MakeSym: Symbol,
-    pub(crate) Children: NodeSeq,
-    pub(crate) Src: Source,
+    pub(crate) op: Symbol,
+    pub(crate) make_sym: Symbol,
+    pub(crate) children: NodeSeq,
+    pub(crate) src: Source,
 }
 
 /// `-a`
@@ -405,29 +405,29 @@ impl Node {
 //======================================
 
 impl OperatorNode {
-    pub(crate) fn new(Op: Symbol, MakeSym: Symbol, Children: NodeSeq) -> Self {
-        assert!(!Children.is_empty());
+    pub(crate) fn new(op: Symbol, make_sym: Symbol, children: NodeSeq) -> Self {
+        assert!(!children.is_empty());
 
-        let src = Source::new_from_source(Children.first().source(), Children.last().source());
+        let src = Source::new_from_source(children.first().source(), children.last().source());
 
         OperatorNode {
-            Op,
-            MakeSym,
-            Children,
-            Src: src,
+            op,
+            make_sym,
+            children,
+            src: src,
         }
     }
 
     pub fn getOp(&self) -> Symbol {
-        return self.Op;
+        return self.op;
     }
 
     pub fn getSource(&self) -> Source {
-        return self.Src;
+        return self.src;
     }
 
     pub(crate) fn check(&self) -> bool {
-        return self.Children.check();
+        return self.children.check();
     }
 
     // TODO: impl Display
@@ -439,10 +439,10 @@ impl OperatorNode {
     //     Op.print(s);
     //     s << ", ";
 
-    //     Children.print(s);
+    //     children.print(s);
     //     s << ", ";
 
-    //     Src.print(s);
+    //     src.print(s);
 
     //     s << "]";
     // }
@@ -469,61 +469,61 @@ impl UnterminatedGroupNeedsReparseNode {
 //======================================
 
 impl PrefixNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PrefixNodeCount);
 
         PrefixNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_PREFIXNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_PREFIXNODE, args),
         }
     }
 }
 
 impl BinaryNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
 
         BinaryNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_BINARYNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_BINARYNODE, args),
         }
     }
 }
 
 impl InfixNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
 
         InfixNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_INFIXNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_INFIXNODE, args),
         }
     }
 }
 
 impl TernaryNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_TernaryNodeCount);
 
         TernaryNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_TERNARYNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_TERNARYNODE, args),
         }
     }
 }
 
 impl PostfixNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
 
         PostfixNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_POSTFIXNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_POSTFIXNODE, args),
         }
     }
 }
 
 impl PrefixBinaryNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PrefixBinaryNodeCount);
 
         PrefixBinaryNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, args),
         }
     }
 }
@@ -533,44 +533,44 @@ impl PrefixBinaryNode {
 //======================================
 
 impl GroupNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_GroupNodeCount);
 
         GroupNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_GROUPNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_GROUPNODE, args),
         }
     }
 }
 
 impl CompoundNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_CompoundNodeCount);
 
         CompoundNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_COMPOUNDNODE, args),
         }
     }
 }
 
 impl GroupMissingCloserNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
         GroupMissingCloserNode {
-            op: OperatorNode::new(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, Args),
+            op: OperatorNode::new(op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, args),
         }
     }
 }
 
 impl UnterminatedGroupNeedsReparseNode {
-    pub(crate) fn new(Op: Symbol, Args: NodeSeq) -> Self {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
 
         UnterminatedGroupNeedsReparseNode {
             op: OperatorNode::new(
-                Op,
+                op,
                 SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE,
-                Args,
+                args,
             ),
         }
     }
@@ -611,7 +611,7 @@ impl CallNode {
     //     std::visit(PrintVisitor{s}, Body);
     //     s << ", ";
 
-    //     Src.print(s);
+    //     src.print(s);
 
     //     s << "]";
     // }
@@ -655,10 +655,10 @@ impl SyntaxErrorNode {
     //     s << Err.name;
     //     s << ", ";
 
-    //     Children.print(s);
+    //     children.print(s);
     //     s << ", ";
 
-    //     Src.print(s);
+    //     src.print(s);
 
     //     s << "]";
     // }
