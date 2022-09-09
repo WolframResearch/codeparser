@@ -51,7 +51,7 @@ fn tokens(input: &str) -> Vec<Node> {
     );
 
     let NodeContainer {
-        nodes: NodeSeq { vec: nodes },
+        nodes: NodeSeq(nodes),
     } = session.tokenize();
 
     nodes.clone()
@@ -153,35 +153,33 @@ fn test_something() {
                 // Op: Symbol { name: "Plus", id: 514 },
                 Op: crate::symbol_registration::SYMBOL_PLUS,
                 MakeSym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
-                Children: NodeSeq {
-                    vec: vec![
-                        NVToken(Token {
-                            tok: TOKEN_INTEGER,
-                            src: src!(1:1-1:2),
-                            span: ByteSpan::new(0, 1),
-                        },),
-                        NVToken(Token {
-                            tok: TOKEN_WHITESPACE,
-                            src: src!(1:2-1:3),
-                            span: ByteSpan::new(1, 1)
-                        },),
-                        NVToken(Token {
-                            tok: TOKEN_PLUS,
-                            src: src!(1:3-1:4),
-                            span: ByteSpan::new(2, 1),
-                        },),
-                        NVToken(Token {
-                            tok: TOKEN_WHITESPACE,
-                            src: src!(1:4-1:5),
-                            span: ByteSpan::new(3, 1),
-                        },),
-                        NVToken(Token {
-                            tok: TOKEN_INTEGER,
-                            src: src!(1:5-1:6),
-                            span: ByteSpan::new(4, 1),
-                        },),
-                    ],
-                },
+                Children: NodeSeq(vec![
+                    NVToken(Token {
+                        tok: TOKEN_INTEGER,
+                        src: src!(1:1-1:2),
+                        span: ByteSpan::new(0, 1),
+                    },),
+                    NVToken(Token {
+                        tok: TOKEN_WHITESPACE,
+                        src: src!(1:2-1:3),
+                        span: ByteSpan::new(1, 1)
+                    },),
+                    NVToken(Token {
+                        tok: TOKEN_PLUS,
+                        src: src!(1:3-1:4),
+                        span: ByteSpan::new(2, 1),
+                    },),
+                    NVToken(Token {
+                        tok: TOKEN_WHITESPACE,
+                        src: src!(1:4-1:5),
+                        span: ByteSpan::new(3, 1),
+                    },),
+                    NVToken(Token {
+                        tok: TOKEN_INTEGER,
+                        src: src!(1:5-1:6),
+                        span: ByteSpan::new(4, 1),
+                    },),
+                ]),
                 Src: src!(1:1-1:6),
             },
         })]
@@ -207,7 +205,7 @@ pub fn test_tokenize_is_not_idempotent() {
     );
 
     assert_eq!(
-        session.tokenize().nodes.vec,
+        session.tokenize().nodes.0,
         vec![
             token(TOKEN_INTEGER, src!(0:1-0:2), ByteSpan::new(0, 1)),
             token(TOKEN_PLUS, src!(0:2-0:3), ByteSpan::new(1, 1)),
@@ -216,5 +214,5 @@ pub fn test_tokenize_is_not_idempotent() {
     );
 
     // Test that ParserSession::tokenize() is NOT idempotent.
-    assert_eq!(session.tokenize().nodes.vec, vec![])
+    assert_eq!(session.tokenize().nodes.0, vec![])
 }

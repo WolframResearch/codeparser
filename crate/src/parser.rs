@@ -385,7 +385,7 @@ pub(crate) fn Parser_popContext<'i>(session: &mut ParserSession<'i>) -> NodeSeq 
     let ArgsTmp: NodeSeq = {
         // let vec = vec![session.NodeStack.begin() + Ctxt.Index, session.NodeStack.end()];
         let vec = Vec::from_iter(session.NodeStack.drain(ctxt.index..));
-        NodeSeq { vec }
+        NodeSeq(vec)
     };
 
     debug_assert_eq!(session.NodeStack.len(), ctxt.index);

@@ -98,7 +98,7 @@ impl Node {
 
 impl NodeSeq {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
-        let NodeSeq { vec } = self;
+        let NodeSeq(vec) = self;
 
         callLink.put_function(SYMBOL_LIST.name, vec.len()).unwrap();
 
