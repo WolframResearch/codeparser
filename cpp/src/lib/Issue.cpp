@@ -44,7 +44,7 @@ void Issue::print(std::ostream& s) const {
     s << "]";
 }
 
-bool Issue::check() const {
+bool Issue::syntaxQ() const {
     return Sev != STRING_FATAL;
 }
 

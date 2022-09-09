@@ -41,7 +41,7 @@ public:
     
     void print(std::ostream& s) const;
     
-    bool check() const;
+    bool syntaxQ() const;
     
 #if USE_EXPR_LIB
     expr toExpr(ParserSessionPtr session) const;

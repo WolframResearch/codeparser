@@ -119,7 +119,7 @@ void Token::skip(ParserSessionPtr session) {
     session->SrcLoc = Src.End;
 }
 
-bool Token::check() const {
+bool Token::syntaxQ() const {
     return !Tok.isError();
 }
 

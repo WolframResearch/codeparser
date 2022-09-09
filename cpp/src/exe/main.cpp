@@ -23,7 +23,7 @@ enum OutputMode {
     NONE,
     PRINT,
     PRINT_DRYRUN,
-    CHECK,
+    SYNTAXQ,
 };
 
 
@@ -67,9 +67,9 @@ int main(int argc, char *argv[]) {
             
             outputMode = NONE;
             
-        } else if (arg == "-check") {
+        } else if (arg == "-check" || arg == "-syntaxq" || arg == "-syntaxQ") {
             
-            outputMode = CHECK;
+            outputMode = SYNTAXQ;
             
         } else {
             return EXIT_FAILURE;
@@ -164,7 +164,7 @@ int readStdIn(APIMode mode, OutputMode outputMode) {
                 
                 break;
             }
-            case NONE: case CHECK: {
+            case NONE: case SYNTAXQ: {
                 break;
             }
         }
@@ -200,7 +200,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode) {
             case PRINT_DRYRUN: {
                 break;
             }
-            case NONE: case CHECK: {
+            case NONE: case SYNTAXQ: {
                 break;
             }
         }
@@ -274,7 +274,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode) {
             
             break;
         }
-        case NONE: case CHECK: {
+        case NONE: case SYNTAXQ: {
             break;
         }
     }

@@ -49,7 +49,7 @@ struct Token {
     
     void print(std::ostream& s) const;
     
-    bool check() const;
+    bool syntaxQ() const;
     
 #if USE_MATHLINK
     void put(ParserSessionPtr session, MLINK callLink) const;

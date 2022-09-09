@@ -137,7 +137,7 @@ EXTERN_C DLLEXPORT int ParserSessionConcreteParseLeaf(ParserSessionPtr session, 
 EXTERN_C DLLEXPORT int ParserSessionSafeString(ParserSessionPtr session, NodePtr *nOut);
 EXTERN_C DLLEXPORT void ParserSessionReleaseNode(ParserSessionPtr session, NodePtr N);
 
-EXTERN_C DLLEXPORT int NodeCheck(NodePtr N);
+EXTERN_C DLLEXPORT int NodeSyntaxQ(NodePtr N);
 
 DLLEXPORT void NodePrint(NodePtr N, std::ostream& s);
 

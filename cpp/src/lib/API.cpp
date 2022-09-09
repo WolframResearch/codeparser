@@ -82,8 +82,8 @@ void NodePrint(NodePtr N, std::ostream& s) {
     N->print(s);
 }
 
-int NodeCheck(NodePtr N) {
-    return N->check();
+int NodeSyntaxQ(NodePtr N) {
+    return N->syntaxQ();
 }
 
 

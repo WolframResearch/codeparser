@@ -19,11 +19,11 @@
 using MNodePtr = Node *;
 
 
-struct CheckVisitor {
+struct SyntaxQVisitor {
     
-    bool operator()(const NodePtr& N) { return N->check(); }
+    bool operator()(const NodePtr& N) { return N->syntaxQ(); }
     
-    bool operator()(const Token& L) { return L.check(); }
+    bool operator()(const Token& L) { return L.syntaxQ(); }
 };
 
 struct GetSourceVisitor {
@@ -138,10 +138,10 @@ void NodeSeq::print(std::ostream& s) const {
     s << "]";
 }
 
-bool NodeSeq::check() const {
+bool NodeSeq::syntaxQ() const {
     
     for (auto& C : vec) {
-        if (!std::visit(CheckVisitor{}, C)) {
+        if (!std::visit(SyntaxQVisitor{}, C)) {
             return false;
         }
     }
@@ -193,10 +193,6 @@ void TriviaSeq::clear() {
 
 void Node::release() {}
 
-bool Node::check() const {
-    return true;
-}
-
 Node::~Node() {}
 
 
@@ -216,8 +212,8 @@ Source OperatorNode::getSource() const {
     return Src;
 }
 
-bool OperatorNode::check() const {
-    return Children.check();
+bool OperatorNode::syntaxQ() const {
+    return Children.syntaxQ();
 }
 
 void OperatorNode::print(std::ostream& s) const {
@@ -252,17 +248,17 @@ Source AbortNode::getSource() const {
     return Source(SourceLocation(std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()));
 }
 
-bool AbortNode::check() const {
+bool AbortNode::syntaxQ() const {
     return false;
 }
 
 
-bool GroupMissingCloserNode::check() const {
+bool GroupMissingCloserNode::syntaxQ() const {
     return false;
 }
 
 
-bool UnterminatedGroupNeedsReparseNode::check() const {
+bool UnterminatedGroupNeedsReparseNode::syntaxQ() const {
     return false;
 }
 
@@ -374,8 +370,8 @@ void CallNode::print(std::ostream& s) const {
     s << "]";
 }
 
-bool CallNode::check() const {
-    return Head.check() && std::visit(CheckVisitor{}, Body);
+bool CallNode::syntaxQ() const {
+    return Head.syntaxQ() && std::visit(SyntaxQVisitor{}, Body);
 }
 
 
@@ -392,7 +388,7 @@ void SyntaxErrorNode::release() {
     Children.release();
 }
 
-bool SyntaxErrorNode::check() const {
+bool SyntaxErrorNode::syntaxQ() const {
     return false;
 }
 
@@ -427,8 +423,8 @@ void CollectedExpressionsNode::print(std::ostream& s) const {
     Exprs.print(s);
 }
 
-bool CollectedExpressionsNode::check() const {
-    return Exprs.check();
+bool CollectedExpressionsNode::syntaxQ() const {
+    return Exprs.syntaxQ();
 }
 
 Source CollectedExpressionsNode::getSource() const {
@@ -460,10 +456,10 @@ void CollectedIssuesNode::print(std::ostream& s) const {
     s << "]";
 }
 
-bool CollectedIssuesNode::check() const {
+bool CollectedIssuesNode::syntaxQ() const {
     
     for (auto& I : Issues) {
-        if (!I->check()) {
+        if (!I->syntaxQ()) {
             return false;
         }
     }
@@ -486,6 +482,10 @@ Source CollectedSourceLocationsNode::getSource() const {
     assert(false);
     
     return Source();
+}
+
+bool CollectedSourceLocationsNode::syntaxQ() const {
+    return true;
 }
 
 void CollectedSourceLocationsNode::print(std::ostream& s) const {
@@ -536,7 +536,7 @@ Source MissingBecauseUnsafeCharacterEncodingNode::getSource() const {
     return Source();
 }
 
-bool MissingBecauseUnsafeCharacterEncodingNode::check() const {
+bool MissingBecauseUnsafeCharacterEncodingNode::syntaxQ() const {
     return false;
 }
 
@@ -562,6 +562,10 @@ Source SafeStringNode::getSource() const {
     return Source();
 }
 
+bool SafeStringNode::syntaxQ() const {
+    return true;
+}
+
 void SafeStringNode::print(std::ostream& s) const {
     s.write(reinterpret_cast<const char *>(Buf), Len);
 }
@@ -584,8 +588,8 @@ void NodeContainer::print(std::ostream& s) const {
     Nodes.print(s);
 }
 
-bool NodeContainer::check() const {
-    return Nodes.check();
+bool NodeContainer::syntaxQ() const {
+    return Nodes.syntaxQ();
 }
 
 
