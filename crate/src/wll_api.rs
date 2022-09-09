@@ -57,7 +57,7 @@ unsafe fn DestroyParserSession(session: ParserSessionPtr) {
 // }
 
 // fn ParserSessionParseExpressions(session: ParserSessionPtr) -> NodeContainerPtr {
-//     return session.parseExpressions();
+//     return session.concrete_parse_expressions();
 // }
 
 // fn ParserSessionTokenize(session: ParserSessionPtr) -> NodeContainerPtr {
@@ -331,7 +331,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let result = session.parseExpressions();
+    let result = session.concrete_parse_expressions();
 
     result.into_node_container().put(&session, link);
 
@@ -445,7 +445,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let C = session.parseExpressions();
+    let C = session.concrete_parse_expressions();
 
     C.into_node_container().put(&session, link);
 

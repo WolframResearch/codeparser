@@ -107,7 +107,7 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.input
     }
 
-    pub fn parseExpressions(&mut self) -> ParseResult {
+    pub fn concrete_parse_expressions(&mut self) -> ParseResult {
         #[cfg(feature = "DIAGNOSTICS")]
         {
             DiagnosticsLog("enter parseExpressions");

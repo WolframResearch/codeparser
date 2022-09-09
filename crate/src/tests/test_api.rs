@@ -40,7 +40,7 @@ fn APITest_Hang1() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -61,7 +61,7 @@ fn APITest_Crash1() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -82,7 +82,7 @@ fn APITest_Crash2() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -103,7 +103,7 @@ fn APITest_Crash3() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -124,7 +124,7 @@ fn APITest_Crash4() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 1);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -145,7 +145,7 @@ fn APITest_Crash5() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -166,7 +166,7 @@ fn APITest_Crash6() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -211,7 +211,7 @@ fn APITest_Crash8() {
         EncodingMode::Normal,
     );
 
-    let _ = session.parseExpressions();
+    let _ = session.concrete_parse_expressions();
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
