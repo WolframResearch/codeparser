@@ -13,8 +13,7 @@ use crate::{
     source::Source,
     source::TOPLEVEL,
     symbol_registration::SYMBOL_SPAN,
-    token::Token,
-    token_enum_registration::TokenEnum::*,
+    token::{Token, TokenKind},
     tokenizer::Tokenizer_currentToken,
 };
 
@@ -39,7 +38,7 @@ impl InfixParselet for SemiSemiParselet {
 
         if Parser_checkSpan(session) {
             return Token::new2(
-                TOKEN_FAKE_IMPLICITTIMES,
+                TokenKind::Fake_ImplicitTimes,
                 TokIn.span,
                 Source::from_location(TokIn.src.start),
             );
@@ -62,7 +61,7 @@ fn SemiSemiParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeaf(
         session,
         Token::new2(
-            TOKEN_FAKE_IMPLICITONE,
+            TokenKind::Fake_ImplicitOne,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         ),
@@ -113,7 +112,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
         Parser_pushLeaf(
             session,
             Token::new2(
-                TOKEN_FAKE_IMPLICITALL,
+                TokenKind::Fake_ImplicitAll,
                 SecondTok.span,
                 Source::from_location(SecondTok.src.start),
             ),
@@ -127,7 +126,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
         return SemiSemiParselet_reduceBinary(session);
     }
 
-    if SecondTok.tok != TOKEN_SEMISEMI {
+    if SecondTok.tok != TokenKind::SemiSemi {
         //
         // a;;b
         //    ^SecondTok
@@ -151,7 +150,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     Parser_pushLeaf(
         session,
         Token::new2(
-            TOKEN_FAKE_IMPLICITALL,
+            TokenKind::Fake_ImplicitAll,
             SecondTok.span,
             Source::from_location(SecondTok.src.start),
         ),
@@ -173,7 +172,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
         &mut Trivia1.borrow_mut(),
     );
 
-    if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok == TOKEN_SEMISEMI {
+    if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok == TokenKind::SemiSemi {
         //
         // a;;;;&
         //      ^ThirdTok
@@ -232,7 +231,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
         &mut Trivia1.borrow_mut(),
     );
 
-    if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok != TOKEN_SEMISEMI {
+    if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok != TokenKind::SemiSemi {
         //
         // a;;b&
         //     ^ThirdTok
@@ -270,7 +269,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
         &mut Trivia2.borrow_mut(),
     );
 
-    if !FourthTok.tok.isPossibleBeginning() || FourthTok.tok == TOKEN_SEMISEMI {
+    if !FourthTok.tok.isPossibleBeginning() || FourthTok.tok == TokenKind::SemiSemi {
         //
         // a;;b;;&
         //       ^FourthTok

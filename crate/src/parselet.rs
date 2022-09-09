@@ -22,9 +22,8 @@ use crate::{
     source::*,
     symbol::Symbol,
     symbol_registration::*,
-    token::Token,
+    token::{Token, TokenKind},
     token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
-    token_enum_registration::TokenEnum::{self, *},
     tokenizer::{
         Tokenizer_currentToken, Tokenizer_currentToken_stringifyAsFile,
         Tokenizer_currentToken_stringifyAsTag,
@@ -75,7 +74,7 @@ pub(crate) trait InfixParselet: Parselet {
 //--------------------------------------
 
 /// Get the [`PrefixParselet`] implementation associated with this token.
-pub(crate) fn prefix_parselet(tok: TokenEnum) -> PrefixParseletPtr {
+pub(crate) fn prefix_parselet(tok: TokenKind) -> PrefixParseletPtr {
     let index = usize::from(tok.value());
 
     PREFIX_PARSELETS[index]
@@ -426,13 +425,13 @@ fn PrefixCloserParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
 
     if Parser_topPrecedence(session) == PRECEDENCE_COMMA {
         createdToken = Token::new2(
-            TOKEN_ERROR_INFIXIMPLICITNULL,
+            TokenKind::Error_InfixImplicitNull,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
     } else {
         createdToken = Token::new2(
-            TOKEN_ERROR_EXPECTEDOPERAND,
+            TokenKind::Error_ExpectedOperand,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
@@ -472,7 +471,7 @@ pub(crate) fn PrefixToplevelCloserParselet_parsePrefix(session: &mut ParserSessi
 
     Parser_pushLeaf(
         session,
-        Token::new2(TOKEN_ERROR_UNEXPECTEDCLOSER, TokIn.span, TokIn.src),
+        Token::new2(TokenKind::Error_UnexpectedCloser, TokIn.span, TokIn.src),
     );
 
     TokIn.skip(&mut session.tokenizer);
@@ -503,13 +502,13 @@ fn PrefixEndOfFileParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
 
     if Parser_topPrecedence(session) == PRECEDENCE_COMMA {
         createdToken = Token::new2(
-            TOKEN_ERROR_INFIXIMPLICITNULL,
+            TokenKind::Error_InfixImplicitNull,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
     } else {
         createdToken = Token::new2(
-            TOKEN_ERROR_EXPECTEDOPERAND,
+            TokenKind::Error_ExpectedOperand,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
@@ -537,7 +536,7 @@ fn PrefixUnsupportedTokenParselet_parsePrefix(session: &mut ParserSession, TokIn
 
     Parser_pushLeaf(
         session,
-        Token::new2(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.span, TokIn.src),
+        Token::new2(TokenKind::Error_UnsupportedToken, TokIn.span, TokIn.src),
     );
 
     TokIn.skip(&mut session.tokenizer);
@@ -558,9 +557,9 @@ impl PrefixParselet for PrefixCommaParselet {
 
 fn PrefixCommaParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     //
-    // if the input is  f[a@,2]  then we want to return TOKEN_ERROR_EXPECTEDOPERAND
+    // if the input is  f[a@,2]  then we want to return TokenKind::ERROR_EXPECTEDOPERAND
     //
-    // if the input is  f[,2]  then we want to return TOKEN_ERROR_PREFIXIMPLICITNULL
+    // if the input is  f[,2]  then we want to return TokenKind::ERROR_PREFIXIMPLICITNULL
     //
 
     panic_if_aborted!();
@@ -570,13 +569,13 @@ fn PrefixCommaParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
 
     if Parser_topPrecedence(session) == PRECEDENCE_LOWEST {
         createdToken = Token::new2(
-            TOKEN_ERROR_PREFIXIMPLICITNULL,
+            TokenKind::Error_PrefixImplicitNull,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
     } else {
         createdToken = Token::new2(
-            TOKEN_ERROR_EXPECTEDOPERAND,
+            TokenKind::Error_ExpectedOperand,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
@@ -607,7 +606,7 @@ fn PrefixUnhandledParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
     Parser_pushLeaf(
         session,
         Token::new2(
-            TOKEN_ERROR_EXPECTEDOPERAND,
+            TokenKind::Error_ExpectedOperand,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         ),
@@ -698,7 +697,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     //
 
     match Tok.tok {
-        TOKEN_UNDER => {
+        TokenKind::Under => {
             //
             // Something like  a_
             //
@@ -714,7 +713,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             // MUSTTAIl
             return SymbolParselet_reducePatternBlank(session, &under1Parselet);
         },
-        TOKEN_UNDERUNDER => {
+        TokenKind::UnderUnder => {
             //
             // Something like  a__
             //
@@ -730,7 +729,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             // MUSTTAIl
             return SymbolParselet_reducePatternBlank(session, &under2Parselet);
         },
-        TOKEN_UNDERUNDERUNDER => {
+        TokenKind::UnderUnderUnder => {
             //
             // Something like  a___
             //
@@ -746,7 +745,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             // MUSTTAIl
             return SymbolParselet_reducePatternBlank(session, &under3Parselet);
         },
-        TOKEN_UNDERDOT => {
+        TokenKind::UnderDot => {
             //
             // Something like  a_.
             //
@@ -906,7 +905,7 @@ impl InfixParselet for InfixImplicitTimesParselet {
 
     fn processImplicitTimes(&self, _session: &mut ParserSession, TokIn: Token) -> Token {
         return Token::new2(
-            TOKEN_FAKE_IMPLICITTIMES,
+            TokenKind::Fake_ImplicitTimes,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );
@@ -1212,7 +1211,7 @@ fn PostfixOperatorParselet_reducePostfixOperator(
 //======================================
 
 impl GroupParselet {
-    pub(crate) const fn new(Opener: TokenEnum, Op: Symbol) -> Self {
+    pub(crate) const fn new(Opener: TokenKind, Op: Symbol) -> Self {
         Self {
             Op,
             closer: GroupOpenerToCloser(Opener),
@@ -1336,7 +1335,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet) {
             // #endif
         }
 
-        if Tok.tok == TOKEN_ENDOFFILE {
+        if Tok.tok == TokenKind::EndOfFile {
             //
             // Handle something like   { a EOF
             //
@@ -1520,7 +1519,7 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
 
     Parser_eatTrivia_2(session, &mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
 
-    if Tok1.tok != TOKEN_TILDE {
+    if Tok1.tok != TokenKind::Tilde {
         //
         // Something like   a ~f b
         //
@@ -1733,7 +1732,7 @@ fn SlashColonParselet_parse1(session: &mut ParserSession) {
     Parser_eatTrivia_2(session, &mut Tok, TOPLEVEL, &mut Trivia1.borrow_mut());
 
     match Tok.tok {
-        TOKEN_EQUAL => {
+        TokenKind::Equal => {
             Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
 
             Parser_setPrecedence(session, PRECEDENCE_EQUAL);
@@ -1741,7 +1740,7 @@ fn SlashColonParselet_parse1(session: &mut ParserSession) {
             // MUSTTAIl
             return EqualParselet_parseInfixTag(session, Tok);
         },
-        TOKEN_COLONEQUAL => {
+        TokenKind::ColonEqual => {
             Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
 
             Parser_setPrecedence(session, PRECEDENCE_COLONEQUAL);
@@ -1805,7 +1804,7 @@ fn EqualParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     Parser_eatTrivia(session, &mut Tok, TOPLEVEL);
 
-    if Tok.tok == TOKEN_DOT {
+    if Tok.tok == TokenKind::Dot {
         //
         // Something like a = .
         //
@@ -1843,7 +1842,7 @@ fn EqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
 
     Parser_eatTrivia(session, &mut Tok, TOPLEVEL);
 
-    if Tok.tok == TOKEN_DOT {
+    if Tok.tok == TokenKind::Dot {
         //
         // Something like a = .
         //
@@ -2010,7 +2009,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     Parser_eatTrivia(session, &mut Tok2, TOPLEVEL);
 
-    if Tok2.tok == TOKEN_COMMA || Tok2.tok == TOKEN_LONGNAME_INVISIBLECOMMA {
+    if Tok2.tok == TokenKind::Comma || Tok2.tok == TokenKind::LongName_InvisibleComma {
         //
         // Something like  a,,
         //
@@ -2018,7 +2017,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         Parser_pushLeaf(
             session,
             Token::new2(
-                TOKEN_ERROR_INFIXIMPLICITNULL,
+                TokenKind::Error_InfixImplicitNull,
                 Tok2.span,
                 Source::from_location(Tok2.src.start),
             ),
@@ -2076,7 +2075,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
 
         Parser_eatTrivia_2(session, &mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
 
-        if !(Tok1.tok == TOKEN_COMMA || Tok1.tok == TOKEN_LONGNAME_INVISIBLECOMMA) {
+        if !(Tok1.tok == TokenKind::Comma || Tok1.tok == TokenKind::LongName_InvisibleComma) {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
@@ -2095,7 +2094,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
 
         Parser_eatTrivia(session, &mut Tok2, TOPLEVEL);
 
-        if Tok2.tok == TOKEN_COMMA || Tok2.tok == TOKEN_LONGNAME_INVISIBLECOMMA {
+        if Tok2.tok == TokenKind::Comma || Tok2.tok == TokenKind::LongName_InvisibleComma {
             //
             // Something like  a,,
             //
@@ -2103,7 +2102,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
             Parser_pushLeaf(
                 session,
                 Token::new2(
-                    TOKEN_ERROR_INFIXIMPLICITNULL,
+                    TokenKind::Error_InfixImplicitNull,
                     Tok2.span,
                     Source::from_location(Tok2.src.start),
                 ),
@@ -2188,7 +2187,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     //
     Parser_eatTriviaButNotToplevelNewlines(session, &mut Tok2, TOPLEVEL);
 
-    if Tok2.tok == TOKEN_SEMI {
+    if Tok2.tok == TokenKind::Semi {
         //
         // Something like  a; ;
         //
@@ -2196,7 +2195,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
         Parser_pushLeaf(
             session,
             Token::new2(
-                TOKEN_FAKE_IMPLICITNULL,
+                TokenKind::Fake_ImplicitNull,
                 Tok2.span,
                 Source::from_location(Tok2.src.start),
             ),
@@ -2258,7 +2257,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeaf(
         session,
         Token::new2(
-            TOKEN_FAKE_IMPLICITNULL,
+            TokenKind::Fake_ImplicitNull,
             Tok2.span,
             Source::from_location(Tok2.src.start),
         ),
@@ -2286,7 +2285,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
 
         Parser_eatTrivia_2(session, &mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
 
-        if Tok1.tok != TOKEN_SEMI {
+        if Tok1.tok != TokenKind::Semi {
             //
             // Something like  a;b
             //
@@ -2312,7 +2311,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
         //
         Parser_eatTriviaButNotToplevelNewlines(session, &mut Tok2, TOPLEVEL);
 
-        if Tok2.tok == TOKEN_SEMI {
+        if Tok2.tok == TokenKind::Semi {
             //
             // Something like  a;b; ;
             //
@@ -2320,7 +2319,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
             Parser_pushLeaf(
                 session,
                 Token::new2(
-                    TOKEN_FAKE_IMPLICITNULL,
+                    TokenKind::Fake_ImplicitNull,
                     Tok2.span,
                     Source::from_location(Tok2.src.start),
                 ),
@@ -2372,7 +2371,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
         Parser_pushLeaf(
             session,
             Token::new2(
-                TOKEN_FAKE_IMPLICITNULL,
+                TokenKind::Fake_ImplicitNull,
                 Tok2.span,
                 Source::from_location(Tok2.src.start),
             ),
@@ -2452,7 +2451,7 @@ fn ColonColonParselet_parseLoop(session: &mut ParserSession) {
 
         Parser_eatTrivia_2(session, &mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
 
-        if Tok1.tok != TOKEN_COLONCOLON {
+        if Tok1.tok != TokenKind::ColonColon {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
@@ -2656,7 +2655,7 @@ fn HashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, INSIDE_SLOT);
 
     match Tok.tok {
-        TOKEN_INTEGER | TOKEN_STRING => {
+        TokenKind::Integer | TokenKind::String => {
             Parser_pushContext(session, PRECEDENCE_HIGHEST);
 
             Parser_pushLeafAndNext(session, Tok);
@@ -2702,7 +2701,7 @@ fn HashHashParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, INSIDE_SLOTSEQUENCE);
 
     match Tok.tok {
-        TOKEN_INTEGER => {
+        TokenKind::Integer => {
             Parser_pushContext(session, PRECEDENCE_HIGHEST);
 
             Parser_pushLeafAndNext(session, Tok);
@@ -2748,7 +2747,7 @@ fn PercentParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, INSIDE_OUT);
 
     match Tok.tok {
-        TOKEN_INTEGER => {
+        TokenKind::Integer => {
             Parser_pushContext(session, PRECEDENCE_HIGHEST);
 
             Parser_pushLeafAndNext(session, Tok);

@@ -12,9 +12,8 @@ use crate::{
     source::{NextPolicy, TOPLEVEL},
     symbol_registration::{SYMBOL_PATTERN, SYMBOL_SPAN, *},
 
-    token::Token,
+    token::{Token, TokenKind},
     token_enum::Closer,
-    token_enum_registration::TokenEnum::*,
     tokenizer::{Tokenizer, Tokenizer_currentToken, Tokenizer_currentToken_stringifyAsFile},
     FirstLineBehavior,
 };
@@ -71,7 +70,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
             let mut peek = Tokenizer_currentToken(session, TOPLEVEL);
 
-            if peek.tok != TOKEN_HASH {
+            if peek.tok != TokenKind::Hash {
                 // not #!
 
                 //
@@ -88,7 +87,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
             peek = Tokenizer_currentToken(session, TOPLEVEL);
 
-            if peek.tok != TOKEN_BANG {
+            if peek.tok != TokenKind::Bang {
                 // not #!
 
                 //
@@ -114,11 +113,11 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
                 let peek = Tokenizer_currentToken(session, TOPLEVEL);
 
-                if peek.tok == TOKEN_ENDOFFILE {
+                if peek.tok == TokenKind::EndOfFile {
                     break;
                 }
 
-                if peek.tok == TOKEN_TOPLEVELNEWLINE {
+                if peek.tok == TokenKind::ToplevelNewline {
                     peek.skip(session);
 
                     break;
@@ -139,7 +138,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
             let mut peek = Tokenizer_currentToken(session, TOPLEVEL);
 
-            if peek.tok != TOKEN_HASH {
+            if peek.tok != TokenKind::Hash {
                 //
                 // TODO: add to Issues
                 //
@@ -151,7 +150,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
             peek = Tokenizer_currentToken(session, TOPLEVEL);
 
-            if peek.tok != TOKEN_BANG {
+            if peek.tok != TokenKind::Bang {
                 //
                 // TODO: add to Issues
                 //
@@ -168,11 +167,11 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
                 let peek = Tokenizer_currentToken(session, TOPLEVEL);
 
-                if peek.tok == TOKEN_ENDOFFILE {
+                if peek.tok == TokenKind::EndOfFile {
                     break;
                 }
 
-                if peek.tok == TOKEN_TOPLEVELNEWLINE {
+                if peek.tok == TokenKind::ToplevelNewline {
                     peek.skip(session);
 
                     break;
@@ -581,7 +580,7 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
 
         Node::Token(tok) => {
             match tok.tok {
-                TOKEN_SYMBOL => {
+                TokenKind::Symbol => {
                     //
                     // Something like  a:b
                     //                  ^ Pattern
@@ -589,7 +588,7 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
 
                     return ColonLHS::Pattern;
                 },
-                TOKEN_UNDER | TOKEN_UNDERUNDER | TOKEN_UNDERUNDERUNDER => {
+                TokenKind::Under | TokenKind::UnderUnder | TokenKind::UnderUnderUnder => {
                     //
                     // Something like  _:b
                     //                  ^ Optional
@@ -597,7 +596,7 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
 
                     return ColonLHS::Optional;
                 },
-                TOKEN_COLON => {
+                TokenKind::Colon => {
                     panic!("Fix at call site")
                 },
                 _ => (),
@@ -661,7 +660,7 @@ pub(crate) fn Parser_checkTilde<'i>(session: &mut ParserSession<'i>) -> bool {
     }
 
     if let Node::Token(tok) = session.NodeStack[i] {
-        if tok.tok == TOKEN_TILDE {
+        if tok.tok == TokenKind::Tilde {
             return true;
         }
     }

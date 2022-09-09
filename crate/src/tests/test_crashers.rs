@@ -1,8 +1,7 @@
 use crate::{
     source::{ByteSpan, TOPLEVEL},
     src,
-    token::Token,
-    token_enum::TokenEnum::*,
+    token::{Token, TokenKind},
     tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
     EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
 };
@@ -26,7 +25,7 @@ fn CrashTest_Crash0_tokens() {
 
     assert_eq!(
         Tok,
-        Token::new3(TOKEN_INTEGER, ByteSpan::new(0, 1), src!(1:1-1:2))
+        Token::new3(TokenKind::Integer, ByteSpan::new(0, 1), src!(1:1-1:2))
     );
 
     Tokenizer_nextToken(&mut session.tokenizer, policy);
@@ -35,7 +34,7 @@ fn CrashTest_Crash0_tokens() {
 
     assert_eq!(
         Tok,
-        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(1, 2), src!(1:2-2:1))
+        Token::new3(TokenKind::EndOfFile, ByteSpan::new(1, 2), src!(1:2-2:1))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);

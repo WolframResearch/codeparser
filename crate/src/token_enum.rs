@@ -1,5 +1,7 @@
-use crate::source::{NextPolicy, NextPolicyBits::RETURN_TOPLEVELNEWLINE};
-pub(crate) use crate::token_enum_registration::TokenEnum;
+use crate::{
+    source::{NextPolicy, NextPolicyBits::RETURN_TOPLEVELNEWLINE},
+    token::TokenKind,
+};
 
 //
 // All group closers
@@ -25,7 +27,7 @@ pub enum Closer {
     AssertFalse,
 }
 
-impl TokenEnum {
+impl TokenKind {
     pub const fn bits(self) -> u16 {
         let bits: u16 = self as u16;
         return bits;
@@ -38,8 +40,8 @@ impl TokenEnum {
     }
 
     pub(crate) fn with_policy(self, policy: NextPolicy) -> Self {
-        if self == TokenEnum::TOKEN_INTERNALNEWLINE && policy & RETURN_TOPLEVELNEWLINE != 0 {
-            return TokenEnum::TOKEN_TOPLEVELNEWLINE;
+        if self == TokenKind::InternalNewline && policy & RETURN_TOPLEVELNEWLINE != 0 {
+            return TokenKind::ToplevelNewline;
         }
 
         self
@@ -119,59 +121,55 @@ impl TokenEnum {
 }
 
 
-pub(crate) const fn GroupOpenerToCloser(token: TokenEnum) -> Closer {
+pub(crate) const fn GroupOpenerToCloser(token: TokenKind) -> Closer {
     match token {
-        TokenEnum::TOKEN_COLONCOLONOPENSQUARE => Closer::CloseSquare,
-        TokenEnum::TOKEN_LONGNAME_LEFTANGLEBRACKET => Closer::LongName_RightAngleBracket,
-        TokenEnum::TOKEN_LONGNAME_LEFTASSOCIATION => Closer::LongName_RightAssociation,
-        TokenEnum::TOKEN_LONGNAME_LEFTBRACKETINGBAR => Closer::LongName_RightBracketingBar,
-        TokenEnum::TOKEN_LONGNAME_LEFTCEILING => Closer::LongName_RightCeiling,
-        TokenEnum::TOKEN_LONGNAME_LEFTDOUBLEBRACKET => Closer::LongName_RightDoubleBracket,
-        TokenEnum::TOKEN_LONGNAME_LEFTDOUBLEBRACKETINGBAR => {
-            Closer::LongName_RightDoubleBracketingBar
-        },
-        TokenEnum::TOKEN_LONGNAME_LEFTFLOOR => Closer::LongName_RightFloor,
-        TokenEnum::TOKEN_LESSBAR => Closer::BarGreater,
-        TokenEnum::TOKEN_OPENCURLY => Closer::CloseCurly,
-        TokenEnum::TOKEN_LONGNAME_OPENCURLYDOUBLEQUOTE => Closer::LongName_CloseCurlyDoubleQuote,
-        TokenEnum::TOKEN_LONGNAME_OPENCURLYQUOTE => Closer::LongName_CloseCurlyQuote,
-        TokenEnum::TOKEN_OPENPAREN => Closer::CloseParen,
-        TokenEnum::TOKEN_OPENSQUARE => Closer::CloseSquare,
+        TokenKind::ColonColonOpenSquare => Closer::CloseSquare,
+        TokenKind::LongName_LeftAngleBracket => Closer::LongName_RightAngleBracket,
+        TokenKind::LongName_LeftAssociation => Closer::LongName_RightAssociation,
+        TokenKind::LongName_LeftBracketingBar => Closer::LongName_RightBracketingBar,
+        TokenKind::LongName_LeftCeiling => Closer::LongName_RightCeiling,
+        TokenKind::LongName_LeftDoubleBracket => Closer::LongName_RightDoubleBracket,
+        TokenKind::LongName_LeftDoubleBracketingBar => Closer::LongName_RightDoubleBracketingBar,
+        TokenKind::LongName_LeftFloor => Closer::LongName_RightFloor,
+        TokenKind::LessBar => Closer::BarGreater,
+        TokenKind::OpenCurly => Closer::CloseCurly,
+        TokenKind::LongName_OpenCurlyDoubleQuote => Closer::LongName_CloseCurlyDoubleQuote,
+        TokenKind::LongName_OpenCurlyQuote => Closer::LongName_CloseCurlyQuote,
+        TokenKind::OpenParen => Closer::CloseParen,
+        TokenKind::OpenSquare => Closer::CloseSquare,
         _ => panic!("Unhandled token"),
     }
 }
 
-pub(crate) fn TokenToCloser(token: TokenEnum) -> Closer {
+pub(crate) fn TokenToCloser(token: TokenKind) -> Closer {
     match token {
-        TokenEnum::TOKEN_BARGREATER => Closer::BarGreater,
-        TokenEnum::TOKEN_CLOSECURLY => Closer::CloseCurly,
-        TokenEnum::TOKEN_LONGNAME_CLOSECURLYDOUBLEQUOTE => Closer::LongName_CloseCurlyDoubleQuote,
-        TokenEnum::TOKEN_LONGNAME_CLOSECURLYQUOTE => Closer::LongName_CloseCurlyQuote,
-        TokenEnum::TOKEN_CLOSEPAREN => Closer::CloseParen,
-        TokenEnum::TOKEN_CLOSESQUARE => Closer::CloseSquare,
-        TokenEnum::TOKEN_LONGNAME_RIGHTANGLEBRACKET => Closer::LongName_RightAngleBracket,
-        TokenEnum::TOKEN_LONGNAME_RIGHTASSOCIATION => Closer::LongName_RightAssociation,
-        TokenEnum::TOKEN_LONGNAME_RIGHTBRACKETINGBAR => Closer::LongName_RightBracketingBar,
-        TokenEnum::TOKEN_LONGNAME_RIGHTCEILING => Closer::LongName_RightCeiling,
-        TokenEnum::TOKEN_LONGNAME_RIGHTDOUBLEBRACKET => Closer::LongName_RightDoubleBracket,
-        TokenEnum::TOKEN_LONGNAME_RIGHTDOUBLEBRACKETINGBAR => {
-            Closer::LongName_RightDoubleBracketingBar
-        },
-        TokenEnum::TOKEN_LONGNAME_RIGHTFLOOR => Closer::LongName_RightFloor,
+        TokenKind::BarGreater => Closer::BarGreater,
+        TokenKind::CloseCurly => Closer::CloseCurly,
+        TokenKind::LongName_CloseCurlyDoubleQuote => Closer::LongName_CloseCurlyDoubleQuote,
+        TokenKind::LongName_CloseCurlyQuote => Closer::LongName_CloseCurlyQuote,
+        TokenKind::CloseParen => Closer::CloseParen,
+        TokenKind::CloseSquare => Closer::CloseSquare,
+        TokenKind::LongName_RightAngleBracket => Closer::LongName_RightAngleBracket,
+        TokenKind::LongName_RightAssociation => Closer::LongName_RightAssociation,
+        TokenKind::LongName_RightBracketingBar => Closer::LongName_RightBracketingBar,
+        TokenKind::LongName_RightCeiling => Closer::LongName_RightCeiling,
+        TokenKind::LongName_RightDoubleBracket => Closer::LongName_RightDoubleBracket,
+        TokenKind::LongName_RightDoubleBracketingBar => Closer::LongName_RightDoubleBracketingBar,
+        TokenKind::LongName_RightFloor => Closer::LongName_RightFloor,
         _ => Closer::AssertFalse,
     }
 }
 
 //======================================
-// Verify some TokenEnum properties
+// Verify some TokenKind properties
 //======================================
 
-const _: () = assert!(TokenEnum::TOKEN_ENDOFFILE.isEmpty());
+const _: () = assert!(TokenKind::EndOfFile.isEmpty());
 
 #[test]
 fn test_newline_policy() {
     assert_eq!(
-        TokenEnum::TOKEN_INTERNALNEWLINE.with_policy(RETURN_TOPLEVELNEWLINE),
-        TokenEnum::TOKEN_TOPLEVELNEWLINE
+        TokenKind::InternalNewline.with_policy(RETURN_TOPLEVELNEWLINE),
+        TokenKind::ToplevelNewline
     );
 }

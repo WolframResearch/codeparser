@@ -3,8 +3,7 @@ use crate::{
     source::{ByteSpan, SourceLocation},
     src,
     symbol_registration::*,
-    token::Token,
-    token_enum::TokenEnum::*,
+    token::{Token, TokenKind},
     EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
 };
 
@@ -23,10 +22,10 @@ fn NodeTest_Bug1() {
         EncodingMode::Normal,
     );
 
-    let T1 = Token::new3(TOKEN_SYMBOL, ByteSpan::new(0, 1), src!(1:1-1:2));
+    let T1 = Token::new3(TokenKind::Symbol, ByteSpan::new(0, 1), src!(1:1-1:2));
     Args.push(T1);
 
-    let T2 = Token::new3(TOKEN_UNDERDOT, ByteSpan::new(1, 2), src!(1:2-1:4));
+    let T2 = Token::new3(TokenKind::UnderDot, ByteSpan::new(1, 2), src!(1:2-1:4));
     Args.push(T2);
 
     let N = CompoundNode::new(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, Args);

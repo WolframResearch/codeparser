@@ -354,11 +354,11 @@ LongNameCodePointToOperatorSource = {
   "//",
   "//",
   "//",
-  "pub(crate) fn LongNameCodePointToOperator(c: CodePoint) -> TokenEnum {",
-  "match c {"} ~Join~
-  (Row[{toGlobal["CodePoint`LongName`"<>#], " => ", "return", " ", toGlobal["Token`LongName`"<>#], ","}]& /@ importedPunctuationLongNames) ~Join~
-  { "_ => panic!(\"Need to add operator\"),"} ~Join~
-  {"}",
+  "pub(crate) fn LongNameCodePointToOperator(c: CodePoint) -> TokenKind {",
+  "    match c {"} ~Join~
+  (Row[{"        ", toGlobal["CodePoint`LongName`"<>#], " => ", "return", " ", toTokenEnumVariant["Token`LongName`"<>#], ","}]& /@ importedPunctuationLongNames) ~Join~
+  {"        _ => panic!(\"Need to add operator\"),"} ~Join~
+  {"    }",
   "}",
   ""};
 
@@ -413,8 +413,7 @@ use once_cell::sync::Lazy;
 
 use crate::{
 	code_point::*,
-	token_enum::TokenEnum,
-	token_enum_registration::TokenEnum::*,
+	token::TokenKind::{self, *},
 };
 
 "} ~Join~

@@ -6,7 +6,7 @@
 #![allow(non_upper_case_globals)]
 
 use crate::{
-	token_enum_registration::TokenEnum::*,
+	token::TokenKind,
 	symbol_registration::*,
 	precedence::*,
 	parselet::{*}
@@ -54,9 +54,9 @@ pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(SYMBOL_BLANK
 
 pub(crate) const underDotParselet: UnderDotParselet = UnderDotParselet {};
 
-pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TOKEN_OPENSQUARE, SYMBOL_CODEPARSER_GROUPSQUARE);
+pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TokenKind::OpenSquare, SYMBOL_CODEPARSER_GROUPSQUARE);
 
-pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TOKEN_LONGNAME_LEFTDOUBLEBRACKET, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
+pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TokenKind::LongName_LeftDoubleBracket, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
 
 pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 
@@ -64,7 +64,7 @@ pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 //
 //
 
-pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as usize] = [
+pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() as usize] = [
   &prefixErrorParselet, // Token`Unknown
   &prefixEndOfFileParselet, // Token`EndOfFile
   &symbolParselet, // Token`Symbol
@@ -102,12 +102,12 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`Error`End
   &prefixUnhandledParselet, // Token`Dot
   &prefixUnhandledParselet, // Token`Colon
-  &GroupParselet::new(TOKEN_OPENPAREN, SYMBOL_CODEPARSER_GROUPPAREN), // Token`OpenParen
+  &GroupParselet::new(TokenKind::OpenParen, SYMBOL_CODEPARSER_GROUPPAREN), // Token`OpenParen
   &prefixCloserParselet, // Token`CloseParen
   &squareGroupParselet, // Token`OpenSquare
   &prefixCloserParselet, // Token`CloseSquare
   &prefixCommaParselet, // Token`Comma
-  &GroupParselet::new(TOKEN_OPENCURLY, SYMBOL_LIST), // Token`OpenCurly
+  &GroupParselet::new(TokenKind::OpenCurly, SYMBOL_LIST), // Token`OpenCurly
   &prefixCloserParselet, // Token`CloseCurly
   &prefixUnhandledParselet, // Token`Equal
   &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_BANG, SYMBOL_NOT), // Token`Bang
@@ -135,7 +135,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`EqualEqual
   &under2Parselet, // Token`UnderUnder
   &underDotParselet, // Token`UnderDot
-  &GroupParselet::new(TOKEN_LESSBAR, SYMBOL_ASSOCIATION), // Token`LessBar
+  &GroupParselet::new(TokenKind::LessBar, SYMBOL_ASSOCIATION), // Token`LessBar
   &(LessLessParselet {}), // Token`LessLess
   &prefixUnhandledParselet, // Token`LessGreater
   &prefixUnhandledParselet, // Token`LessEqual
@@ -179,7 +179,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`GreaterGreaterGreater
   &prefixUnhandledParselet, // Token`BarMinusGreater
   &prefixUnhandledParselet, // Token`SlashSlashEqual
-  &GroupParselet::new(TOKEN_COLONCOLONOPENSQUARE, SYMBOL_CODEPARSER_GROUPTYPESPECIFIER), // Token`ColonColonOpenSquare
+  &GroupParselet::new(TokenKind::ColonColonOpenSquare, SYMBOL_CODEPARSER_GROUPTYPESPECIFIER), // Token`ColonColonOpenSquare
   &leafParselet, // Token`PercentPercent
   &PrefixOperatorParselet::new(PRECEDENCE_LINEARSYNTAX_BANG, SYMBOL_CODEPARSER_PREFIXLINEARSYNTAXBANG), // Token`LinearSyntax`Bang
   &prefixUnsupportedTokenParselet, // Token`LinearSyntax`CloseParen
@@ -206,9 +206,9 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`LongName`CenterDot
   &prefixUnhandledParselet, // Token`LongName`Times
   &prefixUnhandledParselet, // Token`LongName`Divide
-  &GroupParselet::new(TOKEN_LONGNAME_OPENCURLYQUOTE, SYMBOL_CURLYQUOTE), // Token`LongName`OpenCurlyQuote
+  &GroupParselet::new(TokenKind::LongName_OpenCurlyQuote, SYMBOL_CURLYQUOTE), // Token`LongName`OpenCurlyQuote
   &prefixCloserParselet, // Token`LongName`CloseCurlyQuote
-  &GroupParselet::new(TOKEN_LONGNAME_OPENCURLYDOUBLEQUOTE, SYMBOL_CURLYDOUBLEQUOTE), // Token`LongName`OpenCurlyDoubleQuote
+  &GroupParselet::new(TokenKind::LongName_OpenCurlyDoubleQuote, SYMBOL_CURLYDOUBLEQUOTE), // Token`LongName`OpenCurlyDoubleQuote
   &prefixCloserParselet, // Token`LongName`CloseCurlyDoubleQuote
   &prefixUnhandledParselet, // Token`LongName`InvisibleTimes
   &prefixUnhandledParselet, // Token`LongName`LeftArrow
@@ -377,13 +377,13 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`LongName`NotRightTriangle
   &prefixUnhandledParselet, // Token`LongName`NotLeftTriangleEqual
   &prefixUnhandledParselet, // Token`LongName`NotRightTriangleEqual
-  &GroupParselet::new(TOKEN_LONGNAME_LEFTCEILING, SYMBOL_CEILING), // Token`LongName`LeftCeiling
+  &GroupParselet::new(TokenKind::LongName_LeftCeiling, SYMBOL_CEILING), // Token`LongName`LeftCeiling
   &prefixCloserParselet, // Token`LongName`RightCeiling
-  &GroupParselet::new(TOKEN_LONGNAME_LEFTFLOOR, SYMBOL_FLOOR), // Token`LongName`LeftFloor
+  &GroupParselet::new(TokenKind::LongName_LeftFloor, SYMBOL_FLOOR), // Token`LongName`LeftFloor
   &prefixCloserParselet, // Token`LongName`RightFloor
   &prefixUnhandledParselet, // Token`LongName`Cap
   &prefixUnhandledParselet, // Token`LongName`Cup
-  &GroupParselet::new(TOKEN_LONGNAME_LEFTANGLEBRACKET, SYMBOL_ANGLEBRACKET), // Token`LongName`LeftAngleBracket
+  &GroupParselet::new(TokenKind::LongName_LeftAngleBracket, SYMBOL_ANGLEBRACKET), // Token`LongName`LeftAngleBracket
   &prefixCloserParselet, // Token`LongName`RightAngleBracket
   &prefixUnhandledParselet, // Token`LongName`Perpendicular
   &prefixUnhandledParselet, // Token`LongName`LongLeftArrow
@@ -429,7 +429,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`LongName`DoubleLeftTee
   &doubleBracketGroupParselet, // Token`LongName`LeftDoubleBracket
   &prefixCloserParselet, // Token`LongName`RightDoubleBracket
-  &GroupParselet::new(TOKEN_LONGNAME_LEFTASSOCIATION, SYMBOL_ASSOCIATION), // Token`LongName`LeftAssociation
+  &GroupParselet::new(TokenKind::LongName_LeftAssociation, SYMBOL_ASSOCIATION), // Token`LongName`LeftAssociation
   &prefixCloserParselet, // Token`LongName`RightAssociation
   &prefixUnhandledParselet, // Token`LongName`TwoWayRule
   &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PIECEWISE, SYMBOL_PIECEWISE), // Token`LongName`Piecewise
@@ -493,9 +493,9 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`LongName`ShortUpArrow
   &prefixUnhandledParselet, // Token`LongName`ShortDownArrow
   &prefixUnhandledParselet, // Token`LongName`Application
-  &GroupParselet::new(TOKEN_LONGNAME_LEFTBRACKETINGBAR, SYMBOL_BRACKETINGBAR), // Token`LongName`LeftBracketingBar
+  &GroupParselet::new(TokenKind::LongName_LeftBracketingBar, SYMBOL_BRACKETINGBAR), // Token`LongName`LeftBracketingBar
   &prefixCloserParselet, // Token`LongName`RightBracketingBar
-  &GroupParselet::new(TOKEN_LONGNAME_LEFTDOUBLEBRACKETINGBAR, SYMBOL_DOUBLEBRACKETINGBAR), // Token`LongName`LeftDoubleBracketingBar
+  &GroupParselet::new(TokenKind::LongName_LeftDoubleBracketingBar, SYMBOL_DOUBLEBRACKETINGBAR), // Token`LongName`LeftDoubleBracketingBar
   &prefixCloserParselet, // Token`LongName`RightDoubleBracketingBar
   &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CAPITALDIFFERENTIALD, SYMBOL_CAPITALDIFFERENTIALD), // Token`LongName`CapitalDifferentialD
   &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_DIFFERENTIALD, SYMBOL_DIFFERENTIALD), // Token`LongName`DifferentialD
@@ -507,7 +507,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
 //
 //
 //
-pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TOKEN_COUNT.value() as usize] = [
+pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as usize] = [
   &infixAssertFalseParselet, // Token`Unknown
   &infixAssertFalseParselet, // Token`EndOfFile
   &infixImplicitTimesParselet, // Token`Symbol
@@ -622,7 +622,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TOKEN_COUNT.value() as usiz
   (&GreaterGreaterGreaterParselet {}), // Token`GreaterGreaterGreater
   &BinaryOperatorParselet::new(PRECEDENCE_BARMINUSGREATER, SYMBOL_FUNCTION), // Token`BarMinusGreater
   &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHEQUAL, SYMBOL_APPLYTO), // Token`SlashSlashEqual
-  &(CallParselet::new(&GroupParselet::new(TOKEN_COLONCOLONOPENSQUARE, SYMBOL_CODEPARSER_GROUPTYPESPECIFIER))), // Token`ColonColonOpenSquare
+  &(CallParselet::new(&GroupParselet::new(TokenKind::ColonColonOpenSquare, SYMBOL_CODEPARSER_GROUPTYPESPECIFIER))), // Token`ColonColonOpenSquare
   &infixImplicitTimesParselet, // Token`PercentPercent
   &infixImplicitTimesParselet, // Token`LinearSyntax`Bang
   &infixImplicitTimesParselet, // Token`LinearSyntax`CloseParen

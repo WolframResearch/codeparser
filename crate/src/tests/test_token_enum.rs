@@ -1,42 +1,42 @@
-use crate::token_enum::TokenEnum::*;
+use crate::token::TokenKind;
 
 
 #[test]
 fn TokenEnumTest_Trivia() {
-    assert!(TOKEN_WHITESPACE.isTrivia());
+    assert!(TokenKind::Whitespace.isTrivia());
 }
 
 #[test]
 fn TokenEnumTest_PossibleBeginning() {
-    assert!(TOKEN_SYMBOL.isPossibleBeginning());
+    assert!(TokenKind::Symbol.isPossibleBeginning());
 
-    assert!(TOKEN_SEMISEMI.isPossibleBeginning());
+    assert!(TokenKind::SemiSemi.isPossibleBeginning());
 }
 
 #[test]
 fn TokenEnumTest_Closer() {
-    assert!(TOKEN_CLOSESQUARE.isCloser());
+    assert!(TokenKind::CloseSquare.isCloser());
 
-    assert!(TOKEN_LONGNAME_RIGHTCEILING.isCloser());
+    assert!(TokenKind::LongName_RightCeiling.isCloser());
 }
 
 #[test]
 fn TokenEnumTest_Error() {
-    assert!(TOKEN_ERROR_EXPECTEDTAG.isError());
+    assert!(TokenKind::Error_ExpectedTag.isError());
 
-    assert!(TOKEN_ERROR_UNSUPPORTEDTOKEN.isError());
+    assert!(TokenKind::Error_UnsupportedToken.isError());
 }
 
 #[test]
 fn TokenEnumTest_Unterminated() {
-    assert!(TOKEN_ERROR_UNTERMINATEDSTRING.isUnterminated());
+    assert!(TokenKind::Error_UnterminatedString.isUnterminated());
 
-    assert!(TOKEN_ERROR_UNTERMINATEDCOMMENT.isUnterminated());
+    assert!(TokenKind::Error_UnterminatedComment.isUnterminated());
 }
 
 #[test]
 fn TokenEnumTest_Empty() {
-    assert!(TOKEN_ENDOFFILE.isEmpty());
+    assert!(TokenKind::EndOfFile.isEmpty());
 
-    assert!(TOKEN_ERROR_EXPECTEDOPERAND.isEmpty());
+    assert!(TokenKind::Error_ExpectedOperand.isEmpty());
 }

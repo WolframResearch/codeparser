@@ -17,9 +17,8 @@ use crate::{
         SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT, INSIDE_STRINGIFY_AS_FILE,
         INSIDE_STRINGIFY_AS_TAG,
     },
-    token::Token,
+    token::{Token, TokenKind},
     token_enum::Closer,
-    token_enum_registration::TokenEnum::{self, *},
     utils,
     wl_character::{EscapeStyle, WLCharacter},
     EncodingMode, FirstLineBehavior, SourceConvention,
@@ -389,7 +388,7 @@ const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = [
 pub(crate) const ASCII_VTAB: char = '\x0B';
 pub(crate) const ASCII_FORM_FEED: char = '\x0C';
 
-pub(crate) fn Token<T: Into<TokenEnum>>(tok: T, buf: BufferAndLength, src: Source) -> Token {
+pub(crate) fn Token<T: Into<TokenKind>>(tok: T, buf: BufferAndLength, src: Source) -> Token {
     let tok = tok.into();
     Token::new(tok, buf, src)
 }
@@ -437,7 +436,7 @@ fn Tokenizer_nextToken_uncommon(
         Char(_) => (),
         EndOfFile => {
             return Token(
-                TOKEN_ENDOFFILE,
+                TokenKind::EndOfFile,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -448,7 +447,7 @@ fn Tokenizer_nextToken_uncommon(
             //
 
             return Token(
-                TOKEN_ERROR_UNSAFECHARACTERENCODING,
+                TokenKind::Error_UnsafeCharacterEncoding,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -474,11 +473,11 @@ fn Tokenizer_nextToken_uncommon(
             return Tokenizer_handleSymbol(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(CODEPOINT_BEL | CODEPOINT_DEL) => {
-            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return Token(TokenKind::Error_UnhandledCharacter, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         Char('\t') => {
             // MUSTTAIL
-            return Token(TOKEN_WHITESPACE, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return Token(TokenKind::Whitespace, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         Char(ASCII_VTAB | ASCII_FORM_FEED) => {
 
@@ -493,7 +492,7 @@ fn Tokenizer_nextToken_uncommon(
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
             return Token(
-                TOKEN_INTERNALNEWLINE.with_policy(policy),
+                TokenKind::InternalNewline.with_policy(policy),
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc)
             );
@@ -507,7 +506,7 @@ fn Tokenizer_nextToken_uncommon(
 
             incr_diagnostic!(Tokenizer_CloseParenCount);
 
-            return Token(TOKEN_CLOSEPAREN, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return Token(TokenKind::CloseParen, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         Char('+') => {
 
@@ -556,7 +555,7 @@ fn Tokenizer_nextToken_uncommon(
         }
         Char('\'') => {
 
-            return Token(TOKEN_SINGLEQUOTE, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return Token(TokenKind::SingleQuote, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         Char('*') => {
 
@@ -613,7 +612,7 @@ fn Tokenizer_nextToken_uncommon(
             return Tokenizer_handleTilde(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(CODEPOINT_LINEARSYNTAX_BANG) => {
-            return Token(TOKEN_LINEARSYNTAX_BANG, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return Token(TokenKind::LinearSyntax_Bang, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
         }
         Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => {
             // MUSTTAIL
@@ -636,7 +635,7 @@ fn Tokenizer_nextToken_uncommon(
 
     if c.isMBUninterpretable() {
         return Token(
-            TOKEN_ERROR_UNHANDLEDCHARACTER,
+            TokenKind::Error_UnhandledCharacter,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -655,7 +654,7 @@ fn Tokenizer_nextToken_uncommon(
 
     if c.isMBWhitespace() {
         return Token(
-            TOKEN_WHITESPACE,
+            TokenKind::Whitespace,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -671,7 +670,7 @@ fn Tokenizer_nextToken_uncommon(
         // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
         return Token(
-            TOKEN_INTERNALNEWLINE.with_policy(policy),
+            TokenKind::InternalNewline.with_policy(policy),
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -684,7 +683,7 @@ fn Tokenizer_nextToken_uncommon(
 
     if c.isMBStringMeta() {
         return Token(
-            TOKEN_ERROR_UNHANDLEDCHARACTER,
+            TokenKind::Error_UnhandledCharacter,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -715,7 +714,7 @@ pub fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> To
             //
 
             return Token(
-                TOKEN_ERROR_EXPECTEDTAG,
+                TokenKind::Error_ExpectedTag,
                 // BufferAndLength::from_buffer(tokenStartBuf),
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Source::from_location(tokenStartLoc),
@@ -727,7 +726,7 @@ pub fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> To
             //
 
             return Token(
-                TOKEN_ERROR_EXPECTEDTAG,
+                TokenKind::Error_ExpectedTag,
                 // BufferAndLength::from_buffer(tokenStartBuf),
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Source::from_location(tokenStartLoc),
@@ -765,7 +764,7 @@ pub fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> T
     match c {
         EndOfFile => {
             return Token(
-                TOKEN_ERROR_EXPECTEDFILE,
+                TokenKind::Error_ExpectedFile,
                 // BufferAndLength::from_buffer(tokenStartBuf),
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Source::from_location(tokenStartLoc),
@@ -780,14 +779,14 @@ pub fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> T
             //
             // should work
             //
-            // Do not use TOKEN_ERROR_EMPTYSTRING here
+            // Do not use TokenKind::Error_EMPTYSTRING here
             //
 
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
             return Token(
-                TOKEN_INTERNALNEWLINE.with_policy(policy),
+                TokenKind::InternalNewline.with_policy(policy),
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -801,7 +800,7 @@ pub fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> T
             //   b
             //
             return Token(
-                TOKEN_WHITESPACE,
+                TokenKind::Whitespace,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -1016,7 +1015,7 @@ fn Tokenizer_handleComma(
     incr_diagnostic!(Tokenizer_CommaCount);
 
     return Token(
-        TOKEN_COMMA,
+        TokenKind::Comma,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1035,7 +1034,7 @@ fn Tokenizer_handleLineFeed(
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
     return Token(
-        TOKEN_INTERNALNEWLINE.with_policy(policy),
+        TokenKind::InternalNewline.with_policy(policy),
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1051,7 +1050,7 @@ fn Tokenizer_handleOpenSquare(
     incr_diagnostic!(Tokenizer_OpenSquareCount);
 
     return Token(
-        TOKEN_OPENSQUARE,
+        TokenKind::OpenSquare,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1067,7 +1066,7 @@ fn Tokenizer_handleOpenCurly(
     incr_diagnostic!(Tokenizer_OpenCurlyCount);
 
     return Token(
-        TOKEN_OPENCURLY,
+        TokenKind::OpenCurly,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1083,7 +1082,7 @@ fn Tokenizer_handleSpace(
     incr_diagnostic!(Tokenizer_WhitespaceCount);
 
     return Token(
-        TOKEN_WHITESPACE,
+        TokenKind::Whitespace,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1099,7 +1098,7 @@ fn Tokenizer_handleCloseSquare(
     incr_diagnostic!(Tokenizer_CloseSquareCount);
 
     return Token(
-        TOKEN_CLOSESQUARE,
+        TokenKind::CloseSquare,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1115,7 +1114,7 @@ fn Tokenizer_handleCloseCurly(
     incr_diagnostic!(Tokenizer_CloseCurlyCount);
 
     return Token(
-        TOKEN_CLOSECURLY,
+        TokenKind::CloseCurly,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1156,7 +1155,7 @@ fn Tokenizer_handleStrangeWhitespace(
     }
 
     return Token(
-        TOKEN_WHITESPACE,
+        TokenKind::Whitespace,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1218,7 +1217,7 @@ fn Tokenizer_handleComment(
 
                     if depth == 0 {
                         return Token(
-                            TOKEN_COMMENT,
+                            TokenKind::Comment,
                             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                             Tokenizer_getTokenSource(session, tokenStartLoc),
                         );
@@ -1229,7 +1228,7 @@ fn Tokenizer_handleComment(
             },
             EndOfFile => {
                 return Token(
-                    TOKEN_ERROR_UNTERMINATEDCOMMENT,
+                    TokenKind::Error_UnterminatedComment,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -1280,7 +1279,7 @@ fn Tokenizer_handleMBLinearSyntaxBlob(
 
                 if depth == 0 {
                     return Token(
-                        TOKEN_LINEARSYNTAXBLOB,
+                        TokenKind::LinearSyntaxBlob,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -1290,7 +1289,7 @@ fn Tokenizer_handleMBLinearSyntaxBlob(
             },
             EndOfFile => {
                 return Token(
-                    TOKEN_ERROR_UNTERMINATEDLINEARSYNTAXBLOB,
+                    TokenKind::Error_UnterminatedLinearSyntaxBlob,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -1381,7 +1380,7 @@ fn Tokenizer_handleSymbol(
             //
 
             return Token(
-                TOKEN_ERROR_EXPECTEDLETTERLIKE,
+                TokenKind::Error_ExpectedLetterlike,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -1390,9 +1389,9 @@ fn Tokenizer_handleSymbol(
 
     return Token(
         if (policy & INSIDE_SLOT) == INSIDE_SLOT {
-            TOKEN_STRING
+            TokenKind::String
         } else {
-            TOKEN_SYMBOL
+            TokenKind::Symbol
         },
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
@@ -1722,7 +1721,7 @@ fn Tokenizer_handleString(
             session.offset = quot_offset.unwrap() + 1;
 
             return Token(
-                TOKEN_STRING,
+                TokenKind::String,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -1731,7 +1730,7 @@ fn Tokenizer_handleString(
             session.wasEOF = true;
 
             return Token(
-                TOKEN_ERROR_UNTERMINATEDSTRING,
+                TokenKind::Error_UnterminatedString,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -1752,14 +1751,14 @@ fn Tokenizer_handleString(
         match c.to_point() {
             Char('"') => {
                 return Token(
-                    TOKEN_STRING,
+                    TokenKind::String,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
             },
             EndOfFile => {
                 return Token(
-                    TOKEN_ERROR_UNTERMINATEDSTRING,
+                    TokenKind::Error_UnterminatedString,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -1805,7 +1804,7 @@ fn Tokenizer_handleString_stringifyAsTag(
         );
 
         return Token(
-            TOKEN_STRING,
+            TokenKind::String,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -1816,7 +1815,7 @@ fn Tokenizer_handleString_stringifyAsTag(
     //
 
     return Token(
-        TOKEN_ERROR_EXPECTEDTAG,
+        TokenKind::Error_ExpectedTag,
         BufferAndLength::from_buffer_with_len(tokenStartBuf, 0),
         Source::from_location(tokenStartLoc),
     );
@@ -1875,7 +1874,7 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile(
             match handled {
                 UNTERMINATED_FILESTRING => {
                     return Token(
-                        TOKEN_ERROR_UNTERMINATEDFILESTRING,
+                        TokenKind::Error_UnterminatedFileString,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -1893,7 +1892,7 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile(
             //
 
             return Token(
-                TOKEN_ERROR_EXPECTEDFILE,
+                TokenKind::Error_ExpectedFile,
                 // BufferAndLength::from_buffer(tokenStartBuf),
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Source::from_location(tokenStartLoc),
@@ -1948,7 +1947,7 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile(
                 match handled {
                     UNTERMINATED_FILESTRING => {
                         return Token(
-                            TOKEN_ERROR_UNTERMINATEDFILESTRING,
+                            TokenKind::Error_UnterminatedFileString,
                             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                             Tokenizer_getTokenSource(session, tokenStartLoc),
                         );
@@ -1958,7 +1957,7 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile(
             },
             _ => {
                 return Token(
-                    TOKEN_STRING,
+                    TokenKind::String,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -2423,9 +2422,9 @@ fn Tokenizer_handleNumber(
 
                     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    // nee TOKEN_ERROR_EXPECTEDDIGIT
+                    // nee TokenKind::Error_ExpectedDIGIT
                     return Token(
-                        TOKEN_ERROR_NUMBER,
+                        TokenKind::Error_Number,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -2435,9 +2434,9 @@ fn Tokenizer_handleNumber(
                     // Something like  2^^@
                     //
 
-                    // nee TOKEN_ERROR_UNRECOGNIZEDDIGIT
+                    // nee TokenKind::Error_UNRECOGNIZEDDIGIT
                     return Token(
-                        TOKEN_ERROR_NUMBER,
+                        TokenKind::Error_Number,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -2471,9 +2470,9 @@ fn Tokenizer_handleNumber(
                     // Something like  2^^..
                     //
 
-                    // nee TOKEN_ERROR_UNHANDLEDDOT
+                    // nee TokenKind::Error_UNHANDLEDDOT
                     return Token(
-                        TOKEN_ERROR_NUMBER,
+                        TokenKind::Error_Number,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -2499,9 +2498,9 @@ fn Tokenizer_handleNumber(
                     // Something like  2^^.
                     //
 
-                    // nee TOKEN_ERROR_UNHANDLEDDOT
+                    // nee TokenKind::Error_UNHANDLEDDOT
                     return Token(
-                        TOKEN_ERROR_NUMBER,
+                        TokenKind::Error_Number,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -2724,9 +2723,9 @@ fn Tokenizer_handleNumber(
                             // Something like  1.2``->3
                             //
 
-                            // nee TOKEN_ERROR_EXPECTEDACCURACY
+                            // nee TokenKind::Error_ExpectedACCURACY
                             return Token(
-                                TOKEN_ERROR_NUMBER,
+                                TokenKind::Error_Number,
                                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                                 Tokenizer_getTokenSource(session, tokenStartLoc),
                             );
@@ -2836,9 +2835,9 @@ fn Tokenizer_handleNumber(
                             // Something like  123``.EOF
                             //
 
-                            // TOKEN_ERROR_EXPECTEDDIGIT
+                            // TokenKind::Error_ExpectedDIGIT
                             return Token(
-                                TOKEN_ERROR_NUMBER,
+                                TokenKind::Error_Number,
                                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                                 Tokenizer_getTokenSource(session, tokenStartLoc),
                             );
@@ -2856,9 +2855,9 @@ fn Tokenizer_handleNumber(
                                 policy,
                             );
 
-                            // nee TOKEN_ERROR_EXPECTEDDIGIT
+                            // nee TokenKind::Error_ExpectedDIGIT
                             return Token(
-                                TOKEN_ERROR_NUMBER,
+                                TokenKind::Error_Number,
                                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                                 Tokenizer_getTokenSource(session, tokenStartLoc),
                             );
@@ -2978,9 +2977,9 @@ fn Tokenizer_handleNumber(
                     // Something like  1`+.a
                     //
 
-                    // nee TOKEN_ERROR_EXPECTEDDIGIT
+                    // nee TokenKind::Error_ExpectedDIGIT
                     return Token(
-                        TOKEN_ERROR_NUMBER,
+                        TokenKind::Error_Number,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -3000,9 +2999,9 @@ fn Tokenizer_handleNumber(
                         // Something like  123.45``*^6
                         //
 
-                        // nee TOKEN_ERROR_EXPECTEDACCURACY
+                        // nee TokenKind::Error_ExpectedACCURACY
                         return Token(
-                            TOKEN_ERROR_NUMBER,
+                            TokenKind::Error_Number,
                             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                             Tokenizer_getTokenSource(session, tokenStartLoc),
                         );
@@ -3028,9 +3027,9 @@ fn Tokenizer_handleNumber(
                         // Something like  123``EOF
                         //
 
-                        // nee TOKEN_ERROR_EXPECTEDACCURACY
+                        // nee TokenKind::Error_ExpectedACCURACY
                         return Token(
-                            TOKEN_ERROR_NUMBER,
+                            TokenKind::Error_Number,
                             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                             Tokenizer_getTokenSource(session, tokenStartLoc),
                         );
@@ -3103,9 +3102,9 @@ fn Tokenizer_handleNumber(
         // Something like  123*^-<EOF>
         //
 
-        // TOKEN_ERROR_EXPECTEDEXPONENT
+        // TokenKind::Error_ExpectedEXPONENT
         return Token(
-            TOKEN_ERROR_NUMBER,
+            TokenKind::Error_Number,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -3203,9 +3202,9 @@ fn Tokenizer_handleNumber(
             // Make this an error; do NOT make this Dot[123*^0, 5]
             //
 
-            // nee TOKEN_ERROR_EXPECTEDEXPONENT
+            // nee TokenKind::Error_ExpectedEXPONENT
             return Token(
-                TOKEN_ERROR_NUMBER,
+                TokenKind::Error_Number,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3214,7 +3213,7 @@ fn Tokenizer_handleNumber(
 }
 
 impl NumberTokenizationContext {
-    fn computeTok(&self) -> TokenEnum {
+    fn computeTok(&self) -> TokenKind {
         //
         // We wait until returning to handle these errors because we do not want invalid base or unrecognized digit to prevent further parsing
         //
@@ -3222,17 +3221,17 @@ impl NumberTokenizationContext {
         //
 
         if self.InvalidBase {
-            // nee TOKEN_ERROR_INVALIDBASE
-            return TOKEN_ERROR_NUMBER;
+            // nee TokenKind::Error_INVALIDBASE
+            return TokenKind::Error_Number;
         }
 
         if self.UnrecognizedDigit {
-            // nee TOKEN_ERROR_UNRECOGNIZEDDIGIT
-            return TOKEN_ERROR_NUMBER;
+            // nee TokenKind::Error_UNRECOGNIZEDDIGIT
+            return TokenKind::Error_Number;
         }
 
         if self.Real {
-            return TOKEN_REAL;
+            return TokenKind::Real;
         }
 
         if self.NegativeExponent && self.NonZeroExponentDigitCount != 0 {
@@ -3240,10 +3239,10 @@ impl NumberTokenizationContext {
             // Something like  1*^-2..
             //
 
-            return TOKEN_RATIONAL;
+            return TokenKind::Rational;
         }
 
-        return TOKEN_INTEGER;
+        return TokenKind::Integer;
     }
 }
 
@@ -3564,7 +3563,7 @@ fn Tokenizer_handleColon(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_COLONCOLONOPENSQUARE,
+                    TokenKind::ColonColonOpenSquare,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -3575,7 +3574,7 @@ fn Tokenizer_handleColon(
             //
 
             return Token(
-                TOKEN_COLONCOLON,
+                TokenKind::ColonColon,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3588,7 +3587,7 @@ fn Tokenizer_handleColon(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_COLONEQUAL,
+                TokenKind::ColonEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3603,7 +3602,7 @@ fn Tokenizer_handleColon(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_COLONGREATER,
+                TokenKind::ColonGreater,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3614,7 +3613,7 @@ fn Tokenizer_handleColon(
             //
 
             return Token(
-                TOKEN_COLON,
+                TokenKind::Colon,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3652,7 +3651,7 @@ fn Tokenizer_handleOpenParen(
     incr_diagnostic!(Tokenizer_OpenParenCount);
 
     return Token(
-        TOKEN_OPENPAREN,
+        TokenKind::OpenParen,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -3694,7 +3693,7 @@ fn Tokenizer_handleDot(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_DOTDOTDOT,
+                TokenKind::DotDotDot,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3705,7 +3704,7 @@ fn Tokenizer_handleDot(
         //
 
         return Token(
-            TOKEN_DOTDOT,
+            TokenKind::DotDot,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -3716,7 +3715,7 @@ fn Tokenizer_handleDot(
     //
 
     return Token(
-        TOKEN_DOT,
+        TokenKind::Dot,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -3747,7 +3746,7 @@ fn Tokenizer_handleEqual(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_EQUALEQUALEQUAL,
+                    TokenKind::EqualEqualEqual,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -3758,7 +3757,7 @@ fn Tokenizer_handleEqual(
             //
 
             return Token(
-                TOKEN_EQUALEQUAL,
+                TokenKind::EqualEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3779,7 +3778,7 @@ fn Tokenizer_handleEqual(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_EQUALBANGEQUAL,
+                    TokenKind::EqualBangEqual,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -3794,7 +3793,7 @@ fn Tokenizer_handleEqual(
             Tokenizer_backupAndWarn(session, bang_offset, bangLoc);
 
             return Token(
-                TOKEN_EQUAL,
+                TokenKind::Equal,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3807,7 +3806,7 @@ fn Tokenizer_handleEqual(
     //
 
     return Token(
-        TOKEN_EQUAL,
+        TokenKind::Equal,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -3842,14 +3841,14 @@ fn Tokenizer_handleUnder(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_UNDERUNDERUNDER,
+                    TokenKind::UnderUnderUnder,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
             }
 
             return Token(
-                TOKEN_UNDERUNDER,
+                TokenKind::UnderUnder,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3902,7 +3901,7 @@ fn Tokenizer_handleUnder(
             }
 
             return Token(
-                TOKEN_UNDERDOT,
+                TokenKind::UnderDot,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3915,7 +3914,7 @@ fn Tokenizer_handleUnder(
     //
 
     return Token(
-        TOKEN_UNDER,
+        TokenKind::Under,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -3941,7 +3940,7 @@ fn Tokenizer_handleLess(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_LESSBAR,
+                TokenKind::LessBar,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3954,7 +3953,7 @@ fn Tokenizer_handleLess(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_LESSLESS,
+                TokenKind::LessLess,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3967,7 +3966,7 @@ fn Tokenizer_handleLess(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_LESSGREATER,
+                TokenKind::LessGreater,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -3980,7 +3979,7 @@ fn Tokenizer_handleLess(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_LESSEQUAL,
+                TokenKind::LessEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4001,7 +4000,7 @@ fn Tokenizer_handleLess(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_LESSMINUSGREATER,
+                    TokenKind::LessMinusGreater,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -4016,7 +4015,7 @@ fn Tokenizer_handleLess(
             Tokenizer_backupAndWarn(session, minus_offset, minusLoc);
 
             return Token(
-                TOKEN_LESS,
+                TokenKind::Less,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4029,7 +4028,7 @@ fn Tokenizer_handleLess(
     //
 
     return Token(
-        TOKEN_LESS,
+        TokenKind::Less,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4064,14 +4063,14 @@ fn Tokenizer_handleGreater(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_GREATERGREATERGREATER,
+                    TokenKind::GreaterGreaterGreater,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
             }
 
             return Token(
-                TOKEN_GREATERGREATER,
+                TokenKind::GreaterGreater,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4084,7 +4083,7 @@ fn Tokenizer_handleGreater(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_GREATEREQUAL,
+                TokenKind::GreaterEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4097,7 +4096,7 @@ fn Tokenizer_handleGreater(
     //
 
     return Token(
-        TOKEN_GREATER,
+        TokenKind::Greater,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4134,7 +4133,7 @@ fn Tokenizer_handleMinus(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_MINUSGREATER,
+                TokenKind::MinusGreater,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4226,7 +4225,7 @@ fn Tokenizer_handleMinus(
             }
 
             return Token(
-                TOKEN_MINUSMINUS,
+                TokenKind::MinusMinus,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4239,7 +4238,7 @@ fn Tokenizer_handleMinus(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_MINUSEQUAL,
+                TokenKind::MinusEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4254,7 +4253,7 @@ fn Tokenizer_handleMinus(
     incr_diagnostic!(Tokenizer_MinusCount);
 
     return Token(
-        TOKEN_MINUS,
+        TokenKind::Minus,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4314,7 +4313,7 @@ fn Tokenizer_handleBar(
             }
 
             return Token(
-                TOKEN_BARGREATER,
+                TokenKind::BarGreater,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4327,7 +4326,7 @@ fn Tokenizer_handleBar(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_BARBAR,
+                TokenKind::BarBar,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4348,7 +4347,7 @@ fn Tokenizer_handleBar(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_BARMINUSGREATER,
+                    TokenKind::BarMinusGreater,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -4363,7 +4362,7 @@ fn Tokenizer_handleBar(
             Tokenizer_backupAndWarn(session, bar_offset, barLoc);
 
             return Token(
-                TOKEN_BAR,
+                TokenKind::Bar,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4376,7 +4375,7 @@ fn Tokenizer_handleBar(
     //
 
     return Token(
-        TOKEN_BAR,
+        TokenKind::Bar,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4401,7 +4400,7 @@ fn Tokenizer_handleSemi(
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         return Token(
-            TOKEN_SEMISEMI,
+            TokenKind::SemiSemi,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -4412,7 +4411,7 @@ fn Tokenizer_handleSemi(
     //
 
     return Token(
-        TOKEN_SEMI,
+        TokenKind::Semi,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4438,7 +4437,7 @@ fn Tokenizer_handleBang(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_BANGEQUAL,
+                TokenKind::BangEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4451,7 +4450,7 @@ fn Tokenizer_handleBang(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_BANGBANG,
+                TokenKind::BangBang,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4464,7 +4463,7 @@ fn Tokenizer_handleBang(
     //
 
     return Token(
-        TOKEN_BANG,
+        TokenKind::Bang,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4489,7 +4488,7 @@ fn Tokenizer_handleHash(
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         return Token(
-            TOKEN_HASHHASH,
+            TokenKind::HashHash,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -4502,7 +4501,7 @@ fn Tokenizer_handleHash(
     incr_diagnostic!(Tokenizer_HashCount);
 
     return Token(
-        TOKEN_HASH,
+        TokenKind::Hash,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4537,7 +4536,7 @@ fn Tokenizer_handlePercent(
         } // while
 
         return Token(
-            TOKEN_PERCENTPERCENT,
+            TokenKind::PercentPercent,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -4548,7 +4547,7 @@ fn Tokenizer_handlePercent(
     //
 
     return Token(
-        TOKEN_PERCENT,
+        TokenKind::Percent,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4573,7 +4572,7 @@ fn Tokenizer_handleAmp(
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         return Token(
-            TOKEN_AMPAMP,
+            TokenKind::AmpAmp,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -4586,7 +4585,7 @@ fn Tokenizer_handleAmp(
     incr_diagnostic!(Tokenizer_AmpCount);
 
     return Token(
-        TOKEN_AMP,
+        TokenKind::Amp,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4612,7 +4611,7 @@ fn Tokenizer_handleSlash(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_SLASHAT,
+                TokenKind::SlashAt,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4625,7 +4624,7 @@ fn Tokenizer_handleSlash(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_SLASHSEMI,
+                TokenKind::SlashSemi,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4644,7 +4643,7 @@ fn Tokenizer_handleSlash(
                 //
 
                 return Token(
-                    TOKEN_SLASHDOT,
+                    TokenKind::SlashDot,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -4659,7 +4658,7 @@ fn Tokenizer_handleSlash(
             Tokenizer_backupAndWarn(session, dot_offset, dotLoc);
 
             return Token(
-                TOKEN_SLASH,
+                TokenKind::Slash,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4682,7 +4681,7 @@ fn Tokenizer_handleSlash(
                     Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     return Token(
-                        TOKEN_SLASHSLASHDOT,
+                        TokenKind::SlashSlashDot,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -4695,7 +4694,7 @@ fn Tokenizer_handleSlash(
                     Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     return Token(
-                        TOKEN_SLASHSLASHAT,
+                        TokenKind::SlashSlashAt,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -4708,7 +4707,7 @@ fn Tokenizer_handleSlash(
                     Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     return Token(
-                        TOKEN_SLASHSLASHEQUAL,
+                        TokenKind::SlashSlashEqual,
                         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                         Tokenizer_getTokenSource(session, tokenStartLoc),
                     );
@@ -4721,7 +4720,7 @@ fn Tokenizer_handleSlash(
             //
 
             return Token(
-                TOKEN_SLASHSLASH,
+                TokenKind::SlashSlash,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4734,7 +4733,7 @@ fn Tokenizer_handleSlash(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_SLASHCOLON,
+                TokenKind::SlashColon,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4747,7 +4746,7 @@ fn Tokenizer_handleSlash(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_SLASHEQUAL,
+                TokenKind::SlashEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4760,7 +4759,7 @@ fn Tokenizer_handleSlash(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_SLASHSTAR,
+                TokenKind::SlashStar,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4773,7 +4772,7 @@ fn Tokenizer_handleSlash(
     //
 
     return Token(
-        TOKEN_SLASH,
+        TokenKind::Slash,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4804,7 +4803,7 @@ fn Tokenizer_handleAt(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_ATATAT,
+                    TokenKind::AtAtAt,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -4815,7 +4814,7 @@ fn Tokenizer_handleAt(
             //
 
             return Token(
-                TOKEN_ATAT,
+                TokenKind::AtAt,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4828,7 +4827,7 @@ fn Tokenizer_handleAt(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_ATSTAR,
+                TokenKind::AtStar,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4841,7 +4840,7 @@ fn Tokenizer_handleAt(
     //
 
     return Token(
-        TOKEN_AT,
+        TokenKind::At,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4899,7 +4898,7 @@ fn Tokenizer_handlePlus(
             }
 
             return Token(
-                TOKEN_PLUSPLUS,
+                TokenKind::PlusPlus,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4912,7 +4911,7 @@ fn Tokenizer_handlePlus(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_PLUSEQUAL,
+                TokenKind::PlusEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -4927,7 +4926,7 @@ fn Tokenizer_handlePlus(
     incr_diagnostic!(Tokenizer_PlusCount);
 
     return Token(
-        TOKEN_PLUS,
+        TokenKind::Plus,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4952,7 +4951,7 @@ fn Tokenizer_handleTilde(
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         return Token(
-            TOKEN_TILDETILDE,
+            TokenKind::TildeTilde,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -4963,7 +4962,7 @@ fn Tokenizer_handleTilde(
     //
 
     return Token(
-        TOKEN_TILDE,
+        TokenKind::Tilde,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -4988,7 +4987,7 @@ fn Tokenizer_handleQuestion(
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         return Token(
-            TOKEN_QUESTIONQUESTION,
+            TokenKind::QuestionQuestion,
             Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
             Tokenizer_getTokenSource(session, tokenStartLoc),
         );
@@ -4999,7 +4998,7 @@ fn Tokenizer_handleQuestion(
     //
 
     return Token(
-        TOKEN_QUESTION,
+        TokenKind::Question,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -5025,7 +5024,7 @@ fn Tokenizer_handleStar(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_STAREQUAL,
+                TokenKind::StarEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5038,7 +5037,7 @@ fn Tokenizer_handleStar(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_STARSTAR,
+                TokenKind::StarStar,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5051,7 +5050,7 @@ fn Tokenizer_handleStar(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_ERROR_UNEXPECTEDCOMMENTCLOSER,
+                TokenKind::Error_UnexpectedCommentCloser,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5064,7 +5063,7 @@ fn Tokenizer_handleStar(
     //
 
     return Token(
-        TOKEN_STAR,
+        TokenKind::Star,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -5095,7 +5094,7 @@ fn Tokenizer_handleCaret(
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 return Token(
-                    TOKEN_CARETCOLONEQUAL,
+                    TokenKind::CaretColonEqual,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
@@ -5106,7 +5105,7 @@ fn Tokenizer_handleCaret(
             //
 
             return Token(
-                TOKEN_ERROR_EXPECTEDEQUAL,
+                TokenKind::Error_ExpectedEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5119,7 +5118,7 @@ fn Tokenizer_handleCaret(
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             return Token(
-                TOKEN_CARETEQUAL,
+                TokenKind::CaretEqual,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5132,7 +5131,7 @@ fn Tokenizer_handleCaret(
     //
 
     return Token(
-        TOKEN_CARET,
+        TokenKind::Caret,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -5205,14 +5204,14 @@ fn Tokenizer_handleUnhandledBackslash(
 
             if wellFormed {
                 return Token(
-                    TOKEN_ERROR_UNHANDLEDCHARACTER,
+                    TokenKind::Error_UnhandledCharacter,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
             }
 
             return Token(
-                TOKEN_ERROR_UNHANDLEDCHARACTER,
+                TokenKind::Error_UnhandledCharacter,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5244,7 +5243,7 @@ fn Tokenizer_handleUnhandledBackslash(
             }
 
             return Token(
-                TOKEN_ERROR_UNHANDLEDCHARACTER,
+                TokenKind::Error_UnhandledCharacter,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5276,7 +5275,7 @@ fn Tokenizer_handleUnhandledBackslash(
             }
 
             return Token(
-                TOKEN_ERROR_UNHANDLEDCHARACTER,
+                TokenKind::Error_UnhandledCharacter,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5308,7 +5307,7 @@ fn Tokenizer_handleUnhandledBackslash(
             }
 
             return Token(
-                TOKEN_ERROR_UNHANDLEDCHARACTER,
+                TokenKind::Error_UnhandledCharacter,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5340,14 +5339,14 @@ fn Tokenizer_handleUnhandledBackslash(
             }
 
             return Token(
-                TOKEN_ERROR_UNHANDLEDCHARACTER,
+                TokenKind::Error_UnhandledCharacter,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         EndOfFile => {
             return Token(
-                TOKEN_ERROR_UNHANDLEDCHARACTER,
+                TokenKind::Error_UnhandledCharacter,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
@@ -5360,7 +5359,7 @@ fn Tokenizer_handleUnhandledBackslash(
     //
 
     return Token(
-        TOKEN_ERROR_UNHANDLEDCHARACTER,
+        TokenKind::Error_UnhandledCharacter,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -5401,7 +5400,7 @@ fn Tokenizer_handleMBStrangeNewline(
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
     return Token(
-        TOKEN_INTERNALNEWLINE.with_policy(policy),
+        TokenKind::InternalNewline.with_policy(policy),
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -5442,7 +5441,7 @@ fn Tokenizer_handleMBStrangeWhitespace(
     }
 
     return Token(
-        TOKEN_WHITESPACE,
+        TokenKind::Whitespace,
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -5478,77 +5477,77 @@ fn Tokenizer_handleNakedMBLinearSyntax(
     match c.to_point() {
         Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => {
             return Token(
-                TOKEN_LINEARSYNTAX_CLOSEPAREN,
+                TokenKind::LinearSyntax_CloseParen,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_AT) => {
             return Token(
-                TOKEN_LINEARSYNTAX_AT,
+                TokenKind::LinearSyntax_At,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_PERCENT) => {
             return Token(
-                TOKEN_LINEARSYNTAX_PERCENT,
+                TokenKind::LinearSyntax_Percent,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_CARET) => {
             return Token(
-                TOKEN_LINEARSYNTAX_CARET,
+                TokenKind::LinearSyntax_Caret,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_AMP) => {
             return Token(
-                TOKEN_LINEARSYNTAX_AMP,
+                TokenKind::LinearSyntax_Amp,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_STAR) => {
             return Token(
-                TOKEN_LINEARSYNTAX_STAR,
+                TokenKind::LinearSyntax_Star,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_UNDER) => {
             return Token(
-                TOKEN_LINEARSYNTAX_UNDER,
+                TokenKind::LinearSyntax_Under,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_PLUS) => {
             return Token(
-                TOKEN_LINEARSYNTAX_PLUS,
+                TokenKind::LinearSyntax_Plus,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_SLASH) => {
             return Token(
-                TOKEN_LINEARSYNTAX_SLASH,
+                TokenKind::LinearSyntax_Slash,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => {
             return Token(
-                TOKEN_LINEARSYNTAX_BACKTICK,
+                TokenKind::LinearSyntax_BackTick,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
         CodePoint::LinearSyntax_Space => {
             return Token(
-                TOKEN_LINEARSYNTAX_SPACE,
+                TokenKind::LinearSyntax_Space,
                 Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );

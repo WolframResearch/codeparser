@@ -101,7 +101,7 @@ formatPrefix[Parselet`GroupParselet[Token`OpenSquare, CodeParser`GroupSquare]] :
 
 formatPrefix[Parselet`GroupParselet[Token`LongName`LeftDoubleBracket, CodeParser`GroupDoubleBracket]] := "&doubleBracketGroupParselet"
 
-formatPrefix[Parselet`GroupParselet[tok_, op_]] := "&GroupParselet::new(" <> toGlobal[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
+formatPrefix[Parselet`GroupParselet[tok_, op_]] := "&GroupParselet::new(TokenKind::" <> toTokenEnumVariant[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 
 formatInfix[Parselet`InfixAssertFalseParselet[]] := "&infixAssertFalseParselet"
@@ -163,7 +163,7 @@ parseletRegistrationCPPSource = {
 #![allow(non_upper_case_globals)]
 
 use crate::{
-	token_enum_registration::TokenEnum::*,
+	token::TokenKind,
 	symbol_registration::*,
 	precedence::*,
 	parselet::{*}
@@ -211,9 +211,9 @@ pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(SYMBOL_BLANK
 
 pub(crate) const underDotParselet: UnderDotParselet = UnderDotParselet {};
 
-pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TOKEN_OPENSQUARE, SYMBOL_CODEPARSER_GROUPSQUARE);
+pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TokenKind::OpenSquare, SYMBOL_CODEPARSER_GROUPSQUARE);
 
-pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TOKEN_LONGNAME_LEFTDOUBLEBRACKET, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
+pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TokenKind::LongName_LeftDoubleBracket, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
 
 pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 
@@ -221,7 +221,7 @@ pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 //
 //
 
-pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
+pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() as usize] = ["} ~Join~
 
 (Row[{"  ", formatPrefix[PrefixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
@@ -230,7 +230,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
 //
 //
 //
-pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
+pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as usize] = ["} ~Join~
 
 (Row[{"  ", formatInfix[InfixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 

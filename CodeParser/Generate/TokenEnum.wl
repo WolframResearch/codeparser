@@ -378,7 +378,7 @@ Which[
 ]
 
 
-tokenToSymbolCases = Row[{"        ", toGlobal[#], " => return ", toGlobal[tokenToSymbol[#]], ","}]& /@ tokens
+tokenToSymbolCases = Row[{"        ", toTokenEnumVariant[#], " => return ", toGlobal[tokenToSymbol[#]], ","}]& /@ tokens
 
 
 tokenIsEmptyCases = Row[{"tokenIsEmpty", "[", ToString[#], "]", " ", "=", " ", "True"}]& /@ $isEmptyTokens
@@ -405,10 +405,13 @@ use crate::symbol::Symbol;
 #[rustfmt::skip]
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u16)]
-pub enum TokenEnum {"} ~Join~
+pub enum TokenKind {"} ~Join~
 KeyValueMap[(
   (* Row[{"    ",   StringReplace[ToString[#], {"`" -> "_", "$" -> "_"}], " = ", *)
-  Row[{"    ",   toGlobal[#1], " = ",
+  Row[{
+	"    ",
+	toTokenEnumVariant[#1],
+	" = ",
     BitOr[
       group2Bits[#1],
       group1Bits[#1],
@@ -440,32 +443,31 @@ tokenEnumRegistrationCPPSource = tokenEnumRegistrationCPPHeader ~Join~ {
 
 use crate::symbol_registration::*;
 
-use self::TokenEnum::*;
+//
+// TokenKind::Integer must be 0x4 to allow setting the 0b1 bit to convert to TokenKind::REAL, and 0b10 bit to convert to TokenKind::Rational
+//
+const _: () = assert!(TokenKind::Integer.value() == 0x4, \"Check your assumptions\");
+const _: () = assert!(TokenKind::Real.value() == 0x5, \"Check your assumptions\");
+const _: () = assert!(TokenKind::Rational.value() == 0x6, \"Check your assumptions\");
 
 //
-// TOKEN_INTEGER must be 0x4 to allow setting the 0b1 bit to convert to TOKEN_REAL, and 0b10 bit to convert to TOKEN_RATIONAL
+// TokenKind::InternalNewline must be 0x8 to allow setting the 0b100 bit to convert to TokenKind::ToplevelNewline
 //
-const _: () = assert!(TOKEN_INTEGER.value() == 0x4, \"Check your assumptions\");
-const _: () = assert!(TOKEN_REAL.value() == 0x5, \"Check your assumptions\");
-const _: () = assert!(TOKEN_RATIONAL.value() == 0x6, \"Check your assumptions\");
+const _: () = assert!(TokenKind::InternalNewline.value() == 0b1000, \"Check your assumptions\");
+const _: () = assert!(TokenKind::ToplevelNewline.value() == 0b1100, \"Check your assumptions\");
+//const _: () = assert!(TokenKind::Error_First.value() == 0x10, \"Check your assumptions\");
 
 //
-// TOKEN_INTERNALNEWLINE must be 0x8 to allow setting the 0b100 bit to convert to TOKEN_TOPLEVELNEWLINE
+// TokenKind::Error_Unterminated_First must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
 //
-const _: () = assert!(TOKEN_INTERNALNEWLINE.value() == 0b1000, \"Check your assumptions\");
-const _: () = assert!(TOKEN_TOPLEVELNEWLINE.value() == 0b1100, \"Check your assumptions\");
-//const _: () = assert!(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
-
-//
-// TOKEN_ERROR_UNTERMINATED_FIRST must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
-//
-const _: () = assert!(TOKEN_ERROR_UNTERMINATED_FIRST.value() == 0x1c, \"Check your assumptions\");
-const _: () = assert!(TOKEN_ERROR_UNTERMINATED_END.value() == 0x20, \"Check your assumptions\");
+const _: () = assert!(TokenKind::Error_Unterminated_First.value() == 0x1c, \"Check your assumptions\");
+const _: () = assert!(TokenKind::Error_Unterminated_End.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
 
 {"
 #[allow(dead_code)]
-pub(crate) fn TokenToSymbol(token: TokenEnum) -> Symbol {"} ~Join~
+pub(crate) fn TokenToSymbol(token: TokenKind) -> Symbol {"} ~Join~
+{"    use TokenKind::*;"} ~Join~
 {"    match token {"} ~Join~
 tokenToSymbolCases ~Join~
 { "        _ => panic!(\"Unhandled token type\"),"} ~Join~

@@ -1,15 +1,14 @@
 use crate::{
     feature,
     source::{BufferAndLength, ByteSpan, Source},
-    token_enum::TokenEnum,
     tokenizer::Tokenizer,
 };
 
-pub use crate::token_enum_registration::TokenEnum as TokenKind;
+pub use crate::token_enum_registration::TokenKind;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Token {
-    pub tok: TokenEnum,
+    pub tok: TokenKind,
 
     pub src: Source,
 
@@ -31,8 +30,8 @@ const _: () = assert!(std::mem::size_of::<Token>() == 40, "Check your assumption
 fn PrintTo(token: &Token, stream: &mut std::ostream);
 
 impl Token {
-    // pub(crate) fn new(tok: TokenEnum, buf: BufferAndLength, src: Source) -> Self {
-    pub(crate) fn new(tok: TokenEnum, buf: BufferAndLength, src: Source) -> Self {
+    // pub(crate) fn new(tok: TokenKind, buf: BufferAndLength, src: Source) -> Self {
+    pub(crate) fn new(tok: TokenKind, buf: BufferAndLength, src: Source) -> Self {
         let token = Token {
             src,
             span: buf.byte_span(),
@@ -45,14 +44,14 @@ impl Token {
 
         #[cfg(debug_assertions)]
         match tok {
-            TokenEnum::TOKEN_UNKNOWN => {
-                panic!("illegal TOKEN_UNKNOWN")
+            TokenKind::Unknown => {
+                panic!("illegal TokenKind::Unknown")
             },
             //
             // Both \n and \r\n newlines have a size of 1
             // And other newlines like \[IndentingNewLine] have size > 1
             //
-            TokenEnum::TOKEN_TOPLEVELNEWLINE | TokenEnum::TOKEN_INTERNALNEWLINE => {},
+            TokenKind::ToplevelNewline | TokenKind::InternalNewline => {},
             _ if feature::COMPUTE_SOURCE => {
                 use crate::source::SourceCharacter;
 
@@ -104,22 +103,20 @@ impl Token {
     // the span length should be zero, to mark the first byte where the error
     // occurrs.
     // Names: error_at? note that the structure of arguments passed to this function
-    //        is very similar, perhaps it could take a (error: TokenEnum, prev: Token)
+    //        is very similar, perhaps it could take a (error: TokenKind, prev: Token)
     //        and do the ByteSpan/Source massaging automatically.
-    pub(crate) fn new2(tok: TokenEnum, mut span: ByteSpan, src: Source) -> Self {
+    pub(crate) fn new2(tok: TokenKind, mut span: ByteSpan, src: Source) -> Self {
         // Note: Same as BufferAndLength(Buffer Buf), which inits the Len to 0
 
-        fn is_len_zero(tok: TokenEnum) -> bool {
-            use crate::token_enum::TokenEnum::*;
-
+        fn is_len_zero(tok: TokenKind) -> bool {
             match tok {
-                TOKEN_FAKE_IMPLICITONE
-                | TOKEN_FAKE_IMPLICITALL
-                | TOKEN_FAKE_IMPLICITTIMES
-                | TOKEN_FAKE_IMPLICITNULL => true,
-                TOKEN_ERROR_INFIXIMPLICITNULL => true,
-                TOKEN_ERROR_EXPECTEDOPERAND => true,
-                TOKEN_ERROR_PREFIXIMPLICITNULL => true,
+                TokenKind::Fake_ImplicitOne
+                | TokenKind::Fake_ImplicitAll
+                | TokenKind::Fake_ImplicitTimes
+                | TokenKind::Fake_ImplicitNull => true,
+                TokenKind::Error_InfixImplicitNull => true,
+                TokenKind::Error_ExpectedOperand => true,
+                TokenKind::Error_PrefixImplicitNull => true,
                 _ => false,
             }
         }
@@ -133,7 +130,7 @@ impl Token {
 
     /// Used in testing code.
     #[cfg(test)]
-    pub(crate) fn new3(tok: TokenEnum, span: ByteSpan, src: Source) -> Self {
+    pub(crate) fn new3(tok: TokenKind, span: ByteSpan, src: Source) -> Self {
         Token { tok, span, src }
     }
 
@@ -153,7 +150,7 @@ impl Token {
 
     pub(crate) fn skip(&self, session: &mut Tokenizer) {
         session.offset = self.end();
-        session.wasEOF = self.tok == TokenEnum::TOKEN_ENDOFFILE;
+        session.wasEOF = self.tok == TokenKind::EndOfFile;
         session.SrcLoc = self.src.end;
     }
 
