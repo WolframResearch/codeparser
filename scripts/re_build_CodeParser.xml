@@ -48,7 +48,7 @@
 
 		<switch value='${system_id}'>
 			<case value='MacOSX-x86-64'>
-				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14' />
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15' />
 			</case>
 			<case value='MacOSX-ARM64'>
 				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0' />
