@@ -46,3 +46,58 @@ TestMatch[
 
 
 
+Test[
+	CodeParse["\\[Pi]"]
+	,
+	ContainerNode[String, {
+		LeafNode[Symbol, "Pi", <|Source->{{1,1}, {1,6}}|>]}, <|Source->{{1,1}, {1,6}}|>]
+	,
+	TestID->"CodeParser-20220910-I3Q6U1"
+]
+
+Test[
+	CodeParse["\\[Degree]"]
+	,
+	ContainerNode[String, {
+		LeafNode[Symbol, "Degree", <|Source->{{1,1}, {1,10}}|>]}, <|Source->{{1,1}, {1,10}}|>]
+	,
+	TestID->"CodeParser-20220910-Z3K4F3"
+]
+
+Test[
+	CodeParse["\\[Infinity]"]
+	,
+	ContainerNode[String, {
+		LeafNode[Symbol, "Infinity", <|Source->{{1,1}, {1,12}}|>]}, <|Source->{{1,1}, {1,12}}|>]
+	,
+	TestID->"CodeParser-20220910-T2T3W7"
+]
+
+Test[
+	CodeParse["\\[ExponentialE]"]
+	,
+	ContainerNode[String, {
+		LeafNode[Symbol, "E", <|Source->{{1,1}, {1,16}}|>]}, <|Source->{{1,1}, {1,16}}|>]
+	,
+	TestID->"CodeParser-20220910-H2B2B6"
+]
+
+Test[
+	CodeParse["\\[ImaginaryI]"]
+	,
+	ContainerNode[String, {
+		LeafNode[Symbol, "I", <|Source->{{1,1}, {1,14}}|>]}, <|Source->{{1,1}, {1,14}}|>]
+	,
+	TestID->"CodeParser-20220910-M6R5R1"
+]
+
+Test[
+	CodeParse["\\[ImaginaryJ]"]
+	,
+	ContainerNode[String, {
+		LeafNode[Symbol, "J", <|Source->{{1,1}, {1,14}}|>]}, <|Source->{{1,1}, {1,14}}|>]
+	,
+	TestID->"CodeParser-20220910-C4S7C2"
+]
+
+

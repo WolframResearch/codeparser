@@ -131,6 +131,26 @@ abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", d
 
 abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", data]
 
+
+abstract[LeafNode[Symbol, "\[Pi]" | "\\[Pi]" | "\\:03c0" | "\\|0003c0", data_]] :=
+  LeafNode[Symbol, "Pi", data]
+
+abstract[LeafNode[Symbol, "\[Degree]" | "\\[Degree]" | "\\:00b0" | "\\.b0" | "\\260" | "\\|0000b0", data_]] :=
+  LeafNode[Symbol, "Degree", data]
+
+abstract[LeafNode[Symbol, "\[Infinity]" | "\\[Infinity]" | "\\:221e" | "\\|00221e", data_]] :=
+  LeafNode[Symbol, "Infinity", data]
+
+abstract[LeafNode[Symbol, "\[ExponentialE]" | "\\[ExponentialE]" | "\\:f74d" | "\\|00f74d", data_]] :=
+  LeafNode[Symbol, "E", data]
+
+abstract[LeafNode[Symbol, "\[ImaginaryI]" | "\\[ImaginaryI]" | "\\:f74e" | "\\|00f74e", data_]] :=
+  LeafNode[Symbol, "I", data]
+
+abstract[LeafNode[Symbol, "\[ImaginaryJ]" | "\\[ImaginaryJ]" | "\\:f74f" | "\\|00f74f", data_]] :=
+  LeafNode[Symbol, "I", data]
+
+
 (*
 Symbols, Strings, Integers, Reals, and Rationals just get passed through
 
