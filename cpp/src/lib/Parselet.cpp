@@ -16,6 +16,11 @@
 #endif // USE_MUSTTAIL
 
 
+PrefixParselet::PrefixParselet(ParseFunctionPtr parsePrefix) : parsePrefix(parsePrefix) {}
+
+
+InfixParselet::InfixParselet(ParseFunctionPtr parseInfix) : parseInfix(parseInfix) {}
+
 Token InfixParselet::processImplicitTimes(ParserSessionPtr session, Token TokIn) const {
     return TokIn;
 }
@@ -25,9 +30,7 @@ Symbol InfixParselet::getOp() const {
 }
 
 
-ParseFunction LeafParselet::parsePrefix() const {
-    return LeafParselet_reduceLeaf;
-}
+LeafParselet::LeafParselet() : PrefixParselet(LeafParselet_reduceLeaf) {}
 
 void LeafParselet_reduceLeaf(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -38,9 +41,7 @@ void LeafParselet_reduceLeaf(ParserSessionPtr session, ParseletPtr Ignored, Toke
 }
 
 
-ParseFunction PrefixErrorParselet::parsePrefix() const {
-    return PrefixErrorParselet_parsePrefix;
-}
+PrefixErrorParselet::PrefixErrorParselet() : PrefixParselet(PrefixErrorParselet_parsePrefix) {}
 
 void PrefixErrorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -53,9 +54,7 @@ void PrefixErrorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignor
 }
 
 
-ParseFunction PrefixCloserParselet::parsePrefix() const {
-    return PrefixCloserParselet_parsePrefix;
-}
+PrefixCloserParselet::PrefixCloserParselet() : PrefixParselet(PrefixCloserParselet_parsePrefix) {}
 
 void PrefixCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -96,9 +95,7 @@ void PrefixCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Igno
 }
 
 
-ParseFunction PrefixToplevelCloserParselet::parsePrefix() const {
-    return PrefixToplevelCloserParselet_parsePrefix;
-}
+PrefixToplevelCloserParselet::PrefixToplevelCloserParselet() : PrefixParselet(PrefixToplevelCloserParselet_parsePrefix) {}
 
 void PrefixToplevelCloserParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -124,9 +121,7 @@ void PrefixToplevelCloserParselet_parsePrefix(ParserSessionPtr session, Parselet
 }
 
 
-ParseFunction PrefixEndOfFileParselet::parsePrefix() const {
-    return PrefixEndOfFileParselet_parsePrefix;
-}
+PrefixEndOfFileParselet::PrefixEndOfFileParselet() : PrefixParselet(PrefixEndOfFileParselet_parsePrefix) {}
 
 void PrefixEndOfFileParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -159,9 +154,7 @@ void PrefixEndOfFileParselet_parsePrefix(ParserSessionPtr session, ParseletPtr I
 }
 
 
-ParseFunction PrefixUnsupportedTokenParselet::parsePrefix() const {
-    return PrefixUnsupportedTokenParselet_parsePrefix;
-}
+PrefixUnsupportedTokenParselet::PrefixUnsupportedTokenParselet() : PrefixParselet(PrefixUnsupportedTokenParselet_parsePrefix) {}
 
 void PrefixUnsupportedTokenParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -181,9 +174,7 @@ void PrefixUnsupportedTokenParselet_parsePrefix(ParserSessionPtr session, Parsel
 }
 
 
-ParseFunction PrefixCommaParselet::parsePrefix() const {
-    return PrefixCommaParselet_parsePrefix;
-}
+PrefixCommaParselet::PrefixCommaParselet() : PrefixParselet(PrefixCommaParselet_parsePrefix) {}
 
 void PrefixCommaParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -218,9 +209,7 @@ void PrefixCommaParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignor
 }
 
 
-ParseFunction PrefixUnhandledParselet::parsePrefix() const {
-    return PrefixUnhandledParselet_parsePrefix;
-}
+PrefixUnhandledParselet::PrefixUnhandledParselet() : PrefixParselet(PrefixUnhandledParselet_parsePrefix) {}
 
 void PrefixUnhandledParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -273,9 +262,11 @@ void PrefixUnhandledParselet_parsePrefix(ParserSessionPtr session, ParseletPtr I
     auto P2 = infixParselets[TokIn.Tok.value()];
     
     MUSTTAIL
-    return (P2->parseInfix())(session, P2, TokIn);
+    return (P2->parseInfix)(session, P2, TokIn);
 }
 
+
+InfixToplevelNewlineParselet::InfixToplevelNewlineParselet() : InfixParselet(InfixAssertFalseParselet_parseInfix) {}
 
 Precedence InfixToplevelNewlineParselet::getPrecedence(ParserSessionPtr session) const {
     //
@@ -284,24 +275,8 @@ Precedence InfixToplevelNewlineParselet::getPrecedence(ParserSessionPtr session)
     return PRECEDENCE_LOWEST;
 }
 
-ParseFunction InfixToplevelNewlineParselet::parseInfix() const {
-    
-    assert(false);
-    
-    return InfixToplevelNewlineParselet_parseInfix;
-}
 
-void InfixToplevelNewlineParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token firstTok) {
-    
-    assert(false);
-    
-    return;
-}
-
-
-ParseFunction SymbolParselet::parsePrefix() const {
-    return SymbolParselet_parsePrefix;
-}
+SymbolParselet::SymbolParselet() : PrefixParselet(SymbolParselet_parsePrefix) {}
 
 void SymbolParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -451,7 +426,7 @@ void SymbolParselet_reducePatternOptionalDefault(ParserSessionPtr session, Parse
 }
 
 
-PrefixOperatorParselet::PrefixOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+PrefixOperatorParselet::PrefixOperatorParselet(Precedence precedence, Symbol Op) : PrefixParselet(PrefixOperatorParselet_parsePrefix), precedence(precedence), Op(Op) {}
 
 Precedence PrefixOperatorParselet::getPrecedence() const {
     return precedence;
@@ -459,10 +434,6 @@ Precedence PrefixOperatorParselet::getPrecedence() const {
 
 Symbol PrefixOperatorParselet::getOp() const {
     return Op;
-}
-
-ParseFunction PrefixOperatorParselet::parsePrefix() const {
-    return PrefixOperatorParselet_parsePrefix;
 }
 
 void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -493,7 +464,7 @@ void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P,
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void PrefixOperatorParselet_reducePrefixOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
@@ -510,20 +481,7 @@ void PrefixOperatorParselet_reducePrefixOperator(ParserSessionPtr session, Parse
 }
 
 
-ParseFunction InfixImplicitTimesParselet::parseInfix() const {
-    
-    assert(false);
-    
-    return InfixImplicitTimesParselet_parseInfix;
-}
-
-void InfixImplicitTimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
-    
-    assert(false);
-    
-    return;
-}
-
+InfixImplicitTimesParselet::InfixImplicitTimesParselet() : InfixParselet(InfixAssertFalseParselet_parseInfix) {}
 
 Precedence InfixImplicitTimesParselet::getPrecedence(ParserSessionPtr session) const {
     
@@ -538,15 +496,10 @@ Token InfixImplicitTimesParselet::processImplicitTimes(ParserSessionPtr session,
 }
 
 
+InfixAssertFalseParselet::InfixAssertFalseParselet() : InfixParselet(InfixAssertFalseParselet_parseInfix) {}
+
 Precedence InfixAssertFalseParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_LOWEST;
-}
-
-ParseFunction InfixAssertFalseParselet::parseInfix() const {
-    
-    assert(false);
-    
-    return InfixAssertFalseParselet_parseInfix;
 }
 
 void InfixAssertFalseParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token firstTok) {
@@ -557,7 +510,7 @@ void InfixAssertFalseParselet_parseInfix(ParserSessionPtr session, ParseletPtr I
 }
 
 
-BinaryOperatorParselet::BinaryOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+BinaryOperatorParselet::BinaryOperatorParselet(Precedence precedence, Symbol Op) : InfixParselet(BinaryOperatorParselet_parseInfix), precedence(precedence), Op(Op) {}
 
 Precedence BinaryOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
@@ -565,10 +518,6 @@ Precedence BinaryOperatorParselet::getPrecedence(ParserSessionPtr session) const
 
 Symbol BinaryOperatorParselet::getOp() const {
     return Op;
-}
-
-ParseFunction BinaryOperatorParselet::parseInfix() const {
-    return BinaryOperatorParselet_parseInfix;
 }
 
 void BinaryOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -598,7 +547,7 @@ void BinaryOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, 
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void BinaryOperatorParselet_reduceBinaryOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
@@ -615,7 +564,7 @@ void BinaryOperatorParselet_reduceBinaryOperator(ParserSessionPtr session, Parse
 }
 
 
-InfixOperatorParselet::InfixOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+InfixOperatorParselet::InfixOperatorParselet(Precedence precedence, Symbol Op) : InfixParselet(InfixOperatorParselet_parseInfix), precedence(precedence), Op(Op) {}
 
 Precedence InfixOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
@@ -623,10 +572,6 @@ Precedence InfixOperatorParselet::getPrecedence(ParserSessionPtr session) const 
 
 Symbol InfixOperatorParselet::getOp() const {
     return Op;
-}
-
-ParseFunction InfixOperatorParselet::parseInfix() const {
-    return InfixOperatorParselet_parseInfix;
 }
 
 void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -659,7 +604,7 @@ void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, T
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-    (P2->parsePrefix())(session, P2, Tok2);
+    (P2->parsePrefix)(session, P2, Tok2);
     
     return InfixOperatorParselet_parseLoop(session, P, TokIn/*ignored*/);
 #else
@@ -672,7 +617,7 @@ void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, T
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok2);
+    return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -743,7 +688,7 @@ void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, To
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
         
-    (P2->parsePrefix())(session, P2, Tok2);
+    (P2->parsePrefix)(session, P2, Tok2);
     
     } // while (true)
 #else
@@ -754,7 +699,7 @@ void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, To
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok2);
+    return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -772,7 +717,7 @@ void InfixOperatorParselet_reduceInfixOperator(ParserSessionPtr session, Parsele
 }
 
 
-PostfixOperatorParselet::PostfixOperatorParselet(Precedence precedence, Symbol Op) : precedence(precedence), Op(Op) {}
+PostfixOperatorParselet::PostfixOperatorParselet(Precedence precedence, Symbol Op) : InfixParselet(PostfixOperatorParselet_parseInfix), precedence(precedence), Op(Op) {}
 
 Precedence PostfixOperatorParselet::getPrecedence(ParserSessionPtr session) const {
     return precedence;
@@ -780,10 +725,6 @@ Precedence PostfixOperatorParselet::getPrecedence(ParserSessionPtr session) cons
 
 Symbol PostfixOperatorParselet::getOp() const {
     return Op;
-}
-
-ParseFunction PostfixOperatorParselet::parseInfix() const {
-    return PostfixOperatorParselet_parseInfix;
 }
 
 void PostfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -810,7 +751,7 @@ void PostfixOperatorParselet_reducePostfixOperator(ParserSessionPtr session, Par
 }
 
 
-GroupParselet::GroupParselet(TokenEnum Opener, Symbol Op) : Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
+GroupParselet::GroupParselet(TokenEnum Opener, Symbol Op) : PrefixParselet(GroupParselet_parsePrefix), Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
 
 Symbol GroupParselet::getOp() const {
     return Op;
@@ -818,10 +759,6 @@ Symbol GroupParselet::getOp() const {
 
 Closer GroupParselet::getCloser() const {
     return Closr;
-}
-
-ParseFunction GroupParselet::parsePrefix() const {
-    return GroupParselet_parsePrefix;
 }
 
 void GroupParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -971,7 +908,7 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
     
     auto P2 = prefixParselets[Tok.Tok.value()];
         
-    (P2->parsePrefix())(session, P2, Tok);
+    (P2->parsePrefix)(session, P2, Tok);
     
     } // while (true)
 #else
@@ -982,7 +919,7 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 #endif // !USE_MUSTTAIL
 }
 
@@ -1032,7 +969,7 @@ void GroupParselet_reduceUnterminatedGroup(ParserSessionPtr session, ParseletPtr
 }
 
 
-CallParselet::CallParselet(PrefixParseletPtr GP) : GP(GP) {}
+CallParselet::CallParselet(PrefixParseletPtr GP) : InfixParselet(CallParselet_parseInfix), GP(GP) {}
 
 PrefixParseletPtr CallParselet::getGP() const {
     return GP;
@@ -1040,10 +977,6 @@ PrefixParseletPtr CallParselet::getGP() const {
 
 Precedence CallParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_CALL;
-}
-
-ParseFunction CallParselet::parseInfix() const {
-    return CallParselet_parseInfix;
 }
 
 void CallParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -1071,7 +1004,7 @@ void CallParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokI
     auto GP = dynamic_cast<const CallParselet *>(P)->getGP();
     
     MUSTTAIL
-    return (GP->parsePrefix())(session, GP, TokIn);
+    return (GP->parsePrefix)(session, GP, TokIn);
 }
 
 void CallParselet_reduceCall(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -1087,9 +1020,7 @@ void CallParselet_reduceCall(ParserSessionPtr session, ParseletPtr Ignored, Toke
 }
 
 
-ParseFunction TildeParselet::parseInfix() const {
-    return TildeParselet_parseInfix;
-}
+TildeParselet::TildeParselet() : InfixParselet(TildeParselet_parseInfix) {}
 
 Precedence TildeParselet::getPrecedence(ParserSessionPtr session) const {
     
@@ -1130,7 +1061,7 @@ void TildeParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     auto P2 = prefixParselets[FirstTok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, FirstTok);
+    return (P2->parsePrefix)(session, P2, FirstTok);
 }
 
 void TildeParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -1184,7 +1115,7 @@ void TildeParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token I
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok2);
+    return (P2->parsePrefix)(session, P2, Tok2);
 }
 
 void TildeParselet_reduceTilde(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -1204,9 +1135,7 @@ void TildeParselet_reduceError(ParserSessionPtr session, ParseletPtr Ignored, To
 }
 
 
-ParseFunction ColonParselet::parseInfix() const {
-    return ColonParselet_parseInfix;
-}
+ColonParselet::ColonParselet() : InfixParselet(ColonParselet_parseInfix) {}
 
 Precedence ColonParselet::getPrecedence(ParserSessionPtr session) const {
     
@@ -1256,7 +1185,7 @@ void ColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
             auto P2 = prefixParselets[Tok.Tok.value()];
             
             MUSTTAIL
-            return (P2->parsePrefix())(session, P2, Tok);
+            return (P2->parsePrefix)(session, P2, Tok);
         }
         case COLONLHS_OPTIONAL: {
             
@@ -1268,7 +1197,7 @@ void ColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
             auto P2 = prefixParselets[Tok.Tok.value()];
 
             MUSTTAIL
-            return (P2->parsePrefix())(session, P2, Tok);
+            return (P2->parsePrefix)(session, P2, Tok);
         }
         case COLONLHS_ERROR: {
             
@@ -1280,7 +1209,7 @@ void ColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
             auto P2 = prefixParselets[Tok.Tok.value()];
             
             MUSTTAIL
-            return (P2->parsePrefix())(session, P2, Tok);
+            return (P2->parsePrefix)(session, P2, Tok);
         }
     }
     
@@ -1312,12 +1241,10 @@ void ColonParselet_reduceOptional(ParserSessionPtr session, ParseletPtr Ignored,
 }
 
 
+SlashColonParselet::SlashColonParselet() : InfixParselet(SlashColonParselet_parseInfix) {}
+
 Precedence SlashColonParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_SLASHCOLON;
-}
-
-ParseFunction SlashColonParselet::parseInfix() const {
-    return SlashColonParselet_parseInfix;
 }
 
 void SlashColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -1359,7 +1286,7 @@ void SlashColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void SlashColonParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -1422,10 +1349,14 @@ void SlashColonParselet_reduceError(ParserSessionPtr session, ParseletPtr Ignore
 }
 
 
-EqualParselet::EqualParselet() : BinaryOperatorParselet(PRECEDENCE_EQUAL, SYMBOL_SET) {}
+EqualParselet::EqualParselet() : InfixParselet(EqualParselet_parseInfix) {}
 
-ParseFunction EqualParselet::parseInfix() const {
-    return EqualParselet_parseInfix;
+Precedence EqualParselet::getPrecedence(ParserSessionPtr session) const {
+    return PRECEDENCE_EQUAL;
+}
+
+Symbol EqualParselet::getOp() const {
+    return SYMBOL_SET;
 }
 
 void EqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -1466,7 +1397,7 @@ void EqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void EqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -1511,7 +1442,7 @@ void EqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Ignored, 
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void EqualParselet_reduceSet(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -1547,10 +1478,14 @@ void EqualParselet_reduceTagUnset(ParserSessionPtr session, ParseletPtr Ignored,
 }
 
 
-ColonEqualParselet::ColonEqualParselet() : BinaryOperatorParselet(PRECEDENCE_COLONEQUAL, SYMBOL_SETDELAYED) {}
+ColonEqualParselet::ColonEqualParselet() : InfixParselet(ColonEqualParselet_parseInfix) {}
 
-ParseFunction ColonEqualParselet::parseInfix() const {
-    return ColonEqualParselet_parseInfix;
+Precedence ColonEqualParselet::getPrecedence(ParserSessionPtr session) const {
+    return PRECEDENCE_COLONEQUAL;
+}
+
+Symbol ColonEqualParselet::getOp() const {
+    return SYMBOL_SETDELAYED;
 }
 
 void ColonEqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -1576,7 +1511,7 @@ void ColonEqualParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void ColonEqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -1602,7 +1537,7 @@ void ColonEqualParselet_parseInfixTag(ParserSessionPtr session, ParseletPtr Igno
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void ColonEqualParselet_reduceSetDelayed(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -1622,12 +1557,10 @@ void ColonEqualParselet_reduceTagSetDelayed(ParserSessionPtr session, ParseletPt
 }
 
 
+CommaParselet::CommaParselet() : InfixParselet(CommaParselet_parseInfix) {}
+
 Precedence CommaParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_COMMA;
-}
-
-ParseFunction CommaParselet::parseInfix() const {
-    return CommaParselet_parseInfix;
 }
 
 void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -1681,7 +1614,7 @@ void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-    (P2->parsePrefix())(session, P2, Tok2);
+    (P2->parsePrefix)(session, P2, Tok2);
     
     return CommaParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
@@ -1692,7 +1625,7 @@ void CommaParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok2);
+    return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -1759,7 +1692,7 @@ void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
         
-    (P2->parsePrefix())(session, P2, Tok2);
+    (P2->parsePrefix)(session, P2, Tok2);
         
     } // while (true)
 #else
@@ -1769,7 +1702,7 @@ void CommaParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok2);
+    return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -1794,12 +1727,10 @@ void CommaParselet_reduceComma(ParserSessionPtr session, ParseletPtr Ignored, To
 }
 
 
+SemiParselet::SemiParselet() : InfixParselet(SemiParselet_parseInfix) {}
+
 Precedence SemiParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_SEMI;
-}
-
-ParseFunction SemiParselet::parseInfix() const {
-    return SemiParselet_parseInfix;
 }
 
 void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -1866,7 +1797,7 @@ void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Toke
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
-        (P2->parsePrefix())(session, P2, Tok2);
+        (P2->parsePrefix)(session, P2, Tok2);
         
         return SemiParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
@@ -1877,7 +1808,7 @@ void SemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Toke
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
         MUSTTAIL
-        return (P2->parsePrefix())(session, P2, Tok2);
+        return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
     }
     
@@ -1977,7 +1908,7 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
-        (P2->parsePrefix())(session, P2, Tok2);
+        (P2->parsePrefix)(session, P2, Tok2);
         
         continue;
 #else
@@ -1987,7 +1918,7 @@ void SemiParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Token
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
         MUSTTAIL
-        return (P2->parsePrefix())(session, P2, Tok2);
+        return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
     }
 
@@ -2020,12 +1951,10 @@ void SemiParselet_reduceCompoundExpression(ParserSessionPtr session, ParseletPtr
 }
 
 
+ColonColonParselet::ColonColonParselet() : InfixParselet(ColonColonParselet_parseInfix) {}
+
 Precedence ColonColonParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_COLONCOLON;
-}
-
-ParseFunction ColonColonParselet::parseInfix() const {
-    return ColonColonParselet_parseInfix;
 }
 
 void ColonColonParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -2117,12 +2046,10 @@ void ColonColonParselet_reduceMessageName(ParserSessionPtr session, ParseletPtr 
 }
 
 
+GreaterGreaterParselet::GreaterGreaterParselet() : InfixParselet(GreaterGreaterParselet_parseInfix) {}
+
 Precedence GreaterGreaterParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_GREATERGREATER;
-}
-
-ParseFunction GreaterGreaterParselet::parseInfix() const {
-    return GreaterGreaterParselet_parseInfix;
 }
 
 void GreaterGreaterParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -2164,12 +2091,10 @@ void GreaterGreaterParselet_reducePut(ParserSessionPtr session, ParseletPtr Igno
 }
 
 
+GreaterGreaterGreaterParselet::GreaterGreaterGreaterParselet() : InfixParselet(GreaterGreaterGreaterParselet_parseInfix) {}
+
 Precedence GreaterGreaterGreaterParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_GREATERGREATERGREATER;
-}
-
-ParseFunction GreaterGreaterGreaterParselet::parseInfix() const {
-    return GreaterGreaterGreaterParselet_parseInfix;
 }
 
 void GreaterGreaterGreaterParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -2211,9 +2136,7 @@ void GreaterGreaterGreaterParselet_reducePutAppend(ParserSessionPtr session, Par
 }
 
 
-ParseFunction LessLessParselet::parsePrefix() const {
-    return LessLessParselet_parsePrefix;
-}
+LessLessParselet::LessLessParselet() : PrefixParselet(LessLessParselet_parsePrefix) {}
 
 void LessLessParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -2255,9 +2178,7 @@ void LessLessParselet_reduceGet(ParserSessionPtr session, ParseletPtr Ignored, T
 }
 
 
-ParseFunction HashParselet::parsePrefix() const {
-    return HashParselet_parsePrefix;
-}
+HashParselet::HashParselet() : PrefixParselet(HashParselet_parsePrefix) {}
 
 void HashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -2312,9 +2233,7 @@ void HashParselet_reduceSlot(ParserSessionPtr session, ParseletPtr Ignored, Toke
 }
 
 
-ParseFunction HashHashParselet::parsePrefix() const {
-    return HashHashParselet_parsePrefix;
-}
+HashHashParselet::HashHashParselet() : PrefixParselet(HashHashParselet_parsePrefix) {}
 
 void HashHashParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     
@@ -2358,9 +2277,7 @@ void HashHashParselet_reduceSlotSequence(ParserSessionPtr session, ParseletPtr I
 }
 
 
-ParseFunction PercentParselet::parsePrefix() const {
-    return PercentParselet_parsePrefix;
-}
+PercentParselet::PercentParselet() : PrefixParselet(PercentParselet_parsePrefix) {}
 
 void PercentParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     

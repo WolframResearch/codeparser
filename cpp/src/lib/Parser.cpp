@@ -215,7 +215,7 @@ void Parser_parseClimb(ParserSessionPtr session, ParseletPtr Ignored, Token Igno
     Parser_pushTriviaSeq(session, Trivia1);
     
     MUSTTAIL
-    return (I->parseInfix())(session, I, token);
+    return (I->parseInfix)(session, I, token);
 }
 
 void Parser_tryContinue(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {

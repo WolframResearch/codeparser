@@ -168,7 +168,7 @@ NodePtr ParserSession::concreteParse() {
             
         auto P = prefixParselets[peek.Tok.value()];
         
-        (P->parsePrefix())(this, P, peek);
+        (P->parsePrefix)(this, P, peek);
         
         exprs.push(Parser_popNode(this));
         

@@ -16,16 +16,14 @@
 #endif // USE_MUSTTAIL
 
 
+TimesParselet::TimesParselet() : InfixParselet(TimesParselet_parseInfix) {}
+
 Symbol TimesParselet::getOp() const {
     return SYMBOL_TIMES;
 }
 
 Precedence TimesParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_STAR;
-}
-
-ParseFunction TimesParselet::parseInfix() const {
-    return TimesParselet_parseInfix;
 }
 
 void TimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -55,7 +53,7 @@ void TimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-    (P2->parsePrefix())(session, P2, Tok2);
+    (P2->parsePrefix)(session, P2, Tok2);
     
     return TimesParselet_parseLoop(session, Ignored, TokIn/*ignored*/);
 #else
@@ -66,7 +64,7 @@ void TimesParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Tok
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok2);
+    return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 
@@ -149,7 +147,7 @@ void TimesParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
         
-    (P2->parsePrefix())(session, P2, Tok2);
+    (P2->parsePrefix)(session, P2, Tok2);
     
     } // while (true)
 #else
@@ -159,7 +157,7 @@ void TimesParselet_parseLoop(ParserSessionPtr session, ParseletPtr Ignored, Toke
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok2);
+    return (P2->parsePrefix)(session, P2, Tok2);
 #endif // !USE_MUSTTAIL
 }
 

@@ -17,7 +17,7 @@
 #endif // USE_MUSTTAIL
 
 
-IntegralParselet::IntegralParselet(Symbol Op1, Symbol Op2) : Op1(Op1), Op2(Op2) {}
+IntegralParselet::IntegralParselet(Symbol Op1, Symbol Op2) : PrefixParselet(IntegralParselet_parsePrefix),  Op1(Op1), Op2(Op2) {}
 
 Symbol IntegralParselet::getOp1() const {
     return Op1;
@@ -25,10 +25,6 @@ Symbol IntegralParselet::getOp1() const {
 
 Symbol IntegralParselet::getOp2() const {
     return Op2;
-}
-
-ParseFunction IntegralParselet::parsePrefix() const {
-    return IntegralParselet_parsePrefix;
 }
 
 void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -71,7 +67,7 @@ void IntegralParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
@@ -108,7 +104,7 @@ void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr P, Token Igno
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, Tok);
+    return (P2->parsePrefix)(session, P2, Tok);
 }
 
 void IntegralParselet_reduceIntegrate(ParserSessionPtr session, ParseletPtr P, Token Ignored2) {
@@ -138,6 +134,8 @@ void IntegralParselet_reduceIntegral(ParserSessionPtr session, ParseletPtr P, To
 }
 
 
+InfixDifferentialDParselet::InfixDifferentialDParselet() : InfixParselet(InfixAssertFalseParselet_parseInfix) {}
+
 Precedence InfixDifferentialDParselet::getPrecedence(ParserSessionPtr session) const {
     
     if (Parser_topPrecedence(session) == PRECEDENCE_CLASS_INTEGRATIONOPERATORS) {
@@ -164,11 +162,4 @@ Token InfixDifferentialDParselet::processImplicitTimes(ParserSessionPtr session,
     }
     
     return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.Buf, 0, Source(TokIn.Src.Start));
-}
-
-ParseFunction InfixDifferentialDParselet::parseInfix() const {
-    
-    assert(false);
-    
-    return nullptr;
 }

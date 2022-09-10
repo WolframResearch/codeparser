@@ -57,7 +57,7 @@ TEST_F(ParseletTest, Bug1) {
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
-    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+    (prefixParselets[Tok.Tok.value()]->parsePrefix)(session, prefixParselets[Tok.Tok.value()], Tok);
 
     auto& N = Parser_topNode(session);
 
@@ -91,7 +91,7 @@ TEST_F(ParseletTest, Bug2) {
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
-    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+    (prefixParselets[Tok.Tok.value()]->parsePrefix)(session, prefixParselets[Tok.Tok.value()], Tok);
 
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -119,7 +119,7 @@ TEST_F(ParseletTest, Bug3) {
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
-    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+    (prefixParselets[Tok.Tok.value()]->parsePrefix)(session, prefixParselets[Tok.Tok.value()], Tok);
 
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);
@@ -147,7 +147,7 @@ TEST_F(ParseletTest, Bug4) {
 
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
 
-    (prefixParselets[Tok.Tok.value()]->parsePrefix())(session, prefixParselets[Tok.Tok.value()], Tok);
+    (prefixParselets[Tok.Tok.value()]->parsePrefix)(session, prefixParselets[Tok.Tok.value()], Tok);
 
     EXPECT_EQ(session->nonFatalIssues.size(), 0u);
     EXPECT_EQ(session->fatalIssues.size(), 0u);

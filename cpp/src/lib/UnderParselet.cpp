@@ -15,16 +15,14 @@
 #endif // USE_MUSTTAIL
 
 
+UnderParselet::UnderParselet(Symbol BOp, Symbol PBOp) : PrefixParselet(UnderParselet_parsePrefix), BOp(BOp), PBOp(PBOp) {}
+
 Symbol UnderParselet::getBOp() const {
     return BOp;
 }
 
 Symbol UnderParselet::getPBOp() const {
     return PBOp;
-}
-
-ParseFunction UnderParselet::parsePrefix() const {
-    return UnderParselet_parsePrefix;
 }
 
 void UnderParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
@@ -175,9 +173,7 @@ void UnderParselet_reduceBlankContextSensitive(ParserSessionPtr session, Parsele
 }
 
 
-ParseFunction UnderDotParselet::parsePrefix() const {
-    return UnderDotParselet_parsePrefix;
-}
+UnderDotParselet::UnderDotParselet() : PrefixParselet(UnderDotParselet_parsePrefix) {}
 
 void UnderDotParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
     

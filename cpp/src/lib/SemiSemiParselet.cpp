@@ -19,6 +19,8 @@
 // The syntax for ;; is complicated and has a lot of edge cases.
 //
 
+SemiSemiParselet::SemiSemiParselet() : PrefixParselet(SemiSemiParselet_parsePrefix), InfixParselet(SemiSemiParselet_parseInfix) {}
+
 Precedence SemiSemiParselet::getPrecedence(ParserSessionPtr session) const {
     return PRECEDENCE_SEMISEMI;
 }
@@ -34,10 +36,6 @@ Token SemiSemiParselet::processImplicitTimes(ParserSessionPtr session, Token Tok
     }
     
     return TokIn;
-}
-
-ParseFunction SemiSemiParselet::parsePrefix() const {
-    return SemiSemiParselet_parsePrefix;
 }
 
 void SemiSemiParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -59,10 +57,6 @@ void SemiSemiParselet_parsePrefix(ParserSessionPtr session, ParseletPtr Ignored,
     
     MUSTTAIL
     return SemiSemiParselet_parseInfix(session, Ignored, TokIn);
-}
-
-ParseFunction SemiSemiParselet::parseInfix() const {
-    return SemiSemiParselet_parseInfix;
 }
 
 void SemiSemiParselet_parseInfix(ParserSessionPtr session, ParseletPtr Ignored, Token TokIn) {
@@ -134,7 +128,7 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
         auto P2 = prefixParselets[SecondTok.Tok.value()];
         
         MUSTTAIL
-        return (P2->parsePrefix())(session, P2, SecondTok);
+        return (P2->parsePrefix)(session, P2, SecondTok);
     }
     
     //
@@ -194,7 +188,7 @@ void SemiSemiParselet_parse1(ParserSessionPtr session, ParseletPtr Ignored, Toke
     auto P2 = prefixParselets[ThirdTok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, ThirdTok);
+    return (P2->parsePrefix)(session, P2, ThirdTok);
 }
 
 void SemiSemiParselet_parse2(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {
@@ -293,7 +287,7 @@ void SemiSemiParselet_parse2(ParserSessionPtr session, ParseletPtr Ignored, Toke
     auto P2 = prefixParselets[FourthTok.Tok.value()];
     
     MUSTTAIL
-    return (P2->parsePrefix())(session, P2, FourthTok);
+    return (P2->parsePrefix)(session, P2, FourthTok);
 }
 
 void SemiSemiParselet_reduceBinary(ParserSessionPtr session, ParseletPtr Ignored, Token Ignored2) {

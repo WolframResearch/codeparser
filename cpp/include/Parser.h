@@ -13,12 +13,13 @@ class ParserSession;
 
 using ParseletPtr = Parselet *;
 using ParserSessionPtr = ParserSession *;
-typedef void (*ParseFunction)(ParserSessionPtr session, ParseletPtr parselet, Token firstTok);
+using ParseFunction = void(ParserSessionPtr parser, ParseletPtr parselet, Token firstTok);
+using ParseFunctionPtr = ParseFunction *;
 
 
 struct Context {
     
-    ParseFunction F;
+    ParseFunctionPtr F;
 
     ParseletPtr P;
 

@@ -25,7 +25,8 @@ class ParserSession;
 using NodePtr = const Node *;
 using ParseletPtr = Parselet *;
 using ParserSessionPtr = ParserSession *;
-typedef void (*ParseFunction)(ParserSessionPtr parser, ParseletPtr parselet, Token firstTok);
+using ParseFunction = void(ParserSessionPtr parser, ParseletPtr parselet, Token firstTok);
+using ParseFunctionPtr = ParseFunction *;
 
 using NodeVariant = std::variant<NodePtr, struct Token>;
 
