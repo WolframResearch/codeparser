@@ -13,11 +13,15 @@ mod test_wl_character;
 use pretty_assertions::assert_eq;
 
 use crate::{
-    node::{InfixNode, Node, Node::Token as NVToken, NodeContainer, NodeSeq, OperatorNode},
+    node::{
+        CallNode, GroupNode, InfixNode, Node, Node::Token as NVToken, NodeContainer, NodeSeq,
+        OperatorNode,
+    },
     parser_session::ParserSession,
     source::{ByteSpan, SourceConvention},
     src,
     symbol::Symbol,
+    symbol_registration::{SYMBOL_CODEPARSER_GROUPNODE, SYMBOL_CODEPARSER_GROUPSQUARE},
     token::{Token, TokenKind},
     EncodingMode, FirstLineBehavior, Source, DEFAULT_TAB_WIDTH,
 };
@@ -178,6 +182,42 @@ fn test_something() {
                 ]),
                 src: src!(1:1-1:6),
             },
+        })]
+    );
+
+    assert_eq!(
+        nodes("f[x]"),
+        vec![Node::Call(CallNode {
+            head: NodeSeq(vec![Node::Token(Token {
+                tok: TokenKind::Symbol,
+                src: src!(1:1-1:2),
+                span: ByteSpan::new(0, 1),
+            })]),
+            body: Box::new(Node::Group(GroupNode {
+                op: OperatorNode {
+                    op: SYMBOL_CODEPARSER_GROUPSQUARE,
+                    make_sym: SYMBOL_CODEPARSER_GROUPNODE,
+                    children: NodeSeq(vec![
+                        NVToken(Token {
+                            tok: TokenKind::OpenSquare,
+                            src: src!(1:2-1:3),
+                            span: ByteSpan::new(1, 1),
+                        }),
+                        NVToken(Token {
+                            tok: TokenKind::Symbol,
+                            src: src!(1:3-1:4),
+                            span: ByteSpan::new(2, 1),
+                        }),
+                        NVToken(Token {
+                            tok: TokenKind::CloseSquare,
+                            src: src!(1:4-1:5),
+                            span: ByteSpan::new(3, 1),
+                        }),
+                    ]),
+                    src: src!(1:2-1:5),
+                },
+            })),
+            src: src!(1:1-1:5),
         })]
     );
 }
