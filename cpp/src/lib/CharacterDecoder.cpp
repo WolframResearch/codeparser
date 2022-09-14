@@ -44,12 +44,13 @@ WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session,
 std::string CharacterDecoder_longNameSuggestion(ParserSessionPtr session, std::string input);
 
 
-typedef WLCharacter (*HandlerFunction)(ParserSessionPtr session, Buffer startBuf, SourceLocation startLoc, NextPolicy policy);
+using HandlerFunction = WLCharacter(ParserSessionPtr session, Buffer startBuf, SourceLocation startLoc, NextPolicy policy);
+using HandlerFunctionPtr = HandlerFunction *;
 
 #define U CharacterDecoder_handleUncommon
 #define A CharacterDecoder_handleAssertFalse
 
-std::array<HandlerFunction, 128> CharacterDecoderHandlerTable = {
+std::array<HandlerFunctionPtr, 128> CharacterDecoderHandlerTable = {
     A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A, A,
     U, U, CharacterDecoder_handleStringMetaDoubleQuote, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, CharacterDecoder_handleStringMetaOpen, U, CharacterDecoder_handleStringMetaClose, U,
     U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, CharacterDecoder_handleStringMetaBackslash, U, U, U,
@@ -681,11 +682,15 @@ WLCharacter CharacterDecoder_handle4Hex(ParserSessionPtr session, Buffer colonBu
     
     switch (point) {
         case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
+            
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            
             break;
         }
         case CODEPOINT_ACTUAL_BACKSLASH: {
+            
             point = CODEPOINT_STRINGMETA_BACKSLASH;
+            
             break;
         }
     }
@@ -868,11 +873,15 @@ WLCharacter CharacterDecoder_handle2Hex(ParserSessionPtr session, Buffer dotBuf,
     
     switch (point) {
         case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
+            
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            
             break;
         }
         case CODEPOINT_ACTUAL_BACKSLASH: {
+            
             point = CODEPOINT_STRINGMETA_BACKSLASH;
+            
             break;
         }
     }
@@ -1056,11 +1065,15 @@ WLCharacter CharacterDecoder_handleOctal(ParserSessionPtr session, Buffer firstO
     
     switch (point) {
         case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
+            
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            
             break;
         }
         case CODEPOINT_ACTUAL_BACKSLASH: {
+            
             point = CODEPOINT_STRINGMETA_BACKSLASH;
+            
             break;
         }
     }

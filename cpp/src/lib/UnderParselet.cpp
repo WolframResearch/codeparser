@@ -148,9 +148,9 @@ void UnderParselet_parseInfixContextSensitive(ParserSessionPtr session, Parselet
 void UnderParselet_reduceBlank(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<UnderParselet *>(P));
+    assert(dynamic_cast<const UnderParselet *>(P));
     
-    auto BOp = dynamic_cast<UnderParselet *>(P)->getBOp();
+    auto BOp = dynamic_cast<const UnderParselet *>(P)->getBOp();
     
     Parser_pushNode(session, new CompoundNode(BOp, Parser_popContext(session)));
     
@@ -164,9 +164,9 @@ void UnderParselet_reduceBlank(ParserSessionPtr session, ParseletPtr P, Token Ig
 void UnderParselet_reduceBlankContextSensitive(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<UnderParselet *>(P));
+    assert(dynamic_cast<const UnderParselet *>(P));
     
-    auto BOp = dynamic_cast<UnderParselet *>(P)->getBOp();
+    auto BOp = dynamic_cast<const UnderParselet *>(P)->getBOp();
     
     Parser_pushNode(session, new CompoundNode(BOp, Parser_popContext(session)));
     

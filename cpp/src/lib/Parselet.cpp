@@ -432,9 +432,9 @@ void SymbolParselet_parseInfixContextSensitive(ParserSessionPtr session, Parsele
 void SymbolParselet_reducePatternBlank(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<UnderParselet *>(P));
+    assert(dynamic_cast<const UnderParselet *>(P));
     
-    auto PBOp = dynamic_cast<UnderParselet *>(P)->getPBOp();
+    auto PBOp = dynamic_cast<const UnderParselet *>(P)->getPBOp();
     
     Parser_pushNode(session, new CompoundNode(PBOp, Parser_popContext(session)));
     
@@ -468,7 +468,7 @@ ParseFunction PrefixOperatorParselet::parsePrefix() const {
 void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
-    assert(dynamic_cast<PrefixOperatorParselet *>(P));
+    assert(dynamic_cast<const PrefixOperatorParselet *>(P));
     
 #if CHECK_ABORT
     if (session->abortQ()) {
@@ -479,7 +479,7 @@ void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P,
     
     Parser_pushLeafAndNext(session, TokIn);
     
-    auto& Ctxt = Parser_pushContext(session, dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
+    auto& Ctxt = Parser_pushContext(session, dynamic_cast<const PrefixOperatorParselet *>(P)->getPrecedence());
     
     auto Tok = Tokenizer_currentToken(session, TOPLEVEL);
     
@@ -499,9 +499,9 @@ void PrefixOperatorParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P,
 void PrefixOperatorParselet_reducePrefixOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<PrefixOperatorParselet *>(P));
+    assert(dynamic_cast<const PrefixOperatorParselet *>(P));
     
-    auto Op = dynamic_cast<PrefixOperatorParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const PrefixOperatorParselet *>(P)->getOp();
     
     Parser_pushNode(session, new PrefixNode(Op, Parser_popContext(session)));
     
@@ -604,9 +604,9 @@ void BinaryOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, 
 void BinaryOperatorParselet_reduceBinaryOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<BinaryOperatorParselet *>(P));
+    assert(dynamic_cast<const BinaryOperatorParselet *>(P));
     
-    auto Op = dynamic_cast<BinaryOperatorParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const BinaryOperatorParselet *>(P)->getOp();
     
     Parser_pushNode(session, new BinaryNode(Op, Parser_popContext(session)));
     
@@ -679,7 +679,7 @@ void InfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, T
 void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<InfixOperatorParselet *>(P));
+    assert(dynamic_cast<const InfixOperatorParselet *>(P));
     
 #if !USE_MUSTTAIL
     while (true) {
@@ -702,7 +702,7 @@ void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, To
     
     auto I = infixParselets[Tok1.Tok.value()];
     
-    auto Op = dynamic_cast<InfixOperatorParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const InfixOperatorParselet *>(P)->getOp();
     
     //
     // Cannot just compare tokens
@@ -761,9 +761,9 @@ void InfixOperatorParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, To
 void InfixOperatorParselet_reduceInfixOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<InfixOperatorParselet *>(P));
+    assert(dynamic_cast<const InfixOperatorParselet *>(P));
     
-    auto Op = dynamic_cast<InfixOperatorParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const InfixOperatorParselet *>(P)->getOp();
     
     Parser_pushNode(session, new InfixNode(Op, Parser_popContext(session)));
     
@@ -799,9 +799,9 @@ void PostfixOperatorParselet_parseInfix(ParserSessionPtr session, ParseletPtr P,
 void PostfixOperatorParselet_reducePostfixOperator(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<PostfixOperatorParselet *>(P));
+    assert(dynamic_cast<const PostfixOperatorParselet *>(P));
     
-    auto Op = dynamic_cast<PostfixOperatorParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const PostfixOperatorParselet *>(P)->getOp();
     
     Parser_pushNode(session, new PostfixNode(Op, Parser_popContext(session)));
     
@@ -861,7 +861,7 @@ void GroupParselet_parsePrefix(ParserSessionPtr session, ParseletPtr P, Token To
 void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<GroupParselet *>(P));
+    assert(dynamic_cast<const GroupParselet *>(P));
     
 #if !USE_MUSTTAIL
     while (true) {
@@ -885,7 +885,7 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
     // e.g. {1\\2}
     //
     
-    auto Closr = dynamic_cast<GroupParselet *>(P)->getCloser();
+    auto Closr = dynamic_cast<const GroupParselet *>(P)->getCloser();
     
     auto& Trivia1 = session->trivia1;
     
@@ -989,9 +989,9 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
 void GroupParselet_reduceGroup(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<GroupParselet *>(P));
+    assert(dynamic_cast<const GroupParselet *>(P));
     
-    auto Op = dynamic_cast<GroupParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const GroupParselet *>(P)->getOp();
     
     Parser_pushNode(session, new GroupNode(Op, Parser_popContext(session)));
     
@@ -1004,9 +1004,9 @@ void GroupParselet_reduceGroup(ParserSessionPtr session, ParseletPtr P, Token Ig
 void GroupParselet_reduceMissingCloser(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<GroupParselet *>(P));
+    assert(dynamic_cast<const GroupParselet *>(P));
     
-    auto Op = dynamic_cast<GroupParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const GroupParselet *>(P)->getOp();
     
     Parser_pushNode(session, new GroupMissingCloserNode(Op, Parser_popContext(session)));
     
@@ -1019,9 +1019,9 @@ void GroupParselet_reduceMissingCloser(ParserSessionPtr session, ParseletPtr P, 
 void GroupParselet_reduceUnterminatedGroup(ParserSessionPtr session, ParseletPtr P, Token Ignored) {
     
     assert(P);
-    assert(dynamic_cast<GroupParselet *>(P));
+    assert(dynamic_cast<const GroupParselet *>(P));
     
-    auto Op = dynamic_cast<GroupParselet *>(P)->getOp();
+    auto Op = dynamic_cast<const GroupParselet *>(P)->getOp();
     
     Parser_pushNode(session, new UnterminatedGroupNeedsReparseNode(Op, Parser_popContext(session)));
     
@@ -1049,7 +1049,7 @@ ParseFunction CallParselet::parseInfix() const {
 void CallParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokIn) {
     
     assert(P);
-    assert(dynamic_cast<CallParselet *>(P));
+    assert(dynamic_cast<const CallParselet *>(P));
     
 #if CHECK_ABORT
     if (session->abortQ()) {
@@ -1068,7 +1068,7 @@ void CallParselet_parseInfix(ParserSessionPtr session, ParseletPtr P, Token TokI
     Ctxt.F = CallParselet_reduceCall;
     Ctxt.Prec = PRECEDENCE_HIGHEST;
     
-    auto GP = dynamic_cast<CallParselet *>(P)->getGP();
+    auto GP = dynamic_cast<const CallParselet *>(P)->getGP();
     
     MUSTTAIL
     return (GP->parsePrefix())(session, GP, TokIn);

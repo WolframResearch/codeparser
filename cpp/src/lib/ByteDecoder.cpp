@@ -39,8 +39,8 @@
 
 SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr session, NextPolicy policy);
 
-void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
-void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded);
+void ByteDecoder_strangeWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
+void ByteDecoder_nonASCIIWarning(ParserSessionPtr session, codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
 
 SourceCharacter ByteDecoder_validStrange(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
 SourceCharacter ByteDecoder_validMB(ParserSessionPtr session, codepoint decoded, NextPolicy policy);
@@ -134,7 +134,6 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
 #endif // COMPUTE_SOURCE
             
             return SourceCharacter(firstByte);
-
         }
             //
             // Handle CR specially
@@ -588,22 +587,21 @@ SourceCharacter ByteDecoder_nextSourceCharacter_uncommon(ParserSessionPtr sessio
             
             return ByteDecoder_incomplete1ByteSequence(session, policy);
         }
-            //
-            // Not a valid UTF-8 start
-            //
-        default: {
-            
-#if DIAGNOSTICS
-            ByteDecoder_Incomplete1ByteCount++;
-#endif // DIAGNOSTICS
-            
-            //
-            // Incomplete
-            //
-            
-            return ByteDecoder_incomplete1ByteSequence(session, policy);
-        }
     }
+    
+    //
+    // Not a valid UTF-8 start
+    //
+    
+#if DIAGNOSTICS
+    ByteDecoder_Incomplete1ByteCount++;
+#endif // DIAGNOSTICS
+    
+    //
+    // Incomplete
+    //
+    
+    return ByteDecoder_incomplete1ByteSequence(session, policy);
 }
 
 //

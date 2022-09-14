@@ -107,8 +107,7 @@ Closer TokenToCloser(TokenEnum T) {
         case TOKEN_LONGNAME_RIGHTFLOOR.value(): {
             return CLOSER_LONGNAME_RIGHTFLOOR;
         }
-        default: {
-            return CLOSER_ASSERTFALSE;
-        }
 	}
+    
+    return CLOSER_ASSERTFALSE;
 }

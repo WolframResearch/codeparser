@@ -17,6 +17,7 @@
 unsigned char ByteBuffer_nextByte(ParserSessionPtr session) {
     
     assert(session->start <= session->buffer);
+    assert(session->buffer != session->end);
     assert(session->buffer < session->end);
     
     return *(session->buffer++);

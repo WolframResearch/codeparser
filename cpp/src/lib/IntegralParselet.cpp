@@ -114,9 +114,9 @@ void IntegralParselet_parse1(ParserSessionPtr session, ParseletPtr P, Token Igno
 void IntegralParselet_reduceIntegrate(ParserSessionPtr session, ParseletPtr P, Token Ignored2) {
     
     assert(P);
-    assert(dynamic_cast<IntegralParselet *>(P));
+    assert(dynamic_cast<const IntegralParselet *>(P));
     
-    auto Op1 = dynamic_cast<IntegralParselet *>(P)->getOp1();
+    auto Op1 = dynamic_cast<const IntegralParselet *>(P)->getOp1();
     
     Parser_pushNode(session, new PrefixBinaryNode(Op1, Parser_popContext(session)));
     
@@ -127,9 +127,9 @@ void IntegralParselet_reduceIntegrate(ParserSessionPtr session, ParseletPtr P, T
 void IntegralParselet_reduceIntegral(ParserSessionPtr session, ParseletPtr P, Token Ignored2) {
     
     assert(P);
-    assert(dynamic_cast<IntegralParselet *>(P));
+    assert(dynamic_cast<const IntegralParselet *>(P));
     
-    auto Op2 = dynamic_cast<IntegralParselet *>(P)->getOp2();
+    auto Op2 = dynamic_cast<const IntegralParselet *>(P)->getOp2();
     
     Parser_pushNode(session, new PrefixNode(Op2, Parser_popContext(session)));
     
