@@ -359,19 +359,19 @@ isEmpty[_] = False
 
 group1Bits[tok_] := group1Bits[tok] =
 Which[
-  isPossibleBeginning[tok], BitShiftLeft[2^^01, 9],
-  isCloser[tok],            BitShiftLeft[2^^10, 9],
-  isError[tok],             BitShiftLeft[2^^11, 9],
-  True,                     BitShiftLeft[2^^00, 9]
+  isPossibleBeginning[tok], 2^^01,
+  isCloser[tok],            2^^10,
+  isError[tok],             2^^11,
+  True,                     2^^00
 ]
 
 
 group2Bits[tok_] := group2Bits[tok] =
 Which[
-  isEmpty[tok],         BitShiftLeft[2^^01, 9 + 2],
-(*unused,               BitShiftLeft[2^^10, 9 + 2],*)
-(*unused,               BitShiftLeft[2^^11, 9 + 2],*)
-  True,                 BitShiftLeft[2^^00, 9 + 2]
+  isEmpty[tok], 2^^01,
+(*unused,       2^^10*)
+(*unused,       2^^11*)
+  True,         2^^00
 ]
 
 
@@ -404,14 +404,8 @@ Symbol TokenToSymbol(TokenEnum T);
 //
 // All token enums
 //"} ~Join~
-KeyValueMap[(
-  Row[{"constexpr TokenEnum ", toGlobal[#1], "(",
-    BitOr[
-      group2Bits[#1],
-      group1Bits[#1],
-      #2
-    ], "); // { group2Bits:", group2Bits[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, ", ", StringJoin["0b", {StringTake[#, {1, 1}], "_", StringTake[#, {2, 5}], "_", StringTake[#, {6, 9}]}&[IntegerString[#2, 2, 9]]], " }"
-  }])&
+KeyValueMap[
+  Row[{"constexpr TokenEnum ", toGlobal[#1], "(", #2, ", ", group1Bits[#1], ", ", group2Bits[#1], ");"}]&
   ,
   enumMap
 ] ~Join~ {
@@ -449,9 +443,8 @@ static_assert(TOKEN_REAL.value() == 0x5, \"Check your assumptions\");
 static_assert(TOKEN_RATIONAL.value() == 0x6, \"Check your assumptions\");
 
 //
-// TOKEN_INTERNALNEWLINE must be 0x8 to allow setting the 0b100 bit to convert to TOKEN_TOPLEVELNEWLINE
+// TOKEN_TOPLEVELNEWLINE must be 0xc to allow hard-coding in TokenEnum.h
 //
-static_assert(TOKEN_INTERNALNEWLINE.value() == 0x8, \"Check your assumptions\");
 static_assert(TOKEN_TOPLEVELNEWLINE.value() == 0xc, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
 

@@ -7,11 +7,11 @@
 
 
 bool operator==(TokenEnum a, TokenEnum b) {
-	return a.T == b.T;
+	return a.valBits == b.valBits;
 }
 
 bool operator!=(TokenEnum a, TokenEnum b) {
-	return a.T != b.T;
+	return a.valBits != b.valBits;
 }
 
 Closer GroupOpenerToCloser(TokenEnum T) {

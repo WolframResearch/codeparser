@@ -200,7 +200,7 @@ Token Tokenizer_nextToken_uncommon(ParserSessionPtr session, Buffer tokenStartBu
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
+            return Token((policy & RETURN_TOPLEVELNEWLINE) ? TOKEN_TOPLEVELNEWLINE : TOKEN_INTERNALNEWLINE, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
         }
         case '(': {
             
@@ -373,7 +373,7 @@ Token Tokenizer_nextToken_uncommon(ParserSessionPtr session, Buffer tokenStartBu
         //
         // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
-        return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
+        return Token((policy & RETURN_TOPLEVELNEWLINE) ? TOKEN_TOPLEVELNEWLINE : TOKEN_INTERNALNEWLINE, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
     }
     
     if (c.isMBPunctuation()) {
@@ -463,7 +463,7 @@ Token Tokenizer_nextToken_stringifyAsFile(ParserSessionPtr session) {
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
+            return Token((policy & RETURN_TOPLEVELNEWLINE) ? TOKEN_TOPLEVELNEWLINE : TOKEN_INTERNALNEWLINE, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
         }
         case ' ': case '\t': {
             
@@ -659,7 +659,7 @@ Token Tokenizer_handleLineFeed(ParserSessionPtr session, Buffer tokenStartBuf, S
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
+    return Token((policy & RETURN_TOPLEVELNEWLINE) ? TOKEN_TOPLEVELNEWLINE : TOKEN_INTERNALNEWLINE, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
 }
 
 Token Tokenizer_handleOpenSquare(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy) {
@@ -4175,7 +4175,7 @@ inline Token Tokenizer_handleMBStrangeNewline(ParserSessionPtr session, Buffer t
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return Token(TOKEN_INTERNALNEWLINE.T | (policy & RETURN_TOPLEVELNEWLINE), tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
+    return Token((policy & RETURN_TOPLEVELNEWLINE) ? TOKEN_TOPLEVELNEWLINE : TOKEN_INTERNALNEWLINE, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
 }
 
 inline Token Tokenizer_handleMBStrangeWhitespace(ParserSessionPtr session, Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {

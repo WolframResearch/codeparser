@@ -30,92 +30,62 @@ enum Closer : uint8_t {
 //
 struct TokenEnum {
 
-    uint16_t T;
+    uint16_t valBits : 9;
+    uint16_t group1Bits : 2;
+    uint16_t group2Bits : 2;
 
-    constexpr TokenEnum() : T(0) {}
+    TokenEnum() : valBits(), group1Bits(), group2Bits() {}
 
-    constexpr TokenEnum(uint16_t T) : T(T) {}
-
+    constexpr TokenEnum(uint16_t val, uint16_t group1, uint16_t group2) : valBits(val), group1Bits(group1), group2Bits(group2) {}
+    
+    explicit operator int() const noexcept = delete;
+    
     constexpr uint16_t value() const {
-        return (T & 0x1ff);
+        return valBits;
     }
-
-    //
-    // All trivia matches: 0b0_0000_1xxx (x is unknown)
-    //
-    //         Mask off 0b1_1111_1000 (0x1f8)
-    // And test against 0b0_0000_1000 (0x08)
-    //
+    
     constexpr bool isTrivia() const {
-        return static_cast<bool>((T & 0x1f8) == 0x08);
-    }
-
-    //
-    // All trivia but ToplevelNewline matches: 0b0_0000_10xx (x is unknown)
-    //
-    //         Mask off 0b1_1111_1100 (0x1fc)
-    // And test against 0b0_0000_1000 (0x08)
-    //
-    constexpr bool isTriviaButNotToplevelNewline() const {
-        return static_cast<bool>((T & 0x1fc) == 0x08);
-    }
-
-    //
-    // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0000_0110_0000_0000 (0x600)
-    // And test against 0b0000_0010_0000_0000 (0x200)
-    //
-    constexpr bool isPossibleBeginning() const {
-        return static_cast<bool>((T & 0x600) == 0x200);
+        return static_cast<bool>((valBits & 0x1f8) == 0x08);
     }
     
     //
-    // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0000_0110_0000_0000 (0x600)
-    // And test against 0b0000_0100_0000_0000 (0x400)
-    //
-    constexpr bool isCloser() const {
-        return static_cast<bool>((T & 0x600) == 0x400);
-    }
-  
-    //
-    // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0000_0110_0000_0000 (0x600)
-    // And test against 0b0000_0110_0000_0000 (0x600)
-    //
-    constexpr bool isError() const {
-        return static_cast<bool>((T & 0x600) == 0x600);
-    }
-
-    //
-    // isUnterminated value matches: 0b0000_000x_xxxx_xxxx (x is unknown)
-    //
     // Only valid if already checked isError
     //
-    //         Mask off 0b0000_0000_0001_1100 (0x1c)
-    // And test against 0b0000_0000_0001_1100 (0x1c)
-    //
     constexpr bool isUnterminated() const {
-        return static_cast<bool>((T & 0x1c) == 0x1c);
+        return static_cast<bool>((valBits & 0x1c) == 0x1c);
     }
-
-    //
-    // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0001_1000_0000_0000 (0x1800)
-    // And test against 0b0000_1000_0000_0000 (0x0800)
-    //
+    
+    constexpr bool isPossibleBeginning() const {
+        return static_cast<bool>(group1Bits == 0x1);
+    }
+    
+    constexpr bool isCloser() const {
+        return static_cast<bool>(group1Bits == 0x2);
+    }
+    
+    constexpr bool isError() const {
+        return static_cast<bool>(group1Bits == 0x3);
+    }
+    
     constexpr bool isEmpty() const {
-        return static_cast<bool>((T & 0x1800) == 0x0800);
+        return static_cast<bool>(group2Bits == 0x1);
+    }
+    
+    constexpr bool isTriviaButNotToplevelNewline() const {
+        return isTrivia() && valBits != 0xc;
     }
 };
 
 bool operator==(TokenEnum a, TokenEnum b);
 
 bool operator!=(TokenEnum a, TokenEnum b);
+
+//
+// Sizes of structs with bit-fields are implementation-dependent
+//
+#ifdef __clang__
+static_assert(sizeof(TokenEnum) == 2, "Check your assumptions");
+#endif // __clang__
 
 Closer GroupOpenerToCloser(TokenEnum T);
 Closer TokenToCloser(TokenEnum T);

@@ -49,9 +49,9 @@ be mutually exclusive.
 
 
 
-Group 2: These are all mutually exclusive categories: Empty, DifferentialD
+Group 2: These are all mutually exclusive categories: Empty
 01 Empty
-10 DifferentialD
+10 (unused)
 11 (unused)
 00 Anything Else
 
