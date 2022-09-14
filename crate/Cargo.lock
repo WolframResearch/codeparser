@@ -1071,6 +1071,7 @@ dependencies = [
  "ordered-float",
  "pretty_assertions",
  "regex",
+ "wolfram-expr",
  "wolfram-library-link",
 ]
 

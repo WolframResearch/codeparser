@@ -7,6 +7,7 @@ use wolfram_library_link::sys::WolframLibraryData;
 use Diagnostics::*;
 
 use crate::{
+    abstract_::{Abstract, Aggregate},
     byte_decoder::ByteDecoder_nextSourceCharacter,
     feature,
     node::{Node, NodeSeq, TriviaSeq},
@@ -104,6 +105,16 @@ impl<'i> ParserSession<'i> {
     /// Returns the complete input [`Buffer`].
     pub fn input(&self) -> &'i [u8] {
         self.tokenizer.input
+    }
+
+    pub fn abstract_parse_expressions(&mut self) -> ParseResult<BorrowedTokenInput<'i>> {
+        let cst = self.concrete_parse_expressions();
+
+        let agg = Aggregate(cst.nodes);
+
+        let ast = Abstract(agg);
+
+        ParseResult { nodes: ast, ..cst }
     }
 
     pub fn concrete_parse_expressions(&mut self) -> ParseResult<BorrowedTokenInput<'i>> {

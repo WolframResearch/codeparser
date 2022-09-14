@@ -1,31 +1,218 @@
 use std::collections::HashSet;
 
-use wolfram_library_link::wstp;
+use wolfram_library_link::{expr::Expr, wstp};
 
 use crate::{
+    from_expr::List,
     my_string::MyString,
     my_string_registration::*,
     node::{
-        BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode, Node,
-        NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
-        TernaryNode, UnterminatedGroupNode,
+        BinaryNode, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode, GroupNode,
+        InfixNode, Node, NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode,
+        SyntaxErrorNode, TernaryNode, UnterminatedGroupNode,
     },
     source::{
-        BufferAndLength, CharacterRange, CodeAction, CodeActionKind, Issue, IssueTag, Severity,
-        Source, SourceLocation, StringSourceKind,
+        BufferAndLength, CharacterRange, CodeAction, CodeActionKind, GeneralSource, Issue,
+        IssueTag, Severity, Source, SourceLocation, StringSourceKind,
     },
     symbol::Symbol,
     symbol_registration::*,
-    token::{BorrowedTokenInput, Token},
+    token::{BorrowedTokenInput, Token, TokenInput},
     token_enum_registration::TokenToSymbol,
-    ParseResult, Tokens, UnsafeCharacterEncoding,
+    Container, ContainerBody, ContainerKind, Metadata, ParseResult, Tokens,
+    UnsafeCharacterEncoding,
 };
+
+pub trait WstpPut {
+    fn put(&self, link: &mut wstp::Link);
+}
+
+//======================================
+// Container
+//======================================
+
+// TODO(cleanup): Combine with impl Container<Source>
+impl Container<GeneralSource> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let Container {
+            kind,
+            body,
+            metadata,
+        } = self;
+
+        link.put_function("CodeParser`ContainerNode", 3).unwrap();
+
+        kind.put(link);
+        body.put(link);
+        metadata.put(link);
+    }
+}
+
+impl Container<Source> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let Container {
+            kind,
+            body,
+            metadata,
+        } = self;
+
+        link.put_function("CodeParser`ContainerNode", 3).unwrap();
+
+        kind.put(link);
+        body.put(link);
+        metadata.put(link);
+    }
+}
+
+impl ContainerKind {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let symbol = match self {
+            ContainerKind::String => Symbol::try_new("System`String").unwrap(),
+            ContainerKind::File => Symbol::try_new("System`File").unwrap(),
+            ContainerKind::Box => Symbol::try_new("System`Box").unwrap(),
+            ContainerKind::Hold => Symbol::try_new("System`Hold").unwrap(),
+            ContainerKind::Byte => Symbol::try_new("System`Byte").unwrap(),
+        };
+
+        Symbol_put(symbol, link);
+    }
+}
+
+impl<S: WstpPut> WstpPut for ContainerBody<S> {
+    fn put(&self, link: &mut wstp::Link) {
+        match self {
+            ContainerBody::Nodes(nodes) => nodes.put(link),
+            ContainerBody::Missing(flag) => {
+                link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+                flag.put(link);
+            },
+        }
+    }
+}
+
+impl Metadata {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let Metadata {
+            source,
+            syntax_issues,
+            confidence_level,
+            code_actions,
+            file_name,
+            embedded_tabs,
+            embedded_newlines,
+            simple_line_continuations,
+            complex_line_continuations,
+        } = self;
+
+        let mut len = 0;
+
+        if !source.is_unknown() {
+            len += 1;
+        }
+
+        if syntax_issues.is_some() {
+            len += 1;
+        }
+
+        if confidence_level.is_some() {
+            len += 1;
+        }
+
+        if code_actions.is_some() {
+            len += 1;
+        }
+
+        if file_name.is_some() {
+            len += 1;
+        }
+
+        if embedded_tabs.is_some() {
+            len += 1;
+        }
+
+        if embedded_newlines.is_some() {
+            len += 1;
+        }
+
+        if simple_line_continuations.is_some() {
+            len += 1;
+        }
+
+        if complex_line_continuations.is_some() {
+            len += 1;
+        }
+
+        link.put_function(SYMBOL_ASSOCIATION.as_str(), len).unwrap();
+
+        if let Some(issues) = syntax_issues {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_symbol("CodeParser`SyntaxIssues").unwrap();
+
+            // TODO: This clone() is unnecessarily inefficient.
+            let issues = List(issues.clone());
+            issues.put(link);
+        }
+
+        if let Some(embedded_tabs) = embedded_tabs {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_str("EmbeddedTabs").unwrap();
+            link.put_expr(embedded_tabs).unwrap();
+        }
+
+        if let Some(embedded_newlines) = embedded_newlines {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_str("EmbeddedNewlines").unwrap();
+            link.put_expr(embedded_newlines).unwrap();
+        }
+
+        if let Some(simple_line_continuations) = simple_line_continuations {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_str("SimpleLineContinuations").unwrap();
+            link.put_expr(simple_line_continuations).unwrap();
+        }
+
+        if let Some(complex_line_continuations) = complex_line_continuations {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_str("ComplexLineContinuations").unwrap();
+            link.put_expr(complex_line_continuations).unwrap();
+        }
+
+        if !source.is_unknown() {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_symbol(SYMBOL_CODEPARSER_SOURCE.as_str()).unwrap();
+            match source {
+                GeneralSource::String(source) => put_source_rhs(link, *source),
+                GeneralSource::BoxPosition(other) => put_box_position(link, other),
+            }
+        }
+
+        if let Some(level) = confidence_level {
+            link.put_expr(&Expr::number(level.clone())).unwrap();
+        }
+
+        if let Some(actions) = code_actions {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_symbol(SYMBOL_CODEPARSER_CODEACTIONS.as_str())
+                .unwrap();
+
+            // TODO: This clone() is unnecessarily inefficient.
+            let actions = List(actions.clone());
+            actions.put(link);
+        }
+
+        if let Some(file_name) = file_name {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_str("FileName").unwrap();
+            link.put_expr(file_name).unwrap();
+        }
+    }
+}
 
 //======================================
 // Token
 //======================================
 
-impl<'i> Token<BorrowedTokenInput<'i>> {
+impl<I: TokenInput, S: WstpPut> Token<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Token { tok, src, input } = self;
 
@@ -49,14 +236,10 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
 
         // bufLen().put(callLink);
         // let source: &[u8] = &session.tokenizer.input[span.offset..span.offset + span.len];
-        let source: &[u8] = &input.buf.as_bytes();
+        let source: &[u8] = &input.as_bytes();
 
         let source = std::str::from_utf8(source).expect("token source span is not valid UTF-8");
         callLink.put_str(source).unwrap();
-
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
 
         src.put(callLink);
     }
@@ -66,7 +249,7 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
 // Node types
 //======================================
 
-impl<'i> Node<BorrowedTokenInput<'i>> {
+impl<I: TokenInput, S: WstpPut> Node<I, S> {
     pub(crate) fn put(&self, link: &mut wstp::Link) {
         match self {
             Node::Token(token) => token.put(link),
@@ -88,11 +271,13 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
             },
+            Node::Box(box_node) => box_node.put(link),
+            Node::Code(node) => node.put(link),
         }
     }
 }
 
-impl<'i> NodeSeq<BorrowedTokenInput<'i>> {
+impl<I: TokenInput, S: WstpPut> NodeSeq<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let NodeSeq(vec) = self;
 
@@ -129,7 +314,37 @@ impl<'i> Tokens<BorrowedTokenInput<'i>> {
     }
 }
 
-impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
+impl<I: TokenInput, S: WstpPut> BoxNode<I, S> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let BoxNode {
+            kind,
+            children,
+            src,
+        } = self;
+
+        let name = format!("System`{}Box", kind.as_str());
+
+        link.put_function(SYMBOL_CODEPARSER_BOXNODE.as_str(), 3)
+            .unwrap();
+        link.put_symbol(&name).unwrap();
+        children.put(link);
+        src.put(link);
+    }
+}
+
+impl<S: WstpPut> CodeNode<S> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let CodeNode { first, second, src } = self;
+
+        link.put_function(SYMBOL_CODEPARSER_CODENODE.as_str(), 3)
+            .unwrap();
+        link.put_expr(&first).unwrap();
+        link.put_expr(&second).unwrap();
+        src.put(link);
+    }
+}
+
+impl<I: TokenInput, S: WstpPut> OperatorNode<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link, op_head: Symbol) {
         let OperatorNode { op, children, src } = self;
 
@@ -139,34 +354,46 @@ impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
 
         children.put(callLink);
 
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
-
         src.put(callLink);
     }
 }
 
-impl<'i> CallNode<BorrowedTokenInput<'i>> {
+impl<I: TokenInput, S: WstpPut> CallNode<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let CallNode { head, body, src } = self;
+        let CallNode {
+            head,
+            body,
+            src,
+            is_concrete,
+        } = self;
+
         callLink
             .put_function(SYMBOL_CODEPARSER_CALLNODE.as_str(), 3)
             .unwrap();
 
-        head.put(callLink);
+        if *is_concrete {
+            head.put(callLink);
+        } else {
+            // PRE_COMMIT: A CST can contiain CallNode[{__}, ..], but an aggregated
+            //             tree must not, because abstract[..] only checks for
+            //             CallNode[node_, ..]
+            let NodeSeq(head) = head;
+            if head.len() != 1 {
+                todo!();
+            }
+
+            let head = &head[0];
+
+            head.put(callLink);
+        }
 
         body.put(callLink);
-
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
 
         src.put(callLink);
     }
 }
 
-impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
+impl<I: TokenInput, S: WstpPut> SyntaxErrorNode<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SyntaxErrorNode { err, children, src } = self;
 
@@ -179,10 +406,6 @@ impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
         Symbol_put(err, callLink);
 
         children.put(callLink);
-
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
 
         src.put(callLink);
     }
@@ -374,38 +597,75 @@ impl SourceLocation {
     }
 }
 
-impl Source {
-    pub(crate) fn put(&self, link: &mut wstp::Link) {
-        link.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+fn put_source_rhs(link: &mut wstp::Link, source: Source) {
+    match source.kind() {
+        StringSourceKind::LineColumnRange { .. } => {
+            let Source { start, end } = source;
 
+            link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+
+            start.put(link);
+            end.put(link);
+        },
+        StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
+            link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+
+            link.put_i64(start.into()).unwrap();
+
+            link.put_i64((end - 1).into()).unwrap();
+        },
+        // `{}`
+        // TODO: What representation should `<| Source -> <unknown> |>`
+        //       have?
+        //  * Source -> {}
+        //  * Source -> None
+        //  * Source -> Missing["Unknown"]
+        //  * Panic here? (The caller should construct <||>, NOT
+        //    <| Source -> <unknown> |>)
+        StringSourceKind::Unknown => {
+            // link.put_function(SYMBOL_LIST.as_str(), 0).unwrap();
+            panic!("unable to serialize StringSourceKind::Unknown")
+        },
+    }
+}
+
+fn put_box_position(link: &mut wstp::Link, indexes: &Vec<usize>) {
+    link.put_function(SYMBOL_LIST.as_str(), indexes.len())
+        .unwrap();
+
+    for elem in indexes {
+        let elem = i64::try_from(*elem).expect("box position usize index overflows i64");
+        link.put_i64(elem).unwrap();
+    }
+}
+
+impl WstpPut for Source {
+    fn put(&self, link: &mut wstp::Link) {
+        link.put_function(SYMBOL_ASSOCIATION.as_str(), 1).unwrap();
+
+        // Put: CodeParser`Source -> source
+        link.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+        Symbol_put(SYMBOL_CODEPARSER_SOURCE, link);
+        put_source_rhs(link, *self)
+    }
+}
+
+impl WstpPut for GeneralSource {
+    fn put(&self, link: &mut wstp::Link) {
+        if self.is_unknown() {
+            // Put: <||>
+            link.put_function(SYMBOL_ASSOCIATION.as_str(), 0).unwrap();
+            return;
+        }
+
+        // Put: <| CodeParser`Source -> source |>
+        link.put_function(SYMBOL_ASSOCIATION.as_str(), 1).unwrap();
+        link.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
         Symbol_put(SYMBOL_CODEPARSER_SOURCE, link);
 
-        match self.kind() {
-            StringSourceKind::LineColumnRange { .. } => {
-                let Source { start, end } = self;
-
-                link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
-
-                start.put(link);
-                end.put(link);
-            },
-            StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
-                link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
-
-                link.put_i64(start.into()).unwrap();
-
-                link.put_i64((end - 1).into()).unwrap();
-            },
-            // `{}`
-            // TODO: What representation should `<| Source -> <unknown> |>`
-            //       have?
-            //  * Source -> {}
-            //  * Source -> None
-            //  * Source -> Missing["Unknown"]
-            //  * Panic here?
-            StringSourceKind::Unknown => {
-                link.put_function(SYMBOL_LIST.as_str(), 0).unwrap();
-            },
+        match self {
+            GeneralSource::String(source) => put_source_rhs(link, *source),
+            GeneralSource::BoxPosition(other) => put_box_position(link, other),
         }
     }
 }
@@ -507,5 +767,34 @@ impl IssueTag {
         let string: &'static str = self.as_str();
 
         link.put_str(string).unwrap();
+    }
+}
+
+//==========================================================
+// Built-in Wolfram Language forms
+//==========================================================
+
+// TODO(cleanup): Add a Put trait and make this generic on List<T: Put>.
+impl List<Issue> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let List(elements) = self;
+
+        link.put_function("System`List", elements.len()).unwrap();
+
+        for elem in elements {
+            elem.put(link);
+        }
+    }
+}
+
+impl List<CodeAction> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let List(elements) = self;
+
+        link.put_function("System`List", elements.len()).unwrap();
+
+        for elem in elements {
+            elem.put(link);
+        }
     }
 }

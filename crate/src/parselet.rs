@@ -1453,7 +1453,7 @@ fn CallParselet_reduceCall(session: &mut ParserSession) {
     {
         let Body = Parser_popNode(session);
 
-        let node = CallNode::new(Parser_popContext(session), Body);
+        let node = CallNode::concrete(Parser_popContext(session), Body);
         Parser_pushNode(session, node);
     }
 

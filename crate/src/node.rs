@@ -1,6 +1,8 @@
+use wolfram_expr::Expr;
+
 use crate::{
-    source::Source,
-    token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenRef},
+    source::{GeneralSource, Source},
+    token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::Tokenizer,
 };
 
@@ -23,42 +25,67 @@ pub(crate) struct TriviaSeq<'i> {
 // So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct NodeSeq<I = OwnedTokenInput>(pub Vec<Node<I>>);
+pub struct NodeSeq<I = OwnedTokenInput, S = Source>(pub Vec<Node<I, S>>);
 
 /// An expression representing a node in the syntax tree
 #[derive(Debug, Clone, PartialEq)]
-pub enum Node<I = OwnedTokenInput> {
-    Token(Token<I>),
-    Call(CallNode<I>),
-    SyntaxError(SyntaxErrorNode<I>),
-    Prefix(PrefixNode<I>),
-    Infix(InfixNode<I>),
-    Postfix(PostfixNode<I>),
-    Binary(BinaryNode<I>),
-    Ternary(TernaryNode<I>),
-    PrefixBinary(PrefixBinaryNode<I>),
-    Compound(CompoundNode<I>),
-    Group(GroupNode<I>),
+pub enum Node<I = OwnedTokenInput, S = Source> {
+    Token(Token<I, S>),
+    Call(CallNode<I, S>),
+    SyntaxError(SyntaxErrorNode<I, S>),
+    Prefix(PrefixNode<I, S>),
+    Infix(InfixNode<I, S>),
+    Postfix(PostfixNode<I, S>),
+    Binary(BinaryNode<I, S>),
+    Ternary(TernaryNode<I, S>),
+    PrefixBinary(PrefixBinaryNode<I, S>),
+    Compound(CompoundNode<I, S>),
+    Group(GroupNode<I, S>),
     // TODO(cleanup): This variant is never constructed during concrete parsing.
-    UnterminatedGroup(UnterminatedGroupNode<I>),
-    GroupMissingCloser(GroupMissingCloserNode<I>),
+    UnterminatedGroup(UnterminatedGroupNode<I, S>),
+    GroupMissingCloser(GroupMissingCloserNode<I, S>),
+    // TODO(cleanup): This variant is never constructed during concrete parsing.
+    Box(BoxNode<I, S>),
+    // TODO(cleanup): This variant is never constructed during concrete parsing.
+    Code(CodeNode<S>),
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CodeNode<S = Source> {
+    pub first: Expr,
+    pub second: Expr,
+    pub src: S,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct BoxNode<I = OwnedTokenInput, S = Source> {
+    pub kind: BoxKind,
+    pub children: NodeSeq<I, S>,
+    pub src: S,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum BoxKind {
+    Tag,
+    Superscript,
 }
 
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
-pub struct OperatorNode<I = OwnedTokenInput> {
+pub struct OperatorNode<I = OwnedTokenInput, S = Source> {
     pub(crate) op: Operator,
-    pub(crate) children: NodeSeq<I>,
-    pub(crate) src: Source,
+    pub(crate) children: NodeSeq<I, S>,
+    pub(crate) src: S,
 }
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct PrefixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct BinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 //
 // InfixNode
@@ -66,15 +93,15 @@ pub struct BinaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 // a + b + c
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct InfixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct InfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `a /: b = c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct TernaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct TernaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PostfixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct PostfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 //
 // PrefixBinaryNode
@@ -82,25 +109,31 @@ pub struct PostfixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 // \[Integral] f \[DifferentialD] x
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixBinaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CallNode<I = OwnedTokenInput> {
-    pub head: NodeSeq<I>,
-    pub body: Box<Node<I>>,
-    pub src: Source,
+pub struct CallNode<I = OwnedTokenInput, S = Source> {
+    pub head: NodeSeq<I, S>,
+    pub body: Box<Node<I, S>>,
+    pub src: S,
+    // Concrete Call nodes can have more than one element in `head`, and
+    // serialize as `CallNode[{__}, ..]`
+    //
+    // Aggregate and abstract Call nodes must have exactly one element in `head`,
+    // and serialize as `CallNode[node_, ..]`.
+    pub is_concrete: bool,
 }
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct GroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 // TODO: This type is constructed as part of the abstraction step. Should there
 //       be different CstNode and AstNode types so that this node is not part of
 //       CstNode?
 #[derive(Debug, Clone, PartialEq)]
-pub struct UnterminatedGroupNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct UnterminatedGroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// Any "compound" of tokens:
 ///
@@ -112,14 +145,14 @@ pub struct UnterminatedGroupNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 /// * `##2`
 /// * `%2`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompoundNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct CompoundNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
-pub struct SyntaxErrorNode<I = OwnedTokenInput> {
+pub struct SyntaxErrorNode<I = OwnedTokenInput, S = Source> {
     pub err: SyntaxErrorKind,
-    pub children: NodeSeq<I>,
-    pub src: Source,
+    pub children: NodeSeq<I, S>,
+    pub src: S,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -131,11 +164,25 @@ pub enum SyntaxErrorKind {
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput, S = Source>(
+    pub OperatorNode<I, S>,
+);
+
+/// Node representation of a token.
+///
+/// [`LeafNode`] instances are *not* constructed during concrete parsing.
+///
+/// They are only produced when abstracting a concrete parse tree into an
+/// abstract syntax tree.
+pub struct LeafNode {
+    pub kind: TokenKind,
+    pub input: String,
+    pub src: GeneralSource,
+}
 
 //======================================
 // Node convertions
@@ -150,28 +197,42 @@ macro_rules! from_node {
         }
     };
 
-    ($name:ident<> => Node::$variant:ident) => {
+    ($name:ident<I> => Node::$variant:ident) => {
         impl<I> From<$name<I>> for Node<I> {
             fn from(node: $name<I>) -> Node<I> {
                 Node::$variant(node)
             }
         }
     };
+
+    ($name:ident<I, S> => Node::$variant:ident) => {
+        impl<I, S> From<$name<I, S>> for Node<I, S> {
+            fn from(node: $name<I, S>) -> Node<I, S> {
+                Node::$variant(node)
+            }
+        }
+    };
 }
 
-from_node!(CompoundNode<> => Node::Compound);
-from_node!(BinaryNode<> => Node::Binary);
-from_node!(TernaryNode<> => Node::Ternary);
-from_node!(SyntaxErrorNode<> => Node::SyntaxError);
-from_node!(CallNode<> => Node::Call);
-from_node!(InfixNode<> => Node::Infix);
-from_node!(PrefixNode<> => Node::Prefix);
-from_node!(PostfixNode<> => Node::Postfix);
-from_node!(GroupNode<> => Node::Group);
-from_node!(UnterminatedGroupNode<> => Node::UnterminatedGroup);
-from_node!(GroupMissingCloserNode<> => Node::GroupMissingCloser);
-from_node!(PrefixBinaryNode<> => Node::PrefixBinary);
+from_node!(CallNode<I, S> => Node::Call);
+from_node!(SyntaxErrorNode<I, S> => Node::SyntaxError);
+from_node!(BinaryNode<I, S> => Node::Binary);
+from_node!(TernaryNode<I, S> => Node::Ternary);
+from_node!(InfixNode<I, S> => Node::Infix);
+from_node!(PrefixNode<I, S> => Node::Prefix);
+from_node!(PostfixNode<I, S> => Node::Postfix);
+from_node!(PrefixBinaryNode<I, S> => Node::PrefixBinary);
+from_node!(CompoundNode<I, S> => Node::Compound);
+from_node!(GroupNode<I, S> => Node::Group);
+from_node!(UnterminatedGroupNode<I, S> => Node::UnterminatedGroup);
+from_node!(GroupMissingCloserNode<I, S> => Node::GroupMissingCloser);
+from_node!(BoxNode<I, S> => Node::Box);
 
+impl<I, S> From<CodeNode<S>> for Node<I, S> {
+    fn from(code: CodeNode<S>) -> Self {
+        Node::Code(code)
+    }
+}
 
 //==========================================================
 // Impls
@@ -338,7 +399,12 @@ impl<I> Node<I> {
         // Visit child nodes.
         match self {
             Node::Token(_) => (),
-            Node::Call(CallNode { head, body, src: _ }) => {
+            Node::Call(CallNode {
+                head,
+                body,
+                src: _,
+                is_concrete: _,
+            }) => {
                 head.visit(visit);
 
                 body.visit(visit);
@@ -368,6 +434,15 @@ impl<I> Node<I> {
 
                 children.visit(visit);
             },
+            Node::Box(BoxNode {
+                kind: _,
+                children,
+                src: _,
+            }) => {
+                children.visit(visit);
+            },
+            // These node types have no child nodes.
+            Node::Code(_) => (),
         }
     }
 
@@ -379,7 +454,12 @@ impl<I> Node<I> {
         // Visit child nodes.
         let node: Node<I> = match self_ {
             Node::Token(_) => return self_,
-            Node::Call(CallNode { head, body, src }) => {
+            Node::Call(CallNode {
+                head,
+                body,
+                src,
+                is_concrete,
+            }) => {
                 let head = head.map_visit(visit);
 
                 let body = body.map_visit(visit);
@@ -388,6 +468,7 @@ impl<I> Node<I> {
                     head,
                     body: Box::new(body),
                     src,
+                    is_concrete,
                 })
             },
             Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
@@ -412,6 +493,23 @@ impl<I> Node<I> {
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.map_visit(visit)))
             },
+
+            Node::Box(BoxNode {
+                kind,
+                children,
+                src,
+            }) => {
+                let children = children.map_visit(visit);
+
+                Node::Box(BoxNode {
+                    kind,
+                    children,
+                    src,
+                })
+            },
+
+            // These node types have no child nodes.
+            node @ Node::Code(_) => node,
         };
 
         node
@@ -422,10 +520,16 @@ impl Node<BorrowedTokenInput<'_>> {
     pub fn into_owned_input(self) -> Node {
         match self {
             Node::Token(token) => Node::Token(token.into_owned_input()),
-            Node::Call(CallNode { head, body, src }) => Node::Call(CallNode {
+            Node::Call(CallNode {
+                head,
+                body,
+                src,
+                is_concrete,
+            }) => Node::Call(CallNode {
                 head: head.into_owned_input(),
                 body: Box::new(body.into_owned_input()),
                 src,
+                is_concrete,
             }),
             Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
                 Node::SyntaxError(SyntaxErrorNode {
@@ -439,17 +543,27 @@ impl Node<BorrowedTokenInput<'_>> {
             Node::Postfix(PostfixNode(op)) => Node::Postfix(PostfixNode(op.into_owned_input())),
             Node::Binary(BinaryNode(op)) => Node::Binary(BinaryNode(op.into_owned_input())),
             Node::Ternary(TernaryNode(op)) => Node::Ternary(TernaryNode(op.into_owned_input())),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => {
+                Node::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
+            },
             Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.into_owned_input())),
             Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.into_owned_input())),
             Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
                 Node::UnterminatedGroup(UnterminatedGroupNode(op.into_owned_input()))
             },
-            Node::PrefixBinary(PrefixBinaryNode(op)) => {
-                Node::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
-            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.into_owned_input()))
             },
+            Node::Box(BoxNode {
+                kind,
+                children,
+                src,
+            }) => Node::Box(BoxNode {
+                kind,
+                children: children.into_owned_input(),
+                src,
+            }),
+            Node::Code(node) => Node::Code(node),
         }
     }
 }
@@ -475,6 +589,8 @@ impl<I> Node<I> {
             Node::Group(GroupNode(op)) => op.getSource(),
             Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.getSource(),
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => op.getSource(),
+            Node::Box(BoxNode { src, .. }) => src.clone(),
+            Node::Code(node) => node.src.clone(),
         }
     }
 
@@ -497,8 +613,23 @@ impl<I> Node<I> {
             Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.check(),
             Node::GroupMissingCloser(node) => node.check(),
             Node::SyntaxError(node) => node.check(),
+            Node::Box(BoxNode { children, .. }) => children.check(),
+            Node::Code(_) => panic!("unexpected CodeNode in Node::check()"),
         }
     }
+}
+
+//======================================
+// LeafNode
+//======================================
+
+impl LeafNode {
+    // pub fn symbol(sym: Symbol) -> Self {
+    //     LeafNode {
+    //         kind: TokenKind::Symbol,
+    //         input: sym.as_str().to_owned(),
+    //     }
+    // }
 }
 
 //======================================
@@ -673,7 +804,7 @@ impl<I> UnterminatedGroupNeedsReparseNode<I> {
 //======================================
 
 impl<I> CallNode<I> {
-    pub(crate) fn new(head: NodeSeq<I>, body: Node<I>) -> Self {
+    pub(crate) fn concrete(head: NodeSeq<I>, body: Node<I>) -> Self {
         debug_assert!(!head.is_empty());
 
         incr_diagnostic!(Node_CallNodeCount);
@@ -684,8 +815,13 @@ impl<I> CallNode<I> {
             head,
             body: Box::new(body),
             src,
+            is_concrete: true,
         }
     }
+
+    // pub(crate) fn group(head: NodeVariant<I>, group: GroupNode<I>) -> Self {
+    //     CallNode::new(NodeSeq(vec![head]), NodeVariant::Node(Node::Group(group)))
+    // }
 
     fn getSource(&self) -> Source {
         return self.src;
@@ -709,7 +845,15 @@ impl<I> CallNode<I> {
     // }
 
     pub(crate) fn check(&self) -> bool {
-        let CallNode { head, body, src: _ } = self;
+        let CallNode {
+            head,
+            body,
+            src: _,
+            is_concrete,
+        } = self;
+
+        // Sanity check that check() isn't used on aggregate / abstract nodes.
+        debug_assert!(is_concrete);
 
         return head.check() && body.check();
     }
@@ -754,4 +898,39 @@ impl<I> SyntaxErrorNode<I> {
 
     //     s << "]";
     // }
+}
+
+//======================================
+
+impl SyntaxErrorKind {
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
+        let value = match string {
+            "ExpectedSymbol" => SyntaxErrorKind::ExpectedSymbol,
+            "ExpectedSet" => SyntaxErrorKind::ExpectedSet,
+            "ExpectedTilde" => SyntaxErrorKind::ExpectedTilde,
+            _ => return None,
+        };
+
+        Some(value)
+    }
+}
+
+impl BoxKind {
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            BoxKind::Tag => "Tag",
+            BoxKind::Superscript => "Superscript",
+            // NOTE: When adding a case here, also update from_str().
+        }
+    }
+
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
+        let value = match string {
+            "Tag" => BoxKind::Tag,
+            "Superscript" => BoxKind::Superscript,
+            _ => return None,
+        };
+
+        Some(value)
+    }
 }

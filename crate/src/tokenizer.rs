@@ -90,7 +90,19 @@ impl UnsafeCharacterEncoding {
             UnsafeCharacterEncoding::IncompleteUTF8Sequence => "IncompleteUTF8Sequence",
             UnsafeCharacterEncoding::StraySurrogate => "StraySurrogate",
             UnsafeCharacterEncoding::BOM => "BOM",
+            // NOTE: When adding a case here, also update from_str().
         }
+    }
+
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
+        let value = match string {
+            "IncompleteUTF8Sequence" => UnsafeCharacterEncoding::IncompleteUTF8Sequence,
+            "StraySurrogate" => UnsafeCharacterEncoding::StraySurrogate,
+            "BOM" => UnsafeCharacterEncoding::BOM,
+            _ => return None,
+        };
+
+        Some(value)
     }
 }
 

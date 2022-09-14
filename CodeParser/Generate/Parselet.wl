@@ -90,7 +90,8 @@ $Operators = Join[
 		CodeParser`PatternBlankSequence,
 		CodeParser`PatternBlankNullSequence,
 		CodeParser`PatternOptionalDefault,
-		CodeParser`TernaryTilde
+		CodeParser`TernaryTilde,
+		CodeParser`InfixTilde
 	}],
 	DeleteDuplicates @ Association @ Flatten @ Replace[
 		Join[
@@ -226,6 +227,8 @@ parseletRegistrationCPPSource = {
 
 #![allow(non_upper_case_globals)]
 
+use wolfram_expr::symbol::SymbolRef;
+
 use crate::{
 	token::TokenKind,
 	symbol::Symbol,
@@ -327,6 +330,22 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 			$Operators
 		],
 		"        }\n",
+		"    }\n",
+		"\n",
+		"    pub(crate) fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
+		"        let operator = match symbol {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            SYMBOL_" <> toGlobal[symbol] <> " => Operator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$Operators
+		],
+		"            _ => return None,\n",
+		"        };\n",
+		"\n",
+		"        Some(operator)\n",
 		"    }\n",
 		"}\n"
 	]

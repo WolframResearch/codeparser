@@ -18,6 +18,7 @@ tokenizeBytesFunc
 tokenizeFileFunc
 concreteParseLeafFunc
 safeStringFunc
+aggregate
 
 
 
@@ -273,6 +274,11 @@ Which[
     concreteParseLeafFunc := concreteParseLeafFunc = (If[$Debug, Print["memoizing concreteParseLeafFunc"]]; loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject]);
 
     safeStringFunc := safeStringFunc = (If[$Debug, Print["memoizing safeStringFunc"]]; loadFunc["SafeString_LibraryLink", LinkObject, LinkObject]);
+
+    aggregate := aggregate = (
+		If[$Debug, Print["memoizing aggregate"]];
+		loadFunc["Aggregate_LibraryLink", LinkObject, LinkObject]
+	);
   ,
   True,
     Message[CodeParser::notransport]

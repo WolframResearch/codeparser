@@ -397,6 +397,8 @@ tokenEnumRegistrationCPPHeader = {
 
 use crate::symbol::Symbol;
 
+use wolfram_expr::symbol::SymbolRef;
+
 //
 // All token enums
 //
@@ -473,7 +475,23 @@ tokenToSymbolCases ~Join~
 { "        _ => panic!(\"Unhandled token type\"),"} ~Join~
 {"    }",
 "}",
-""};
+""} ~Join~ {
+	StringJoin[
+		"pub(crate) fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {\n",
+		"    use TokenKind::*;\n",
+		"    use crate::symbol_registration as st;\n",
+		"    let token = match symbol {\n",
+		Map[
+			token |-> "        st::" <> toGlobal[tokenToSymbol[token]] <> " => " <> toTokenEnumVariant[token] <> ",\n",
+			tokens
+		],
+		"        _ => return None,\n",
+		"    };\n",
+		"\n",
+		"    Some(token)\n",
+		"}\n"
+	]
+};
 
 
 Print["exporting TokenEnumRegistration.cpp"];

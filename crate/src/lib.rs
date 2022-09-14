@@ -65,11 +65,16 @@ mod error;
 mod parser;
 mod parser_session;
 
+mod abstract_;
+
 #[cfg(feature = "USE_MATHLINK")]
 mod convert_wstp;
 
 #[cfg(feature = "USE_EXPR_LIB")]
 mod convert_expr;
+
+#[cfg(feature = "USE_MATHLINK")]
+mod from_expr;
 
 #[cfg(feature = "USE_MATHLINK")]
 mod wll_api;
@@ -207,6 +212,40 @@ pub use crate::{
 //======================================
 // Types
 //======================================
+
+pub struct Container<S> {
+    pub kind: ContainerKind,
+    pub body: ContainerBody<S>,
+    pub metadata: Metadata,
+}
+
+pub enum ContainerBody<S> {
+    Nodes(NodeSeq<OwnedTokenInput, S>),
+    Missing(UnsafeCharacterEncoding),
+}
+
+pub enum ContainerKind {
+    String,
+    File,
+    Box,
+    Byte,
+    // FIXME Is this really a valid container kind?
+    Hold,
+}
+
+#[derive(Debug)]
+pub struct Metadata {
+    pub source: GeneralSource,
+    pub syntax_issues: Option<Vec<Issue>>,
+    pub confidence_level: Option<Number>,
+    pub code_actions: Option<Vec<CodeAction>>,
+    // TODO: Change this to Option<String>?
+    pub file_name: Option<Expr>,
+    pub embedded_tabs: Option<Expr>,
+    pub embedded_newlines: Option<Expr>,
+    pub simple_line_continuations: Option<Expr>,
+    pub complex_line_continuations: Option<Expr>,
+}
 
 /// How `#!` [shebangs](https://en.wikipedia.org/wiki/Shebang_(Unix))
 /// should be treated if they appear in the first line of input.
@@ -383,6 +422,28 @@ pub fn parse_concrete<'i>(
     session.concrete_parse_expressions()
 }
 
+pub fn abstract_parse_expressions<'i>(
+    input: &'i str,
+    opts: &ParseOptions,
+) -> ParseResult<BorrowedTokenInput<'i>> {
+    let ParseOptions {
+        first_line_behavior,
+        src_convention,
+        encoding_mode,
+        tab_width,
+    } = *opts;
+
+    let mut session = ParserSession::new(
+        input.as_bytes(),
+        src_convention,
+        tab_width,
+        first_line_behavior,
+        encoding_mode,
+    );
+
+    session.abstract_parse_expressions()
+}
+
 //======================================
 // LibraryLink
 //======================================
@@ -417,6 +478,9 @@ macro_rules! panic_if_aborted {
     };
 }
 
+use crate::node::NodeSeq;
 pub(crate) use panic_if_aborted;
+use source::{CodeAction, GeneralSource, Issue};
 use token::{BorrowedTokenInput, OwnedTokenInput, Token};
 use tokenizer::UnsafeCharacterEncoding;
+use wolfram_expr::{Expr, Number};

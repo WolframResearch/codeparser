@@ -1,10 +1,17 @@
-use wolfram_library_link::{self as wll, sys::mint, wstp};
+use wolfram_library_link::{
+    self as wll,
+    expr::{self, Expr},
+    sys::mint,
+    wstp,
+};
 
 use crate::{
+    abstract_::Aggregate,
+    from_expr::FromExpr,
     node::SyntaxErrorKind,
     symbol::Symbol,
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
-    EncodingMode, FirstLineBehavior, StringifyMode,
+    Container, ContainerBody, EncodingMode, FirstLineBehavior, StringifyMode,
 };
 
 #[cfg(feature = "USE_MATHLINK")]
@@ -218,6 +225,55 @@ pub fn DestroyParserSession_LibraryLink(link: &mut wstp::Link) {
     //
 
     link.put_symbol(SYMBOL_NULL.as_str()).unwrap();
+}
+
+//==========================================================
+// Abstract Parsing
+//==========================================================
+
+//======================================
+// Aggregate_LibraryLink
+//======================================
+
+#[cfg(feature = "USE_MATHLINK")]
+#[wll::export(wstp)]
+pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
+    let mut args: Vec<Expr> = parse_assuming_link_print_full_symbols(link);
+
+    if args.len() != 1 {
+        panic!("unexpected number of arguments passed to Aggregate: {args:?}")
+    }
+
+    let arg = args.remove(0);
+
+    if arg.has_normal_head(&wolfram_expr::Symbol::new("System`Failure")) {
+        link.put_expr(&arg).unwrap();
+        return;
+    }
+
+    let Container {
+        kind,
+        body,
+        metadata,
+    } = match Container::from_expr(&arg) {
+        Ok(container) => container,
+        Err(err) => panic!("Error parsing '{arg}': {err}"),
+    };
+
+    let body = match body {
+        ContainerBody::Nodes(nodes) => ContainerBody::Nodes(Aggregate(nodes)),
+        ContainerBody::Missing(_) => body,
+    };
+
+    let container = Container {
+        kind,
+        body,
+        metadata,
+    };
+
+    debug_assert!(!link.is_ready());
+
+    container.put(link);
 }
 
 //==========================================================
@@ -1097,4 +1153,48 @@ impl SyntaxErrorKind {
             SyntaxErrorKind::ExpectedTilde => SYMBOL_SYNTAXERROR_EXPECTEDTILDE,
         }
     }
+}
+
+//==========================================================
+// WSTP Deserialization Utilities
+//==========================================================
+
+// TODO: Make this logic part of the wstp crate in some way.
+fn parse_assuming_link_print_full_symbols(link: &mut wstp::Link) -> Vec<Expr> {
+    get_args_list_impl_assuming_link_print_full_symbols(link)
+        .expect("unable to parse expression arguments list from WSTP link")
+}
+
+fn assume_link_print_full_symbols_resolver(s: &str) -> Option<expr::Symbol> {
+    if let Some(symbol) = expr::symbol::SymbolRef::try_new(s) {
+        return Some(symbol.to_symbol());
+    }
+
+    if let Some(symbol_name) = expr::symbol::SymbolNameRef::try_new(s) {
+        return Some(expr::Symbol::new(&format!("System`{symbol_name}")));
+    }
+
+    None
+}
+
+fn get_args_list_impl_assuming_link_print_full_symbols(
+    link: &mut wstp::Link,
+) -> Result<Vec<Expr>, wstp::Error> {
+    let arg_count: usize = match link.test_head("List") {
+        Ok(count) => Ok(count),
+        Err(err) if err.code() == Some(wstp::sys::WSEGSEQ) => {
+            link.clear_error();
+            link.test_head("System`List")
+        },
+        Err(err) => Err(err),
+    }?;
+
+    let mut elements: Vec<Expr> = Vec::new();
+
+    for _ in 0..arg_count {
+        let elem = link.get_expr_with_resolver(&mut assume_link_print_full_symbols_resolver)?;
+        elements.push(elem);
+    }
+
+    Ok(elements)
 }

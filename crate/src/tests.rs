@@ -169,6 +169,7 @@ fn test_something() {
                 src: src!(1:2-1:5),
             }))),
             src: src!(1:1-1:5),
+            is_concrete: true,
         })]
     );
 }
@@ -293,4 +294,15 @@ fn test_unterminated_group_reparse() {
             }
         ))]
     );
+}
+
+//==========================================================
+// Abstract
+//==========================================================
+
+#[test]
+fn test_abstract_parse() {
+    let result = crate::abstract_parse_expressions("2 + 2", &ParseOptions::default());
+
+    assert_eq!(result.nodes(), vec![])
 }

@@ -249,6 +249,13 @@ impl Debug for SourceLocation {
 #[cfg(feature = "BUILD_TESTS")]
 fn PrintTo(Loc: &SourceLocation, s: &mut std::ostream);
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeneralSource {
+    String(Source),
+    /// Box structure position.
+    BoxPosition(Vec<usize>),
+}
+
 #[derive(Copy, Clone, PartialEq, Hash)]
 pub struct Source {
     pub(crate) start: SourceLocation,
@@ -372,7 +379,32 @@ impl IssueTag {
             IssueTag::IncompleteUTF8Sequence => "IncompleteUTF8Sequence",
             IssueTag::StraySurrogate => "StraySurrogate",
             IssueTag::BOM => "BOM",
+            // NOTE: When adding a case here, also update from_str().
         }
+    }
+
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
+        let value = match string {
+            "Ambiguous" => IssueTag::Ambiguous,
+            "UnhandledCharacter" => IssueTag::UnhandledCharacter,
+            "UnexpectedCharacter" => IssueTag::UnexpectedCharacter,
+            "UnexpectedCarriageReturn" => IssueTag::UnexpectedCarriageReturn,
+            "UnexpectedSpaceCharacter" => IssueTag::UnexpectedSpaceCharacter,
+            "UnexpectedNewlineCharacter" => IssueTag::UnexpectedNewlineCharacter,
+            "UnexpectedDot" => IssueTag::UnexpectedDot,
+            "UnexpectedSign" => IssueTag::UnexpectedSign,
+            "UnexpectedImplicitTimes" => IssueTag::UnexpectedImplicitTimes,
+            "UnexpectedLetterlikeCharacter" => IssueTag::UnexpectedLetterlikeCharacter,
+            "UnrecognizedLongName" => IssueTag::UnrecognizedLongName,
+            "UndocumentedSlotSyntax" => IssueTag::UndocumentedSlotSyntax,
+            "NonASCIICharacter" => IssueTag::NonASCIICharacter,
+            "IncompleteUTF8Sequence" => IssueTag::IncompleteUTF8Sequence,
+            "StraySurrogate" => IssueTag::StraySurrogate,
+            "BOM" => IssueTag::BOM,
+            _ => return None,
+        };
+
+        Some(value)
     }
 }
 
@@ -384,7 +416,21 @@ impl Severity {
             Severity::Warning => "Warning",
             Severity::Error => "Error",
             Severity::Fatal => "Fatal",
+            // NOTE: When adding a case here, also update from_str().
         }
+    }
+
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
+        let value = match string {
+            "Formatting" => Severity::Formatting,
+            "Remark" => Severity::Remark,
+            "Warning" => Severity::Warning,
+            "Error" => Severity::Error,
+            "Fatal" => Severity::Fatal,
+            _ => return None,
+        };
+
+        Some(value)
     }
 }
 
@@ -393,8 +439,8 @@ impl Severity {
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct CodeAction {
     pub label: String,
-    pub src: Source,
     pub kind: CodeActionKind,
+    pub src: Source,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash)]
@@ -1144,6 +1190,22 @@ impl Source {
 impl PartialOrd for Source {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.start.partial_cmp(&other.start)
+    }
+}
+
+impl GeneralSource {
+    pub fn unknown() -> Self {
+        GeneralSource::String(Source::unknown())
+    }
+
+    pub fn is_unknown(&self) -> bool {
+        match self {
+            GeneralSource::String(source) => match source.kind() {
+                StringSourceKind::Unknown => true,
+                _ => false,
+            },
+            GeneralSource::BoxPosition(_) => false,
+        }
     }
 }
 
