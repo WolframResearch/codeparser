@@ -82,16 +82,16 @@ impl Node {
             Node::CollectedIssues(node) => node.put(session, link),
             Node::MissingBecauseUnsafeCharacterEncoding(node) => node.put(session, link),
             Node::SafeString(node) => node.put(session, link),
-            Node::Infix(InfixNode { op }) => op.put(session, link),
-            Node::Prefix(PrefixNode { op })
-            | Node::Postfix(PostfixNode { op })
-            | Node::Binary(BinaryNode { op })
-            | Node::Ternary(TernaryNode { op })
-            | Node::Compound(CompoundNode { op })
-            | Node::Group(GroupNode { op })
-            | Node::GroupMissingCloser(GroupMissingCloserNode { op })
-            | Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode { op })
-            | Node::PrefixBinary(PrefixBinaryNode { op }) => op.put(session, link),
+            Node::Infix(InfixNode(op)) => op.put(session, link),
+            Node::Prefix(PrefixNode(op))
+            | Node::Postfix(PostfixNode(op))
+            | Node::Binary(BinaryNode(op))
+            | Node::Ternary(TernaryNode(op))
+            | Node::Compound(CompoundNode(op))
+            | Node::Group(GroupNode(op))
+            | Node::GroupMissingCloser(GroupMissingCloserNode(op))
+            | Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op))
+            | Node::PrefixBinary(PrefixBinaryNode(op)) => op.put(session, link),
         }
     }
 }

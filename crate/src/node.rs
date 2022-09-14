@@ -61,15 +61,11 @@ pub struct OperatorNode {
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixNode {
-    pub op: OperatorNode,
-}
+pub struct PrefixNode(pub OperatorNode);
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryNode {
-    pub op: OperatorNode,
-}
+pub struct BinaryNode(pub OperatorNode);
 
 //
 // InfixNode
@@ -77,21 +73,15 @@ pub struct BinaryNode {
 // a + b + c
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct InfixNode {
-    pub op: OperatorNode,
-}
+pub struct InfixNode(pub OperatorNode);
 
 /// `a /: b = c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct TernaryNode {
-    pub op: OperatorNode,
-}
+pub struct TernaryNode(pub OperatorNode);
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PostfixNode {
-    pub op: OperatorNode,
-}
+pub struct PostfixNode(pub OperatorNode);
 
 //
 // PrefixBinaryNode
@@ -99,9 +89,7 @@ pub struct PostfixNode {
 // \[Integral] f \[DifferentialD] x
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixBinaryNode {
-    pub op: OperatorNode,
-}
+pub struct PrefixBinaryNode(pub OperatorNode);
 
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
@@ -113,9 +101,7 @@ pub struct CallNode {
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode {
-    pub op: OperatorNode,
-}
+pub struct GroupNode(pub OperatorNode);
 
 /// Any "compound" of tokens:
 ///
@@ -127,9 +113,7 @@ pub struct GroupNode {
 /// * `##2`
 /// * `%2`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompoundNode {
-    pub op: OperatorNode,
-}
+pub struct CompoundNode(pub OperatorNode);
 
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
@@ -141,15 +125,11 @@ pub struct SyntaxErrorNode {
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode {
-    pub op: OperatorNode,
-}
+pub struct GroupMissingCloserNode(pub OperatorNode);
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
-pub struct UnterminatedGroupNeedsReparseNode {
-    pub op: OperatorNode,
-}
+pub struct UnterminatedGroupNeedsReparseNode(pub OperatorNode);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CollectedExpressionsNode {
@@ -359,16 +339,16 @@ impl Node {
             Node::CollectedIssues(node) => node.getSource(),
             Node::MissingBecauseUnsafeCharacterEncoding(node) => node.getSource(),
             Node::SafeString(node) => node.getSource(),
-            Node::Prefix(PrefixNode { op }) => op.getSource(),
-            Node::Infix(InfixNode { op }) => op.getSource(),
-            Node::Postfix(PostfixNode { op }) => op.getSource(),
-            Node::Binary(BinaryNode { op }) => op.getSource(),
-            Node::PrefixBinary(PrefixBinaryNode { op }) => op.getSource(),
-            Node::Ternary(TernaryNode { op }) => op.getSource(),
-            Node::Compound(CompoundNode { op }) => op.getSource(),
-            Node::Group(GroupNode { op }) => op.getSource(),
-            Node::GroupMissingCloser(GroupMissingCloserNode { op }) => op.getSource(),
-            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode { op }) => {
+            Node::Prefix(PrefixNode(op)) => op.getSource(),
+            Node::Infix(InfixNode(op)) => op.getSource(),
+            Node::Postfix(PostfixNode(op)) => op.getSource(),
+            Node::Binary(BinaryNode(op)) => op.getSource(),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => op.getSource(),
+            Node::Ternary(TernaryNode(op)) => op.getSource(),
+            Node::Compound(CompoundNode(op)) => op.getSource(),
+            Node::Group(GroupNode(op)) => op.getSource(),
+            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => op.getSource(),
+            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
                 op.getSource()
             },
         }
@@ -379,14 +359,14 @@ impl Node {
     fn check(&self) -> bool {
         match self {
             Node::Token(token) => token.check(),
-            Node::Prefix(PrefixNode { op }) => op.check(),
-            Node::Binary(BinaryNode { op }) => op.check(),
-            Node::Infix(InfixNode { op }) => op.check(),
-            Node::Ternary(TernaryNode { op }) => op.check(),
-            Node::Postfix(PostfixNode { op }) => op.check(),
-            Node::PrefixBinary(PrefixBinaryNode { op }) => op.check(),
-            Node::Compound(CompoundNode { op }) => op.check(),
-            Node::Group(GroupNode { op }) => op.check(),
+            Node::Prefix(PrefixNode(op)) => op.check(),
+            Node::Binary(BinaryNode(op)) => op.check(),
+            Node::Infix(InfixNode(op)) => op.check(),
+            Node::Ternary(TernaryNode(op)) => op.check(),
+            Node::Postfix(PostfixNode(op)) => op.check(),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => op.check(),
+            Node::Compound(CompoundNode(op)) => op.check(),
+            Node::Group(GroupNode(op)) => op.check(),
             Node::CollectedExpressions(node) => node.check(),
             Node::CollectedSourceLocations(_) => true,
             Node::CollectedIssues(node) => node.check(),
@@ -472,9 +452,7 @@ impl PrefixNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PrefixNodeCount);
 
-        PrefixNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_PREFIXNODE, args),
-        }
+        PrefixNode(OperatorNode::new(op, SYMBOL_CODEPARSER_PREFIXNODE, args))
     }
 }
 
@@ -482,9 +460,7 @@ impl BinaryNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
 
-        BinaryNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_BINARYNODE, args),
-        }
+        BinaryNode(OperatorNode::new(op, SYMBOL_CODEPARSER_BINARYNODE, args))
     }
 }
 
@@ -492,9 +468,7 @@ impl InfixNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
 
-        InfixNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_INFIXNODE, args),
-        }
+        InfixNode(OperatorNode::new(op, SYMBOL_CODEPARSER_INFIXNODE, args))
     }
 }
 
@@ -502,9 +476,7 @@ impl TernaryNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_TernaryNodeCount);
 
-        TernaryNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_TERNARYNODE, args),
-        }
+        TernaryNode(OperatorNode::new(op, SYMBOL_CODEPARSER_TERNARYNODE, args))
     }
 }
 
@@ -512,9 +484,7 @@ impl PostfixNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
 
-        PostfixNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_POSTFIXNODE, args),
-        }
+        PostfixNode(OperatorNode::new(op, SYMBOL_CODEPARSER_POSTFIXNODE, args))
     }
 }
 
@@ -522,9 +492,11 @@ impl PrefixBinaryNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PrefixBinaryNodeCount);
 
-        PrefixBinaryNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, args),
-        }
+        PrefixBinaryNode(OperatorNode::new(
+            op,
+            SYMBOL_CODEPARSER_PREFIXBINARYNODE,
+            args,
+        ))
     }
 }
 
@@ -536,9 +508,7 @@ impl GroupNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_GroupNodeCount);
 
-        GroupNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_GROUPNODE, args),
-        }
+        GroupNode(OperatorNode::new(op, SYMBOL_CODEPARSER_GROUPNODE, args))
     }
 }
 
@@ -546,9 +516,7 @@ impl CompoundNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_CompoundNodeCount);
 
-        CompoundNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_COMPOUNDNODE, args),
-        }
+        CompoundNode(OperatorNode::new(op, SYMBOL_CODEPARSER_COMPOUNDNODE, args))
     }
 }
 
@@ -556,9 +524,11 @@ impl GroupMissingCloserNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
-        GroupMissingCloserNode {
-            op: OperatorNode::new(op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, args),
-        }
+        GroupMissingCloserNode(OperatorNode::new(
+            op,
+            SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE,
+            args,
+        ))
     }
 }
 
@@ -566,13 +536,11 @@ impl UnterminatedGroupNeedsReparseNode {
     pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
 
-        UnterminatedGroupNeedsReparseNode {
-            op: OperatorNode::new(
-                op,
-                SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE,
-                args,
-            ),
-        }
+        UnterminatedGroupNeedsReparseNode(OperatorNode::new(
+            op,
+            SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE,
+            args,
+        ))
     }
 }
 

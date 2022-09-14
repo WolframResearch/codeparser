@@ -541,7 +541,7 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
     }
 
     match &session.NodeStack[i] {
-        Node::Binary(BinaryNode { op }) => {
+        Node::Binary(BinaryNode(op)) => {
             //
             // Something like  a:b:c
             //                  ^ Pattern
@@ -557,7 +557,7 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
             return ColonLHS::Error;
         },
 
-        Node::Compound(CompoundNode { op }) => {
+        Node::Compound(CompoundNode(op)) => {
             //
             // Something like  a_:b
             //                   ^ Optional
@@ -676,7 +676,7 @@ pub(crate) fn Parser_checkSpan<'i>(session: &mut ParserSession<'i>) -> bool {
     {
         let NN = N;
 
-        if let Node::Binary(BinaryNode { op: B }) = NN {
+        if let Node::Binary(BinaryNode(B)) = NN {
             let op = B.getOp();
 
             if op == SYMBOL_SPAN {
@@ -690,7 +690,7 @@ pub(crate) fn Parser_checkSpan<'i>(session: &mut ParserSession<'i>) -> bool {
             return false;
         }
 
-        if let Node::Ternary(TernaryNode { op }) = NN {
+        if let Node::Ternary(TernaryNode(op)) = NN {
             let op = op.getOp();
 
             if op == SYMBOL_SPAN {

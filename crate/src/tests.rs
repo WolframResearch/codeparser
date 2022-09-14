@@ -148,41 +148,39 @@ fn test_something() {
 
     assert_eq!(
         nodes("2 + 2"),
-        vec![Node::Infix(InfixNode {
-            op: OperatorNode {
-                // Op: Symbol { name: "Plus", id: 514 },
-                op: crate::symbol_registration::SYMBOL_PLUS,
-                make_sym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
-                children: NodeSeq(vec![
-                    NVToken(Token {
-                        tok: TokenKind::Integer,
-                        src: src!(1:1-1:2),
-                        span: ByteSpan::new(0, 1),
-                    },),
-                    NVToken(Token {
-                        tok: TokenKind::Whitespace,
-                        src: src!(1:2-1:3),
-                        span: ByteSpan::new(1, 1)
-                    },),
-                    NVToken(Token {
-                        tok: TokenKind::Plus,
-                        src: src!(1:3-1:4),
-                        span: ByteSpan::new(2, 1),
-                    },),
-                    NVToken(Token {
-                        tok: TokenKind::Whitespace,
-                        src: src!(1:4-1:5),
-                        span: ByteSpan::new(3, 1),
-                    },),
-                    NVToken(Token {
-                        tok: TokenKind::Integer,
-                        src: src!(1:5-1:6),
-                        span: ByteSpan::new(4, 1),
-                    }),
-                ]),
-                src: src!(1:1-1:6),
-            },
-        })]
+        vec![Node::Infix(InfixNode(OperatorNode {
+            // Op: Symbol { name: "Plus", id: 514 },
+            op: crate::symbol_registration::SYMBOL_PLUS,
+            make_sym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
+            children: NodeSeq(vec![
+                NVToken(Token {
+                    tok: TokenKind::Integer,
+                    src: src!(1:1-1:2),
+                    span: ByteSpan::new(0, 1),
+                },),
+                NVToken(Token {
+                    tok: TokenKind::Whitespace,
+                    src: src!(1:2-1:3),
+                    span: ByteSpan::new(1, 1)
+                },),
+                NVToken(Token {
+                    tok: TokenKind::Plus,
+                    src: src!(1:3-1:4),
+                    span: ByteSpan::new(2, 1),
+                },),
+                NVToken(Token {
+                    tok: TokenKind::Whitespace,
+                    src: src!(1:4-1:5),
+                    span: ByteSpan::new(3, 1),
+                },),
+                NVToken(Token {
+                    tok: TokenKind::Integer,
+                    src: src!(1:5-1:6),
+                    span: ByteSpan::new(4, 1),
+                },),
+            ],),
+            src: src!(1:1-1:6),
+        }))]
     );
 
     assert_eq!(
@@ -193,30 +191,28 @@ fn test_something() {
                 src: src!(1:1-1:2),
                 span: ByteSpan::new(0, 1),
             })]),
-            body: Box::new(Node::Group(GroupNode {
-                op: OperatorNode {
-                    op: SYMBOL_CODEPARSER_GROUPSQUARE,
-                    make_sym: SYMBOL_CODEPARSER_GROUPNODE,
-                    children: NodeSeq(vec![
-                        NVToken(Token {
-                            tok: TokenKind::OpenSquare,
-                            src: src!(1:2-1:3),
-                            span: ByteSpan::new(1, 1),
-                        }),
-                        NVToken(Token {
-                            tok: TokenKind::Symbol,
-                            src: src!(1:3-1:4),
-                            span: ByteSpan::new(2, 1),
-                        }),
-                        NVToken(Token {
-                            tok: TokenKind::CloseSquare,
-                            src: src!(1:4-1:5),
-                            span: ByteSpan::new(3, 1),
-                        }),
-                    ]),
-                    src: src!(1:2-1:5),
-                },
-            })),
+            body: Box::new(Node::Group(GroupNode(OperatorNode {
+                op: SYMBOL_CODEPARSER_GROUPSQUARE,
+                make_sym: SYMBOL_CODEPARSER_GROUPNODE,
+                children: NodeSeq(vec![
+                    NVToken(Token {
+                        tok: TokenKind::OpenSquare,
+                        src: src!(1:2-1:3),
+                        span: ByteSpan::new(1, 1),
+                    }),
+                    NVToken(Token {
+                        tok: TokenKind::Symbol,
+                        src: src!(1:3-1:4),
+                        span: ByteSpan::new(2, 1),
+                    }),
+                    NVToken(Token {
+                        tok: TokenKind::CloseSquare,
+                        src: src!(1:4-1:5),
+                        span: ByteSpan::new(3, 1),
+                    }),
+                ]),
+                src: src!(1:2-1:5),
+            },))),
             src: src!(1:1-1:5),
         })]
     );
