@@ -83,7 +83,7 @@ SourceLocation SourceLocation::previous() const {
 #endif // COMPUTE_SOURCE
 }
 
-void SourceLocation::print(std::ostream& s) const {
+void SourceLocation::print(ParserSessionPtr session, std::ostream& s) const {
     
     s << first;
     
@@ -95,7 +95,10 @@ void SourceLocation::print(std::ostream& s) const {
 // For googletest
 //
 void PrintTo(const SourceLocation& Loc, std::ostream *s) {
-    Loc.print(*s);
+    
+    ParserSession session;
+    
+    Loc.print(&session, *s);
 }
 #endif // BUILD_TESTS
 
@@ -129,11 +132,11 @@ bool operator<(Source a, Source b) {
     return a.Start < b.Start;
 }
 
-void Source::print(std::ostream& s) const {
+void Source::print(ParserSessionPtr session, std::ostream& s) const {
     
-    Start.print(s);
+    Start.print(session, s);
     
-    End.print(s);
+    End.print(session, s);
 }
 
 size_t Source::size() const {
@@ -148,7 +151,10 @@ size_t Source::size() const {
 // For googletest
 //
 void PrintTo(const Source& Src, std::ostream *s) {
-    Src.print(*s);
+    
+    ParserSession session;
+    
+    Src.print(&session, *s);
 }
 #endif // BUILD_TESTS
 

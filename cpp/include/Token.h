@@ -47,7 +47,7 @@ struct Token {
     void reset(ParserSessionPtr session);
     void skip(ParserSessionPtr session);
     
-    void print(std::ostream& s) const;
+    void print(ParserSessionPtr session, std::ostream& s) const;
     
     bool syntaxQ() const;
     

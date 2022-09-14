@@ -123,7 +123,7 @@ bool Token::syntaxQ() const {
     return !Tok.isError();
 }
 
-void Token::print(std::ostream& s) const {
+void Token::print(ParserSessionPtr session, std::ostream& s) const {
     
     auto Sym = TokenToSymbol(Tok);
     
@@ -135,16 +135,16 @@ void Token::print(std::ostream& s) const {
         
         if (Tok.isUnterminated()) {
             
-            SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.print(s);
+            SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.print(session, s);
             
         } else {
             
-            SYMBOL_CODEPARSER_ERRORNODE.print(s);
+            SYMBOL_CODEPARSER_ERRORNODE.print(session, s);
         }
         
     } else {
         
-        SYMBOL_CODEPARSER_LEAFNODE.print(s);
+        SYMBOL_CODEPARSER_LEAFNODE.print(session, s);
     }
     
     s << "[";
@@ -155,7 +155,7 @@ void Token::print(std::ostream& s) const {
     s.write(reinterpret_cast<const char *>(Buf), Len);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     s << "]";
 }
 
@@ -164,7 +164,10 @@ void Token::print(std::ostream& s) const {
 // For googletest
 //
 void PrintTo(const Token& T, std::ostream *s) {
-    T.print(*s);
+    
+    ParserSession session;
+    
+    T.print(&session, *s);
 }
 #endif // BUILD_TESTS
 

@@ -30,7 +30,7 @@ bool operator<(MyString a, MyString b) {
     return strcmp(a.Val, b.Val);
 }
 
-void MyString::print(std::ostream& s) const {
+void MyString::print(ParserSessionPtr session, std::ostream& s) const {
     s << Val;
 }
 

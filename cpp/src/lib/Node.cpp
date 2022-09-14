@@ -35,13 +35,14 @@ struct GetSourceVisitor {
 
 struct PrintVisitor {
     
+    ParserSessionPtr session;
     std::ostream& s;
     
-    PrintVisitor(std::ostream& s) : s(s) {};
+    PrintVisitor(ParserSessionPtr session, std::ostream& s) : session(session), s(s) {};
     
-    void operator()(const NodePtr& N) { return N->print(s); }
+    void operator()(const NodePtr& N) { return N->print(session, s); }
     
-    void operator()(const Token& L) { return L.print(s); }
+    void operator()(const Token& L) { return L.print(session, s); }
 };
 
 struct ReleaseVisitor {
@@ -125,13 +126,13 @@ const NodeVariant& NodeSeq::last() const {
     return vec.back();
 }
 
-void NodeSeq::print(std::ostream& s) const {
+void NodeSeq::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_LIST.print(s);
+    SYMBOL_LIST.print(session, s);
     s << "[";
     
     for (auto& C : vec) {
-        std::visit(PrintVisitor{s}, C);
+        std::visit(PrintVisitor{session, s}, C);
         s << ", ";
     }
     
@@ -216,18 +217,18 @@ bool OperatorNode::syntaxQ() const {
     return Children.syntaxQ();
 }
 
-void OperatorNode::print(std::ostream& s) const {
+void OperatorNode::print(ParserSessionPtr session, std::ostream& s) const {
     
-    MakeSym.print(s);
+    MakeSym.print(session, s);
     s << "[";
     
-    Op.print(s);
+    Op.print(session, s);
     s << ", ";
     
-    Children.print(s);
+    Children.print(session, s);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     
     s << "]";
 }
@@ -240,8 +241,8 @@ AbortNode::AbortNode() {
 #endif // DIAGNOSTICS
 }
 
-void AbortNode::print(std::ostream& s) const {
-    SYMBOL__ABORTED.print(s);
+void AbortNode::print(ParserSessionPtr session, std::ostream& s) const {
+    SYMBOL__ABORTED.print(session, s);
 }
 
 Source AbortNode::getSource() const {
@@ -354,18 +355,18 @@ Source CallNode::getSource() const {
     return Src;
 }
 
-void CallNode::print(std::ostream& s) const {
+void CallNode::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CALLNODE.print(s);
+    SYMBOL_CODEPARSER_CALLNODE.print(session, s);
     s << "[";
     
-    Head.print(s);
+    Head.print(session, s);
     s << ", ";
     
-    std::visit(PrintVisitor{s}, Body);
+    std::visit(PrintVisitor{session, s}, Body);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     
     s << "]";
 }
@@ -396,18 +397,18 @@ Source SyntaxErrorNode::getSource() const {
     return Src;
 }
 
-void SyntaxErrorNode::print(std::ostream& s) const {
+void SyntaxErrorNode::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_SYNTAXERRORNODE.print(s);
+    SYMBOL_CODEPARSER_SYNTAXERRORNODE.print(session, s);
     s << "[";
     
     s << Err.Name;
     s << ", ";
-        
-    Children.print(s);
+    
+    Children.print(session, s);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     
     s << "]";
 }
@@ -419,8 +420,8 @@ void CollectedExpressionsNode::release() {
     Exprs.release();
 }
 
-void CollectedExpressionsNode::print(std::ostream& s) const {
-    Exprs.print(s);
+void CollectedExpressionsNode::print(ParserSessionPtr session, std::ostream& s) const {
+    Exprs.print(session, s);
 }
 
 bool CollectedExpressionsNode::syntaxQ() const {
@@ -443,13 +444,13 @@ void CollectedIssuesNode::release() {
     }
 }
 
-void CollectedIssuesNode::print(std::ostream& s) const {
+void CollectedIssuesNode::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_LIST.print(s);
+    SYMBOL_LIST.print(session, s);
     s << "[";
     
     for (auto& I : Issues) {
-        I->print(s);
+        I->print(session, s);
         s << ", ";
     }
     
@@ -488,13 +489,13 @@ bool CollectedSourceLocationsNode::syntaxQ() const {
     return true;
 }
 
-void CollectedSourceLocationsNode::print(std::ostream& s) const {
+void CollectedSourceLocationsNode::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_LIST.print(s);
+    SYMBOL_LIST.print(session, s);
     s << "[";
     
     for (auto& L : SourceLocs) {
-        L.print(s);
+        L.print(session, s);
         s << ", ";
     }
     
@@ -540,14 +541,14 @@ bool MissingBecauseUnsafeCharacterEncodingNode::syntaxQ() const {
     return false;
 }
 
-void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
+void MissingBecauseUnsafeCharacterEncodingNode::print(ParserSessionPtr session, std::ostream& s) const {
     
     auto reason = unsafeCharacterEncodingReason(flag);
     
-    SYMBOL_MISSING.print(s);
+    SYMBOL_MISSING.print(session, s);
     s << "[";
     
-    reason.print(s);
+    reason.print(session, s);
     
     s << "]";
 }
@@ -566,7 +567,7 @@ bool SafeStringNode::syntaxQ() const {
     return true;
 }
 
-void SafeStringNode::print(std::ostream& s) const {
+void SafeStringNode::print(ParserSessionPtr session, std::ostream& s) const {
     s.write(reinterpret_cast<const char *>(Buf), Len);
 }
 
@@ -584,8 +585,8 @@ void NodeContainer::release() {
     Nodes.release();
 }
 
-void NodeContainer::print(std::ostream& s) const {
-    Nodes.print(s);
+void NodeContainer::print(ParserSessionPtr session, std::ostream& s) const {
+    Nodes.print(session, s);
 }
 
 bool NodeContainer::syntaxQ() const {

@@ -98,7 +98,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const;
+    void print(ParserSessionPtr session, std::ostream& s) const;
     
     bool syntaxQ() const;
     
@@ -119,8 +119,8 @@ public:
     
     virtual void release();
     
-    virtual void print(std::ostream& s) const = 0;
-
+    virtual void print(ParserSessionPtr session, std::ostream& s) const = 0;
+    
     virtual Source getSource() const = 0;
     
 #if USE_MATHLINK
@@ -159,7 +159,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
 #if USE_EXPR_LIB
     expr toExpr(ParserSessionPtr session) const override;
@@ -180,7 +180,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
     Source getSource() const override;
     
@@ -283,7 +283,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
 #if USE_EXPR_LIB
     expr toExpr(ParserSessionPtr session) const override;
@@ -344,7 +344,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
 #if USE_EXPR_LIB
     expr toExpr(ParserSessionPtr session) const override;
@@ -397,7 +397,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
     bool syntaxQ() const override;
     
@@ -424,7 +424,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
     bool syntaxQ() const override;
     
@@ -453,7 +453,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
     bool syntaxQ() const override;
     
@@ -482,7 +482,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
 #if USE_EXPR_LIB
     expr toExpr(ParserSessionPtr session) const override;
@@ -508,7 +508,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
     bool syntaxQ() const override;
     
@@ -537,7 +537,7 @@ public:
     void put(ParserSessionPtr session, MLINK callLink) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const override;
+    void print(ParserSessionPtr session, std::ostream& s) const override;
     
     bool syntaxQ() const override;
     

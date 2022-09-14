@@ -210,7 +210,7 @@ struct SourceLocation {
     void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const;
+    void print(ParserSessionPtr session, std::ostream& s) const;
     
 #if USE_EXPR_LIB
     expr toExpr(ParserSessionPtr session) const;
@@ -251,7 +251,7 @@ struct Source {
     void put(ParserSessionPtr session, MLINK callLink) const;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s) const;
+    void print(ParserSessionPtr session, std::ostream& s) const;
     
 #if USE_EXPR_LIB
     expr toExpr(ParserSessionPtr session) const;

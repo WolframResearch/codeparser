@@ -11,28 +11,28 @@
 
 Issue::Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(Actions), AdditionalDescriptions(AdditionalDescriptions) {}
 
-void Issue::print(std::ostream& s) const {
+void Issue::print(ParserSessionPtr session, std::ostream& s) const {
     
-    MakeSym.print(s);
+    MakeSym.print(session, s);
     s << "[";
     
-    Tag.print(s);
+    Tag.print(session, s);
     s << ", ";
     
     s << Msg;
     s << ", ";
     
-    Sev.print(s);
+    Sev.print(session, s);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     s << ", ";
     
     s << Val;
     s << ", ";
     
     for (auto& A : Actions) {
-        A->print(s);
+        A->print(session, s);
         s << ", ";
     }
     
@@ -63,18 +63,18 @@ EncodingIssue::EncodingIssue(MyString Tag, std::string Msg, MyString Sev, Source
 CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
 
 
-void ReplaceTextCodeAction::print(std::ostream& s) const {
+void ReplaceTextCodeAction::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CODEACTION.print(s);
+    SYMBOL_CODEPARSER_CODEACTION.print(session, s);
     s << "[";
     
     s << Label;
     s << ", ";
     
-    SYMBOL_CODEPARSER_REPLACETEXT.print(s);
+    SYMBOL_CODEPARSER_REPLACETEXT.print(session, s);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     s << ", ";
     
     s << ReplacementText;
@@ -82,18 +82,18 @@ void ReplaceTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
-void InsertTextCodeAction::print(std::ostream& s) const {
+void InsertTextCodeAction::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CODEACTION.print(s);
+    SYMBOL_CODEPARSER_CODEACTION.print(session, s);
     s << "[";
     
     s << Label;
     s << ", ";
     
-    SYMBOL_CODEPARSER_INSERTTEXT.print(s);
+    SYMBOL_CODEPARSER_INSERTTEXT.print(session, s);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     s << ", ";
     
     s << InsertionText;
@@ -101,18 +101,18 @@ void InsertTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
-void DeleteTextCodeAction::print(std::ostream& s) const {
+void DeleteTextCodeAction::print(ParserSessionPtr session, std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CODEACTION.print(s);
+    SYMBOL_CODEPARSER_CODEACTION.print(session, s);
     s << "[";
     
     s << Label;
     s << ", ";
     
-    SYMBOL_CODEPARSER_DELETETEXT.print(s);
+    SYMBOL_CODEPARSER_DELETETEXT.print(session, s);
     s << ", ";
     
-    Src.print(s);
+    Src.print(session, s);
     
     s << "]";
 }

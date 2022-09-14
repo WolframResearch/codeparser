@@ -33,7 +33,7 @@ struct Symbol {
     
     Token token() const;
     
-    void print(std::ostream& s) const;
+    void print(ParserSessionPtr session, std::ostream& s) const;
 
 #if USE_MATHLINK
     void put(ParserSessionPtr session, MLINK callLink) const;

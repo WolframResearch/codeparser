@@ -148,7 +148,7 @@ int readStdIn(APIMode mode, OutputMode outputMode) {
         switch (outputMode) {
             case PRINT: {
                 
-                NodePrint(N, std::cout);
+                NodePrint(session, N, std::cout);
                 
                 std::cout << "\n";
                 
@@ -158,7 +158,7 @@ int readStdIn(APIMode mode, OutputMode outputMode) {
                 
                 std::ofstream nullStream;
                 
-                NodePrint(N, nullStream);
+                NodePrint(session, N, nullStream);
                 
                 nullStream << "\n";
                 
@@ -258,7 +258,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode) {
     switch (outputMode) {
         case PRINT: {
             
-            NodePrint(N, std::cout);
+            NodePrint(session, N, std::cout);
             
             std::cout << "\n";
             
@@ -268,7 +268,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode) {
             
             std::ofstream nullStream;
             
-            NodePrint(N, nullStream);
+            NodePrint(session, N, nullStream);
             
             nullStream << "\n";
             

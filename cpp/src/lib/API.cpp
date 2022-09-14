@@ -78,8 +78,8 @@ void ParserSessionReleaseNode(ParserSessionPtr session, NodePtr N) {
 }
 
 
-void NodePrint(NodePtr N, std::ostream& s) {
-    N->print(s);
+void NodePrint(ParserSessionPtr session, NodePtr N, std::ostream& s) {
+    N->print(session, s);
 }
 
 int NodeSyntaxQ(NodePtr N) {

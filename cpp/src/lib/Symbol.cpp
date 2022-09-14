@@ -27,7 +27,7 @@ Token Symbol::token() const {
     return Token(TOKEN_SYMBOL, reinterpret_cast<Buffer>(Name), Len);
 }
 
-void Symbol::print(std::ostream& s) const {
+void Symbol::print(ParserSessionPtr session, std::ostream& s) const {
     s << Name;
 }
 

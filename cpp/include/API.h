@@ -139,7 +139,7 @@ EXTERN_C DLLEXPORT void ParserSessionReleaseNode(ParserSessionPtr session, NodeP
 
 EXTERN_C DLLEXPORT int NodeSyntaxQ(NodePtr N);
 
-DLLEXPORT void NodePrint(NodePtr N, std::ostream& s);
+DLLEXPORT void NodePrint(ParserSessionPtr session, NodePtr N, std::ostream& s);
 
 #if USE_EXPR_LIB
 EXTERN_C DLLEXPORT int NodeToExpr(ParserSessionPtr session, NodePtr N, expr *eOut);
