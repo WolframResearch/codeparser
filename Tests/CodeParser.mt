@@ -95,7 +95,7 @@ Test[
 	CodeParse["\\[ImaginaryJ]"]
 	,
 	ContainerNode[String, {
-		LeafNode[Symbol, "J", <|Source->{{1,1}, {1,14}}|>]}, <|Source->{{1,1}, {1,14}}|>]
+		LeafNode[Symbol, "I", <|Source->{{1,1}, {1,14}}|>]}, <|Source->{{1,1}, {1,14}}|>]
 	,
 	TestID->"CodeParser-20220910-C4S7C2"
 ]
