@@ -213,7 +213,6 @@ parseletRegistrationCPPSource = {
 #include \"ByteDecoder.h\" // for TheByteDecoder
 #include \"SymbolRegistration.h\"
 
-#include <cassert>
 
 SymbolParselet *symbolParselet = new SymbolParselet();
 

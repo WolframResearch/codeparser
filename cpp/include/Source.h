@@ -104,8 +104,6 @@ enum NextPolicyBits : uint8_t {
     INTEGER_SHORT_CIRCUIT = 0x20,
 };
 
-static_assert(RETURN_TOPLEVELNEWLINE == 0x04, "Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE");
-
 
 using NextPolicy = uint8_t;
 

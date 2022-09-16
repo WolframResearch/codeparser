@@ -11,6 +11,7 @@
 #include <sstream> // for ostringstream
 #include <cstddef> // for size_t
 #include <algorithm> // for lower_bound
+#include <cassert>
 
 
 char fromDigit(uint8_t d);

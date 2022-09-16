@@ -9,6 +9,8 @@
 #include "Node.h"
 #include "TokenEnumRegistration.h"
 
+#include <cassert>
+
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
 #else
@@ -881,7 +883,7 @@ void GroupParselet_parseLoop(ParserSessionPtr session, ParseletPtr P, Token Igno
 #else
         MUSTTAIL
         return PrefixToplevelCloserParselet_parsePrefix(session, prefixToplevelCloserParselet, Tok);
-#endif
+#endif // !USE_MUSTTAIL
     }
 
     if (Tok.Tok == TOKEN_ENDOFFILE) {

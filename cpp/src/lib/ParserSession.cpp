@@ -14,6 +14,7 @@
 
 #include <cstring> // for memcpy
 #include <algorithm> // for find_if
+#include <cassert>
 
 
 using MNodePtr = Node *;

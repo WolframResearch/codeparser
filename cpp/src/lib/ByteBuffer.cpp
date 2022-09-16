@@ -7,6 +7,8 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
+#include <cassert>
+
 
 //
 // Precondition: buffer is pointing to current byte

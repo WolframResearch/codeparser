@@ -19,6 +19,7 @@
 
 #include <algorithm> // for lower_bound
 #include <array>
+#include <cassert>
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]

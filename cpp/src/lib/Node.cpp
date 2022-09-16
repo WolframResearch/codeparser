@@ -14,6 +14,7 @@
 #endif // DIAGNOSTICS
 
 #include <limits> // for numeric_limits
+#include <cassert>
 
 
 using MNodePtr = Node *;

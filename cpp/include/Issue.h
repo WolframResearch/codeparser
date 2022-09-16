@@ -10,9 +10,11 @@
 
 class Issue;
 class CodeAction;
+class ParserSession;
 
 using IssuePtr = Issue *;
 using CodeActionPtr = CodeAction *;
+using ParserSessionPtr = ParserSession *;
 using IssuePtrVector = std::vector<IssuePtr>;
 using CodeActionPtrVector = std::vector<CodeActionPtr>;
 using AdditionalDescriptionVector = std::vector<std::string>;

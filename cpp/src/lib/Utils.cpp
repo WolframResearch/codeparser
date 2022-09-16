@@ -4,7 +4,6 @@
 #include "LongNamesRegistration.h" // for CodePointToLongNameMap
 #include "CodePoint.h"
 
-#include <cassert>
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 
 

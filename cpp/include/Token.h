@@ -17,7 +17,12 @@ using expr = void *;
 #endif // USE_EXPR_LIB
 
 class Node;
+class ParserSession;
+
 using NodePtr = const Node *;
+using ParserSessionPtr = ParserSession *;
+using Buffer = const unsigned char *;
+
 using NodeVariant = std::variant<NodePtr, struct Token>;
 
 //

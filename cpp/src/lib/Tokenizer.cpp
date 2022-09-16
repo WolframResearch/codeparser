@@ -16,6 +16,7 @@
 
 #include <cstring> // for memchr
 #include <array>
+#include <cassert>
 
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]

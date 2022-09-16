@@ -8,6 +8,8 @@
 #include "ExprLibrary.h"
 #endif // USE_EXPR_LIB
 
+#include <cassert>
+
 
 Issue::Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(Actions), AdditionalDescriptions(AdditionalDescriptions) {}
 

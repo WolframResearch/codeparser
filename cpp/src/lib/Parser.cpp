@@ -8,6 +8,8 @@
 #include "SymbolRegistration.h"
 #include "TokenEnumRegistration.h"
 
+#include <cassert>
+
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
 #else

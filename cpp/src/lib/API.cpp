@@ -12,6 +12,7 @@
 
 #include <cstdio> // for fopen
 #include <cstring> // for strlen
+#include <cassert>
 
 
 int CreateParserSession(ParserSessionPtr *sessionOut) {
