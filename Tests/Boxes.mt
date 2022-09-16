@@ -1070,9 +1070,7 @@ bug 426013
 Test[
 	CodeConcreteParseBox[""]
 	,
-	ContainerNode[Box, {Missing["EmptyInput"]}, <|SyntaxIssues -> {
-	
-	EncodingIssue["EmptyInput", "Empty input.", "Fatal", <|Source -> {}, ConfidenceLevel -> 1.|>]}|>]
+	ContainerNode[Box, {Missing["EmptyInput"]}, <||>]
 	,
 	TestID->"Boxes-20220711-Q7R8Q8"
 ]
@@ -1093,3 +1091,108 @@ Test[
 	TestID->"Boxes-20220829-S5T6B6"
 ]
 
+
+
+(*
+This was a real case of TagBox[""] causing problems
+
+"" is not a valid box, so technically this is not valid syntax
+
+But this is testing that there are no messages spews
+*)
+
+box = RowBox[{"CUDADilation", "[", 
+      RowBox[{
+         RowBox[{
+            GraphicsBox[
+              TagBox[RasterBox[CompressedData["
+1:eJzt2O1twyAQBmDTTbpSR0gHyDadt82fRob7hPfFWOKkSgkcd09c2zH5fDy/
+Hh/HcXz//f0cO3bs2DEryivmdIk2Ku+YYQr1KSWVjjD5nVLJOJPdKZUMRVmd
+cp8BitI7JY8sFqW2Ok2TWDrKUYnvJqjkVtUcRWWhFlWJvSaobNQaqmbEWDNN
+pQ6Ja87ZNJU1Jq6pXl+r4n/j3EYV6EZGdZ3tLQuMau8MwXZm1jhVOEdiB8Ex
+jcF6UbF6FNZ4tSVUkMPtqCC14CxnGVWV3k28l2iFTu+wrNACcdikD7Gi6cK4
+ggS44rm6CvFAGDUZ34EEVThuoSrNTJ24pIrKiKtg+wyjQtNdV8k3vkGSWKOd
+MpqyUHUVacrIh6nsMtKU1ZSFEk6U/1fCGqceDNVcVc3L2NXRbXIfFzRVpGov
+yX+06lQNRsVYQyUrRNXYidKlakaajIkoXaV8vSQKUVWBC71UMUOl7Rw0E8AV
+UdknuoQaZen/r2QBKitZVTONss5VskUNFeU3tWEUgwVA4Vn9K4ksEAp0xoNR
+UFbXIoIqf0sQVaidRNXFaOyr9EFoOPXl/myV97HlWbKqRpl76lnPri3K3rpP
+UUko83eOC1XGb0IzVArKOFgelqlyD5b1Ma5QvebM/ItUdvokVYS1VWEWFnVr
+lccCoyL3dp8FR0VVtG1qhhXnc1BhVfio0liDfg4LkAlnxVOZpnMzdqdcrGja
+sWMHLn4B6FERVg==
+       "], {{0, 99}, {150, 0}}, {0, 1},
+                  ColorFunction -> GrayLevel],
+                
+          BoxForm`ImageTag["Bit", ColorSpace -> Automatic, 
+           ImageSize -> Automatic, Interleaving -> None],
+                Selectable -> False],
+              BaseStyle -> "ImageGraphics",
+              ImageSize -> Magnification[1],
+              ImageSizeRaw -> {150, 99},
+              PlotRange -> {{0, 150}, {0, 99}}], 
+            TagBox[
+              TagBox["",
+                {"Bit", ColorSpace -> Automatic, 
+           ImageResolution -> Automatic, ImageSize -> Automatic, 
+           Interleaving -> 
+                   None, Magnification -> Automatic}],
+              "Image"]}], ",", "3"}], "]"}];
+
+Test[
+	CodeConcreteParseBox[box]
+	,
+With[{evaledAssoc = <||>},
+	ContainerNode[Box, {CallNode[{LeafNode[Symbol, 
+     "CUDADilation", <|Source -> {1, 1}|>]}, 
+   GroupNode[
+    GroupSquare, {LeafNode[Token`OpenSquare, 
+      "[", <|Source -> {1, 2}|>], 
+     InfixNode[
+      Comma, {InfixNode[
+        Times, {BoxNode[
+          GraphicsBox, {CodeNode[Null, 
+            TagBox[RasterBox[CompressedData["
+1:eJzt2O1twyAQBmDTTbpSR0gHyDadt82fRob7hPfFWOKkSgkcd09c2zH5fDy/
+Hh/HcXz//f0cO3bs2DEryivmdIk2Ku+YYQr1KSWVjjD5nVLJOJPdKZUMRVmd
+cp8BitI7JY8sFqW2Ok2TWDrKUYnvJqjkVtUcRWWhFlWJvSaobNQaqmbEWDNN
+pQ6Ja87ZNJU1Jq6pXl+r4n/j3EYV6EZGdZ3tLQuMau8MwXZm1jhVOEdiB8Ex
+jcF6UbF6FNZ4tSVUkMPtqCC14CxnGVWV3k28l2iFTu+wrNACcdikD7Gi6cK4
+ggS44rm6CvFAGDUZ34EEVThuoSrNTJ24pIrKiKtg+wyjQtNdV8k3vkGSWKOd
+MpqyUHUVacrIh6nsMtKU1ZSFEk6U/1fCGqceDNVcVc3L2NXRbXIfFzRVpGov
+yX+06lQNRsVYQyUrRNXYidKlakaajIkoXaV8vSQKUVWBC71UMUOl7Rw0E8AV
+UdknuoQaZen/r2QBKitZVTONss5VskUNFeU3tWEUgwVA4Vn9K4ksEAp0xoNR
+UFbXIoIqf0sQVaidRNXFaOyr9EFoOPXl/myV97HlWbKqRpl76lnPri3K3rpP
+UUko83eOC1XGb0IzVArKOFgelqlyD5b1Ma5QvebM/ItUdvokVYS1VWEWFnVr
+lccCoyL3dp8FR0VVtG1qhhXnc1BhVfio0liDfg4LkAlnxVOZpnMzdqdcrGja
+sWMHLn4B6FERVg==
+       "], {{0, 99}, {150, 0}}, {0, 1}, ColorFunction -> GrayLevel], 
+             BoxForm`ImageTag["Bit", ColorSpace -> Automatic, 
+              ImageSize -> Automatic, Interleaving -> None], 
+             Selectable -> False], evaledAssoc], 
+           CodeNode[Null, BaseStyle -> "ImageGraphics", evaledAssoc], 
+           CodeNode[Null, ImageSize -> Magnification[1], evaledAssoc], 
+           CodeNode[Null, ImageSizeRaw -> {150, 99}, evaledAssoc], 
+           CodeNode[Null, 
+            PlotRange -> {{0, 150}, {0, 99}}, evaledAssoc]}, <|Source -> {1, 
+             3, 1, 1, 1, 1}|>], 
+         LeafNode[Token`Fake`ImplicitTimes, 
+          "", <|Source -> After[{1, 3, 1, 1, 1, 1}]|>], 
+         BoxNode[TagBox, {BoxNode[
+            TagBox, {Missing["EmptyInput"], 
+             CodeNode[
+              Null, {"Bit", ColorSpace -> Automatic, 
+               ImageResolution -> Automatic, ImageSize -> Automatic, 
+               Interleaving -> None, 
+               Magnification -> Automatic}, evaledAssoc]}, <|Source -> {1, 3,
+                1, 1, 1, 2, 1}|>], 
+           CodeNode[Null, 
+            "Image", evaledAssoc]}, <|Source -> {1, 3, 1, 1, 1, 
+             2}|>]}, <|Source -> {1, 3, 1, 1}|>], 
+       LeafNode[Token`Comma, ",", <|Source -> {1, 3, 1, 2}|>], 
+       LeafNode[Integer, 
+        "3", <|Source -> {1, 3, 1, 3}|>]}, <|Source -> {1, 3}|>], 
+     LeafNode[Token`CloseSquare, 
+      "]", <|Source -> {1, 4}|>]}, <||>], <|Source -> {}|>]}, <||>]
+]
+	,
+	TestID->"Boxes-20220916-H7M0J2"
+]

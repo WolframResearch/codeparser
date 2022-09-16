@@ -1311,7 +1311,8 @@ Module[{ast},
     ErrorNode |
     SyntaxErrorNode | AbstractSyntaxErrorNode |
     GroupMissingCloserNode | UnterminatedGroupNode |
-    CallMissingCloserNode | UnterminatedCallNode] &&
+    CallMissingCloserNode | UnterminatedCallNode |
+    _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 ]
 
@@ -1319,7 +1320,8 @@ CodeSyntaxCSTQ[cst_] :=
   FreeQ[cst,
     ErrorNode |
     SyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode] &&
+    GroupMissingCloserNode | UnterminatedGroupNode |
+    _Missing] &&
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
 CodeStructuralSyntaxQ[code_] :=
@@ -1328,20 +1330,23 @@ Module[{ast},
   FreeQ[ast,
     SyntaxErrorNode | AbstractSyntaxErrorNode |
     GroupMissingCloserNode | UnterminatedGroupNode |
-    CallMissingCloserNode | UnterminatedCallNode] &&
+    CallMissingCloserNode | UnterminatedCallNode |
+    _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 ]
 
 CodeStructuralSyntaxCSTQ[cst_] :=
   FreeQ[cst,
     SyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode] &&
+    GroupMissingCloserNode | UnterminatedGroupNode |
+    _Missing] &&
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
 CodeStructuralSyntaxAggQ[agg_] :=
   FreeQ[agg,
     SyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode] &&
+    GroupMissingCloserNode | UnterminatedGroupNode |
+    _Missing] &&
   !MemberQ[Lookup[agg[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
 

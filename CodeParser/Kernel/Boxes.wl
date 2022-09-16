@@ -12,6 +12,7 @@ $PreserveRowBox
 toBeSpliced
 toBeSplicedDefinitely
 
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
@@ -126,18 +127,6 @@ Module[{aggregatedChildren},
 
 wrapToplevelCompoundExpression[ns_] := ns
 
-
-(*
-bug 426013
-*)
-CodeConcreteParseBox["", opts:OptionsPattern[]] :=
-Catch[
-Module[{},
-
-  ContainerNode[Box, {Missing["EmptyInput"]}, <|
-    SyntaxIssues -> {EncodingIssue["EmptyInput", "Empty input.", "Fatal", <|Source -> {}, ConfidenceLevel -> 1.|>]}
-  |>]
-]]
 
 CodeConcreteParseBox[box_, opts:OptionsPattern[]] :=
 Catch[
@@ -1017,7 +1006,12 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
   Has the effect of disabling NonASCIICharacter issues for boxes
   *)
   parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode, "EncodingMode" -> 1];
+
   If[FailureQ[parsed],
+    Throw[parsed]
+  ];
+
+  If[MissingQ[parsed],
     Throw[parsed]
   ];
 
@@ -2360,6 +2354,8 @@ Module[{processed},
 
 
 
+
+toStandardFormBoxes[Missing["EmptyInput"]] = ""
 
 toStandardFormBoxes[f_Failure] := f
 
