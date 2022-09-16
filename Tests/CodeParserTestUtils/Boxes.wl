@@ -252,8 +252,8 @@ rowBoxify[BinaryNode[PatternTest, {ErrorNode[Token`Error`ExpectedOperand, _, _],
 
 rowBoxify[node_LeafNode] := node
 
-rowBoxify[CallNode[head_, children_, data_]] :=
-  CallNode[rowBoxify[head], rowBoxify /@ children, data]
+rowBoxify[CallNode[head_, child_, data_]] :=
+  CallNode[rowBoxify[head], rowBoxify[child], data]
 
 
 rowBoxify[node_[tag_, children_, data_]] :=
