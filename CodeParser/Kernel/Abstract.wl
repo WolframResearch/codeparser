@@ -495,17 +495,24 @@ abstract[GroupNode[tag_, children_, data_]] :=
 
 
 
-abstract[PrefixBinaryNode[Integrate, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] := CallNode[ToNode[Integrate], {abstract[operand1], abstract[var]}, data]
+(*
+all PrefixBinaryNodes must be handled separately
+*)
 
-abstract[PrefixBinaryNode[ContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] := CallNode[ToNode[ContourIntegral], {abstract[operand1], abstract[var]}, data]
+abstract[PrefixBinaryNode[Integrate, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[Integrate], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[DoubleContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] := CallNode[ToNode[DoubleContourIntegral], {abstract[operand1], abstract[var]}, data]
+abstract[PrefixBinaryNode[ContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[ContourIntegral], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[ClockwiseContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] := CallNode[ToNode[ClockwiseContourIntegral], {abstract[operand1], abstract[var]}, data]
+abstract[PrefixBinaryNode[DoubleContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[DoubleContourIntegral], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[CounterClockwiseContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] := CallNode[ToNode[CounterClockwiseContourIntegral], {abstract[operand1], abstract[var]}, data]
+abstract[PrefixBinaryNode[ClockwiseContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[ClockwiseContourIntegral], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]] := CallNode[ToNode[op], {abstract[operand1], abstract[operand2]}, data]
+abstract[PrefixBinaryNode[CounterClockwiseContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[CounterClockwiseContourIntegral], {abstract[operand1], abstract[var]}, data]
 
 
 
