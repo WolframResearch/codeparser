@@ -552,7 +552,7 @@ Module[{cst, encoding, full, bytes, fileFormat, firstLineBehavior,
   FindFile also fails if in sandbox mode
   *)
   full = FindFile[f];
-  If[Failure[full],
+  If[FailureQ[full],
     Throw[Failure["FindFileFailed", <| "File" -> f |>]]
   ];
 
