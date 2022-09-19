@@ -200,6 +200,9 @@ nodeStructure[CallNode[LeafNode[Symbol, "SameQ", _], _, _]] =
 nodeStructure[CallNode[LeafNode[Symbol, "UnsameQ", _], _, _]] = 
   structure[InfixNode[UnsameQ, #, <||>]&, LeafNode[Token`EqualBangEqual, "=!=", <||>], Precedence`EqualBangEqual]
 
+nodeStructure[CallNode[LeafNode[Symbol, "MessageName", _], _, _]] = 
+  structure[InfixNode[MessageName, #, <||>]&, LeafNode[Token`ColonColon, "::", <||>], Precedence`ColonColon]
+
 
 
 (*
@@ -581,6 +584,9 @@ precCTR[InfixNode[SameQ, {first_, ___}, _]] := precedenceMin[precCTR[first], Pre
 
 precCTL[InfixNode[CompoundExpression, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`Semi]
 precCTR[InfixNode[CompoundExpression, {first_, ___}, _]] := precedenceMin[precCTR[first], Precedence`Semi]
+
+precCTL[InfixNode[MessageName, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`ColonColon]
+precCTR[InfixNode[MessageName, {first_, ___}, _]] := precedenceMin[precCTR[first], Precedence`ColonColon]
 
 precCTL[PrefixNode[Plus, _, _]] = Precedence`Prefix`Plus
 precCTR[PrefixNode[Plus, _, _]] = Precedence`Prefix`Plus
@@ -1217,6 +1223,7 @@ walk[
         "StringJoin" | "RightComposition" |
         "Composition" | "StringExpression" |
         "NonCommutativeMultiply" | "SameQ" | "UnsameQ" |
+        "MessageName" |
         (* inequality *)
         "Less" | "Greater" | "Equal" | "LessEqual" |
         "GreaterEqual" | "Unequal"
