@@ -256,16 +256,6 @@ Module[{nodeStrs},
   StringJoin[nodeStrs]
 ]]
 
-toInputFormString[UnterminatedGroupNode[op_, nodes_, data_]] :=
-Catch[
-Module[{nodeStrs},
-  nodeStrs = toInputFormString /@ nodes;
-  If[AnyTrue[nodeStrs, FailureQ],
-    Throw[SelectFirst[nodeStrs, FailureQ]]
-  ];
-  StringJoin[nodeStrs]
-]]
-
 
 toInputFormString[ContainerNode[Hold, nodes_, data_]] :=
 Module[{processed},

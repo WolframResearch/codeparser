@@ -207,7 +207,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   Rationale: there is not a useful purpose for returning the rest of the file, which may be massive.
   *)
-  UnterminatedGroupNode[tag, betterLeaves, data]
+  GroupMissingCloserNode[tag, betterLeaves, data]
 ]]
 
 

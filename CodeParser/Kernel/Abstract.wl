@@ -176,7 +176,6 @@ abstract[CompoundNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _
 
 
 abstract[CompoundNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]] := CallNode[ToNode[Slot], {abstract[arg]}, data]
-abstract[CompoundNode[Slot, {_, arg:LeafNode[Symbol, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
 abstract[CompoundNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
 
 
@@ -303,17 +302,6 @@ abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] :=
 all TernaryNodes must be handled separately
 *)
 
-(*
-handle  a ~f,~ b
-
-Cannot have  (f,)[a, b]
-*)
-abstract[TernaryNode[TernaryTilde, {left_, _, middle:InfixNode[Comma, _, _], _, right_}, data_]] :=
-With[{abstractedMiddle = abstract[middle]},
-  CallNode[AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, abstractedMiddle[[2]], abstractedMiddle[[3]]], {
-    abstract[left], abstract[right]}, data]
-]
-
 abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] :=
   CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
 
@@ -359,24 +347,19 @@ They are:
 
 f [ ]
 
-f [ [ ] ]
-
 f ::[ ]
 
 f \[LeftDoubleBracket] \[RightDoubleBracket]
 *)
 
-abstract[CallNode[op_, child:GroupNode[GroupSquare, { _, GroupNode[GroupSquare, _, _], _ }, _], data1_]] :=
-  abstractCallNode[CallNode[op, child, data1]]
+abstract[CallNode[op_, child:GroupNode[GroupSquare, _, _], data_]] :=
+  abstractCallNode[CallNode[op, child, data]]
 
-abstract[CallNode[op_, child:GroupNode[GroupSquare, _, _], data1_]] :=
-  abstractCallNode[CallNode[op, child, data1]]
+abstract[CallNode[op_, child:GroupNode[GroupTypeSpecifier, _, _], data_]] :=
+  abstractCallNode[CallNode[op, child, data]]
 
-abstract[CallNode[op_, child:GroupNode[GroupTypeSpecifier, _, _], data1_]] :=
-  abstractCallNode[CallNode[op, child, data1]]
-
-abstract[CallNode[op_, child:GroupNode[GroupDoubleBracket, _, _], data1_]] :=
-  abstractCallNode[CallNode[op, child, data1]]
+abstract[CallNode[op_, child:GroupNode[GroupDoubleBracket, _, _], data_]] :=
+  abstractCallNode[CallNode[op, child, data]]
 
 
 (*
@@ -411,18 +394,6 @@ abstract[CallNode[head_, child:GroupMissingCloserNode[GroupTypeSpecifier, _, _],
 
 abstract[CallNode[head_, child:GroupMissingCloserNode[GroupDoubleBracket, _, _], data_]] :=
   abstractCallNode[CallMissingCloserNode[head, child, data]]
-
-(*
-UnterminatedGroupNode does NOT get abstracted
-*)
-abstract[CallNode[head_, child:UnterminatedGroupNode[GroupSquare, _, _], data_]] :=
-  abstractCallNode[UnterminatedCallNode[head, child, data]]
-
-abstract[CallNode[head_, child:UnterminatedGroupNode[GroupTypeSpecifier, _, _], data_]] :=
-  abstractCallNode[UnterminatedCallNode[head, child, data]]
-
-abstract[CallNode[head_, child:UnterminatedGroupNode[GroupDoubleBracket, _, _], data_]] :=
-  abstractCallNode[UnterminatedCallNode[head, child, data]]
 
 
 
@@ -469,11 +440,6 @@ Missing closers
 
 abstract[GroupMissingCloserNode[tag_, children_, data_]] :=
   abstractGroupNode[GroupMissingCloserNode[tag, children, data]]
-
-
-
-abstract[n:UnterminatedGroupNode[_, _, _]] :=
-  n
 
 
 
@@ -840,7 +806,13 @@ Module[{flattenTimesQuirk},
         ]
       ,
       InfixNode[Times, _, _],
+        (*
+        I believe this to be dead code, but just in case it is alive,
+        return a Failure
+
         flattenTimes[#[[2, ;;;;2]], data]
+        *)
+        Failure["InternalUnhandled", <| "Function" -> flattenTimes, "Arguments" -> {nodes, data} |>]
       ,
       (*
       This rule for BinaryNode[Divide] illustrates the difference between the FE and kernel
@@ -1160,13 +1132,13 @@ vectorInequalityAffinity[GreaterEqualLess] := False
 vectorInequalityAffinity[GreaterFullEqual] := False
 vectorInequalityAffinity[GreaterGreater] := False
 vectorInequalityAffinity[GreaterLess] := False
-vectorInequalityAffinity[GreaterSlantEqual] := False
+(* vectorInequalityAffinity[GreaterSlantEqual] := False *)
 vectorInequalityAffinity[GreaterTilde] := False
 vectorInequalityAffinity[LessEqualGreater] := False
 vectorInequalityAffinity[LessFullEqual] := False
 vectorInequalityAffinity[LessGreater] := False
 vectorInequalityAffinity[LessLess] := False
-vectorInequalityAffinity[LessSlantEqual] := False
+(* vectorInequalityAffinity[LessSlantEqual] := False *)
 vectorInequalityAffinity[LessTilde] := False
 vectorInequalityAffinity[NestedGreaterGreater] := False
 vectorInequalityAffinity[NestedLessLess] := False
@@ -1203,7 +1175,7 @@ abstractComma[InfixNode[Comma, children_, data_]] :=
 
 
 abstractCompoundExpressionChild[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
-    LeafNode[Symbol, "Null", data]
+  LeafNode[Symbol, "Null", data]
 
 abstractCompoundExpressionChild[c_] :=
   abstract[c]
@@ -1376,7 +1348,6 @@ Module[{children, abstractedChildren, issues, data},
 
   GroupMissingCloserNode[tag, abstractedChildren, data]
 ]
-
 
 abstractGroupNode[GroupMissingOpenerNode[tag_, childrenIn_, dataIn_]] :=
 Module[{children, abstractedChildren, issues, data},

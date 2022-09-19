@@ -25,8 +25,6 @@ Collapse CallNode[{op}, xxx] to CallNode[op, xxx]
 
 *)
 
-aggregate[Null] := Null
-
 aggregate[LeafNode[Whitespace | Token`Comment | Token`Newline | Token`Boxes`MultiWhitespace, _, _]] := Nothing
 
 aggregateButNotToplevelNewlines[LeafNode[Whitespace | Token`Comment | Token`Boxes`MultiWhitespace, _, _]] := Nothing
@@ -207,8 +205,6 @@ Remove parens
 
 *)
 
-deparen[Null] := Null
-
 deparen[l_LeafNode] := l
 
 
@@ -298,9 +294,6 @@ linearize0[AbstractSyntaxErrorNode[_, fs_List, _]] :=
 
 linearize0[CallMissingCloserNode[head_List, fs_List, _]] :=
   {linearize0 /@ head, linearize0 /@ fs}
-
-linearize0[UnterminatedCallNode[head_List, f_, _]] :=
-  {linearize0 /@ head, linearize0[f]}
 
 
 (*

@@ -1051,20 +1051,6 @@ freePatterns[AbstractSyntaxErrorNode[_, _, _]] :=
   {}
 
 
-walk[UnterminatedCallNode[_, _, _], pred_] :=
-  {}
-
-freePatterns[UnterminatedCallNode[_, _, _]] := 
-  {}
-
-
-walk[UnterminatedGroupNode[_, _, _], pred_] :=
-  {}
-
-freePatterns[UnterminatedGroupNode[_, _, _]] := 
-  {}
-
-
 walk[GroupMissingCloserNode[_, _, _], pred_] :=
   {}
 

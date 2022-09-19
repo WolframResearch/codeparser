@@ -731,8 +731,8 @@ Module[{head, part, data, issues, partData},
   CallMissingCloserNode[head, part[[2]], data]
 ]
 
-abstractCallNode[UnterminatedCallNode[headIn_, partIn:UnterminatedGroupNode[GroupSquare, _, _], dataIn_]] :=
-Module[{head, part, data, issues},
+abstractCallNode[CallMissingCloserNode[headIn_, partIn:GroupMissingCloserNode[GroupTypeSpecifier, _, _], dataIn_]] :=
+Module[{head, part, data, issues, partData},
   head = headIn;
   part = partIn;
   data = dataIn;
@@ -740,21 +740,41 @@ Module[{head, part, data, issues},
   issues = {};
 
   head = abstract[head];
-  (*
+  
   part = abstractGroupNode[part];
   partData = part[[3]];
-  *)
 
-  (*
   issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
   If[issues != {},
     issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
     AssociateTo[data, AbstractSyntaxIssues -> issues];
   ];
-  *)
 
-  UnterminatedCallNode[head, part[[2]], data]
+  CallMissingCloserNode[CallNode[ToNode[System`TypeSpecifier], {head}, <||>], part[[2]], data]
+]
+
+abstractCallNode[CallMissingCloserNode[headIn_, partIn:GroupMissingCloserNode[GroupDoubleBracket, _, _], dataIn_]] :=
+Module[{head, part, data, issues, partData},
+  head = headIn;
+  part = partIn;
+  data = dataIn;
+
+  issues = {};
+
+  head = abstract[head];
+  
+  part = abstractGroupNode[part];
+  partData = part[[3]];
+
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
+
+  CallMissingCloserNode[ToNode[Part], {head} ~Join~ part[[2]], data]
 ]
 
 

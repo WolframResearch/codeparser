@@ -2293,16 +2293,6 @@ Module[{},
   RowBox[nodes]
 ]]
 
-toStandardFormBoxes[UnterminatedGroupNode[op_, nodes_, data_]] :=
-Catch[
-Module[{nodeBoxes},
-  nodeBoxes = toStandardFormBoxes /@ nodes;
-  If[AnyTrue[nodeBoxes, FailureQ],
-    Throw[SelectFirst[nodeBoxes, FailureQ]]
-  ];
-  RowBox[nodeBoxes]
-]]
-
 toStandardFormBoxes[GroupMissingCloserNode[op_, nodes_, data_]] :=
 Catch[
 Module[{nodeBoxes},

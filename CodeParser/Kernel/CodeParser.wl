@@ -234,7 +234,6 @@ gets parsed as UnterminatedGroupNode[ { ]
 
 *)
 GroupMissingCloserNode
-UnterminatedGroupNode
 UnterminatedGroupNeedsReparseNode
 (*
 GroupMissingOpenerNode is only used in Boxes
@@ -242,7 +241,6 @@ GroupMissingOpenerNode is only used in Boxes
 GroupMissingOpenerNode
 AbstractSyntaxErrorNode
 CallMissingCloserNode
-UnterminatedCallNode
 
 
 (*
@@ -1311,7 +1309,7 @@ Module[{ast},
     ErrorNode |
     SyntaxErrorNode | AbstractSyntaxErrorNode |
     GroupMissingCloserNode | UnterminatedGroupNode |
-    CallMissingCloserNode | UnterminatedCallNode |
+    CallMissingCloserNode |
     _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 ]
@@ -1330,7 +1328,7 @@ Module[{ast},
   FreeQ[ast,
     SyntaxErrorNode | AbstractSyntaxErrorNode |
     GroupMissingCloserNode | UnterminatedGroupNode |
-    CallMissingCloserNode | UnterminatedCallNode |
+    CallMissingCloserNode |
     _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 ]
