@@ -15,6 +15,21 @@ TestMatch[
 ]
 
 
+TestMatch[
+	CodeParse[" ::[x] "]
+	,
+	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`ColonColonOpenSquare, {LeafNode[Token`ColonColonOpenSquare, "::[", <|Source -> {{1, 2}, {1, 5}}|>], LeafNode[Symbol, "x", <|Source -> {{1, 5}, {1, 6}}|>], LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 2}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
+	,
+	TestID->"AbstractSyntaxErrorNodes-20220917-G3L5M1"
+]
+
+TestMatch[
+	CodeParse[" \\[LeftDoubleBracket]x\\[RightDoubleBracket] "]
+	,
+	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, {LeafNode[Token`LongName`LeftDoubleBracket, "\\[LeftDoubleBracket]", <|Source -> {{1, 2}, {1, 22}}|>], LeafNode[Symbol, "x", <|Source -> {{1, 22}, {1, 23}}|>], LeafNode[Token`LongName`RightDoubleBracket, "\\[RightDoubleBracket]", <|Source -> {{1, 23}, {1, 44}}|>]}, <|Source -> {{1, 2}, {1, 44}}|>]}, <|Source -> {{1, 1}, {1, 45}}|>]
+	,
+	TestID->"AbstractSyntaxErrorNodes-20220917-C4T9X0"
+]
 
 (*
 OpenParen:
@@ -37,7 +52,7 @@ GroupMissingCloser:
 TestMatch[
 	CodeParse["{"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[List, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[List, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-M0B3Z5"
 ]
@@ -46,7 +61,7 @@ TestMatch[
 TestMatch[
 	CodeParse["<|"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[Association, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[Association, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-U0L5P6"
 ]
@@ -54,7 +69,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftAngleBracket]"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[AngleBracket, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[AngleBracket, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-X7G1G5"
 ]
@@ -63,7 +78,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftCeiling]"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[Ceiling, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[Ceiling, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-Q4A4B9"
 ]
@@ -72,7 +87,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftFloor]"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[Floor, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[Floor, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-C4T4D9"
 ]
@@ -80,7 +95,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftDoubleBracket]"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[GroupDoubleBracket, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[GroupDoubleBracket, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-S1C3U4"
 ]
@@ -88,7 +103,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftBracketingBar]"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[BracketingBar, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[BracketingBar, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-H0B3W9"
 ]
@@ -96,7 +111,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftDoubleBracketingBar]"]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[DoubleBracketingBar, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[DoubleBracketingBar, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-R4A5I7"
 ]
@@ -104,7 +119,7 @@ TestMatch[
 TestMatch[
 	CodeParse["("]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[GroupParen, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[GroupParen, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-K6C7J1"
 ]
@@ -112,7 +127,7 @@ TestMatch[
 TestMatch[
 	CodeParse["["]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[GroupSquare, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[GroupSquare, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-Y0H1P1"
 ]

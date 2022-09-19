@@ -1196,3 +1196,166 @@ sWMHLn4B6FERVg==
 	,
 	TestID->"Boxes-20220916-H7M0J2"
 ]
+
+
+
+
+
+cst = CodeConcreteParseBox[RowBox[{"a", "}"}]]
+
+agg = CodeParser`Abstract`Aggregate[cst]
+
+ast = CodeParser`Abstract`Abstract[agg]
+
+Test[
+	ast
+	,
+	ContainerNode[Box, {
+		GroupMissingOpenerNode[List, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-S2F0I7"
+]
+
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 2}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-K5B6F0"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "f", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-M5Q4S4"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 4}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-C3X9B3"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-N6B4D4"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "f"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], LeafNode[Symbol, "f", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-K5Q4Y8"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "f", "~"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 2}|>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 3}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-O5U0L5"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "f", "~", "b"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 2}|>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], LeafNode[Symbol, "b", <|Source -> {1, 4}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-B0W6B8"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "b"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], LeafNode[Symbol, "b", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-G4G5Q5"
+]
+
+
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 6}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-U2T0V7"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "c", <|Source -> {1, 7}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-E6P8D8"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 8}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-X9S9P2"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-U4F5R7"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 10}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-K9S2V4"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e"}]]]]
+	,
+	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], LeafNode[Symbol, "e", <|Source -> {1, 11}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-X3Y1H3"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e", "~"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "e", <|Source -> {1, 11}|>], {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 12}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-W1A7X3"
+]
+
+Test[
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e", "~", "f"}]]]]
+	,
+	ContainerNode[Box, {CallNode[LeafNode[Symbol, "e", <|Source -> {1, 11}|>], {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], LeafNode[Symbol, "f", <|Source -> {1, 13}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220919-G2G8R3"
+]
+
+
+
+
+
+
+
+
+
+
+
+

@@ -267,41 +267,74 @@ Test[
 ]
 
 Test[
-	"\\[CountourIntegral] a \\[DifferentialD] x"
+	CodeParse["\\[ContourIntegral] a \\[DifferentialD] x"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "ContourIntegral", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 20}, {1, 21}}|>],
+			LeafNode[Symbol, "x", <|Source -> {{1, 39}, {1, 40}}|>]}, <|Source -> {{1, 1}, {1, 40}}|>]}, <|Source -> {{1, 1}, {1, 40}}|>]
 	,
 	TestID->"Weird-20220821-D0P3C2"
 ]
 
 Test[
-	"\\[DoubleCountourIntegral] a \\[DifferentialD] x"
+	CodeParse["\\[DoubleContourIntegral] a \\[DifferentialD] x"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "DoubleContourIntegral", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 26}, {1, 27}}|>],
+			LeafNode[Symbol, "x", <|Source -> {{1, 45}, {1, 46}}|>]}, <|Source -> {{1, 1}, {1, 46}}|>]}, <|Source -> {{1, 1}, {1, 46}}|>]
 	,
 	TestID->"Weird-20220821-H4S8N6"
 ]
 
 Test[
-	"\\[ClockwiseCountourIntegral] a \\[DifferentialD] x"
+	CodeParse["\\[ClockwiseContourIntegral] a \\[DifferentialD] x"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "ClockwiseContourIntegral", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 29}, {1, 30}}|>],
+			LeafNode[Symbol, "x", <|Source -> {{1, 48}, {1, 49}}|>]}, <|Source -> {{1, 1}, {1, 49}}|>]}, <|Source -> {{1, 1}, {1, 49}}|>]
 	,
 	TestID->"Weird-20220821-C2P4Y0"
 ]
 
 Test[
-	"\\[CounterClockwiseCountourIntegral] a \\[DifferentialD] x"
+	CodeParse["\\[CounterClockwiseContourIntegral] a \\[DifferentialD] x"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "CounterClockwiseContourIntegral", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 36}, {1, 37}}|>],
+			LeafNode[Symbol, "x", <|Source -> {{1, 55}, {1, 56}}|>]}, <|Source -> {{1, 1}, {1, 56}}|>]}, <|Source -> {{1, 1}, {1, 56}}|>]
 	,
 	TestID->"Weird-20220821-X2S1Q0"
 ]
+
+
+
+
+Test[
+	CodeParse["a \\[HermitianConjugate]"]
+	,
+	ContainerNode[String, {CallNode[
+   LeafNode[Symbol, 
+    "ConjugateTranspose", <||>], {LeafNode[Symbol, 
+     "a", <|Source -> {{1, 1}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 
+       24}}|>]}, <|Source -> {{1, 1}, {1, 24}}|>]
+	,
+	TestID->"Weird-20220917-O2D5Y6"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+

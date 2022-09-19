@@ -831,7 +831,7 @@ Test[
 	CodeConcreteParse["<|\t?"]
 	,
 	ContainerNode[String, {
-		UnterminatedGroupNode[Association, {
+		GroupMissingCloserNode[Association, {
 			LeafNode[Token`LessBar, "<|", <|Source -> {{1, 1}, {1, 3}}|>],
 			LeafNode[Whitespace, "\t", <|Source -> {{1, 3}, {1, 4}}|>],
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>],

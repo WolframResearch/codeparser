@@ -2,6 +2,7 @@
 
 TestSuite[{
 	"Abstract.mt",
+	"AbstractCallNode.mt",
 	"AbstractSyntaxErrorNodes.mt",
 	"AbstractSyntaxIssues.mt",
 	"Arrows.mt",
@@ -16,8 +17,10 @@ TestSuite[{
 	"Error.mt",
 	"Errors.mt",
 	"File.mt",
+	"Inequality.mt",
 	"LineContinuations.mt",
 	"Parse.mt",
+	"Quirks.mt",
 	"SafeString.mt",
 	"Scoping.mt",
 	"Span.mt",

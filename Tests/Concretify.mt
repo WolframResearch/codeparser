@@ -605,3 +605,440 @@ Test[
 	,
 	TestID->"Concretify-20220809-G0E2O5"
 ]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a[[]]"]]]
+	,
+	"a[[]]"
+	,
+	TestID->"Concretify-20220917-T5M2N2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a[[1]]"]]]
+	,
+	"a[[1]]"
+	,
+	TestID->"Concretify-20220917-F3J2S5"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a[[1,2]]"]]]
+	,
+	"a[[1,2]]"
+	,
+	TestID->"Concretify-20220917-A3T3O2"
+]
+
+
+
+
+
+
+
+
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";; ;;"]]]
+	,
+	"(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-E7L2P8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;"]]]
+	,
+	"(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-H7A3J2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;"]]]
+	,
+	"a;;All"
+	,
+	TestID->"Concretify-20220917-W8X5N9"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;b"]]]
+	,
+	"a;;b"
+	,
+	TestID->"Concretify-20220917-Y4C5W5"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;b"]]]
+	,
+	"1;;b"
+	,
+	TestID->"Concretify-20220917-Y3Y7F1"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;;;"]]]
+	,
+	"(a;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-O3K5T9"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;"]]]
+	,
+	"(1;;a)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-K3L6G8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;a"]]]
+	,
+	"1;;All;;a"
+	,
+	TestID->"Concretify-20220917-P4H0G3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;b"]]]
+	,
+	"1;;a;;b"
+	,
+	TestID->"Concretify-20220917-Y8A2N2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;;;b"]]]
+	,
+	"a;;All;;b"
+	,
+	TestID->"Concretify-20220917-W3Z3S2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;b;;c"]]]
+	,
+	"a;;b;;c"
+	,
+	TestID->"Concretify-20220917-T4K8O8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;"]]]
+	,
+	"(1;;All)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-N5W8F1"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;b;;c;;"]]]
+	,
+	"(1;;b;;c)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-Z2M2U1"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;b;;c;;d"]]]
+	,
+	"(a;;b;;c)*(1;;d)"
+	,
+	TestID->"Concretify-20220917-U6Z3Z1"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;;;;;"]]]
+	,
+	"(a;;All)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-G3A5U6"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;;;"]]]
+	,
+	"(1;;a)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-M8I2B3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;a;;"]]]
+	,
+	"(1;;All;;a)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-M3V3H7"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;a"]]]
+	,
+	"(1;;All)*(1;;All;;a)"
+	,
+	TestID->"Concretify-20220917-G5I0S8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;;;"]]]
+	,
+	"(1;;All)*(1;;All)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-G2Q3F4"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;;;;;;;"]]]
+	,
+	"(a;;All)*(1;;All)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-Z6Z4T1"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;;;;;"]]]
+	,
+	"(1;;a)*(1;;All)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-D8Q1A8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;a;;;;"]]]
+	,
+	"(1;;All;;a)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-U0M1P2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;a;;"]]]
+	,
+	"(1;;All)*(1;;All;;a)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-J7E9D4"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;;;a"]]]
+	,
+	"(1;;All)*(1;;All)*(1;;All;;a)"
+	,
+	TestID->"Concretify-20220917-I3D7O9"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;;;;;b"]]]
+	,
+	"(a;;All)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-H2T9N9"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;;;b"]]]
+	,
+	"(1;;a)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-T8S5U6"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;a;;b"]]]
+	,
+	"(1;;All;;a)*(1;;b)"
+	,
+	TestID->"Concretify-20220917-L7T9R0"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;a"]]]
+	,
+	"(1;;All)*(1;;All;;a)"
+	,
+	TestID->"Concretify-20220917-K1D0M7"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;;;b"]]]
+	,
+	"(1;;All)*(1;;All)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-T1T8Y4"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;;;;;;;b"]]]
+	,
+	"(a;;All)*(1;;All)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-L5F6R3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;;;;;b"]]]
+	,
+	"(1;;a)*(1;;All)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-W4Q6S4"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;a;;;;b"]]]
+	,
+	"(1;;All;;a)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-M5R6S7"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;a;;b"]]]
+	,
+	"(1;;All)*(1;;All;;a)*(1;;b)"
+	,
+	TestID->"Concretify-20220917-G6Z1J0"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;;;a"]]]
+	,
+	"(1;;All)*(1;;All)*(1;;All;;a)"
+	,
+	TestID->"Concretify-20220917-A2T5N5"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;;;b"]]]
+	,
+	"(1;;All)*(1;;All)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-J9D8J2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;c;;;;;;b"]]]
+	,
+	"(a;;c)*(1;;All)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-J5H0O7"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;c;;;;b"]]]
+	,
+	"(1;;a;;c)*(1;;All;;b)"
+	,
+	TestID->"Concretify-20220917-W5A0B6"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;a;;c;;b"]]]
+	,
+	"(1;;All;;a)*(1;;c;;b)"
+	,
+	TestID->"Concretify-20220917-G7I0M1"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["c;;;;;;a;;b"]]]
+	,
+	"(c;;All)*(1;;All;;a)*(1;;b)"
+	,
+	TestID->"Concretify-20220917-L1C0M2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["{ ;;\n;; }"]]]
+	,
+	"{(1;;All)*(1;;All)}"
+	,
+	TestID->"Concretify-20220917-W3H2W6"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["{ ;;\n;;a }"]]]
+	,
+	"{1;;All;;a}"
+	,
+	TestID->"Concretify-20220917-A8P1E5"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;;;;;;;"]]]
+	,
+	"(1;;All)*(1;;All)*(1;;All)*(1;;All)"
+	,
+	TestID->"Concretify-20220917-G6R3O0"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;b;;c;;d;;e"]]]
+	,
+	"(a;;b;;c)*(1;;d;;e)"
+	,
+	TestID->"Concretify-20220917-S5H7T6"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;b;;c;;d;;e;;f"]]]
+	,
+	"(a;;b;;c)*(1;;d;;e)*(1;;f)"
+	,
+	TestID->"Concretify-20220917-A7D1V0"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;b;;c;;d;;e;;f;;g"]]]
+	,
+	"(a;;b;;c)*(1;;d;;e)*(1;;f;;g)"
+	,
+	TestID->"Concretify-20220917-U0Q5Q3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;b;;c;;d;;e;;f;;g;;h"]]]
+	,
+	"(a;;b;;c)*(1;;d;;e)*(1;;f;;g)*(1;;h)"
+	,
+	TestID->"Concretify-20220917-N5C8T5"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;;;;"]]]
+	,
+	"(a;;All)*(1;;All);"
+	,
+	TestID->"Concretify-20220917-Q4R1J4"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["b;;a;;;"]]]
+	,
+	"(b;;a)*(1;;All);"
+	,
+	TestID->"Concretify-20220917-I7G4K5"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse[";;a;;;"]]]
+	,
+	"(1;;a)*(1;;All);"
+	,
+	TestID->"Concretify-20220917-F0L3H3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;;!"]]]
+	,
+	"a;;(!)"
+	,
+	TestID->"Concretify-20220917-F6A2V8"
+]
+
+
+
+
+

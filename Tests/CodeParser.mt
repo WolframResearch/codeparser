@@ -19,7 +19,10 @@ location = "Location" /. PacletInformation["CodeParser"]
 
 pacletInfoFile = FileNameJoin[{location, "PacletInfo.wl"}]
 
-Block[{$ContextPath = {"System`"}, $Context = "Global`"},
+Block[{$ContextPath = {"PacletManager`", "System`"}, $Context = "Global`"},
+	(*
+	put PacletManager` on $ContextPath to guarantee using PacletManager`Paclet symbol
+	*)
 	pacletInfo = Get[pacletInfoFile];
 ]
 

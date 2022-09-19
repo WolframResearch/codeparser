@@ -131,6 +131,16 @@ Test[
 ]
 
 Test[
+	"-(1)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220917-O3C2Z9"
+]
+
+Test[
 	"x * 2/3"
 	,
 	Null
@@ -272,16 +282,6 @@ Test[
 ]
 
 Test[
-	"10^^2.Pi"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190821-P0C8P3"
-]
-
-Test[
 	CodeParse["10^^2.Pi"]
 	,
 	ContainerNode[String, {
@@ -301,21 +301,25 @@ Test[
 ]
 
 Test[
-	"123`.xxx"
+	CodeParse["123`.xxx"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Dot", <||>], {
+			LeafNode[Real, "123`", <|Source -> {{1, 1}, {1, 5}}|>],
+			LeafNode[Symbol, "xxx", <|Source -> {{1, 6}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]}, <|
+		
+		SyntaxIssues -> {
+			FormatIssue["Ambiguous", "Ambiguous syntax.", "Formatting", <|Source -> {{1, 5}, {1, 5}}, ConfidenceLevel -> 1., CodeActions -> {CodeAction["Insert space", InsertText, <|Source -> {{1, 5}, {1, 5}}, "InsertionText" -> " "|>]}|>]}, Source -> {{1, 1}, {1, 9}}|>]
 	,
 	TestID->"Parse-20190821-N5B9V0"
 ]
 
 Test[
-	"123``.xxx"
+	CodeParse["123``.xxx"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		ErrorNode[Token`Error`Number, "123``.", <|Source -> {{1, 1}, {1, 7}}|>],
+		LeafNode[Symbol, "xxx", <|Source -> {{1, 7}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]
 	,
 	TestID->"Parse-20190821-N2R2A4"
 ]
@@ -323,32 +327,37 @@ Test[
 
 
 Test[
-	"1`.+2"
+	CodeParse["1`.+2"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		ErrorNode[Token`Error`Number, "1`.+", <|Source -> {{1, 1}, {1, 5}}|>], LeafNode[Integer, "2", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"Parse-20191116-N2A8P4"
 ]
 
 
 Test[
-	"8`."
+	CodeParse["8`."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Dot", <||>], {
+			LeafNode[Real, "8`", <|Source -> {{1, 1}, {1, 3}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|
+		
+		SyntaxIssues -> {
+			FormatIssue["Ambiguous", "Ambiguous syntax.", "Formatting", <|Source -> {{1, 3}, {1, 3}}, ConfidenceLevel -> 1., CodeActions -> {CodeAction["Insert space", InsertText, <|Source -> {{1, 3}, {1, 3}}, "InsertionText" -> " "|>]}|>]}, Source -> {{1, 1}, {1, 4}}|>]
 	,
 	TestID->"Parse-20191116-T7X2G0"
 ]
 
 Test[
-	"8`+."
+	CodeParse["8`+."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		ErrorNode[Token`Error`Number, "8`+.", <|Source -> {{1, 1}, {1, 5}}|>]}, <|
+		
+		SyntaxIssues -> {
+			SyntaxIssue["UnexpectedSign", "The real number has a ``+`` sign in its precision specification.", "Warning", <|Source -> {{1, 3}, {1, 3}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"This is usually unintentional."}|>]}, Source -> {{1, 1}, {1, 5}}|>]
 	,
 	TestID->"Parse-20191116-O7H4T2"
 ]
@@ -389,11 +398,9 @@ Test[
 ]
 
 Test[
-	"1`+.a"
+	CodeParse["1`+.a"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {ErrorNode[Token`Error`Number, "1`+.", <|Source -> {{1, 1}, {1, 5}}|>], LeafNode[Symbol, "a", <|Source -> {{1, 5}, {1, 6}}|>]}, <|SyntaxIssues -> {SyntaxIssue["UnexpectedSign", "The real number has a ``+`` sign in its precision specification.", "Warning", <|Source -> {{1, 3}, {1, 3}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"This is usually unintentional."}|>]}, Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"Parse-20191116-D2C6O4"
 ]
@@ -409,11 +416,10 @@ Test[
 ]
 
 Test[
-	"2^^."
+	CodeParse["2^^."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		ErrorNode[Token`Error`Number, "2^^.", <|Source -> {{1, 1}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]
 	,
 	TestID->"Parse-20200112-K5W6R9"
 ]
@@ -601,11 +607,9 @@ Test[
 ]
 
 Test[
-	"2^^.."
+	CodeParse["2^^.."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {ErrorNode[Token`Error`Number, "2^^", <|Source -> {{1, 1}, {1, 4}}|>], CallNode[LeafNode[Symbol, "Repeated", <||>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 4}, {1, 6}}|>]}, <|SyntaxIssues -> {FormatIssue["Ambiguous", "Ambiguous syntax.", "Formatting", <|Source -> {{1, 4}, {1, 4}}, ConfidenceLevel -> 1., CodeActions -> {CodeAction["Insert space", InsertText, <|Source -> {{1, 4}, {1, 4}}, "InsertionText" -> " "|>]}|>]}, Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"Parse-20200404-S6W5R8"
 ]
@@ -619,6 +623,67 @@ Test[
 	,
 	TestID->"Parse-20200531-W0B6N6"
 ]
+
+Test[
+	"-a * b / c d \\[InvisibleTimes] e \\[Times] f"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220919-B6S0H5"
+]
+
+Test[
+	"-(2) * b / c d \\[InvisibleTimes] e \\[Times] f"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220919-G9E3V7"
+]
+
+Test[
+	"-(2.3) * b / c d \\[InvisibleTimes] e \\[Times] f"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220919-Z4R9M3"
+]
+
+Test[
+	"-(2.3) * (b / c) d \\[InvisibleTimes] e \\[Times] f"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220919-O7A9U4"
+]
+
+Test[
+	"-(2.3) * b / (c d) \\[InvisibleTimes] e \\[Times] f"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220919-C5C2G1"
+]
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2291,21 +2356,20 @@ Test[
 
 
 Test[
-	"f[,1]"
+	CodeParse["f[,1]"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>], {
+			LeafNode[Symbol, "Null", <|Source -> {{1, 3}, {1, 3}}|>],
+			LeafNode[Integer, "1", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"Parse-20190920-R5Q7N8"
 ]
 
 Test[
-	"f[,1,2]"
+	CodeParse["f[,1,2]"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {CallNode[LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>], {LeafNode[Symbol, "Null", <|Source -> {{1, 3}, {1, 3}}|>], LeafNode[Integer, "1", <|Source -> {{1, 4}, {1, 5}}|>], LeafNode[Integer, "2", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
 	,
 	TestID->"Parse-20190920-T8N2C7"
 ]
@@ -2683,11 +2747,9 @@ Test[
 ]
 
 Test[
-	" a ~f,~ b "
+	CodeParse[" a ~f,~ b "]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {SyntaxErrorNode[SyntaxError`ExpectedTilde, {LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>], CallNode[LeafNode[Symbol, "CodeParser`Comma", <||>], {LeafNode[Symbol, "f", <|Source -> {{1, 5}, {1, 6}}|>], SyntaxErrorNode[SyntaxError`ExpectedTilde, {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>], LeafNode[Symbol, "b", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 7}, {1, 10}}|>]}, <|Source -> {{1, 5}, {1, 10}}|>]}, <|Source -> {{1, 2}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
 	,
 	TestID->"Parse-20200121-C5U1S2"
 ]
@@ -2856,11 +2918,9 @@ Test[
 ]
 
 Test[
-	"a/:b=c|d:.."
+	CodeParse["a/:b=c|d:.."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {CallNode[LeafNode[Symbol, "TagSet", <||>], {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>], CallNode[LeafNode[Symbol, "Alternatives", <||>], {LeafNode[Symbol, "c", <|Source -> {{1, 6}, {1, 7}}|>], CallNode[LeafNode[Symbol, "Pattern", <||>], {LeafNode[Symbol, "d", <|Source -> {{1, 8}, {1, 9}}|>], CallNode[LeafNode[Symbol, "Repeated", <||>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 10}, {1, 10}}|>]}, <|Source -> {{1, 10}, {1, 12}}|>]}, <|Source -> {{1, 8}, {1, 12}}|>]}, <|Source -> {{1, 6}, {1, 12}}|>]}, <|Source -> {{1, 1}, {1, 12}}, "Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]}, "AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}|>]}, <|Source -> {{1, 1}, {1, 12}}|>]
 	,
 	TestID->"Parse-20200313-E1G3T9"
 ]
@@ -2876,11 +2936,9 @@ Test[
 ]
 
 Test[
-	"a/:b:=c|d:.."
+	CodeParse["a/:b:=c|d:.."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {CallNode[LeafNode[Symbol, "TagSetDelayed", <||>], {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>], CallNode[LeafNode[Symbol, "Alternatives", <||>], {LeafNode[Symbol, "c", <|Source -> {{1, 7}, {1, 8}}|>], CallNode[LeafNode[Symbol, "Pattern", <||>], {LeafNode[Symbol, "d", <|Source -> {{1, 9}, {1, 10}}|>], CallNode[LeafNode[Symbol, "Repeated", <||>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 11}, {1, 11}}|>]}, <|Source -> {{1, 11}, {1, 13}}|>]}, <|Source -> {{1, 9}, {1, 13}}|>]}, <|Source -> {{1, 7}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}, "Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]}, "AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}|>]}, <|Source -> {{1, 1}, {1, 13}}|>]
 	,
 	TestID->"Parse-20200313-C0G3S6"
 ]
@@ -2906,21 +2964,17 @@ Test[
 ]
 
 Test[
-	"a/:b=.c|d:.."
+	CodeParse["a/:b=.c|d:.."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {CallNode[LeafNode[Symbol, "Alternatives", <||>], {CallNode[LeafNode[Symbol, "Times", <||>], {CallNode[LeafNode[Symbol, "TagUnset", <||>], {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>], LeafNode[Symbol, "c", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>], CallNode[LeafNode[Symbol, "Pattern", <||>], {LeafNode[Symbol, "d", <|Source -> {{1, 9}, {1, 10}}|>], CallNode[LeafNode[Symbol, "Repeated", <||>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 11}, {1, 11}}|>]}, <|Source -> {{1, 11}, {1, 13}}|>]}, <|Source -> {{1, 9}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>]
 	,
 	TestID->"Parse-20200313-J0R5D7"
 ]
 
 Test[
-	"a/:b= .c|d:.."
+	CodeParse["a/:b= .c|d:.."]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {CallNode[LeafNode[Symbol, "Alternatives", <||>], {CallNode[LeafNode[Symbol, "Times", <||>], {CallNode[LeafNode[Symbol, "TagUnset", <||>], {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>], LeafNode[Symbol, "c", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>], CallNode[LeafNode[Symbol, "Pattern", <||>], {LeafNode[Symbol, "d", <|Source -> {{1, 10}, {1, 11}}|>], CallNode[LeafNode[Symbol, "Repeated", <||>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 12}, {1, 12}}|>]}, <|Source -> {{1, 12}, {1, 14}}|>]}, <|Source -> {{1, 10}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]
 	,
 	TestID->"Parse-20200322-I2K4Z7"
 ]
@@ -3316,11 +3370,12 @@ Test[
 
 
 Test[
-	"{,}"
+	CodeParse["{,}"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "List", <||>], {
+			LeafNode[Symbol, "Null", <|Source -> {{1, 2}, {1, 2}}|>],
+			LeafNode[Symbol, "Null", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]
 	,
 	TestID->"Parse-20200703-O0D8F0"
 ]

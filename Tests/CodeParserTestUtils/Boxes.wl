@@ -401,6 +401,7 @@ exceptions = <|
    "GeometricAssertion" -> {{1, 2}, {2, 2}, {3, 2}},
    "GeometricScene" -> {{1, 4}, {2, 2}, {3, 2}},
    "GeometricStep" -> {{1, 2}, {1, 4}},
+   "GeometricStylingRules" -> {{1, 2}, {2, 2}, {3, 2}},
    "ImageAspectRatio" -> {{2, 1}},
    "ImageDimensions" -> {{2, 1}},
    "InverseShortTimeFourier" -> {{1, 2}, {1, 6}},
@@ -431,6 +432,7 @@ exceptions = <|
    (* weird <<>> Skeleton formatting *)
    "Authentication" -> {{5, 7}},
    "CombinedEntityClass" -> {{5, 2}, {6, 4}},
+   "EstimatedPointNormals" -> {{1, 4}},
    "PolyhedronDecomposition" -> {{1, 3}},
    "SecuredAuthenticationKey" -> {{5, 7}},
    "Shallow" -> {{1, 2}, {2, 4}},
@@ -611,7 +613,12 @@ exceptions = <|
    "CombinatorI" -> {{1, 1}},
    "CombinatorK" -> {{1, 1}, {2, 1}},
    "CombinatorS" -> {{1, 1}, {1, 2}, {2, 1}},
-   "CombinatorW" -> {{1, 1}, {1, 2}}
+   "CombinatorW" -> {{1, 1}, {1, 2}},
+
+   (*
+   malformed boxes for ::[]
+   *)
+   "UnmanageObject" -> {{2, 3}}
    |>;
 
 outputFormPatterns = ToExpression["\"\\[Backslash]\""]

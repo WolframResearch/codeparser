@@ -505,11 +505,13 @@ Test[
 ]
 
 Test[
-	"a;;!"
+	CodeParse["a;;!"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Span", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			CallNode[LeafNode[Symbol, "Not", <||>], {
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]
 	,
 	TestID->"Span-20191016-M3L9D1"
 ]
