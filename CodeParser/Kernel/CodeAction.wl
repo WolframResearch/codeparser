@@ -55,7 +55,7 @@ Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, 
   originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
   If[originalNodePos == {},
-  Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -144,7 +144,7 @@ Module[{src, originalNodePos, cst, srcPosMap},
   originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
   If[originalNodePos == {},
-  Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 

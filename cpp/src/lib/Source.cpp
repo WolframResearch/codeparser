@@ -272,7 +272,7 @@ bool operator==(SourceCharacter a, SourceCharacter b) {
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
-    auto graphicalFlag = stream.iword(get_graphical_i()) == 1;
+    auto graphicalFlag = (stream.iword(get_graphical_i()) == 1);
     
     if (!graphicalFlag) {
 
@@ -491,14 +491,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
             //
             // Make sure to include DEL
             //
-        case CODEPOINT_DEL:
-            //
-            // C1 control characters
-            //
-        case '\x80': case '\x81': case '\x82': case '\x83': case '\x84': case '\x85': case '\x86': case '\x87':
-        case '\x88': case '\x89': case '\x8a': case '\x8b': case '\x8c': case '\x8d': case '\x8e': case '\x8f':
-        case '\x90': case '\x91': case '\x92': case '\x93': case '\x94': case '\x95': case '\x96': case '\x97':
-        case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f': {
+        case CODEPOINT_DEL: {
             
             stream << WLCharacter(val, ESCAPE_2HEX);
             
@@ -508,7 +501,25 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     assert(val >= 0);
     
-    if (val > 0xffff) {
+    if (val <= 0x7f) {
+        
+        //
+        // ASCII
+        //
+        // ASCII is untouched
+        // Do not use CodePointToLongNameMap to find Raw names
+        //
+        
+        stream << static_cast<char>(val);
+        
+        return stream;
+    }
+    
+    if (val <= 0xff) {
+        
+        //
+        // \.XX (or a Long Name)
+        //
         
         auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
         
@@ -522,12 +533,16 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
             return stream;
         }
         
-        stream << WLCharacter(val, ESCAPE_6HEX);
+        stream << WLCharacter(val, ESCAPE_2HEX);
         
         return stream;
     }
     
-    if (val > 0xff) {
+    if (val <= 0xffff) {
+        
+        //
+        // \:XXXX (or a Long Name)
+        //
         
         auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
         
@@ -546,33 +561,23 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         return stream;
     }
     
-    if (val > 0x7f) {
+    //
+    // \|XXXXXX (or a Long Name)
+    //
+    
+    auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+    
+    if (it != CodePointToLongNameMap_points.end() && *it == val) {
         
-        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
-        
-        if (it != CodePointToLongNameMap_points.end() && *it == val) {
-            
-            //
-            // Use LongName if available
-            //
-            stream << WLCharacter(val, ESCAPE_LONGNAME);
-            
-            return stream;
-        }
-        
-        stream << WLCharacter(val, ESCAPE_2HEX);
+        //
+        // Use LongName if available
+        //
+        stream << WLCharacter(val, ESCAPE_LONGNAME);
         
         return stream;
     }
-        
-    //
-    // ASCII is untouched
-    // Do not use CodePointToLongNameMap to find Raw names
-    //
     
-    ByteEncoderState state;
-    
-    ByteEncoder::encodeBytes(stream, val, &state);
+    stream << WLCharacter(val, ESCAPE_6HEX);
     
     return stream;
 }
