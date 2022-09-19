@@ -64,7 +64,10 @@ libraryResources = FileNameJoin[{location, "LibraryResources", $SystemID}]
 
 pacletInfoFile = FileNameJoin[{location, "PacletInfo.wl"}]
 
-Block[{$ContextPath = {"System`"}, $Context = "CodeParser`Library`Private`"},
+Block[{$ContextPath = {"PacletManager`", "System`"}, $Context = "CodeParser`Library`Private`"},
+  (*
+  put PacletManager` on $ContextPath to guarantee using PacletManager`Paclet symbol
+  *)
   pacletInfo = Get[pacletInfoFile];
 ]
 
