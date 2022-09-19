@@ -271,7 +271,6 @@ Token`Boxes`LongName`LeftSkeleton
 
 Treat skeletons like groups
 *)
-(*
 prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___, LeafNode[Token`Boxes`LongName`RightSkeleton, _, _]}, handledChildren_, children_, pos_] :=
   Module[{rehandledChildren},
 
@@ -282,12 +281,10 @@ prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___, LeafNode[To
     
     GroupNode[Skeleton, rehandledChildren, <| Source -> pos |>]
   ]
-*)
 
 (*
 Unexpected openers and unexpected closers
 *)
-(*
 prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___}, handledChildren_, children_, pos_] :=
   GroupMissingCloserNode[Skeleton,
     {LeafNode[Token`Boxes`LongName`LeftSkeleton, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
@@ -297,7 +294,6 @@ prbDispatch[{___, LeafNode[Token`Boxes`LongName`RightSkeleton, _, _]}, handledCh
   GroupMissingOpenerNode[Skeleton,
     MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
     {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <| Source -> pos |>]
-*)
 "}
 
 
