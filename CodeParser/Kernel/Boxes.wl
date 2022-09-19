@@ -2354,24 +2354,14 @@ Module[{processed},
 
 
 
-
 toStandardFormBoxes[Missing["EmptyInput"]] = ""
 
-toStandardFormBoxes[f_Failure] := f
+toStandardFormBoxes[m_?MissingQ] = m
+
+toStandardFormBoxes[f_?FailureQ] := f
 
 toStandardFormBoxes[args___] :=
   Failure["Unhandled", <| "Function" -> toStandardFormBoxes, "Arguments" -> HoldForm[{args}] |>]
-
-
-
-
-
-
-
-
-
-
-
 
 
 
