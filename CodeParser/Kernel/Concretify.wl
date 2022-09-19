@@ -417,6 +417,9 @@ nodeStructure[n : LeafNode[Rational, str_, _]] :=
     ]
   ]
 
+nodeStructure[n : CallNode[head:LeafNode[Symbol, "Part", _], children_, data_]] :=
+  structure[Failure["Unhandled structure", <| "n" -> n |>]&, Failure["badop", <| "n" -> n |>], Precedence`Call]
+
 nodeStructure[n : CallNode[head_, children_, data_]] :=
   structure[Failure["Unhandled structure", <| "n" -> n |>]&, Failure["badop", <| "n" -> n |>], Precedence`Call]
 
@@ -1767,6 +1770,73 @@ walk[n : CallNode[LeafNode[Symbol, "SlotSequence", _], {i:LeafNode[Integer, _, _
   CompoundNode[SlotSequence, {LeafNode[Token`HashHash, "##", <||>], i}, <||>]
 
 
+walk[n : CallNode[LeafNode[Symbol, "Part", _], {first_}, _]] :=
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  CallNode[Flatten[{Function[{h},
+    Module[{walked},
+      walked = walk[h];
+      Which[
+        precedenceLess[precCTR[walked], prec],
+          paren[walked]
+        ,
+        !okToJuxtapose[lastPrec[walked], prec],
+          spaceAfter[walked]
+        ,
+        True,
+          walked
+      ]
+    ]
+  ][first]}], doubleSquare[{}], <||>]
+]
+
+walk[n : CallNode[LeafNode[Symbol, "Part", _], {first_, second_}, _]] :=
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  CallNode[Flatten[{Function[{h},
+    Module[{walked},
+      walked = walk[h];
+      Which[
+        precedenceLess[precCTR[walked], prec],
+          paren[walked]
+        ,
+        !okToJuxtapose[lastPrec[walked], prec],
+          spaceAfter[walked]
+        ,
+        True,
+          walked
+      ]
+    ]
+  ][first]}], doubleSquare[{walk[second]}], <||>]
+]
+
+walk[n : CallNode[LeafNode[Symbol, "Part", _], {first_, rest___}, _]] :=
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  CallNode[Flatten[{Function[{h},
+    Module[{walked},
+      walked = walk[h];
+      Which[
+        precedenceLess[precCTR[walked], prec],
+          paren[walked]
+        ,
+        !okToJuxtapose[lastPrec[walked], prec],
+          spaceAfter[walked]
+        ,
+        True,
+          walked
+      ]
+    ]
+  ][first]}], doubleSquare[{InfixNode[Comma, Riffle[walk /@ {rest}, LeafNode[Token`Comma, ",", <||>]], <||>]}], <||>]
+]
+
+
 walk[n : CallNode[head_, {}, _]] :=
 Module[{struct = nodeStructure[n], ctor, op, prec},
   ctor = struct["ctor"];
@@ -1810,6 +1880,7 @@ Module[{struct = nodeStructure[n], ctor, op, prec},
     ]
   ][head]}], square[{InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]}], <||>]
 ]
+
 
 (*
 concretifying, so need to introduce newlines
@@ -1885,6 +1956,13 @@ paren[n_] :=
 
 square[children_List] :=
   GroupNode[GroupSquare, {LeafNode[Token`OpenSquare, "[", <||>]} ~Join~ children ~Join~ {LeafNode[Token`CloseSquare, "]", <||>]}, <||>]
+
+doubleSquare[children_List] :=
+  GroupNode[GroupSquare, {LeafNode[Token`OpenSquare, "[", <||>]} ~Join~
+  {GroupNode[GroupSquare, {LeafNode[Token`OpenSquare, "[", <||>]} ~Join~
+  children ~Join~
+  {LeafNode[Token`CloseSquare, "]", <||>]}, <||>]} ~Join~
+  {LeafNode[Token`CloseSquare, "]", <||>]}, <||>]
 
 curly[children_List] :=
   GroupNode[List, {LeafNode[Token`OpenCurly, "{", <||>]} ~Join~ children ~Join~ {LeafNode[Token`CloseCurly, "}", <||>]}, <||>]
