@@ -319,6 +319,16 @@ nodeStructure[CallNode[LeafNode[Symbol,"Function",_],_,_]] =
 nodeStructure[CallNode[LeafNode[Symbol, "ApplyTo", _], _, _]] =
   structure[BinaryNode[ApplyTo, #, <||>]&, LeafNode[Token`SlashSlashEqual, "//=", <||>], Precedence`SlashSlashEqual]
 
+nodeStructure[CallNode[LeafNode[Symbol, "Span", _], {_, _}, _]] =
+  structure[BinaryNode[Span, #, <||>]&, LeafNode[Token`SemiSemi, ";;", <||>], Precedence`SemiSemi]
+
+
+(*
+ternary
+*)
+
+nodeStructure[CallNode[LeafNode[Symbol, "Span", _], {_, _, _}, _]] =
+  structure[TernaryNode[Span, #, <||>]&, LeafNode[Token`SemiSemi, ";;", <||>], Precedence`SemiSemi]
 
 
 (*
@@ -517,6 +527,12 @@ precCTR[BinaryNode[DivideBy, {first_, ___}, _]] := precedenceMin[precCTR[first],
 
 precCTL[BinaryNode[ApplyTo, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`SlashSlashEqual]
 precCTR[BinaryNode[ApplyTo, {first_, ___}, _]] := precedenceMin[precCTR[first], Precedence`SlashSlashEqual]
+
+precCTL[BinaryNode[Span, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`SemiSemi]
+precCTR[BinaryNode[Span, {first_, ___}, _]] := precedenceMin[precCTR[first], Precedence`SemiSemi]
+
+precCTL[TernaryNode[Span, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`SemiSemi]
+precCTR[TernaryNode[Span, {first_, ___}, _]] := precedenceMin[precCTR[first], Precedence`SemiSemi]
 
 precCTL[InfixNode[Times, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`Star]
 precCTR[InfixNode[Times, {first_, ___}, _]] := precedenceMin[precCTR[first], Precedence`Star]
@@ -1404,7 +1420,7 @@ Module[{struct = nodeStructure[n], ctor, op, prec},
 (*
 Left associative
 *)
-walk[n : CallNode[LeafNode[Symbol, "Condition" | "PatternTest" | "ReplaceAll" | "ReplaceRepeated", _], children : {_, _}, _]] :=
+walk[n : CallNode[LeafNode[Symbol, "Condition" | "PatternTest" | "ReplaceAll" | "ReplaceRepeated" | "Span", _], children : {_, _}, _]] :=
 Module[{struct = nodeStructure[n], ctor, op, prec},
   ctor = struct["ctor"];
   op = struct["op"];
@@ -1485,6 +1501,105 @@ Module[{struct = nodeStructure[n], ctor, op, prec},
     ][children[[2]]]}]]
 ]
 
+
+(*
+ternary
+*)
+
+walk[
+  n :
+    CallNode[
+      LeafNode[
+        Symbol
+        ,
+        "Span"
+        ,
+        _
+      ]
+      ,
+      children : {_, _, _}
+      ,
+      _
+    ]
+] :=
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[
+    Flatten[
+      {Function[{c},
+            Module[{walked},
+              walked = walk[c];
+              Which[
+                precedenceLess[precCTR[walked], prec],
+                  paren[walked]
+                ,
+                precedenceEqual[precCTR[walked], prec],
+                  paren[walked]
+                ,
+                !okToJuxtapose[lastPrec[walked], prec],
+                  spaceAfter[walked]
+                ,
+                True,
+                  walked
+              ]
+            ]
+          ][First[children]]} ~Join~
+          (
+            Function[{c},
+                Module[{walked},
+                  walked = walk[c];
+                  {
+                    op
+                    ,
+                    Which[
+                      precedenceGreater[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      precedenceEqual[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], prec],
+                        spaceBoth[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]],
+                        spaceBefore[walked]
+                      ,
+                      !okToJuxtapose[lastPrec[walked], prec],
+                        spaceAfter[walked]
+                      ,
+                      True,
+                        walked
+                    ]
+                  }
+                ]
+              ] /@ children[[2 ;; -2]]
+          ) ~Join~ (Function[{c},
+          Module[{walked},
+            walked = walk[c];
+            {
+              op
+              ,
+              Which[
+                precedenceGreater[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                precedenceEqual[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                !okToJuxtapose[prec, firstPrec[walked]],
+                  spaceBefore[walked]
+                ,
+                True,
+                  walked
+              ]
+            }
+          ]
+        ][Last[children]])
+    ]
+  ]
+]
 
 
 (*
