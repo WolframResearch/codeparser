@@ -20,8 +20,7 @@ use crate::{
     parser_session::ParserSession,
     source::SourceConvention,
     src,
-    symbol::Symbol,
-    symbol_registration::{SYMBOL_CODEPARSER_GROUPNODE, SYMBOL_CODEPARSER_GROUPSQUARE},
+    symbol_registration::SYMBOL_CODEPARSER_GROUPSQUARE,
     token,
     token::BorrowedTokenInput,
     EncodingMode, FirstLineBehavior, DEFAULT_TAB_WIDTH,
@@ -106,7 +105,6 @@ fn test_something() {
         vec![Node::Infix(InfixNode(OperatorNode {
             // Op: Symbol { name: "Plus", id: 514 },
             op: crate::symbol_registration::SYMBOL_PLUS,
-            make_sym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
             children: NodeSeq(vec![
                 NVToken(token![Integer, "2" @ 0, src!(1:1-1:2)]),
                 NVToken(token![Whitespace, " " @ 1, src!(1:2-1:3)]),
@@ -128,7 +126,6 @@ fn test_something() {
             ])]),
             body: Box::new(Node::Group(GroupNode(OperatorNode {
                 op: SYMBOL_CODEPARSER_GROUPSQUARE,
-                make_sym: SYMBOL_CODEPARSER_GROUPNODE,
                 children: NodeSeq(vec![
                     NVToken(token![OpenSquare, "[" @ 1, src!(1:2-1:3)]),
                     NVToken(token![Symbol, "x" @ 2, src!(1:3-1:4)]),

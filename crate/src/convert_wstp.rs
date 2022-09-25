@@ -83,16 +83,22 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             Node::CollectedIssues(node) => node.put(link),
             Node::MissingBecauseUnsafeCharacterEncoding(node) => node.put(link),
             Node::SafeString(node) => node.put(link),
-            Node::Infix(InfixNode(op)) => op.put(link),
-            Node::Prefix(PrefixNode(op))
-            | Node::Postfix(PostfixNode(op))
-            | Node::Binary(BinaryNode(op))
-            | Node::Ternary(TernaryNode(op))
-            | Node::Compound(CompoundNode(op))
-            | Node::Group(GroupNode(op))
-            | Node::GroupMissingCloser(GroupMissingCloserNode(op))
-            | Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op))
-            | Node::PrefixBinary(PrefixBinaryNode(op)) => op.put(link),
+            Node::Infix(InfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_INFIXNODE),
+            Node::Prefix(PrefixNode(op)) => op.put(link, SYMBOL_CODEPARSER_PREFIXNODE),
+            Node::Postfix(PostfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_POSTFIXNODE),
+            Node::Binary(BinaryNode(op)) => op.put(link, SYMBOL_CODEPARSER_BINARYNODE),
+            Node::Ternary(TernaryNode(op)) => op.put(link, SYMBOL_CODEPARSER_TERNARYNODE),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => {
+                op.put(link, SYMBOL_CODEPARSER_PREFIXBINARYNODE)
+            },
+            Node::Compound(CompoundNode(op)) => op.put(link, SYMBOL_CODEPARSER_COMPOUNDNODE),
+            Node::Group(GroupNode(op)) => op.put(link, SYMBOL_CODEPARSER_GROUPNODE),
+            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
+            },
+            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
+                op.put(link, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE)
+            },
         }
     }
 }
@@ -115,15 +121,10 @@ impl<'i> NodeSeq<BorrowedTokenInput<'i>> {
 }
 
 impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let OperatorNode {
-            op,
-            children,
-            src,
-            make_sym,
-        } = self;
+    pub(crate) fn put(&self, callLink: &mut wstp::Link, op_head: Symbol) {
+        let OperatorNode { op, children, src } = self;
 
-        callLink.put_function(make_sym.name, 3).unwrap();
+        callLink.put_function(op_head.name, 3).unwrap();
 
         op.put(callLink);
 
