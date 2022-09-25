@@ -42,13 +42,10 @@ pub(crate) struct Buffer<'i> {
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct BufferAndLength<'i> {
     pub buf: Buffer<'i>,
-    // PRE_COMMIT: Does this bitfield size break anything in the port?
-    // const uint64_t Len : 48;
-    /// The number of bytes in `buf.slice` that are refered to by this reference.
-    ///
-    /// Note that this length may be smaller than `buf.slice.len()`
-    pub len: usize,
 }
+
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(std::mem::size_of::<BufferAndLength>() == 24);
 
 /* FIXME: Re-enable this assertion, or a variation of it.
 const _: () = assert!(
@@ -356,7 +353,13 @@ impl<'i, I: SliceIndex<[u8]>> Index<I> for Buffer<'i> {
 
 impl<'i> BufferAndLength<'i> {
     pub fn from_buffer_with_len(buf: Buffer<'i>, len: usize) -> Self {
-        BufferAndLength { buf, len }
+        let Buffer { offset, slice } = buf;
+
+        let slice = &slice[..len];
+
+        BufferAndLength {
+            buf: Buffer { offset, slice },
+        }
     }
 
     // BufferAndLength::BufferAndLength(Buffer Buf) : Buf(Buf), Len(0) {}
@@ -384,7 +387,6 @@ impl<'i> BufferAndLength<'i> {
                 slice: &start.slice[0..size],
                 offset: start.offset,
             },
-            len: size,
         }
     }
 
@@ -400,8 +402,9 @@ impl<'i> BufferAndLength<'i> {
     // TODO: Remove this method? Currently only used in token.rs for debug
     //       assertion.
     pub(crate) fn length(&self) -> usize {
-        // return self.0.len();
-        return self.len;
+        let BufferAndLength { buf } = self;
+
+        return buf.slice.len();
     }
 
     // pub fn end(&self) -> Buffer {
@@ -409,18 +412,20 @@ impl<'i> BufferAndLength<'i> {
     // }
 
     pub fn as_bytes(&self) -> &[u8] {
-        let BufferAndLength { buf, len } = *self;
+        let BufferAndLength { buf } = *self;
 
-        &buf.slice[..len]
+        buf.slice
     }
 
     pub(crate) fn byte_span(&self) -> ByteSpan {
         let BufferAndLength {
-            buf: Buffer { slice: _, offset },
-            len,
+            buf: Buffer { slice, offset },
         } = *self;
 
-        ByteSpan { offset, len }
+        ByteSpan {
+            offset,
+            len: slice.len(),
+        }
     }
 
     #[allow(dead_code)]
