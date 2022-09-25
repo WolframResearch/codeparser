@@ -196,7 +196,7 @@ const _: () = assert!(
     "Check your assumptions"
 );
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum SourceConvention {
     /// Handle next (non-newline) SourceLocation by incrementing column.
     /// Handle next newline by incrementing line.
@@ -698,6 +698,17 @@ pub fn EncodingIssue(
 impl SourceLocation {
     pub fn new(first: u32, second: u32) -> Self {
         Self { first, second }
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn convention(&self) -> SourceConvention {
+        let SourceLocation { first, second: _ } = *self;
+
+        if first == 0 {
+            SourceConvention::CharacterIndex
+        } else {
+            SourceConvention::LineColumn
+        }
     }
 }
 

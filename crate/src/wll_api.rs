@@ -92,12 +92,8 @@ fn NodeContainerToExpr(session: ParserSessionPtr, C: NodeContainerPtr) -> expr {
 }
 
 #[cfg(feature = "USE_MATHLINK")]
-fn NodeContainerPut<'i>(
-    session: &ParserSession<'i>,
-    C: &NodeContainer<BorrowedTokenInput<'i>>,
-    link: &mut wstp::Link,
-) {
-    C.put(session, link);
+fn NodeContainerPut<'i>(C: &NodeContainer<BorrowedTokenInput<'i>>, link: &mut wstp::Link) {
+    C.put(link);
 }
 
 #[no_mangle]
@@ -338,7 +334,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
 
     let result = session.concrete_parse_expressions();
 
-    result.into_node_container().put(&session, link);
+    result.into_node_container().put(link);
 
     drop(session);
 }
@@ -452,7 +448,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
 
     let C = session.concrete_parse_expressions();
 
-    C.into_node_container().put(&session, link);
+    C.into_node_container().put(link);
 
     drop(session);
 }
@@ -561,7 +557,7 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
 
     let C = session.tokenize();
 
-    NodeContainerPut(&session, &C, link);
+    NodeContainerPut(&C, link);
 
     drop(session);
 }
@@ -676,7 +672,7 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
 
     let C = session.tokenize();
 
-    C.put(&session, link);
+    C.put(link);
 
     drop(session);
 }
@@ -800,7 +796,7 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
         StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value"),
     );
 
-    result.into_node_container().put(&session, link);
+    result.into_node_container().put(link);
 
 
     drop(session);
@@ -897,7 +893,7 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
 
     let C = session.safeString();
 
-    NodeContainerPut(&session, &C, link);
+    NodeContainerPut(&C, link);
 
     drop(session);
 }

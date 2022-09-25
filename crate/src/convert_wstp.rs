@@ -18,7 +18,6 @@ use crate::{
     symbol_registration::*,
     token::{BorrowedTokenInput, Token},
     token_enum_registration::TokenToSymbol,
-    ParserSession,
 };
 
 //======================================
@@ -26,7 +25,7 @@ use crate::{
 //======================================
 
 impl<'i> Token<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Token { tok, src, input } = self;
 
         if tok.isError() {
@@ -54,9 +53,9 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
 
         let sym = TokenToSymbol(*tok);
 
-        sym.put(session, callLink);
+        sym.put(callLink);
 
-        // bufLen().put(session, callLink);
+        // bufLen().put(callLink);
         // let source: &[u8] = &session.tokenizer.input[span.offset..span.offset + span.len];
         let source: &[u8] = &input.buf.as_bytes();
 
@@ -65,7 +64,7 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
 
         callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
-        src.put(session, callLink);
+        src.put(callLink);
     }
 }
 
@@ -74,17 +73,17 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
 //======================================
 
 impl<'i> Node<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, link: &mut wstp::Link) {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         match self {
-            Node::Token(token) => token.put(session, link),
-            Node::Call(node) => node.put(session, link),
-            Node::SyntaxError(node) => node.put(session, link),
-            Node::CollectedExpressions(node) => node.put(session, link),
-            Node::CollectedSourceLocations(node) => node.put(session, link),
-            Node::CollectedIssues(node) => node.put(session, link),
-            Node::MissingBecauseUnsafeCharacterEncoding(node) => node.put(session, link),
-            Node::SafeString(node) => node.put(session, link),
-            Node::Infix(InfixNode(op)) => op.put(session, link),
+            Node::Token(token) => token.put(link),
+            Node::Call(node) => node.put(link),
+            Node::SyntaxError(node) => node.put(link),
+            Node::CollectedExpressions(node) => node.put(link),
+            Node::CollectedSourceLocations(node) => node.put(link),
+            Node::CollectedIssues(node) => node.put(link),
+            Node::MissingBecauseUnsafeCharacterEncoding(node) => node.put(link),
+            Node::SafeString(node) => node.put(link),
+            Node::Infix(InfixNode(op)) => op.put(link),
             Node::Prefix(PrefixNode(op))
             | Node::Postfix(PostfixNode(op))
             | Node::Binary(BinaryNode(op))
@@ -93,30 +92,30 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             | Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
             | Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op))
-            | Node::PrefixBinary(PrefixBinaryNode(op)) => op.put(session, link),
+            | Node::PrefixBinary(PrefixBinaryNode(op)) => op.put(link),
         }
     }
 }
 
 impl<'i> NodeSeq<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let NodeSeq(vec) = self;
 
         callLink.put_function(SYMBOL_LIST.name, vec.len()).unwrap();
 
         for C in vec {
             if crate::feature::CHECK_ABORT && crate::abortQ() {
-                SYMBOL__ABORTED.put(session, callLink);
+                SYMBOL__ABORTED.put(callLink);
                 continue;
             }
 
-            C.put(session, callLink)
+            C.put(callLink)
         }
     }
 }
 
 impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let OperatorNode {
             op,
             children,
@@ -126,61 +125,61 @@ impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
 
         callLink.put_function(make_sym.name, 3).unwrap();
 
-        op.put(session, callLink);
+        op.put(callLink);
 
-        children.put(session, callLink);
+        children.put(callLink);
 
         callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
-        src.put(session, callLink);
+        src.put(callLink);
     }
 }
 
 impl<'i> CallNode<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CallNode { head, body, src } = self;
         callLink
             .put_function(SYMBOL_CODEPARSER_CALLNODE.name, 3)
             .unwrap();
 
-        head.put(session, callLink);
+        head.put(callLink);
 
-        body.put(session, callLink);
+        body.put(callLink);
 
         callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
-        src.put(session, callLink);
+        src.put(callLink);
     }
 }
 
 impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SyntaxErrorNode { err, children, src } = self;
 
         callLink
             .put_function(SYMBOL_CODEPARSER_SYNTAXERRORNODE.name, 3)
             .unwrap();
 
-        err.put(session, callLink);
+        err.put(callLink);
 
-        children.put(session, callLink);
+        children.put(callLink);
 
         callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
-        src.put(session, callLink);
+        src.put(callLink);
     }
 }
 
 impl<'i> CollectedExpressionsNode<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CollectedExpressionsNode { exprs } = self;
 
-        exprs.put(session, callLink);
+        exprs.put(callLink);
     }
 }
 
 impl CollectedIssuesNode {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CollectedIssuesNode(issues) = self;
 
         callLink
@@ -188,13 +187,13 @@ impl CollectedIssuesNode {
             .unwrap();
 
         for issue in issues {
-            issue.put(session, callLink);
+            issue.put(callLink);
         }
     }
 }
 
 impl CollectedSourceLocationsNode {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CollectedSourceLocationsNode { source_locs } = self;
 
         callLink
@@ -202,38 +201,38 @@ impl CollectedSourceLocationsNode {
             .unwrap();
 
         for loc in source_locs {
-            loc.put(session, callLink);
+            loc.put(callLink);
         }
     }
 }
 
 impl MissingBecauseUnsafeCharacterEncodingNode {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let MissingBecauseUnsafeCharacterEncodingNode { flag } = *self;
 
         callLink.put_function(SYMBOL_MISSING.name, 1).unwrap();
 
         let reason = unsafeCharacterEncodingReason(flag);
 
-        reason.put(session, callLink);
+        reason.put(callLink);
     }
 }
 
 impl SafeStringNode {
-    pub(crate) fn put(&self, _session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SafeStringNode { bufAndLen } = self;
 
-        // bufAndLen.put(session, callLink);
+        // bufAndLen.put(callLink);
 
         callLink.put_str(bufAndLen).unwrap();
     }
 }
 
 impl<'i> NodeContainer<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let NodeContainer { nodes } = self;
 
-        nodes.put(session, callLink);
+        nodes.put(callLink);
     }
 }
 
@@ -243,13 +242,13 @@ impl<'i> NodeContainer<BorrowedTokenInput<'i>> {
 
 impl<'i> BufferAndLength<'i> {
     #[allow(dead_code)]
-    pub(crate) fn put(&self, _: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         callLink.put_str(self.as_str()).unwrap();
     }
 }
 
 impl Issue {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Issue {
             make_sym,
             tag,
@@ -263,11 +262,11 @@ impl Issue {
 
         callLink.put_function(make_sym.name, 4).unwrap();
 
-        tag.put(session, callLink);
+        tag.put(callLink);
 
         callLink.put_str(msg).unwrap();
 
-        sev.put(session, callLink);
+        sev.put(callLink);
 
         {
             callLink
@@ -282,12 +281,12 @@ impl Issue {
                 )
                 .unwrap();
 
-            src.put(session, callLink);
+            src.put(callLink);
 
             {
                 callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-                SYMBOL_CONFIDENCELEVEL.put(session, callLink);
+                SYMBOL_CONFIDENCELEVEL.put(callLink);
 
                 callLink.put_f64(**val).unwrap();
             }
@@ -295,21 +294,21 @@ impl Issue {
             if !actions.is_empty() {
                 callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-                SYMBOL_CODEPARSER_CODEACTIONS.put(session, callLink);
+                SYMBOL_CODEPARSER_CODEACTIONS.put(callLink);
 
                 callLink
                     .put_function(SYMBOL_LIST.name, actions.len())
                     .unwrap();
 
                 for A in actions {
-                    A.put(session, callLink);
+                    A.put(callLink);
                 }
             }
 
             if !additional_descriptions.is_empty() {
                 callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-                STRING_ADDITIONALDESCRIPTIONS.put(session, callLink);
+                STRING_ADDITIONALDESCRIPTIONS.put(callLink);
 
                 callLink
                     .put_function(SYMBOL_LIST.name, additional_descriptions.len())
@@ -324,7 +323,7 @@ impl Issue {
 }
 
 impl CodeAction {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CodeAction {
             label: Label,
             src: Src,
@@ -339,16 +338,16 @@ impl CodeAction {
 
                 callLink.put_str(Label).unwrap();
 
-                SYMBOL_CODEPARSER_REPLACETEXT.put(session, callLink);
+                SYMBOL_CODEPARSER_REPLACETEXT.put(callLink);
 
                 {
                     callLink.put_function(SYMBOL_ASSOCIATION.name, 2).unwrap();
 
-                    Src.put(session, callLink);
+                    Src.put(callLink);
 
                     callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-                    STRING_REPLACEMENTTEXT.put(session, callLink);
+                    STRING_REPLACEMENTTEXT.put(callLink);
 
                     callLink.put_str(replacement_text).unwrap();
                 }
@@ -360,16 +359,16 @@ impl CodeAction {
 
                 callLink.put_str(Label).unwrap();
 
-                SYMBOL_CODEPARSER_INSERTTEXT.put(session, callLink);
+                SYMBOL_CODEPARSER_INSERTTEXT.put(callLink);
 
                 {
                     callLink.put_function(SYMBOL_ASSOCIATION.name, 2).unwrap();
 
-                    Src.put(session, callLink);
+                    Src.put(callLink);
 
                     callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-                    STRING_INSERTIONTEXT.put(session, callLink);
+                    STRING_INSERTIONTEXT.put(callLink);
 
                     callLink.put_str(insertion_text).unwrap();
                 }
@@ -381,12 +380,12 @@ impl CodeAction {
 
                 callLink.put_str(Label).unwrap();
 
-                SYMBOL_CODEPARSER_DELETETEXT.put(session, callLink);
+                SYMBOL_CODEPARSER_DELETETEXT.put(callLink);
 
                 {
                     callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
-                    Src.put(session, callLink);
+                    Src.put(callLink);
                 }
             },
         }
@@ -394,7 +393,7 @@ impl CodeAction {
 }
 
 impl SourceLocation {
-    pub(crate) fn put(&self, _: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SourceLocation { first, second } = *self;
 
         callLink.put_function(SYMBOL_LIST.name, 2).unwrap();
@@ -406,19 +405,21 @@ impl SourceLocation {
 }
 
 impl Source {
-    pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Source { start, end } = self;
 
         callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-        SYMBOL_CODEPARSER_SOURCE.put(session, callLink);
+        SYMBOL_CODEPARSER_SOURCE.put(callLink);
 
-        match session.tokenizer.srcConvention {
+        debug_assert_eq!(start.convention(), end.convention());
+
+        match start.convention() {
             SourceConvention::LineColumn => {
                 callLink.put_function(SYMBOL_LIST.name, 2).unwrap();
 
-                start.put(session, callLink);
-                end.put(session, callLink);
+                start.put(callLink);
+                end.put(callLink);
             },
             SourceConvention::CharacterIndex => {
                 callLink.put_function(SYMBOL_LIST.name, 2).unwrap();
@@ -438,7 +439,7 @@ impl Source {
 //======================================
 
 impl MyString {
-    pub(crate) fn put(&self, _session: &ParserSession, link: &mut wstp::Link) {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let MyString { val, id: _ } = self;
 
         link.put_str(val).unwrap()
@@ -446,7 +447,7 @@ impl MyString {
 }
 
 impl Symbol {
-    pub(crate) fn put(&self, _: &ParserSession, callLink: &mut wstp::Link) {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Symbol { name, id: _ } = self;
 
         callLink.put_symbol(name).unwrap();
