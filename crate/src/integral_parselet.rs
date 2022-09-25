@@ -9,7 +9,7 @@ use crate::{
     },
     parser_session::ParserSession,
     precedence::*,
-    source::{Source, TOPLEVEL},
+    source::TOPLEVEL,
     symbol::Symbol,
     token::{Token, TokenKind},
     tokenizer::Tokenizer_currentToken,
@@ -60,11 +60,7 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
 
         Parser_pushLeaf(
             session,
-            Token::new2(
-                TokenKind::Fake_ImplicitOne,
-                Tok.span,
-                Source::from_location(Tok.src.start),
-            ),
+            Token::error_at_start(TokenKind::Fake_ImplicitOne, Tok),
         );
 
         return IntegralParselet_parse1(session, P);
@@ -168,10 +164,6 @@ impl InfixParselet for InfixDifferentialDParselet {
             return TokIn;
         }
 
-        return Token::new2(
-            TokenKind::Fake_ImplicitTimes,
-            TokIn.span,
-            Source::from_location(TokIn.src.start),
-        );
+        return Token::error_at_start(TokenKind::Fake_ImplicitTimes, TokIn);
     }
 }
