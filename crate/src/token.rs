@@ -1,27 +1,91 @@
 use crate::{
     feature,
-    source::{BufferAndLength, ByteSpan, Source},
+    source::{Buffer, BufferAndLength, ByteSpan, Source},
     tokenizer::Tokenizer,
 };
 
 pub use crate::token_enum_registration::TokenKind;
 
+pub(crate) type TokenRef<'i> = Token<BorrowedTokenInput<'i>>;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Token {
+pub struct Token<I = OwnedTokenInput> {
     pub tok: TokenKind,
 
     pub src: Source,
 
-    pub span: ByteSpan,
+    pub input: I,
 }
+
+/// Borrowed subslice of the input that is associated with a particular
+/// [`Token`] instance.
+///
+/// This type is used for efficient zero-copy parsing of input during the
+/// tokenization and parsing steps.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct BorrowedTokenInput<'i> {
+    pub(crate) buf: BufferAndLength<'i>,
+}
+
+/// Owned subslice of the input that is associated with a particular
+/// [`Token`] instance.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OwnedTokenInput {
+    pub buf: Vec<u8>,
+}
+
+impl<'i> BorrowedTokenInput<'i> {
+    #[doc(hidden)]
+    pub fn new(slice: &'i [u8], offset: usize) -> Self {
+        BorrowedTokenInput {
+            buf: BufferAndLength {
+                buf: Buffer { slice, offset },
+            },
+        }
+    }
+
+    pub(crate) fn from_buf(buf: BufferAndLength<'i>) -> Self {
+        BorrowedTokenInput { buf: buf }
+    }
+
+    pub(crate) fn byte_span(&self) -> ByteSpan {
+        let BorrowedTokenInput { buf } = self;
+
+        buf.byte_span()
+    }
+
+    fn into_empty(self) -> Self {
+        let BorrowedTokenInput { mut buf } = self;
+
+        buf.buf.slice = &buf.buf.slice[..0];
+
+        BorrowedTokenInput { buf }
+    }
+
+    fn into_owned_input(self) -> OwnedTokenInput {
+        let BorrowedTokenInput { buf } = self;
+
+        OwnedTokenInput {
+            buf: buf.as_bytes().to_owned(),
+        }
+    }
+}
+
 
 //
 // Sizes of structs with bit-fields are implementation-dependent
 //
 // TODO(optimize): In the C++ version (which used bitfields to pack the `len` to
 //                 48 bits), this was 32 bytes.
+const _: () = assert!(std::mem::size_of::<TokenRef>() == 48);
+const _: () = assert!(std::mem::size_of::<BorrowedTokenInput>() == 24);
+
 #[cfg(target_pointer_width = "64")]
-const _: () = assert!(std::mem::size_of::<Token>() == 40, "Check your assumptions");
+#[test]
+fn test_token_size() {
+    assert_eq!(std::mem::size_of::<TokenRef>(), 48);
+    assert_eq!(std::mem::size_of::<BorrowedTokenInput>(), 24);
+}
 
 //
 // For googletest
@@ -29,12 +93,12 @@ const _: () = assert!(std::mem::size_of::<Token>() == 40, "Check your assumption
 #[cfg(feature = "BUILD_TESTS")]
 fn PrintTo(token: &Token, stream: &mut std::ostream);
 
-impl Token {
+impl<'i> TokenRef<'i> {
     // pub(crate) fn new(tok: TokenKind, buf: BufferAndLength, src: Source) -> Self {
-    pub(crate) fn new(tok: TokenKind, buf: BufferAndLength, src: Source) -> Self {
+    pub(crate) fn new(tok: TokenKind, buf: BufferAndLength<'i>, src: Source) -> Self {
         let token = Token {
             src,
-            span: buf.byte_span(),
+            input: BorrowedTokenInput::from_buf(buf),
             tok,
         };
 
@@ -99,19 +163,19 @@ impl Token {
         token
     }
 
-    pub(crate) fn error_at_start(error_tok: TokenKind, mut token: Token) -> Self {
+    pub(crate) fn error_at_start(error_tok: TokenKind, mut token: TokenRef<'i>) -> TokenRef<'i> {
         // The error is at the start of this token.
         token.src = Source::from_location(token.src.start);
 
         Token::error_at(error_tok, token)
     }
 
-    pub(crate) fn error_at(error_tok: TokenKind, token: Token) -> Self {
+    pub(crate) fn error_at(error_tok: TokenKind, token: TokenRef<'i>) -> TokenRef<'i> {
         // Note: Same as BufferAndLength(Buffer Buf), which inits the Len to 0
 
         let Token {
             tok: _,
-            mut span,
+            mut input,
             src,
         } = token;
 
@@ -129,24 +193,30 @@ impl Token {
         }
 
         if is_len_zero(error_tok) {
-            span.len = 0;
+            input = input.into_empty();
         }
 
         Token {
             tok: error_tok,
             src,
-            span,
+            input,
         }
     }
 
-    /// Used in testing code.
-    #[cfg(test)]
-    pub(crate) fn new3(tok: TokenKind, span: ByteSpan, src: Source) -> Self {
-        Token { tok, span, src }
-    }
+    pub(crate) fn into_owned_input(self) -> Token {
+        let Token { tok, src, input } = self;
 
+        Token {
+            tok,
+            src,
+            input: input.into_owned_input(),
+        }
+    }
+}
+
+impl<'i> TokenRef<'i> {
     fn end(&self) -> usize {
-        return self.span.offset + self.span.len;
+        return self.input.byte_span().end();
     }
 
     pub(crate) fn reset(&self, session: &mut Tokenizer) {
@@ -155,7 +225,7 @@ impl Token {
         // Just need to reset the global buffer to the buffer of the token
         //
 
-        session.offset = self.span.offset;
+        session.offset = self.input.byte_span().offset;
         session.SrcLoc = self.src.start;
     }
 
@@ -164,7 +234,9 @@ impl Token {
         session.wasEOF = self.tok == TokenKind::EndOfFile;
         session.SrcLoc = self.src.end;
     }
+}
 
+impl<T> Token<T> {
     pub(crate) fn check(&self) -> bool {
         return !self.tok.isError();
     }
@@ -212,5 +284,19 @@ impl Token {
     #[cfg(feature = "BUILD_TESTS")]
     fn PrintTo(T: &Token, s: &mut std::ostream) {
         T.print(*s);
+    }
+}
+
+impl PartialEq<Token> for Token<BorrowedTokenInput<'_>> {
+    fn eq(&self, other: &Token) -> bool {
+        let Token { tok, src, input } = *self;
+
+        if !(tok == other.tok && src == other.src) {
+            return false;
+        }
+
+        let BorrowedTokenInput { buf } = input;
+
+        buf.as_bytes() == other.input.buf
     }
 }

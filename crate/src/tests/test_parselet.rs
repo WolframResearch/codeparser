@@ -21,7 +21,7 @@ fn ParseletTest_Bug1() {
 
     prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
 
-    let P: &mut Node = Parser_topNode(&mut session);
+    let P: &mut Node<_> = Parser_topNode(&mut session);
 
     assert!(matches!(P, Node::Ternary(_)));
 

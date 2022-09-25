@@ -16,7 +16,7 @@ use crate::{
     },
     symbol::Symbol,
     symbol_registration::*,
-    token::Token,
+    token::{BorrowedTokenInput, Token},
     token_enum_registration::TokenToSymbol,
     ParserSession,
 };
@@ -25,9 +25,9 @@ use crate::{
 // Token
 //======================================
 
-impl Token {
+impl<'i> Token<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
-        let Token { tok, src, span } = *self;
+        let Token { tok, src, input } = self;
 
         if tok.isError() {
             if tok.isUnterminated() {
@@ -52,12 +52,14 @@ impl Token {
                 .unwrap();
         }
 
-        let sym = TokenToSymbol(tok);
+        let sym = TokenToSymbol(*tok);
 
         sym.put(session, callLink);
 
         // bufLen().put(session, callLink);
-        let source: &[u8] = &session.tokenizer.input[span.offset..span.offset + span.len];
+        // let source: &[u8] = &session.tokenizer.input[span.offset..span.offset + span.len];
+        let source: &[u8] = &input.buf.as_bytes();
+
         let source = std::str::from_utf8(source).expect("token source span is not valid UTF-8");
         callLink.put_str(source).unwrap();
 
@@ -71,7 +73,7 @@ impl Token {
 // Node types
 //======================================
 
-impl Node {
+impl<'i> Node<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, link: &mut wstp::Link) {
         match self {
             Node::Token(token) => token.put(session, link),
@@ -96,7 +98,7 @@ impl Node {
     }
 }
 
-impl NodeSeq {
+impl<'i> NodeSeq<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
         let NodeSeq(vec) = self;
 
@@ -113,7 +115,7 @@ impl NodeSeq {
     }
 }
 
-impl OperatorNode {
+impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
         let OperatorNode {
             op,
@@ -134,7 +136,7 @@ impl OperatorNode {
     }
 }
 
-impl CallNode {
+impl<'i> CallNode<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
         let CallNode { head, body, src } = self;
         callLink
@@ -151,7 +153,7 @@ impl CallNode {
     }
 }
 
-impl SyntaxErrorNode {
+impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
         let SyntaxErrorNode { err, children, src } = self;
 
@@ -169,7 +171,7 @@ impl SyntaxErrorNode {
     }
 }
 
-impl CollectedExpressionsNode {
+impl<'i> CollectedExpressionsNode<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
         let CollectedExpressionsNode { exprs } = self;
 
@@ -227,7 +229,7 @@ impl SafeStringNode {
     }
 }
 
-impl NodeContainer {
+impl<'i> NodeContainer<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
         let NodeContainer { nodes } = self;
 

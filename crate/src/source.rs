@@ -39,7 +39,7 @@ pub(crate) struct Buffer<'i> {
     pub offset: usize,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) struct BufferAndLength<'i> {
     pub buf: Buffer<'i>,
 }
@@ -63,9 +63,10 @@ pub struct ByteSpan {
 }
 
 impl ByteSpan {
-    #[cfg(test)]
-    pub(crate) fn new(offset: usize, len: usize) -> Self {
-        ByteSpan { offset, len }
+    pub(crate) fn end(&self) -> usize {
+        let ByteSpan { offset, len } = *self;
+
+        return offset + len;
     }
 }
 

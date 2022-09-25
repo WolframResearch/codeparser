@@ -127,7 +127,53 @@ pub mod test_utils {
         };
     }
 
-    pub use src;
+    #[macro_export]
+    #[doc(hidden)]
+    /// Convenience constructor for [`Token`][crate::token::Token]s.
+    ///
+    /// **Usage:**
+    ///
+    /// ```
+    /// # use wolfram_code_parse::test_utils::{src, token};
+    /// token!(Integer, "5" @ 0, src!(1:1-1:2));
+    /// //     ^^^^^^^  ... ###  *************
+    /// ```
+    ///
+    /// * `^^^` — [`TokenKind`][crate::token::TokenKind] variant
+    /// * `...` — input content
+    /// * `###` — byte offset of this token
+    /// * `***` — [`Source`][crate::source::Source] of the token
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use pretty_assertions::assert_eq;
+    /// use wolfram_code_parse::{
+    ///     tokenize_bytes,
+    ///     ParseOptions,
+    ///     node::{NodeSeq, Node},
+    ///     test_utils::{src, token}
+    /// };
+    ///
+    /// let NodeSeq(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).nodes;
+    ///
+    /// assert_eq!(tokens, &[
+    ///     Node::Token(token!(Symbol, b"foo" @ 0, src!(1:1-1:4))),
+    ///     Node::Token(token!(Plus, b"+" @ 3, src!(1:4-1:5))),
+    ///     Node::Token(token!(Integer, b"1" @ 4, src!(1:5-1:6))),
+    /// ]);
+    /// ```
+    macro_rules! token {
+        ($kind:ident, $input:tt @ $offset:literal, $src:expr) => {
+            $crate::token::Token {
+                tok: $crate::token::TokenKind::$kind,
+                src: $src,
+                input: $crate::token::BorrowedTokenInput::new($input.as_ref(), $offset),
+            }
+        };
+    }
+
+    pub use {src, token};
 }
 
 //======================================
@@ -256,7 +302,10 @@ use crate::parser_session::ParserSession;
 ///     ])
 /// }); */
 /// ```
-pub fn tokenize_bytes(input: &[u8], opts: &ParseOptions) -> NodeContainer {
+pub fn tokenize_bytes<'i>(
+    input: &'i [u8],
+    opts: &ParseOptions,
+) -> NodeContainer<BorrowedTokenInput<'i>> {
     let ParseOptions {
         first_line_behavior,
         src_convention,
@@ -288,7 +337,10 @@ pub fn tokenize_bytes(input: &[u8], opts: &ParseOptions) -> NodeContainer {
 ///
 /// // TODO: assert_eq!(result.nodes(), &[]);
 /// ```
-pub fn parse_concrete(input: &str, opts: &ParseOptions) -> ParseResult {
+pub fn parse_concrete<'i>(
+    input: &'i str,
+    opts: &ParseOptions,
+) -> ParseResult<BorrowedTokenInput<'i>> {
     let ParseOptions {
         first_line_behavior,
         src_convention,
@@ -343,3 +395,4 @@ macro_rules! panic_if_aborted {
 
 use node::NodeContainer;
 pub(crate) use panic_if_aborted;
+use token::BorrowedTokenInput;

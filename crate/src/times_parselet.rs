@@ -13,13 +13,13 @@ use crate::{
     source::TOPLEVEL,
     symbol::Symbol,
     symbol_registration::SYMBOL_TIMES,
-    token::{Token, TokenKind},
+    token::{TokenKind, TokenRef},
     tokenizer::Tokenizer_currentToken,
 };
 
 
 impl InfixParselet for TimesParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
+    fn parse_infix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
         TimesParselet_parseInfix(session, token)
     }
 
@@ -32,7 +32,7 @@ impl InfixParselet for TimesParselet {
     }
 }
 
-fn TimesParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
+fn TimesParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
     panic_if_aborted!();
 
     Parser_pushLeafAndNext(session, TokIn);

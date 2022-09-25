@@ -11,7 +11,7 @@ use crate::{
     precedence::*,
     source::TOPLEVEL,
     symbol::Symbol,
-    token::{Token, TokenKind},
+    token::{Token, TokenKind, TokenRef},
     tokenizer::Tokenizer_currentToken,
 };
 
@@ -22,12 +22,16 @@ impl IntegralParselet {
 }
 
 impl PrefixParselet for IntegralParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
+    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
         IntegralParselet_parsePrefix(session, self, token)
     }
 }
 
-fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
+fn IntegralParselet_parsePrefix<'i>(
+    session: &mut ParserSession<'i>,
+    P: ParseletPtr,
+    TokIn: TokenRef<'i>,
+) {
     //
     // Something like  \[Integral] f \[DifferentialD] x
     //
@@ -139,7 +143,7 @@ fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) 
 }
 
 impl InfixParselet for InfixDifferentialDParselet {
-    fn parse_infix(&'static self, _session: &mut ParserSession, _token: Token) {
+    fn parse_infix(&'static self, _session: &mut ParserSession, _token: TokenRef) {
         panic!("illegal call to InfixDifferentialDParselet::parse_infix()")
     }
 
@@ -155,7 +159,11 @@ impl InfixParselet for InfixDifferentialDParselet {
         return PRECEDENCE_FAKE_IMPLICITTIMES;
     }
 
-    fn processImplicitTimes(&self, session: &mut ParserSession, TokIn: Token) -> Token {
+    fn processImplicitTimes<'i>(
+        &self,
+        session: &mut ParserSession<'i>,
+        TokIn: TokenRef<'i>,
+    ) -> TokenRef<'i> {
         if Parser_topPrecedence(session) == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially

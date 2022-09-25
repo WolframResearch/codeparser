@@ -18,15 +18,16 @@ use crate::{
         OperatorNode,
     },
     parser_session::ParserSession,
-    source::{ByteSpan, SourceConvention},
+    source::SourceConvention,
     src,
     symbol::Symbol,
     symbol_registration::{SYMBOL_CODEPARSER_GROUPNODE, SYMBOL_CODEPARSER_GROUPSQUARE},
-    token::{Token, TokenKind},
-    EncodingMode, FirstLineBehavior, Source, DEFAULT_TAB_WIDTH,
+    token,
+    token::BorrowedTokenInput,
+    EncodingMode, FirstLineBehavior, DEFAULT_TAB_WIDTH,
 };
 
-fn nodes(input: &str) -> Vec<Node> {
+fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
     let mut session = ParserSession::new(
         input.as_bytes(),
         SourceConvention::LineColumn,
@@ -36,12 +37,14 @@ fn nodes(input: &str) -> Vec<Node> {
     );
 
     let result = session.concrete_parse_expressions();
-    let nodes = result.nodes();
 
-    nodes.to_owned()
+    let NodeSeq(nodes) = NodeSeq(result.nodes().to_vec());
+
+    nodes
 }
 
-fn tokens(input: &str) -> Vec<Node> {
+// TODO: Change this to return Vec<Token>.
+fn tokens(input: &str) -> Vec<Node<BorrowedTokenInput>> {
     let mut session = ParserSession::new(
         input.as_bytes(),
         SourceConvention::LineColumn,
@@ -50,11 +53,11 @@ fn tokens(input: &str) -> Vec<Node> {
         EncodingMode::Normal,
     );
 
-    let NodeContainer {
-        nodes: NodeSeq(nodes),
-    } = session.tokenize();
+    let NodeContainer { nodes } = session.tokenize();
 
-    nodes.clone()
+    let NodeSeq(nodes) = nodes;
+
+    nodes
 }
 
 
@@ -62,87 +65,39 @@ fn tokens(input: &str) -> Vec<Node> {
 fn test_something() {
     assert_eq!(
         tokens("123"),
-        vec![NVToken(Token {
-            tok: TokenKind::Integer,
-            src: src!(1:1-1:4),
-            span: ByteSpan::new(0, 3)
-        })]
+        vec![NVToken(token![Integer, "123" @ 0, src!(1:1-1:4)])]
     );
 
     assert_eq!(
         nodes("foo"),
-        vec![NVToken(Token {
-            tok: TokenKind::Symbol,
-            src: src!(1:1-1:4),
-            span: ByteSpan::new(0, 3)
-        })]
+        vec![NVToken(token![Symbol, "foo" @ 0, src!(1:1-1:4)])]
     );
 
     assert_eq!(
         tokens("a+b"),
         vec![
-            NVToken(Token {
-                tok: TokenKind::Symbol,
-                src: src!(1:1-1:2),
-                span: ByteSpan::new(0, 1),
-            }),
-            NVToken(Token {
-                tok: TokenKind::Plus,
-                src: src!(1:2-1:3),
-                span: ByteSpan::new(1, 1),
-            }),
-            NVToken(Token {
-                tok: TokenKind::Symbol,
-                src: src!(1:3-1:4),
-                span: ByteSpan::new(2, 1),
-            }),
+            NVToken(token![Symbol, "a" @ 0, src!(1:1-1:2)]),
+            NVToken(token![Plus, "+" @ 1, src!(1:2-1:3)]),
+            NVToken(token![Symbol, "b" @ 2, src!(1:3-1:4)]),
         ]
     );
 
     assert_eq!(
         tokens("!a"),
         vec![
-            NVToken(Token {
-                tok: TokenKind::Bang,
-                src: src!(1:1-1:2),
-                span: ByteSpan { offset: 0, len: 1 },
-            },),
-            NVToken(Token {
-                tok: TokenKind::Symbol,
-                src: src!(1:2-1:3),
-                span: ByteSpan::new(1, 1)
-            },),
+            NVToken(token![Bang, "!" @ 0, src!(1:1-1:2)]),
+            NVToken(token![Symbol, "a" @ 1, src!(1:2-1:3)])
         ]
     );
 
     assert_eq!(
         tokens("2 + 2"),
         vec![
-            NVToken(Token {
-                tok: TokenKind::Integer,
-                src: src!(1:1-1:2),
-                span: ByteSpan::new(0, 1)
-            },),
-            NVToken(Token {
-                tok: TokenKind::Whitespace,
-                src: src!(1:2-1:3),
-                span: ByteSpan::new(1, 1)
-            },),
-            NVToken(Token {
-                tok: TokenKind::Plus,
-                src: src!(1:3-1:4),
-                span: ByteSpan::new(2, 1)
-            },),
-            NVToken(Token {
-                tok: TokenKind::Whitespace,
-                src: src!(1:4-1:5),
-                span: ByteSpan::new(3, 1)
-            },),
-            NVToken(Token {
-                tok: TokenKind::Integer,
-                src: src!(1:5-1:6),
-                span: ByteSpan::new(4, 1)
-            },),
+            NVToken(token![Integer, "2" @ 0, src!(1:1-1:2)]),
+            NVToken(token![Whitespace, " " @ 1, src!(1:2-1:3)]),
+            NVToken(token![Plus, "+" @ 2, src!(1:3-1:4)]),
+            NVToken(token![Whitespace, " " @ 3, src!(1:4-1:5)]),
+            NVToken(token![Integer, "2" @ 4, src!(1:5-1:6)]),
         ]
     );
 
@@ -153,31 +108,11 @@ fn test_something() {
             op: crate::symbol_registration::SYMBOL_PLUS,
             make_sym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
             children: NodeSeq(vec![
-                NVToken(Token {
-                    tok: TokenKind::Integer,
-                    src: src!(1:1-1:2),
-                    span: ByteSpan::new(0, 1),
-                },),
-                NVToken(Token {
-                    tok: TokenKind::Whitespace,
-                    src: src!(1:2-1:3),
-                    span: ByteSpan::new(1, 1)
-                },),
-                NVToken(Token {
-                    tok: TokenKind::Plus,
-                    src: src!(1:3-1:4),
-                    span: ByteSpan::new(2, 1),
-                },),
-                NVToken(Token {
-                    tok: TokenKind::Whitespace,
-                    src: src!(1:4-1:5),
-                    span: ByteSpan::new(3, 1),
-                },),
-                NVToken(Token {
-                    tok: TokenKind::Integer,
-                    src: src!(1:5-1:6),
-                    span: ByteSpan::new(4, 1),
-                },),
+                NVToken(token![Integer, "2" @ 0, src!(1:1-1:2)]),
+                NVToken(token![Whitespace, " " @ 1, src!(1:2-1:3)]),
+                NVToken(token![Plus, "+" @ 2, src!(1:3-1:4)]),
+                NVToken(token![Whitespace, " " @ 3, src!(1:4-1:5)]),
+                NVToken(token![Integer, "2" @ 4, src!(1:5-1:6)]),
             ],),
             src: src!(1:1-1:6),
         }))]
@@ -186,44 +121,24 @@ fn test_something() {
     assert_eq!(
         nodes("f[x]"),
         vec![Node::Call(CallNode {
-            head: NodeSeq(vec![Node::Token(Token {
-                tok: TokenKind::Symbol,
-                src: src!(1:1-1:2),
-                span: ByteSpan::new(0, 1),
-            })]),
+            head: NodeSeq(vec![Node::Token(token![
+                Symbol,
+                "f" @ 0,
+                src!(1:1-1:2)
+            ])]),
             body: Box::new(Node::Group(GroupNode(OperatorNode {
                 op: SYMBOL_CODEPARSER_GROUPSQUARE,
                 make_sym: SYMBOL_CODEPARSER_GROUPNODE,
                 children: NodeSeq(vec![
-                    NVToken(Token {
-                        tok: TokenKind::OpenSquare,
-                        src: src!(1:2-1:3),
-                        span: ByteSpan::new(1, 1),
-                    }),
-                    NVToken(Token {
-                        tok: TokenKind::Symbol,
-                        src: src!(1:3-1:4),
-                        span: ByteSpan::new(2, 1),
-                    }),
-                    NVToken(Token {
-                        tok: TokenKind::CloseSquare,
-                        src: src!(1:4-1:5),
-                        span: ByteSpan::new(3, 1),
-                    }),
+                    NVToken(token![OpenSquare, "[" @ 1, src!(1:2-1:3)]),
+                    NVToken(token![Symbol, "x" @ 2, src!(1:3-1:4)]),
+                    NVToken(token![CloseSquare, "]" @ 3, src!(1:4-1:5)]),
                 ]),
                 src: src!(1:2-1:5),
-            },))),
+            }))),
             src: src!(1:1-1:5),
         })]
     );
-}
-
-fn token(kind: TokenKind, src: Source, span: ByteSpan) -> Node {
-    Node::Token(Token {
-        tok: kind,
-        src,
-        span,
-    })
 }
 
 #[test]
@@ -239,9 +154,9 @@ pub fn test_tokenize_is_not_idempotent() {
     assert_eq!(
         session.tokenize().nodes.0,
         vec![
-            token(TokenKind::Integer, src!(0:1-0:2), ByteSpan::new(0, 1)),
-            token(TokenKind::Plus, src!(0:2-0:3), ByteSpan::new(1, 1)),
-            token(TokenKind::Integer, src!(0:3-0:4), ByteSpan::new(2, 1))
+            NVToken(token![Integer, "2" @ 0, src!(0:1-0:2)]),
+            NVToken(token![Plus, "+" @ 1, src!(0:2-0:3)]),
+            NVToken(token![Integer, "2" @ 2, src!(0:3-0:4)])
         ]
     );
 
