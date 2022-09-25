@@ -7,7 +7,7 @@ macro(CheckMacOSXVersionMin)
   
   execute_process(
     COMMAND
-      ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -nostartuppaclets -run Pause[${KERNEL_PAUSE}]\;Needs["CCompilerDriver`"]\;Print[OutputForm[StringReplace[CCompilerDriver`CCompilerDriverBase`MacOSXVersionMinFlag[],\ "-mmacosx-version-min="\ ->\ ""]]]\;Exit[]
+      ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -nostartuppaclets -run Pause[${KERNEL_PAUSE}]\;Needs["CCompilerDriver`"]\;Print[OutputForm[If[$VersionNumber\ >=\ 12.2,\ StringReplace[CCompilerDriver`CCompilerDriverBase`MacOSXVersionMinFlag[],\ "-mmacosx-version-min="\ ->\ ""],\ "10.10"]]]\;Exit[]
     OUTPUT_VARIABLE
       MACOSX_VERSION_MIN
     OUTPUT_STRIP_TRAILING_WHITESPACE
