@@ -67,7 +67,7 @@ impl NodeSeq {
         let e = Expr_BuildExprA(head, size_to_int(vec.len()));
 
         for i in 0..vec.len() {
-            if crate::feature::CHECK_ABORT && session.abortQ() {
+            if crate::feature::CHECK_ABORT && crate::abortQ() {
                 Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr(session));
                 continue;
             }

@@ -103,7 +103,7 @@ impl NodeSeq {
         callLink.put_function(SYMBOL_LIST.name, vec.len()).unwrap();
 
         for C in vec {
-            if crate::feature::CHECK_ABORT && session.abortQ() {
+            if crate::feature::CHECK_ABORT && crate::abortQ() {
                 SYMBOL__ABORTED.put(session, callLink);
                 continue;
             }
