@@ -472,38 +472,16 @@ pub(crate) fn Symbol_put(self_: Symbol, callLink: &mut wstp::Link) {
 
 impl Severity {
     pub(crate) fn put(&self, link: &mut wstp::Link) {
-        let string: MyString = match self {
-            Severity::Formatting => STRING_FORMATTING,
-            Severity::Remark => STRING_REMARK,
-            Severity::Warning => STRING_WARNING,
-            Severity::Error => STRING_ERROR,
-            Severity::Fatal => STRING_FATAL,
-        };
+        let string: &'static str = self.into();
 
-        string.put(link);
+        link.put_str(string).unwrap();
     }
 }
 
 impl IssueTag {
     pub(crate) fn put(&self, link: &mut wstp::Link) {
-        let string: MyString = match self {
-            IssueTag::Ambiguous => STRING_AMBIGUOUS,
-            IssueTag::UnhandledCharacter => STRING_UNHANDLEDCHARACTER,
-            IssueTag::UnexpectedCharacter => STRING_UNEXPECTEDCHARACTER,
-            IssueTag::UnexpectedCarriageReturn => STRING_UNEXPECTEDCARRIAGERETURN,
-            IssueTag::UnexpectedSpaceCharacter => STRING_UNEXPECTEDSPACECHARACTER,
-            IssueTag::UnexpectedNewlineCharacter => STRING_UNEXPECTEDNEWLINECHARACTER,
-            IssueTag::UnexpectedDot => STRING_UNEXPECTEDDOT,
-            IssueTag::UnexpectedSign => STRING_UNEXPECTEDSIGN,
-            IssueTag::UnexpectedImplicitTimes => STRING_UNEXPECTEDIMPLICITTIMES,
-            IssueTag::UnexpectedLetterlikeCharacter => STRING_UNEXPECTEDLETTERLIKECHARACTER,
-            IssueTag::UndocumentedSlotSyntax => STRING_UNDOCUMENTEDSLOTSYNTAX,
-            IssueTag::NonASCIICharacter => STRING_NONASCIICHARACTER,
-            IssueTag::IncompleteUTF8Sequence => STRING_INCOMPLETEUTF8SEQUENCE,
-            IssueTag::StraySurrogate => STRING_STRAYSURROGATE,
-            IssueTag::BOM => STRING_BOM,
-        };
+        let string: &'static str = self.into();
 
-        string.put(link);
+        link.put_str(string).unwrap();
     }
 }

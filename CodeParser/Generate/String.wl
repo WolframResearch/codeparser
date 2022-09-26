@@ -27,32 +27,7 @@ strings = Union[Join[
   {"InsertionText", "ReplacementText"},
   {"UnsafeCharacterEncoding_IncompleteUTF8Sequence",
     "UnsafeCharacterEncoding_StraySurrogate",
-    "UnsafeCharacterEncoding_BOM",
-    "UnsafeCharacterEncoding_Unknown"},
-  (*
-  SyntaxIssue Tags
-  *)
-  {"UnhandledCharacter", "UnsupportedCharacter",
-    "UndocumentedCharacter", "UnexpectedEscapeSequence",
-    "UnexpectedCharacter", "UnexpectedNewlineCharacter",
-    "UnexpectedSpaceCharacter", "UnexpectedLetterlikeCharacter",
-    "UndocumentedSlotSyntax", "UnexpectedImplicitTimes",
-    "UnexpectedDot", "Comma", "UnexpectedSign", "Ambiguous",
-    "UnrecognizedLongName"},
-  (*
-  FormatIssue Tags
-  *)
-  {"Ambiguous"},
-  (*
-  EncodingIssue Tags
-  *)
-  {"IncompleteUTF8Sequence", "StraySurrogate", "BOM",
-    "UnexpectedCarriageReturn", "UnexpectedCharacter",
-    "NonASCIICharacter"},
-  (*
-  Severities
-  *)
-  {"Remark", "Warning", "Error", "Fatal", "Formatting"}
+    "UnsafeCharacterEncoding_BOM"}
 ]]
 
 
