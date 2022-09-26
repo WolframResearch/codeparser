@@ -11,8 +11,8 @@ use crate::{
         SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     source::{
-        BufferAndLength, CodeAction, CodeActionKind, Issue, Severity, Source, SourceConvention,
-        SourceLocation,
+        BufferAndLength, CodeAction, CodeActionKind, Issue, IssueTag, Severity, Source,
+        SourceConvention, SourceLocation,
     },
     symbol::Symbol,
     symbol_registration::*,
@@ -478,6 +478,30 @@ impl Severity {
             Severity::Warning => STRING_WARNING,
             Severity::Error => STRING_ERROR,
             Severity::Fatal => STRING_FATAL,
+        };
+
+        string.put(link);
+    }
+}
+
+impl IssueTag {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let string: MyString = match self {
+            IssueTag::Ambiguous => STRING_AMBIGUOUS,
+            IssueTag::UnhandledCharacter => STRING_UNHANDLEDCHARACTER,
+            IssueTag::UnexpectedCharacter => STRING_UNEXPECTEDCHARACTER,
+            IssueTag::UnexpectedCarriageReturn => STRING_UNEXPECTEDCARRIAGERETURN,
+            IssueTag::UnexpectedSpaceCharacter => STRING_UNEXPECTEDSPACECHARACTER,
+            IssueTag::UnexpectedNewlineCharacter => STRING_UNEXPECTEDNEWLINECHARACTER,
+            IssueTag::UnexpectedDot => STRING_UNEXPECTEDDOT,
+            IssueTag::UnexpectedSign => STRING_UNEXPECTEDSIGN,
+            IssueTag::UnexpectedImplicitTimes => STRING_UNEXPECTEDIMPLICITTIMES,
+            IssueTag::UnexpectedLetterlikeCharacter => STRING_UNEXPECTEDLETTERLIKECHARACTER,
+            IssueTag::UndocumentedSlotSyntax => STRING_UNDOCUMENTEDSLOTSYNTAX,
+            IssueTag::NonASCIICharacter => STRING_NONASCIICHARACTER,
+            IssueTag::IncompleteUTF8Sequence => STRING_INCOMPLETEUTF8SEQUENCE,
+            IssueTag::StraySurrogate => STRING_STRAYSURROGATE,
+            IssueTag::BOM => STRING_BOM,
         };
 
         string.put(link);
