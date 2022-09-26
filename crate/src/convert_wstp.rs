@@ -457,7 +457,7 @@ impl Source {
 
 impl MyString {
     pub(crate) fn put(&self, link: &mut wstp::Link) {
-        let MyString { val, id: _ } = self;
+        let MyString(val) = self;
 
         link.put_str(val).unwrap()
     }

@@ -484,7 +484,7 @@ impl PartialOrd for Issue {
         // TODO: What is the reason for doing this? This seems to result in
         //       otherwise equal issues being sorted in reverse alphabetical
         //       order by issue name.
-        Some(self.tag.id.cmp(&other.tag.id).reverse())
+        Some(self.tag.cmp(&other.tag).reverse())
     }
 }
 
