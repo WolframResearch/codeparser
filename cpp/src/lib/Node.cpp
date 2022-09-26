@@ -94,7 +94,7 @@ void NodeSeq::release() {
 }
 
 void NodeSeq::push(NodeVariant&& N) {
-    vec.push_back(N);
+    vec.push_back(std::move(N));
 }
 
 void NodeSeq::clear() {
@@ -247,7 +247,12 @@ void AbortNode::print(ParserSessionPtr session, std::ostream& s) const {
 }
 
 Source AbortNode::getSource() const {
-    return Source(SourceLocation(std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()));
+    //
+    // parens around ::max to prevent:
+    // warning C4003: not enough arguments for function-like macro invocation 'max'
+    // on MSVC
+    //
+    return Source(SourceLocation((std::numeric_limits<uint32_t>::max)(), (std::numeric_limits<uint32_t>::max)()));
 }
 
 bool AbortNode::syntaxQ() const {
@@ -415,7 +420,7 @@ void SyntaxErrorNode::print(ParserSessionPtr session, std::ostream& s) const {
 }
 
 
-CollectedExpressionsNode::CollectedExpressionsNode(NodeSeq&& Exprs) : Exprs(Exprs) {}
+CollectedExpressionsNode::CollectedExpressionsNode(NodeSeq&& Exprs) : Exprs(std::move(Exprs)) {}
 
 void CollectedExpressionsNode::release() {
     Exprs.release();
@@ -573,7 +578,7 @@ void SafeStringNode::print(ParserSessionPtr session, std::ostream& s) const {
 }
 
 
-NodeContainer::NodeContainer(NodeSeq&& Nodes) : Nodes(Nodes) {}
+NodeContainer::NodeContainer(NodeSeq&& Nodes) : Nodes(std::move(Nodes)) {}
 
 Source NodeContainer::getSource() const {
     
