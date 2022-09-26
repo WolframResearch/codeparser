@@ -19,6 +19,8 @@ importedPrecedenceSource
 
 importedTokenEnumSource
 
+FatalError::usage = "FatalError[expr, ...] prints an error message an exists with a fatal error code."
+
 Begin["`Private`"]
 
 (*
@@ -64,6 +66,12 @@ importedLongNames := importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.w
 importedPrecedenceSource := importedPrecedenceSource = Get[FileNameJoin[{dataDir, "Precedence.wl"}]]
 
 importedTokenEnumSource := importedTokenEnumSource = Get[FileNameJoin[{dataDir, "TokenEnum.wl"}]]
+
+FatalError[args___] := (
+	Print["\n\nFATAL ERROR: ", args, "\n\n"];
+
+	Exit[-1]
+)
 
 End[]
 

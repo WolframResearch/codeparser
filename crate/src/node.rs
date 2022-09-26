@@ -7,6 +7,8 @@ use crate::{
     tokenizer::{Tokenizer, UnsafeCharacterEncoding},
 };
 
+pub use crate::parselet_registration::Operator;
+
 //
 // Used mainly for collecting trivia that has been eaten
 //
@@ -52,7 +54,7 @@ pub enum Node<I = OwnedTokenInput> {
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
 pub struct OperatorNode<I = OwnedTokenInput> {
-    pub(crate) op: Symbol,
+    pub(crate) op: Operator,
     pub(crate) children: NodeSeq<I>,
     pub(crate) src: Source,
 }
@@ -445,7 +447,7 @@ impl<I> Node<I> {
 //======================================
 
 impl<I> OperatorNode<I> {
-    pub(crate) fn new(op: Symbol, children: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, children: NodeSeq<I>) -> Self {
         assert!(!children.is_empty());
 
         let src = Source::new_from_source(children.first().source(), children.last().source());
@@ -457,7 +459,7 @@ impl<I> OperatorNode<I> {
         }
     }
 
-    pub fn getOp(&self) -> Symbol {
+    pub fn getOp(&self) -> Operator {
         return self.op;
     }
 
@@ -520,7 +522,7 @@ impl<I> UnterminatedGroupNeedsReparseNode<I> {
 //======================================
 
 impl<I> PrefixNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixNodeCount);
 
         PrefixNode(OperatorNode::new(op, args))
@@ -528,7 +530,7 @@ impl<I> PrefixNode<I> {
 }
 
 impl<I> BinaryNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
 
         BinaryNode(OperatorNode::new(op, args))
@@ -536,7 +538,7 @@ impl<I> BinaryNode<I> {
 }
 
 impl<I> InfixNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
 
         InfixNode(OperatorNode::new(op, args))
@@ -544,7 +546,7 @@ impl<I> InfixNode<I> {
 }
 
 impl<I> TernaryNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_TernaryNodeCount);
 
         TernaryNode(OperatorNode::new(op, args))
@@ -552,7 +554,7 @@ impl<I> TernaryNode<I> {
 }
 
 impl<I> PostfixNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
 
         PostfixNode(OperatorNode::new(op, args))
@@ -560,7 +562,7 @@ impl<I> PostfixNode<I> {
 }
 
 impl<I> PrefixBinaryNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixBinaryNodeCount);
 
         PrefixBinaryNode(OperatorNode::new(op, args))
@@ -572,7 +574,7 @@ impl<I> PrefixBinaryNode<I> {
 //======================================
 
 impl<I> GroupNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupNodeCount);
 
         GroupNode(OperatorNode::new(op, args))
@@ -580,7 +582,7 @@ impl<I> GroupNode<I> {
 }
 
 impl<I> CompoundNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_CompoundNodeCount);
 
         CompoundNode(OperatorNode::new(op, args))
@@ -588,7 +590,7 @@ impl<I> CompoundNode<I> {
 }
 
 impl<I> GroupMissingCloserNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
         GroupMissingCloserNode(OperatorNode::new(op, args))
@@ -596,7 +598,7 @@ impl<I> GroupMissingCloserNode<I> {
 }
 
 impl<I> UnterminatedGroupNeedsReparseNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
         incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
 
         UnterminatedGroupNeedsReparseNode(OperatorNode::new(op, args))

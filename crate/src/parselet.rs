@@ -2,7 +2,7 @@ use std::any::Any;
 
 use crate::{
     node::{
-        BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode,
+        BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode, Operator,
         PostfixNode, PrefixNode, SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
@@ -19,7 +19,6 @@ use crate::{
     parser_session::ParserSession,
     precedence::{Precedence, *},
     source::*,
-    symbol::Symbol,
     symbol_registration::*,
     token::{Token, TokenKind, TokenRef},
     token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
@@ -59,8 +58,9 @@ pub(crate) trait InfixParselet: Parselet {
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence;
 
-    fn getOp(&self) -> Symbol {
-        return SYMBOL_CODEPARSER_INTERNALINVALID;
+    fn getOp(&self) -> Operator {
+        // TODO: Make this sentinel value unnecessary?
+        return Operator::CodeParser_InternalInvalid;
     }
 
     fn processImplicitTimes<'i>(
@@ -194,7 +194,7 @@ pub(crate) struct PrefixUnhandledParselet /* : PrefixParselet */ {}
 #[derive(Debug)]
 pub(crate) struct PrefixOperatorParselet /* : PrefixParselet */ {
     precedence: Precedence,
-    Op: Symbol,
+    Op: Operator,
 }
 
 #[derive(Debug)]
@@ -222,17 +222,15 @@ pub(crate) struct InfixToplevelNewlineParselet /* : InfixParselet */ {}
 
 #[derive(Debug)]
 pub(crate) struct BinaryOperatorParselet /* : InfixParselet */ {
-    // private:
     precedence: Precedence,
-    Op: Symbol,
+    Op: Operator,
 }
 
 
 #[derive(Debug)]
 pub(crate) struct InfixOperatorParselet /* : InfixParselet */ {
-    // private:
     precedence: Precedence,
-    Op: Symbol,
+    Op: Operator,
 }
 
 
@@ -246,22 +244,15 @@ pub(crate) struct TimesParselet /* : InfixParselet */ {}
 
 #[derive(Debug)]
 pub(crate) struct PostfixOperatorParselet /* : InfixParselet */ {
-    // private:
     precedence: Precedence,
-    Op: Symbol,
+    Op: Operator,
 }
 
 
 #[derive(Debug)]
 pub(crate) struct GroupParselet /* : PrefixParselet */ {
-    // private:
-    Op: Symbol,
+    Op: Operator,
     closer: Closer,
-    // public:
-
-    //     GroupParselet(Opener: TokenEnum, Op: Symbol);
-
-    //     Closer getCloser() const;
 }
 
 
@@ -322,8 +313,8 @@ pub(crate) struct ColonEqualParselet /* : BinaryOperatorParselet */ {
 
 #[derive(Debug)]
 pub(crate) struct IntegralParselet /* : PrefixParselet */ {
-    pub(crate) Op1: Symbol,
-    pub(crate) Op2: Symbol,
+    pub(crate) Op1: Operator,
+    pub(crate) Op2: Operator,
 }
 
 
@@ -358,8 +349,8 @@ pub(crate) struct PercentParselet /* : PrefixParselet */ {}
 
 #[derive(Debug)]
 pub(crate) struct UnderParselet /* : PrefixParselet */ {
-    pub BOp: Symbol,
-    pub PBOp: Symbol,
+    pub BOp: Operator,
+    pub PBOp: Operator,
 }
 
 
@@ -789,7 +780,7 @@ fn SymbolParselet_reducePatternBlank(session: &mut ParserSession, P: &UnderParse
 
 fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession) {
     let node = CompoundNode::new(
-        SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT,
+        Operator::CodeParser_PatternOptionalDefault,
         Parser_popContext(session),
     );
     Parser_pushNode(session, node);
@@ -803,7 +794,7 @@ fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession) {
 //======================================
 
 impl PrefixOperatorParselet {
-    pub(crate) const fn new(precedence: Precedence, Op: Symbol) -> Self {
+    pub(crate) const fn new(precedence: Precedence, Op: Operator) -> Self {
         PrefixOperatorParselet { precedence, Op }
     }
 
@@ -811,7 +802,7 @@ impl PrefixOperatorParselet {
         return self.precedence;
     }
 
-    fn getOp(&self) -> Symbol {
+    fn getOp(&self) -> Operator {
         self.Op
     }
 }
@@ -930,7 +921,7 @@ impl InfixParselet for InfixAssertFalseParselet {
 //======================================
 
 impl BinaryOperatorParselet {
-    pub(crate) const fn new(precedence: Precedence, Op: Symbol) -> Self {
+    pub(crate) const fn new(precedence: Precedence, Op: Operator) -> Self {
         BinaryOperatorParselet { precedence, Op }
     }
 }
@@ -944,7 +935,7 @@ impl InfixParselet for BinaryOperatorParselet {
         self.precedence
     }
 
-    fn getOp(&self) -> Symbol {
+    fn getOp(&self) -> Operator {
         self.Op
     }
 }
@@ -996,7 +987,7 @@ fn BinaryOperatorParselet_reduceBinaryOperator(session: &mut ParserSession, P: P
 //======================================
 
 impl InfixOperatorParselet {
-    pub(crate) const fn new(precedence: Precedence, Op: Symbol) -> Self {
+    pub(crate) const fn new(precedence: Precedence, Op: Operator) -> Self {
         Self { precedence, Op }
     }
 }
@@ -1010,7 +1001,7 @@ impl InfixParselet for InfixOperatorParselet {
         self.precedence
     }
 
-    fn getOp(&self) -> Symbol {
+    fn getOp(&self) -> Operator {
         self.Op
     }
 }
@@ -1146,7 +1137,7 @@ fn InfixOperatorParselet_reduceInfixOperator(
 //======================================
 
 impl PostfixOperatorParselet {
-    pub(crate) const fn new(precedence: Precedence, Op: Symbol) -> Self {
+    pub(crate) const fn new(precedence: Precedence, Op: Operator) -> Self {
         PostfixOperatorParselet { precedence, Op }
     }
 }
@@ -1160,7 +1151,7 @@ impl InfixParselet for PostfixOperatorParselet {
         self.precedence
     }
 
-    fn getOp(&self) -> Symbol {
+    fn getOp(&self) -> Operator {
         self.Op
     }
 }
@@ -1195,14 +1186,14 @@ fn PostfixOperatorParselet_reducePostfixOperator(
 //======================================
 
 impl GroupParselet {
-    pub(crate) const fn new(Opener: TokenKind, Op: Symbol) -> Self {
+    pub(crate) const fn new(Opener: TokenKind, Op: Operator) -> Self {
         Self {
             Op,
             closer: GroupOpenerToCloser(Opener),
         }
     }
 
-    fn getOp(&self) -> Symbol {
+    fn getOp(&self) -> Operator {
         self.Op
     }
 
@@ -1549,7 +1540,10 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
 }
 
 fn TildeParselet_reduceTilde(session: &mut ParserSession) {
-    let node = TernaryNode::new(SYMBOL_CODEPARSER_TERNARYTILDE, Parser_popContext(session));
+    let node = TernaryNode::new(
+        Operator::CodeParser_TernaryTilde,
+        Parser_popContext(session),
+    );
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1636,7 +1630,7 @@ fn ColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 }
 
 fn ColonParselet_reducePattern(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_PATTERN, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::Pattern, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1655,7 +1649,7 @@ fn ColonParselet_reduceError(session: &mut ParserSession) {
 }
 
 fn ColonParselet_reduceOptional(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_OPTIONAL, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::Optional, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1771,7 +1765,7 @@ fn SlashColonParselet_reduceError(session: &mut ParserSession) {
 impl EqualParselet {
     pub(crate) const fn new() -> Self {
         Self {
-            op: BinaryOperatorParselet::new(PRECEDENCE_EQUAL, SYMBOL_SET),
+            op: BinaryOperatorParselet::new(PRECEDENCE_EQUAL, Operator::Set),
         }
     }
 }
@@ -1860,7 +1854,7 @@ fn EqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: Token
 }
 
 fn EqualParselet_reduceSet(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_SET, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::Set, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1868,7 +1862,7 @@ fn EqualParselet_reduceSet(session: &mut ParserSession) {
 }
 
 fn EqualParselet_reduceUnset(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_UNSET, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::Unset, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1876,7 +1870,7 @@ fn EqualParselet_reduceUnset(session: &mut ParserSession) {
 }
 
 fn EqualParselet_reduceTagSet(session: &mut ParserSession) {
-    let node = TernaryNode::new(SYMBOL_TAGSET, Parser_popContext(session));
+    let node = TernaryNode::new(Operator::TagSet, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1884,7 +1878,7 @@ fn EqualParselet_reduceTagSet(session: &mut ParserSession) {
 }
 
 fn EqualParselet_reduceTagUnset(session: &mut ParserSession) {
-    let node = TernaryNode::new(SYMBOL_TAGUNSET, Parser_popContext(session));
+    let node = TernaryNode::new(Operator::TagUnset, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1898,7 +1892,7 @@ fn EqualParselet_reduceTagUnset(session: &mut ParserSession) {
 impl ColonEqualParselet {
     pub(crate) const fn new() -> Self {
         ColonEqualParselet {
-            op: BinaryOperatorParselet::new(PRECEDENCE_COLONEQUAL, SYMBOL_SETDELAYED),
+            op: BinaryOperatorParselet::new(PRECEDENCE_COLONEQUAL, Operator::SetDelayed),
         }
     }
 }
@@ -1957,7 +1951,7 @@ fn ColonEqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: 
 }
 
 fn ColonEqualParselet_reduceSetDelayed(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_SETDELAYED, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::SetDelayed, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1965,7 +1959,7 @@ fn ColonEqualParselet_reduceSetDelayed(session: &mut ParserSession) {
 }
 
 fn ColonEqualParselet_reduceTagSetDelayed(session: &mut ParserSession) {
-    let node = TernaryNode::new(SYMBOL_TAGSETDELAYED, Parser_popContext(session));
+    let node = TernaryNode::new(Operator::TagSetDelayed, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2120,7 +2114,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn CommaParselet_reduceComma(session: &mut ParserSession) {
-    let node = InfixNode::new(SYMBOL_CODEPARSER_COMMA, Parser_popContext(session));
+    let node = InfixNode::new(Operator::CodeParser_Comma, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     //
@@ -2358,7 +2352,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn SemiParselet_reduceCompoundExpression(session: &mut ParserSession) {
-    let node = InfixNode::new(SYMBOL_COMPOUNDEXPRESSION, Parser_popContext(session));
+    let node = InfixNode::new(Operator::CompoundExpression, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2447,7 +2441,7 @@ fn ColonColonParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn ColonColonParselet_reduceMessageName(session: &mut ParserSession) {
-    let node = InfixNode::new(SYMBOL_MESSAGENAME, Parser_popContext(session));
+    let node = InfixNode::new(Operator::MessageName, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2493,7 +2487,7 @@ fn GreaterGreaterParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn:
 }
 
 fn GreaterGreaterParselet_reducePut(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_PUT, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::Put, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2542,7 +2536,8 @@ fn GreaterGreaterGreaterParselet_parseInfix<'i>(
 }
 
 fn GreaterGreaterGreaterParselet_reducePutAppend(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_PUTAPPEND, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::PutAppend, Parser_popContext(session));
+
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2586,7 +2581,7 @@ fn LessLessParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
 }
 
 fn LessLessParselet_reduceGet(session: &mut ParserSession) {
-    let node = PrefixNode::new(SYMBOL_GET, Parser_popContext(session));
+    let node = PrefixNode::new(Operator::Get, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2642,7 +2637,7 @@ fn HashParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 }
 
 fn HashParselet_reduceSlot(session: &mut ParserSession) {
-    let node = CompoundNode::new(SYMBOL_SLOT, Parser_popContext(session));
+    let node = CompoundNode::new(Operator::Slot, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2688,7 +2683,7 @@ fn HashHashParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
 }
 
 fn HashHashParselet_reduceSlotSequence(session: &mut ParserSession) {
-    let node = CompoundNode::new(SYMBOL_SLOTSEQUENCE, Parser_popContext(session));
+    let node = CompoundNode::new(Operator::SlotSequence, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2734,7 +2729,7 @@ fn PercentParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Token
 }
 
 fn PercentParselet_reduceOut(session: &mut ParserSession) {
-    let node = CompoundNode::new(SYMBOL_OUT, Parser_popContext(session));
+    let node = CompoundNode::new(Operator::Out, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

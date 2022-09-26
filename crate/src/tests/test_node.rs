@@ -1,9 +1,8 @@
 use crate::{
-    node::{CompoundNode, Node, NodeSeq},
+    node::{CompoundNode, Node, NodeSeq, Operator},
     source::SourceLocation,
-    src,
-    symbol_registration::*,
-    token, EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
+    src, token, EncodingMode, FirstLineBehavior, ParserSession, SourceConvention,
+    DEFAULT_TAB_WIDTH,
 };
 
 
@@ -27,7 +26,7 @@ fn NodeTest_Bug1() {
     let T2 = token!(UnderDot, "_." @ 1, src!(1:2-1:4));
     Args.push(Node::Token(T2));
 
-    let N = CompoundNode::new(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, Args);
+    let N = CompoundNode::new(Operator::CodeParser_PatternOptionalDefault, Args);
 
     let NSource = Node::Compound(N).getSource();
 

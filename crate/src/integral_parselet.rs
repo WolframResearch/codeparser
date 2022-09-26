@@ -1,5 +1,5 @@
 use crate::{
-    node::{PrefixBinaryNode, PrefixNode},
+    node::{Operator, PrefixBinaryNode, PrefixNode},
     panic_if_aborted,
     parselet::*,
     parser::{
@@ -10,13 +10,12 @@ use crate::{
     parser_session::ParserSession,
     precedence::*,
     source::TOPLEVEL,
-    symbol::Symbol,
     token::{Token, TokenKind, TokenRef},
     tokenizer::Tokenizer_currentToken,
 };
 
 impl IntegralParselet {
-    pub(crate) const fn new(Op1: Symbol, Op2: Symbol) -> Self {
+    pub(crate) const fn new(Op1: Operator, Op2: Operator) -> Self {
         IntegralParselet { Op1, Op2 }
     }
 }

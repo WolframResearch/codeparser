@@ -1,5 +1,5 @@
 use crate::{
-    node::{BinaryNode, TernaryNode},
+    node::{BinaryNode, Operator, TernaryNode},
     panic_if_aborted,
     parselet::*,
     parser::{
@@ -11,7 +11,6 @@ use crate::{
     parser_session::ParserSession,
     precedence::*,
     source::TOPLEVEL,
-    symbol_registration::SYMBOL_SPAN,
     token::{Token, TokenKind, TokenRef},
     tokenizer::Tokenizer_currentToken,
 };
@@ -303,7 +302,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
 }
 
 fn SemiSemiParselet_reduceBinary(session: &mut ParserSession) {
-    let node = BinaryNode::new(SYMBOL_SPAN, Parser_popContext(session));
+    let node = BinaryNode::new(Operator::Span, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -311,7 +310,7 @@ fn SemiSemiParselet_reduceBinary(session: &mut ParserSession) {
 }
 
 fn SemiSemiParselet_reduceTernary(session: &mut ParserSession) {
-    let node = TernaryNode::new(SYMBOL_SPAN, Parser_popContext(session));
+    let node = TernaryNode::new(Operator::Span, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

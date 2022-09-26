@@ -2,7 +2,7 @@ use std::fmt::{self, Debug};
 
 use crate::{
     feature,
-    node::{BinaryNode, CompoundNode, Node, NodeSeq, TernaryNode, TriviaSeq},
+    node::{BinaryNode, CompoundNode, Node, NodeSeq, Operator, TernaryNode, TriviaSeq},
     panic_if_aborted,
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
     parselet_registration::INFIX_PARSELETS,
@@ -10,7 +10,6 @@ use crate::{
     parser_session::{NodeStack, ParserSession},
     precedence::{Precedence, *},
     source::{NextPolicy, TOPLEVEL},
-    symbol_registration::{SYMBOL_PATTERN, SYMBOL_SPAN, *},
 
     token::{BorrowedTokenInput, TokenKind, TokenRef},
     token_enum::Closer,
@@ -557,7 +556,7 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
 
             let op = op.getOp();
 
-            if op == SYMBOL_PATTERN {
+            if op == Operator::Pattern {
                 return ColonLHS::Optional;
             }
 
@@ -573,12 +572,12 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
             let op = op.getOp();
 
             match op {
-                SYMBOL_CODEPARSER_PATTERNBLANK
-                | SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE
-                | SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE
-                | SYMBOL_BLANK
-                | SYMBOL_BLANKSEQUENCE
-                | SYMBOL_BLANKNULLSEQUENCE => {
+                Operator::CodeParser_PatternBlank
+                | Operator::CodeParser_PatternBlankSequence
+                | Operator::CodeParser_PatternBlankNullSequence
+                | Operator::Blank
+                | Operator::BlankSequence
+                | Operator::BlankNullSequence => {
                     return ColonLHS::Optional;
                 },
                 _ => return ColonLHS::Error,
@@ -686,7 +685,7 @@ pub(crate) fn Parser_checkSpan<'i>(session: &mut ParserSession<'i>) -> bool {
         if let Node::Binary(BinaryNode(B)) = NN {
             let op = B.getOp();
 
-            if op == SYMBOL_SPAN {
+            if op == Operator::Span {
                 return true;
             }
 
@@ -700,7 +699,7 @@ pub(crate) fn Parser_checkSpan<'i>(session: &mut ParserSession<'i>) -> bool {
         if let Node::Ternary(TernaryNode(op)) = NN {
             let op = op.getOp();
 
-            if op == SYMBOL_SPAN {
+            if op == Operator::Span {
                 return true;
             }
 

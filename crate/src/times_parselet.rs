@@ -1,5 +1,5 @@
 use crate::{
-    node::InfixNode,
+    node::{InfixNode, Operator},
     panic_if_aborted,
     parselet::*,
     parselet_registration::*,
@@ -11,8 +11,6 @@ use crate::{
     parser_session::ParserSession,
     precedence::*,
     source::TOPLEVEL,
-    symbol::Symbol,
-    symbol_registration::SYMBOL_TIMES,
     token::{TokenKind, TokenRef},
     tokenizer::Tokenizer_currentToken,
 };
@@ -23,8 +21,8 @@ impl InfixParselet for TimesParselet {
         TimesParselet_parseInfix(session, token)
     }
 
-    fn getOp(&self) -> Symbol {
-        return SYMBOL_TIMES;
+    fn getOp(&self) -> Operator {
+        return Operator::Times;
     }
 
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
@@ -156,7 +154,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn TimesParselet_reduceTimes(session: &mut ParserSession) {
-    let node = InfixNode::new(SYMBOL_TIMES, Parser_popContext(session));
+    let node = InfixNode::new(Operator::Times, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
