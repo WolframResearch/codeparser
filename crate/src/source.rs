@@ -13,7 +13,6 @@ use crate::{
     feature,
     long_names::{self as LongNames, code_point_has_long_name},
     my_string::MyString,
-    my_string_registration::STRING_FATAL,
     symbol::Symbol,
     symbol_registration::{
         SYMBOL_CODEPARSER_ENCODINGISSUE, SYMBOL_CODEPARSER_FORMATISSUE,
@@ -295,11 +294,20 @@ pub struct Issue {
     pub make_sym: Symbol,
     pub tag: MyString,
     pub msg: String,
-    pub sev: MyString,
+    pub sev: Severity,
     pub src: Source,
     pub val: NotNan<f64>,
     pub actions: Vec<CodeAction>,
     pub additional_descriptions: AdditionalDescriptionVector,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Severity {
+    Formatting,
+    Remark,
+    Warning,
+    Error,
+    Fatal,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash)]
@@ -514,7 +522,7 @@ impl Issue {
         make_sym: Symbol,
         tag: MyString,
         msg: String,
-        sev: MyString,
+        sev: Severity,
         src: Source,
         val: std::os::raw::c_double,
         actions: Vec<CodeAction>,
@@ -569,14 +577,14 @@ impl Issue {
     // }
 
     pub(crate) fn check(&self) -> bool {
-        return self.sev != STRING_FATAL;
+        return self.sev != Severity::Fatal;
     }
 }
 
 pub fn SyntaxIssue(
     tag: MyString,
     msg: String,
-    sev: MyString,
+    sev: Severity,
     src: Source,
     val: std::os::raw::c_double,
     actions: Vec<CodeAction>,
@@ -597,7 +605,7 @@ pub fn SyntaxIssue(
 pub(crate) fn FormatIssue(
     tag: MyString,
     msg: String,
-    sev: MyString,
+    sev: Severity,
     src: Source,
     val: std::os::raw::c_double,
     actions: Vec<CodeAction>,
@@ -618,7 +626,7 @@ pub(crate) fn FormatIssue(
 pub fn EncodingIssue(
     tag: MyString,
     msg: String,
-    sev: MyString,
+    sev: Severity,
     src: Source,
     val: std::os::raw::c_double,
     actions: Vec<CodeAction>,

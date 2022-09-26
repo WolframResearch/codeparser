@@ -11,7 +11,7 @@ use crate::{
         SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     source::{
-        BufferAndLength, CodeAction, CodeActionKind, Issue, Source, SourceConvention,
+        BufferAndLength, CodeAction, CodeActionKind, Issue, Severity, Source, SourceConvention,
         SourceLocation,
     },
     symbol::Symbol,
@@ -468,4 +468,18 @@ impl MyString {
 //       to implement methods on types that aren't part of the current crate.
 pub(crate) fn Symbol_put(self_: Symbol, callLink: &mut wstp::Link) {
     callLink.put_symbol(self_.as_str()).unwrap();
+}
+
+impl Severity {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let string: MyString = match self {
+            Severity::Formatting => STRING_FORMATTING,
+            Severity::Remark => STRING_REMARK,
+            Severity::Warning => STRING_WARNING,
+            Severity::Error => STRING_ERROR,
+            Severity::Fatal => STRING_FATAL,
+        };
+
+        string.put(link);
+    }
 }

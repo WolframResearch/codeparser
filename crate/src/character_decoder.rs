@@ -5,12 +5,10 @@ use crate::{
     long_names_registration::{
         LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
     },
-    my_string_registration::{
-        STRING_FATAL, STRING_REMARK, STRING_UNEXPECTEDCHARACTER, STRING_WARNING, *,
-    },
+    my_string_registration::{STRING_UNEXPECTEDCHARACTER, *},
     source::{
         BufferAndLength, CodeAction, NextPolicy, NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
-        Source, SourceCharacter, SourceLocation, SyntaxIssue, STRING_OR_COMMENT,
+        Severity, Source, SourceCharacter, SourceLocation, SyntaxIssue, STRING_OR_COMMENT,
     },
     tokenizer::Tokenizer,
     utils,
@@ -226,7 +224,7 @@ fn CharacterDecoder_handleStringMetaOpen(
         let I = SyntaxIssue(
             STRING_UNEXPECTEDCHARACTER,
             format!("Unexpected string meta character: ``{}``.", graphicalStr),
-            STRING_REMARK,
+            Severity::Remark,
             Src,
             0.95,
             vec![],
@@ -269,7 +267,7 @@ fn CharacterDecoder_handleStringMetaClose(
         let I = SyntaxIssue(
             STRING_UNEXPECTEDCHARACTER,
             format!("Unexpected string meta character: ``{graphicalStr}``."),
-            STRING_REMARK,
+            Severity::Remark,
             Src,
             0.95,
             vec![],
@@ -404,7 +402,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\[{longNameStr}``."),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -431,7 +429,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\[{}``.", longNameStr),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -531,7 +529,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNRECOGNIZEDLONGNAME,
                     format!("Unrecognized longname: ``\\\\[{longNameStr}]``."),
-                    STRING_ERROR,
+                    Severity::Error,
                     Source::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
                     0.75,
                     Actions,
@@ -552,7 +550,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\[{longNameStr}]``."),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -640,7 +638,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
-                    STRING_REMARK,
+                    Severity::Remark,
                     Src,
                     0.95,
                     Actions,
@@ -655,7 +653,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
-                    STRING_WARNING,
+                    Severity::Warning,
                     Src,
                     0.95,
                     Actions,
@@ -717,7 +715,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
-                    STRING_REMARK,
+                    Severity::Remark,
                     Src,
                     0.85,
                     Actions,
@@ -732,7 +730,7 @@ fn CharacterDecoder_handleLongName(
                 let I = SyntaxIssue(
                     STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
-                    STRING_WARNING,
+                    Severity::Warning,
                     Src,
                     0.85,
                     Actions,
@@ -800,7 +798,7 @@ fn CharacterDecoder_handle4Hex(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\:{hexStr}``."),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -886,7 +884,7 @@ fn CharacterDecoder_handle4Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.95,
                 Actions,
@@ -899,7 +897,7 @@ fn CharacterDecoder_handle4Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.95,
                 Actions,
@@ -955,7 +953,7 @@ fn CharacterDecoder_handle4Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.85,
                 Actions,
@@ -968,7 +966,7 @@ fn CharacterDecoder_handle4Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.85,
                 Actions,
@@ -1031,7 +1029,7 @@ fn CharacterDecoder_handle2Hex(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\.{hexStr}``."),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -1114,7 +1112,7 @@ fn CharacterDecoder_handle2Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.95,
                 Actions,
@@ -1127,7 +1125,7 @@ fn CharacterDecoder_handle2Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.95,
                 Actions,
@@ -1183,7 +1181,7 @@ fn CharacterDecoder_handle2Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.85,
                 Actions,
@@ -1196,7 +1194,7 @@ fn CharacterDecoder_handle2Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.85,
                 Actions,
@@ -1259,7 +1257,7 @@ fn CharacterDecoder_handleOctal(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\{octalStr}``."),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -1348,7 +1346,7 @@ fn CharacterDecoder_handleOctal(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.95,
                 Actions,
@@ -1361,7 +1359,7 @@ fn CharacterDecoder_handleOctal(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.95,
                 Actions,
@@ -1417,7 +1415,7 @@ fn CharacterDecoder_handleOctal(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.85,
                 Actions,
@@ -1430,7 +1428,7 @@ fn CharacterDecoder_handleOctal(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.85,
                 Actions,
@@ -1493,7 +1491,7 @@ fn CharacterDecoder_handle6Hex(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\|{hexStr}``."),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -1597,7 +1595,7 @@ fn CharacterDecoder_handle6Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.95,
                 Actions,
@@ -1610,7 +1608,7 @@ fn CharacterDecoder_handle6Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.95,
                 Actions,
@@ -1666,7 +1664,7 @@ fn CharacterDecoder_handle6Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_REMARK,
+                Severity::Remark,
                 Src,
                 0.85,
                 Actions,
@@ -1679,7 +1677,7 @@ fn CharacterDecoder_handle6Hex(
             let I = SyntaxIssue(
                 STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
-                STRING_WARNING,
+                Severity::Warning,
                 Src,
                 0.85,
                 Actions,
@@ -1852,7 +1850,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character ``\\{curSourceGraphicalStr}``."),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -1881,7 +1879,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                     let I = SyntaxIssue(
                         STRING_UNHANDLEDCHARACTER,
                         format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
-                        STRING_FATAL,
+                        Severity::Fatal,
                         Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         1.0,
                         Actions,
@@ -1903,7 +1901,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                     let I = SyntaxIssue(
                         STRING_UNHANDLEDCHARACTER,
                         format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
-                        STRING_FATAL,
+                        Severity::Fatal,
                         Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         1.0,
                         Actions,
@@ -1927,7 +1925,7 @@ fn CharacterDecoder_handleUnhandledEscape(
             let I = SyntaxIssue(
                 STRING_UNHANDLEDCHARACTER,
                 format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
-                STRING_FATAL,
+                Severity::Fatal,
                 Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                 1.0,
                 Actions,
@@ -1967,7 +1965,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character ``\\\\{}``.", curSourceGraphicalStr),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     vec![],
@@ -1987,7 +1985,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                 let I = SyntaxIssue(
                     STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
-                    STRING_FATAL,
+                    Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
@@ -2110,7 +2108,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
                 let I = SyntaxIssue(
                     STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
-                    STRING_REMARK,
+                    Severity::Remark,
                     Src,
                     0.95,
                     vec![],
@@ -2150,7 +2148,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
                 let I = SyntaxIssue(
                     STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
-                    STRING_REMARK,
+                    Severity::Remark,
                     Src,
                     0.95,
                     vec![],
