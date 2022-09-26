@@ -5,7 +5,7 @@ use crate::{
         CollectedExpressionsNode, CollectedIssuesNode, MissingBecauseUnsafeCharacterEncodingNode,
         NodeContainer, NodeSeq,
     },
-    symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
+    symbol_registration::SYMBOL_NULL,
     token::BorrowedTokenInput,
     EncodingMode, FirstLineBehavior, ParseResult, StringifyMode,
 };
@@ -153,7 +153,7 @@ fn DestroyParserSession_LibraryLink(mlSession: mint) -> mint {
     // cannot use session after this
     //
 
-    let e = Expr_MEncodedStringToSymbolExpr(SYMBOL_NULL.name);
+    let e = Expr_MEncodedStringToSymbolExpr(SYMBOL_NULL.as_str());
 
     return e as mint;
 }
@@ -204,7 +204,7 @@ fn read_input_bytes(link: &mut wstp::Link) -> Vec<u8> {
 // #[cfg(feature = "USE_MATHLINK")]
 #[wll::export(wstp)]
 pub fn DestroyParserSession_LibraryLink(link: &mut wstp::Link) {
-    let len = match link.test_head(SYMBOL_LIST.name) {
+    let len = match link.test_head("List") {
         Ok(len) => len,
         Err(err) => panic!("expected List: {err}"),
     };
@@ -225,7 +225,7 @@ pub fn DestroyParserSession_LibraryLink(link: &mut wstp::Link) {
     // cannot use session after this
     //
 
-    link.put_symbol(SYMBOL_NULL.name).unwrap();
+    link.put_symbol(SYMBOL_NULL.as_str()).unwrap();
 }
 
 //==========================================================
