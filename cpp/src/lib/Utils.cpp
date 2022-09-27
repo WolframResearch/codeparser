@@ -166,16 +166,16 @@ bool Utils::isMBStrange(codepoint point) {
     //
     // Plane 15 PUA
     //
-    if (0x0f0000 <= point && point <= 0x0ffffd) {
-        return true;
-    }
+//    if (0x0f0000 <= point && point <= 0x0ffffd) {
+//        return true;
+//    }
 
     //
     // Plane 16 PUA
     //
-    if (0x100000 <= point && point <= 0x10fffd) {
-        return true;
-    }
+//    if (0x100000 <= point && point <= 0x10fffd) {
+//        return true;
+//    }
     
     return false;
 }
