@@ -210,28 +210,6 @@ ContainerNode
 
 
 SyntaxErrorNode
-(*
-
-what is the difference between GroupMissingCloserNode and UnterminatedGroupNode?
-
-
-GroupMissingCloserNode is a parse that has been "recovered" but UnterminatedGroupNode has hit the end of the input
-
-
-Parsing:
-
-{ ) }
-
-gets parsed as GroupMissingCloserNode[ { ] UnexpectedCloser[ ) ] UnexpectedCloser[ } ]
-
-
-But just parsing:
-
-{
-
-gets parsed as UnterminatedGroupNode[ { ]
-
-*)
 GroupMissingCloserNode
 UnterminatedGroupNeedsReparseNode
 (*
@@ -1307,7 +1285,7 @@ Module[{ast},
   FreeQ[ast,
     ErrorNode |
     SyntaxErrorNode | AbstractSyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode |
+    GroupMissingCloserNode | GroupMissingOpenerNode |
     CallMissingCloserNode |
     _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
@@ -1317,7 +1295,7 @@ CodeSyntaxCSTQ[cst_] :=
   FreeQ[cst,
     ErrorNode |
     SyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode |
+    GroupMissingCloserNode | GroupMissingOpenerNode |
     _Missing] &&
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
@@ -1326,7 +1304,7 @@ Module[{ast},
   ast = CodeParse[code];
   FreeQ[ast,
     SyntaxErrorNode | AbstractSyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode |
+    GroupMissingCloserNode | GroupMissingOpenerNode |
     CallMissingCloserNode |
     _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
@@ -1335,14 +1313,14 @@ Module[{ast},
 CodeStructuralSyntaxCSTQ[cst_] :=
   FreeQ[cst,
     SyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode |
+    GroupMissingCloserNode | GroupMissingOpenerNode |
     _Missing] &&
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
 CodeStructuralSyntaxAggQ[agg_] :=
   FreeQ[agg,
     SyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode |
+    GroupMissingCloserNode | GroupMissingOpenerNode |
     _Missing] &&
   !MemberQ[Lookup[agg[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 

@@ -140,7 +140,6 @@ If[!StringQ[inputStr],
 
   agg2Compare = agg2;
   agg2Compare = rowBoxify[agg2Compare];
-  agg2Compare = convertedUnterminatedToGroupMissingCloser[agg2Compare];
   agg2ToCompare = agg2Compare /. {_Association -> <||>};
 
   If[agg2ToCompare =!= aggToCompare,
@@ -302,10 +301,6 @@ cleanupImplicitNull[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitNull
 
 flattenChildrenInGroupMissingCloser[node_] := node /. {
   GroupMissingCloserNode[op_, children_, data_] :> GroupMissingCloserNode[op, Cases[children, (LeafNode|ErrorNode)[_, _, _], Infinity], data]
-}
-
-convertedUnterminatedToGroupMissingCloser[node_] := node /. {
-  UnterminatedGroupNode[op_, children_, data_] :> GroupMissingCloserNode[op, children, data]
 }
 
 

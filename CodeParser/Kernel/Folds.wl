@@ -286,9 +286,6 @@ linearize0[SyntaxErrorNode[_, fs_List, _]] :=
 linearize0[GroupMissingCloserNode[_, fs_List, _]] :=
   linearize0 /@ fs
 
-linearize0[UnterminatedGroupNode[_, fs_List, _]] :=
-  linearize0 /@ fs
-
 linearize0[AbstractSyntaxErrorNode[_, fs_List, _]] :=
   linearize0 /@ fs
 
