@@ -65,14 +65,7 @@ Related bugs: 283291, 284492
 So also make library->kernel traffic match this behavior
 *)
 stringifyForTransmitting[sym_Symbol] :=
-Module[{ctxt},
-  ctxt = Context[sym];
-  If[ctxt == "System`",
-    SymbolName[sym]
-    ,
-    Context[sym] <> SymbolName[sym]
-  ]
-]
+  Context[sym] <> SymbolName[sym]
 
 
 
