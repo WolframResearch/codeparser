@@ -208,6 +208,15 @@ Module[{workingDir, targetDir, prog, compLib, compStart, compEnd,
 
   targetDir = FileNameJoin[{ buildDir, "paclet", "CodeParser", "LibraryResources", $SystemID }];
 
+
+  (*
+  work-around bug 411375
+  *)
+  Unprotect[Failure];
+
+  FormatValues[Failure] =.;
+
+
   prog = ExprLibraryProgram[];
 
   Print["Calling CreateCompilerEnvironment[]... \[WatchIcon]"];
