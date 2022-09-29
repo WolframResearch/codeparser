@@ -13,19 +13,52 @@ Needs["CodeParser`Utils`"]
 
 parseBoxTest[box_, name_, n_, i_, j_] :=
 Catch[
-Module[{cst, back, diff, sourceStr, agg, inputStr, cst2, agg2, aggToCompare, agg2Compare, agg2ToCompare, inputStr2, ast},
+Module[{cst, back, diff, sourceStr, agg, inputStr, cst2, agg2,
+  aggToCompare, agg2Compare, agg2ToCompare, inputStr2, ast, f},
+
+(*
+
+Cannot check if FreeQ of Failure because may be inside CodeNode[Unevaluated]
+
+If[!FreeQ[box, _Failure],
+  f = FirstCase[box, _Failure, $Failed, {0, Infinity}];
+  Throw[f]
+];
+
+*)
 
 cst =
   Catch[
     CodeConcreteParseBox[box]
     ,
-    {CodeParser`Boxes`Private`parseBox, "Unhandled"} |
-      {CodeParser`Boxes`Private`parseBox, RowBox, CodeParser`Boxes`Private`Unhandled}
+    {CodeParser`Boxes`parseBox, "Unhandled"}
     ,
-    (Print["bad: ", # // InputForm];) &
+    (Print["bad: ", #1 // InputForm]; Throw[#1]) &
   ];
 
+(*
+
+Cannot check if FreeQ of Failure because may be inside CodeNode[Unevaluated]
+
+If[!FreeQ[cst, _Failure],
+  f = FirstCase[cst, _Failure, $Failed, {0, Infinity}];
+  Throw[f]
+];
+
+*)
+
 back = ToStandardFormBoxes[cst];
+
+(*
+
+Cannot check if FreeQ of Failure because may be inside CodeNode[Unevaluated]
+
+If[!FreeQ[back, _Failure],
+  f = FirstCase[back, _Failure, $Failed, {0, Infinity}];
+  Throw[f]
+];
+
+*)
 
 If[back =!= box,
   If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
@@ -55,6 +88,7 @@ If[back =!= box,
 ];
 
 sourceStr = ToSourceCharacterString[cst];
+
 If[!StringQ[sourceStr],
   If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
    Print[{"exception", {name, n, i, j}}];
