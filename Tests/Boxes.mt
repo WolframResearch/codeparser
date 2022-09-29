@@ -40,7 +40,7 @@ Test[
 		ContainerNode[Box, {
 			BoxNode[TagBox, {
 				LeafNode[Symbol, "a", <|Source -> {1}|>],
-				CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]}, <||>]
+				CodeNode[Evaluated, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]}, <||>]
 	]
 	,
 	TestID->"Boxes-20191119-A5T4V2"
@@ -55,7 +55,7 @@ Test[
 		ContainerNode[Box, {
 			BoxNode[TagBox, {
 				LeafNode[Symbol, "a", <|Source -> {1}|>], 
-	  			CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]}, <||>]
+	  			CodeNode[Evaluated, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]}, <||>]
 	]
 	,
 	TestID->"Boxes-20191119-F6L1J2"
@@ -80,7 +80,7 @@ Test[
 		ContainerNode[Box, {
 			BoxNode[TagBox, {
 				LeafNode[Symbol, "a", <|Source -> {1}|>],
-				CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]}, <||>]
+				CodeNode[Evaluated, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]}, <||>]
 	]
 	,
 	TestID->"Boxes-20191119-R5E0G4"
@@ -260,8 +260,8 @@ Test[
 	With[{assoc = <||>},
 		ContainerNode[Box, {
 			BoxNode[InterpretationBox, {
-				CodeNode[Null, "a", assoc],
-				CodeNode[Null, Sequence[Appearance -> "Horizontal"], assoc]}, <|Source -> {}|>]}, <||>]
+				CodeNode[Unevaluated, "a", assoc],
+				CodeNode[Unevaluated, Sequence[Appearance -> "Horizontal"], assoc]}, <|Source -> {}|>]}, <||>]
 	]
 	,
 	TestID->"Boxes-20200618-U5E6C1"
@@ -926,7 +926,7 @@ With[{evaledData = <||>},
 	ContainerNode[Box, {PrefixNode[
    Get, {LeafNode[Token`LessLess, "<<", <|Source -> {1, 1}|>], 
     BoxNode[
-     InterpretationBox, {CodeNode[Null, 
+     InterpretationBox, {CodeNode[Unevaluated, 
        DynamicModuleBox[{Typeset`open = False}, 
         TemplateBox[{"String", 
           StyleBox["\"RegisterMachine`\"", "IconizedCustomName", 
@@ -944,10 +944,10 @@ With[{evaledData = <||>},
            GridBoxItemSize -> {"Columns" -> {{Automatic}}, 
              "Rows" -> {{Automatic}}}], Dynamic[Typeset`open]}, 
          "IconizedObject"]], evaledData], 
-      CodeNode[Null, 
+      CodeNode[Unevaluated, 
        "VirtualMachine`Machines`Abstract`RegisterMachine`", evaledData], 
-      CodeNode[Null, SelectWithContents -> True, evaledData], 
-      CodeNode[Null, 
+      CodeNode[Unevaluated, SelectWithContents -> True, evaledData], 
+      CodeNode[Unevaluated, 
        Selectable -> False, evaledData]}, <|Source -> {1, 
         2}|>]}, <|Source -> {}|>]}, <||>]
 ]
@@ -1149,7 +1149,7 @@ With[{evaledAssoc = <||>},
      InfixNode[
       Comma, {InfixNode[
         Times, {BoxNode[
-          GraphicsBox, {CodeNode[Null, 
+          GraphicsBox, {CodeNode[Unevaluated, 
             TagBox[RasterBox[CompressedData["
 1:eJzt2O1twyAQBmDTTbpSR0gHyDadt82fRob7hPfFWOKkSgkcd09c2zH5fDy/
 Hh/HcXz//f0cO3bs2DEryivmdIk2Ku+YYQr1KSWVjjD5nVLJOJPdKZUMRVmd
@@ -1168,10 +1168,10 @@ sWMHLn4B6FERVg==
              BoxForm`ImageTag["Bit", ColorSpace -> Automatic, 
               ImageSize -> Automatic, Interleaving -> None], 
              Selectable -> False], evaledAssoc], 
-           CodeNode[Null, BaseStyle -> "ImageGraphics", evaledAssoc], 
-           CodeNode[Null, ImageSize -> Magnification[1], evaledAssoc], 
-           CodeNode[Null, ImageSizeRaw -> {150, 99}, evaledAssoc], 
-           CodeNode[Null, 
+           CodeNode[Unevaluated, BaseStyle -> "ImageGraphics", evaledAssoc], 
+           CodeNode[Unevaluated, ImageSize -> Magnification[1], evaledAssoc], 
+           CodeNode[Unevaluated, ImageSizeRaw -> {150, 99}, evaledAssoc], 
+           CodeNode[Unevaluated, 
             PlotRange -> {{0, 150}, {0, 99}}, evaledAssoc]}, <|Source -> {1, 
              3, 1, 1, 1, 1}|>], 
          LeafNode[Token`Fake`ImplicitTimes, 
@@ -1179,12 +1179,12 @@ sWMHLn4B6FERVg==
          BoxNode[TagBox, {BoxNode[
             TagBox, {Missing["EmptyInput"], 
              CodeNode[
-              Null, {"Bit", ColorSpace -> Automatic, 
+              Evaluated, {"Bit", ColorSpace -> Automatic, 
                ImageResolution -> Automatic, ImageSize -> Automatic, 
                Interleaving -> None, 
                Magnification -> Automatic}, evaledAssoc]}, <|Source -> {1, 3,
                 1, 1, 1, 2, 1}|>], 
-           CodeNode[Null, 
+           CodeNode[Evaluated, 
             "Image", evaledAssoc]}, <|Source -> {1, 3, 1, 1, 1, 
              2}|>]}, <|Source -> {1, 3, 1, 1}|>], 
        LeafNode[Token`Comma, ",", <|Source -> {1, 3, 1, 2}|>], 

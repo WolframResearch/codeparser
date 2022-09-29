@@ -1190,7 +1190,7 @@ walk[
         _,
         b_,
         _}, _],
-      CodeNode[Null, Derivative, _]}, _],
+      CodeNode[Evaluated, Derivative, _]}, _],
     ___}, _]
   ,
   pred_
@@ -1204,7 +1204,7 @@ freePatterns[
         _,
         b_,
         _}, _],
-      CodeNode[Null, Derivative, _]}, _],
+      CodeNode[Evaluated, Derivative, _]}, _],
     ___}, _]
 ] := Flatten[Join[freePatterns[a], freePatterns[b]]]
 
@@ -1216,7 +1216,7 @@ walkCondition[
         _,
         b_,
         _}, _],
-      CodeNode[Null, Derivative, _]}, _],
+      CodeNode[Evaluated, Derivative, _]}, _],
     ___}, _]
 ] := Flatten[Join[walkCondition[a], walkCondition[b]]]
 

@@ -194,7 +194,6 @@ ErrorNode
 UnterminatedTokenErrorNeedsReparseNode
 BoxNode
 CodeNode
-DirectiveNode
 
 PrefixNode
 BinaryNode

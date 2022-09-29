@@ -1477,7 +1477,7 @@ abstract[
           data2_
         ]
         ,
-        t:CodeNode[Null, Derivative, _]}
+        t:CodeNode[Evaluated, Derivative, _]}
         ,
         data1_
       ]

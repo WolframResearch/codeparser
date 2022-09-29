@@ -223,7 +223,7 @@ parseBox[Cell[d:BoxData[_], rest___], pos_] :=
 Catch[
 Module[{handledChildren},
 
-  handledChildren = {parseBox[d, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest];
+  handledChildren = {parseBox[d, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest];
 
   If[AnyTrue[handledChildren, FailureQ],
     Throw[SelectFirst[handledChildren, FailureQ]]
@@ -236,7 +236,7 @@ parseBox[Cell[rest___], pos_] :=
 Catch[
 Module[{handledChildren},
 
-  handledChildren = applyCodeNodesToRest[rest];
+  handledChildren = applyEvaluatedCodeNodesToRest[rest];
 
   If[AnyTrue[handledChildren, FailureQ],
     Throw[SelectFirst[handledChildren, FailureQ]]
@@ -260,19 +260,129 @@ Module[{handledChildren},
 
 
 
+
+
+
+
+
+
+Attributes[applyEvaluatedCodeNodesToRest] = {}
+
+applyEvaluatedCodeNodesToRest[rest___] :=
+Module[{},
+  Function[arg,
+    With[{assoc = <||>},
+      CodeNode[Evaluated, arg, assoc]
+    ]
+  ] /@ {rest}
+]
+
+Attributes[applyUnevaluatedCodeNodesToRest] = {HoldAllComplete}
+
+applyUnevaluatedCodeNodesToRest[rest___] := List @@ Map[Function[arg, With[{assoc = <||>}, CodeNode[Unevaluated, arg, assoc]], {HoldAllComplete}], HoldComplete[rest]]
+
+
+
+
+
+
+
+
+
+(*
+boxes that are just {Protected, ReadProtected}
+*)
+
+parseBox[ActionMenuBox[a_, rest___], pos_] :=
+  BoxNode[ActionMenuBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[AdjustmentBox[a_, rest___], pos_] :=
+  BoxNode[AdjustmentBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[AnimatorBox[rest___], pos_] :=
+  BoxNode[AnimatorBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[ButtonBox[a_, rest___], pos_] :=
+  BoxNode[ButtonBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[CheckboxBox[rest___], pos_] :=
+  BoxNode[CheckboxBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[ColorSetterBox[rest___], pos_] :=
+  BoxNode[ColorSetterBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
 parseBox[ErrorBox[a_], pos_] :=
-Catch[
-Module[{handledChildren},
+  BoxNode[ErrorBox, {parseBox[a, Append[pos, 1]]}, <|Source->pos|>]
 
-  handledChildren = {parseBox[a, Append[pos, 1]]};
+(*
+something like TraditionalForm where they are not valid StandardForm boxes
 
-  If[AnyTrue[handledChildren, FailureQ],
-    Throw[SelectFirst[handledChildren, FailureQ]]
-  ];
+In fact, contents of FormBox can be VERY far away from standard StandardForm boxes
+*)
+parseBox[FormBox[rest___], pos_] :=
+  BoxNode[FormBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
-  BoxNode[ErrorBox, handledChildren, <|Source->pos|>]
-]]
+parseBox[FractionBox[a_, b_, rest___], pos_] :=
+  BoxNode[FractionBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <| Source -> pos |>]
 
+parseBox[FrameBox[a_, rest___], pos_] :=
+  BoxNode[FrameBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+(*
+a is a List of Lists
+*)
+parseBox[GridBox[a_, rest___], pos_] :=
+Block[{$PreserveRowBox = True},
+  BoxNode[GridBox, {parseBoxPossibleList[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+]
+
+parseBox[InputFieldBox[rest___], pos_] :=
+  BoxNode[InputFieldBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[ItemBox[a_, rest___], pos_] :=
+  BoxNode[ItemBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[ListPickerBox[rest___], pos_] :=
+  BoxNode[ListPickerBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[LocatorPaneBox[first_, a_, rest___], pos_] :=
+  BoxNode[LocatorPaneBox, applyEvaluatedCodeNodesToRest[first] ~Join~ {parseBox[a, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[NamespaceBox[first_, a_, rest___], pos_] :=
+  BoxNode[NamespaceBox, applyEvaluatedCodeNodesToRest[first] ~Join~ {parseBox[a, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[OpenerBox[rest___], pos_] :=
+  BoxNode[OpenerBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[OverlayBox[rest___], pos_] :=
+  BoxNode[OverlayBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[OverscriptBox[a_, b_, rest___], pos_] :=
+  BoxNode[OverscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <| Source -> pos |>]
+
+parseBox[PaneBox[a_, rest___], pos_] :=
+  BoxNode[PaneBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[PanelBox[a_, rest___], pos_] :=
+  BoxNode[PanelBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[PaneSelectorBox[rest___], pos_] :=
+  BoxNode[PaneSelectorBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[PopupMenuBox[rest___], pos_] :=
+  BoxNode[PopupMenuBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[ProgressIndicatorBox[rest___], pos_] :=
+  BoxNode[ProgressIndicatorBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[RadicalBox[a_, b_, rest___], pos_] :=
+  BoxNode[RadicalBox, {parseBox[a, Append[pos, 1]]} ~Join~ {parseBox[b, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <| Source -> pos |>]
+
+parseBox[RadioButtonBox[rest___], pos_] :=
+  BoxNode[RadioButtonBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[RotationBox[a_, rest___], pos_] :=
+  BoxNode[RotationBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[RowBox[children_], pos_] :=
 Catch[
@@ -302,151 +412,35 @@ Module[{handledChildren, aggregatedChildren},
   prbDispatch[aggregatedChildren, handledChildren, children, pos]
 ]]
 
+parseBox[SetterBox[rest___], pos_] :=
+  BoxNode[SetterBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
+parseBox[Slider2DBox[rest___], pos_] :=
+  BoxNode[Slider2DBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
-Attributes[applyCodeNodesToRest] = {HoldAllComplete}
-
-applyCodeNodesToRest[rest___] := List @@ Map[Function[arg, With[{assoc = <||>}, CodeNode[Null, arg, assoc]], {HoldAllComplete}], HoldComplete[rest]]
-
-
-
-parseBox[SubscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[SubscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
-
-parseBox[SuperscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[SuperscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
-
-parseBox[SubsuperscriptBox[a_, b_, c_, rest___], pos_] :=
-  BoxNode[SubsuperscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]], parseBox[c, Append[pos, 3]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[UnderoverscriptBox[a_, b_, c_, rest___], pos_] :=
-  BoxNode[UnderoverscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]], parseBox[c, Append[pos, 3]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[FractionBox[a_, b_, rest___], pos_] :=
-  BoxNode[FractionBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
-
-parseBox[OverscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[OverscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
-
-parseBox[UnderscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[UnderscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
+parseBox[SliderBox[rest___], pos_] :=
+  BoxNode[SliderBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[SqrtBox[a_, rest___], pos_] :=
-  BoxNode[SqrtBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
+  BoxNode[SqrtBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <| Source -> pos |>]
 
-parseBox[RadicalBox[a_, b_, rest___], pos_] :=
-  BoxNode[RadicalBox, {parseBox[a, Append[pos, 1]]} ~Join~ {parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
+parseBox[StyleBox[a_, rest___], pos_] :=
+  BoxNode[StyleBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
-(*
-FullNotationPalette has something like:
+parseBox[SubscriptBox[a_, b_, rest___], pos_] :=
+  BoxNode[SubscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <| Source -> pos |>]
 
-TooltipBox[xxx, "\[EscapeKey]notation\[EscapeKey]. Notation template that parses and formats."]
+parseBox[SuperscriptBox[a_, b_, rest___], pos_] :=
+  BoxNode[SuperscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <| Source -> pos |>]
 
-2nd arg is a string, not a box
-*)
-parseBox[TooltipBox[a_, rest___], pos_] :=
-  BoxNode[TooltipBox,
-    {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+parseBox[SubsuperscriptBox[a_, b_, c_, rest___], pos_] :=
+  BoxNode[SubsuperscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]], parseBox[c, Append[pos, 3]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
-
+parseBox[TabViewBox[rest___], pos_] :=
+  BoxNode[TabViewBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[TagBox[a_, rest___], pos_] :=
-  BoxNode[TagBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[DynamicBox[rest___], pos_] :=
-  BoxNode[DynamicBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[DynamicModuleBox[rest___], pos_] :=
-  BoxNode[DynamicModuleBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[NamespaceBox[first_, a_, rest___], pos_] :=
-  BoxNode[NamespaceBox, applyCodeNodesToRest[first] ~Join~ {parseBox[a, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-(*
-a may be a List
-
-GraphicsBox is HoldAll, so cannot recurse into child boxes without evaling
-
-parseBox[GraphicsBox[a_, rest___], pos_] :=
-  BoxNode[GraphicsBox, {parseBoxPossibleListPossibleDirective[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-*)
-parseBox[GraphicsBox[rest___], pos_] :=
-  BoxNode[GraphicsBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[Graphics3DBox[rest___], pos_] :=
-  BoxNode[Graphics3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[GraphicsComplexBox[rest___], pos_] :=
-  BoxNode[GraphicsComplexBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[GraphicsComplex3DBox[rest___], pos_] :=
-  BoxNode[GraphicsComplex3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[GraphicsGroupBox[rest___], pos_] :=
-  BoxNode[GraphicsGroupBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[GraphicsGroup3DBox[rest___], pos_] :=
-  BoxNode[GraphicsGroup3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[DiskBox[rest___], pos_] :=
-  BoxNode[DiskBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[LineBox[rest___], pos_] :=
-  BoxNode[LineBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[Line3DBox[rest___], pos_] :=
-  BoxNode[Line3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[RectangleBox[rest___], pos_] :=
-  BoxNode[RectangleBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[PointBox[rest___], pos_] :=
-  BoxNode[PointBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[Point3DBox[rest___], pos_] :=
-  BoxNode[Point3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[CuboidBox[rest___], pos_] :=
-  BoxNode[CuboidBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[Polygon3DBox[rest___], pos_] :=
-  BoxNode[Polygon3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[SphereBox[rest___], pos_] :=
-  BoxNode[SphereBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[RotationBox[a_, rest___], pos_] :=
-  BoxNode[RotationBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[BSplineCurveBox[rest___], pos_] :=
-  BoxNode[BSplineCurveBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[BSplineCurve3DBox[rest___], pos_] :=
-  BoxNode[BSplineCurve3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[BSplineSurface3DBox[rest___], pos_] :=
-  BoxNode[BSplineSurface3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[PolygonBox[rest___], pos_] :=
-  BoxNode[PolygonBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[ConicHullRegion3DBox[rest___], pos_] :=
-  BoxNode[ConicHullRegion3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[TubeBox[rest___], pos_] :=
-  BoxNode[TubeBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[Arrow3DBox[rest___], pos_] :=
-  BoxNode[Arrow3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[GeometricTransformation3DBox[rest___], pos_] :=
-  BoxNode[GeometricTransformation3DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-(*
-InterpretationBox is HoldAllComplete
-*)
-parseBox[InterpretationBox[rest___], pos_] :=
-  BoxNode[InterpretationBox, applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[TagBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
 (*
 too complicated to handle first arg as boxes
@@ -459,113 +453,188 @@ The second arg is a link, but it's not like we can do ParseLeaf["https://www.wol
 
 *)
 parseBox[TemplateBox[rest___], pos_] :=
-  BoxNode[TemplateBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[StyleBox[a_, rest___], pos_] :=
-  BoxNode[StyleBox, {parseBoxPossibleListPossibleDirective[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-(*
-something like TraditionalForm where they are not valid StandardForm boxes
-
-In fact, contents of FormBox can be VERY far away from standard StandardForm boxes
-*)
-parseBox[FormBox[rest___], pos_] :=
-  BoxNode[FormBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[RasterBox[rest___], pos_] :=
-  BoxNode[RasterBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[ButtonBox[a_, rest___], pos_] :=
-  BoxNode[ButtonBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[PaneSelectorBox[rest___], pos_] :=
-  BoxNode[PaneSelectorBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[PanelBox[a_, rest___], pos_] :=
-  BoxNode[PanelBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[ActionMenuBox[a_, rest___], pos_] :=
-  BoxNode[ActionMenuBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-(*
-a is a List of Lists
-*)
-parseBox[GridBox[a_, rest___], pos_] :=
-  Block[{$PreserveRowBox = True},
-    BoxNode[GridBox, {parseBoxPossibleList[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-  ]
-
-parseBox[ItemBox[a_, rest___], pos_] :=
-  BoxNode[ItemBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[InsetBox[a_, rest___], pos_] :=
-  BoxNode[InsetBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[AdjustmentBox[a_, rest___], pos_] :=
-  BoxNode[AdjustmentBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[LocatorPaneBox[first_, a_, rest___], pos_] :=
-  BoxNode[LocatorPaneBox, applyCodeNodesToRest[first] ~Join~ {parseBox[a, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[AnimatorBox[rest___], pos_] :=
-  BoxNode[AnimatorBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[OpenerBox[rest___], pos_] :=
-  BoxNode[OpenerBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[SliderBox[rest___], pos_] :=
-  BoxNode[SliderBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[CylinderBox[rest___], pos_] :=
-  BoxNode[CylinderBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[FrameBox[a_, rest___], pos_] :=
-  BoxNode[FrameBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[CheckboxBox[rest___], pos_] :=
-  BoxNode[CheckboxBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[ColorSetterBox[rest___], pos_] :=
-  BoxNode[ColorSetterBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[InputFieldBox[rest___], pos_] :=
-  BoxNode[InputFieldBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[TabViewBox[rest___], pos_] :=
-  BoxNode[TabViewBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[RadioButtonBox[rest___], pos_] :=
-  BoxNode[RadioButtonBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[PopupMenuBox[rest___], pos_] :=
-  BoxNode[PopupMenuBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[SetterBox[rest___], pos_] :=
-  BoxNode[SetterBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[Slider2DBox[rest___], pos_] :=
-  BoxNode[Slider2DBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[DynamicWrapperBox[a_, rest___], pos_] :=
-  BoxNode[DynamicWrapperBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[PaneBox[a_, rest___], pos_] :=
-  BoxNode[PaneBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[ListPickerBox[rest___], pos_] :=
-  BoxNode[ListPickerBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[OverlayBox[rest___], pos_] :=
-  BoxNode[OverlayBox, applyCodeNodesToRest[rest], <|Source->pos|>]
-
-parseBox[ProgressIndicatorBox[rest___], pos_] :=
-  BoxNode[ProgressIndicatorBox, applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[TemplateBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[TogglerBox[rest___], pos_] :=
-  BoxNode[TogglerBox, applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[TogglerBox, applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+(*
+FullNotationPalette has something like:
+
+TooltipBox[xxx, "\[EscapeKey]notation\[EscapeKey]. Notation template that parses and formats."]
+
+2nd arg is a string, not a box
+*)
+parseBox[TooltipBox[a_, rest___], pos_] :=
+  BoxNode[TooltipBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[UnderoverscriptBox[a_, b_, c_, rest___], pos_] :=
+  BoxNode[UnderoverscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]], parseBox[c, Append[pos, 3]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[UnderscriptBox[a_, b_, rest___], pos_] :=
+  BoxNode[UnderscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyEvaluatedCodeNodesToRest[rest], <| Source -> pos |>]
+
+
+
+
+
+
+(*
+boxes that are HoldFirst
+*)
 
 parseBox[TableViewBox[rest___], pos_] :=
-  BoxNode[TableViewBox, applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[TableViewBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+
+
+
+
+(*
+boxes that are HoldRest
+*)
+
+parseBox[DynamicWrapperBox[a_, rest___], pos_] :=
+  BoxNode[DynamicWrapperBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+
+
+
+
+
+(*
+boxes that are HoldAll
+*)
+
+parseBox[Arrow3DBox[rest___], pos_] :=
+  BoxNode[Arrow3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[BSplineCurve3DBox[rest___], pos_] :=
+  BoxNode[BSplineCurve3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[BSplineCurveBox[rest___], pos_] :=
+  BoxNode[BSplineCurveBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[BSplineSurface3DBox[rest___], pos_] :=
+  BoxNode[BSplineSurface3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[ConicHullRegion3DBox[rest___], pos_] :=
+  BoxNode[ConicHullRegion3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[CuboidBox[rest___], pos_] :=
+  BoxNode[CuboidBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[CylinderBox[rest___], pos_] :=
+  BoxNode[CylinderBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[DiskBox[rest___], pos_] :=
+  BoxNode[DiskBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[DynamicBox[rest___], pos_] :=
+  BoxNode[DynamicBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[DynamicModuleBox[rest___], pos_] :=
+  BoxNode[DynamicModuleBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[GeometricTransformation3DBox[rest___], pos_] :=
+  BoxNode[GeometricTransformation3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[Graphics3DBox[rest___], pos_] :=
+  BoxNode[Graphics3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+(*
+a may be a List
+
+GraphicsBox is HoldAll, so cannot recurse into child boxes without evaling
+
+parseBox[GraphicsBox[a_, rest___], pos_] :=
+  BoxNode[GraphicsBox, {parseBoxPossibleListPossibleDirective[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+*)
+parseBox[GraphicsBox[rest___], pos_] :=
+  BoxNode[GraphicsBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[GraphicsComplex3DBox[rest___], pos_] :=
+  BoxNode[GraphicsComplex3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[GraphicsComplexBox[rest___], pos_] :=
+  BoxNode[GraphicsComplexBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[GraphicsGroup3DBox[rest___], pos_] :=
+  BoxNode[GraphicsGroup3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[GraphicsGroupBox[rest___], pos_] :=
+  BoxNode[GraphicsGroupBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[InsetBox[a_, rest___], pos_] :=
+  BoxNode[InsetBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[Line3DBox[rest___], pos_] :=
+  BoxNode[Line3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[LineBox[rest___], pos_] :=
+  BoxNode[LineBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[Point3DBox[rest___], pos_] :=
+  BoxNode[Point3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[PointBox[rest___], pos_] :=
+  BoxNode[PointBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[Polygon3DBox[rest___], pos_] :=
+  BoxNode[Polygon3DBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[PolygonBox[rest___], pos_] :=
+  BoxNode[PolygonBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[RasterBox[rest___], pos_] :=
+  BoxNode[RasterBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[RectangleBox[rest___], pos_] :=
+  BoxNode[RectangleBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[SphereBox[rest___], pos_] :=
+  BoxNode[SphereBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[TubeBox[rest___], pos_] :=
+  BoxNode[TubeBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+
+
+
+
+(*
+boxes that are HoldAllComplete
+*)
+
+(*
+InterpretationBox is HoldAllComplete
+*)
+parseBox[InterpretationBox[rest___], pos_] :=
+  BoxNode[InterpretationBox, applyUnevaluatedCodeNodesToRest[rest], <|Source->pos|>]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -574,43 +643,6 @@ parseBox[TableViewBox[rest___], pos_] :=
 parseBoxPossibleList[l_List, pos_] := MapIndexed[parseBoxPossibleList[#, pos ~Join~ #2]&, l]
 
 parseBoxPossibleList[box_, pos_] := parseBox[box, pos]
-
-
-
-
-
-
-parseBoxPossibleListPossibleDirective[l_List, pos_] := MapIndexed[parseBoxPossibleListPossibleDirective[#, pos ~Join~ #2]&, l]
-
-parseBoxPossibleListPossibleDirective[GrayLevel[l_], pos_] := DirectiveNode[GrayLevel, {l}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[AbsoluteThickness[t_], pos_] := DirectiveNode[AbsoluteThickness, {t}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[Opacity[o_], pos_] := DirectiveNode[Opacity, {o}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[RGBColor[r_, g_, b_], pos_] := DirectiveNode[RGBColor, {r, g, b}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[EdgeForm[f_], pos_] := DirectiveNode[EdgeForm, {f}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[PointSize[s_], pos_] := DirectiveNode[PointSize, {s}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[CapForm[f_], pos_] := DirectiveNode[CapForm, {f}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[Thickness[t_], pos_] := DirectiveNode[Thickness, {t}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[JoinForm[f_], pos_] := DirectiveNode[JoinForm, {f}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[FaceForm[f_], pos_] := DirectiveNode[FaceForm, {f}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[Specularity[args___], pos_] := DirectiveNode[Specularity, {args}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[AbsoluteDashing[args___], pos_] := DirectiveNode[AbsoluteDashing, {args}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[AbsolutePointSize[args___], pos_] := DirectiveNode[AbsolutePointSize, {args}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[Arrowheads[args___], pos_] := DirectiveNode[Arrowheads, {args}, <|Source->pos|>]
-
-parseBoxPossibleListPossibleDirective[box_, pos_] := parseBox[box, pos]
 
 
 parseBox["=.", pos_] :=
@@ -1211,320 +1243,48 @@ Module[{heldRest, heldChildren},
 BoxNodes that may contain CodeNodes have to be handled individually
 *)
 
-toStandardFormBoxes[BoxNode[DynamicBox, {rest___}, _]] :=
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  heldChildren = heldRest;
 
-  With[{heldChildren = heldChildren}, ReleaseHold[DynamicBox @@ heldChildren]]
-]
 
-toStandardFormBoxes[BoxNode[DynamicModuleBox, {rest___}, _]] :=
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  heldChildren = heldRest;
 
-  With[{heldChildren = heldChildren}, ReleaseHold[DynamicModuleBox @@ heldChildren]]
-]
 
-toStandardFormBoxes[BoxNode[NamespaceBox, {first_, a_, rest___}, _]] :=
-Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  (*
-  Need to wrap boxes in HoldComplete, so that ReleaseHold does not descend into the boxes (which may contain code that has HoldComplete)
-  *)
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { HoldComplete[aBox] } ~Join~ heldRest];
 
-  With[{heldChildren = heldChildren}, ReleaseHold[NamespaceBox @@ heldChildren]]
-]
 
-toStandardFormBoxes[BoxNode[RasterBox, {rest___}, _]] :=
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[RasterBox @@ heldChildren]]
-]
-
-toStandardFormBoxes[BoxNode[TagBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[TagBox @@ heldChildren]]
-]]
-
-
-toStandardFormBoxes[BoxNode[GraphicsBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[Graphics3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[Graphics3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[GraphicsComplexBox, {rest___}, _]] :=
-Catch[
-Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsComplexBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[GraphicsComplex3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsComplex3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[GraphicsGroupBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsGroupBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[GraphicsGroup3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsGroup3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[DiskBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[DiskBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[LineBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[LineBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[Line3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[Line3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[RectangleBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[RectangleBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[PointBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[PointBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[Point3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[Point3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[CuboidBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[CuboidBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[Polygon3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[Polygon3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[SphereBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[SphereBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[RotationBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[RotationBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[BSplineCurveBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[BSplineCurveBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[BSplineCurve3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[BSplineCurve3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[BSplineSurface3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[BSplineSurface3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[PolygonBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[PolygonBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[ConicHullRegion3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[ConicHullRegion3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[TubeBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[TubeBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[Arrow3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[Arrow3DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[GeometricTransformation3DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[GeometricTransformation3DBox @@ heldChildren]]
-]]
 
 (*
-too complicated to handle first arg as boxes
+boxes that are just {Protected, ReadProtected}
 *)
-toStandardFormBoxes[BoxNode[TemplateBox, {rest___}, _]] :=
+
+toStandardFormBoxes[BoxNode[ActionMenuBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  heldChildren = heldRest;
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
-  With[{heldChildren = heldChildren}, ReleaseHold[TemplateBox @@ heldChildren]]
+  With[{heldChildren = heldChildren}, ReleaseHold[ActionMenuBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[FormBox, {rest___}, _]] :=
+toStandardFormBoxes[BoxNode[AdjustmentBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[AdjustmentBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[AnimatorBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
-  With[{heldChildren = heldChildren}, ReleaseHold[FormBox @@ heldChildren]]
+  With[{heldChildren = heldChildren}, ReleaseHold[AnimatorBox @@ heldChildren]]
 ]]
 
 toStandardFormBoxes[BoxNode[ButtonBox, {a_, rest___}, _]] :=
@@ -1537,24 +1297,160 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[ButtonBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[ActionMenuBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[ActionMenuBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[PaneSelectorBox, {rest___}, _]] :=
+toStandardFormBoxes[BoxNode[CheckboxBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
-  With[{heldChildren = heldChildren}, ReleaseHold[PaneSelectorBox @@ heldChildren]]
+  With[{heldChildren = heldChildren}, ReleaseHold[CheckboxBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[ColorSetterBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[ColorSetterBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[n:BoxNode[ErrorBox, {rest___}, _]] :=
+  Failure["Unimplemented", <| "Function" -> toStandardFormBoxes, "Arguments" -> HoldForm[{n}] |>]
+
+toStandardFormBoxes[BoxNode[FormBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[FormBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[n:BoxNode[FractionBox, {a_, b_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[FractionBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[FrameBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[FrameBox @@ heldChildren]]
+]]
+
+(*
+a is a List of Lists
+*)
+toStandardFormBoxes[BoxNode[GridBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = Map[toStandardFormBoxes, a, {2}]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[GridBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[InputFieldBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[InputFieldBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[ItemBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[ItemBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[ListPickerBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[ListPickerBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[LocatorPaneBox, {first_, a_, rest___}, _]] :=
+Module[{heldFirst, heldRest, heldChildren},
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[LocatorPaneBox @@ heldChildren]]
+]
+
+toStandardFormBoxes[BoxNode[NamespaceBox, {first_, a_, rest___}, _]] :=
+Module[{heldFirst, heldRest, heldChildren},
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[NamespaceBox @@ heldChildren]]
+]
+
+toStandardFormBoxes[BoxNode[OpenerBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[OpenerBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[OverlayBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[OverlayBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[OverscriptBox, {a_, b_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[OverscriptBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[PaneBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[PaneBox @@ heldChildren]]
 ]]
 
 toStandardFormBoxes[BoxNode[PanelBox, {a_, rest___}, _]] :=
@@ -1567,14 +1463,120 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[PanelBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[InterpretationBox, {rest___}, _]] :=
+toStandardFormBoxes[BoxNode[PaneSelectorBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
-  With[{heldChildren = heldChildren}, ReleaseHold[InterpretationBox @@ heldChildren]]
+  With[{heldChildren = heldChildren}, ReleaseHold[PaneSelectorBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[PopupMenuBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[PopupMenuBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[ProgressIndicatorBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[ProgressIndicatorBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[RadicalBox, {a_, b_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]},
+    heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[RadicalBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[RadioButtonBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[RadioButtonBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[RotationBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[RotationBox @@ heldChildren]]
+]]
+
+(*
+a is a List of boxes
+*)
+toStandardFormBoxes[BoxNode[RowBox, {a_}, _]] :=
+Catch[
+Module[{aBox, boxes},
+
+  aBox = toStandardFormBoxes /@ a;
+
+  boxes = {aBox};
+
+  RowBox @@ boxes
+]]
+
+toStandardFormBoxes[BoxNode[SetterBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[SetterBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[Slider2DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[Slider2DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[SliderBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[SliderBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[SqrtBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]},
+    heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[SqrtBox @@ heldChildren]]
 ]]
 
 toStandardFormBoxes[BoxNode[StyleBox, {a_, rest___}, _]] :=
@@ -1585,6 +1587,16 @@ Module[{heldRest, heldChildren},
   With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[StyleBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[n:BoxNode[SubscriptBox, {a_, b_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[SubscriptBox @@ heldChildren]]
 ]]
 
 toStandardFormBoxes[BoxNode[SuperscriptBox, {a_, b_, rest___}, _]] :=
@@ -1608,160 +1620,6 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[SubsuperscriptBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[UnderoverscriptBox, {a_, b_, c_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b], cBox = toStandardFormBoxes[c]},
-    heldChildren = { HoldComplete[aBox], HoldComplete[bBox], HoldComplete[cBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[UnderoverscriptBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[ItemBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[ItemBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[InsetBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[InsetBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[AdjustmentBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[AdjustmentBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[LocatorPaneBox, {first_, a_, rest___}, _]] :=
-Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  (*
-  Need to wrap boxes in HoldComplete, so that ReleaseHold does not descend into the boxes (which may contain code that has HoldComplete)
-  *)
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[LocatorPaneBox @@ heldChildren]]
-]
-
-toStandardFormBoxes[BoxNode[AnimatorBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[AnimatorBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[OpenerBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[OpenerBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[SliderBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[SliderBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[CylinderBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[CylinderBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[OverscriptBox, {a_, b_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[OverscriptBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[UnderscriptBox, {a_, b_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[UnderscriptBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[FrameBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[FrameBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[CheckboxBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[CheckboxBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[ColorSetterBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[ColorSetterBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[InputFieldBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[InputFieldBox @@ heldChildren]]
-]]
-
 toStandardFormBoxes[BoxNode[TabViewBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
@@ -1772,116 +1630,27 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[TabViewBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[RadioButtonBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[RadioButtonBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[PopupMenuBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[PopupMenuBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[SetterBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[SetterBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[Slider2DBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[Slider2DBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[DynamicWrapperBox, {a_, rest___}, _]] :=
+toStandardFormBoxes[BoxNode[TagBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
-  With[{heldChildren = heldChildren}, ReleaseHold[DynamicWrapperBox @@ heldChildren]]
+  With[{heldChildren = heldChildren}, ReleaseHold[TagBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[PaneBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[PaneBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[SqrtBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a]},
-    heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[SqrtBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[RadicalBox, {a_, b_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]},
-    heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[RadicalBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[ListPickerBox, {rest___}, _]] :=
+(*
+too complicated to handle first arg as boxes
+*)
+toStandardFormBoxes[BoxNode[TemplateBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
-  With[{heldChildren = heldChildren}, ReleaseHold[ListPickerBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[OverlayBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[OverlayBox @@ heldChildren]]
-]]
-
-toStandardFormBoxes[BoxNode[ProgressIndicatorBox, {rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  With[{heldChildren = heldChildren}, ReleaseHold[ProgressIndicatorBox @@ heldChildren]]
+  With[{heldChildren = heldChildren}, ReleaseHold[TemplateBox @@ heldChildren]]
 ]]
 
 toStandardFormBoxes[BoxNode[TogglerBox, {rest___}, _]] :=
@@ -1905,6 +1674,34 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[TooltipBox @@ heldChildren]]
 ]]
 
+toStandardFormBoxes[BoxNode[UnderoverscriptBox, {a_, b_, c_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b], cBox = toStandardFormBoxes[c]},
+    heldChildren = { HoldComplete[aBox], HoldComplete[bBox], HoldComplete[cBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[UnderoverscriptBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[UnderscriptBox, {a_, b_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[UnderscriptBox @@ heldChildren]]
+]]
+
+
+
+
+(*
+boxes that are HoldFirst
+*)
+
 toStandardFormBoxes[BoxNode[TableViewBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
@@ -1916,52 +1713,347 @@ Module[{heldRest, heldChildren},
 ]]
 
 
+
+
+
 (*
-a is a List of Lists
+boxes that are HoldRest
 *)
-toStandardFormBoxes[BoxNode[GridBox, {a_, rest___}, _]] :=
+
+toStandardFormBoxes[BoxNode[DynamicWrapperBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = Map[toStandardFormBoxes, a, {2}]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
-  With[{heldChildren = heldChildren}, ReleaseHold[GridBox @@ heldChildren]]
+  With[{heldChildren = heldChildren}, ReleaseHold[DynamicWrapperBox @@ heldChildren]]
 ]]
+
+
+
+
 
 (*
-a is a List of boxes
+boxes that are HoldAll
 *)
-toStandardFormBoxes[BoxNode[RowBox, {a_}, _]] :=
+
+toStandardFormBoxes[BoxNode[Arrow3DBox, {rest___}, _]] :=
 Catch[
-Module[{aBox, boxes},
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  aBox = toStandardFormBoxes /@ a;
+  heldChildren = heldRest;
 
-  boxes = {aBox};
-
-  RowBox @@ boxes
+  With[{heldChildren = heldChildren}, ReleaseHold[Arrow3DBox @@ heldChildren]]
 ]]
+
+toStandardFormBoxes[BoxNode[BSplineCurve3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[BSplineCurve3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[BSplineCurveBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[BSplineCurveBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[BSplineSurface3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[BSplineSurface3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[ConicHullRegion3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[ConicHullRegion3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[CuboidBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[CuboidBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[CylinderBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[CylinderBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[DiskBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[DiskBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[DynamicBox, {rest___}, _]] :=
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[DynamicBox @@ heldChildren]]
+]
+
+toStandardFormBoxes[BoxNode[DynamicModuleBox, {rest___}, _]] :=
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[DynamicModuleBox @@ heldChildren]]
+]
+
+toStandardFormBoxes[BoxNode[GeometricTransformation3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[GeometricTransformation3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[Graphics3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[Graphics3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[GraphicsBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[GraphicsComplex3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldFirst, heldRest, heldChildren},
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsComplex3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[GraphicsComplexBox, {rest___}, _]] :=
+Catch[
+Module[{heldFirst, heldRest, heldChildren},
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsComplexBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[GraphicsGroup3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsGroup3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[GraphicsGroupBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[GraphicsGroupBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[InsetBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[InsetBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[Line3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[Line3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[LineBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[LineBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[Point3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[Point3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[PointBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[PointBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[Polygon3DBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[Polygon3DBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[PolygonBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[PolygonBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[RasterBox, {rest___}, _]] :=
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[RasterBox @@ heldChildren]]
+]
+
+toStandardFormBoxes[BoxNode[RectangleBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[RectangleBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[SphereBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[SphereBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[TubeBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[TubeBox @@ heldChildren]]
+]]
+
+
+
+
 
 (*
-For BoxNodes that do not contain CodeNodes ( SqrtBox, FractionBox, etc )
+boxes that are HoldAllComplete
 *)
-toStandardFormBoxes[BoxNode[box_, children_, _]] :=
+
+toStandardFormBoxes[BoxNode[InterpretationBox, {rest___}, _]] :=
 Catch[
-Module[{nodeBoxes},
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  nodeBoxes = toStandardFormBoxes /@ children;
-  If[AnyTrue[nodeBoxes, FailureQ],
-    Throw[SelectFirst[nodeBoxes, FailureQ]]
-  ];
+  heldChildren = heldRest;
 
-  box @@ nodeBoxes
+  With[{heldChildren = heldChildren}, ReleaseHold[InterpretationBox @@ heldChildren]]
 ]]
 
 
 
-toStandardFormBoxes[CodeNode[Null, code_, data_]] :=
-  Failure["CannotConvertToStandardFormBoxes", <| "Node" -> CodeNode[Null, code, data] |>]
+
+
+
+
+
+
+
+
+
+
+
+
+toStandardFormBoxes[n:CodeNode[Evaluated, code_, data_]] :=
+  code
+
+toStandardFormBoxes[n:CodeNode[Unevaluated, _, _]] :=
+  Failure["CannotConvertUnevaluatedCodeNodeToStandardFormBoxes", <| "Node" -> n |>]
 
 
 toStandardFormBoxes[l_List] := Map[toStandardFormBoxes, l]
