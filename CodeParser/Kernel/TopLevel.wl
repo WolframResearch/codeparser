@@ -63,11 +63,21 @@ Some nodes would be strange at top-level in a package. For example, 1+1 would be
 *)
 
 
-topLevelChildIssues[CallNode[_, GroupNode[GroupSquare, {_, GroupNode[GroupSquare, _, _], _}, _], data_], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
+topLevelChildIssues[n:CallNode[_, GroupNode[GroupSquare, {_, GroupNode[GroupSquare, _, _], _}, _], data_], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
+Catch[
+Module[{first},
+
+  first = firstExplicitToken[n];
+
+  If[FailureQ[first],
+    Throw[{}]
+  ];
+
   {SyntaxIssue["TopLevelPart", "Unexpected ``Part`` expression at top-level.", "Warning", <|
-    Source -> data[Source],
+    Source -> first[[3, Key[Source]]],
     ConfidenceLevel -> 0.95
   |>]}
+]]
 
 (*
 Call could be anything
@@ -171,25 +181,31 @@ topLevelChildIssues[GroupNode[List, {
 
 topLevelChildIssues[n:GroupNode[List, _, data_], reportIssuesBehavior:KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 Catch[
-Module[{},
+Module[{first},
 
   (*
   If a list or whatever is the only expression in a file, or if it is the last expression in a file,
   then assume it is "Data" or something and do not complain
   *)
   If[reportIssuesBehavior["ToplevelChildIndex"] == reportIssuesBehavior["ToplevelChildrenLength"],
+    Throw[{}]
+  ];
+
+  first = firstExplicitToken[n];
+
+  If[FailureQ[first],
     Throw[{}]
   ];
 
   {SyntaxIssue["TopLevelList", "Unexpected list at top-level.", "Warning", <|
-    Source -> data[Source],
+    Source -> first[[3, Key[Source]]],
     ConfidenceLevel -> 0.75
   |>]}
 ]]
 
-topLevelChildIssues[GroupNode[Association, _, data_], reportIssuesBehavior:KeyValuePattern["WillReportToplevelIssues" -> True]] :=
+topLevelChildIssues[n:GroupNode[Association, _, data_], reportIssuesBehavior:KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 Catch[
-Module[{},
+Module[{first},
 
   (*
   If a list or whatever is the only expression in a file, or if it is the last expression in a file,
@@ -199,8 +215,14 @@ Module[{},
     Throw[{}]
   ];
 
-  {SyntaxIssue["TopLevelAssociation", "Unexpected list at top-level.", "Warning", <|
-    Source -> data[Source],
+  first = firstExplicitToken[n];
+
+  If[FailureQ[first],
+    Throw[{}]
+  ];
+
+  {SyntaxIssue["TopLevelAssociation", "Unexpected association at top-level.", "Warning", <|
+    Source -> first[[3, Key[Source]]],
     ConfidenceLevel -> 0.75
   |>]}
 ]]
@@ -462,10 +484,20 @@ topLevelChildIssues[GroupMissingCloserNode[_, _, _], KeyValuePattern["WillReport
   {}
 
 topLevelChildIssues[node:_[_, _, data_], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
+Catch[
+Module[{first},
+
+  first = firstExplicitToken[node];
+
+  If[FailureQ[first],
+    Throw[{}]
+  ];
+
   {SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <|
-    Source -> data[Source],
+    Source -> first[[3, Key[Source]]],
     ConfidenceLevel -> 0.95
   |>]}
+]]
 
 (*
 if not active, return no issues
