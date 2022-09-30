@@ -699,7 +699,7 @@ Test[
 			SyntaxIssue["UnhandledCharacter", "Unhandled character: ``\\[Alpa]``.", "Fatal", <|
 				Source -> {{1, 1}, {1, 8}},
 				ConfidenceLevel -> 1., 
-				CodeActions -> {CodeAction["Replace with ``\\[Alpha]``", ReplaceText, <|Source -> {{1, 1}, {1, 8}}, "ReplacementText" -> "\\[Alpha]"|>]}, "AdditionalDescriptions" -> {"``Alpa`` is not a recognized long name."}|>]},
+				CodeActions -> {CodeAction["Replace with ``\\[Alpha]``", ReplaceText, <|Source -> {{1, 1}, {1, 8}}, "ReplacementText" -> "\\[Alpha]"|>]}, "AdditionalDescriptions" -> {"``Alpa`` is not a valid long name."}|>]},
 		Source -> {{1, 1}, {1, 8}}|>
 	]
 	,

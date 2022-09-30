@@ -278,6 +278,7 @@ WLCharacter CharacterDecoder_handleStringMetaBackslash(ParserSessionPtr session,
                 auto tmpPolicy = policy;
                 
                 tmpPolicy |= ENABLE_CHARACTER_DECODING_ISSUES;
+                tmpPolicy |= SCAN_FOR_UNRECOGNIZEDLONGNAMES;
                 
                 session->buffer = longNameStartBuf;
                 session->SrcLoc = longNameStartLoc;
@@ -342,8 +343,6 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
                 
             } else {
                 
-                //
-                // Unrecognized
                 //
                 // Something like \[A!] which is not a long name
                 //
@@ -448,7 +447,7 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
     if (!found) {
         
         //
-        // Unrecognized name
+        // Name not found
         //
         
 #if CHECK_ISSUES
@@ -467,17 +466,28 @@ WLCharacter CharacterDecoder_handleLongName(ParserSessionPtr session, Buffer ope
             
             CodeActionPtrVector Actions;
             
-            if (!suggestion.empty()) {
-                Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]"));
+            if ((policy & SCAN_FOR_UNRECOGNIZEDLONGNAMES) == SCAN_FOR_UNRECOGNIZEDLONGNAMES) {
+                
+                auto currentUnrecognizedStartLoc = currentWLCharacterStartLoc.previous();
+                
+                if (!suggestion.empty()) {
+                    Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\\\[" + suggestion + "]``", Source(currentUnrecognizedStartLoc, currentWLCharacterEndLoc), "\\\\[" + suggestion + "]"));
+                }
+                
+                auto I = new SyntaxIssue(STRING_UNRECOGNIZEDLONGNAME, std::string("Unrecognized longname: ``\\\\[") + longNameStr + "]``.", STRING_ERROR, Source(currentUnrecognizedStartLoc, currentWLCharacterEndLoc), 0.75, Actions, {"``" + longNameStr + "`` is not a valid long name."});
+                
+                session->addIssue(I);
+                
+            } else {
+                
+                if (!suggestion.empty()) {
+                    Actions.push_back(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]"));
+                }
+                
+                auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "]``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {"``" + longNameStr + "`` is not a valid long name."});
+                
+                session->addIssue(I);
             }
-            
-            //
-            // More specifically: Unrecognized
-            //
-            auto I = new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "]``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, Actions, {"``" + longNameStr + "`` is not a recognized long name."});
-            
-            session->addIssue(I);
-            
         }
 #endif // CHECK_ISSUES
         
@@ -1456,8 +1466,6 @@ WLCharacter CharacterDecoder_handleUnhandledEscape(ParserSessionPtr session, Buf
                     
                 } else {
                     
-                    //
-                    // Unrecognized
                     //
                     // Something like \A!] which is not a long name
                     //

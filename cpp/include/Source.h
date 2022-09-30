@@ -102,6 +102,11 @@ enum NextPolicyBits : uint8_t {
     // For example, we must consider  #2.c  to be Slot[2] . c  and NOT  Slot[1] 2. c
     //
     INTEGER_SHORT_CIRCUIT = 0x20,
+    
+    //
+    // With input  "\\[Alpa]"  , then report \[Alpa] as unrecognized, even though this is valid syntax
+    //
+    SCAN_FOR_UNRECOGNIZEDLONGNAMES = 0x40,
 };
 
 

@@ -37,7 +37,8 @@ strings = Union[Join[
     "UnexpectedCharacter", "UnexpectedNewlineCharacter",
     "UnexpectedSpaceCharacter", "UnexpectedLetterlikeCharacter",
     "UndocumentedSlotSyntax", "UnexpectedImplicitTimes",
-    "UnexpectedDot", "Comma", "UnexpectedSign", "Ambiguous"},
+    "UnexpectedDot", "Comma", "UnexpectedSign", "Ambiguous",
+    "UnrecognizedLongName"},
   (*
   FormatIssue Tags
   *)

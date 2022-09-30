@@ -4027,9 +4027,6 @@ inline Token Tokenizer_handleUnhandledBackslash(ParserSessionPtr session, Buffer
             }
             
             if (wellFormed) {
-                //
-                // More specifically: Unrecognized
-                //
                 return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
             }
             

@@ -108,7 +108,7 @@ Test[
 			LeafNode[Symbol, "Alpa", <|Source -> {{1, 4}, {1, 8}}|>],
 			LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 3}, {1, 9}}|>]}, <|SyntaxIssues -> {
 		
-		SyntaxIssue["UnhandledCharacter", "Unhandled character: ``\\[Alpa]``.", "Fatal", <|Source -> {{1, 2}, {1, 9}}, ConfidenceLevel -> 1., CodeActions -> {CodeAction["Replace with ``\\[Alpha]``", ReplaceText, <|Source -> {{1, 2}, {1, 9}}, "ReplacementText" -> "\\[Alpha]"|>]}, "AdditionalDescriptions" -> {"``Alpa`` is not a recognized long name."}|>]}, Source -> {{1, 1}, {1, 9}}|>]
+		SyntaxIssue["UnrecognizedLongName", "Unrecognized longname: ``\\\\[Alpa]``.", "Error", <|Source -> {{1, 1}, {1, 9}}, ConfidenceLevel -> 0.75, CodeActions -> {CodeAction["Replace with ``\\\\[Alpha]``", ReplaceText, <|Source -> {{1, 1}, {1, 9}}, "ReplacementText" -> "\\\\[Alpha]"|>]}, "AdditionalDescriptions" -> {"``Alpa`` is not a valid long name."}|>]}, Source -> {{1, 1}, {1, 9}}|>]
 	,
 	TestID->"Error-20220709-M4Y7Z3"
 ]
