@@ -1,6 +1,5 @@
 use crate::{
     source::Source,
-    symbol::Symbol,
     token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenRef},
     tokenizer::Tokenizer,
 };
@@ -118,9 +117,16 @@ pub struct CompoundNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyntaxErrorNode<I = OwnedTokenInput> {
-    pub err: Symbol,
+    pub err: SyntaxErrorKind,
     pub children: NodeSeq<I>,
     pub src: Source,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SyntaxErrorKind {
+    ExpectedSymbol,
+    ExpectedSet,
+    ExpectedTilde,
 }
 
 /// `{]`
@@ -714,7 +720,7 @@ impl<I> CallNode<I> {
 //======================================
 
 impl<I> SyntaxErrorNode<I> {
-    pub(crate) fn new(err: Symbol, children: NodeSeq<I>) -> Self {
+    pub(crate) fn new(err: SyntaxErrorKind, children: NodeSeq<I>) -> Self {
         assert!(!children.is_empty());
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);

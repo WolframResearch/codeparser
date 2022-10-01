@@ -1,6 +1,8 @@
 use wolfram_library_link::{self as wll, sys::mint, wstp};
 
 use crate::{
+    node::SyntaxErrorKind,
+    symbol::Symbol,
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
     EncodingMode, FirstLineBehavior, StringifyMode,
 };
@@ -1079,4 +1081,20 @@ fn validatePath(path: &str) -> bool {
     let is_valid = unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as c_char) } != 0;
 
     return is_valid;
+}
+
+//======================================
+// WSTP Serialization
+//======================================
+
+impl SyntaxErrorKind {
+    pub(crate) fn to_symbol(&self) -> Symbol {
+        use crate::symbol_registration::*;
+
+        match self {
+            SyntaxErrorKind::ExpectedSymbol => SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL,
+            SyntaxErrorKind::ExpectedSet => SYMBOL_SYNTAXERROR_EXPECTEDSET,
+            SyntaxErrorKind::ExpectedTilde => SYMBOL_SYNTAXERROR_EXPECTEDTILDE,
+        }
+    }
 }

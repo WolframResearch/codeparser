@@ -3,7 +3,8 @@ use std::any::Any;
 use crate::{
     node::{
         BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode, Operator,
-        PostfixNode, PrefixNode, SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
+        PostfixNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
     parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
@@ -19,7 +20,6 @@ use crate::{
     parser_session::ParserSession,
     precedence::{Precedence, *},
     source::*,
-    symbol_registration::*,
     token::{Token, TokenKind, TokenRef},
     token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
     tokenizer::{
@@ -1565,7 +1565,7 @@ fn TildeParselet_reduceTilde(session: &mut ParserSession) {
 }
 
 fn TildeParselet_reduceError(session: &mut ParserSession) {
-    let node = SyntaxErrorNode::new(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, Parser_popContext(session));
+    let node = SyntaxErrorNode::new(SyntaxErrorKind::ExpectedTilde, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1652,10 +1652,7 @@ fn ColonParselet_reducePattern(session: &mut ParserSession) {
 }
 
 fn ColonParselet_reduceError(session: &mut ParserSession) {
-    let node = SyntaxErrorNode::new(
-        SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL,
-        Parser_popContext(session),
-    );
+    let node = SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSymbol, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1765,7 +1762,7 @@ fn SlashColonParselet_parse1(session: &mut ParserSession) {
 }
 
 fn SlashColonParselet_reduceError(session: &mut ParserSession) {
-    let node = SyntaxErrorNode::new(SYMBOL_SYNTAXERROR_EXPECTEDSET, Parser_popContext(session));
+    let node = SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSet, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

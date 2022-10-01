@@ -170,11 +170,13 @@ impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SyntaxErrorNode { err, children, src } = self;
 
+        let err: Symbol = err.to_symbol();
+
         callLink
             .put_function(SYMBOL_CODEPARSER_SYNTAXERRORNODE.as_str(), 3)
             .unwrap();
 
-        Symbol_put(*err, callLink);
+        Symbol_put(err, callLink);
 
         children.put(callLink);
 
