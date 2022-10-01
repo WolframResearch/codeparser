@@ -10,7 +10,6 @@ use crate::{
         *,
     },
     feature,
-    node::CollectedSourceLocationsNode,
     source::{
         Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssuePtrSet, IssueTag, NextPolicy,
         Severity, Source, SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT,
@@ -185,7 +184,7 @@ impl<'i> Tokenizer<'i> {
 
 impl TrackedSourceLocations {
     #[allow(dead_code)]
-    pub(crate) fn to_nodes(&self) -> [CollectedSourceLocationsNode; 4] {
+    pub(crate) fn to_nodes(&self) -> [HashSet<SourceLocation>; 4] {
         let TrackedSourceLocations {
             simple_line_continuations,
             complex_line_continuations,
@@ -194,10 +193,10 @@ impl TrackedSourceLocations {
         } = self;
 
         [
-            CollectedSourceLocationsNode::new(simple_line_continuations.clone()),
-            CollectedSourceLocationsNode::new(complex_line_continuations.clone()),
-            CollectedSourceLocationsNode::new(embedded_newlines.clone()),
-            CollectedSourceLocationsNode::new(embedded_tabs.clone()),
+            simple_line_continuations.clone(),
+            complex_line_continuations.clone(),
+            embedded_newlines.clone(),
+            embedded_tabs.clone(),
         ]
     }
 }

@@ -596,10 +596,6 @@ impl Issue {
 
     //     s << "]";
     // }
-
-    pub(crate) fn check(&self) -> bool {
-        return self.sev != Severity::Fatal;
-    }
 }
 
 pub fn SyntaxIssue(

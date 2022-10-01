@@ -1,13 +1,8 @@
 use wolfram_library_link::{self as wll, sys::mint, wstp};
 
 use crate::{
-    node::{
-        CollectedExpressionsNode, CollectedIssuesNode, MissingBecauseUnsafeCharacterEncodingNode,
-        Node, NodeSeq,
-    },
-    symbol_registration::SYMBOL_NULL,
-    token::BorrowedTokenInput,
-    EncodingMode, FirstLineBehavior, ParseResult, StringifyMode,
+    symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
+    EncodingMode, FirstLineBehavior, StringifyMode, UnsafeCharacterEncoding,
 };
 
 #[cfg(feature = "USE_MATHLINK")]
@@ -327,9 +322,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let result = session.concrete_parse_expressions();
-
-    result.into_nodes().put(link);
+    session.concrete_parse_expressions().put(link);
 
     drop(session);
 }
@@ -441,9 +434,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let C = session.concrete_parse_expressions();
-
-    C.into_nodes().put(link);
+    session.concrete_parse_expressions().put(link);
 
     drop(session);
 }
@@ -550,16 +541,13 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let nodes = match session.tokenize() {
-        Ok(nodes) => nodes,
+    match session.tokenize() {
+        Ok(nodes) => nodes.put(link),
         Err(flag) => {
-            let node = Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(flag));
-
-            NodeSeq(vec![node])
+            link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+            flag.put(link);
         },
     };
-
-    nodes.put(link);
 
     drop(session);
 }
@@ -672,16 +660,13 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let nodes = match session.tokenize() {
-        Ok(nodes) => nodes,
+    match session.tokenize() {
+        Ok(nodes) => nodes.put(link),
         Err(flag) => {
-            let node = Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(flag));
-
-            NodeSeq(vec![node])
+            link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+            flag.put(link);
         },
     };
-
-    nodes.put(link);
 
     drop(session);
 }
@@ -805,7 +790,7 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
         StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value"),
     );
 
-    result.into_nodes().put(link);
+    result.put(link);
 
     drop(session);
 }
@@ -900,12 +885,8 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
     // }
 
     match session.safe_string() {
-        Ok(str) => {
-            link.put_str(str).unwrap();
-        },
-        Err(flag) => {
-            MissingBecauseUnsafeCharacterEncodingNode::new(flag).put(link);
-        },
+        Ok(str) => link.put_str(str).unwrap(),
+        Err(flag) => flag.put(link),
     };
 
     drop(session);
@@ -1104,50 +1085,22 @@ fn validatePath(path: &str) -> bool {
 // WSTP / ExprLib serialization
 //==========================================================
 
-impl<'i> ParseResult<BorrowedTokenInput<'i>> {
-    pub(crate) fn into_nodes(self) -> NodeSeq<BorrowedTokenInput<'i>> {
-        let ParseResult {
-            nodes: outer_exprs,
-            unsafe_character_encoding,
-            fatal_issues,
-            non_fatal_issues,
-            tracked,
-        } = self;
+//
+// Other
+//
 
-        let mut nodes = NodeSeq::new();
-        nodes.push(CollectedExpressionsNode::new(outer_exprs));
+impl UnsafeCharacterEncoding {
+    pub(crate) fn reason(self) -> crate::my_string::MyString {
+        use crate::my_string_registration::*;
 
-        if let Some(flag) = unsafe_character_encoding {
-            nodes.clear();
-
-            let mut exprs = NodeSeq::new();
-
-            let node = MissingBecauseUnsafeCharacterEncodingNode::new(flag);
-
-            exprs.push(node);
-
-            let Collected = CollectedExpressionsNode::new(exprs);
-
-            nodes.push(Collected);
+        match self {
+            UnsafeCharacterEncoding::IncompleteUTF8Sequence => {
+                STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE
+            },
+            UnsafeCharacterEncoding::StraySurrogate => {
+                STRING_UNSAFECHARACTERENCODING_STRAYSURROGATE
+            },
+            UnsafeCharacterEncoding::BOM => STRING_UNSAFECHARACTERENCODING_BOM,
         }
-
-        //
-        // Now handle the out-of-band expressions, i.e., issues and metadata
-        //
-
-        //
-        // if there are fatal issues, then only send fatal issues
-        //
-        if !fatal_issues.is_empty() {
-            nodes.push(CollectedIssuesNode(fatal_issues));
-        } else {
-            nodes.push(CollectedIssuesNode(non_fatal_issues));
-        }
-
-        for node in tracked.to_nodes() {
-            nodes.push(node);
-        }
-
-        nodes
     }
 }

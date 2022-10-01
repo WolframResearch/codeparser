@@ -1,14 +1,14 @@
+use std::collections::HashSet;
+
 use wolfram_library_link::wstp;
 
 use crate::{
     my_string::MyString,
     my_string_registration::*,
     node::{
-        unsafeCharacterEncodingReason, BinaryNode, CallNode, CollectedExpressionsNode,
-        CollectedIssuesNode, CollectedSourceLocationsNode, CompoundNode, GroupMissingCloserNode,
-        GroupNode, InfixNode, MissingBecauseUnsafeCharacterEncodingNode, Node, NodeSeq,
-        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode, TernaryNode,
-        UnterminatedGroupNeedsReparseNode,
+        BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode, Node,
+        NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
+        TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     source::{
         BufferAndLength, CodeAction, CodeActionKind, Issue, IssueTag, Severity, Source,
@@ -18,6 +18,7 @@ use crate::{
     symbol_registration::*,
     token::{BorrowedTokenInput, Token},
     token_enum_registration::TokenToSymbol,
+    ParseResult, UnsafeCharacterEncoding,
 };
 
 //======================================
@@ -80,10 +81,6 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             Node::Token(token) => token.put(link),
             Node::Call(node) => node.put(link),
             Node::SyntaxError(node) => node.put(link),
-            Node::CollectedExpressions(node) => node.put(link),
-            Node::CollectedSourceLocations(node) => node.put(link),
-            Node::CollectedIssues(node) => node.put(link),
-            Node::MissingBecauseUnsafeCharacterEncoding(node) => node.put(link),
             Node::Infix(InfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_INFIXNODE),
             Node::Prefix(PrefixNode(op)) => op.put(link, SYMBOL_CODEPARSER_PREFIXNODE),
             Node::Postfix(PostfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_POSTFIXNODE),
@@ -180,49 +177,11 @@ impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
     }
 }
 
-impl<'i> CollectedExpressionsNode<BorrowedTokenInput<'i>> {
+impl UnsafeCharacterEncoding {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let CollectedExpressionsNode { exprs } = self;
-
-        exprs.put(callLink);
-    }
-}
-
-impl CollectedIssuesNode {
-    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let CollectedIssuesNode(issues) = self;
-
-        callLink
-            .put_function(SYMBOL_LIST.as_str(), issues.len())
-            .unwrap();
-
-        for issue in issues {
-            issue.put(callLink);
-        }
-    }
-}
-
-impl CollectedSourceLocationsNode {
-    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let CollectedSourceLocationsNode { source_locs } = self;
-
-        callLink
-            .put_function(SYMBOL_LIST.as_str(), source_locs.len())
-            .unwrap();
-
-        for loc in source_locs {
-            loc.put(callLink);
-        }
-    }
-}
-
-impl MissingBecauseUnsafeCharacterEncodingNode {
-    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let MissingBecauseUnsafeCharacterEncodingNode { flag } = *self;
-
         callLink.put_function(SYMBOL_MISSING.as_str(), 1).unwrap();
 
-        let reason = unsafeCharacterEncodingReason(flag);
+        let reason = self.reason();
 
         reason.put(callLink);
     }
@@ -428,6 +387,71 @@ impl Source {
 
                 return;
             },
+        }
+    }
+}
+
+fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<SourceLocation>) {
+    link.put_function(SYMBOL_LIST.as_str(), source_locs.len())
+        .unwrap();
+
+    for loc in source_locs {
+        loc.put(link);
+    }
+}
+
+//======================================
+// Result types
+//======================================
+
+impl<'i> ParseResult<BorrowedTokenInput<'i>> {
+    pub(crate) fn put(self, link: &mut wstp::Link) {
+        let ParseResult {
+            nodes: outer_exprs,
+            unsafe_character_encoding,
+            fatal_issues,
+            non_fatal_issues,
+            tracked,
+        } = self;
+
+        link.put_function(SYMBOL_LIST.as_str(), 6).unwrap();
+
+        // 1.
+        // Collected expressions.
+        match unsafe_character_encoding {
+            None => outer_exprs.put(link),
+            Some(flag) => {
+                link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+                flag.put(link);
+            },
+        };
+
+        //
+        // Now handle the out-of-band expressions, i.e., issues and metadata
+        //
+
+        // 2.
+        {
+            //
+            // if there are fatal issues, then only send fatal issues
+            //
+            let issues = if !fatal_issues.is_empty() {
+                fatal_issues
+            } else {
+                non_fatal_issues
+            };
+
+            link.put_function(SYMBOL_LIST.as_str(), issues.len())
+                .unwrap();
+
+            for issue in issues {
+                issue.put(link);
+            }
+        }
+
+        // 3, 4, 5, 6
+        for source_locs in tracked.to_nodes() {
+            put_source_locations(link, source_locs);
         }
     }
 }

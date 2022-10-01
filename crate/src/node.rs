@@ -1,10 +1,8 @@
-use std::collections::HashSet;
-
 use crate::{
-    source::{IssuePtrSet, Source, SourceLocation},
+    source::Source,
     symbol::Symbol,
     token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenRef},
-    tokenizer::{Tokenizer, UnsafeCharacterEncoding},
+    tokenizer::Tokenizer,
 };
 
 pub use crate::parselet_registration::Operator;
@@ -42,10 +40,6 @@ pub enum Node<I = OwnedTokenInput> {
     PrefixBinary(PrefixBinaryNode<I>),
     Compound(CompoundNode<I>),
     Group(GroupNode<I>),
-    CollectedExpressions(CollectedExpressionsNode<I>),
-    CollectedSourceLocations(CollectedSourceLocationsNode),
-    CollectedIssues(CollectedIssuesNode),
-    MissingBecauseUnsafeCharacterEncoding(MissingBecauseUnsafeCharacterEncodingNode),
     GroupMissingCloser(GroupMissingCloserNode<I>),
     UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode<I>),
 }
@@ -130,24 +124,6 @@ pub struct GroupMissingCloserNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct CollectedExpressionsNode<I = OwnedTokenInput> {
-    pub(crate) exprs: NodeSeq<I>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct CollectedIssuesNode(pub IssuePtrSet);
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct CollectedSourceLocationsNode {
-    pub source_locs: HashSet<SourceLocation>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct MissingBecauseUnsafeCharacterEncodingNode {
-    pub(crate) flag: UnsafeCharacterEncoding,
-}
-
 //======================================
 // Node convertions
 //======================================
@@ -170,10 +146,6 @@ macro_rules! from_node {
     };
 }
 
-from_node!(CollectedExpressionsNode<> => Node::CollectedExpressions);
-from_node!(CollectedSourceLocationsNode => Node::CollectedSourceLocations);
-from_node!(CollectedIssuesNode => Node::CollectedIssues);
-from_node!(MissingBecauseUnsafeCharacterEncodingNode => Node::MissingBecauseUnsafeCharacterEncoding);
 from_node!(CompoundNode<> => Node::Compound);
 from_node!(BinaryNode<> => Node::Binary);
 from_node!(TernaryNode<> => Node::Ternary);
@@ -349,16 +321,6 @@ impl Node<BorrowedTokenInput<'_>> {
             Node::PrefixBinary(PrefixBinaryNode(op)) => {
                 Node::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
             },
-            Node::CollectedExpressions(CollectedExpressionsNode { exprs }) => {
-                Node::CollectedExpressions(CollectedExpressionsNode {
-                    exprs: exprs.into_owned_input(),
-                })
-            },
-            Node::CollectedSourceLocations(node) => Node::CollectedSourceLocations(node),
-            Node::CollectedIssues(node) => Node::CollectedIssues(node),
-            Node::MissingBecauseUnsafeCharacterEncoding(node) => {
-                Node::MissingBecauseUnsafeCharacterEncoding(node)
-            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.into_owned_input()))
             },
@@ -382,10 +344,6 @@ impl<I> Node<I> {
             Node::Token(token) => token.src,
             Node::Call(node) => node.getSource(),
             Node::SyntaxError(node) => node.getSource(),
-            Node::CollectedExpressions(node) => node.getSource(),
-            Node::CollectedSourceLocations(node) => node.getSource(),
-            Node::CollectedIssues(node) => node.getSource(),
-            Node::MissingBecauseUnsafeCharacterEncoding(node) => node.getSource(),
             Node::Prefix(PrefixNode(op)) => op.getSource(),
             Node::Infix(InfixNode(op)) => op.getSource(),
             Node::Postfix(PostfixNode(op)) => op.getSource(),
@@ -414,10 +372,6 @@ impl<I> Node<I> {
             Node::PrefixBinary(PrefixBinaryNode(op)) => op.check(),
             Node::Compound(CompoundNode(op)) => op.check(),
             Node::Group(GroupNode(op)) => op.check(),
-            Node::CollectedExpressions(node) => node.check(),
-            Node::CollectedSourceLocations(_) => true,
-            Node::CollectedIssues(node) => node.check(),
-            Node::MissingBecauseUnsafeCharacterEncoding(node) => node.check(),
             Node::Call(node) => node.check(),
             Node::SyntaxError(node) => node.check(),
             Node::GroupMissingCloser(node) => node.check(),
@@ -672,145 +626,6 @@ impl<I> SyntaxErrorNode<I> {
     //     s << ", ";
 
     //     src.print(s);
-
-    //     s << "]";
-    // }
-}
-
-//======================================
-// CollectedExpressionsNode
-//======================================
-
-impl<I> CollectedExpressionsNode<I> {
-    #[allow(dead_code)]
-    pub(crate) fn new(exprs: NodeSeq<I>) -> Self {
-        CollectedExpressionsNode { exprs }
-    }
-
-    // TODO: Display
-    // fn CollectedExpressionsNode::print(std::ostream& s) const {
-    //     Exprs.print(s);
-    // }
-
-    pub(crate) fn check(&self) -> bool {
-        let CollectedExpressionsNode { exprs } = self;
-        return exprs.check();
-    }
-
-    fn getSource(&self) -> Source {
-        panic!("illegal access of getSource() on CollectedExpressionsNode");
-    }
-}
-
-//======================================
-// CollectedIssuesNode
-//======================================
-
-impl CollectedIssuesNode {
-    pub fn CollectedIssuesNode(issues: IssuePtrSet) -> Self {
-        CollectedIssuesNode(issues)
-    }
-
-    // TODO: Display
-    // fn CollectedIssuesNode::print(std::ostream& s) const {
-
-    //     SYMBOL_LIST.print(s);
-    //     s << "[";
-
-    //     for (auto& I : Issues) {
-    //         I->print(s);
-    //         s << ", ";
-    //     }
-
-    //     s << "]";
-    // }
-
-    pub(crate) fn check(&self) -> bool {
-        let CollectedIssuesNode(issues) = self;
-
-        for issue in issues {
-            if !issue.check() {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    fn getSource(&self) -> Source {
-        panic!("illegal access of getSource() on CollectedIssuesNode");
-    }
-}
-
-//======================================
-// CollectedSourceLocationsNode
-//======================================
-
-impl CollectedSourceLocationsNode {
-    #[allow(dead_code)]
-    pub(crate) fn new(source_locs: HashSet<SourceLocation>) -> Self {
-        CollectedSourceLocationsNode { source_locs }
-    }
-
-    fn getSource(&self) -> Source {
-        panic!("illegal access of getSource() on CollectedSourceLocationsNode");
-    }
-
-    // TODO: Display
-    // void CollectedSourceLocationsNode::print(std::ostream& s) const {
-
-    //     SYMBOL_LIST.print(s);
-    //     s << "[";
-
-    //     for (auto& L : SourceLocs) {
-    //         L.print(s);
-    //         s << ", ";
-    //     }
-
-    //     s << "]";
-    // }
-}
-
-#[cfg(feature = "USE_MATHLINK")]
-pub(crate) fn unsafeCharacterEncodingReason(flag: UnsafeCharacterEncoding) -> crate::my_string::MyString {
-    use crate::my_string_registration::*;
-
-    match flag {
-        UnsafeCharacterEncoding::IncompleteUTF8Sequence => {
-            STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE
-        },
-        UnsafeCharacterEncoding::StraySurrogate => STRING_UNSAFECHARACTERENCODING_STRAYSURROGATE,
-        UnsafeCharacterEncoding::BOM => STRING_UNSAFECHARACTERENCODING_BOM,
-    }
-}
-
-//======================================
-// MissingBecauseUnsafeCharacterEncodingNode
-//======================================
-
-impl MissingBecauseUnsafeCharacterEncodingNode {
-    #[allow(dead_code)]
-    pub(crate) fn new(flag: UnsafeCharacterEncoding) -> Self {
-        MissingBecauseUnsafeCharacterEncodingNode { flag }
-    }
-
-    fn getSource(&self) -> Source {
-        panic!("illegal access of getSource() on MissingBecauseUnsafeCharacterEncodingNode");
-    }
-
-    pub(crate) fn check(&self) -> bool {
-        return false;
-    }
-
-    // TODO: Display
-    // void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
-
-    //     auto reason = unsafeCharacterEncodingReason(flag);
-
-    //     SYMBOL_MISSING.print(s);
-    //     s << "[";
-
-    //     reason.print(s);
 
     //     s << "]";
     // }
