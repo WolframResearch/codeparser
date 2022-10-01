@@ -166,6 +166,8 @@ impl<'i> ParserSession<'i> {
             DiagnosticsLogTime();
         }
 
+        let exprs = self.reparse_unterminated(exprs);
+
         return self.create_parse_result(exprs);
     }
 
@@ -192,6 +194,7 @@ impl<'i> ParserSession<'i> {
             return Err(flag);
         }
 
+        let nodes = self.reparse_unterminated(nodes);
 
         return Ok(nodes);
     }
@@ -218,6 +221,8 @@ impl<'i> ParserSession<'i> {
         let mut exprs = NodeSeq::new();
 
         exprs.push(self.concreteParseLeaf0(mode));
+
+        let exprs = self.reparse_unterminated(exprs);
 
         return self.create_parse_result(exprs);
     }
@@ -254,6 +259,22 @@ impl<'i> ParserSession<'i> {
                 Err(flag)
             },
         }
+    }
+
+    fn reparse_unterminated(
+        &self,
+        mut nodes: NodeSeq<BorrowedTokenInput<'i>>,
+    ) -> NodeSeq<BorrowedTokenInput<'i>> {
+        if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
+            nodes = crate::error::reparse_unterminated(
+                nodes,
+                input,
+                self.tokenizer.srcConvention,
+                usize::try_from(self.tokenizer.tabWidth).unwrap(),
+            );
+        }
+
+        nodes
     }
 
     fn create_parse_result(

@@ -116,7 +116,6 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Concretify.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Definitions.wl
-	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Error.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Folds.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Library.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Node.wl

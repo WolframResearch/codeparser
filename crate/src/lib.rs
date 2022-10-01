@@ -61,6 +61,7 @@ mod token_enum;
 mod tokenizer;
 mod wl_character;
 
+mod error;
 mod parser;
 mod parser_session;
 
@@ -124,6 +125,10 @@ pub mod test_utils {
                 $crate::SourceLocation::new($line1, $column1),
                 $crate::SourceLocation::new($line2, $column2),
             )
+        };
+        // a..b
+        ($start:literal .. $end:literal) => {
+            $crate::Source::from_character_range($start, $end)
         };
     }
 
@@ -276,6 +281,12 @@ impl Default for ParseOptions {
             encoding_mode: EncodingMode::Normal,
             tab_width: DEFAULT_TAB_WIDTH,
         }
+    }
+}
+
+impl ParseOptions {
+    pub fn tab_width(self, tab_width: u32) -> Self {
+        ParseOptions { tab_width, ..self }
     }
 }
 

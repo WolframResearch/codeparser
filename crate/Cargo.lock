@@ -1104,6 +1104,7 @@ dependencies = [
  "once_cell",
  "ordered-float",
  "pretty_assertions",
+ "regex",
  "strum",
  "wolfram-library-link",
 ]

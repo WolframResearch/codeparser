@@ -264,7 +264,12 @@ impl Display for Source {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let Source { start, end } = *self;
 
-        write!(f, "{start:?}-{end:?}")
+        if start.first == 0 {
+            debug_assert!(end.first == 0);
+            write!(f, "{}..{}", start.second, end.second)
+        } else {
+            write!(f, "{start:?}-{end:?}")
+        }
     }
 }
 
@@ -853,6 +858,37 @@ fn PrintTo(loc: &SourceLocation, s: &mut std::ostream) {
 // Source
 //
 
+/// A span of Wolfram Language input by character index.
+///
+/// This range starts indexing at 1, and is exclusive.
+///
+/// `CharacterRange(start, end)`
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct CharacterRange(pub u32, pub u32);
+
+impl CharacterRange {
+    pub(crate) fn tuple(self) -> (u32, u32) {
+        let CharacterRange(start, end) = self;
+
+        (start, end)
+    }
+
+    pub(crate) fn to_rust_range(&self) -> std::ops::Range<usize> {
+        let CharacterRange(start, end) = *self;
+
+        debug_assert!(start > 0);
+
+        let start = usize::try_from(start).unwrap();
+        let end = usize::try_from(end).unwrap();
+
+        // -1 because CharacterRange is 1-indexed (like WL)
+        let start = start - 1;
+        let end = end - 1;
+
+        start..end
+    }
+}
+
 impl Source {
     pub fn new(start: SourceLocation, end: SourceLocation) -> Self {
         assert!(start <= end);
@@ -865,6 +901,25 @@ impl Source {
             start: only,
             end: only,
         }
+    }
+
+    pub(crate) fn from_character_range(start: u32, end: u32) -> Self {
+        Source {
+            start: SourceLocation {
+                first: 0,
+                second: start,
+            },
+            end: SourceLocation {
+                first: 0,
+                second: end,
+            },
+        }
+    }
+
+    pub(crate) fn character_range(&self) -> CharacterRange {
+        assert!(self.start.first == 0 && self.end.first == 0);
+
+        CharacterRange(self.start.second, self.end.second)
     }
 
     pub fn new_from_source(start: Source, end: Source) -> Self {
@@ -889,6 +944,86 @@ impl Source {
         assert!(start.first == end.first);
 
         return end.second as usize - start.second as usize;
+    }
+
+    /// Check if a [`SourceLocation`] is inside of this [`Source`] span.
+    ///
+    /// ```
+    /// use wolfram_code_parse::{Source, SourceLocation, test_utils::src};
+    ///
+    /// assert!(src!(1:3-2:0).contains(SourceLocation::new(1, 4)));
+    ///
+    /// assert!(!src!(1:3-2:0).contains(SourceLocation::new(2, 4)));
+    ///
+    /// assert!(src!(1:3-2:0).contains(SourceLocation::new(1, 4)));
+    ///
+    /// assert!(!src!(1:3-2:0).contains(SourceLocation::new(2, 4)));
+    /// ```
+    pub fn contains(&self, cursor: SourceLocation) -> bool {
+        let Source {
+            start:
+                SourceLocation {
+                    first: srcLine1,
+                    second: srcCol1,
+                },
+            end:
+                SourceLocation {
+                    first: srcLine2,
+                    second: srcCol2,
+                },
+        } = *self;
+
+        let SourceLocation {
+            first: cursorLine,
+            second: cursorCol,
+        } = cursor;
+
+        // not in-between the lines of the spec, so no
+        if !(srcLine1 <= cursorLine && cursorLine <= srcLine2) {
+            return false;
+        }
+
+        // everything is on 1 line, so now test cols
+        if cursorLine == srcLine1 && srcLine1 == srcLine2 {
+            return srcCol1 <= cursorCol && cursorCol <= srcCol2;
+        }
+
+        // on srcLine1, so test that cursor comes after srcCol1
+        if cursorLine == srcLine1 {
+            return srcCol1 <= cursorCol;
+        }
+
+        // on srcLine2, so test that cursor comes before srcCol2
+        if cursorLine == srcLine2 {
+            return cursorCol <= srcCol2;
+        }
+
+        // exclusively in-between start and end, so yes
+        true
+    }
+
+    /// Check if this [`Source`] partially or completely overlaps with another
+    /// [`Source`].
+    ///
+    /// ```
+    /// use wolfram_code_parse::{Source, SourceLocation, test_utils::src};
+    ///
+    /// // Complete overlap.
+    /// assert!(src!(1:1-1:5).overlaps(src!(1:2-1:4)));
+    ///
+    /// // Partial overlap.
+    /// assert!(src!(1:1-1:5).overlaps(src!(1:4-1:8))); // Single line
+    /// assert!(src!(1:1-2:5).overlaps(src!(2:4-3:8))); // Multiline
+    ///
+    /// assert!(!src!(1:1-1:5).overlaps(src!(2:1-2:5)));
+    /// ```
+    pub fn overlaps(&self, cursor: Source) -> bool {
+        let Source { start, end } = cursor;
+
+        debug_assert!(start.convention() == SourceConvention::LineColumn);
+        debug_assert!(end.convention() == SourceConvention::LineColumn);
+
+        self.contains(start) || self.contains(end)
     }
 }
 

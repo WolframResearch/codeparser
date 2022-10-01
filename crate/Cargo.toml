@@ -29,6 +29,7 @@ strum = { version = "0.24", features = ["derive"] }
 ordered-float = "3.0"
 edit-distance = "2.1.0"
 memchr = "2.5.0"
+regex = "1.6.0"
 
 wolfram-library-link = { version = "0.2.9", optional = true, default-features = false }
 
