@@ -1296,8 +1296,6 @@ Module[{res},
     Throw[res]
   ];
 
-  res = res[[1]];
-
   res
 ]]
 

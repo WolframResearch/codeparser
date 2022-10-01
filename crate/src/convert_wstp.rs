@@ -7,8 +7,8 @@ use crate::{
         unsafeCharacterEncodingReason, BinaryNode, CallNode, CollectedExpressionsNode,
         CollectedIssuesNode, CollectedSourceLocationsNode, CompoundNode, GroupMissingCloserNode,
         GroupNode, InfixNode, MissingBecauseUnsafeCharacterEncodingNode, Node, NodeSeq,
-        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SafeStringNode, SyntaxErrorNode,
-        TernaryNode, UnterminatedGroupNeedsReparseNode,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode, TernaryNode,
+        UnterminatedGroupNeedsReparseNode,
     },
     source::{
         BufferAndLength, CodeAction, CodeActionKind, Issue, IssueTag, Severity, Source,
@@ -84,7 +84,6 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             Node::CollectedSourceLocations(node) => node.put(link),
             Node::CollectedIssues(node) => node.put(link),
             Node::MissingBecauseUnsafeCharacterEncoding(node) => node.put(link),
-            Node::SafeString(node) => node.put(link),
             Node::Infix(InfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_INFIXNODE),
             Node::Prefix(PrefixNode(op)) => op.put(link, SYMBOL_CODEPARSER_PREFIXNODE),
             Node::Postfix(PostfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_POSTFIXNODE),
@@ -226,16 +225,6 @@ impl MissingBecauseUnsafeCharacterEncodingNode {
         let reason = unsafeCharacterEncodingReason(flag);
 
         reason.put(callLink);
-    }
-}
-
-impl SafeStringNode {
-    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let SafeStringNode { bufAndLen } = self;
-
-        // bufAndLen.put(callLink);
-
-        callLink.put_str(bufAndLen).unwrap();
     }
 }
 

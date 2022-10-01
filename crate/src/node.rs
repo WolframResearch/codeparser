@@ -46,7 +46,6 @@ pub enum Node<I = OwnedTokenInput> {
     CollectedSourceLocations(CollectedSourceLocationsNode),
     CollectedIssues(CollectedIssuesNode),
     MissingBecauseUnsafeCharacterEncoding(MissingBecauseUnsafeCharacterEncodingNode),
-    SafeString(SafeStringNode),
     GroupMissingCloser(GroupMissingCloserNode<I>),
     UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode<I>),
 }
@@ -149,12 +148,6 @@ pub struct MissingBecauseUnsafeCharacterEncodingNode {
     pub(crate) flag: UnsafeCharacterEncoding,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct SafeStringNode {
-    // pub bufAndLen: BufferAndLength,
-    pub bufAndLen: String,
-}
-
 //======================================
 // Node convertions
 //======================================
@@ -181,7 +174,6 @@ from_node!(CollectedExpressionsNode<> => Node::CollectedExpressions);
 from_node!(CollectedSourceLocationsNode => Node::CollectedSourceLocations);
 from_node!(CollectedIssuesNode => Node::CollectedIssues);
 from_node!(MissingBecauseUnsafeCharacterEncodingNode => Node::MissingBecauseUnsafeCharacterEncoding);
-from_node!(SafeStringNode => Node::SafeString);
 from_node!(CompoundNode<> => Node::Compound);
 from_node!(BinaryNode<> => Node::Binary);
 from_node!(TernaryNode<> => Node::Ternary);
@@ -367,7 +359,6 @@ impl Node<BorrowedTokenInput<'_>> {
             Node::MissingBecauseUnsafeCharacterEncoding(node) => {
                 Node::MissingBecauseUnsafeCharacterEncoding(node)
             },
-            Node::SafeString(node) => Node::SafeString(node),
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.into_owned_input()))
             },
@@ -395,7 +386,6 @@ impl<I> Node<I> {
             Node::CollectedSourceLocations(node) => node.getSource(),
             Node::CollectedIssues(node) => node.getSource(),
             Node::MissingBecauseUnsafeCharacterEncoding(node) => node.getSource(),
-            Node::SafeString(node) => node.getSource(),
             Node::Prefix(PrefixNode(op)) => op.getSource(),
             Node::Infix(InfixNode(op)) => op.getSource(),
             Node::Postfix(PostfixNode(op)) => op.getSource(),
@@ -428,7 +418,6 @@ impl<I> Node<I> {
             Node::CollectedSourceLocations(_) => true,
             Node::CollectedIssues(node) => node.check(),
             Node::MissingBecauseUnsafeCharacterEncoding(node) => node.check(),
-            Node::SafeString(_) => true,
             Node::Call(node) => node.check(),
             Node::SyntaxError(node) => node.check(),
             Node::GroupMissingCloser(node) => node.check(),
@@ -824,24 +813,5 @@ impl MissingBecauseUnsafeCharacterEncodingNode {
     //     reason.print(s);
 
     //     s << "]";
-    // }
-}
-
-//======================================
-// SafeStringNode
-//======================================
-
-impl SafeStringNode {
-    pub(crate) fn new(bufAndLen: String) -> Self {
-        SafeStringNode { bufAndLen }
-    }
-
-    fn getSource(&self) -> Source {
-        panic!("illegal access of getSource() on SafeStringNode");
-    }
-
-    // TODO: Display
-    // void SafeStringNode::print(std::ostream& s) const {
-    //     bufAndLen.print(s);
     // }
 }

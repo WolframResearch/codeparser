@@ -239,12 +239,6 @@ impl MissingBecauseUnsafeCharacterEncodingNode {
     }
 }
 
-impl SafeStringNode {
-    fn toExpr(&self, session: &ParserSession) -> expr {
-        return bufAndLen.toExpr(session);
-    }
-}
-
 impl NodeContainer {
     fn toExpr(&self, session: &ParserSession) -> expr {
         return Nodes.toExpr(session);
