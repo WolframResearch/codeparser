@@ -6,9 +6,9 @@ use crate::{
     node::{
         unsafeCharacterEncodingReason, BinaryNode, CallNode, CollectedExpressionsNode,
         CollectedIssuesNode, CollectedSourceLocationsNode, CompoundNode, GroupMissingCloserNode,
-        GroupNode, InfixNode, MissingBecauseUnsafeCharacterEncodingNode, Node, NodeContainer,
-        NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SafeStringNode,
-        SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
+        GroupNode, InfixNode, MissingBecauseUnsafeCharacterEncodingNode, Node, NodeSeq,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SafeStringNode, SyntaxErrorNode,
+        TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     source::{
         BufferAndLength, CodeAction, CodeActionKind, Issue, IssueTag, Severity, Source,
@@ -236,14 +236,6 @@ impl SafeStringNode {
         // bufAndLen.put(callLink);
 
         callLink.put_str(bufAndLen).unwrap();
-    }
-}
-
-impl<'i> NodeContainer<BorrowedTokenInput<'i>> {
-    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        let NodeContainer { nodes } = self;
-
-        nodes.put(callLink);
     }
 }
 

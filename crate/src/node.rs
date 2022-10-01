@@ -155,11 +155,6 @@ pub struct SafeStringNode {
     pub bufAndLen: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct NodeContainer<I = OwnedTokenInput> {
-    pub nodes: NodeSeq<I>,
-}
-
 //======================================
 // Node convertions
 //======================================
@@ -849,21 +844,4 @@ impl SafeStringNode {
     // void SafeStringNode::print(std::ostream& s) const {
     //     bufAndLen.print(s);
     // }
-}
-
-impl<I> NodeContainer<I> {
-    pub(crate) fn new(nodes: NodeSeq<I>) -> Self {
-        NodeContainer { nodes }
-    }
-
-    // TODO: Display
-    // void print(std::ostream& s) const {
-    //     Nodes.print(s);
-    // }
-
-    #[allow(dead_code)]
-    pub(crate) fn check(&self) -> bool {
-        let NodeContainer { nodes } = self;
-        return nodes.check();
-    }
 }

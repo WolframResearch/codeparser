@@ -291,7 +291,7 @@ use crate::parser_session::ParserSession;
 /// use wolfram_code_parse::{
 ///     tokenize_bytes,
 ///     ParseOptions,
-///     node::{NodeContainer, NodeSeq}
+///     node::NodeSeq
 /// };
 ///
 /// let nodes = tokenize_bytes(b"2 + 2", &ParseOptions::default());
