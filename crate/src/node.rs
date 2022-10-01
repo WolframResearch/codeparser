@@ -805,6 +805,7 @@ pub(crate) fn unsafeCharacterEncodingReason(flag: UnsafeCharacterEncoding) -> cr
 //======================================
 
 impl MissingBecauseUnsafeCharacterEncodingNode {
+    #[allow(dead_code)]
     pub(crate) fn new(flag: UnsafeCharacterEncoding) -> Self {
         MissingBecauseUnsafeCharacterEncodingNode { flag }
     }

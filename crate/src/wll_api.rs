@@ -91,11 +91,6 @@ fn NodeContainerToExpr(session: ParserSessionPtr, C: NodeContainerPtr) -> expr {
     return C.toExpr(session);
 }
 
-#[cfg(feature = "USE_MATHLINK")]
-fn NodeContainerPut<'i>(C: &NodeContainer<BorrowedTokenInput<'i>>, link: &mut wstp::Link) {
-    C.put(link);
-}
-
 #[no_mangle]
 extern "C" fn WolframLibrary_getVersion() -> mint {
     return wll::sys::WolframLibraryVersion as mint;
@@ -555,9 +550,16 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let C = session.tokenize();
+    let nodes = match session.tokenize() {
+        Ok(nodes) => nodes,
+        Err(flag) => {
+            let node = Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(flag));
 
-    NodeContainerPut(&C, link);
+            NodeSeq(vec![node])
+        },
+    };
+
+    nodes.put(link);
 
     drop(session);
 }
@@ -670,9 +672,16 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
         EncodingMode::Normal,
     );
 
-    let C = session.tokenize();
+    let nodes = match session.tokenize() {
+        Ok(nodes) => nodes,
+        Err(flag) => {
+            let node = Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(flag));
 
-    C.put(link);
+            NodeSeq(vec![node])
+        },
+    };
+
+    nodes.put(link);
 
     drop(session);
 }

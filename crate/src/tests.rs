@@ -14,8 +14,8 @@ use pretty_assertions::assert_eq;
 
 use crate::{
     node::{
-        CallNode, GroupNode, InfixNode, Node, Node::Token as NVToken, NodeContainer, NodeSeq,
-        Operator, OperatorNode,
+        CallNode, GroupNode, InfixNode, Node, Node::Token as NVToken, NodeSeq, Operator,
+        OperatorNode,
     },
     parser_session::ParserSession,
     source::SourceConvention,
@@ -50,7 +50,7 @@ fn tokens(input: &str) -> Vec<Node<BorrowedTokenInput>> {
         EncodingMode::Normal,
     );
 
-    let NodeContainer { nodes } = session.tokenize();
+    let nodes: NodeSeq<BorrowedTokenInput> = session.tokenize().unwrap();
 
     let NodeSeq(nodes) = nodes;
 
@@ -146,7 +146,7 @@ pub fn test_tokenize_is_not_idempotent() {
     );
 
     assert_eq!(
-        session.tokenize().nodes.0,
+        session.tokenize().unwrap().0,
         vec![
             NVToken(token![Integer, "2" @ 0, src!(0:1-0:2)]),
             NVToken(token![Plus, "+" @ 1, src!(0:2-0:3)]),
@@ -155,5 +155,5 @@ pub fn test_tokenize_is_not_idempotent() {
     );
 
     // Test that ParserSession::tokenize() is NOT idempotent.
-    assert_eq!(session.tokenize().nodes.0, vec![])
+    assert_eq!(session.tokenize().unwrap().0, vec![])
 }

@@ -9,7 +9,7 @@ use Diagnostics::*;
 use crate::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
     feature,
-    node::{MissingBecauseUnsafeCharacterEncodingNode, Node, NodeContainer, NodeSeq, TriviaSeq},
+    node::{Node, NodeSeq, TriviaSeq},
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
@@ -169,7 +169,7 @@ impl<'i> ParserSession<'i> {
         return self.create_parse_result(exprs);
     }
 
-    pub fn tokenize(&mut self) -> NodeContainer<BorrowedTokenInput<'i>> {
+    pub fn tokenize(&mut self) -> Result<NodeSeq<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
         let mut nodes = NodeSeq::new();
 
         loop {
@@ -189,14 +189,11 @@ impl<'i> ParserSession<'i> {
         } // while (true)
 
         if let Some(flag) = self.tokenizer.unsafe_character_encoding_flag {
-            nodes.clear();
-
-            let N = MissingBecauseUnsafeCharacterEncodingNode::new(flag);
-
-            nodes.push(N);
+            return Err(flag);
         }
 
-        return NodeContainer::new(nodes);
+
+        return Ok(nodes);
     }
 
     fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Node<BorrowedTokenInput<'i>> {
