@@ -8,7 +8,7 @@ use crate::{
     node::{
         BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode, Node,
         NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
-        TernaryNode, UnterminatedGroupNeedsReparseNode,
+        TernaryNode, UnterminatedGroupNeedsReparseNode, UnterminatedGroupNode,
     },
     source::{
         BufferAndLength, CodeAction, CodeActionKind, Issue, IssueTag, Severity, Source,
@@ -91,6 +91,9 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             },
             Node::Compound(CompoundNode(op)) => op.put(link, SYMBOL_CODEPARSER_COMPOUNDNODE),
             Node::Group(GroupNode(op)) => op.put(link, SYMBOL_CODEPARSER_GROUPNODE),
+            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
+                op.put(link, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNODE)
+            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
             },
