@@ -76,6 +76,7 @@ pub(crate) struct SourceManager<'t> {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(strum::IntoStaticStr, strum::EnumString)]
 pub enum UnsafeCharacterEncoding {
     // Ok = 0,
     IncompleteUTF8Sequence = 1,

@@ -2,7 +2,7 @@ use wolfram_library_link::{self as wll, sys::mint, wstp};
 
 use crate::{
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
-    EncodingMode, FirstLineBehavior, StringifyMode, UnsafeCharacterEncoding,
+    EncodingMode, FirstLineBehavior, StringifyMode,
 };
 
 #[cfg(feature = "USE_MATHLINK")]
@@ -1079,28 +1079,4 @@ fn validatePath(path: &str) -> bool {
     let is_valid = unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as c_char) } != 0;
 
     return is_valid;
-}
-
-//==========================================================
-// WSTP / ExprLib serialization
-//==========================================================
-
-//
-// Other
-//
-
-impl UnsafeCharacterEncoding {
-    pub(crate) fn reason(self) -> crate::my_string::MyString {
-        use crate::my_string_registration::*;
-
-        match self {
-            UnsafeCharacterEncoding::IncompleteUTF8Sequence => {
-                STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE
-            },
-            UnsafeCharacterEncoding::StraySurrogate => {
-                STRING_UNSAFECHARACTERENCODING_STRAYSURROGATE
-            },
-            UnsafeCharacterEncoding::BOM => STRING_UNSAFECHARACTERENCODING_BOM,
-        }
-    }
 }

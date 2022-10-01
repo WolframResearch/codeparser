@@ -169,12 +169,14 @@ impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
 }
 
 impl UnsafeCharacterEncoding {
-    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
-        callLink.put_function(SYMBOL_MISSING.as_str(), 1).unwrap();
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        link.put_function(SYMBOL_MISSING.as_str(), 1).unwrap();
 
-        let reason = self.reason();
+        let variant_name: &'static str = self.into();
 
-        reason.put(callLink);
+        let name = format!("UnsafeCharacterEncoding_{variant_name}");
+
+        link.put_str(&name).unwrap();
     }
 }
 
