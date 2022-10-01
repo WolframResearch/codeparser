@@ -4,7 +4,7 @@ use crate::{
     node::{Node, NodeSeq, OperatorNode, UnterminatedGroupNeedsReparseNode, UnterminatedGroupNode},
     source::{Buffer, BufferAndLength, CharacterRange},
     token::{BorrowedTokenInput, Token},
-    Source, SourceConvention, SourceLocation,
+    Source, SourceConvention, SourceLocation, Tokens,
 };
 
 use once_cell::sync::Lazy;
@@ -82,6 +82,30 @@ pub(crate) fn reparse_unterminated<'i>(
         },
         other => other,
     })
+}
+
+pub(crate) fn reparse_unterminated_tokens<'i>(
+    tokens: Tokens<BorrowedTokenInput<'i>>,
+    input: &'i str,
+    convention: SourceConvention,
+    tab_width: usize,
+) -> Tokens<BorrowedTokenInput<'i>> {
+    let Tokens(tokens) = tokens;
+
+    let tokens = tokens
+        .into_iter()
+        .map(&mut |token: Token<_>| {
+            if token.tok.isError() && token.tok.isUnterminated() {
+                let token = reparseUnterminatedTokenErrorNode(token, input, convention, tab_width);
+
+                token
+            } else {
+                token
+            }
+        })
+        .collect();
+
+    Tokens(tokens)
 }
 
 //==========================================================

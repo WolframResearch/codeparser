@@ -18,7 +18,7 @@ use crate::{
     symbol_registration::*,
     token::{BorrowedTokenInput, Token},
     token_enum_registration::TokenToSymbol,
-    ParseResult, UnsafeCharacterEncoding,
+    ParseResult, Tokens, UnsafeCharacterEncoding,
 };
 
 //======================================
@@ -107,6 +107,24 @@ impl<'i> NodeSeq<BorrowedTokenInput<'i>> {
             }
 
             C.put(callLink)
+        }
+    }
+}
+
+impl<'i> Tokens<BorrowedTokenInput<'i>> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let Tokens(tokens) = self;
+
+        link.put_function(SYMBOL_LIST.as_str(), tokens.len())
+            .unwrap();
+
+        for token in tokens {
+            if crate::feature::CHECK_ABORT && crate::abortQ() {
+                Symbol_put(SYMBOL__ABORTED, link);
+                continue;
+            }
+
+            token.put(link);
         }
     }
 }

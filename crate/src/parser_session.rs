@@ -19,7 +19,7 @@ use crate::{
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
         TrackedSourceLocations, UnsafeCharacterEncoding,
     },
-    EncodingMode, FirstLineBehavior, StringifyMode,
+    EncodingMode, FirstLineBehavior, StringifyMode, Tokens,
 };
 
 /// A parser session
@@ -171,8 +171,8 @@ impl<'i> ParserSession<'i> {
         return self.create_parse_result(exprs);
     }
 
-    pub fn tokenize(&mut self) -> Result<NodeSeq<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
-        let mut nodes = NodeSeq::new();
+    pub fn tokenize(&mut self) -> Result<Tokens<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
+        let mut tokens = Vec::new();
 
         loop {
             if feature::CHECK_ABORT && crate::abortQ() {
@@ -185,7 +185,7 @@ impl<'i> ParserSession<'i> {
                 break;
             }
 
-            nodes.push(Node::Token(Tok));
+            tokens.push(Tok);
 
             Tok.skip(&mut self.tokenizer);
         } // while (true)
@@ -194,9 +194,9 @@ impl<'i> ParserSession<'i> {
             return Err(flag);
         }
 
-        let nodes = self.reparse_unterminated(nodes);
+        let tokens = self.reparse_unterminated_tokens(Tokens(tokens));
 
-        return Ok(nodes);
+        return Ok(tokens);
     }
 
     fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Node<BorrowedTokenInput<'i>> {
@@ -275,6 +275,22 @@ impl<'i> ParserSession<'i> {
         }
 
         nodes
+    }
+
+    fn reparse_unterminated_tokens(
+        &self,
+        mut tokens: Tokens<BorrowedTokenInput<'i>>,
+    ) -> Tokens<BorrowedTokenInput<'i>> {
+        if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
+            tokens = crate::error::reparse_unterminated_tokens(
+                tokens,
+                input,
+                self.tokenizer.srcConvention,
+                usize::try_from(self.tokenizer.tabWidth).unwrap(),
+            );
+        }
+
+        tokens
     }
 
     fn create_parse_result(
