@@ -178,6 +178,27 @@ from_node!(PrefixBinaryNode<> => Node::PrefixBinary);
 //======================================
 
 impl<I> NodeSeq<I> {
+    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I>)) {
+        let NodeSeq(elements) = self;
+
+        for elem in elements {
+            elem.visit(visit);
+        }
+    }
+
+    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I>) -> Node<I>) -> Self {
+        let NodeSeq(elements) = self;
+
+        let elements = elements
+            .into_iter()
+            .map(|elem| elem.map_visit(visit))
+            .collect();
+
+        NodeSeq(elements)
+    }
+}
+
+impl<I> NodeSeq<I> {
     pub(crate) fn new() -> NodeSeq<I> {
         NodeSeq(Vec::new())
     }
@@ -303,6 +324,101 @@ impl<'i> TriviaSeq<'i> {
 //==========================================================
 // Nodes
 //==========================================================
+
+impl<I> Node<I> {
+    /// Visit this node and every child node, recursively.
+    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I>)) {
+        // Visit the current node.
+        visit(self);
+
+        // Visit child nodes.
+        match self {
+            Node::Token(_) => (),
+            Node::Call(CallNode { head, body, src: _ }) => {
+                head.visit(visit);
+
+                body.visit(visit);
+            },
+            Node::SyntaxError(SyntaxErrorNode {
+                err: _,
+                children,
+                src: _,
+            }) => {
+                children.visit(visit);
+            },
+            Node::Prefix(PrefixNode(op))
+            | Node::Infix(InfixNode(op))
+            | Node::Postfix(PostfixNode(op))
+            | Node::Binary(BinaryNode(op))
+            | Node::Ternary(TernaryNode(op))
+            | Node::PrefixBinary(PrefixBinaryNode(op))
+            | Node::Compound(CompoundNode(op))
+            | Node::Group(GroupNode(op))
+            | Node::GroupMissingCloser(GroupMissingCloserNode(op))
+            | Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op))
+            | Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
+                let OperatorNode {
+                    op: _,
+                    children,
+                    src: _,
+                } = op;
+
+                children.visit(visit);
+            },
+        }
+    }
+
+    /// Transform this node tree by visiting this node and every child node, recursively.
+    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I>) -> Node<I>) -> Self {
+        // Visit the current node.
+        let self_ = visit(self);
+
+        // Visit child nodes.
+        let node: Node<I> = match self_ {
+            Node::Token(_) => return self_,
+            Node::Call(CallNode { head, body, src }) => {
+                let head = head.map_visit(visit);
+
+                let body = body.map_visit(visit);
+
+                Node::Call(CallNode {
+                    head,
+                    body: Box::new(body),
+                    src,
+                })
+            },
+            Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
+                let children = children.map_visit(visit);
+
+                Node::SyntaxError(SyntaxErrorNode { err, children, src })
+            },
+
+            Node::Infix(InfixNode(op)) => Node::Infix(InfixNode(op.map_visit(visit))),
+            Node::Prefix(PrefixNode(op)) => Node::Prefix(PrefixNode(op.map_visit(visit))),
+            Node::Postfix(PostfixNode(op)) => Node::Postfix(PostfixNode(op.map_visit(visit))),
+            Node::Binary(BinaryNode(op)) => Node::Binary(BinaryNode(op.map_visit(visit))),
+            Node::Ternary(TernaryNode(op)) => Node::Ternary(TernaryNode(op.map_visit(visit))),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => {
+                Node::PrefixBinary(PrefixBinaryNode(op.map_visit(visit)))
+            },
+            Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.map_visit(visit))),
+            Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.map_visit(visit))),
+            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
+                Node::UnterminatedGroup(UnterminatedGroupNode(op.map_visit(visit)))
+            },
+            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
+                Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(
+                    op.map_visit(visit),
+                ))
+            },
+            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                Node::GroupMissingCloser(GroupMissingCloserNode(op.map_visit(visit)))
+            },
+        };
+
+        node
+    }
+}
 
 impl Node<BorrowedTokenInput<'_>> {
     pub fn into_owned_input(self) -> Node {
@@ -452,6 +568,16 @@ impl OperatorNode<BorrowedTokenInput<'_>> {
             children: children.into_owned_input(),
             src,
         }
+    }
+}
+
+impl<I> OperatorNode<I> {
+    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I>) -> Node<I>) -> Self {
+        let OperatorNode { op, children, src } = self;
+
+        let children = children.map_visit(visit);
+
+        OperatorNode { op, children, src }
     }
 }
 
