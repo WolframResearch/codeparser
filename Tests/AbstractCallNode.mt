@@ -300,7 +300,7 @@ Test[
 
 
 Test[
-	"%\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"%\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -310,7 +310,7 @@ Test[
 ]
 
 Test[
-	"%%%\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"%%%\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -320,7 +320,7 @@ Test[
 ]
 
 Test[
-	"%45\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"%45\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -331,7 +331,7 @@ Test[
 
 
 Test[
-	"a;b\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"a;b\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -341,7 +341,7 @@ Test[
 ]
 
 Test[
-	"(a;b)\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"(a;b)\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -351,7 +351,7 @@ Test[
 ]
 
 Test[
-	"{}\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"{}\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -361,7 +361,7 @@ Test[
 ]
 
 Test[
-	"<||>\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"<||>\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -371,7 +371,7 @@ Test[
 ]
 
 Test[
-	"a\\[Transpose]\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"a\\[Transpose]\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
@@ -381,7 +381,7 @@ Test[
 ]
 
 Test[
-	"\\[LeftCeiling]\\[RightCeiling]\\[LeftDoubleBracket\\[RightDoubleBracket]"
+	"\\[LeftCeiling]\\[RightCeiling]\\[LeftDoubleBracket]\\[RightDoubleBracket]"
 	,
 	Null
 	,
