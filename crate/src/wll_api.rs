@@ -6,9 +6,10 @@ use wolfram_library_link::{
 };
 
 use crate::{
-    abstract_::Aggregate,
+    abstract_::{abstract_, Aggregate},
+    convert_wstp::WstpPut,
     from_expr::FromExpr,
-    node::SyntaxErrorKind,
+    node::{Node, SyntaxErrorKind},
     symbol::Symbol,
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
     Container, ContainerBody, EncodingMode, FirstLineBehavior, StringifyMode,
@@ -274,6 +275,53 @@ pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
     debug_assert!(!link.is_ready());
 
     container.put(link);
+}
+
+//======================================
+// Abstract_LibraryLink
+//======================================
+
+#[cfg(feature = "USE_MATHLINK")]
+#[wll::export(wstp)]
+pub fn Abstract_LibraryLink(link: &mut wstp::Link) {
+    let mut args: Vec<Expr> = parse_assuming_link_print_full_symbols(link);
+
+    if args.len() != 1 {
+        panic!("unexpected number of arguments passed to Abstract: {args:?}")
+    }
+
+    let arg = args.remove(0);
+
+    let node = match Node::from_expr(&arg) {
+        Ok(node) => abstract_(node),
+        Err(err) => panic!("Error parsing arg: {err}: (expr: {arg})"),
+    };
+
+    node.put(link);
+
+    // let Container {
+    //     kind,
+    //     body,
+    //     metadata,
+    // } = match Container::from_expr(&arg) {
+    //     Ok(container) => container,
+    //     Err(err) => panic!("Error parsing '{arg}': {err}"),
+    // };
+
+    // let body = match body {
+    //     ContainerBody::Nodes(nodes) => ContainerBody::Nodes(Abstract(nodes)),
+    //     ContainerBody::Missing(_) => body,
+    // };
+
+    // let container = Container {
+    //     kind,
+    //     body,
+    //     metadata,
+    // };
+
+    // debug_assert!(!link.is_ready());
+
+    // container.put(link);
 }
 
 //==========================================================

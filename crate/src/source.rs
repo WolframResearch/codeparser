@@ -249,7 +249,10 @@ impl Debug for SourceLocation {
 #[cfg(feature = "BUILD_TESTS")]
 fn PrintTo(Loc: &SourceLocation, s: &mut std::ostream);
 
-#[derive(Debug, Clone, PartialEq)]
+// TODO(cleanup): Remove derive(PartialOrd). This is purely here so that
+//                derive(PartialOrd) works on Issue. Change issue to have a
+//                custom impl of PartialOrd, and remove this.
+#[derive(Debug, Clone, PartialEq, PartialOrd, Hash)]
 pub enum GeneralSource {
     String(Source),
     /// Box structure position.
@@ -325,10 +328,11 @@ pub struct Issue {
     pub tag: IssueTag,
     pub msg: String,
     pub sev: Severity,
-    pub src: Source,
+    pub src: GeneralSource,
     pub val: NotNan<f64>,
     pub actions: Vec<CodeAction>,
     pub additional_descriptions: AdditionalDescriptionVector,
+    pub additional_sources: Vec<GeneralSource>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -349,6 +353,13 @@ pub enum IssueTag {
     IncompleteUTF8Sequence,
     StraySurrogate,
     BOM,
+    //
+    // Syntax Issues
+    //
+    SyntaxUndocumentedMessageName,
+    PrefixNotNot,
+    StrangeCall,
+    StrangeCallSlotSequence,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -379,6 +390,10 @@ impl IssueTag {
             IssueTag::IncompleteUTF8Sequence => "IncompleteUTF8Sequence",
             IssueTag::StraySurrogate => "StraySurrogate",
             IssueTag::BOM => "BOM",
+            IssueTag::SyntaxUndocumentedMessageName => "SyntaxUndocumentedMessageName",
+            IssueTag::PrefixNotNot => "PrefixNotNot",
+            IssueTag::StrangeCall => "StrangeCall",
+            IssueTag::StrangeCallSlotSequence => "StrangeCallSlotSequence",
             // NOTE: When adding a case here, also update from_str().
         }
     }
@@ -401,6 +416,10 @@ impl IssueTag {
             "IncompleteUTF8Sequence" => IssueTag::IncompleteUTF8Sequence,
             "StraySurrogate" => IssueTag::StraySurrogate,
             "BOM" => IssueTag::BOM,
+            "SyntaxUndocumentedMessageName" => IssueTag::SyntaxUndocumentedMessageName,
+            "PrefixNotNot" => IssueTag::PrefixNotNot,
+            "StrangeCall" => IssueTag::StrangeCall,
+            "StrangeCallSlotSequence" => IssueTag::StrangeCallSlotSequence,
             _ => return None,
         };
 
@@ -662,10 +681,40 @@ impl Issue {
             tag,
             msg,
             sev,
-            src,
+            src: GeneralSource::String(src),
             val,
             actions,
             additional_descriptions,
+            additional_sources: Vec::new(),
+        }
+    }
+
+    pub(crate) fn syntax(
+        tag: IssueTag,
+        msg: String,
+        sev: Severity,
+        src: GeneralSource,
+        val: f64,
+    ) -> Self {
+        let val = NotNan::new(val).expect("unable to construct Issue with NaN val");
+
+        Issue {
+            make_sym: SYMBOL_CODEPARSER_SYNTAXISSUE,
+            tag,
+            msg,
+            sev,
+            src,
+            val,
+            actions: Vec::new(),
+            additional_descriptions: Vec::new(),
+            additional_sources: Vec::new(),
+        }
+    }
+
+    pub fn with_additional_sources(self, additional_sources: Vec<GeneralSource>) -> Self {
+        Issue {
+            additional_sources,
+            ..self
         }
     }
 

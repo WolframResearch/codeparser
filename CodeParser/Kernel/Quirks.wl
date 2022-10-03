@@ -70,7 +70,8 @@ Module[{},
 
 
 
-
+(* TODO(port): This has been ported. Remove once uses in Abstract.wl are fully
+               ported. *)
 processInfixBinaryAtQuirk[
   BinaryNode[BinaryAt, {
     LeafNode[Symbol, symName_, symData_],

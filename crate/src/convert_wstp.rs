@@ -3,21 +3,22 @@ use std::collections::HashSet;
 use wolfram_library_link::{expr::Expr, wstp};
 
 use crate::{
+    ast::{AbstractSyntaxError, AstMetadata, AstNode},
     from_expr::List,
     my_string::MyString,
     my_string_registration::*,
     node::{
-        BinaryNode, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode, GroupNode,
-        InfixNode, Node, NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode,
-        SyntaxErrorNode, TernaryNode, UnterminatedGroupNode,
+        BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
+        GroupNode, InfixNode, Node, NodeSeq, Operator, OperatorNode, PostfixNode, PrefixBinaryNode,
+        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, UnterminatedGroupNode,
     },
     source::{
         BufferAndLength, CharacterRange, CodeAction, CodeActionKind, GeneralSource, Issue,
         IssueTag, Severity, Source, SourceLocation, StringSourceKind,
     },
     symbol::Symbol,
-    symbol_registration::*,
-    token::{BorrowedTokenInput, Token, TokenInput},
+    symbol_registration::{self as sym, *},
+    token::{BorrowedTokenInput, Token, TokenInput, TokenKind},
     token_enum_registration::TokenToSymbol,
     Container, ContainerBody, ContainerKind, Metadata, ParseResult, Tokens,
     UnsafeCharacterEncoding,
@@ -208,9 +209,273 @@ impl Metadata {
     }
 }
 
+impl WstpPut for AstMetadata {
+    fn put(&self, link: &mut wstp::Link) {
+        let AstMetadata { source, issues } = self;
+
+        let mut len = 0;
+
+        if !source.is_unknown() {
+            len += 1;
+        }
+
+        len += !issues.is_empty() as usize;
+
+        link.put_function(SYMBOL_ASSOCIATION.as_str(), len).unwrap();
+
+        if !source.is_unknown() {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_symbol(SYMBOL_CODEPARSER_SOURCE.as_str()).unwrap();
+            match source {
+                GeneralSource::String(source) => put_source_rhs(link, *source),
+                GeneralSource::BoxPosition(other) => put_box_position(link, other),
+            }
+        }
+
+        if !issues.is_empty() {
+            link.put_function("System`Rule", 2).unwrap();
+            link.put_symbol("CodeParser`AbstractSyntaxIssues").unwrap();
+
+            // TODO: This clone() is unnecessarily inefficient.
+            let issues = List(issues.clone());
+            issues.put(link);
+        }
+    }
+}
+
+//======================================
+// AstNode types
+//======================================
+
+impl WstpPut for AstNode {
+    fn put(&self, link: &mut wstp::Link) {
+        match self {
+            AstNode::Leaf { kind, input, data } => {
+                link.put_function(SYMBOL_CODEPARSER_LEAFNODE.as_str(), 3)
+                    .unwrap();
+
+                kind.put(link);
+
+                let input: &[u8] = &input.as_bytes();
+                let input =
+                    std::str::from_utf8(input).expect("token source span is not valid UTF-8");
+                link.put_str(input).unwrap();
+
+                data.put(link);
+            },
+            AstNode::Error { kind, input, data } => {
+                link.put_function(SYMBOL_CODEPARSER_ERRORNODE.as_str(), 3)
+                    .unwrap();
+
+                kind.put(link);
+
+                let input: &[u8] = &input.as_bytes();
+                let input =
+                    std::str::from_utf8(input).expect("error token source span is not valid UTF-8");
+                link.put_str(input).unwrap();
+
+                data.put(link);
+            },
+            AstNode::Call { head, args, data } => {
+                link.put_function(SYMBOL_CODEPARSER_CALLNODE.as_str(), 3)
+                    .unwrap();
+
+                head.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+
+                for arg in args {
+                    arg.put(link);
+                }
+
+                data.put(link);
+            },
+            AstNode::CallMissingCloser { head, args, data } => {
+                link.put_function(sym::CodeParser_CallMissingCloserNode.as_str(), 3)
+                    .unwrap();
+
+                head.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+
+                for arg in args {
+                    arg.put(link);
+                }
+
+                data.put(link);
+            },
+            AstNode::UnterminatedCall { head, args, data } => {
+                link.put_function(sym::CodeParser_UnterminatedCallNode.as_str(), 3)
+                    .unwrap();
+
+                head.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+
+                for arg in args {
+                    arg.put(link);
+                }
+
+                data.put(link);
+            },
+            AstNode::SyntaxError {
+                kind,
+                children,
+                data,
+            } => {
+                link.put_function(sym::CodeParser_SyntaxErrorNode.as_str(), 3)
+                    .unwrap();
+
+                kind.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), children.len())
+                    .unwrap();
+
+                for arg in children {
+                    arg.put(link);
+                }
+
+                data.put(link);
+            },
+            AstNode::AbstractSyntaxError { kind, args, data } => {
+                link.put_function(SYMBOL_CODEPARSER_ABSTRACTSYNTAXERRORNODE.as_str(), 3)
+                    .unwrap();
+
+                kind.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+
+                for arg in args {
+                    arg.put(link);
+                }
+
+                data.put(link);
+            },
+            AstNode::Box { kind, args, data } => {
+                link.put_function(SYMBOL_CODEPARSER_BOXNODE.as_str(), 3)
+                    .unwrap();
+
+                kind.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+
+                for arg in args {
+                    arg.put(link);
+                }
+
+                data.put(link);
+            },
+            AstNode::Group {
+                kind,
+                children,
+                data,
+            } => {
+                link.put_function(sym::CodeParser_GroupNode.as_str(), 3)
+                    .unwrap();
+
+                kind.put(link);
+
+                {
+                    let (opener, body, closer) = &**children;
+
+                    link.put_function(sym::List.as_str(), 3).unwrap();
+                    opener.put(link);
+                    body.put(link);
+                    closer.put(link);
+                }
+
+                data.put(link);
+            },
+            AstNode::Code {
+                first,
+                second,
+                data,
+            } => {
+                link.put_function(sym::CodeParser_CodeNode.as_str(), 3)
+                    .unwrap();
+
+                link.put_expr(first).unwrap();
+                link.put_expr(second).unwrap();
+                data.put(link);
+            },
+            AstNode::TagBox_GroupParen {
+                group,
+                tag,
+                data: data1,
+            } => {
+                // BoxNode[
+                //     TagBox,
+                //     {
+                //         GroupNode[GroupParen, {o, abstract[b], c}, data2],
+                //         tag
+                //     },
+                //     data1
+                // ]
+                link.put_function(SYMBOL_CODEPARSER_BOXNODE.as_str(), 3)
+                    .unwrap();
+
+                BoxKind::TagBox.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+
+                // GroupNode[..]
+                {
+                    link.put_function(SYMBOL_CODEPARSER_GROUPNODE.as_str(), 3)
+                        .unwrap();
+
+                    Operator::CodeParser_GroupParen.put(link);
+
+                    let (o, b, c, data2) = &**group;
+                    link.put_function(SYMBOL_LIST.as_str(), 3).unwrap();
+                    o.put(link);
+                    b.put(link);
+                    c.put(link);
+
+                    data2.put(link);
+                }
+
+                tag.put(link);
+
+                data1.put(link);
+            },
+            AstNode::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
+                link.put_function(SYMBOL_CODEPARSER_PREFIXNODE.as_str(), 3)
+                    .unwrap();
+
+                Operator::CodeParser_PrefixLinearSyntaxBang.put(link);
+
+                link.put_function(SYMBOL_LIST.as_str(), children.len())
+                    .unwrap();
+
+                for child in children.iter() {
+                    child.put(link);
+                }
+
+                data.put(link);
+            },
+        }
+    }
+}
+
+impl WstpPut for AbstractSyntaxError {
+    fn put(&self, link: &mut wstp::Link) {
+        let symbol = format!("AbstractSyntaxError`{}", self.as_str());
+
+        link.put_symbol(&symbol).unwrap();
+    }
+}
+
 //======================================
 // Token
 //======================================
+
+impl WstpPut for TokenKind {
+    fn put(&self, link: &mut wstp::Link) {
+        let sym = TokenToSymbol(*self);
+
+        Symbol_put(sym, link);
+    }
+}
 
 impl<I: TokenInput, S: WstpPut> Token<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
@@ -230,9 +495,7 @@ impl<I: TokenInput, S: WstpPut> Token<I, S> {
                 .unwrap();
         }
 
-        let sym = TokenToSymbol(*tok);
-
-        Symbol_put(sym, callLink);
+        tok.put(callLink);
 
         // bufLen().put(callLink);
         // let source: &[u8] = &session.tokenizer.input[span.offset..span.offset + span.len];
@@ -322,13 +585,22 @@ impl<I: TokenInput, S: WstpPut> BoxNode<I, S> {
             src,
         } = self;
 
-        let name = format!("System`{}Box", kind.as_str());
-
         link.put_function(SYMBOL_CODEPARSER_BOXNODE.as_str(), 3)
             .unwrap();
-        link.put_symbol(&name).unwrap();
+        kind.put(link);
         children.put(link);
         src.put(link);
+    }
+}
+
+impl WstpPut for BoxKind {
+    fn put(&self, link: &mut wstp::Link) {
+        let symbol_name = self.as_str();
+        debug_assert!(symbol_name.ends_with("Box"));
+
+        let name = format!("System`{}", symbol_name);
+
+        link.put_symbol(&name).unwrap();
     }
 }
 
@@ -350,11 +622,17 @@ impl<I: TokenInput, S: WstpPut> OperatorNode<I, S> {
 
         callLink.put_function(op_head.as_str(), 3).unwrap();
 
-        Symbol_put(op.to_symbol(), callLink);
+        op.put(callLink);
 
         children.put(callLink);
 
         src.put(callLink);
+    }
+}
+
+impl WstpPut for Operator {
+    fn put(&self, link: &mut wstp::Link) {
+        Symbol_put(self.to_symbol(), link)
     }
 }
 
@@ -397,17 +675,24 @@ impl<I: TokenInput, S: WstpPut> SyntaxErrorNode<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SyntaxErrorNode { err, children, src } = self;
 
-        let err: Symbol = err.to_symbol();
 
         callLink
             .put_function(SYMBOL_CODEPARSER_SYNTAXERRORNODE.as_str(), 3)
             .unwrap();
 
-        Symbol_put(err, callLink);
+        err.put(callLink);
 
         children.put(callLink);
 
         src.put(callLink);
+    }
+}
+
+impl WstpPut for SyntaxErrorKind {
+    fn put(&self, link: &mut wstp::Link) {
+        let err: Symbol = self.to_symbol();
+
+        Symbol_put(err, link);
     }
 }
 
@@ -445,6 +730,7 @@ impl Issue {
             val,
             actions,
             additional_descriptions,
+            additional_sources,
         } = self;
 
         callLink.put_function(make_sym.as_str(), 4).unwrap();
@@ -456,16 +742,13 @@ impl Issue {
         sev.put(callLink);
 
         {
+            let len = 2
+                + (!actions.is_empty() as usize)
+                + (!additional_descriptions.is_empty() as usize)
+                + (!additional_sources.is_empty() as usize);
+
             callLink
-                .put_function(
-                    SYMBOL_ASSOCIATION.as_str(),
-                    2 + (if actions.is_empty() { 0 } else { 1 })
-                        + (if additional_descriptions.is_empty() {
-                            0
-                        } else {
-                            1
-                        }),
-                )
+                .put_function(SYMBOL_ASSOCIATION.as_str(), len)
                 .unwrap();
 
             src.put(callLink);
@@ -503,6 +786,23 @@ impl Issue {
 
                 for D in additional_descriptions {
                     callLink.put_str(D).unwrap();
+                }
+            }
+
+            if !additional_sources.is_empty() {
+                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+
+                callLink.put_str("AdditionalSources").unwrap();
+
+                callLink
+                    .put_function(SYMBOL_LIST.as_str(), additional_sources.len())
+                    .unwrap();
+
+                for source in additional_sources {
+                    match source {
+                        GeneralSource::String(source) => put_source_rhs(callLink, *source),
+                        GeneralSource::BoxPosition(other) => put_box_position(callLink, other),
+                    }
                 }
             }
         }

@@ -18,7 +18,9 @@ tokenizeBytesFunc
 tokenizeFileFunc
 concreteParseLeafFunc
 safeStringFunc
+
 aggregate
+abstractFunc
 
 
 
@@ -278,6 +280,11 @@ Which[
     aggregate := aggregate = (
 		If[$Debug, Print["memoizing aggregate"]];
 		loadFunc["Aggregate_LibraryLink", LinkObject, LinkObject]
+	);
+
+	abstractFunc := abstractFunc = (
+		If[$Debug, Print["memoizing abstractFunc"]];
+		loadFunc["Abstract_LibraryLink", LinkObject, LinkObject]
 	);
   ,
   True,

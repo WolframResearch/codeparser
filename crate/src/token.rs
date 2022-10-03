@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    source::{Buffer, BufferAndLength, ByteSpan, Source},
+    source::{Buffer, BufferAndLength, ByteSpan, GeneralSource, Source},
     tokenizer::Tokenizer,
 };
 
@@ -13,13 +13,60 @@ pub(crate) type TokenRef<'i> = Token<BorrowedTokenInput<'i>>;
 pub struct Token<I = OwnedTokenInput, S = Source> {
     pub tok: TokenKind,
 
-    pub src: S,
-
     pub input: I,
+
+    pub src: S,
 }
 
 pub trait TokenInput: Clone {
     fn as_bytes(&self) -> &[u8];
+
+    fn as_str(&self) -> &str {
+        std::str::from_utf8(self.as_bytes())
+            .expect("TokenInput::as_str(): as_bytes() for this token did not return valid UTF-8")
+    }
+
+    fn into_owned(self) -> OwnedTokenInput;
+
+    #[doc(hidden)]
+    fn fake(input: &'static str) -> Self;
+}
+
+pub trait TokenSource: Clone {
+    fn into_general(self) -> GeneralSource;
+
+    #[doc(hidden)]
+    fn unknown() -> Self;
+
+    fn from_source(source: Source) -> Self;
+}
+
+impl TokenSource for GeneralSource {
+    fn into_general(self) -> GeneralSource {
+        self
+    }
+
+    fn unknown() -> Self {
+        GeneralSource::unknown()
+    }
+
+    fn from_source(source: Source) -> Self {
+        GeneralSource::String(source)
+    }
+}
+
+impl TokenSource for Source {
+    fn into_general(self) -> GeneralSource {
+        GeneralSource::String(self)
+    }
+
+    fn unknown() -> Self {
+        Source::unknown()
+    }
+
+    fn from_source(source: Source) -> Self {
+        source
+    }
 }
 
 impl<'i> TokenInput for BorrowedTokenInput<'i> {
@@ -28,6 +75,26 @@ impl<'i> TokenInput for BorrowedTokenInput<'i> {
 
         buf.as_bytes()
     }
+
+    fn into_owned(self) -> OwnedTokenInput {
+        let BorrowedTokenInput { buf } = self;
+
+        OwnedTokenInput {
+            buf: buf.as_bytes().to_vec(),
+        }
+    }
+
+    fn fake(input: &'static str) -> Self {
+        BorrowedTokenInput {
+            buf: BufferAndLength {
+                buf: Buffer {
+                    slice: input.as_bytes(),
+                    // FIXME: Fake offset okay? Use usize::MAX instead?
+                    offset: 0,
+                },
+            },
+        }
+    }
 }
 
 impl TokenInput for OwnedTokenInput {
@@ -35,6 +102,16 @@ impl TokenInput for OwnedTokenInput {
         let OwnedTokenInput { buf } = self;
 
         buf.as_slice()
+    }
+
+    fn into_owned(self) -> OwnedTokenInput {
+        self
+    }
+
+    fn fake(input: &'static str) -> Self {
+        OwnedTokenInput {
+            buf: input.as_bytes().to_vec(),
+        }
     }
 }
 
@@ -81,14 +158,6 @@ impl<'i> BorrowedTokenInput<'i> {
         buf.buf.slice = &buf.buf.slice[..0];
 
         BorrowedTokenInput { buf }
-    }
-
-    fn into_owned_input(self) -> OwnedTokenInput {
-        let BorrowedTokenInput { buf } = self;
-
-        OwnedTokenInput {
-            buf: buf.as_bytes().to_owned(),
-        }
     }
 }
 
@@ -233,14 +302,16 @@ impl<'i> TokenRef<'i> {
             input,
         }
     }
+}
 
-    pub(crate) fn into_owned_input(self) -> Token {
+impl<I: TokenInput, S> Token<I, S> {
+    pub(crate) fn into_owned_input(self) -> Token<OwnedTokenInput, S> {
         let Token { tok, src, input } = self;
 
         Token {
             tok,
             src,
-            input: input.into_owned_input(),
+            input: input.into_owned(),
         }
     }
 }
@@ -267,7 +338,7 @@ impl<'i> TokenRef<'i> {
     }
 }
 
-impl<T> Token<T> {
+impl<I, S> Token<I, S> {
     pub(crate) fn check(&self) -> bool {
         return !self.tok.isError();
     }

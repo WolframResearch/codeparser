@@ -14,7 +14,7 @@ use crate::{
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
-    token::{BorrowedTokenInput, TokenKind, TokenRef},
+    token::{BorrowedTokenInput, OwnedTokenInput, TokenKind, TokenRef},
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
@@ -107,14 +107,16 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.input
     }
 
-    pub fn abstract_parse_expressions(&mut self) -> ParseResult<BorrowedTokenInput<'i>> {
+    #[allow(dead_code, unused_variables)] // PRE_COMMIT: Remove
+    pub fn abstract_parse_expressions(&mut self) -> ParseResult<OwnedTokenInput> {
         let cst = self.concrete_parse_expressions();
 
         let agg = Aggregate(cst.nodes);
 
         let ast = Abstract(agg);
 
-        ParseResult { nodes: ast, ..cst }
+        // ParseResult { nodes: ast, ..cst }
+        todo!()
     }
 
     pub fn concrete_parse_expressions(&mut self) -> ParseResult<BorrowedTokenInput<'i>> {
