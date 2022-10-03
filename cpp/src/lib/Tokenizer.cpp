@@ -925,7 +925,7 @@ inline Token Tokenizer_handleSymbol(ParserSessionPtr session, Buffer tokenStartB
         }
         
 #if CHECK_ISSUES
-        if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
+        if ((policy & INSIDE_SLOT) == INSIDE_SLOT) {
             
             //
             // Something like  #`a
@@ -960,12 +960,8 @@ inline Token Tokenizer_handleSymbol(ParserSessionPtr session, Buffer tokenStartB
         }
         
     } // while
-    
-    if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
-        return Token(TOKEN_STRING, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
-    }
         
-    return Token(TOKEN_SYMBOL, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
+    return Token(((policy & INSIDE_SLOT) == INSIDE_SLOT) ? TOKEN_STRING : TOKEN_SYMBOL, tokenStartBuf, session->buffer - tokenStartBuf, Source(tokenStartLoc, session->SrcLoc));
 }
 
 //
@@ -981,7 +977,7 @@ inline WLCharacter Tokenizer_handleSymbolSegment(ParserSessionPtr session, Buffe
 #if CHECK_ISSUES
     if (c.to_point() == '$') {
         
-        if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
+        if ((policy & INSIDE_SLOT) == INSIDE_SLOT) {
             
             //
             // Something like  #$a
@@ -1019,6 +1015,19 @@ inline WLCharacter Tokenizer_handleSymbolSegment(ParserSessionPtr session, Buffe
         auto I = new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.80, Actions, {});
         
         session->addIssue(I);
+        
+    } else if (!c.isAlpha()) {
+        
+        if ((policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG) {
+
+            //
+            // Something like  a::\[Beta]
+            //
+
+            auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "The tag has non-alphanumeric source characters.", STRING_WARNING, Source(charLoc, session->SrcLoc), 0.85, {}, {});
+
+            session->addIssue(I);
+        }
     }
 #endif // CHECK_ISSUES
     
@@ -1043,7 +1052,7 @@ inline WLCharacter Tokenizer_handleSymbolSegment(ParserSessionPtr session, Buffe
 #if CHECK_ISSUES
             if (c.to_point() == '$') {
                 
-                if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
+                if ((policy & INSIDE_SLOT) == INSIDE_SLOT) {
                     
                     //
                     // Something like  #$a
@@ -1081,6 +1090,19 @@ inline WLCharacter Tokenizer_handleSymbolSegment(ParserSessionPtr session, Buffe
                 auto I = new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.80, Actions, {});
                 
                 session->addIssue(I);
+                
+            } else if (!c.isAlphaOrDigit()) {
+                
+                if ((policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG) {
+                    
+                    //
+                    // Something like  a::b\[Beta]
+                    //
+                    
+                    auto I = new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "The tag has non-alphanumeric source characters.", STRING_WARNING, Source(charLoc, session->SrcLoc), 0.85, {}, {});
+                    
+                    session->addIssue(I);
+                }
             }
 #endif // CHECK_ISSUES
             
@@ -1112,7 +1134,7 @@ inline Token Tokenizer_handleString(ParserSessionPtr session, Buffer tokenStartB
     assert(c.to_point() == '"');
     
 #if CHECK_ISSUES
-    if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
+    if ((policy & INSIDE_SLOT) == INSIDE_SLOT) {
         
         //
         // Something like  #"a"
@@ -1503,7 +1525,6 @@ inline SourceCharacter Tokenizer_handleFileOpsBrackets(ParserSessionPtr session,
         }
         
     } // while
-    
 }
 
 

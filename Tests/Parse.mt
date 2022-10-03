@@ -3532,3 +3532,33 @@ Test[
 	TestID->"Parse-20220609-I2Z8M5"
 ]
 
+
+
+Test[
+	CodeParse["a::\\[Beta]"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "MessageName", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[String, "\"\\[Beta]\"", <|Source -> {{1, 4}, {1, 11}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]}, <|
+		
+		SyntaxIssues -> {
+			SyntaxIssue["UnexpectedCharacter", "The tag has non-alphanumeric source characters.", "Warning", <|Source -> {{1, 11}, {1, 11}}, ConfidenceLevel -> 0.85|>]}, Source -> {{1, 1}, {1, 11}}|>]
+	,
+	TestID->"Parse-20221001-G2R7V6"
+]
+
+Test[
+	CodeParse["a>>[\\0]"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Put", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[String, "\"[\\\\0]\"", <|Source -> {{1, 4}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
+	,
+	TestID->"Parse-20221001-M7B3J3"
+]
+
+
+
+

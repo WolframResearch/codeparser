@@ -176,7 +176,7 @@ abstract[CompoundNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _
 
 
 abstract[CompoundNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]] := CallNode[ToNode[Slot], {abstract[arg]}, data]
-abstract[CompoundNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
+abstract[CompoundNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, abstractSymbolString[s], data1]}, data]
 
 
 abstract[CompoundNode[SlotSequence, {_, arg:LeafNode[Integer, _, _]}, data_]] := CallNode[ToNode[SlotSequence], {abstract[arg]}, data]
@@ -209,7 +209,7 @@ abstract syntax Get["a"]
 concrete syntax: <<"a"
 abstract syntax Get["a"]
 *)
-abstract[PrefixNode[Get, {_, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[Get], {LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
+abstract[PrefixNode[Get, {_, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[Get], {LeafNode[String, abstractFileString[str], data1]}, data]
 
 abstract[PrefixNode[op_, {_, operand_}, data_]] := CallNode[ToNode[op], {abstract[operand]}, data]
 
@@ -245,8 +245,8 @@ Make sure to reverse the arguments
 *)
 abstract[BinaryNode[BinarySlashSlash, {left_, _, right_}, data_]] := CallNode[abstract[right], {abstract[left]}, data]
 
-abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[Put], {abstract[left], LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
-abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
+abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[Put], {abstract[left], LeafNode[String, abstractFileString[str], data1]}, data]
+abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], LeafNode[String, abstractFileString[str], data1]}, data]
 
 abstract[BinaryNode[Pattern, {left_, _, right_}, data_]] :=
   CallNode[ToNode[Pattern], {abstract[left], abstract[right]}, data]
@@ -556,10 +556,10 @@ a::b
 a::"b"
 *)
 abstractSymbolString[str_String /; StringStartsQ[str, "\""]] :=
-  Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  str
   
 abstractSymbolString[str_String] :=
-  Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  "\""<>str<>"\""
 
 (*
 a>>b
@@ -568,47 +568,34 @@ a>>"b"
 The strings might be something like:
 b\c => b\\c
 b\f => b\\f
-
-FIXME: once the semantics are completely understood, move this to library
 *)
 abstractFileString[str_String /; StringStartsQ[str, "\""]] :=
-Module[{},
-  Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
-]
+  str
 
 abstractFileString[str_String] :=
 Module[{replaced},
 
-  (*
-  convert to the language that is understood by quoted strings, to be given to ToExpression
-  *)
   replaced = StringReplace[str, {
-      (*
-      single character escapes
-      *)
-      "\\b" -> "\\\\b",
-      "\\f" -> "\\\\f",
-      "\\n" -> "\\\\n",
-      "\\r" -> "\\\\r",
-      "\\t" -> "\\\\t",
-      (*
-      and double quote
-      *)
-      "\"" -> "\\\"",
-      (*
-      and backslash
-      *)
-      "\\" -> "\\\\"
-    }];
+    (*
+    single character escapes
+    *)
+    "\\b" -> "\\\\b",
+    "\\f" -> "\\\\f",
+    "\\n" -> "\\\\n",
+    "\\r" -> "\\\\r",
+    "\\t" -> "\\\\t",
+    (*
+    and double quote
+    *)
+    "\"" -> "\\\"",
+    (*
+    and backslash
+    *)
+    "\\" -> "\\\\"
+  }];
 
-  Quiet[ToExpression["\""<>replaced<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  "\""<>replaced<>"\""
 ]
-
-
-
-
-
-
 
 
 
@@ -1219,7 +1206,7 @@ Module[{data, issues},
 ]
 
 
-abstractMessageNameChild[LeafNode[String, str_, data_]] := LeafNode[String, escapeString[abstractSymbolString[str]], data]
+abstractMessageNameChild[LeafNode[String, str_, data_]] := LeafNode[String, abstractSymbolString[str], data]
 
 abstractMessageNameChild[n_] := n
 
