@@ -196,6 +196,7 @@ pub use crate::{
         Source,
         SourceConvention,
         SourceLocation,
+        StringSourceKind,
         // TODO: Should this be a part of the public API as a constant value, or
         //       something else 'symbolic'? E.g. prehaps this shouldn't be a
         //       required parameter of ParserSession::new().

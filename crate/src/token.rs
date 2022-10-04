@@ -116,7 +116,7 @@ impl<'i> TokenRef<'i> {
             //
             TokenKind::ToplevelNewline | TokenKind::InternalNewline => {},
             _ if crate::feature::COMPUTE_SOURCE => {
-                use crate::source::SourceCharacter;
+                use crate::source::{SourceCharacter, StringSourceKind};
 
                 if tok.isEmpty() {
                     assert!(
@@ -137,22 +137,32 @@ impl<'i> TokenRef<'i> {
                     // Only bother checking if the token is all on one line
                     // Spanning multiple lines is too complicated to care about
                     //
-                    if src.start.first == 0 && src.end.first == 0 {
-                        //
-                        // SourceConvention of "SourceCharacterIndex"
-                        // so nothing to do
-                        //
-                    } else if src.start.first == src.end.first {
-                        if src.len() != buf.length() {
+                    match src.kind() {
+                        StringSourceKind::CharacterRange(_) => {
                             //
-                            // If the sizes do not match, then check if there are multi-byte characters
-                            // If there are multi-bytes characters, then it is too complicated to compare sizes
+                            // SourceConvention of "SourceCharacterIndex"
+                            // so nothing to do
                             //
-                            // Note that this also catches changes in character representation, e.g.,
-                            // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
-                            //
-                            assert!(!buf.containsOnlyASCII() || buf.containsTab());
-                        }
+                        },
+                        StringSourceKind::LineColumnRange {
+                            start_line,
+                            end_line,
+                            ..
+                        } => {
+                            if start_line == end_line {
+                                if src.column_width() != buf.length() {
+                                    //
+                                    // If the sizes do not match, then check if there are multi-byte characters
+                                    // If there are multi-bytes characters, then it is too complicated to compare sizes
+                                    //
+                                    // Note that this also catches changes in character representation, e.g.,
+                                    // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
+                                    //
+                                    assert!(!buf.containsOnlyASCII() || buf.containsTab());
+                                }
+                            }
+                        },
+                        StringSourceKind::Unknown => (),
                     }
                 }
             },
