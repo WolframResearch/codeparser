@@ -123,13 +123,12 @@ Module[{count},
   CallNode[ToNode[Out], { ToNode[-count] }, data]
 ]
 
-(*
-Token`Fake`ImplicitNull, Token`Error`PrefixImplicitNull, and Token`Error`InfixImplicitNull do NOT get abstracted because they are handled at their possible parents: Comma and CompoundExpression
-*)
-
 abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", data]
 
 abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", data]
+
+abstract[ErrorNode[Token`Error`PrefixImplicitNull | Token`Error`InfixImplicitNull, _, data_]] :=
+  LeafNode[Symbol, "Null", data]
 
 
 abstract[LeafNode[Symbol, "\[Pi]" | "\\[Pi]" | "\\:03c0" | "\\|0003c0", data_]] :=
@@ -197,8 +196,8 @@ FIXME: keep linear syntax for now
 abstract[PrefixNode[PrefixLinearSyntaxBang, {rator_, rand:LeafNode[Token`LinearSyntaxBlob, _, _]}, data_]] :=
   PrefixNode[PrefixLinearSyntaxBang, {rator, abstract[rand]}, data]
 
-abstract[PrefixNode[PrefixLinearSyntaxBang, children_, data_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
+abstract[PrefixNode[PrefixLinearSyntaxBang, {_, rand_}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, {abstract[rand]}, data]
 
 (*
 strings may be quoted
@@ -284,8 +283,6 @@ abstract[InfixNode[Plus, children_, data_]] := abstractPlus[InfixNode[Plus, chil
 abstract[InfixNode[Times, children_, data_]] := abstractTimes[InfixNode[Times, children[[;;;;2]], data]]
 
 abstract[InfixNode[Divisible, children_, data_]] := abstractDivisible[InfixNode[Divisible, children[[;;;;2]], data]]
-
-abstract[InfixNode[Comma, children_, data_]] := abstractComma[InfixNode[Comma, children[[;;;;2]], data]]
 
 abstract[InfixNode[CompoundExpression, children_, data_]] := abstractCompoundExpression[InfixNode[CompoundExpression, children[[;;;;2]], data]]
 
@@ -405,14 +402,14 @@ take care of specific GroupNodes before calling abstractGroupNode
 GroupParen
 *)
 
-abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, data]
+abstract[GroupNode[GroupParen, { _, InfixNode[Comma, commaChildren_, _], _ }, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, abstract /@ commaChildren[[;;;;2]], data]
 
 abstract[GroupNode[GroupParen, { _, child_, _}, data_]] :=
   abstract[child]
 
-abstract[GroupNode[GroupParen, children_, data_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, children[[2;;-2]], data]
+abstract[GroupNode[GroupParen, { _, _ }, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, {}, data]
 
 (*
 GroupNode errors
@@ -423,14 +420,32 @@ naked ::[]
 
 naked \[LeftDoubleBracket]\[RightDoubleBracket]
 *)
-abstract[GroupNode[GroupSquare, children_, data_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
+abstract[GroupNode[GroupSquare, {_, InfixNode[Comma, commaChildren_, _], _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, abstract /@ commaChildren[[;;;;2]], data]
 
-abstract[GroupNode[GroupTypeSpecifier, children_, data_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`ColonColonOpenSquare, children, data]
+abstract[GroupNode[GroupSquare, {_, child_, _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, {abstract[child]}, data]
 
-abstract[GroupNode[GroupDoubleBracket, children_, data_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, children, data]
+abstract[GroupNode[GroupSquare, {_, _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, {}, data]
+
+abstract[GroupNode[GroupTypeSpecifier, {_, InfixNode[Comma, commaChildren_, _], _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ColonColonOpenSquare, abstract /@ commaChildren[[;;;;2]], data]
+
+abstract[GroupNode[GroupTypeSpecifier, {_, child_, _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ColonColonOpenSquare, {abstract[child]}, data]
+
+abstract[GroupNode[GroupTypeSpecifier, {_, _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ColonColonOpenSquare, {}, data]
+
+abstract[GroupNode[GroupDoubleBracket, {_, InfixNode[Comma, commaChildren_, _], _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, abstract /@ commaChildren[[;;;;2]], data]
+
+abstract[GroupNode[GroupDoubleBracket, {_, child_, _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, {abstract[child]}, data]
+
+abstract[GroupNode[GroupDoubleBracket, {_, _}, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, {}, data]
 
 
 
@@ -1156,10 +1171,6 @@ vectorInequalityAffinity[System`VectorGreaterEqual] := True
 
 
 
-abstractComma[InfixNode[Comma, children_, data_]] :=
-  CallNode[ToNode[Comma], abstract /@ (children /. ErrorNode[Token`Error`PrefixImplicitNull | Token`Error`InfixImplicitNull, _, data1_] :> LeafNode[Symbol, "Null", data1]), data]
-
-
 
 abstractCompoundExpressionChild[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
   LeafNode[Symbol, "Null", data]
@@ -1264,7 +1275,7 @@ only from boxes
 *)
 
 abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_}, dataIn_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, abstract[middle]}, dataIn]
 
 abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_, right_}, dataIn_]] :=
   CallNode[abstract[middle], {left, abstract[right]}, dataIn]
@@ -1273,7 +1284,7 @@ abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_, r
   abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
 
 abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_}, dataIn_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {abstract[left], abstract[middle]}, dataIn]
 
 abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_, right_}, dataIn_]] :=
   abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstract[left], middle, right}, dataIn]]

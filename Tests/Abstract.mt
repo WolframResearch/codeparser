@@ -209,7 +209,9 @@ Test[
 Test[
 	CodeParse["[[a]]"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, {LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 1}, {1, 2}}|>], GroupNode[GroupSquare, {LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 2}, {1, 3}}|>], LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>], LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 2}, {1, 5}}|>], LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]
+	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"Abstract-20220917-J7P6H3"
 ]
