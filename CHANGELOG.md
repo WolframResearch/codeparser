@@ -1,5 +1,21 @@
 
-## 1.8 - XX Sep, 2022
+## 1.8 - 10 Oct, 2022
+
+Enforce insertion-order for SyntaxIssues.
+
+Abstract special characters e.g., `\[Pi] -> Pi`.
+
+Add Span, Part, and MessageName to Concretify.
+
+Non-BMP PUA characters are not strange.
+
+Better reporting of unrecognized longnames.
+
+Lots of internal updates.
+
+### Fixes
+
+Fix building for older versions on Mac.
 
 
 ## 1.7 - 4 July, 2022

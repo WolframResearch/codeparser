@@ -7,6 +7,16 @@ if(NOT DEFINED RETRY_ON_FAILURE)
 set(RETRY_ON_FAILURE OFF)
 endif()
 
+if(NOT EXISTS ${SCRIPT})
+message(FATAL_ERROR "SCRIPT does not exist. SCRIPT: ${SCRIPT}")
+endif()
+
+file(READ ${SCRIPT} script)
+
+if(script STREQUAL "")
+message(FATAL_ERROR "SCRIPT is empty. SCRIPT: ${SCRIPT}")
+endif()
+
 if(RETRY_ON_FAILURE)
 
 #
