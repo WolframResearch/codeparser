@@ -676,9 +676,48 @@ Module[{exprToReturn, newIssues, flow},
 BeginPackage["Foo`"]
 *)
 process[
+  CallNode[LeafNode[Symbol, "BeginPackage", _], {
+    context:LeafNode[String, _?contextQ, _] }, data_],
+  operatorStack_,
+  nodeListStack_
+] :=
+Catch[
+Module[{},
+  If[!$CurrentBatchMode,
+    Throw[{Null, {}, Null}]
+  ];
+  operatorStack["Push", PackageNode[{context, CallNode[LeafNode[Symbol, "List", <||>], {}, <||>]}, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
+  nodeListStack["Push", System`CreateDataStructure["Stack"]];
+  {Null, {}, Null}
+]]
+
+(*
+BeginPackage["Foo`", need]
+*)
+process[
+  CallNode[LeafNode[Symbol, "BeginPackage", _], {
+    context:LeafNode[String, _?contextQ, _],
+    need:LeafNode[String, _?contextQ, _] }, data_],
+  operatorStack_,
+  nodeListStack_
+] :=
+Catch[
+Module[{},
+  If[!$CurrentBatchMode,
+    Throw[{Null, {}, Null}]
+  ];
+  operatorStack["Push", PackageNode[{context, CallNode[LeafNode[Symbol, "List", <||>], { need }, <||>]}, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
+  nodeListStack["Push", System`CreateDataStructure["Stack"]];
+  {Null, {}, Null}
+]]
+
+(*
+BeginPackage["Foo`", {need1, need2}]
+*)
+process[
   CallNode[LeafNode[Symbol, "BeginPackage", _], children:{
     LeafNode[String, _?contextQ, _],
-    LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[] }, data_],
+    CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, data_],
   operatorStack_,
   nodeListStack_
 ] :=

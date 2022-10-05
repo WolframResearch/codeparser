@@ -579,7 +579,7 @@ EndPackage[]
 "]]]
     ,
     "\
-BeginPackage[\"Foo`\"]" <> $systemNewline <> "\
+BeginPackage[\"Foo`\",{}]" <> $systemNewline <> "\
 EndPackage[]"
 	,
 	TestID->"Concretify-20220614-F0A1F4"
