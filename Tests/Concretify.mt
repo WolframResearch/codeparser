@@ -1039,6 +1039,70 @@ Test[
 ]
 
 
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["{}"]]]
+	,
+	"{}"
+	,
+	TestID->"Concretify-20221007-V2B6D3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["{a}"]]]
+	,
+	"{a}"
+	,
+	TestID->"Concretify-20221007-C5E4S8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["{a, b}"]]]
+	,
+	"{a,b}"
+	,
+	TestID->"Concretify-20221007-P4Q5T1"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["{1+2, 3+4}"]]]
+	,
+	"{1 +2,3 +4}"
+	,
+	TestID->"Concretify-20221007-Q2M5V3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["<||>"]]]
+	,
+	"<||>"
+	,
+	TestID->"Concretify-20221007-M5Y7O7"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["<|a|>"]]]
+	,
+	"<|a|>"
+	,
+	TestID->"Concretify-20221007-X9D1M5"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["<|a, b|>"]]]
+	,
+	"<|a,b|>"
+	,
+	TestID->"Concretify-20221007-O6E2L8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["<|1+2, 3+4|>"]]]
+	,
+	"<|1 +2,3 +4|>"
+	,
+	TestID->"Concretify-20221007-X5G5P7"
+]
+
 
 
 

@@ -1719,8 +1719,20 @@ Module[{struct = nodeStructure[n], ctor, op, prec},
 group
 *)
 
+walk[n:CallNode[LeafNode[Symbol, "List", _], {}, _]] :=
+  curly[{}]
+
+walk[n:CallNode[LeafNode[Symbol, "List", _], {child_}, _]] :=
+  curly[{walk[child]}]
+
 walk[n:CallNode[LeafNode[Symbol, "List", _], children_, _]] :=
   curly[{InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]}]
+
+walk[n:CallNode[LeafNode[Symbol, "Association", _], {}, _]] :=
+  assoc[{}]
+
+walk[n:CallNode[LeafNode[Symbol, "Association", _], {child_}, _]] :=
+  assoc[{walk[child]}]
 
 walk[n:CallNode[LeafNode[Symbol, "Association", _], children_, _]] :=
   assoc[{InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]}]
