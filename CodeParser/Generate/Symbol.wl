@@ -158,6 +158,7 @@ generate[] := (
 //
 
 #![allow(dead_code)]
+#![allow(non_upper_case_globals)]
 
 use crate::symbol::Symbol;
 
@@ -177,6 +178,28 @@ use crate::symbol::Symbol;
 			Row[{
 				"pub const ",
 				toGlobal["Symbol`"<>ToString[#1]],
+				": Symbol = unsafe { Symbol::unchecked_new(",
+				"\"", Context[#1] <> SymbolName[#1], "\"",
+				") };"
+			}]
+		]&,
+		symbols
+	] ~Join~ {
+		"//======================================",
+		"// Symbols",
+		"//======================================"
+	} ~Join~ MapIndexed[
+		If[#1 === String && $WorkaroundBug321344,
+			(*
+			handle String specially because of bug 321344
+			*)
+			Row[{
+				"pub const SYMBOL_STRING: Symbol = Symbol::new(", "\"String\"", ",", " ", ToString[#2[[1]]-1], ")", ";"
+			}]
+			,
+			Row[{
+				"pub const ",
+				toGlobal[ToString[#1], "UpperCamelCase"],
 				": Symbol = unsafe { Symbol::unchecked_new(",
 				"\"", Context[#1] <> SymbolName[#1], "\"",
 				") };"
