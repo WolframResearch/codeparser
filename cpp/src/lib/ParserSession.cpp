@@ -77,7 +77,7 @@ int ParserSession::init(Buffer Buf, size_t Len, WolframLibraryData libDataIn, Pa
         }
         default: {
             
-            fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+            fprintf(stderr, "returning PARSERSESSIONINIT_ERROR: %s:%d\n", __FILE__, __LINE__);
             
             return PARSERSESSIONINIT_ERROR;
         }
