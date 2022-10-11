@@ -75,8 +75,14 @@ transport = Transport /. List @@ pacletInfo
 
 
 $ParserSession := $ParserSession =
-  libraryFunctionWrapper[createParserSessionFunc]
+Module[{},
 
+  If[$Debug,
+    Print["memoizing $ParserSession"]
+  ];
+
+  libraryFunctionWrapper[createParserSessionFunc]
+]
 
 
 $CodeParserLib := $CodeParserLib =
@@ -301,11 +307,14 @@ Module[{exprLibCompiledLib},
 
 
 
-fromPointerA[f_?FailureQ] :=
-  f
-
 fromPointerA[res_Integer] :=
   $ExprLibCompiledLibFuns["Expr_FromPointerA"][res]
+
+(*
+all other Failure or LibraryFunctionError
+*)
+fromPointerA[f_] :=
+  f
 
 
 
@@ -349,6 +358,10 @@ Module[{res},
 
   If[FailureQ[libFunc],
     Throw[libFunc]
+  ];
+
+  If[AnyTrue[{args}, FailureQ],
+    Throw[SelectFirst[{args}, FailureQ]]
   ];
 
   (*
