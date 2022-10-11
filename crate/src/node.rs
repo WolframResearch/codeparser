@@ -18,14 +18,12 @@ pub(crate) struct TriviaSeq<'i> {
     pub vec: Vec<Token<BorrowedTokenInput<'i>>>,
 }
 
-//
-// A sequence of Nodes
-//
-// When parsing  a(**)+b  we actually want to keep track of the comment.
-// But the comment does not affect the parsing: a(**) is still 1 "thing" to the parser
-//
-// So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
-//
+/// A sequence of Nodes
+///
+/// When parsing  a(**)+b  we actually want to keep track of the comment.
+/// But the comment does not affect the parsing: a(**) is still 1 "thing" to the parser
+///
+/// So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeSeq<I = OwnedTokenInput, S = Source>(pub Vec<Node<I, S>>);
 
