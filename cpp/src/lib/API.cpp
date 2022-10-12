@@ -159,18 +159,21 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, mint A
 #elif USE_MATHLINK
 DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -180,6 +183,7 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK 
     if (len != 0) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -236,18 +240,21 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, mint 
 #elif USE_MATHLINK
 DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -257,13 +264,16 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
     if (len != 1) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -273,6 +283,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
     if (!MLGetInteger64(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -281,6 +292,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
     if (!MLGetInteger32(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -370,18 +382,21 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
 #elif USE_MATHLINK
 DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -391,13 +406,16 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     if (len != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -405,26 +423,40 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
 #if SIZEOF_VOID_P == 8
     mlint64 mlSession;
     if (!MLGetInteger64(callLink, &mlSession)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
 #elif SIZEOF_VOID_P == 4
     int mlSession;
     if (!MLGetInteger32(callLink, &mlSession)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
 #endif // SIZEOF_VOID_P == 8
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (MLGetType(callLink) != MLTKFUNC) {
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     len = static_cast<size_t>(mlLen);
@@ -432,32 +464,45 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     if (len != 1) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto arr = ScopedMLByteArray(callLink);
     if (!arr.read()) {
-        assert(false);
-    }
-    
-    if (MLGetType(callLink) != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlSrcConvention;
     if (!MLGetInteger(callLink, &mlSrcConvention)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -469,16 +514,22 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
     
     auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlFirstLineBehavior;
     if (!MLGetInteger(callLink, &mlFirstLineBehavior)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
@@ -595,18 +646,21 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
 #elif USE_MATHLINK
 DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -616,13 +670,16 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
     if (len != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -630,60 +687,88 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
 #if SIZEOF_VOID_P == 8
     mlint64 mlSession;
     if (!MLGetInteger64(callLink, &mlSession)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
 #elif SIZEOF_VOID_P == 4
     int mlSession;
     if (!MLGetInteger32(callLink, &mlSession)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
 #endif // SIZEOF_VOID_P == 8
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (MLGetType(callLink) != MLTKSTR) {
+    type = MLGetType(callLink);
+    if (type != MLTKSTR) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto full = ScopedMLUTF8String(callLink);
     if (!full.read()) {
-        assert(false);
-    }
-    
-    if (MLGetType(callLink) != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlSrcConvention;
     if (!MLGetInteger(callLink, &mlSrcConvention)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlTabWidth;
     if (!MLGetInteger(callLink, &mlTabWidth)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -807,18 +892,21 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
 #elif USE_MATHLINK
 int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -828,13 +916,16 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (len != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -844,6 +935,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger64(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -852,6 +944,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger32(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -859,9 +952,11 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (MLGetType(callLink) != MLTKFUNC) {
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -869,6 +964,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -878,32 +974,45 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (len != 1) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto arr = ScopedMLByteArray(callLink);
     if (!arr.read()) {
-        assert(false);
-    }
-    
-    if (MLGetType(callLink) != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlSrcConvention;
     if (!MLGetInteger(callLink, &mlSrcConvention)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -912,15 +1021,18 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlTabWidth)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -929,6 +1041,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlFirstLineBehavior)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -984,6 +1097,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     if (Argc != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", Argc);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1047,18 +1161,21 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
 #elif USE_MATHLINK
 int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1068,13 +1185,16 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (len != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1084,6 +1204,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger64(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1092,6 +1213,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger32(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1099,35 +1221,49 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (MLGetType(callLink) != MLTKSTR) {
+    type = MLGetType(callLink);
+    if (type != MLTKSTR) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto full = ScopedMLUTF8String(callLink);
     if (!full.read()) {
-        assert(false);
-    }
-    
-    if (MLGetType(callLink) != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     int mlSrcConvention;
     if (!MLGetInteger(callLink, &mlSrcConvention)) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1136,15 +1272,18 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlTabWidth)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1153,6 +1292,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlFirstLineBehavior)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1277,20 +1417,21 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
 #elif USE_MATHLINK
 int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    std::string unescaped;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen))  {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1300,13 +1441,16 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (len != 7) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1316,6 +1460,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger64(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1324,6 +1469,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger32(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1331,9 +1477,11 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (MLGetType(callLink) != MLTKFUNC) {
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1341,6 +1489,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1350,18 +1499,25 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (len != 1) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto arr = ScopedMLByteArray(callLink);
     if (!arr.read()) {
-        assert(false);
-    }
-    
-    if (MLGetType(callLink) != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1370,15 +1526,18 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlStringifyMode)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto stringifyMode = static_cast<StringifyMode>(mlStringifyMode);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1387,15 +1546,18 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlSrcConvention)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto srcConvention = static_cast<SourceConvention>(mlSrcConvention);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1404,15 +1566,18 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlTabWidth)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto tabWidth = static_cast<uint32_t>(mlTabWidth);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1421,15 +1586,18 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlFirstLineBehavior)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1438,6 +1606,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger(callLink, &mlEncodingMode)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1545,18 +1714,21 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
 #elif USE_MATHLINK
 int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
-    int mlLen;
-    
-    if (MLGetType(callLink) != MLTKFUNC) {
+    int type;
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlLen;
     if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1566,13 +1738,16 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (len != 2) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (MLGetType(callLink) != MLTKINT) {
+    type = MLGetType(callLink);
+    if (type != MLTKINT) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1582,6 +1757,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger64(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1590,6 +1766,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLGetInteger32(callLink, &mlSession)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1597,9 +1774,11 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     
     auto session = reinterpret_cast<ParserSessionPtr>(mlSession);
     
-    if (MLGetType(callLink) != MLTKFUNC) {
+    type = MLGetType(callLink);
+    if (type != MLTKFUNC) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "type: %d\n", type);
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1607,6 +1786,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1616,13 +1796,18 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     if (len != 1) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "len: %lu\n", len);
         
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto arr = ScopedMLByteArray(callLink);
     if (!arr.read()) {
-        assert(false);
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "MLError: %d\n", MLError(callLink));
+        
+        return LIBRARY_FUNCTION_ERROR;
     }
     
     if (!MLNewPacket(callLink) ) {
