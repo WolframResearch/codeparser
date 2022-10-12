@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use crate::{
+    agg::AggNodeSeq,
     node::{
         GroupMissingCloserNode, Node, NodeSeq, OperatorNode, UnterminatedGroupNeedsReparseNode,
     },
@@ -71,11 +72,11 @@ TagSetDelayed\
 });
 
 pub(crate) fn reparse_unterminated<'i>(
-    nodes: NodeSeq<BorrowedTokenInput<'i>>,
+    nodes: AggNodeSeq<BorrowedTokenInput<'i>>,
     input: &'i str,
     convention: SourceConvention,
     tab_width: usize,
-) -> NodeSeq<BorrowedTokenInput<'i>> {
+) -> AggNodeSeq<BorrowedTokenInput<'i>> {
     nodes.map_visit(&mut |node| match node {
         Node::Token(token) if token.tok.isError() && token.tok.isUnterminated() => {
             let token = reparseUnterminatedTokenErrorNode(token, input, convention, tab_width);

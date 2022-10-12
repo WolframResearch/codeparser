@@ -9,6 +9,7 @@ use Diagnostics::*;
 use crate::{
     abstract_::{Abstract, Aggregate},
     byte_decoder::ByteDecoder_nextSourceCharacter,
+    cst::CstNodeSeq,
     feature,
     node::{Node, NodeSeq, TriviaSeq},
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
@@ -39,7 +40,7 @@ pub(crate) type NodeStack<'i> = Vec<Node<BorrowedTokenInput<'i>>>;
 
 pub struct ParseResult<I> {
     /// Tokens or expressions.
-    pub(crate) nodes: NodeSeq<I>,
+    pub(crate) nodes: CstNodeSeq<I>,
 
     pub(crate) unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
 
@@ -130,7 +131,7 @@ impl<'i> ParserSession<'i> {
         // Collect all expressions
         //
 
-        let mut exprs: NodeSeq<BorrowedTokenInput<'i>> = NodeSeq::new();
+        let mut exprs: CstNodeSeq<BorrowedTokenInput<'i>> = NodeSeq::new();
 
         loop {
             if feature::CHECK_ABORT && crate::abortQ() {
@@ -276,8 +277,8 @@ impl<'i> ParserSession<'i> {
 
     fn reparse_unterminated(
         &self,
-        mut nodes: NodeSeq<BorrowedTokenInput<'i>>,
-    ) -> NodeSeq<BorrowedTokenInput<'i>> {
+        mut nodes: CstNodeSeq<BorrowedTokenInput<'i>>,
+    ) -> CstNodeSeq<BorrowedTokenInput<'i>> {
         if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
             nodes = crate::error::reparse_unterminated(
                 nodes,
@@ -308,7 +309,7 @@ impl<'i> ParserSession<'i> {
 
     fn create_parse_result(
         &self,
-        nodes: NodeSeq<BorrowedTokenInput<'i>>,
+        nodes: CstNodeSeq<BorrowedTokenInput<'i>>,
     ) -> ParseResult<BorrowedTokenInput<'i>> {
         let result = ParseResult {
             nodes,

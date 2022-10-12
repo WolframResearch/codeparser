@@ -1,3 +1,7 @@
+use crate::{node::Node, token::OwnedTokenInput, NodeSeq, Source};
+
+pub type AggNodeSeq<I = OwnedTokenInput, S = Source> = NodeSeq<Node<I, S>>;
+
 //==========================================================
 // Macros
 //==========================================================

@@ -3,6 +3,7 @@ use wolfram_expr::{symbol::SymbolRef, ExprKind, Number};
 use wolfram_library_link::expr::{Expr, Normal, Symbol};
 
 use crate::{
+    cst::CstNodeSeq,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
         GroupNode, InfixNode, LeafNode, Node, NodeSeq, Operator, OperatorNode, PostfixNode,
@@ -25,7 +26,7 @@ pub(crate) trait FromExpr: Sized {
 // FromExpr impls
 //==========================================================
 
-impl FromExpr for Container<GeneralSource> {
+impl FromExpr for Container<Node<OwnedTokenInput, GeneralSource>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(
             expr,
@@ -71,7 +72,7 @@ impl FromExpr for ContainerKind {
     }
 }
 
-impl FromExpr for ContainerBody<GeneralSource> {
+impl FromExpr for ContainerBody<Node<OwnedTokenInput, GeneralSource>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(elements) = try_normal_with_head(expr, SYMBOL_LIST) {
             if elements.len() == 1 {
@@ -87,13 +88,13 @@ impl FromExpr for ContainerBody<GeneralSource> {
     }
 }
 
-impl FromExpr for NodeSeq<OwnedTokenInput, GeneralSource> {
+impl<N: FromExpr> FromExpr for NodeSeq<N> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, SYMBOL_LIST)?;
 
         let nodes = elements
             .into_iter()
-            .map(Node::from_expr)
+            .map(N::from_expr)
             .collect::<Result<Vec<_>, String>>()?;
 
         Ok(NodeSeq(nodes))
@@ -368,7 +369,7 @@ impl FromExpr for BoxNode<OwnedTokenInput, GeneralSource> {
         }
 
         let kind = BoxKind::from_expr(&elements[0]).expect("PRE_COMMIT");
-        let children: NodeSeq<OwnedTokenInput, GeneralSource> =
+        let children: CstNodeSeq<OwnedTokenInput, GeneralSource> =
             NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 

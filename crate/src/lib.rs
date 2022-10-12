@@ -68,6 +68,7 @@ mod parser_session;
 
 mod agg;
 mod ast;
+mod cst;
 
 mod abstract_;
 
@@ -217,15 +218,10 @@ pub use crate::{
 // Types
 //======================================
 
-pub struct Container<S> {
+pub struct Container<N> {
     pub kind: ContainerKind,
-    pub body: ContainerBody<S>,
+    pub body: ContainerBody<N>,
     pub metadata: Metadata,
-}
-
-pub enum ContainerBody<S> {
-    Nodes(NodeSeq<OwnedTokenInput, S>),
-    Missing(UnsafeCharacterEncoding),
 }
 
 pub enum ContainerKind {
@@ -236,6 +232,15 @@ pub enum ContainerKind {
     // FIXME Is this really a valid container kind?
     Hold,
 }
+
+pub enum ContainerBody<N> {
+    Nodes(NodeSeq<N>),
+    Missing(UnsafeCharacterEncoding),
+}
+
+/// A sequence of Nodes
+#[derive(Debug, Clone, PartialEq)]
+pub struct NodeSeq<N>(pub Vec<N>);
 
 #[derive(Debug)]
 pub struct Metadata {
@@ -484,7 +489,6 @@ macro_rules! panic_if_aborted {
     };
 }
 
-use crate::node::NodeSeq;
 pub(crate) use panic_if_aborted;
 use source::{CodeAction, GeneralSource, Issue};
 use token::{BorrowedTokenInput, OwnedTokenInput, Token};

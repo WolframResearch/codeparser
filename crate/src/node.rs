@@ -1,6 +1,7 @@
 use wolfram_expr::Expr;
 
 use crate::{
+    cst::CstNodeSeq,
     source::{GeneralSource, Source},
     token::{
         BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind, TokenRef, TokenSource,
@@ -10,6 +11,8 @@ use crate::{
 
 pub use crate::parselet_registration::Operator;
 
+// TODO(cleanup): Remove this re-export.
+pub(crate) use crate::NodeSeq;
 //
 // Used mainly for collecting trivia that has been eaten
 //
@@ -17,15 +20,6 @@ pub use crate::parselet_registration::Operator;
 pub(crate) struct TriviaSeq<'i> {
     pub vec: Vec<Token<BorrowedTokenInput<'i>>>,
 }
-
-/// A sequence of Nodes
-///
-/// When parsing  a(**)+b  we actually want to keep track of the comment.
-/// But the comment does not affect the parsing: a(**) is still 1 "thing" to the parser
-///
-/// So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
-#[derive(Debug, Clone, PartialEq)]
-pub struct NodeSeq<I = OwnedTokenInput, S = Source>(pub Vec<Node<I, S>>);
 
 /// An expression representing a node in the syntax tree
 #[derive(Debug, Clone, PartialEq)]
@@ -61,7 +55,7 @@ pub struct CodeNode<S = Source> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoxNode<I = OwnedTokenInput, S = Source> {
     pub kind: BoxKind,
-    pub children: NodeSeq<I, S>,
+    pub children: CstNodeSeq<I, S>,
     pub src: S,
 }
 
@@ -84,7 +78,7 @@ pub enum BoxKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OperatorNode<I = OwnedTokenInput, S = Source> {
     pub(crate) op: Operator,
-    pub(crate) children: NodeSeq<I, S>,
+    pub(crate) children: CstNodeSeq<I, S>,
     pub(crate) src: S,
 }
 
@@ -123,7 +117,7 @@ pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I,
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
 pub struct CallNode<I = OwnedTokenInput, S = Source> {
-    pub head: NodeSeq<I, S>,
+    pub head: CstNodeSeq<I, S>,
     pub body: Box<Node<I, S>>,
     pub src: S,
     // Concrete Call nodes can have more than one element in `head`, and
@@ -160,7 +154,7 @@ pub struct CompoundNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>)
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyntaxErrorNode<I = OwnedTokenInput, S = Source> {
     pub err: SyntaxErrorKind,
-    pub children: NodeSeq<I, S>,
+    pub children: CstNodeSeq<I, S>,
     pub src: S,
 }
 
@@ -251,7 +245,7 @@ impl<I, S> From<CodeNode<S>> for Node<I, S> {
 // NodeSeq
 //======================================
 
-impl<I, S> NodeSeq<I, S> {
+impl<I, S> CstNodeSeq<I, S> {
     pub fn visit(&self, visit: &mut dyn FnMut(&Node<I, S>)) {
         let NodeSeq(elements) = self;
 
@@ -272,11 +266,7 @@ impl<I, S> NodeSeq<I, S> {
     }
 }
 
-impl<I> NodeSeq<I> {
-    pub(crate) fn new() -> NodeSeq<I> {
-        NodeSeq(Vec::new())
-    }
-
+impl<I> CstNodeSeq<I> {
     pub fn push<N: Into<Node<I>>>(&mut self, node: N) {
         let NodeSeq(vec) = self;
 
@@ -285,7 +275,11 @@ impl<I> NodeSeq<I> {
     }
 }
 
-impl<I, S> NodeSeq<I, S> {
+impl<N> NodeSeq<N> {
+    pub(crate) fn new() -> NodeSeq<N> {
+        NodeSeq(Vec::new())
+    }
+
     pub fn clear(&mut self) {
         let NodeSeq(vec) = self;
 
@@ -307,12 +301,12 @@ impl<I, S> NodeSeq<I, S> {
     //     return vec[index];
     // }
 
-    fn first(&self) -> &Node<I, S> {
+    fn first(&self) -> &N {
         let NodeSeq(vec) = self;
         vec.first().expect("NodeSeq::first(): vector is empty")
     }
 
-    fn last(&self) -> &Node<I, S> {
+    fn last(&self) -> &N {
         let NodeSeq(vec) = self;
         vec.last().expect("NodeSeq::last(): vector is empty")
     }
@@ -332,7 +326,7 @@ impl<I, S> NodeSeq<I, S> {
     // }
 }
 
-impl<I, S: TokenSource> NodeSeq<I, S> {
+impl<I, S: TokenSource> CstNodeSeq<I, S> {
     pub(crate) fn check(&self) -> bool {
         let NodeSeq(vec) = self;
 
@@ -346,8 +340,8 @@ impl<I, S: TokenSource> NodeSeq<I, S> {
     }
 }
 
-impl<I: TokenInput, S> NodeSeq<I, S> {
-    pub(crate) fn into_owned_input(self) -> NodeSeq<OwnedTokenInput, S> {
+impl<I: TokenInput, S> CstNodeSeq<I, S> {
+    pub(crate) fn into_owned_input(self) -> CstNodeSeq<OwnedTokenInput, S> {
         let NodeSeq(nodes) = self;
 
         let nodes = nodes.into_iter().map(Node::into_owned_input).collect();
@@ -651,7 +645,7 @@ impl LeafNode {
 //======================================
 
 impl<I> OperatorNode<I> {
-    pub(crate) fn new(op: Operator, children: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, children: CstNodeSeq<I>) -> Self {
         assert!(!children.is_empty());
 
         let src = Source::new_from_source(children.first().source(), children.last().source());
@@ -732,7 +726,7 @@ impl<I, S: TokenSource> GroupMissingCloserNode<I, S> {
 //======================================
 
 impl<I> PrefixNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixNodeCount);
 
         PrefixNode(OperatorNode::new(op, args))
@@ -740,7 +734,7 @@ impl<I> PrefixNode<I> {
 }
 
 impl<I> BinaryNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
 
         BinaryNode(OperatorNode::new(op, args))
@@ -748,7 +742,7 @@ impl<I> BinaryNode<I> {
 }
 
 impl<I> InfixNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
 
         InfixNode(OperatorNode::new(op, args))
@@ -756,7 +750,7 @@ impl<I> InfixNode<I> {
 }
 
 impl<I> TernaryNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_TernaryNodeCount);
 
         TernaryNode(OperatorNode::new(op, args))
@@ -764,7 +758,7 @@ impl<I> TernaryNode<I> {
 }
 
 impl<I> PostfixNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
 
         PostfixNode(OperatorNode::new(op, args))
@@ -772,7 +766,7 @@ impl<I> PostfixNode<I> {
 }
 
 impl<I> PrefixBinaryNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixBinaryNodeCount);
 
         PrefixBinaryNode(OperatorNode::new(op, args))
@@ -784,7 +778,7 @@ impl<I> PrefixBinaryNode<I> {
 //======================================
 
 impl<I> GroupNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupNodeCount);
 
         GroupNode(OperatorNode::new(op, args))
@@ -792,7 +786,7 @@ impl<I> GroupNode<I> {
 }
 
 impl<I> CompoundNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_CompoundNodeCount);
 
         CompoundNode(OperatorNode::new(op, args))
@@ -800,7 +794,7 @@ impl<I> CompoundNode<I> {
 }
 
 impl<I> GroupMissingCloserNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
         GroupMissingCloserNode(OperatorNode::new(op, args))
@@ -808,7 +802,7 @@ impl<I> GroupMissingCloserNode<I> {
 }
 
 impl<I> UnterminatedGroupNeedsReparseNode<I> {
-    pub(crate) fn new(op: Operator, args: NodeSeq<I>) -> Self {
+    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
 
         UnterminatedGroupNeedsReparseNode(OperatorNode::new(op, args))
@@ -820,7 +814,7 @@ impl<I> UnterminatedGroupNeedsReparseNode<I> {
 //======================================
 
 impl<I> CallNode<I> {
-    pub(crate) fn concrete(head: NodeSeq<I>, body: Node<I>) -> Self {
+    pub(crate) fn concrete(head: CstNodeSeq<I>, body: Node<I>) -> Self {
         debug_assert!(!head.is_empty());
 
         incr_diagnostic!(Node_CallNodeCount);
@@ -882,7 +876,7 @@ impl<I, S: TokenSource> CallNode<I, S> {
 //======================================
 
 impl<I> SyntaxErrorNode<I> {
-    pub(crate) fn new(err: SyntaxErrorKind, children: NodeSeq<I>) -> Self {
+    pub(crate) fn new(err: SyntaxErrorKind, children: CstNodeSeq<I>) -> Self {
         assert!(!children.is_empty());
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);
