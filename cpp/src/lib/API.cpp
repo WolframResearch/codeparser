@@ -15,6 +15,17 @@
 #include <cassert>
 
 
+//
+// MathLink sends System`List as List,
+// So need to make sure that any testing of System symbols is sans context.
+// bug 283291
+// bug 284492
+// bug 429034
+//
+const char *SYMBOL_LIST_SHORTNAME = "List";
+const char *SYMBOL_BYTEARRAY_SHORTNAME = "ByteArray";
+
+
 int CreateParserSession(ParserSessionPtr *sessionOut) {
     
     *sessionOut = new ParserSession();
@@ -157,7 +168,7 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, MLINK 
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -234,7 +245,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, MLINK
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -368,7 +379,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -412,7 +423,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK c
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
         assert(false);
     }
     
@@ -593,7 +604,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -805,7 +816,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -855,7 +866,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -1045,7 +1056,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -1277,7 +1288,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen))  {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen))  {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -1327,7 +1338,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -1543,7 +1554,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_LIST.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_LIST_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
@@ -1593,7 +1604,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK callLink) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY.Name, &mlLen)) {
+    if (!MLTestHead(callLink, SYMBOL_BYTEARRAY_SHORTNAME, &mlLen)) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
         
