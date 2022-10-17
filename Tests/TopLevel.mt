@@ -167,3 +167,33 @@ Test[
 	,
 	TestID->"TopLevel-20220808-I5K1K1"
 ]
+
+
+
+Test[
+	CodeParse["
+
+BeginPackage[\"Foo`\", {}]
+
+EndPackage[]
+
+"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{3, 1}, {3, 13}}|>], {
+			LeafNode[String, "\"Foo`\"", <|Source -> {{3, 14}, {3, 20}}|>],
+			CallNode[LeafNode[Symbol, "List", <||>], {}, <|Source -> {{3, 22}, {3, 24}}|>]}, <|Source -> {{3, 1}, {3, 25}}|>],
+		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{5, 1}, {5, 11}}|>], {}, <|Source -> {{5, 1}, {5, 13}}|>]}, <|Source -> {{1, 1}, {7, 1}},
+	
+		AbstractSyntaxIssues -> {
+			SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <|Source -> {{3, 1}, {3, 25}}, ConfidenceLevel -> 0.95|>]}|>]
+	,
+	TestID->"TopLevel-20221017-B8C2H1"
+]
+
+
+
+
+
+
+

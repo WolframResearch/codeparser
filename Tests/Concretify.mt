@@ -579,10 +579,36 @@ EndPackage[]
 "]]]
     ,
     "\
-BeginPackage[\"Foo`\",{}]" <> $systemNewline <> "\
+BeginPackage[\"Foo`\"]" <> $systemNewline <> "\
 EndPackage[]"
 	,
 	TestID->"Concretify-20220614-F0A1F4"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["\
+BeginPackage[\"Foo`\", \"Bar`\"]
+EndPackage[]
+"]]]
+    ,
+    "\
+BeginPackage[\"Foo`\",{\"Bar`\"}]" <> $systemNewline <> "\
+EndPackage[]"
+	,
+	TestID->"Concretify-20221017-D0P1V0"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["\
+BeginPackage[\"Foo`\", {\"Bar`\", \"Baz`\"}]
+EndPackage[]
+"]]]
+    ,
+    "\
+BeginPackage[\"Foo`\",{\"Bar`\",\"Baz`\"}]" <> $systemNewline <> "\
+EndPackage[]"
+	,
+	TestID->"Concretify-20221017-U2H5H0"
 ]
 
 Test[

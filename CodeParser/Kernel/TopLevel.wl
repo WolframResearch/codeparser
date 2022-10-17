@@ -686,7 +686,7 @@ Module[{},
   If[!$CurrentBatchMode,
     Throw[{Null, {}, Null}]
   ];
-  operatorStack["Push", PackageNode[{context, CallNode[LeafNode[Symbol, "List", <||>], {}, <||>]}, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
+  operatorStack["Push", PackageNode[{context}, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
   nodeListStack["Push", System`CreateDataStructure["Stack"]];
   {Null, {}, Null}
 ]]
@@ -712,12 +712,24 @@ Module[{},
 ]]
 
 (*
+BeginPackage["Foo`", {}]
+*)
+process[
+  CallNode[LeafNode[Symbol, "BeginPackage", _], {
+    LeafNode[String, _?contextQ, _],
+    CallNode[LeafNode[Symbol, "List", _], {}, _] }, data_],
+  operatorStack_,
+  nodeListStack_
+] :=
+{Null, {SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> data[Source], ConfidenceLevel -> 0.95 |> ]}, Throw}
+
+(*
 BeginPackage["Foo`", {need1, need2}]
 *)
 process[
   CallNode[LeafNode[Symbol, "BeginPackage", _], children:{
     LeafNode[String, _?contextQ, _],
-    CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, data_],
+    CallNode[LeafNode[Symbol, "List", _], { LeafNode[String, _?contextQ, _]... }, _] }, data_],
   operatorStack_,
   nodeListStack_
 ] :=
@@ -755,7 +767,7 @@ System`Private`NewContextPath[{"Foo`"}]
 *)
 process[
   CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], children:{
-    CallNode[LeafNode[Symbol, "List", <||>], {
+    CallNode[LeafNode[Symbol, "List", _], {
       LeafNode[String, _?contextQ, _]... }, _] }, data_],
   operatorStack_,
   nodeListStack_

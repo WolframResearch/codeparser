@@ -1909,6 +1909,12 @@ walk[ContainerNode[type_, children_, _]] :=
     Riffle[walk /@ children, LeafNode[Token`Newline, $systemNewline, <||>]], <||>]
 
 
+walk[PackageNode[{ctxt_}, children_, _]] :=
+  Sequence @@ (
+    {CallNode[{LeafNode[Symbol, "BeginPackage", <||>]}, square[{walk[ctxt]}], <||>]} ~Join~
+    (walk /@ children) ~Join~
+    {CallNode[{LeafNode[Symbol, "EndPackage", <||>]}, square[{}], <||>]})
+
 walk[PackageNode[{ctxt_, needs_}, children_, _]] :=
   Sequence @@ (
     {CallNode[{LeafNode[Symbol, "BeginPackage", <||>]}, square[{InfixNode[Comma, {walk[ctxt], LeafNode[Token`Comma, ",", <||>], walk[needs]}, <||>]}], <||>]} ~Join~
