@@ -137,6 +137,7 @@ DLLEXPORT int CreateParserSession_LibraryLink(WolframLibraryData libData, mint A
     if (Argc != 0) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -218,6 +219,7 @@ DLLEXPORT int DestroyParserSession_LibraryLink(WolframLibraryData libData, mint 
     if (Argc != 1) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -321,6 +323,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
     if (Argc != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -583,6 +586,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     if (Argc != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -831,6 +835,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     if (Argc != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1097,7 +1102,7 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     if (Argc != 5) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
-        fprintf(stderr, "Argc: %d\n", Argc);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1350,6 +1355,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     if (Argc != 7) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -1662,6 +1668,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
     if (Argc != 2) {
         
         fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        fprintf(stderr, "Argc: %d\n", static_cast<int>(Argc));
         
         return LIBRARY_FUNCTION_ERROR;
     }
