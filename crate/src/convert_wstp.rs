@@ -4,6 +4,7 @@ use wolfram_library_link::{expr::Expr, wstp};
 
 use crate::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
+    cst::CstNode,
     from_expr::List,
     my_string::MyString,
     my_string_registration::*,
@@ -966,7 +967,7 @@ fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<SourceLocati
 // Result types
 //======================================
 
-impl<'i> ParseResult<BorrowedTokenInput<'i>> {
+impl<'i> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
     pub(crate) fn put(self, link: &mut wstp::Link) {
         let ParseResult {
             nodes: outer_exprs,

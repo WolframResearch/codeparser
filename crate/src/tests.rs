@@ -13,14 +13,15 @@ mod test_wl_character;
 use pretty_assertions::assert_eq;
 
 use crate::{
+    ast::{AstMetadata, AstNode},
     node::{
         CallNode, GroupMissingCloserNode, GroupNode, InfixNode, Node, Node::Token as NVToken,
         NodeSeq, Operator, OperatorNode, UnterminatedGroupNode,
     },
     parser_session::ParserSession,
-    source::SourceConvention,
-    src, token,
-    token::{BorrowedTokenInput, Token},
+    source::{GeneralSource, SourceConvention},
+    test_utils::{src, token},
+    token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
     EncodingMode, FirstLineBehavior, ParseOptions, ParseResult, Tokens, DEFAULT_TAB_WIDTH,
 };
 
@@ -302,7 +303,38 @@ fn test_unterminated_group_reparse() {
 
 #[test]
 fn test_abstract_parse() {
-    let result = crate::abstract_parse_expressions("2 + 2", &ParseOptions::default());
+    let result = crate::parse_ast("2 + 2", &ParseOptions::default());
 
-    assert_eq!(result.nodes(), vec![])
+    assert_eq!(
+        result.nodes(),
+        &[AstNode::Call {
+            head: Box::new(AstNode::Leaf {
+                kind: TK::Symbol,
+                input: OwnedTokenInput::fake("Plus"),
+                data: AstMetadata::empty()
+            }),
+            args: vec![
+                AstNode::Leaf {
+                    kind: TK::Integer,
+                    input: OwnedTokenInput::fake("2"),
+                    data: AstMetadata {
+                        source: GeneralSource::String(src!(1:1-1:2),),
+                        issues: vec![],
+                    },
+                },
+                AstNode::Leaf {
+                    kind: TK::Integer,
+                    input: OwnedTokenInput::fake("2"),
+                    data: AstMetadata {
+                        source: GeneralSource::String(src!(1:5-1:6),),
+                        issues: vec![],
+                    },
+                },
+            ],
+            data: AstMetadata {
+                source: GeneralSource::String(src!(1:1-1:6),),
+                issues: vec![],
+            },
+        },]
+    )
 }

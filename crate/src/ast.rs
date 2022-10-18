@@ -6,7 +6,7 @@ use crate::{
     token::{OwnedTokenInput, TokenKind, TokenSource},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AstNode {
     /// `LeafNode[...]`
     Leaf {
@@ -86,7 +86,7 @@ pub enum AstNode {
 }
 
 // TODO(cleanup): Combine this with `Metadata`?
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AstMetadata {
     pub source: GeneralSource,
     pub issues: Vec<Issue>,
@@ -94,7 +94,7 @@ pub struct AstMetadata {
 
 // TODO(cleanup): Add `Kind` suffix to this name? Or remove `Kind` suffix from
 //                other enums like this?
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AbstractSyntaxError {
     CommaTopLevel,
     OpenParen,

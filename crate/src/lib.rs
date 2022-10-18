@@ -396,6 +396,10 @@ pub fn tokenize_bytes<'i>(
     session.tokenize()
 }
 
+//======================================
+// Parse CST
+//======================================
+
 /// Parse a string containing Wolfram Language input into concrete syntax tree.
 ///
 /// # Examples
@@ -412,7 +416,14 @@ pub fn tokenize_bytes<'i>(
 pub fn parse_concrete<'i>(
     input: &'i str,
     opts: &ParseOptions,
-) -> ParseResult<BorrowedTokenInput<'i>> {
+) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+    parse_concrete_bytes(input.as_bytes(), opts)
+}
+
+pub fn parse_concrete_bytes<'i>(
+    bytes: &'i [u8],
+    opts: &ParseOptions,
+) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
     let ParseOptions {
         first_line_behavior,
         src_convention,
@@ -421,7 +432,7 @@ pub fn parse_concrete<'i>(
     } = *opts;
 
     let mut session = ParserSession::new(
-        input.as_bytes(),
+        bytes,
         src_convention,
         tab_width,
         first_line_behavior,
@@ -431,28 +442,33 @@ pub fn parse_concrete<'i>(
     session.concrete_parse_expressions()
 }
 
-pub fn abstract_parse_expressions<'i>(
-    _input: &'i str,
-    _opts: &ParseOptions,
-) -> ParseResult<BorrowedTokenInput<'i>> {
-    // let ParseOptions {
-    //     first_line_behavior,
-    //     src_convention,
-    //     encoding_mode,
-    //     tab_width,
-    // } = *opts;
+//======================================
+// Parse AST
+//======================================
 
-    // let mut session = ParserSession::new(
-    //     input.as_bytes(),
-    //     src_convention,
-    //     tab_width,
-    //     first_line_behavior,
-    //     encoding_mode,
-    // );
+/// Parse a string containing Wolfram Language input into an abstract syntax tree.
+pub fn parse_ast<'i>(input: &'i str, opts: &ParseOptions) -> ParseResult<AstNode> {
+    parse_ast_bytes(input.as_bytes(), opts)
+}
 
-    // session.abstract_parse_expressions()
+/// Parse bytes containing Wolfram Language input into an abstract syntax tree.
+pub fn parse_ast_bytes<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<AstNode> {
+    let ParseOptions {
+        first_line_behavior,
+        src_convention,
+        encoding_mode,
+        tab_width,
+    } = *opts;
 
-    todo!()
+    let mut session = ParserSession::new(
+        bytes,
+        src_convention,
+        tab_width,
+        first_line_behavior,
+        encoding_mode,
+    );
+
+    session.abstract_parse_expressions()
 }
 
 //======================================
@@ -489,6 +505,8 @@ macro_rules! panic_if_aborted {
     };
 }
 
+use ast::AstNode;
+use cst::CstNode;
 pub(crate) use panic_if_aborted;
 use source::{CodeAction, GeneralSource, Issue};
 use token::{BorrowedTokenInput, OwnedTokenInput, Token};
