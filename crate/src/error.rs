@@ -74,24 +74,6 @@ pub(crate) fn reparse_unterminated<'i>(
     convention: SourceConvention,
     tab_width: usize,
 ) -> NodeSeq<BorrowedTokenInput<'i>> {
-    // TODO: Combine these map_visit() calls into one? I'm unsure if that is
-    //       semantically valid; are there any scenarios where the
-    //       second transformation may depend on the first in some way?
-    //
-    //       Think this through and remove this comment, one way or the other.
-
-    let nodes = nodes.map_visit(&mut |node| {
-        match node {
-            // UnterminatedGroupNeedsReparseNode => UnterminatedGroupNode
-            Node::UnterminatedGroupNeedsReparse(group) => {
-                let group = reparseUnterminatedGroupNode(group, input, convention, tab_width);
-
-                Node::UnterminatedGroup(group)
-            },
-            other => other,
-        }
-    });
-
     nodes.map_visit(&mut |node| match node {
         Node::Token(token) if token.tok.isError() && token.tok.isUnterminated() => {
             let token = reparseUnterminatedTokenErrorNode(token, input, convention, tab_width);
@@ -111,7 +93,7 @@ pub(crate) fn reparse_unterminated<'i>(
 // Do not return the previous children, because they are useless any way.
 //
 // But return the opener to make ToString stuff easier
-fn reparseUnterminatedGroupNode<'i>(
+pub(crate) fn reparseUnterminatedGroupNode<'i>(
     group: UnterminatedGroupNeedsReparseNode<BorrowedTokenInput<'i>>,
     str: &'i str,
     convention: SourceConvention,

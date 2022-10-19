@@ -8,7 +8,7 @@ use crate::{
     node::{
         BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode, Node,
         NodeSeq, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
-        TernaryNode, UnterminatedGroupNeedsReparseNode, UnterminatedGroupNode,
+        TernaryNode, UnterminatedGroupNode,
     },
     source::{
         BufferAndLength, CodeAction, CodeActionKind, Issue, IssueTag, Severity, Source,
@@ -87,14 +87,6 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
-            },
-            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(_)) => {
-                // Note: These nodes should never be returned to the WL. They
-                //       exist only temporarily, and are cleaned up before
-                //       concrete parsing is complete.
-                // TODO(cleanup): Remove this variant from the public `Node`
-                //                type(s).
-                panic!("unexpected UnterminatedGroupNeedsReparse node")
             },
         }
     }

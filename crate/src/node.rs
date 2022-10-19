@@ -43,7 +43,6 @@ pub enum Node<I = OwnedTokenInput> {
     // TODO(cleanup): This variant is never constructed during concrete parsing.
     UnterminatedGroup(UnterminatedGroupNode<I>),
     GroupMissingCloser(GroupMissingCloserNode<I>),
-    UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode<I>),
 }
 
 /// Any kind of prefix, postfix, binary, or infix operator
@@ -130,7 +129,7 @@ pub struct GroupMissingCloserNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
-pub struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 
 //======================================
 // Node convertions
@@ -165,7 +164,6 @@ from_node!(PostfixNode<> => Node::Postfix);
 from_node!(GroupNode<> => Node::Group);
 from_node!(UnterminatedGroupNode<> => Node::UnterminatedGroup);
 from_node!(GroupMissingCloserNode<> => Node::GroupMissingCloser);
-from_node!(UnterminatedGroupNeedsReparseNode<> => Node::UnterminatedGroupNeedsReparse);
 from_node!(PrefixBinaryNode<> => Node::PrefixBinary);
 
 
@@ -355,7 +353,6 @@ impl<I> Node<I> {
             | Node::Compound(CompoundNode(op))
             | Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
-            | Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op))
             | Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
                 let OperatorNode {
                     op: _,
@@ -406,11 +403,6 @@ impl<I> Node<I> {
             Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
                 Node::UnterminatedGroup(UnterminatedGroupNode(op.map_visit(visit)))
             },
-            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
-                Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(
-                    op.map_visit(visit),
-                ))
-            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.map_visit(visit)))
             },
@@ -452,11 +444,6 @@ impl Node<BorrowedTokenInput<'_>> {
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.into_owned_input()))
             },
-            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
-                Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(
-                    op.into_owned_input(),
-                ))
-            },
         }
     }
 }
@@ -482,9 +469,6 @@ impl<I> Node<I> {
             Node::Group(GroupNode(op)) => op.getSource(),
             Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.getSource(),
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => op.getSource(),
-            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
-                op.getSource()
-            },
         }
     }
 
@@ -506,7 +490,6 @@ impl<I> Node<I> {
             //        therefore invalid syntax?
             Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.check(),
             Node::GroupMissingCloser(node) => node.check(),
-            Node::UnterminatedGroupNeedsReparse(node) => node.check(),
             Node::SyntaxError(node) => node.check(),
         }
     }
@@ -586,12 +569,6 @@ impl<I> OperatorNode<I> {
 //======================================
 
 impl<I> GroupMissingCloserNode<I> {
-    pub(crate) fn check(&self) -> bool {
-        return false;
-    }
-}
-
-impl<I> UnterminatedGroupNeedsReparseNode<I> {
     pub(crate) fn check(&self) -> bool {
         return false;
     }

@@ -85,7 +85,7 @@ symbols = Union[Flatten[Join[
     CodeParser`UnterminatedGroupNode,
     CodeParser`CompoundNode,
     CodeParser`SyntaxErrorNode,
-    CodeParser`GroupMissingCloserNode, CodeParser`UnterminatedGroupNeedsReparseNode,
+    CodeParser`GroupMissingCloserNode,
     CodeParser`PrefixBinaryNode},
   {CodeParser`SyntaxIssue, CodeParser`FormatIssue, CodeParser`EncodingIssue,
     CodeParser`ReplaceText, CodeParser`DeleteText, CodeParser`InsertText,

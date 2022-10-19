@@ -1379,6 +1379,20 @@ fn GroupParselet_reduceUnterminatedGroup(session: &mut ParserSession, P: &GroupP
     let Op = P.getOp();
 
     let node = UnterminatedGroupNeedsReparseNode::new(Op, Parser_popContext(session));
+
+    // The input MUST be valid UTF-8, because we only reduce an *unterminated*
+    // group node if we've read an EOF (which is how we know it must be
+    // unterminated: we've read all the input).
+    let input = std::str::from_utf8(session.input())
+        .expect("cannot reparse unterminated group node: input is not valid UTF-8");
+
+    let node = crate::error::reparseUnterminatedGroupNode(
+        node,
+        input,
+        session.tokenizer.srcConvention,
+        session.tokenizer.tabWidth as usize,
+    );
+
     Parser_pushNode(session, node);
 
     Parser_popGroup(session);

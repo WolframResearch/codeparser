@@ -51,7 +51,6 @@ pub const SYMBOL_CODEPARSER_SYNTAXERRORNODE: Symbol = unsafe { Symbol::unchecked
 pub const SYMBOL_CODEPARSER_SYNTAXISSUE: Symbol = unsafe { Symbol::unchecked_new("CodeParser`SyntaxIssue") };
 pub const SYMBOL_CODEPARSER_TERNARYNODE: Symbol = unsafe { Symbol::unchecked_new("CodeParser`TernaryNode") };
 pub const SYMBOL_CODEPARSER_TERNARYTILDE: Symbol = unsafe { Symbol::unchecked_new("CodeParser`TernaryTilde") };
-pub const SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE: Symbol = unsafe { Symbol::unchecked_new("CodeParser`UnterminatedGroupNeedsReparseNode") };
 pub const SYMBOL_CODEPARSER_UNTERMINATEDGROUPNODE: Symbol = unsafe { Symbol::unchecked_new("CodeParser`UnterminatedGroupNode") };
 pub const SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE: Symbol = unsafe { Symbol::unchecked_new("CodeParser`UnterminatedTokenErrorNeedsReparseNode") };
 pub const SYMBOL_SYNTAXERROR_EXPECTEDSET: Symbol = unsafe { Symbol::unchecked_new("SyntaxError`ExpectedSet") };
