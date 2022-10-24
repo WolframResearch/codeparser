@@ -1013,7 +1013,19 @@ Test[
 
 
 
-
+Test[
+	CodeConcreteParse["(#a)"]
+	,
+	ContainerNode[String, {
+		GroupNode[GroupParen, {
+			LeafNode[Token`OpenParen, "(", <|Source -> {{1, 1}, {1, 2}}|>],
+			CompoundNode[Slot, {
+				LeafNode[Token`Hash, "#", <|Source -> {{1, 2}, {1, 3}}|>],
+       			LeafNode[String, "a", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1, 4}}|>], 
+       		LeafNode[Token`CloseParen, ")", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]
+	,
+	TestID->"Concrete-20221023-H0R0U2"
+]
 
 
 
