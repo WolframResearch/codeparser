@@ -1238,6 +1238,15 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[Cell @@ heldChildren]]
 ]]
 
+toStandardFormBoxes[BoxNode[BoxData, {a_}, _]] :=
+Catch[
+Module[{heldChildren},
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] }];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[BoxData @@ heldChildren]]
+]]
+
 
 (*
 BoxNodes that may contain CodeNodes have to be handled individually
