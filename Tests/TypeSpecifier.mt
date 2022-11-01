@@ -49,7 +49,7 @@ Test[
 			LeafNode[Symbol, "baz", <|Source -> {{1, 12}, {1, 15}}|>]}, <|Source -> {{1, 1}, {1, 16}},
 			
 			AbstractSyntaxIssues -> {
-				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 4}, {1, 7}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 15}, {1, 16}}}|>]}|>]}, <|Source -> {{1, 1}, {1, 16}}|>]
+				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 1}, {1, 4}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>]}, <|Source -> {{1, 1}, {1, 16}}|>]
 	,
 	TestID->"TypeSpecifier-20220506-X9H6A6"
 ]
@@ -65,7 +65,7 @@ Test[
 			LeafNode[Symbol, "dram", <|Source -> {{1, 17}, {1, 21}}|>]}, <|Source -> {{1, 1}, {1, 22}},
 			
 			AbstractSyntaxIssues -> {
-				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 4}, {1, 7}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 21}, {1, 22}}}|>]}|>]}
+				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 1}, {1, 4}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>]}
 		,
 		<|Source -> {{1, 1}, {1, 22}}|>]
 	,
@@ -84,13 +84,13 @@ Test[
 				LeafNode[Symbol, "baz", <|Source -> {{1, 12}, {1, 15}}|>]}, <|Source -> {{1, 1}, {1, 16}},
 				
 				AbstractSyntaxIssues -> {
-					SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 4}, {1, 7}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 15}, {1, 16}}}|>]}|>]}, <||>], {
+					SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 1}, {1, 4}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>]}, <||>], {
 			
 			LeafNode[Symbol, "bar", <|Source -> {{1, 19}, {1, 22}}|>],
 			LeafNode[Symbol, "baz", <|Source -> {{1, 24}, {1, 27}}|>]}, <|Source -> {{1, 1}, {1, 28}},
 			
 			AbstractSyntaxIssues -> {
-				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 16}, {1, 19}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 27}, {1, 28}}}|>]}|>]}
+				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 1}, {1, 16}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>]}
 		,
 		<|Source -> {{1, 1}, {1, 28}}|>]
 	,
@@ -111,7 +111,7 @@ Test[
 				LeafNode[Symbol, "baz", <|Source -> {{1, 18}, {1, 21}}|>]}, <|Source -> {{1, 7}, {1, 22}},
 			
 				AbstractSyntaxIssues -> {
-					SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 10}, {1, 13}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 21}, {1, 22}}}|>]}|>],
+					SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 7}, {1, 10}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>],
 			
 			CallNode[
 				CallNode[LeafNode[Symbol, "TypeSpecifier", <||>], {LeafNode[Symbol, "foo", <|Source -> {{1, 24}, {1, 27}}|>]}, <||>], {
@@ -119,10 +119,10 @@ Test[
 				LeafNode[Symbol, "baz", <|Source -> {{1, 35}, {1, 38}}|>]}, <|Source -> {{1, 24}, {1, 39}},
 			
 			AbstractSyntaxIssues -> {
-				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 27}, {1, 30}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 38}, {1, 39}}}|>]}|>]}, <|Source -> {{1, 1}, {1, 40}},
+				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 24}, {1, 27}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>]}, <|Source -> {{1, 1}, {1, 40}},
 				
 		AbstractSyntaxIssues -> {
-			SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 4}, {1, 7}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 39}, {1, 40}}}|>]}|>]}, <|Source -> {{1, 1}, {1, 40}}|>]
+			SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 1}, {1, 4}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>]}, <|Source -> {{1, 1}, {1, 40}}|>]
 	,
 	TestID->"TypeSpecifier-20220506-N2X6U7"
 ]
@@ -140,7 +140,7 @@ Test[
 				LeafNode[Symbol, "baz", <|Source -> {{1, 20}, {1, 23}}|>]}, <|Source -> {{1, 1}, {1, 24}},
 				
 			AbstractSyntaxIssues -> {
-				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 12}, {1, 15}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 23}, {1, 24}}}|>]}|>]}
+				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 1}, {1, 12}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>]}
 		,
 		<|Source -> {{1, 1}, {1, 24}}|>
 	]
@@ -159,7 +159,7 @@ Test[
 				LeafNode[Symbol, "baz", <|Source -> {{1, 12}, {1, 15}}|>]}, <|Source -> {{1, 1}, {1, 16}},
 				
 				AbstractSyntaxIssues -> {
-					SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 4}, {1, 7}}, ConfidenceLevel -> 0.95, "AdditionalSources" -> {{{1, 15}, {1, 16}}}|>]}|>], {
+					SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source -> {{1, 1}, {1, 4}}, ConfidenceLevel -> 0.95, "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}|>]}|>], {
 			
 			LeafNode[Integer, "1", <|Source -> {{1, 17}, {1, 18}}|>],
 			LeafNode[Integer, "2", <|Source -> {{1, 20}, {1, 21}}|>],

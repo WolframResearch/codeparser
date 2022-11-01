@@ -533,9 +533,9 @@ Module[{head, part, partData, issues, data},
 
   AppendTo[issues,
     SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-      Source -> first[[3, Key[Source]]],
+      Source -> head[[3, Key[Source]]],
       ConfidenceLevel -> 0.95,
-      "AdditionalSources" -> {last[[3, Key[Source]]]}
+      "AdditionalDescriptions" -> {"The head of ``::[]`` syntax is usually a string."}
     |>]
   ];
 
