@@ -183,6 +183,11 @@ Token`LongName`Curl -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`Limit -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`MaxLimit -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`MinLimit -> Parselet`PrefixUnsupportedTokenParselet[],
+(*
+technically, \[AutoLeftMatch] foo \[AutoRightMatch] does parse as
+AutoMatch[foo] in InputForm but this is not documented,
+and I'm not going to support it
+*)
 Token`LongName`AutoLeftMatch -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`AutoRightMatch -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`DiscreteShift -> Parselet`PrefixUnsupportedTokenParselet[],

@@ -508,6 +508,11 @@ Token`LongName`Curl -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`Limit -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`MaxLimit -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`MinLimit -> Parselet`InfixAssertFalseParselet[],
+(*
+technically, \[AutoLeftMatch] foo \[AutoRightMatch] does parse as
+AutoMatch[foo] in InputForm but this is not documented,
+and I'm not going to support it
+*)
 Token`LongName`AutoLeftMatch -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`AutoRightMatch -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`DiscreteShift -> Parselet`InfixAssertFalseParselet[],
