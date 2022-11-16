@@ -186,7 +186,7 @@ EndPackage[]
 		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{5, 1}, {5, 11}}|>], {}, <|Source -> {{5, 1}, {5, 13}}|>]}, <|Source -> {{1, 1}, {7, 1}},
 	
 		AbstractSyntaxIssues -> {
-			SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <|Source -> {{3, 1}, {3, 25}}, ConfidenceLevel -> 0.95|>]}|>]
+			SyntaxIssue["Package", "Directive does not have correct syntax.", "Warning", <|Source -> {{3, 1}, {3, 25}}, ConfidenceLevel -> 0.95|>]}|>]
 	,
 	TestID->"TopLevel-20221017-B8C2H1"
 ]
@@ -237,7 +237,7 @@ EndPackage[];
 					LeafNode[Integer, "123", <|Source -> {{4, 13}, {4, 16}}|>]}, <|Source -> {{4, 1}, {4, 16}}, "Definitions" -> {LeafNode[Symbol, "$MySymbol", <|Source -> {{4, 1}, {4, 10}}|>]}|>],
 				LeafNode[Symbol, "Null", <|Source -> {{4, 17}, {4, 17}}|>]}, <|Source -> {{4, 1}, {4, 17}}|>]}, <|Source -> {{2, 1}, {6, 13}}|>]}, <|Source -> {{1, 1}, {7, 1}},
 		
-		AbstractSyntaxIssues -> {SyntaxIssue["Package", "Directive does not have expected syntax.", "Error", <|Source -> {{2, 14}, {2, 44}}, ConfidenceLevel -> 0.85|>]}|>]
+		AbstractSyntaxIssues -> {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <|Source -> {{2, 14}, {2, 44}}, ConfidenceLevel -> 0.85|>]}|>]
 	,
 	TestID->"TopLevel-20221116-M2K1N0"
 ]
