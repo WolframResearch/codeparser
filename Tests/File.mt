@@ -793,6 +793,26 @@ Test[
 ]
 
 
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", ToExpression["\"\\:9ce5\\:7269\""]<>".wl"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20221116-O0T8W2"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
