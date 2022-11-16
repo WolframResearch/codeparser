@@ -688,7 +688,15 @@ Module[{},
   ];
   operatorStack["Push", PackageNode[{context}, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
   nodeListStack["Push", System`CreateDataStructure["Stack"]];
-  {Null, {}, Null}
+  {Null,
+    If[strangeContextQ[context[[2]]],
+      {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> context[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+      ,
+      {}
+    ]
+    ,
+    Null
+  }
 ]]
 
 (*
@@ -708,7 +716,20 @@ Module[{},
   ];
   operatorStack["Push", PackageNode[{context, CallNode[LeafNode[Symbol, "List", <||>], { need }, <||>]}, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
   nodeListStack["Push", System`CreateDataStructure["Stack"]];
-  {Null, {}, Null}
+  {Null,
+    If[strangeContextQ[context[[2]]],
+      {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> context[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+      ,
+      {}
+    ] ~Join~
+    If[strangeContextQ[need[[2]]],
+      {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> need[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+      ,
+      {}
+    ]
+    ,
+    Null
+  }
 ]]
 
 (*
@@ -716,20 +737,28 @@ BeginPackage["Foo`", {}]
 *)
 process[
   CallNode[LeafNode[Symbol, "BeginPackage", _], {
-    LeafNode[String, _?contextQ, _],
+    context:LeafNode[String, _?contextQ, _],
     CallNode[LeafNode[Symbol, "List", _], {}, _] }, data_],
   operatorStack_,
   nodeListStack_
 ] :=
-{Null, {SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> data[Source], ConfidenceLevel -> 0.95 |> ]}, Throw}
+{Null, {SyntaxIssue["Package", "Directive does not have correct syntax.", "Warning", <| Source -> data[Source], ConfidenceLevel -> 0.95 |> ]} ~Join~
+  If[strangeContextQ[context[[2]]],
+    {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> context[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+    ,
+    {}
+  ]
+  ,
+  Throw
+}
 
 (*
 BeginPackage["Foo`", {need1, need2}]
 *)
 process[
   CallNode[LeafNode[Symbol, "BeginPackage", _], children:{
-    LeafNode[String, _?contextQ, _],
-    CallNode[LeafNode[Symbol, "List", _], { LeafNode[String, _?contextQ, _]... }, _] }, data_],
+    context:LeafNode[String, _?contextQ, _],
+    CallNode[LeafNode[Symbol, "List", _], needs:{ LeafNode[String, _?contextQ, _]... }, _] }, data_],
   operatorStack_,
   nodeListStack_
 ] :=
@@ -740,7 +769,22 @@ Module[{},
   ];
   operatorStack["Push", PackageNode[children, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
   nodeListStack["Push", System`CreateDataStructure["Stack"]];
-  {Null, {}, Null}
+  {Null,
+    If[strangeContextQ[context[[2]]],
+      {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> context[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+      ,
+      {}
+    ] ~Join~
+    Union[
+      If[strangeContextQ[#[[2]]],
+        {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> #[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+        ,
+        {}
+      ]& /@ needs
+    ]
+    ,
+    Null
+  }
 ]]
 
 (*
@@ -748,7 +792,7 @@ Begin["`Private`"]
 *)
 process[
   CallNode[LeafNode[Symbol, "Begin", _], children:{
-    LeafNode[String, _?contextQ, _]}, data_],
+    context:LeafNode[String, _?contextQ, _]}, data_],
   operatorStack_,
   nodeListStack_
 ] :=
@@ -759,7 +803,15 @@ Module[{},
   ];
   operatorStack["Push", ContextNode[children, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
   nodeListStack["Push", System`CreateDataStructure["Stack"]];
-  {Null, {}, Null}
+  {Null,
+    If[strangeContextQ[context[[2]]],
+      {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> context[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+      ,
+      {}
+    ]
+    ,
+    Null
+  }
 ]]
 
 (*
@@ -768,7 +820,7 @@ System`Private`NewContextPath[{"Foo`"}]
 process[
   CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], children:{
     CallNode[LeafNode[Symbol, "List", _], {
-      LeafNode[String, _?contextQ, _]... }, _] }, data_],
+      context:LeafNode[String, _?contextQ, _]... }, _] }, data_],
   operatorStack_,
   nodeListStack_
 ] :=
@@ -779,7 +831,15 @@ Module[{},
   ];
   operatorStack["Push", NewContextPathNode[children, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
   nodeListStack["Push", System`CreateDataStructure["Stack"]];
-  {Null, {}, Null}
+  {Null,
+    If[strangeContextQ[context[[2]]],
+      {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> context[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+      ,
+      {}
+    ]
+    ,
+    Null
+  }
 ]]
 
 (*
@@ -1041,7 +1101,37 @@ tutorial/InputSyntax#6562
 Symbol Names and Contexts
 
 *)
-contextQ[s_String] := StringMatchQ[s, RegularExpression["\"`?([a-zA-Z][a-zA-Z0-9]*`)+\""]]
+contextQ[s_String] :=
+Catch[
+Module[{segs},
+
+  (*
+  first check the form
+  *)
+
+  If[!StringMatchQ[s, RegularExpression["\"`?(.*`)+\""]],
+    Throw[False]
+  ];
+
+  (*
+  now actually check the segments
+  *)
+
+  segs = StringSplit[StringTake[s, {2, -2}], "`"];
+
+  (*
+  segments between ` should tokenize as symbols
+  *)
+  AllTrue[segs, MatchQ[CodeTokenize[#], {LeafNode[Symbol, _, _]}]&]
+]]
+
+
+(*
+assumes already tested with contextQ
+*)
+strangeContextQ[s_] :=
+  !StringMatchQ[s, RegularExpression["[a-zA-Z0-9\\$`\"]+"]]
+
 
 
 

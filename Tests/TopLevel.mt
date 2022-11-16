@@ -196,4 +196,50 @@ EndPackage[]
 
 
 
+Test[
+	CodeParse["\
+
+BeginPackage[\"MyPackage`$MySymbol`\"];
+
+$MySymbol = 123;
+
+EndPackage[];
+"]
+	,
+	ContainerNode[String, {
+		PackageNode[{LeafNode[String, "\"MyPackage`$MySymbol`\"", <|Source -> {{2, 14}, {2, 36}}|>]}, {
+			CallNode[LeafNode[Symbol, "CompoundExpression", <||>], {
+				CallNode[LeafNode[Symbol, "Set", <||>], {
+					LeafNode[Symbol, "$MySymbol", <|Source -> {{4, 1}, {4, 10}}|>],
+					LeafNode[Integer, "123", <|Source -> {{4, 13}, {4, 16}}|>]}, <|Source -> {{4, 1}, {4, 16}}, "Definitions" -> {LeafNode[Symbol, "$MySymbol", <|Source -> {{4, 1}, {4, 10}}|>]}|>],
+				LeafNode[Symbol, "Null", <|Source -> {{4, 17}, {4, 17}}|>]}, <|Source -> {{4, 1}, {4, 17}}|>]}, <|Source -> {{2, 1}, {6, 13}}|>]}, <|Source -> {{1, 1}, {7, 1}}|>]
+	,
+	TestID->"TopLevel-20221116-F9U1D9"
+]
+
+
+
+Test[
+	CodeParse["\
+
+BeginPackage[\"MyPackage`$MySymbol\\[Alpha]`\"];
+
+$MySymbol = 123;
+
+EndPackage[];
+"]
+	,
+	ContainerNode[String, {
+		PackageNode[{LeafNode[String, "\"MyPackage`$MySymbol\\[Alpha]`\"", <|Source -> {{2, 14}, {2, 44}}|>]}, {
+			CallNode[LeafNode[Symbol, "CompoundExpression", <||>], {
+				CallNode[LeafNode[Symbol, "Set", <||>], {
+					LeafNode[Symbol, "$MySymbol", <|Source -> {{4, 1}, {4, 10}}|>],
+					LeafNode[Integer, "123", <|Source -> {{4, 13}, {4, 16}}|>]}, <|Source -> {{4, 1}, {4, 16}}, "Definitions" -> {LeafNode[Symbol, "$MySymbol", <|Source -> {{4, 1}, {4, 10}}|>]}|>],
+				LeafNode[Symbol, "Null", <|Source -> {{4, 17}, {4, 17}}|>]}, <|Source -> {{4, 1}, {4, 17}}|>]}, <|Source -> {{2, 1}, {6, 13}}|>]}, <|Source -> {{1, 1}, {7, 1}},
+		
+		AbstractSyntaxIssues -> {SyntaxIssue["Package", "Directive does not have expected syntax.", "Error", <|Source -> {{2, 14}, {2, 44}}, ConfidenceLevel -> 0.85|>]}|>]
+	,
+	TestID->"TopLevel-20221116-M2K1N0"
+]
+
 
