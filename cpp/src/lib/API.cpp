@@ -14,6 +14,11 @@
 #include <cstring> // for strlen
 #include <cassert>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h> // for MultiByteToWideChar
+#endif // ifdef _WIN32
+
 
 bool validatePath(WolframLibraryData libData, Buffer fullIn);
 
@@ -623,6 +628,13 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
+    if (fb.fail()) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -809,6 +821,13 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ca
     }
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
+    
+    if (fb.fail()) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
@@ -1157,6 +1176,13 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *A
     
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
     
+    if (fb.fail()) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
     opts.tabWidth = tabWidth;
@@ -1347,6 +1373,13 @@ int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK callLink) {
     }
     
     auto fb = ScopedFileBuffer(full.get(), strlen(reinterpret_cast<const char *>(full.get())));
+    
+    if (fb.fail()) {
+        
+        fprintf(stderr, "returning LIBRARY_FUNCTION_ERROR: %s:%d\n", __FILE__, __LINE__);
+        
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     ParserSessionOptions opts;
     opts.srcConvention = srcConvention;
@@ -1902,7 +1935,51 @@ ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(),
     
     auto inStr = reinterpret_cast<const char *>(inStrIn);
     
-    FILE *file = fopen(inStr, "rb");
+#ifdef _WIN32
+    
+    //
+    // fopen on Windows:
+    // By default, a narrow filename string is interpreted using the ANSI codepage (CP_ACP)
+    //
+    // So convert UTF-8 string inStr to wide-character string and use _wfopen
+    //
+    // And while we are at it, use the secure version _wfopen_s
+    //
+    
+    auto wLen = MultiByteToWideChar(CP_UTF8, 0, inStr, -1, 0, 0);
+    
+    if (wLen == 0) {
+        return;
+    }
+    
+    auto winStr = new wchar_t[wLen];
+    
+    wLen = MultiByteToWideChar(CP_UTF8, 0, inStr, -1, winStr, wLen);
+    
+    if (wLen == 0) {
+        
+        delete[] winStr;
+        
+        return;
+    }
+    
+    FILE *file;
+    auto err = _wfopen_s(&file, winStr, L"rb");
+    
+    if (err) {
+        
+        delete[] winStr;
+        
+        return;
+    }
+    
+    delete[] winStr;
+    
+#else
+    
+    FILE *file = fopen(inStr, "r");
+    
+#endif // ifdef _WIN32
     
     if (!file) {
         return;
@@ -1926,15 +2003,13 @@ ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(),
     //
     buf = new unsigned char[len + 1];
     
-    inited = true;
-    
     auto r = fread(buf, sizeof(unsigned char), len, file);
     
     if (r != len) {
         
-        inited = false;
-        
         delete[] buf;
+        
+        return;
     }
     
     //
@@ -1942,7 +2017,14 @@ ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(),
     //
     buf[len] = 0xff;
     
-    fclose(file);
+    if (fclose(file)) {
+        
+        delete[] buf;
+        
+        return;
+    }
+    
+    inited = true;
 }
 
 ScopedFileBuffer::~ScopedFileBuffer() {
