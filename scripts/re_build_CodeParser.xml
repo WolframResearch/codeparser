@@ -83,8 +83,8 @@
 		</condition>
 		
 		<re-cmake-exec dir='${build.dir}'>
-			<env key='RUST_WOLFRAM_LOCATION' value='${env.MATHEMATICA_DIRECTORY}' />
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
+			<arg line='-DMATHEMATICA_INSTALL_DIR=${env.MATHEMATICA_DIRECTORY}' />
 			<arg line='-DMATHLINK_INCLUDE_DIR=${MATHLINK_INCLUDE_DIR}' />
 			<arg line='-DMATHLINK_LIB_DIR=${MATHLINK_LIB_DIR}' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${WOLFRAMLIBRARY_INCLUDE_DIR}' />

@@ -560,9 +560,20 @@ add_custom_command(
 		${CODEPARSE_DYLIB}
 	WORKING_DIRECTORY
 		${PROJECT_SOURCE_DIR}
+
 	COMMAND
 		cd crate
-		&& cargo build
+		&&
+			#===== Environment variables
+			# FIXME: Don't build using an app, use WSTP/WolframLibrary directly.
+			# WSTP_COMPILER_ADDITIONS_DIRECTORY="${WSTP_LIB_DIR}"
+			# WOLFRAM_LIBRARY_LINK_C_INCLUDES_DIRECTORY="${WOLFRAMLIBRARY_INCLUDE_DIR}"
+			RUST_WOLFRAM_LOCATION="${MATHEMATICA_INSTALL_DIR}"
+			# Print 'trace'-level logging info, but disable bindgen logging,
+			# which isn't typically useful, and is very verbose.
+			RUST_LOG="trace,bindgen=off"
+			#===== Actual command
+			cargo build
 			$<$<CONFIG:Release>:--release>
 			--features=USE_MATHLINK,CHECK_ABORT
 
