@@ -480,21 +480,44 @@ abstract[GroupNode[tag_, children_, data_]] :=
 all PrefixBinaryNodes must be handled separately
 *)
 
-abstract[PrefixBinaryNode[Integrate, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+(*
+definite integrals
+*)
+
+abstract[PrefixBinaryNode[Integrate, {BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`Integral, _, _], min_, max_}, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[Integrate], {abstract[operand1], CallNode[LeafNode[Symbol, "List", <||>], {abstract[var], abstract[min], abstract[max]}, <||>]}, data]
+
+abstract[PrefixBinaryNode[ContourIntegral, {BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`ContourIntegral, min_, max_], _, _}, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[ContourIntegral], {abstract[operand1], CallNode[LeafNode[Symbol, "List", <||>], {abstract[var], abstract[min], abstract[max]}, <||>]}, data]
+
+abstract[PrefixBinaryNode[DoubleContourIntegral, {BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`DoubleContourIntegral, min_, max_], _, _}, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[DoubleContourIntegral], {abstract[operand1], CallNode[LeafNode[Symbol, "List", <||>], {abstract[var], abstract[min], abstract[max]}, <||>]}, data]
+
+abstract[PrefixBinaryNode[ClockwiseContourIntegral, {BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`ClockwiseContourIntegral, min_, max_], _, _}, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[ClockwiseContourIntegral], {abstract[operand1], CallNode[LeafNode[Symbol, "List", <||>], {abstract[var], abstract[min], abstract[max]}, <||>]}, data]
+
+abstract[PrefixBinaryNode[CounterClockwiseContourIntegral, {BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`CounterClockwiseContourIntegral, min_, max_], _, _}, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+  CallNode[ToNode[CounterClockwiseContourIntegral], {abstract[operand1], CallNode[LeafNode[Symbol, "List", <||>], {abstract[var], abstract[min], abstract[max]}, <||>]}, data]
+
+
+(*
+indefinite integrals
+*)
+
+abstract[PrefixBinaryNode[Integrate, {LeafNode[Token`LongName`Integral, _, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
   CallNode[ToNode[Integrate], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[ContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+abstract[PrefixBinaryNode[ContourIntegral, {LeafNode[Token`LongName`ContourIntegral, _, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
   CallNode[ToNode[ContourIntegral], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[DoubleContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+abstract[PrefixBinaryNode[DoubleContourIntegral, {LeafNode[Token`LongName`DoubleContourIntegral, _, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
   CallNode[ToNode[DoubleContourIntegral], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[ClockwiseContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+abstract[PrefixBinaryNode[ClockwiseContourIntegral, {LeafNode[Token`LongName`ClockwiseContourIntegral, _, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
   CallNode[ToNode[ClockwiseContourIntegral], {abstract[operand1], abstract[var]}, data]
 
-abstract[PrefixBinaryNode[CounterClockwiseContourIntegral, {_, operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
+abstract[PrefixBinaryNode[CounterClockwiseContourIntegral, {LeafNode[Token`LongName`CounterClockwiseContourIntegral, _, _], operand1_, PrefixNode[DifferentialD | CapitalDifferentialD, {_, var_}, _]}, data_]] :=
   CallNode[ToNode[CounterClockwiseContourIntegral], {abstract[operand1], abstract[var]}, data]
-
 
 
 abstract[ContainerNode[tag_, childrenIn_, dataIn_]] :=

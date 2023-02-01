@@ -62,6 +62,8 @@ binaryOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parse
 
 prefixOperatorParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`PrefixOperatorParselet[_, op_]] :> {tok, op}]
 
+integralParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`IntegralParselet[op1_, op2_]] :> {tok, op1, op2}]
+
 postfixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`PostfixOperatorParselet[_, op_]] :> {tok, op}]
 
 
@@ -654,34 +656,37 @@ prefixBinary = {
 (*
 PrefixBinary
 *)
-
+"} ~Join~
+(
+With[{tokStr = ToString[#[[1]]], opStr = ToString[#[[2]]]},
+"
 (*
-Token`LongName`Integral
+" <> tokStr <> "
 *)
-prbDispatch[{LeafNode[Token`LongName`Integral, _, _], _}, handledChildren_, children_, pos_] :=
+prbDispatch[{LeafNode[" <> tokStr <> ", _, _], _}, handledChildren_, children_, pos_] :=
   Switch[children,
-    {\"\\[Integral]\", RowBox[{_, RowBox[{\"\\[DifferentialD]\", _}]}]},
+    {_, RowBox[{_, RowBox[{\"\\[DifferentialD]\" | \"\\[CapitalDifferentialD]\", _}]}]},
       (*
-      Successful match for Integral syntax
+      Successful match for indefinite Integral syntax
 
       Single argument
       *)
-      PrefixBinaryNode[Integrate, {
-        LeafNode[Token`LongName`Integral, \"\\[Integral]\", <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
+      PrefixBinaryNode[" <> opStr <> ", {
+        LeafNode[" <> tokStr <> ", children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
         {parseBox[children[[2, 1, 1]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({1} + 1 - 1)]} ~Join~
         {parseBox[children[[2, 1, 2]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({2} + 1 - 1)]}
         ,
         <| Source -> pos |>
       ]
     ,
-    {\"\\[Integral]\", RowBox[{_, _, ___, RowBox[{\"\\[DifferentialD]\", _}]}]},
+    {_, RowBox[{_, _, ___, RowBox[{\"\\[DifferentialD]\" | \"\\[CapitalDifferentialD]\", _}]}]},
       (*
-      Successful match for Integral syntax
+      Successful match for indefinite Integral syntax
 
       Multiple arguments, treat as implicit Times
       *)
-      PrefixBinaryNode[Integrate, {
-        LeafNode[Token`LongName`Integral, \"\\[Integral]\", <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
+      PrefixBinaryNode[" <> opStr <> ", {
+        LeafNode[" <> tokStr <> ", children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
         (*
         create a fake RowBox to induce the creation of InfixNode[Times, ...]
         *)
@@ -697,7 +702,56 @@ prbDispatch[{LeafNode[Token`LongName`Integral, _, _], _}, handledChildren_, chil
       *)
       BoxNode[RowBox, {handledChildren}, <| Source -> pos |>]
   ]
-"}
+
+(*
+SubsuperscriptBox " <> tokStr <> "
+*)
+prbDispatch[{BoxNode[SubsuperscriptBox, {LeafNode[" <> tokStr <> ", _, _], _, _}, _], _}, handledChildren_, children_, pos_] :=
+  Switch[children,
+    {SubsuperscriptBox[_, _, _], RowBox[{_, RowBox[{\"\\[DifferentialD]\" | \"\\[CapitalDifferentialD]\", _}]}]},
+      (*
+      Successful match for definite Integral syntax
+
+      Single argument
+      *)
+      PrefixBinaryNode[" <> opStr <> ", {
+        BoxNode[SubsuperscriptBox, {LeafNode[" <> tokStr <> ", children[[1, 1]], <| Source -> Append[pos, 1] ~Join~ {1, 1} |>],
+          parseBox[children[[1, 2]], Append[pos, 1] ~Join~ {1, 2}],
+          parseBox[children[[1, 3]], Append[pos, 1] ~Join~ {1, 3}]}, <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
+        {parseBox[children[[2, 1, 1]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({1} + 1 - 1)]} ~Join~
+        {parseBox[children[[2, 1, 2]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({2} + 1 - 1)]}
+        ,
+        <| Source -> pos |>
+      ]
+    ,
+    {SubsuperscriptBox[_, _, _] RowBox[{_, _, ___, RowBox[{\"\\[DifferentialD]\" | \"\\[CapitalDifferentialD]\", _}]}]},
+      (*
+      Successful match for definite Integral syntax
+
+      Multiple arguments, treat as implicit Times
+      *)
+      PrefixBinaryNode[" <> opStr <> ", {
+        BoxNode[SubsuperscriptBox, {LeafNode[" <> tokStr <> ", children[[1]], <| Source -> Append[pos, 1] ~Join~ {1, 1} |>],
+          parseBox[children[[1, 2]], Append[pos, 1] ~Join~ {1, 2}],
+          parseBox[children[[1, 3]], Append[pos, 1] ~Join~ {1, 3}]}, <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
+        (*
+        create a fake RowBox to induce the creation of InfixNode[Times, ...]
+        *)
+        {parseBox[RowBox[children[[2, 1, ;;-2]]], Append[pos, 1] ~Join~ {2}]} ~Join~
+        {parseBox[children[[2, 1, -1]], Append[pos, 1] ~Join~ {2, 1, Length[children[[2, 1]]]}]}
+        ,
+        <| Source -> pos |>
+      ]
+    ,
+    _,
+      (*
+      Does not match definite Integral syntax, so treat as generic RowBox
+      *)
+      BoxNode[RowBox, {handledChildren}, <| Source -> pos |>]
+  ]
+"
+]& /@ integralParselets
+)
 
 
 postfix = {

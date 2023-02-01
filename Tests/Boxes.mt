@@ -156,6 +156,187 @@ TestMatch[
 	TestID->"Boxes-20200126-N4V0N6"
 ]
 
+box = RowBox[{SubsuperscriptBox["\[Integral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[Integrate, {
+			BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`Integral, "\[Integral]", KeyValuePattern[Source -> {1, 1, 1}]], LeafNode[Symbol, "a", KeyValuePattern[Source -> {1, 1, 2}]], LeafNode[Symbol, "b", KeyValuePattern[Source -> {1, 1, 3}]]}, KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-J0G2S9"
+]
+
+box = RowBox[{"\[ContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[ContourIntegral, {
+			LeafNode[Token`LongName`ContourIntegral, "\[ContourIntegral]", KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-D7J7O3"
+]
+
+box = RowBox[{SubsuperscriptBox["\[ContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[ContourIntegral, {
+			BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`ContourIntegral, "\[ContourIntegral]", KeyValuePattern[Source -> {1, 1, 1}]], LeafNode[Symbol, "a", KeyValuePattern[Source -> {1, 1, 2}]], LeafNode[Symbol, "b", KeyValuePattern[Source -> {1, 1, 3}]]}, KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-D8T7D2"
+]
+
+box = RowBox[{"\[DoubleContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[DoubleContourIntegral, {
+			LeafNode[Token`LongName`DoubleContourIntegral, "\[DoubleContourIntegral]", KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-S7W7W7"
+]
+
+box = RowBox[{SubsuperscriptBox["\[DoubleContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[DoubleContourIntegral, {
+			BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`DoubleContourIntegral, "\[DoubleContourIntegral]", KeyValuePattern[Source -> {1, 1, 1}]], LeafNode[Symbol, "a", KeyValuePattern[Source -> {1, 1, 2}]], LeafNode[Symbol, "b", KeyValuePattern[Source -> {1, 1, 3}]]}, KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-D0G9F0"
+]
+
+box = RowBox[{"\[ClockwiseContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[ClockwiseContourIntegral, {
+			LeafNode[Token`LongName`ClockwiseContourIntegral, "\[ClockwiseContourIntegral]", KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-R4T2S8"
+]
+
+box = RowBox[{SubsuperscriptBox["\[ClockwiseContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[ClockwiseContourIntegral, {
+			BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`ClockwiseContourIntegral, "\[ClockwiseContourIntegral]", KeyValuePattern[Source -> {1, 1, 1}]], LeafNode[Symbol, "a", KeyValuePattern[Source -> {1, 1, 2}]], LeafNode[Symbol, "b", KeyValuePattern[Source -> {1, 1, 3}]]}, KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-R8L7G0"
+]
+
+box = RowBox[{"\[CounterClockwiseContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[CounterClockwiseContourIntegral, {
+			LeafNode[Token`LongName`CounterClockwiseContourIntegral, "\[CounterClockwiseContourIntegral]", KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-V6L1R0"
+]
+
+box = RowBox[{SubsuperscriptBox["\[CounterClockwiseContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
+TestMatch[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {
+		PrefixBinaryNode[CounterClockwiseContourIntegral, {
+			BoxNode[SubsuperscriptBox, {LeafNode[Token`LongName`CounterClockwiseContourIntegral, "\[CounterClockwiseContourIntegral]", KeyValuePattern[Source -> {1, 1, 1}]], LeafNode[Symbol, "a", KeyValuePattern[Source -> {1, 1, 2}]], LeafNode[Symbol, "b", KeyValuePattern[Source -> {1, 1, 3}]]}, KeyValuePattern[Source -> {1, 1}]],
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
+	,
+	TestID->"Boxes-20230201-J8F5B2"
+]
+
+
 
 
 (*
