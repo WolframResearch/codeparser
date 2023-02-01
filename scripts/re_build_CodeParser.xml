@@ -29,8 +29,28 @@
 
 	</target>
 
-	<target name='Paclet.CodeParser.execute' extensionOf='Paclet.execute' >
+	<target name='Paclet.CodeParser.Unix.execute' extensionOf='Paclet.prebuild' unless='is.windows'>
+		<exec dir='${build.dir}' executable='sh'>
+			<env key='CARGO_HOME' value='${build.dir}/.cargo' />
+			<env key='RUSTUP_HOME' value='${build.dir}/.rust' />
+			<arg value='-c' />
+			<arg value='curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path' />
+		</exec>
+	</target>
+	
+	<target name='Paclet.CodeParser.Windows.execute' extensionOf='Paclet.prebuild' if='is.windows'>
+		<exec dir='${build.dir}' executable='cmd'>
+			<arg value='/c curl -O https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe' />
+		</exec>
+		<exec dir='${build.dir}' executable='cmd'>
+			<env key='CARGO_HOME' value='${build.dir}\.cargo' />
+			<env key='RUSTUP_HOME' value='${build.dir}\.rust' />
+			<arg value='/c echo 1|rustup-init.exe --no-modify-path' />
+		</exec>
 
+	</target>
+
+	<target name='Paclet.CodeParser.execute' extensionOf='Paclet.execute' >
 		<local name='MATHLINK_INCLUDE_DIR' />
 		<pathconvert dirsep='/' property='MATHLINK_INCLUDE_DIR'>
 			<path location='${re.build.prerequisites.mathlink_directory}/CompilerAdditions' />
@@ -58,7 +78,12 @@
 			</default>
 		</switch>
 
+		<condition property='CARGO_PATH' value='${env.Path};${build.dir}/.cargo/bin' else='${env.PATH}:${build.dir}/.cargo/bin'>
+		    <equals arg1='${system_id}' arg2='Windows-x86-64'/>
+		</condition>
+		
 		<re-cmake-exec dir='${build.dir}'>
+			<env key='RUST_WOLFRAM_LOCATION' value='${env.MATHEMATICA_DIRECTORY}' />
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
 			<arg line='-DMATHLINK_INCLUDE_DIR=${MATHLINK_INCLUDE_DIR}' />
 			<arg line='-DMATHLINK_LIB_DIR=${MATHLINK_LIB_DIR}' />
@@ -72,6 +97,9 @@
 		</re-cmake-exec>
 
 		<re-cmake-exec dir='${build.dir}'>
+			<env key='CARGO_HOME' value='${build.dir}/.cargo' />
+			<env key='RUSTUP_HOME' value='${build.dir}/.rust' />
+			<env key='PATH' value='${CARGO_PATH}' />
 			<arg line='--build .' />
 			<arg line='--target codeparser-lib' />
 			<arg line='--verbose' />
