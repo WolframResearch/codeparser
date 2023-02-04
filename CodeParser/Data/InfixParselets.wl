@@ -497,14 +497,11 @@ Token`QuestionQuestion -> Parselet`InfixAssertFalseParselet[],
 
 (*
 Also use for operators that are only valid in StandardForm.
-e.g., \[Gradient] does not have an interpretation in InputForm
+e.g., \[Limit] does not have an interpretation in InputForm
 
-\[Gradient] is not letterlike, so it needs some kind of categorization,
+\[Limit] is not letterlike, so it needs some kind of categorization,
 but it also needs to be prevented from making any valid parses.
 *)
-Token`LongName`Gradient -> Parselet`InfixAssertFalseParselet[],
-Token`LongName`Divergence -> Parselet`InfixAssertFalseParselet[],
-Token`LongName`Curl -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`Limit -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`MaxLimit -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`MinLimit -> Parselet`InfixAssertFalseParselet[],
@@ -518,7 +515,6 @@ Token`LongName`AutoRightMatch -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`DiscreteShift -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`DifferenceDelta -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`DiscreteRatio -> Parselet`InfixAssertFalseParselet[],
-Token`LongName`Laplacian -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`PartialD -> Parselet`InfixAssertFalseParselet[]
 
 |>

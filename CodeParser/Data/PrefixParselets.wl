@@ -172,14 +172,11 @@ Token`QuestionQuestion -> Parselet`PrefixUnsupportedTokenParselet[],
 
 (*
 Also use for operators that are only valid in StandardForm.
-e.g., \[Gradient] does not have an interpretation in InputForm
+e.g., \[Limit] does not have an interpretation in InputForm
 
-\[Gradient] is not letterlike, so it needs some kind of categorization,
+\[Limit] is not letterlike, so it needs some kind of categorization,
 but it also needs to be prevented from making any valid parses.
 *)
-Token`LongName`Gradient -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LongName`Divergence -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LongName`Curl -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`Limit -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`MaxLimit -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`MinLimit -> Parselet`PrefixUnsupportedTokenParselet[],
@@ -193,7 +190,6 @@ Token`LongName`AutoRightMatch -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`DiscreteShift -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`DifferenceDelta -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`DiscreteRatio -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LongName`Laplacian -> Parselet`PrefixUnsupportedTokenParselet[],
 Token`LongName`PartialD -> Parselet`PrefixUnsupportedTokenParselet[]
 
 |>
