@@ -1,5 +1,7 @@
 (* Wolfram Language Test file *)
 
+Needs["MUnit`"]
+
 TestSuite[{
 	"Abstract.mt",
 	"AbstractCallNode.mt",
