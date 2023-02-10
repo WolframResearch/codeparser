@@ -73,6 +73,23 @@
 
 		<re-cmake-exec dir='${build.dir}'>
 			<arg line='--build .' />
+			<arg line='--target codeparser-lib' />
+			<arg line='--verbose' />
+			<arg line='--config Release' />
+		</re-cmake-exec>
+
+		<if>
+			<not><isset property='is.unix'/></not>
+		<then>
+			<sign dir='${build.dir}'>
+				<include name='**/*.dylib' if='is.osx' />
+				<include name='**/*.dll' if='is.windows' />
+			</sign>
+		</then>
+		</if>
+
+		<re-cmake-exec dir='${build.dir}'>
+			<arg line='--build .' />
 			<arg line='--target create-paclet-archive' />
 			<arg line='--verbose' />
 			<arg line='--config Release' />
