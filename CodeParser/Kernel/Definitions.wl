@@ -38,6 +38,7 @@ DefinitionSymbols[n:BoxNode[SuperscriptBox, _, _]] := {n}
 DefinitionSymbols[LeafNode[_, _, _]] := {}
 DefinitionSymbols[ErrorNode[_, _, _]] := {}
 DefinitionSymbols[AbstractSyntaxErrorNode[_, _, _]] := {}
+DefinitionSymbols[PrefixNode[PrefixLinearSyntaxBang, _, _]] := {}
 
 
 DefinitionSymbols[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, _]] := DefinitionSymbols[node]
