@@ -819,8 +819,8 @@ System`Private`NewContextPath[{"Foo`"}]
 *)
 process[
   CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], children:{
-    CallNode[LeafNode[Symbol, "List", _], {
-      context:LeafNode[String, _?contextQ, _]... }, _] }, data_],
+    CallNode[LeafNode[Symbol, "List", _], contexts:{
+      LeafNode[String, _?contextQ, _]... }, _] }, data_],
   operatorStack_,
   nodeListStack_
 ] :=
@@ -832,10 +832,12 @@ Module[{},
   operatorStack["Push", NewContextPathNode[children, {}, <| Source -> sourceSpan[sourceStart[data[Source]], (*partially constructed Source*)Indeterminate] |>]];
   nodeListStack["Push", System`CreateDataStructure["Stack"]];
   {Null,
-    If[strangeContextQ[context[[2]]],
-      {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> context[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
-      ,
-      {}
+    Flatten[
+      If[strangeContextQ[#[[2]]],
+        {SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <| Source -> #[[3, Key[Source]]], ConfidenceLevel -> 0.85 |> ]}
+        ,
+        {}
+      ]& /@ contexts
     ]
     ,
     Null

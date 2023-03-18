@@ -243,3 +243,25 @@ EndPackage[];
 ]
 
 
+
+Test[
+	CodeParse["System`Private`NewContextPath[{\"fo\\[Alpha]o`\", \"ba\\[Alpha]r`\"}]"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "System`Private`NewContextPath", <|Source -> {{1, 1}, {1, 30}}|>], {
+			CallNode[LeafNode[Symbol, "List", <||>], {
+				LeafNode[String, "\"fo\\[Alpha]o`\"", <|Source -> {{1, 32}, {1, 46}}|>],
+				LeafNode[String, "\"ba\\[Alpha]r`\"", <|Source -> {{1, 48}, {1, 62}}|>]}, <|Source -> {{1, 31}, {1, 63}}|>]}, <|Source -> {{1, 1}, {1, 64}}|>]}, <|Source -> {{1, 1}, {1, 64}},
+		
+		AbstractSyntaxIssues -> {
+			SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <|Source -> {{1, 32}, {1, 46}}, ConfidenceLevel -> 0.85|>],
+			SyntaxIssue["Package", "Directive does not have expected syntax.", "Warning", <|Source -> {{1, 48}, {1, 62}}, ConfidenceLevel -> 0.85|>],
+			SyntaxIssue["Package", "There are unbalanced directives.", "Error", <|Source -> {{1, 1}, {1, 64}}, ConfidenceLevel -> 0.7|>]}|>]
+	,
+	TestID->"TopLevel-20230318-G4M5Y4"
+]
+
+
+
+
+
