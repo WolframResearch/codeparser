@@ -447,6 +447,10 @@ Module[{res, convention, container, tabWidth,
   container = OptionValue[func, {opts}, ContainerNode];
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
+  If[Length[bytes] == 0,
+    Throw[concreteParseString[{}, firstLineBehavior, func, opts]]
+  ];
+
   (*
   The <||> will be filled in with Source later
   The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
@@ -768,6 +772,10 @@ Module[{res, convention, container, tabWidth, containerWasAutomatic,
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
   alreadyHasEOFSentinel = OptionValue[func, {opts}, "AlreadyHasEOFSentinel"];
 
+  If[Length[bytes] == 0,
+    Throw[concreteParseBytes[{}, firstLineBehavior, func, opts]]
+  ];
+
   If[!MatchQ[alreadyHasEOFSentinel, True | False],
     Throw[Failure["AlreadyHasEOFSentinelIsNotTrueOrFalse", <| "AlreadyHasEOFSentinel" -> alreadyHasEOFSentinel |>]]
   ];
@@ -941,6 +949,10 @@ Module[{res, convention, tabWidth},
   convention = OptionValue[func, {opts}, SourceConvention];
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
+  If[Length[bytes] == 0,
+    Throw[tokenizeString[{}, firstLineBehavior, func, opts]]
+  ];
+
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
@@ -1098,6 +1110,10 @@ Module[{res, convention, tabWidth, alreadyHasEOFSentinel},
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
   alreadyHasEOFSentinel = OptionValue[func, {opts}, "AlreadyHasEOFSentinel"];
 
+  If[Length[bytes] == 0,
+    Throw[tokenizeBytes[{}, firstLineBehavior, func, opts]]
+  ];
+
   If[!MatchQ[alreadyHasEOFSentinel, True | False],
     Throw[Failure["AlreadyHasEOFSentinelIsNotTrueOrFalse", <| "AlreadyHasEOFSentinel" -> alreadyHasEOFSentinel |>]]
   ];
@@ -1244,6 +1260,10 @@ Module[{res, stringifyMode, convention, tabWidth, encodingMode},
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
   encodingMode = OptionValue[func, {opts}, "EncodingMode"];
 
+  If[Length[bytes] == 0,
+    Throw[concreteParseLeafString[{}, firstLineBehavior, func, opts]]
+  ];
+
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
@@ -1287,6 +1307,10 @@ SafeString[EndOfFile] :=
 SafeString[bytes_ByteArray?ByteArrayQ] :=
 Catch[
 Module[{res},
+
+  If[Length[bytes] == 0,
+    Throw[SafeString[{}]]
+  ];
 
   res = libraryFunctionWrapper[safeStringFunc, $ParserSession, bytes];
 
