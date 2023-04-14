@@ -90,7 +90,13 @@ Module[{},
     Function[{Typed[arg1, "MachineInteger"]},
       Module[{cstr, str, sym},
         cstr = Native`BitCast[arg1, "CArray"["UnsignedInteger8"]];
+        (*
+        used to be:
         str = String`CloneNew[cstr];
+
+        but String`CloneNew was removed
+        *)
+        str = String`New[CString`Clone[cstr]];
         sym = Native`LookupSymbol[str];
         sym
       ]
