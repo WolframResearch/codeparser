@@ -24,3 +24,13 @@ Test[
 	,
 	TestID->"CodeSyntaxQ-20200703-Q2R5G9"
 ]
+
+
+
+Test[
+	CodeSyntaxQ[File["doesntexist"]]
+	,
+	False
+	,
+	TestID->"CodeSyntaxQ-20230426-X7Z7D3"
+]

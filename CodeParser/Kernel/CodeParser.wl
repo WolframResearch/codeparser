@@ -1326,8 +1326,12 @@ Module[{res},
 
 
 CodeSyntaxQ[code_] :=
+Catch[
 Module[{ast},
   ast = CodeParse[code];
+  If[FailureQ[ast],
+    Throw[False]
+  ];
   FreeQ[ast,
     ErrorNode |
     SyntaxErrorNode | AbstractSyntaxErrorNode |
@@ -1335,7 +1339,7 @@ Module[{ast},
     CallMissingCloserNode |
     _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
-]
+]]
 
 CodeSyntaxCSTQ[cst_] :=
   FreeQ[cst,
@@ -1346,15 +1350,19 @@ CodeSyntaxCSTQ[cst_] :=
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
 CodeStructuralSyntaxQ[code_] :=
+Catch[
 Module[{ast},
   ast = CodeParse[code];
+  If[FailureQ[ast],
+    Throw[False]
+  ];
   FreeQ[ast,
     SyntaxErrorNode | AbstractSyntaxErrorNode |
     GroupMissingCloserNode | GroupMissingOpenerNode |
     CallMissingCloserNode |
     _Missing] &&
   !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
-]
+]]
 
 CodeStructuralSyntaxCSTQ[cst_] :=
   FreeQ[cst,
