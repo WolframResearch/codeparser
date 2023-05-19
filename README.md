@@ -1,138 +1,3 @@
-# CodeParser-rs Quick Start Instructions
-
-These are very quick instructions on how to try out the Rust CodeParser port.
-
-The new Rust code is located in the [`./crate/`](./crate/) subdirectory of the
-project. As each file was ported, I deleted it from the [`./cpp/`](./cpp)
-directory; so the `cpp` directory contains the only files that haven't been
-ported.
-
-The ported code includes all of the lib .cpp files, as well as the testing .cpp
-files.
-
-Installation instructions for Rust itself
-[can be found at rust-lang.org](https://www.rust-lang.org/tools/install).
-
-The Rust port functions as a drop-in replacement for the C++ version:
-
-* 100% of the .mt tests pass when run against the Rust dynamic library
-* 100% of the C++ compiled tests were ported to Rust and all pass
-* No changes to the `CodeParser/**.wl` or `*.mt` files were needed (other than the
-  `Generate/*.wl`, which directly generate compiled code).
-
-## Building
-
-You can invoke CMake in the normal way:
-
-```shell
-cmake -S . -B build -DMATHEMATICA_INSTALL_DIR=/Applications/Wolfram/Mathematica-13.1.0.app/Contents/
-```
-
-Then build in the normal way. This will run the code generation scripts, which
-have been updated to produce Rust instead of C++.
-
-```shell
-$ cmake --build build
-```
-
-CMake will automatically use [`cargo`](https://doc.rust-lang.org/cargo/) to
-build the Rust code.
-
-The built Rust artifacts will be placed in the `./crate/target/` directory.
-
-CMakeLists.txt has been updated to copy the and rename the compiled dynamic
-library out of the `./crate/target/` directory and into the appropriate built
-paclet `LibraryResources` subdirectory.
-
-The built paclet can be loaded and installed the same way as before the port.
-
-### Build the .dylib manually
-
-To build a dynamic library suitable for use via LibraryLink manually, run:
-
-```shell
-$ cargo build --features=USE_MATHLINK,CHECK_ABORT
-```
-
-> Note: The `USE_MATHLINK` and `CHECK_ABORT` features are opt-in because they
-> enable functionality that only works when the resulting library is loaded via
-> LibraryLink, which isn't the case when e.g. running tests via `cargo test`,
-> or when the `wolfram-code-parser` is used as a dependency from other Rust
-> crates.
-
-## Testing
-
-CodeParser has two test suites: tests written in Rust, and tests written in
-Wolfram Language.
-
-#### Run the compiled tests
-
-Rust's `cargo` build tool has support for running tests built in, so the test
-suite can be run by doing:
-
-```shell
-$ cd crate
-$ cargo test
-```
-
-#### Run the Wolfram Language tests
-
-The Wolfram Language tests can be run from the command line using the
-[`wolfram-cli paclet test`](https://github.com/ConnorGray/wolfram-cli) tool:
-
-```
-$ wolfram-cli paclet test build/paclet/CodeParser Tests/TestSuite.mt
-```
-
-#### Run the Wolfram Language tests
-
-The Wolfram Language tests can be run from the command line using the
-[`wolfram-cli paclet test`](https://github.com/ConnorGray/wolfram-cli) tool:
-
-```
-$ wolfram-cli paclet test build/paclet/CodeParser Tests/TestSuite.mt
-```
-
-## Benchmarks
-
-> Some of the benchmarks test large data files. Those files are tracked in this
-> repository to ensure that benchmarks are always run against identical input.
-> [Git LFS](https://git-lfs.github.com/) is used to ensure that a basic checkout
-> of this repository remains small, which is important in CI/CD builds.
-
-To run the benchmarks, first ensure that the large benchmark files have been
-checked out locally using:
-
-```shell
-$ git lfs pull --exclude="" --include="*"
-```
-
-This will override the default settings in [`.lfsconfig`](./.lfsconfig).
-
-Then, to being running the benchmarks, execute:
-
-```shell
-$ cd crate
-$ cargo bench
-```
-
-### `FAST_STRING_SCAN` benchmarks
-
-The benchmarks that test the optional `FAST_STRING_SCAN` feature must be run
-using:
-
-```shell
-$ cargo bench --no-default-features --features="FAST_STRING_SCAN"
-```
-
-## File Overview
-
-* [crate/benches/data/large/](./crate/benches/data/large/) contains files
-  managed by [`Git LFS`](https://git-lfs.github.com/). The files in this
-  directory are used by the benchmarks. These files should never be modified, to
-  ensure that benchmark comparisions between different revisions of this
-  repository can be meaningfully compared.
-
 # CodeParser
 
 CodeParser is a package for parsing Wolfram Language source code as abstract syntax trees (ASTs) or concrete syntax trees (CSTs).
@@ -253,6 +118,13 @@ $ git lfs pull --exclude="" --include="*"
 ```
 
 This will override the default settings in [`.lfsconfig`](./.lfsconfig).
+
+Then, to begin running the benchmarks, execute:
+
+```shell
+$ cd crate
+$ cargo bench
+```
 
 ## File Overview
 
