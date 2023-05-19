@@ -140,7 +140,7 @@ pub mod NextPolicyBits {
     ///
     /// Used by Tokenizer
     //
-    pub const SLOT_BEHAVIOR_FOR_STRINGS: u8 = 0x10;
+    pub const TAGSLOT_BEHAVIOR_FOR_STRINGS: u8 = 0x10;
 
     //
     /// When tokenizing numbers, return immediately when an integer has been tokenized
@@ -155,7 +155,6 @@ pub mod NextPolicyBits {
     // With input  "\\[Alpa]"  , then report \[Alpa] as unrecognized, even though this is valid syntax
     //
     pub const SCAN_FOR_UNRECOGNIZEDLONGNAMES: u8 = 0x40;
-
 }
 
 pub use self::NextPolicyBits::*;
@@ -170,28 +169,26 @@ pub(crate) type NextPolicy = u8;
 use ordered_float::NotNan;
 use NextPolicyBits::{
     ENABLE_CHARACTER_DECODING_ISSUES, INTEGER_SHORT_CIRCUIT, RETURN_TOPLEVELNEWLINE,
-    SLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
+    TAGSLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
 };
 
 pub const TOPLEVEL: NextPolicy =
     ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
 
 #[allow(dead_code)] // TODO(cleanup): Is it meaningful that this is unused?
-pub const INSIDE_SYMBOL: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
+pub const INSIDE_SYMBOL: NextPolicy = ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
 
 pub const INSIDE_STRINGIFY_AS_TAG: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
+    ENABLE_CHARACTER_DECODING_ISSUES | TAGSLOT_BEHAVIOR_FOR_STRINGS | TRACK_LC;
 pub const INSIDE_STRINGIFY_AS_FILE: NextPolicy = RETURN_TOPLEVELNEWLINE;
 
-pub const INSIDE_SLOT: NextPolicy =
-    RETURN_TOPLEVELNEWLINE | SLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+pub const INSIDE_SLOT: NextPolicy = TAGSLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
 pub const INSIDE_SLOTSEQUENCE: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
 pub const INSIDE_OUT: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
 /// A single character of source code
 ///

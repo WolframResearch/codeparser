@@ -13,7 +13,7 @@ use crate::{
     my_string_registration::*,
     source::{
         Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssuePtrSet, NextPolicy, Source,
-        SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_STRINGIFY_AS_FILE,
+        SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT, INSIDE_STRINGIFY_AS_FILE,
         INSIDE_STRINGIFY_AS_TAG,
     },
     token::Token,
@@ -1313,9 +1313,7 @@ fn Tokenizer_handleSymbol(
             break;
         }
 
-        if feature::CHECK_ISSUES
-            && (policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS
-        {
+        if feature::CHECK_ISSUES && (policy & INSIDE_SLOT) == INSIDE_SLOT {
             //
             // Something like  #`a
             //
@@ -1365,16 +1363,12 @@ fn Tokenizer_handleSymbol(
         }
     } // while
 
-    if (policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS {
-        return Token(
-            TOKEN_STRING,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
-    }
-
     return Token(
-        TOKEN_SYMBOL,
+        if (policy & INSIDE_SLOT) == INSIDE_SLOT {
+            TOKEN_STRING
+        } else {
+            TOKEN_SYMBOL
+        },
         Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
         Tokenizer_getTokenSource(session, tokenStartLoc),
     );
@@ -1399,7 +1393,7 @@ fn Tokenizer_handleSymbolSegment(
 
     #[cfg(feature = "CHECK_ISSUES")]
     if c.to_point() == '$' {
-        if (policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS {
+        if (policy & INSIDE_SLOT) == INSIDE_SLOT {
             //
             // Something like  #$a
             //
@@ -1463,6 +1457,24 @@ fn Tokenizer_handleSymbolSegment(
         );
 
         session.addIssue(I);
+    } else if !c.isAlpha() {
+        if (policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG {
+            //
+            // Something like  a::\[Beta]
+            //
+
+            let I = SyntaxIssue(
+                STRING_UNEXPECTEDCHARACTER,
+                "The tag has non-alphanumeric source characters.".to_owned(),
+                STRING_WARNING,
+                Source::new(charLoc, session.SrcLoc),
+                0.85,
+                vec![],
+                vec![],
+            );
+
+            session.addIssue(I);
+        }
     }
 
     charLoc = session.SrcLoc;
@@ -1481,7 +1493,7 @@ fn Tokenizer_handleSymbolSegment(
 
             #[cfg(feature = "CHECK_ISSUES")]
             if c.to_point() == '$' {
-                if (policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS {
+                if (policy & INSIDE_SLOT) == INSIDE_SLOT {
                     //
                     // Something like  #$a
                     //
@@ -1544,6 +1556,24 @@ fn Tokenizer_handleSymbolSegment(
                 );
 
                 session.addIssue(I);
+            } else if !c.isAlphaOrDigit() {
+                if (policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG {
+                    //
+                    // Something like  a::b\[Beta]
+                    //
+
+                    let I = SyntaxIssue(
+                        STRING_UNEXPECTEDCHARACTER,
+                        "The tag has non-alphanumeric source characters.".to_owned(),
+                        STRING_WARNING,
+                        Source::new(charLoc, session.SrcLoc),
+                        0.85,
+                        vec![],
+                        vec![],
+                    );
+
+                    session.addIssue(I);
+                }
             }
 
             charLoc = session.SrcLoc;
@@ -1574,7 +1604,7 @@ fn Tokenizer_handleString(
 ) -> Token {
     assert!(c.to_point() == '"');
 
-    if feature::CHECK_ISSUES && (policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS {
+    if feature::CHECK_ISSUES && (policy & INSIDE_SLOT) == INSIDE_SLOT {
         //
         // Something like  #"a"
         //
