@@ -29,6 +29,10 @@
 
 	</target>
 
+	<!--=============================-->
+	<!-- Install Rust                -->
+	<!--=============================-->
+
 	<target name='Paclet.CodeParser.Unix.execute' extensionOf='Paclet.prebuild' unless='is.windows'>
 		<exec dir='${build.dir}' executable='sh'>
 			<env key='CARGO_HOME' value='${build.dir}/.cargo' />
@@ -49,6 +53,10 @@
 		</exec>
 
 	</target>
+
+	<!--=============================-->
+	<!-- Main CodeParser build task  -->
+	<!--=============================-->
 
 	<target name='Paclet.CodeParser.execute' extensionOf='Paclet.execute' >
 		<local name='MATHLINK_INCLUDE_DIR' />
@@ -90,7 +98,6 @@
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${WOLFRAMLIBRARY_INCLUDE_DIR}' />
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
 			<arg line='${CMAKE_OSX_DEPLOYMENT_TARGET_LINE}' />
-			<arg line='-DENABLE_WARNINGS=ON' />
 			<arg line='-DCMAKE_BUILD_TYPE=Release' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/CodeParser' />
@@ -117,6 +124,9 @@
 		</if>
 
 		<re-cmake-exec dir='${build.dir}'>
+			<env key='CARGO_HOME' value='${build.dir}/.cargo' />
+			<env key='RUSTUP_HOME' value='${build.dir}/.rust' />
+			<env key='PATH' value='${CARGO_PATH}' />
 			<arg line='--build .' />
 			<arg line='--target create-paclet-archive' />
 			<arg line='--verbose' />

@@ -548,6 +548,7 @@ endif(TRANSPORT STREQUAL ExprLib)
 
 set(RUST_TARGET_DIR ${PROJECT_SOURCE_DIR}/crate/target)
 
+# WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
 set(CODEPARSE_DYLIB ${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}/CodeParser${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 add_custom_command(
@@ -559,11 +560,14 @@ add_custom_command(
 	COMMAND
 		cd crate
 		&&
+			${CMAKE_COMMAND} -E env
 			#===== Environment variables
 			# FIXME: Don't build using an app, use WSTP/WolframLibrary directly.
 			# WSTP_COMPILER_ADDITIONS_DIRECTORY="${WSTP_LIB_DIR}"
 			# WOLFRAM_LIBRARY_LINK_C_INCLUDES_DIRECTORY="${WOLFRAMLIBRARY_INCLUDE_DIR}"
 			RUST_WOLFRAM_LOCATION="${MATHEMATICA_INSTALL_DIR}"
+			WSTP_COMPILER_ADDITIONS_DIRECTORY="${MATHEMATICA_INSTALL_DIR}/SystemFiles/Links/WSTP/DeveloperKit/${SYSTEMID}/CompilerAdditions/"
+			WOLFRAM_LIBRARY_LINK_C_INCLUDES_DIRECTORY="${MATHEMATICA_INSTALL_DIR}/SystemFiles/IncludeFiles/C"
 			# Print 'trace'-level logging info, but disable bindgen logging,
 			# which isn't typically useful, and is very verbose.
 			RUST_LOG="trace,bindgen=off"
@@ -586,6 +590,14 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}/crate/src/*
 )
 
+# "Fake" named target that just runs the custom command to generate the
+# CodeParser dynamic library.
+add_custom_target(
+	codeparser-lib
+	DEPENDS
+		${CODEPARSE_DYLIB}
+)
+
 
 
 #
@@ -605,23 +617,6 @@ message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 endif(TRANSPORT STREQUAL MathLink)
 
 
-
-# add_library(codeparser-lib SHARED
-# 	${STATIC_CPP_INCLUDES}
-# 	${STATIC_CPP_LIB_SOURCES}
-# 	${GENERATED_CPP_INCLUDES}
-# 	${GENERATED_CPP_LIB_SOURCES}
-# )
-
-# target_include_directories(codeparser-lib
-# 	PRIVATE ${PROJECT_SOURCE_DIR}/cpp/include
-# 	PRIVATE ${PROJECT_BINARY_DIR}/generated/cpp/include
-# 	PRIVATE ${MATHLINK_INCLUDE_DIR}
-# 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
-# )
-
-
-
 if(TRANSPORT STREQUAL MathLink)
 
 #
@@ -630,8 +625,6 @@ if(TRANSPORT STREQUAL MathLink)
 # and 64-bit builds may happen to find the 32-bit version first and fail.
 #
 if(SYSTEMWORDLENGTH EQUAL 32)
-
-# target_compile_definitions(codeparser-lib PUBLIC MINT_32=1)
 
 set(MATHLINK_LIB_NAMES
 	ml32i4
@@ -677,10 +670,6 @@ endif()
 # set_target_properties(codeparser-lib PROPERTIES
 # 	OUTPUT_NAME
 # 		CodeParser
-# 	CXX_STANDARD
-# 		17
-# 	CXX_STANDARD_REQUIRED
-# 		ON
 # 	#
 # 	# prevent
 # 	# /Volumes/TeamCity/work/4466f913884ff7b4/MathLink/CompilerAdditions
@@ -688,47 +677,6 @@ endif()
 # 	#
 # 	SKIP_BUILD_RPATH
 # 		ON
-# 	#
-# 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
-# 	#
-# 	LIBRARY_OUTPUT_DIRECTORY
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	#
-# 	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
-# 	#
-# 	LIBRARY_OUTPUT_DIRECTORY_DEBUG
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	LIBRARY_OUTPUT_DIRECTORY_RELEASE
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	#
-# 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#archive-output-artifacts
-# 	#
-# 	ARCHIVE_OUTPUT_DIRECTORY
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	ARCHIVE_OUTPUT_DIRECTORY_DEBUG
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	ARCHIVE_OUTPUT_DIRECTORY_RELEASE
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	#
-# 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#runtime-output-artifacts
-# 	#
-# 	RUNTIME_OUTPUT_DIRECTORY
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	RUNTIME_OUTPUT_DIRECTORY_DEBUG
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	RUNTIME_OUTPUT_DIRECTORY_RELEASE
-# 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-# 	PDB_OUTPUT_DIRECTORY
-# 		${PROJECT_BINARY_DIR}/pdb-output
-# 	PDB_OUTPUT_DIRECTORY_DEBUG
-# 		${PROJECT_BINARY_DIR}/pdb-output
-# 	PDB_OUTPUT_DIRECTORY_RELEASE
-# 		${PROJECT_BINARY_DIR}/pdb-output
-# 	#
-# 	# WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
-# 	#
-# 	PREFIX
-# 		""
 # )
 
 #[[ FIXME: Adjust this for the Rust CodeParser.dylib
@@ -755,45 +703,7 @@ endif(TRANSPORT STREQUAL ExprLib)
 
 ]]
 
-# if(NOT BUILD_TESTS)
-# set_target_properties(codeparser-lib PROPERTIES
-# 	CXX_VISIBILITY_PRESET
-# 		hidden
-# 	VISIBILITY_INLINES_HIDDEN
-# 		ON
-# )
-# endif()
 
-
-# if(CHECK_ISSUES)
-# target_compile_definitions(codeparser-lib PUBLIC CHECK_ISSUES=1)
-# else()
-# target_compile_definitions(codeparser-lib PUBLIC CHECK_ISSUES=0)
-# endif()
-
-# if(CHECK_ABORT)
-# target_compile_definitions(codeparser-lib PUBLIC CHECK_ABORT=1)
-# else()
-# target_compile_definitions(codeparser-lib PUBLIC CHECK_ABORT=0)
-# endif()
-
-# if(COMPUTE_OOB)
-# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_OOB=1)
-# else()
-# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_OOB=0)
-# endif()
-
-# if(COMPUTE_SOURCE)
-# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_SOURCE=1)
-# else()
-# target_compile_definitions(codeparser-lib PUBLIC COMPUTE_SOURCE=0)
-# endif()
-
-# if(FAST_STRING_SCAN)
-# target_compile_definitions(codeparser-lib PUBLIC FAST_STRING_SCAN=1)
-# else()
-# target_compile_definitions(codeparser-lib PUBLIC FAST_STRING_SCAN=0)
-# endif()
 
 # if(USE_MUSTTAIL)
 # target_compile_definitions(codeparser-lib PUBLIC USE_MUSTTAIL=1)
@@ -818,43 +728,6 @@ endif(TRANSPORT STREQUAL ExprLib)
 # else()
 # target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=0)
 # endif()
-
-# target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
-
-
-if(MSVC)
-target_compile_options(codeparser-lib
-	#
-	# specify /EHsc to force compiler to assume that functions declared as extern "C" never throw a C++ exception
-	#
-	# specify /MT to statically link runtime on Windows
-	# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
-	# and fixes bug 427427:
-	# error 126 "The specified module could not be found"
-	# when Visual Studio is not installed
-	PRIVATE /EHsc /MT
-)
-endif(MSVC)
-
-
-if(ENABLE_WARNINGS)
-
-#
-# Setup warnings
-#
-# https://www.foonathan.net/2018/10/cmake-warnings/
-#
-# if(MSVC)
-# 	target_compile_options(codeparser-lib
-# 		PRIVATE /W4 /wd4100
-# 	)
-# else(MSVC)
-# 	target_compile_options(codeparser-lib
-# 		PRIVATE -pedantic-errors -Wall -Wextra -Wconversion -Wsign-conversion -Wno-unused-parameter
-# 	)
-# endif(MSVC)
-
-endif(ENABLE_WARNINGS)
 
 
 

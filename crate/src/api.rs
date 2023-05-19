@@ -1039,12 +1039,14 @@ struct ScopedNumericArray {
 /// Does the file currently have permission to be read?
 #[cfg(feature = "USE_MATHLINK")]
 fn validatePath(path: &str) -> bool {
+    use std::ffi::c_char;
+
     let cstr = std::ffi::CString::new(path).expect("unable to convert file path to CString");
 
-    let cptr: *const i8 = cstr.as_ptr();
-    let cptr = cptr as *mut i8;
+    let cptr: *const c_char = cstr.as_ptr();
+    let cptr = cptr as *mut c_char;
 
-    let is_valid = unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as i8) } != 0;
+    let is_valid = unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as c_char) } != 0;
 
     return is_valid;
 }

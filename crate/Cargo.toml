@@ -31,6 +31,11 @@ memchr = "2.5.0"
 
 wolfram-library-link = { version = "0.2.9", optional = true, default-features = false }
 
+[patch.crates-io]
+wolfram-library-link     = { git = "https://github.com/WolframResearch/wolfram-library-link-rs" }
+wolfram-library-link-sys = { git = "https://github.com/WolframResearch/wolfram-library-link-rs" }
+wstp     = { git = "https://github.com/WolframResearch/wstp-rs" }
+wstp-sys = { git = "https://github.com/WolframResearch/wstp-rs" }
 
 [dev-dependencies]
 pretty_assertions = "1.2.1"

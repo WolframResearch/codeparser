@@ -1,0 +1,9 @@
+# Specify the Rust compiler equivalent of `/MT`, to statically link the runtime
+# on Windows.
+#
+# This prevents "The program can't start because ucrtbased.dll is missing from
+# your computer" error on Windows 7 and fixes bug 427427:
+#     error 126 "The specified module could not be found"
+# when Visual Studio is not installed
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-Ctarget-feature=+crt-static"]
