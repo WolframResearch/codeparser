@@ -244,11 +244,11 @@ Which[
 
     destroyParserSessionFunc := destroyParserSessionFunc = fromPointerA @* (If[$Debug, Print["memoizing destroyParserSessionFunc"]]; $ExprLibCompiledLibFuns; loadFunc["DestroyParserSession_LibraryLink", { Integer }, Integer]);
 
-    concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, "Boolean" }, Integer]);
+    concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer]);
 
     concreteParseFileFunc := concreteParseFileFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseFileFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer]);
 
-    tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, "Boolean" }, Integer]);
+    tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer]);
 
     tokenizeFileFunc := tokenizeFileFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeFileFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer]);
 

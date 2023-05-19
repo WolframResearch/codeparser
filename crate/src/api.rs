@@ -292,7 +292,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
     };
 
     if len != 5 {
-        panic!()
+        panic!("wrong arg count: {len}")
     }
 
     let _session = unsafe { read_session_from_link(link) };
