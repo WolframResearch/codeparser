@@ -116,7 +116,7 @@ pub fn CreateParserSession_LibraryLink(link: &mut wstp::Link) {
         panic!("expected List expr");
     }
 
-    let len: usize = match link.test_head(SYMBOL_LIST.name) {
+    let len: usize = match link.test_head("List") {
         Ok(len) => len,
         Err(err) => panic!("expected List expr: {err}"),
     };
@@ -384,7 +384,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
 #[cfg(feature = "USE_MATHLINK")]
 #[wll::export(wstp)]
 fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
-    let len = match link.test_head(SYMBOL_LIST.name) {
+    let len = match link.test_head("List") {
         Ok(len) => len,
         Err(err) => panic!("expected List: {err}"),
     };
@@ -491,13 +491,13 @@ fn TokenizeBytes_LibraryLink(
 #[cfg(feature = "USE_MATHLINK")]
 #[wll::export(wstp)]
 fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
-    let len = match link.test_head(SYMBOL_LIST.name) {
+    let len = match link.test_head("List") {
         Ok(len) => len,
-        Err(err) => panic!("expected List: {err}"),
+        Err(err) => panic!("expected List: {err};"),
     };
 
     if len != 5 {
-        panic!()
+        panic!("unexpected number of arguments: {len}");
     }
 
     let _session = unsafe { read_session_from_link(link) };
@@ -590,7 +590,7 @@ fn TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Ar
 #[cfg(feature = "USE_MATHLINK")]
 #[wll::export(wstp)]
 fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
-    let len = match link.test_head(SYMBOL_LIST.name) {
+    let len = match link.test_head("List") {
         Ok(len) => len,
         Err(err) => panic!("expected List: {err}"),
     };
@@ -705,7 +705,7 @@ fn ConcreteParseLeaf_LibraryLink(
 #[cfg(feature = "USE_MATHLINK")]
 #[wll::export(wstp)]
 fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
-    let len = match link.test_head(SYMBOL_LIST.name) {
+    let len = match link.test_head("List") {
         Ok(len) => len,
         Err(err) => panic!("expected List: {err}"),
     };
@@ -802,7 +802,7 @@ fn SafeString_LibraryLink(
 #[cfg(feature = "USE_MATHLINK")]
 #[wll::export(wstp)]
 fn SafeString_LibraryLink(link: &mut wstp::Link) {
-    let len = match link.test_head(SYMBOL_LIST.name) {
+    let len = match link.test_head("List") {
         Ok(len) => len,
         Err(err) => panic!("expected List: {err}"),
     };
