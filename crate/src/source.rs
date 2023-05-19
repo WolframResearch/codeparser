@@ -150,6 +150,12 @@ pub mod NextPolicyBits {
     /// For example, we must consider  `#2.c`  to be `Slot[2] . c`  and NOT  `Slot[1] 2. c`
     //
     pub const INTEGER_SHORT_CIRCUIT: u8 = 0x20;
+
+    //
+    // With input  "\\[Alpa]"  , then report \[Alpa] as unrecognized, even though this is valid syntax
+    //
+    pub const SCAN_FOR_UNRECOGNIZEDLONGNAMES: u8 = 0x40;
+
 }
 
 pub use self::NextPolicyBits::*;

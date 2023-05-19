@@ -7,7 +7,7 @@ use crate::{
         STRING_FATAL, STRING_REMARK, STRING_UNEXPECTEDCHARACTER, STRING_WARNING, *,
     },
     source::{
-        BufferAndLength, CodeAction, NextPolicy, NextPolicyBits::ENABLE_CHARACTER_DECODING_ISSUES,
+        BufferAndLength, CodeAction, NextPolicy, NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
         Source, SourceCharacter, SourceLocation, SyntaxIssue, STRING_OR_COMMENT,
     },
     tokenizer::Tokenizer,
@@ -341,8 +341,6 @@ fn CharacterDecoder_handleLongName(
                 break;
             } else {
                 //
-                // Unrecognized
-                //
                 // Something like \[A!] which is not a long name
                 //
 
@@ -489,7 +487,7 @@ fn CharacterDecoder_handleLongName(
 
     if found == None {
         //
-        // Unrecognized name
+        // Name not found
         //
 
         if feature::CHECK_ISSUES
@@ -508,28 +506,75 @@ fn CharacterDecoder_handleLongName(
 
             let mut Actions: Vec<CodeAction> = Vec::new();
 
-            if !suggestion.is_empty() {
-                Actions.push(CodeAction::replace_text(
-                    format!("Replace with ``\\[{suggestion}]``"),
+            // if !suggestion.is_empty() {
+            //     Actions.push(CodeAction::replace_text(
+            //         format!("Replace with ``\\[{suggestion}]``"),
+            //         Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+            //         format!("\\[{suggestion}]"),
+            //     ));
+            // }
+
+            // //
+            // // More specifically: Unrecognized
+            // //
+            // let I = SyntaxIssue(
+            //     STRING_UNHANDLEDCHARACTER,
+            //     format!("Unhandled character: ``\\[{longNameStr}]``."),
+            //     STRING_FATAL,
+            //     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+            //     1.0,
+            //     Actions,
+            //     vec![format!("``{longNameStr}`` is not a recognized long name.")],
+            // );
+
+            // session.addIssue(I);
+
+            if (policy & SCAN_FOR_UNRECOGNIZEDLONGNAMES) == SCAN_FOR_UNRECOGNIZEDLONGNAMES {
+
+                let currentUnrecognizedStartLoc = currentWLCharacterStartLoc.previous();
+
+                if !suggestion.is_empty() {
+                    Actions.push(CodeAction::replace_text(
+                        format!("Replace with ``\\\\[{suggestion}]``"),
+                        Source::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
+                        format!("\\\\[{suggestion}]")
+                    ));
+                }
+
+                let I = SyntaxIssue(
+                    STRING_UNRECOGNIZEDLONGNAME,
+                    format!("Unrecognized longname: ``\\\\[{longNameStr}]``."),
+                    STRING_ERROR,
+                    Source::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
+                    0.75,
+                    Actions,
+                    vec![format!("``{longNameStr}`` is not a valid long name.")]
+                );
+
+                session.addIssue(I);
+
+            } else {
+                if !suggestion.is_empty() {
+                    Actions.push(CodeAction::replace_text(
+                        format!("Replace with ``\\[{suggestion}]``"),
+                        Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                        format!("\\[{suggestion}]")
+                    ));
+                }
+
+                let I = SyntaxIssue(
+                    STRING_UNHANDLEDCHARACTER,
+                    format!("Unhandled character: ``\\[{longNameStr}]``."),
+                    STRING_FATAL,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
-                    format!("\\[{suggestion}]"),
-                ));
+                    1.0,
+                    Actions,
+                    vec![format!("``{longNameStr}`` is not a valid long name.")]
+                );
+
+                session.addIssue(I);
             }
 
-            //
-            // More specifically: Unrecognized
-            //
-            let I = SyntaxIssue(
-                STRING_UNHANDLEDCHARACTER,
-                format!("Unhandled character: ``\\[{longNameStr}]``."),
-                STRING_FATAL,
-                Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
-                1.0,
-                Actions,
-                vec![format!("``{longNameStr}`` is not a recognized long name.")],
-            );
-
-            session.addIssue(I);
         }
 
         session.offset = openSquareBuf;
@@ -1715,6 +1760,7 @@ fn CharacterDecoder_handleBackslash(session: &mut Tokenizer, policy: NextPolicy)
                 let mut tmpPolicy = policy;
 
                 tmpPolicy |= ENABLE_CHARACTER_DECODING_ISSUES;
+                tmpPolicy |= SCAN_FOR_UNRECOGNIZEDLONGNAMES;
 
                 session.offset = longNameStartBuf;
                 session.SrcLoc = longNameStartLoc;

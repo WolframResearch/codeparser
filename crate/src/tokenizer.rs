@@ -5149,9 +5149,6 @@ fn Tokenizer_handleUnhandledBackslash(
             }
 
             if wellFormed {
-                //
-                // More specifically: Unrecognized
-                //
                 return Token(
                     TOKEN_ERROR_UNHANDLEDCHARACTER,
                     Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
