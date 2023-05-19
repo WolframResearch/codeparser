@@ -389,23 +389,3 @@ impl<'i> ParserSession<'i> {
         &self.tokenizer.nonFatalIssues
     }
 }
-
-//
-// Does the file currently have permission to be read?
-//
-#[cfg(feature = "USE_MATHLINK")]
-fn validatePath(libData: WolframLibraryData, _inStr: crate::source::Buffer) -> bool {
-    if !libData.is_null() {
-        //
-        // If running as a stand-alone executable, then always valid
-        //
-        return true;
-    }
-
-    unimplemented!("validatePath()")
-    // let inStr1 = reinterpret_cast<const char *>(inStr);
-
-    // let inStr2 = const_cast<char *>(inStr1);
-
-    // return libData->validatePath(inStr2, 'R');
-}

@@ -350,6 +350,10 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, mint Arg
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
 
+    if !validatePath(&path) {
+        panic!("insufficient permissions to read file: {path}");
+    }
+
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
 
     auto numBytes = fb.getLen();
@@ -396,6 +400,10 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
     let _session = unsafe { read_session_from_link(link) };
 
     let path: String = link.get_string().unwrap();
+
+    if !validatePath(&path) {
+        panic!("insufficient permissions to read file: {path}");
+    }
 
     let mlSrcConvention = link.get_i32().unwrap();
     let srcConvention =
@@ -556,6 +564,10 @@ fn TokenizeFile_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Ar
     auto mlFirstLineBehavior = MArgument_getInteger(Args[4]);
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
 
+    if !validatePath(&path) {
+        panic!("insufficient permissions to read file: {path}");
+    }
+
     auto fb = ScopedFileBuffer(full.data(), strlen(reinterpret_cast<const char *>(full.data())));
 
     auto numBytes = fb.getLen();
@@ -602,6 +614,10 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
     let _session = unsafe { read_session_from_link(link) };
 
     let path: String = link.get_string().unwrap();
+
+    if !validatePath(&path) {
+        panic!("insufficient permissions to read file: {path}");
+    }
 
     let mlSrcConvention = link.get_i32().unwrap();
     let srcConvention =
@@ -1018,3 +1034,17 @@ struct ScopedNumericArray {
 //         return reinterpret_cast<Buffer>(libData->numericarrayLibraryFunctions->MNumericArray_getData(arr));
 //     }
 // }
+
+
+/// Does the file currently have permission to be read?
+#[cfg(feature = "USE_MATHLINK")]
+fn validatePath(path: &str) -> bool {
+    let cstr = std::ffi::CString::new(path).expect("unable to convert file path to CString");
+
+    let cptr: *const i8 = cstr.as_ptr();
+    let cptr = cptr as *mut i8;
+
+    let is_valid = unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as i8) } != 0;
+
+    return is_valid;
+}
