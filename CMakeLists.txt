@@ -291,7 +291,6 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
-		${PROJECT_SOURCE_DIR}/cpp/include/LongNames.h
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/LongNames.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
@@ -326,7 +325,6 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
-		${PROJECT_SOURCE_DIR}/cpp/include/TokenEnum.h
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
@@ -351,7 +349,6 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Parselet.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
-		${PROJECT_SOURCE_DIR}/cpp/include/Parselet.h
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/InfixParselets.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/PrefixParselets.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Parselet.wl
@@ -428,7 +425,6 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
-		${PROJECT_SOURCE_DIR}/cpp/include/Symbol.h
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
@@ -456,7 +452,6 @@ add_custom_command(
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/String.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
-		${PROJECT_SOURCE_DIR}/cpp/include/MyString.h
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/String.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
