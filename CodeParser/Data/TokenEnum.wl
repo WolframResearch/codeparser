@@ -62,8 +62,11 @@ Token`Error`UnsafeCharacterEncoding -> Next,
 (*
 Unterminated errors
 
-Any buffers before unterminateds and after unterminateds serve the purpose of giving the correct
-value to unterminateds to allow fast checking with a bit mask.
+Any Buffers before trivia and any Buffers after trivia serve the purpose of giving the
+correct values to Token`InternalNewline and Token`ToplevelNewline so that the single
+bit 0b100 can be set to turn Token`InternalNewline into Token`ToplevelNewline
+while also allowing fast testing of trivia (just a bit mask) and also fast testing of
+non-ToplevelNewline trivia (also just a bit mask)
 *)
 Token`Error`UnterminatedComment -> Next, (*28*)
 Token`Error`Unterminated`First -> Token`Error`UnterminatedComment,

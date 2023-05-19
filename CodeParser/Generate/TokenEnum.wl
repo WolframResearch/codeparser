@@ -361,19 +361,20 @@ isEmpty[_] = False
 
 group1Bits[tok_] := group1Bits[tok] =
 Which[
-  isPossibleBeginning[tok], 2^^01,
-  isCloser[tok],            2^^10,
-  isError[tok],             2^^11,
-  True,                     2^^00
+  isPossibleBeginning[tok], BitShiftLeft[2^^01, 9],
+  isCloser[tok],            BitShiftLeft[2^^10, 9],
+  isError[tok],             BitShiftLeft[2^^11, 9],
+  True,                     BitShiftLeft[2^^00, 9]
 ]
 
 
 group2Bits[tok_] := group2Bits[tok] =
 Which[
-  isEmpty[tok], 2^^01,
-(*unused,       2^^10*)
-(*unused,       2^^11*)
-  True,         2^^00
+  isEmpty[tok],         BitShiftLeft[2^^01, 9 + 2],
+(*unused,               BitShiftLeft[2^^10, 9 + 2],*)
+(*unused,               BitShiftLeft[2^^11, 9 + 2],*)
+  True,                 BitShiftLeft[2^^00, 9 + 2]
+
 ]
 
 
@@ -447,7 +448,7 @@ const _: () = assert!(TOKEN_REAL.value() == 0x5, \"Check your assumptions\");
 const _: () = assert!(TOKEN_RATIONAL.value() == 0x6, \"Check your assumptions\");
 
 //
-// TOKEN_TOPLEVELNEWLINE must be 0xc to allow hard-coding in TokenEnum.h
+// TOKEN_INTERNALNEWLINE must be 0x8 to allow setting the 0b100 bit to convert to TOKEN_TOPLEVELNEWLINE
 //
 const _: () = assert!(TOKEN_INTERNALNEWLINE.value() == 0b1000, \"Check your assumptions\");
 const _: () = assert!(TOKEN_TOPLEVELNEWLINE.value() == 0b1100, \"Check your assumptions\");
