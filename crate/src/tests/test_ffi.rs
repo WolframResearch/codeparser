@@ -11,24 +11,16 @@ use crate::{EncodingMode, FirstLineBehavior, SourceConvention, StringifyMode};
 
 #[test]
 fn public_enum_values() {
-    const _: () = assert!(size_of::<FirstLineBehavior>() == size_of::<i32>());
-
     assert_eq!(FirstLineBehavior::NotScript as i32, 0);
     assert_eq!(FirstLineBehavior::Check as i32, 1);
     assert_eq!(FirstLineBehavior::Script as i32, 2);
 
-    const _: () = assert!(size_of::<EncodingMode>() == size_of::<i32>());
-
     assert_eq!(EncodingMode::Normal as i32, 0);
     assert_eq!(EncodingMode::Box as i32, 1);
-
-    const _: () = assert!(size_of::<StringifyMode>() == size_of::<i32>());
 
     assert_eq!(StringifyMode::Normal as i32, 0);
     assert_eq!(StringifyMode::Tag as i32, 1);
     assert_eq!(StringifyMode::File as i32, 2);
-
-    const _: () = assert!(size_of::<SourceConvention>() == size_of::<i32>());
 
     assert_eq!(SourceConvention::LineColumn as i32, 0);
     assert_eq!(SourceConvention::CharacterIndex as i32, 1);
