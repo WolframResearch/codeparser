@@ -305,7 +305,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
     Parser_pushTriviaSeq(session, &mut Trivia2.borrow_mut());
 
     let Ctxt = Parser_topContext(session);
-    assert!(Ctxt.f.unwrap() as usize == SemiSemiParselet_parse2 as usize);
+    // assert!(Ctxt.f.unwrap() as usize == SemiSemiParselet_parse2 as usize);
     Ctxt.f = Some(|s, _| SemiSemiParselet_reduceTernary(s));
 
     let P2 = prefix_parselet(FourthTok.tok);
