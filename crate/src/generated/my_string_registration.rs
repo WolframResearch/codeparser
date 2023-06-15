@@ -1,4 +1,3 @@
-
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
@@ -36,9 +35,10 @@ pub const STRING_UNEXPECTEDNEWLINECHARACTER: MyString = MyString::new("Unexpecte
 pub const STRING_UNEXPECTEDSIGN: MyString = MyString::new("UnexpectedSign", 22);
 pub const STRING_UNEXPECTEDSPACECHARACTER: MyString = MyString::new("UnexpectedSpaceCharacter", 23);
 pub const STRING_UNHANDLEDCHARACTER: MyString = MyString::new("UnhandledCharacter", 24);
-pub const STRING_UNSAFECHARACTERENCODING_BOM: MyString = MyString::new("UnsafeCharacterEncoding_BOM", 25);
-pub const STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE: MyString = MyString::new("UnsafeCharacterEncoding_IncompleteUTF8Sequence", 26);
-pub const STRING_UNSAFECHARACTERENCODING_STRAYSURROGATE: MyString = MyString::new("UnsafeCharacterEncoding_StraySurrogate", 27);
-pub const STRING_UNSAFECHARACTERENCODING_UNKNOWN: MyString = MyString::new("UnsafeCharacterEncoding_Unknown", 28);
-pub const STRING_UNSUPPORTEDCHARACTER: MyString = MyString::new("UnsupportedCharacter", 29);
-pub const STRING_WARNING: MyString = MyString::new("Warning", 30);
+pub const STRING_UNRECOGNIZEDLONGNAME: MyString = MyString::new("UnrecognizedLongName", 25);
+pub const STRING_UNSAFECHARACTERENCODING_BOM: MyString = MyString::new("UnsafeCharacterEncoding_BOM", 26);
+pub const STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE: MyString = MyString::new("UnsafeCharacterEncoding_IncompleteUTF8Sequence", 27);
+pub const STRING_UNSAFECHARACTERENCODING_STRAYSURROGATE: MyString = MyString::new("UnsafeCharacterEncoding_StraySurrogate", 28);
+pub const STRING_UNSAFECHARACTERENCODING_UNKNOWN: MyString = MyString::new("UnsafeCharacterEncoding_Unknown", 29);
+pub const STRING_UNSUPPORTEDCHARACTER: MyString = MyString::new("UnsupportedCharacter", 30);
+pub const STRING_WARNING: MyString = MyString::new("Warning", 31);

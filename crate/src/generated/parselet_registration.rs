@@ -1,4 +1,3 @@
-
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
@@ -252,7 +251,6 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnsupportedTokenParselet, // Token`LongName`PartialD
   &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_EXISTS, SYMBOL_EXISTS), // Token`LongName`Exists
   &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTEXISTS, SYMBOL_NOTEXISTS), // Token`LongName`NotExists
-  &prefixUnsupportedTokenParselet, // Token`LongName`Laplacian
   &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_DEL, SYMBOL_DEL), // Token`LongName`Del
   &prefixUnhandledParselet, // Token`LongName`Element
   &prefixUnhandledParselet, // Token`LongName`NotElement
@@ -450,9 +448,6 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
   &prefixUnhandledParselet, // Token`LongName`Conditioned
   &prefixUnhandledParselet, // Token`LongName`UndirectedEdge
   &prefixUnhandledParselet, // Token`LongName`DirectedEdge
-  &prefixUnsupportedTokenParselet, // Token`LongName`Gradient
-  &prefixUnsupportedTokenParselet, // Token`LongName`Divergence
-  &prefixUnsupportedTokenParselet, // Token`LongName`Curl
   &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CONTINUEDFRACTIONK, SYMBOL_CONTINUEDFRACTIONK), // Token`LongName`ContinuedFractionK
   &prefixUnhandledParselet, // Token`LongName`TensorProduct
   &prefixUnhandledParselet, // Token`LongName`TensorWedge
@@ -699,7 +694,6 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TOKEN_COUNT.value() as usiz
   &infixAssertFalseParselet, // Token`LongName`PartialD
   &infixImplicitTimesParselet, // Token`LongName`Exists
   &infixImplicitTimesParselet, // Token`LongName`NotExists
-  &infixAssertFalseParselet, // Token`LongName`Laplacian
   &infixImplicitTimesParselet, // Token`LongName`Del
   &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, SYMBOL_ELEMENT), // Token`LongName`Element
   &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, SYMBOL_NOTELEMENT), // Token`LongName`NotElement
@@ -897,9 +891,6 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TOKEN_COUNT.value() as usiz
   &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONDITIONED, SYMBOL_CONDITIONED), // Token`LongName`Conditioned
   &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_UNDIRECTEDEDGE, SYMBOL_UNDIRECTEDEDGE), // Token`LongName`UndirectedEdge
   &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIRECTEDEDGE, SYMBOL_DIRECTEDEDGE), // Token`LongName`DirectedEdge
-  &infixAssertFalseParselet, // Token`LongName`Gradient
-  &infixAssertFalseParselet, // Token`LongName`Divergence
-  &infixAssertFalseParselet, // Token`LongName`Curl
   &infixImplicitTimesParselet, // Token`LongName`ContinuedFractionK
   &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORPRODUCT, SYMBOL_TENSORPRODUCT), // Token`LongName`TensorProduct
   &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORWEDGE, SYMBOL_TENSORWEDGE), // Token`LongName`TensorWedge
