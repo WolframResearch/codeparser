@@ -14,8 +14,8 @@ use pretty_assertions::assert_eq;
 
 use crate::{
     node::{
-        CallNode, GroupNode, InfixNode, Node, Node::Token as NVToken, NodeSeq, Operator,
-        OperatorNode, UnterminatedGroupNode,
+        CallNode, GroupMissingCloserNode, GroupNode, InfixNode, Node, Node::Token as NVToken,
+        NodeSeq, Operator, OperatorNode, UnterminatedGroupNode,
     },
     parser_session::ParserSession,
     source::SourceConvention,
@@ -219,7 +219,7 @@ fn test_character_index_source() {
 fn test_unterminated_group_reparse() {
     assert_eq!(
         concrete_exprs("{", ParseOptions::default()),
-        &[Node::UnterminatedGroup(UnterminatedGroupNode(
+        &[Node::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
                 op: Operator::List,
                 children: NodeSeq(vec![Node::Token(token![
@@ -258,7 +258,7 @@ fn test_unterminated_group_reparse() {
         // 123456
         //   ^ \t
         concrete_exprs("<|\t?", ParseOptions::default().tab_width(1)),
-        &[Node::UnterminatedGroup(UnterminatedGroupNode(
+        &[Node::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
                 op: Operator::Association,
                 children: NodeSeq(vec![
@@ -279,7 +279,7 @@ fn test_unterminated_group_reparse() {
         // 123456
         //   ^^ \t
         concrete_exprs("<|\t?", ParseOptions::default()),
-        &[Node::UnterminatedGroup(UnterminatedGroupNode(
+        &[Node::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
                 op: Operator::Association,
                 children: NodeSeq(vec![
