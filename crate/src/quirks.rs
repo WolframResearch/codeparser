@@ -1,4 +1,6 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, sync::Mutex};
+
+use once_cell::sync::Lazy;
 
 use crate::{
     abstract_::expect_children,
@@ -6,21 +8,119 @@ use crate::{
     token::{Token, TokenInput, TokenKind as TK, TokenSource},
 };
 
+// TODO(cleanup): Don't store these settings using error-prone global state.
+static QUIRK_SETTINGS: Lazy<Mutex<QuirkSettings>> =
+    Lazy::new(|| Mutex::new(QuirkSettings::default()));
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct QuirkSettings {
+    /// "InfixBinaryAt" quirk
+    ///
+    ///
+    /// The kernel parses `a<>StringJoin@b` as `StringJoin[a, b]`
+    ///
+    /// Most infix operators can be used with this syntax.
+    /// Notably, SameQ and UnsameQ do NOT work with this syntax.
+    ///
+    /// *Related bugs: 365013*
+    pub infix_binary_at: bool,
+
+    /// "FlattenTimes" quirk
+    ///
+    /// In 12.1 and before:
+    ///
+    /// * `a / b / c` is parsed as `Times[a, Power[b, -1], Power[c, -1]]`
+    /// * `-a / b` is parsed as `Times[-1, a, Power[b, -1]]`
+    ///
+    /// In 12.2 and after:
+    ///
+    /// * `a / b / c` is parsed as `Times[Times[a, Power[b, -1]], Power[c, -1]]`
+    /// * `-a / b` is parsed as `Times[Times[-1, a], Power[b, -1]]`
+    ///
+    /// TODO: when targeting v12.2 as a minimum, remove this quirk
+    ///
+    /// *Related bugs: 57064, 139531, 153875, 160919*
+    pub flatten_times: bool,
+
+    /// "OldAtAtAt" quirk
+    ///
+    /// Changed in 13.1: `@@@`
+    ///
+    /// In 13.0 and before:
+    ///
+    /// `a @@@ b` parsed as `Apply[a, b, {1}]`
+    ///
+    /// In 13.1 and after:
+    ///
+    /// `a @@@ b` parses as `MapApply[a, b]`
+    pub old_at_at_at: bool,
+}
+
 pub enum Quirk {
+    /// "InfixBinaryAt" quirk
+    ///
+    ///
+    /// The kernel parses `a<>StringJoin@b` as `StringJoin[a, b]`
+    ///
+    /// Most infix operators can be used with this syntax.
+    /// Notably, SameQ and UnsameQ do NOT work with this syntax.
+    ///
+    /// *Related bugs: 365013*
     InfixBinaryAt,
+
+    /// "FlattenTimes" quirk
+    ///
+    /// In 12.1 and before:
+    ///
+    /// * `a / b / c` is parsed as `Times[a, Power[b, -1], Power[c, -1]]`
+    /// * `-a / b` is parsed as `Times[-1, a, Power[b, -1]]`
+    ///
+    /// In 12.2 and after:
+    ///
+    /// * `a / b / c` is parsed as `Times[Times[a, Power[b, -1]], Power[c, -1]]`
+    /// * `-a / b` is parsed as `Times[Times[-1, a], Power[b, -1]]`
+    ///
+    /// TODO: when targeting v12.2 as a minimum, remove this quirk
+    ///
+    /// *Related bugs: 57064, 139531, 153875, 160919*
     FlattenTimes,
+
+    /// "OldAtAtAt" quirk
+    ///
+    /// Changed in 13.1: `@@@`
+    ///
+    /// In 13.0 and before:
+    ///
+    /// `a @@@ b` parsed as `Apply[a, b, {1}]`
+    ///
+    /// In 13.1 and after:
+    ///
+    /// `a @@@ b` parses as `MapApply[a, b]`
+    OldAtAtAt,
 }
 
-pub(crate) fn lookup_quirk_enabled(_quirk: Quirk, default: bool) -> bool {
-    // FIXME: Implement this funtionality.
-    //     Lookup[$Quirks, quirk, default]
-    default
+impl Default for QuirkSettings {
+    fn default() -> Self {
+        Self {
+            infix_binary_at: true,
+            flatten_times: false,
+            old_at_at_at: false,
+        }
+    }
 }
 
-fn quirk_enabled(_quirk: Quirk) -> bool {
-    // $Quirks[quirk]
-    // FIXME: Implement this funtionality.
-    true
+pub fn set_quirks(quirks: QuirkSettings) {
+    *QUIRK_SETTINGS.lock().unwrap() = quirks;
+}
+
+pub(crate) fn is_quirk_enabled(quirk: Quirk) -> bool {
+    let settings = QUIRK_SETTINGS.lock().unwrap();
+
+    match quirk {
+        Quirk::InfixBinaryAt => settings.infix_binary_at,
+        Quirk::FlattenTimes => settings.flatten_times,
+        Quirk::OldAtAtAt => settings.old_at_at_at,
+    }
 }
 
 pub(crate) fn processInfixBinaryAtQuirk<I: TokenInput + Debug, S: TokenSource + Debug>(
@@ -32,7 +132,7 @@ pub(crate) fn processInfixBinaryAtQuirk<I: TokenInput + Debug, S: TokenSource + 
             op: Operator::CodeParser_BinaryAt,
             ref children,
             src: _,
-        })) if quirk_enabled(Quirk::InfixBinaryAt) => {
+        })) if is_quirk_enabled(Quirk::InfixBinaryAt) => {
             let [left, middle, rhs] = expect_children(children.clone());
 
             if !matches!(

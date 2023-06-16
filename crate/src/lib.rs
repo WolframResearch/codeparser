@@ -201,6 +201,7 @@ pub mod test_utils {
 
 pub use crate::{
     parser_session::ParseResult,
+    quirks::QuirkSettings,
     source::{
         ByteSpan,
         Source,
@@ -327,6 +328,7 @@ pub struct ParseOptions {
     src_convention: SourceConvention,
     encoding_mode: EncodingMode,
     tab_width: u32,
+    quirk_settings: QuirkSettings,
 }
 
 impl Default for ParseOptions {
@@ -336,6 +338,7 @@ impl Default for ParseOptions {
             src_convention: SourceConvention::LineColumn,
             encoding_mode: EncodingMode::Normal,
             tab_width: DEFAULT_TAB_WIDTH,
+            quirk_settings: QuirkSettings::default(),
         }
     }
 }
@@ -384,6 +387,7 @@ pub fn tokenize_bytes<'i>(
         src_convention,
         encoding_mode,
         tab_width,
+        quirk_settings,
     } = *opts;
 
     let mut session = ParserSession::new(
@@ -392,6 +396,7 @@ pub fn tokenize_bytes<'i>(
         tab_width,
         first_line_behavior,
         encoding_mode,
+        quirk_settings,
     );
 
     session.tokenize()
@@ -430,6 +435,7 @@ pub fn parse_concrete_bytes<'i>(
         src_convention,
         encoding_mode,
         tab_width,
+        quirk_settings,
     } = *opts;
 
     let mut session = ParserSession::new(
@@ -438,6 +444,7 @@ pub fn parse_concrete_bytes<'i>(
         tab_width,
         first_line_behavior,
         encoding_mode,
+        quirk_settings,
     );
 
     session.concrete_parse_expressions()
@@ -459,6 +466,7 @@ pub fn parse_ast_bytes<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<
         src_convention,
         encoding_mode,
         tab_width,
+        quirk_settings,
     } = *opts;
 
     let mut session = ParserSession::new(
@@ -467,6 +475,7 @@ pub fn parse_ast_bytes<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<
         tab_width,
         first_line_behavior,
         encoding_mode,
+        quirk_settings,
     );
 
     session.abstract_parse_expressions()

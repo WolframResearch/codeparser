@@ -455,7 +455,7 @@ Module[{res, convention, container, tabWidth,
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -575,7 +575,7 @@ Module[{res, convention, container, containerWasAutomatic,
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -744,7 +744,7 @@ Module[{res, convention, container, tabWidth, containerWasAutomatic},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -883,7 +883,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -962,7 +962,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1015,7 +1015,7 @@ Module[{res, convention, tabWidth, alreadyHasEOFSentinel},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1144,7 +1144,7 @@ Module[{res, stringifyMode, convention, tabWidth, encodingMode},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseLeafFunc, $ParserSession, bytes, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode];
+  res = libraryFunctionWrapper[concreteParseLeafFunc, $ParserSession, bytes, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode, $Quirks];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;

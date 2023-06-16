@@ -3,7 +3,8 @@ use crate::{
     code_point::CodePoint,
     source::TOPLEVEL,
     wl_character::{EscapeStyle, WLCharacter},
-    EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
+    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
+    DEFAULT_TAB_WIDTH,
 };
 
 
@@ -17,6 +18,7 @@ fn CharacterDecoderTest_Basic1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -55,6 +57,7 @@ fn CharacterDecoderTest_LongName() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -96,6 +99,7 @@ fn CharacterDecoderTest_4Hex() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -137,6 +141,7 @@ fn CharacterDecoderTest_2Hex() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -175,6 +180,7 @@ fn CharacterDecoderTest_Octal() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -213,6 +219,7 @@ fn CharacterDecoderTest_6Hex() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -251,6 +258,7 @@ fn CharacterDecoderTest_Raw() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -289,6 +297,7 @@ fn CharacterDecoderTest_LongNameError1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -375,6 +384,7 @@ fn CharacterDecoderTest_LongNameError2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -461,6 +471,7 @@ fn CharacterDecoderTest_4HexError1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -538,6 +549,7 @@ fn CharacterDecoderTest_UnexpectedEscapeSequence() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);

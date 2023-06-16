@@ -10,6 +10,7 @@ use crate::{
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
         TernaryNode,
     },
+    quirks::QuirkSettings,
     source::{CodeAction, CodeActionKind, GeneralSource, Issue, IssueTag, Severity},
     symbol_registration::*,
     token::{OwnedTokenInput, Token, TokenKind},
@@ -902,6 +903,52 @@ impl FromExpr for CodeAction {
         };
 
         Ok(CodeAction { label, kind, src })
+    }
+}
+
+
+impl FromExpr for QuirkSettings {
+    fn from_expr(expr: &Expr) -> Result<Self, String> {
+        let Association(rules) = Association::from_expr(expr)?;
+
+        let mut infix_binary_at: Option<Expr> = None;
+        let mut flatten_times: Option<Expr> = None;
+        let mut old_at_at_at: Option<Expr> = None;
+
+        for Rule { lhs, rhs } in rules {
+            if lhs == Expr::string("InfixBinaryAt") {
+                infix_binary_at = Some(rhs);
+            } else if lhs == Expr::string("FlattenTimes") {
+                flatten_times = Some(rhs);
+            } else if lhs == Expr::string("OldAtAtAt") {
+                old_at_at_at = Some(rhs);
+            } else {
+                todo!("unrecognized QuirkSettings LHS: {lhs}")
+            }
+        }
+
+        let default = QuirkSettings::default();
+
+        let infix_binary_at = infix_binary_at
+            .as_ref()
+            .and_then(Expr::try_as_bool)
+            .unwrap_or(default.infix_binary_at);
+
+        let flatten_times = flatten_times
+            .as_ref()
+            .and_then(Expr::try_as_bool)
+            .unwrap_or(default.flatten_times);
+
+        let old_at_at_at = old_at_at_at
+            .as_ref()
+            .and_then(Expr::try_as_bool)
+            .unwrap_or(default.old_at_at_at);
+
+        Ok(QuirkSettings {
+            infix_binary_at,
+            flatten_times,
+            old_at_at_at,
+        })
     }
 }
 

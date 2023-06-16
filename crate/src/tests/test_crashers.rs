@@ -2,7 +2,8 @@ use crate::{
     source::TOPLEVEL,
     src, token,
     tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
-    EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
+    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
+    DEFAULT_TAB_WIDTH,
 };
 
 use pretty_assertions::assert_eq;
@@ -18,6 +19,7 @@ fn CrashTest_Crash0_tokens() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let policy = TOPLEVEL;
@@ -46,6 +48,7 @@ fn CrashTest_Crash1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -92,6 +95,7 @@ fn CrashTest_Crash2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -112,6 +116,7 @@ fn CrashTest_Crash3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -135,6 +140,7 @@ fn CrashTest_Crash4() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -155,6 +161,7 @@ fn CrashTest_Crash5() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();

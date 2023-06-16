@@ -10,6 +10,7 @@ use crate::{
     convert_wstp::WstpPut,
     from_expr::FromExpr,
     node::{Node, SyntaxErrorKind},
+    quirks::QuirkSettings,
     symbol::Symbol,
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
     Container, ContainerBody, EncodingMode, FirstLineBehavior, StringifyMode,
@@ -399,7 +400,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
         Err(err) => panic!("expected List: {err}"),
     };
 
-    if len != 5 {
+    if len != 6 {
         panic!("wrong arg count: {len}")
     }
 
@@ -418,6 +419,9 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
     let firstLineBehavior =
         FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
 
+    let quirk_settings =
+        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+
     link.new_packet().unwrap();
 
     let mut session = ParserSession::new(
@@ -426,6 +430,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
         tabWidth,
         firstLineBehavior,
         EncodingMode::Normal,
+        quirk_settings,
     );
 
     session.concrete_parse_expressions().put(link);
@@ -502,7 +507,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         Err(err) => panic!("expected List: {err}"),
     };
 
-    if len != 5 {
+    if len != 6 {
         panic!()
     }
 
@@ -525,6 +530,9 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
     let firstLineBehavior =
         FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
 
+    let quirk_settings =
+        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+
     link.new_packet().unwrap();
 
     let bytes = match std::fs::read(path) {
@@ -538,6 +546,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         tabWidth,
         firstLineBehavior,
         EncodingMode::Normal,
+        quirk_settings,
     );
 
     session.concrete_parse_expressions().put(link);
@@ -618,7 +627,7 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
         Err(err) => panic!("expected List: {err};"),
     };
 
-    if len != 5 {
+    if len != 6 {
         panic!("unexpected number of arguments: {len}");
     }
 
@@ -637,6 +646,9 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
     let firstLineBehavior =
         FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
 
+    let quirk_settings =
+        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+
     link.new_packet().unwrap();
 
     let mut session = ParserSession::new(
@@ -645,6 +657,7 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
         tabWidth,
         firstLineBehavior,
         EncodingMode::Normal,
+        quirk_settings,
     );
 
     match session.tokenize() {
@@ -728,7 +741,7 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
         Err(err) => panic!("expected List: {err}"),
     };
 
-    if len != 5 {
+    if len != 6 {
         panic!()
     }
 
@@ -751,6 +764,9 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
     let firstLineBehavior =
         FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
 
+    let quirk_settings =
+        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+
     link.new_packet().unwrap();
 
     let bytes = match std::fs::read(path) {
@@ -764,6 +780,7 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
         tabWidth,
         firstLineBehavior,
         EncodingMode::Normal,
+        quirk_settings,
     );
 
     match session.tokenize() {
@@ -858,7 +875,7 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
         Err(err) => panic!("expected List: {err}"),
     };
 
-    if len != 7 {
+    if len != 8 {
         panic!()
     }
 
@@ -882,6 +899,9 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
     let mlEncodingMode = link.get_i32().unwrap();
     let encodingMode = EncodingMode::try_from(mlEncodingMode).expect("invalid EncodingMode value");
 
+    let quirk_settings =
+        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+
     link.new_packet().unwrap();
 
     let mut session = ParserSession::new(
@@ -890,6 +910,7 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
         tabWidth,
         firstLineBehavior,
         encodingMode,
+        quirk_settings,
     );
 
     let result = session.concreteParseLeaf(
@@ -975,6 +996,7 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     // if (ParserSessionInit(
@@ -1206,6 +1228,10 @@ impl SyntaxErrorKind {
 //==========================================================
 // WSTP Deserialization Utilities
 //==========================================================
+
+fn get_expr(link: &mut wstp::Link) -> Result<Expr, wstp::Error> {
+    link.get_expr_with_resolver(&mut assume_link_print_full_symbols_resolver)
+}
 
 // TODO: Make this logic part of the wstp crate in some way.
 fn parse_assuming_link_print_full_symbols(link: &mut wstp::Link) -> Vec<Expr> {

@@ -70,38 +70,6 @@ Module[{},
 
 
 
-(* TODO(port): This has been ported. Remove once uses in Abstract.wl are fully
-               ported. *)
-processInfixBinaryAtQuirk[
-  BinaryNode[BinaryAt, {
-    LeafNode[Symbol, symName_, symData_],
-    LeafNode[Token`At, _, atData_], rhsIn_}, _]
-  ,
-  symName_
-] /; $Quirks["InfixBinaryAt"] :=
-Module[{data, rhs, issues, synthesizedSource},
-
-  rhs = rhsIn;
-
-  data = rhs[[3]];
-
-  issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-  synthesizedSource = {symData[[Key[Source], 1]], atData[[Key[Source], 2]]};
-
-  AppendTo[issues, SyntaxIssue["InfixBinaryAtQuirk", "Unexpected parse.", "Remark", <| Source -> synthesizedSource, ConfidenceLevel -> 1.0 |>]];
-
-  AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-  rhs[[3]] = data;
-
-  rhs
-]
-
-processInfixBinaryAtQuirk[node_, _] := node
-
-
-
 
 End[]
 

@@ -1,7 +1,7 @@
 use crate::{
     node::Node, parselet::prefix_parselet, parselet_registration::*, parser::Parser_topNode,
     source::TOPLEVEL, tokenizer::Tokenizer_currentToken, EncodingMode, FirstLineBehavior,
-    ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
+    ParserSession, QuirkSettings, SourceConvention, DEFAULT_TAB_WIDTH,
 };
 
 
@@ -15,6 +15,7 @@ fn ParseletTest_Bug1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -43,6 +44,7 @@ fn ParseletTest_Bug2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -66,6 +68,7 @@ fn ParseletTest_Bug3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -89,6 +92,7 @@ fn ParseletTest_Bug4() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);

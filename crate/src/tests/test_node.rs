@@ -1,7 +1,7 @@
 use crate::{
     node::{CompoundNode, Node, NodeSeq, Operator},
     source::SourceLocation,
-    src, token, EncodingMode, FirstLineBehavior, ParserSession, SourceConvention,
+    src, token, EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
     DEFAULT_TAB_WIDTH,
 };
 
@@ -18,6 +18,7 @@ fn NodeTest_Bug1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let T1 = token!(Symbol, "a" @ 0, src!(1:1-1:2));
