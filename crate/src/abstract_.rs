@@ -432,8 +432,8 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             Op::CodeParser_PrefixLinearSyntaxBang => {
                 let NodeSeq(children) = children;
 
-                // PrefixNode[PrefixLinearSyntaxBang, {rator_, rand:LeafNode[Token`LinearSyntaxBlob, _, _]}, data_]
                 match children.as_slice() {
+                    // PrefixNode[PrefixLinearSyntaxBang, {rator_, rand:LeafNode[Token`LinearSyntaxBlob, _, _]}, data_]
                     [_, Node::Token(Token {
                         tok: TK::LinearSyntaxBlob,
                         ..
@@ -447,13 +447,11 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             AstMetadata::from(data),
                         )
                     },
-                    // PrefixNode[PrefixLinearSyntaxBang, children_, data_]
-                    _ => {
-                        // FIXME?: In the original WL, these children were not
-                        //         abstracted.
-                        let children = Abstract(NodeSeq(children));
-                        WL!( AbstractSyntaxErrorNode[LinearSyntaxBang, children, data])
+                    // PrefixNode[PrefixLinearSyntaxBang, {_, rand_}, data_]
+                    [_, rand] => {
+                        WL!( AbstractSyntaxErrorNode[LinearSyntaxBang, { abstract_(rand.clone()) }, data])
                     },
+                    _ => unhandled(),
                 }
             },
 
@@ -737,32 +735,6 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     WL!( CallNode[ToNode[Divisible], processed, data] )
                 },
 
-                // InfixNode[Comma, children_, data_]
-                Operator::CodeParser_Comma => {
-                    // Skip every other child, which are Comma tokens.
-                    //   children[[;; ;; 2]]
-                    let children = part_span_even_children(children, Some(TokenKind::Comma));
-
-                    // children /. ErrorNode[Token`Error`PrefixImplicitNull | Token`Error`InfixImplicitNull, _, data1_]
-                    //     :> LeafNode[Symbol, "Null", data1]
-                    let NodeSeq(children) = NodeSeq(children).map_visit(&mut |child| {
-                        if let Node::Token(Token {
-                            tok: TK::Error_PrefixImplicitNull | TK::Error_InfixImplicitNull,
-                            src: data1,
-                            ..
-                        }) = child
-                        {
-                            agg::WL!( LeafNode[Symbol, "Null", data1] )
-                        } else {
-                            child
-                        }
-                    });
-
-                    let children = children.into_iter().map(abstract_).collect();
-
-                    WL!( CallNode[ToNode[CodeParser_Comma], children, data] )
-                },
-
                 // InfixNode[CompoundExpression, children_, data_]
                 Op::CompoundExpression => {
                     // Skip every other child, which are Semi tokens.
@@ -927,21 +899,18 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     let children: Result<[_; 3], _> = children.try_into();
 
                     match children {
-                        // GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]
+                        // GroupNode[GroupParen, { _, InfixNode[Comma, commaChildren, _], _ }, data_]
                         Ok(
-                            [_, child @ Node::Infix(InfixNode(OperatorNode {
+                            [_, Node::Infix(InfixNode(OperatorNode {
                                 op: Op::CodeParser_Comma,
+                                children: NodeSeq(comma_children),
                                 ..
                             })), _],
                         ) => {
-                            // FIXME: The WL source did not call abstract(..) on
-                            //        child. Is that intentional, or simply
-                            //        because InfixNode[Comma, ..] doesn't need
-                            //        abstracting? We have to do it here for
-                            //        type checking to succeed.
-                            let child = abstract_(child);
+                            let comma_children = part_span_even_children(comma_children, None);
+                            let comma_children = Abstract(NodeSeq(comma_children));
 
-                            WL!( AbstractSyntaxErrorNode[OpenParen, { child }, data] )
+                            WL!( AbstractSyntaxErrorNode[OpenParen, comma_children, data] )
                         },
 
                         // GroupNode[GroupParen, { _, child_, _}, data_]
@@ -951,7 +920,6 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         Err(children) => {
                             // children[[2 ;; -2]]
                             let children = part_span_drop_first_and_last(children);
-                            // PRE_COMMIT: WL source didnt abstract
                             let children = Abstract(NodeSeq(children));
 
                             WL!( AbstractSyntaxErrorNode[OpenParen, children, data] )
@@ -968,16 +936,76 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 // naked \[LeftDoubleBracket]\[RightDoubleBracket]
 
                 // GroupNode[GroupSquare, children_, data_]
-                Op::CodeParser_GroupSquare => WL!(
-                    AbstractSyntaxErrorNode[OpenSquare, Abstract(children), data]
-                ),
+                Op::CodeParser_GroupSquare => match children.0.as_slice() {
+                    // GroupNode[GroupSquare, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
+                    [_, Node::Infix(InfixNode(OperatorNode {
+                        op: Op::CodeParser_Comma,
+                        children: NodeSeq(comma_children),
+                        ..
+                    })), _] => {
+                        let comma_children = part_span_even_children(comma_children.clone(), None);
+                        let comma_children = Abstract(NodeSeq(comma_children));
+
+                        WL!( AbstractSyntaxErrorNode[OpenSquare, comma_children, data] )
+                    },
+                    // GroupNode[GroupSquare, {_, child_, _}, data_]
+                    [_, child, _] => {
+                        WL!( AbstractSyntaxErrorNode[OpenSquare, { abstract_(child.clone()) }, data] )
+                    },
+                    // GroupNode[GroupSquare, {_, _}, data_]
+                    [_, _] => {
+                        WL!( AbstractSyntaxErrorNode[OpenSquare, {}, data] )
+                    },
+                    _ => unhandled(),
+                },
+
                 // GroupNode[GroupTypeSpecifier, children_, data_]
-                Op::CodeParser_GroupTypeSpecifier => WL!(
-                    AbstractSyntaxErrorNode[ColonColonOpenSquare, Abstract(children), data]
-                ),
-                Op::CodeParser_GroupDoubleBracket => WL!(
-                    AbstractSyntaxErrorNode[LeftDoubleBracket, Abstract(children), data]
-                ),
+                Op::CodeParser_GroupTypeSpecifier => match children.0.as_slice() {
+                    // GroupNode[GroupTypeSpecifier, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
+                    [_, Node::Infix(InfixNode(OperatorNode {
+                        op: Op::CodeParser_Comma,
+                        children: NodeSeq(comma_children),
+                        ..
+                    })), _] => {
+                        let comma_children = part_span_even_children(comma_children.clone(), None);
+                        let comma_children = Abstract(NodeSeq(comma_children));
+
+                        WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, comma_children, data] )
+                    },
+                    // GroupNode[GroupTypeSpecifier, {_, child_, _}, data_]
+                    [_, child, _] => {
+                        WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, { abstract_(child.clone()) }, data] )
+                    },
+                    // GroupNode[GroupTypeSpecifier, {_, _}, data_]
+                    [_, _] => {
+                        WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, {}, data] )
+                    },
+                    _ => unhandled(),
+                },
+
+                // GroupNode[GroupDoubleBracket, children_, data_]
+                Op::CodeParser_GroupDoubleBracket => match children.0.as_slice() {
+                    // GroupNode[GroupDoubleBracket, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
+                    [_, Node::Infix(InfixNode(OperatorNode {
+                        op: Op::CodeParser_Comma,
+                        children: NodeSeq(comma_children),
+                        ..
+                    })), _] => {
+                        let comma_children = part_span_even_children(comma_children.clone(), None);
+                        let comma_children = Abstract(NodeSeq(comma_children));
+
+                        WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, comma_children, data] )
+                    },
+                    // GroupNode[GroupDoubleBracket, {_, child_, _}, data_]
+                    [_, child, _] => {
+                        WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, { abstract_(child.clone()) }, data] )
+                    },
+                    // GroupNode[GroupDoubleBracket, {_, _}, data_]
+                    [_, _] => {
+                        WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, {}, data] )
+                    },
+                    _ => unhandled(),
+                },
 
                 // GroupNode[tag_, children_, data_]
                 _ => AstNode::from(abstractGroupNode(GroupNode(OperatorNode {
@@ -1136,13 +1164,14 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
         TokenKind::HashHash => WL!( CallNode[ToNode[SlotSequence], { ToNode_Integer(1) }, data] ),
         TokenKind::Percent => WL!( CallNode[ToNode[Out], {}, data] ),
 
-        // Token`Fake`ImplicitNull, Token`Error`PrefixImplicitNull, and
-        // Token`Error`InfixImplicitNull do NOT get abstracted because they are
-        // handled at their possible parents: Comma and CompoundExpression
         TokenKind::Fake_ImplicitOne => WL!( LeafNode[Integer, "1", data] ),
         // FIXME: This should be "System`All", so that "All" doesn't resolve
         //        into the wrong context if System` is not on $ContextPath?
         TokenKind::Fake_ImplicitAll => WL!( LeafNode[Symbol, "All", data] ),
+
+        TokenKind::Error_PrefixImplicitNull | TokenKind::Error_InfixImplicitNull => {
+            WL!( LeafNode[Symbol, "Null", data] )
+        },
 
         kind if kind.isError() => AstNode::Error {
             kind,
@@ -2261,7 +2290,6 @@ fn abstractInfixTilde<I: TokenInput + Debug, S: TokenSource + Debug>(
         [_, _] => {
             let [left, middle] = expect_children(NodeSeq(children));
 
-            // FIXME: In the original WL, these were not abstracted.
             let left = abstract_(left);
             let middle = abstract_(middle);
 
@@ -2299,7 +2327,6 @@ fn abstractInfixTildeLeftAlreadyAbstracted<I: TokenInput + Debug, S: TokenSource
     match rest.as_slice() {
         [_] => {
             let [middle] = expect_children(NodeSeq(rest));
-            // FIXME: In the original WL, `middle` was not abstracted.
             let middle = abstract_(middle);
             WL!(AbstractSyntaxErrorNode[ExpectedTilde, {left, middle}, data])
         },
