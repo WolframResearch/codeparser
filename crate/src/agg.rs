@@ -252,17 +252,6 @@ macro_rules! LHS {
         }))
     };
 
-    //----------------------------------
-    // UnterminatedGroupNode
-    //----------------------------------
-
-    ($name:ident:UnterminatedGroupNode[$($op_kind:ident)|*, _, _]) => {
-        Node::UnterminatedGroup($name @ $crate::node::UnterminatedGroupNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
-            ..
-        }))
-    };
-
     //==================================
     // BoxNode
     //==================================

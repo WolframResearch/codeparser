@@ -72,6 +72,16 @@ pub enum AstNode {
         )>,
         data: AstMetadata,
     },
+    GroupMissingCloser {
+        kind: Operator,
+        children: Vec<AstNode>,
+        data: AstMetadata,
+    },
+    GroupMissingOpener {
+        kind: Operator,
+        children: Vec<AstNode>,
+        data: AstMetadata,
+    },
     // TODO: Store these in abstracted form?
     #[allow(non_camel_case_types)]
     TagBox_GroupParen {
@@ -156,6 +166,8 @@ impl AstNode {
             } => (args, data.source),
             AstNode::Code { .. } => todo!(),
             AstNode::Group { .. } => todo!(),
+            AstNode::GroupMissingCloser { .. } => todo!(),
+            AstNode::GroupMissingOpener { .. } => todo!(),
             AstNode::TagBox_GroupParen { .. } => todo!(),
             AstNode::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
                 (Vec::from(*children), data.source)

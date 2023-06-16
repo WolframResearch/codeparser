@@ -8,10 +8,10 @@ use crate::{
     cst::CstNodeSeq,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
-        GroupNode, InfixNode, Node, NodeSeq,
+        GroupMissingOpenerNode, GroupNode, InfixNode, Node, NodeSeq,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode, UnterminatedGroupNode,
+        TernaryNode,
     },
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
     source::{GeneralSource, Issue, IssueTag, Severity},
@@ -110,11 +110,11 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
             })
         },
         Node::Group(GroupNode(op)) => Node::Group(GroupNode(aggregate_op(op))),
-        Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
-            Node::UnterminatedGroup(UnterminatedGroupNode(aggregate_op(op)))
-        },
         Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
             Node::GroupMissingCloser(GroupMissingCloserNode(aggregate_op(op)))
+        },
+        Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+            Node::GroupMissingOpener(GroupMissingOpenerNode(aggregate_op(op)))
         },
         Node::Box(BoxNode {
             kind,
@@ -709,9 +709,9 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
 
                 // InfixNode[Times, children_, data_]
                 Op::Times => {
-                    // Skip every other child, which are Comma tokens.
+                    // Skip every other child, which are Star tokens.
                     //   children[[;; ;; 2]]
-                    let children = part_span_even_children(children, Some(TokenKind::Comma));
+                    let children = part_span_even_children(children, None);
 
                     abstractTimes_InfixNode(InfixNode(OperatorNode {
                         op: Op::Times,
@@ -1016,6 +1016,24 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             }
         },
 
+        //==============================
+        // GroupMissingCloserNode
+        //==============================
+        Node::GroupMissingCloser(node) => {
+            let (op, abstracted_children, data) = abstractGroupNode_GroupMissingCloserNode(node);
+
+            AstNode::GroupMissingCloser {
+                kind: op,
+                children: abstracted_children,
+                data,
+            }
+        },
+
+        //==============================
+        // GroupMissingOpenerNode
+        //==============================
+        Node::GroupMissingOpener(node) => abstractGroupNode_GroupMissingOpenerNode(node),
+
         //=================
         // PrefixBinaryNode
         //=================
@@ -1116,13 +1134,6 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             ),
             _ => todo!("unhandled SyntaxErrorNode content: ({err:?}, {children:?})"),
         },
-
-        //==============================
-        // Illegal
-        //==============================
-        Node::UnterminatedGroup(_) | Node::GroupMissingCloser(_) => {
-            panic!("cannot abstract illegal top-level group node: {node:?}")
-        },
     }
 }
 
@@ -1177,6 +1188,49 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
             kind,
             input: input.into_owned(),
             data: AstMetadata::from_src(data),
+        },
+
+        TokenKind::Symbol => {
+            match input.as_str() {
+                // "\[Pi]"
+                "\u{03c0}" | "\\[Pi]" | "\\:03c0" | "\\|0003c0" => {
+                    WL!( LeafNode[Symbol, "Pi", data] )
+                },
+
+                // "\[Degree]"
+                "\u{00b0}" | "\\[Degree]" | "\\:00b0" | "\\.b0" | "\\260" | "\\|0000b0" => {
+                    WL!( LeafNode[Symbol, "Degree", data] )
+                },
+
+                // "\[Infinity]"
+                "\u{221e}" | "\\[Infinity]" | "\\:221e" | "\\|00221e" => {
+                    WL!( LeafNode[Symbol, "Infinity", data] )
+                },
+
+                // "\[ExponentialE]"
+                "\u{f74d}" | "\\[ExponentialE]" | "\\:f74d" | "\\|00f74d" => {
+                    WL!( LeafNode[Symbol, "E", data] )
+                },
+
+                // "\[ImaginaryI]"
+                "\u{f74e}" | "\\[ImaginaryI]" | "\\:f74e" | "\\|00f74e" => {
+                    WL!( LeafNode[Symbol, "I", data] )
+                },
+
+                // NOTE: It is NOT a bug that \[ImaginaryJ] turns into the same
+                //       thing as \[ImaginaryI]. (Or, at the very least, its a
+                //       bug so old its not going to change now.)
+                // "\[ImaginaryJ]"
+                "\u{f74f}" | "\\[ImaginaryJ]" | "\\:f74f" | "\\|00f74f" => {
+                    WL!( LeafNode[Symbol, "I", data] )
+                },
+
+                _ => AstNode::Leaf {
+                    kind,
+                    input: input.into_owned(),
+                    data: AstMetadata::from_src(data),
+                },
+            }
         },
 
         // Symbols, Strings, Integers, Reals, and Rationals just get passed
@@ -1645,6 +1699,9 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
                     },
                     (GeneralSource::BoxPosition(_), _) | (_, GeneralSource::BoxPosition(_)) => {
                         todo!("processPlusPair synthetic source of BoxPosition's")
+                    },
+                    (GeneralSource::After(_), _) | (_, GeneralSource::After(_)) => {
+                        todo!("processPlusPair synthetic source of After's")
                     },
                 }
             };
@@ -2402,11 +2459,11 @@ fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 fn abstractGroupNode_GroupMissingCloserNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     group: GroupMissingCloserNode<I, S>,
-) -> Vec<AstNode> {
+) -> (Operator, Vec<AstNode>, AstMetadata) {
     let GroupMissingCloserNode(OperatorNode {
-        op: _,
+        op,
         children: NodeSeq(mut children),
-        src: _,
+        src: data,
     }) = group;
 
     // children[[2;;]]
@@ -2418,7 +2475,32 @@ fn abstractGroupNode_GroupMissingCloserNode<I: TokenInput + Debug, S: TokenSourc
         .flat_map(selectChildren)
         .collect();
 
-    abstractedChildren
+    (op, abstractedChildren, AstMetadata::from_src(data))
+}
+
+fn abstractGroupNode_GroupMissingOpenerNode<I: TokenInput + Debug, S: TokenSource + Debug>(
+    group: GroupMissingOpenerNode<I, S>,
+) -> AstNode {
+    let GroupMissingOpenerNode(OperatorNode {
+        op,
+        children: NodeSeq(mut children),
+        src: data,
+    }) = group;
+
+    // children[[;;-2]]
+    children.pop();
+
+    let abstracted_children = children
+        .into_iter()
+        .map(abstract_)
+        .flat_map(selectChildren)
+        .collect();
+
+    AstNode::GroupMissingOpener {
+        kind: op,
+        children: abstracted_children,
+        data: AstMetadata::from_src(data),
+    }
 }
 
 
@@ -2851,7 +2933,7 @@ fn is_odd(x: usize) -> bool {
 }
 
 /// `children[[;; ;; 2]]`
-fn part_span_even_children<I, S>(
+fn part_span_even_children<I: Debug, S: Debug>(
     children: Vec<Node<I, S>>,
     debug_expected_separator: Option<TokenKind>,
 ) -> Vec<Node<I, S>> {
@@ -2860,7 +2942,9 @@ fn part_span_even_children<I, S>(
         .enumerate()
         .filter(|(index, child)| {
             debug_assert!(
-                is_even(*index) || is_expected_separator(child, debug_expected_separator)
+                is_even(*index) || is_expected_separator(child, debug_expected_separator),
+                "child with is_even == {}, expected to be {debug_expected_separator:?}, was: {child:?}",
+                is_even(*index)
             );
 
             is_even(*index)

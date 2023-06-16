@@ -6,9 +6,9 @@ use crate::{
     cst::CstNodeSeq,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
-        GroupNode, InfixNode, LeafNode, Node, NodeSeq, Operator, OperatorNode, PostfixNode,
-        PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
-        UnterminatedGroupNode,
+        GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Node, NodeSeq, Operator,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
+        TernaryNode,
     },
     source::{CodeAction, CodeActionKind, GeneralSource, Issue, IssueTag, Severity},
     symbol_registration::*,
@@ -155,7 +155,11 @@ impl FromExpr for Node<OwnedTokenInput, GeneralSource> {
             return Ok(Self::from(node));
         }
 
-        if let Ok(node) = UnterminatedGroupNode::from_expr(expr) {
+        if let Ok(node) = GroupMissingCloserNode::from_expr(expr) {
+            return Ok(Self::from(node));
+        }
+
+        if let Ok(node) = GroupMissingOpenerNode::from_expr(expr) {
             return Ok(Self::from(node));
         }
 
@@ -223,8 +227,6 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
         };
         let body = if let Ok(group) = GroupNode::from_expr(&elements[1]) {
             Node::Group(group)
-        } else if let Ok(group) = UnterminatedGroupNode::from_expr(&elements[1]) {
-            Node::UnterminatedGroup(group)
         } else if let Ok(group) = GroupMissingCloserNode::from_expr(&elements[1]) {
             Node::GroupMissingCloser(group)
         } else {
@@ -421,22 +423,6 @@ impl FromExpr for CodeNode<GeneralSource> {
     }
 }
 
-impl FromExpr for UnterminatedGroupNode<OwnedTokenInput, GeneralSource> {
-    fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNODE)?;
-
-        if elements.len() != 3 {
-            todo!()
-        }
-
-        let op = Operator::from_expr(&elements[0])?;
-        let children = NodeSeq::from_expr(&elements[1])?;
-        let src = Metadata::from_expr(&elements[2])?.source;
-
-        Ok(UnterminatedGroupNode(OperatorNode { op, children, src }))
-    }
-}
-
 impl FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)?;
@@ -450,6 +436,22 @@ impl FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource> {
         let src = Metadata::from_expr(&elements[2])?.source;
 
         Ok(GroupMissingCloserNode(OperatorNode { op, children, src }))
+    }
+}
+
+impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, GeneralSource> {
+    fn from_expr(expr: &Expr) -> Result<Self, String> {
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_GROUPMISSINGOPENERNODE)?;
+
+        if elements.len() != 3 {
+            todo!()
+        }
+
+        let op = Operator::from_expr(&elements[0])?;
+        let children = NodeSeq::from_expr(&elements[1])?;
+        let src = Metadata::from_expr(&elements[2])?.source;
+
+        Ok(GroupMissingOpenerNode(OperatorNode { op, children, src }))
     }
 }
 
@@ -538,6 +540,7 @@ impl FromExpr for Metadata {
         let mut syntax_issues: Option<Expr> = None;
         let mut confidence_level: Option<Expr> = None;
         let mut code_actions: Option<Expr> = None;
+        let mut additional_descriptions: Option<Expr> = None;
         let mut file_name: Option<Expr> = None;
         let mut embedded_tabs: Option<Expr> = None;
         let mut embedded_newlines: Option<Expr> = None;
@@ -567,6 +570,8 @@ impl FromExpr for Metadata {
                 // PRE_COMMIT
             } else if lhs == Expr::string("FileName") {
                 file_name = Some(rhs);
+            } else if lhs == Expr::string("AdditionalDescriptions") {
+                additional_descriptions = Some(rhs);
             } else {
                 todo!("unrecognized Source LHS: {lhs}")
             }
@@ -598,11 +603,20 @@ impl FromExpr for Metadata {
             None => None,
         };
 
+        let additional_descriptions = match additional_descriptions {
+            Some(expr) => {
+                let List(descs) = List::<String>::from_expr(&expr)?;
+                Some(descs)
+            },
+            None => None,
+        };
+
         Ok(Metadata {
             source,
             syntax_issues,
             confidence_level,
             code_actions,
+            additional_descriptions,
             file_name,
             embedded_tabs,
             embedded_newlines,
@@ -615,6 +629,14 @@ impl FromExpr for Metadata {
 
 impl FromExpr for GeneralSource {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
+        // FIXME: This means GeneralSource::After actually covers both After
+        //        and Before. Represent this more cleanly.
+        if expr.has_normal_head(&Symbol::new("System`After"))
+            || expr.has_normal_head(&Symbol::new("System`Before"))
+        {
+            return Ok(GeneralSource::After(expr.clone()));
+        }
+
         let elements = try_normal_with_head(expr, SYMBOL_LIST)?;
 
         if elements.len() != 2 {
@@ -707,6 +729,7 @@ impl FromExpr for Source {
         match GeneralSource::from_expr(expr)? {
             GeneralSource::String(source) => Ok(source),
             GeneralSource::BoxPosition(_) => todo!("Source from GeneralSource::BoxPosition"),
+            GeneralSource::After(_) => todo!("Source from GeneralSource::After"),
         }
     }
 }
@@ -774,6 +797,7 @@ impl FromExpr for Issue {
             syntax_issues,
             confidence_level,
             code_actions,
+            additional_descriptions,
             file_name,
             embedded_tabs,
             embedded_newlines,
@@ -816,9 +840,9 @@ impl FromExpr for Issue {
             sev,
             src: source,
             val,
-            // FIXME: These aren't always empty.
             actions: code_actions.unwrap_or_else(Vec::new),
-            additional_descriptions: vec![],
+            additional_descriptions: additional_descriptions.unwrap_or_else(Vec::new),
+            // FIXME: These aren't always empty.
             additional_sources: vec![],
         })
     }
@@ -872,7 +896,7 @@ impl FromExpr for CodeAction {
 
         let src = match src {
             GeneralSource::String(src) => src,
-            GeneralSource::BoxPosition(_) => {
+            GeneralSource::BoxPosition(_) | GeneralSource::After(_) => {
                 todo!("unexpected source for CodeAction: {src:?}")
             },
         };
@@ -911,7 +935,7 @@ impl Association {
     }
 }
 
-pub(crate) struct List<T: FromExpr>(pub Vec<T>);
+pub(crate) struct List<T>(pub Vec<T>);
 
 impl<T: FromExpr> FromExpr for List<T> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
@@ -920,6 +944,22 @@ impl<T: FromExpr> FromExpr for List<T> {
         let elements: Vec<T> = elements
             .into_iter()
             .map(T::from_expr)
+            .collect::<Result<Vec<_>, String>>()?;
+
+        Ok(List(elements))
+    }
+}
+
+impl FromExpr for List<String> {
+    fn from_expr(expr: &Expr) -> Result<Self, String> {
+        let elements = try_normal_with_head(&expr, SYMBOL_LIST)?;
+
+        let elements: Vec<String> = elements
+            .into_iter()
+            .map(|elem| match elem.try_as_str() {
+                Some(elem) => Ok(elem.to_owned()),
+                None => Err(format!("expected List element to be String")),
+            })
             .collect::<Result<Vec<_>, String>>()?;
 
         Ok(List(elements))

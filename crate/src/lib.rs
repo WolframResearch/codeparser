@@ -248,6 +248,7 @@ pub struct Metadata {
     pub syntax_issues: Option<Vec<Issue>>,
     pub confidence_level: Option<Number>,
     pub code_actions: Option<Vec<CodeAction>>,
+    pub additional_descriptions: Option<Vec<String>>,
     // TODO: Change this to Option<String>?
     pub file_name: Option<Expr>,
     pub embedded_tabs: Option<Expr>,

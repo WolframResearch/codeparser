@@ -21,6 +21,8 @@ use crate::{
     wl_character::{EscapeStyle, WLCharacter},
 };
 
+use wolfram_expr::Expr;
+
 pub type IssuePtrSet = Vec<Issue>;
 
 pub type AdditionalDescriptionVector = Vec<String>;
@@ -249,14 +251,19 @@ impl Debug for SourceLocation {
 #[cfg(feature = "BUILD_TESTS")]
 fn PrintTo(Loc: &SourceLocation, s: &mut std::ostream);
 
-// TODO(cleanup): Remove derive(PartialOrd). This is purely here so that
-//                derive(PartialOrd) works on Issue. Change issue to have a
-//                custom impl of PartialOrd, and remove this.
-#[derive(Debug, Clone, PartialEq, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum GeneralSource {
     String(Source),
     /// Box structure position.
     BoxPosition(Vec<usize>),
+
+    /// `After[{..}]`
+    ///
+    /// Used to indicate the position of fake implicit Null or Times tokens, or
+    /// expected operand error tokens, that come after a specific position in
+    /// the source.
+    // TODO: Parse this into a strongly typed value
+    After(Expr),
 }
 
 #[derive(Copy, Clone, PartialEq, Hash)]
@@ -712,8 +719,19 @@ impl Issue {
     }
 
     pub fn with_additional_sources(self, additional_sources: Vec<GeneralSource>) -> Self {
+        debug_assert!(self.additional_sources.is_empty());
+
         Issue {
             additional_sources,
+            ..self
+        }
+    }
+
+    pub fn with_additional_descriptions(self, additional_descriptions: Vec<String>) -> Self {
+        debug_assert!(self.additional_descriptions.is_empty());
+
+        Issue {
+            additional_descriptions,
             ..self
         }
     }
@@ -1254,6 +1272,16 @@ impl GeneralSource {
                 _ => false,
             },
             GeneralSource::BoxPosition(_) => false,
+            GeneralSource::After(_) => false,
+        }
+    }
+}
+
+impl PartialOrd for GeneralSource {
+    fn partial_cmp(&self, other: &GeneralSource) -> Option<Ordering> {
+        match (self, other) {
+            (GeneralSource::String(src1), GeneralSource::String(src2)) => src1.partial_cmp(src2),
+            _ => None,
         }
     }
 }

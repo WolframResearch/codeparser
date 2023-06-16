@@ -87,10 +87,10 @@ symbols = Union[Flatten[Join[
     CodeParser`TernaryNode, CodeParser`PostfixNode,
 	CodeParser`CallNode, CodeParser`CallMissingCloserNode, CodeParser`UnterminatedCallNode,
     CodeParser`GroupNode,
-    CodeParser`UnterminatedGroupNode,
     CodeParser`CompoundNode,
     CodeParser`SyntaxErrorNode,
     CodeParser`GroupMissingCloserNode,
+    CodeParser`GroupMissingOpenerNode,
     CodeParser`PrefixBinaryNode,
     CodeParser`BoxNode,
     CodeParser`CodeNode

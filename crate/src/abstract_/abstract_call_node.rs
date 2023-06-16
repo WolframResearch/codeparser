@@ -6,9 +6,10 @@ use crate::{
     ast::{AstMetadata, AstNode},
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CompoundNode, GroupNode, InfixNode, Node, NodeSeq,
-        Operator as Op, OperatorNode, PostfixNode, PrefixNode, UnterminatedGroupNode,
+        Operator as Op, OperatorNode, PostfixNode, PrefixNode,
     },
     source::{Issue, IssueTag, Severity},
+    symbol as sym,
     token::{
         Token, TokenInput,
         TokenKind::{self as TK},
@@ -18,7 +19,7 @@ use crate::{
 
 use super::{
     abstractGroupNode, abstractGroupNode_GroupMissingCloserNode, abstract_, expect_children,
-    Abstract, AstCall,
+    AstCall, ToNode_Symbol,
 };
 
 /// These boxes are ok to have as head of calls
@@ -545,9 +546,6 @@ pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
         // warn about anything else
         //
         LHS!(CallNode[head:_, part:GroupNode[CodeParser_GroupTypeSpecifier, _, _], data:_]) => {
-            let first = part.0.children.0.first().unwrap();
-            let last = part.0.children.0.last().unwrap();
-
             let mut data = AstMetadata::from_src(data);
 
             data.issues.push(
@@ -555,10 +553,12 @@ pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
                     IssueTag::StrangeCall,
                     "Unexpected call.".to_owned(),
                     Severity::Error,
-                    first.source().into_general(),
+                    head.source().into_general(),
                     0.95,
                 )
-                .with_additional_sources(vec![last.source().into_general()]),
+                .with_additional_descriptions(vec![
+                    "The head of ``::[]`` syntax is usually a string.".to_owned(),
+                ]),
             );
 
             let head = abstract_(head);
@@ -760,40 +760,75 @@ pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
         //
         LHS!(CallNode[
             head:_,
-            part:GroupMissingCloserNode[
-                CodeParser_GroupSquare | CodeParser_GroupTypeSpecifier | CodeParser_GroupDoubleBracket,
-                _,
-                _
-            ],
+            part:GroupMissingCloserNode[CodeParser_GroupSquare, _, _],
             data:_
         ]) => {
             let head = abstract_(head);
 
-            let children = abstractGroupNode_GroupMissingCloserNode(part);
+            let (_, children, _) = abstractGroupNode_GroupMissingCloserNode(part);
 
             WL!(CallMissingCloserNode[head, children, data])
         },
-        //
-        // UnterminatedGroupNode does NOT get abstracted
-        //
         LHS!(CallNode[
             head:_,
-            part:UnterminatedGroupNode[CodeParser_GroupSquare | CodeParser_GroupTypeSpecifier | CodeParser_GroupDoubleBracket, _, _],
+            part:GroupMissingCloserNode[CodeParser_GroupTypeSpecifier, _, _],
             data:_
         ]) => {
             let head = abstract_(head);
 
-            let UnterminatedGroupNode(OperatorNode {
-                op: _,
-                children,
-                src: _,
-            }) = part;
+            let (_, children, _) = abstractGroupNode_GroupMissingCloserNode(part);
 
-            // FIXME: The original WL didn't abstract the children of
-            //        UnterminatedCallNode's
-            let children = Abstract(children);
+            /* TODO: Port this issue joining logic
+                part = abstractGroupNode[part];
+                partData = part[[3]];
 
-            WL!(UnterminatedCallNode[head, children, data])
+                issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+                If[issues != {},
+                    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+                    AssociateTo[data, AbstractSyntaxIssues -> issues];
+                ];
+            */
+
+            WL!(
+                CallMissingCloserNode[
+                    WL!( CallNode[ToNode_Symbol(sym::TypeSpecifier), {head}, <||>] ),
+                    children,
+                    data
+                ]
+            )
+        },
+        LHS!(CallNode[
+            head:_,
+            part:GroupMissingCloserNode[CodeParser_GroupDoubleBracket, _, _],
+            data:_
+        ]) => {
+            let head = abstract_(head);
+
+            let (_, mut children, _) = abstractGroupNode_GroupMissingCloserNode(part);
+
+            /* TODO: Port this issue joining logic
+                part = abstractGroupNode[part];
+                partData = part[[3]];
+
+                issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+                If[issues != {},
+                    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+                    AssociateTo[data, AbstractSyntaxIssues -> issues];
+                ];
+            */
+
+            // {head} ~Join~ part[[2]]
+            children.insert(0, head);
+
+            WL!(
+                CallMissingCloserNode[
+                    ToNode_Symbol(sym::Part),
+                    children,
+                    data
+                ]
+            )
         },
         call => todo!("abstract_call_node: {call:#?}"),
     }

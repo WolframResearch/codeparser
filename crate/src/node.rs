@@ -35,9 +35,8 @@ pub enum Node<I = OwnedTokenInput, S = Source> {
     PrefixBinary(PrefixBinaryNode<I, S>),
     Compound(CompoundNode<I, S>),
     Group(GroupNode<I, S>),
-    // TODO(cleanup): This variant is never constructed during concrete parsing.
-    UnterminatedGroup(UnterminatedGroupNode<I, S>),
     GroupMissingCloser(GroupMissingCloserNode<I, S>),
+    GroupMissingOpener(GroupMissingOpenerNode<I, S>),
     // TODO(cleanup): This variant is never constructed during concrete parsing.
     Box(BoxNode<I, S>),
     // TODO(cleanup): This variant is never constructed during concrete parsing.
@@ -132,12 +131,6 @@ pub struct CallNode<I = OwnedTokenInput, S = Source> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct GroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
-// TODO: This type is constructed as part of the abstraction step. Should there
-//       be different CstNode and AstNode types so that this node is not part of
-//       CstNode?
-#[derive(Debug, Clone, PartialEq)]
-pub struct UnterminatedGroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
-
 /// Any "compound" of tokens:
 ///
 /// * `a_`
@@ -168,6 +161,10 @@ pub enum SyntaxErrorKind {
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
 pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+
+/// Only possible with boxes
+#[derive(Debug, Clone, PartialEq)]
+pub struct GroupMissingOpenerNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
@@ -227,8 +224,8 @@ from_node!(PostfixNode<I, S> => Node::Postfix);
 from_node!(PrefixBinaryNode<I, S> => Node::PrefixBinary);
 from_node!(CompoundNode<I, S> => Node::Compound);
 from_node!(GroupNode<I, S> => Node::Group);
-from_node!(UnterminatedGroupNode<I, S> => Node::UnterminatedGroup);
 from_node!(GroupMissingCloserNode<I, S> => Node::GroupMissingCloser);
+from_node!(GroupMissingOpenerNode<I, S> => Node::GroupMissingOpener);
 from_node!(BoxNode<I, S> => Node::Box);
 
 impl<I, S> From<CodeNode<S>> for Node<I, S> {
@@ -432,7 +429,8 @@ impl<I, S> Node<I, S> {
             | Node::Compound(CompoundNode(op))
             | Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
-            | Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
+            | Node::GroupMissingOpener(GroupMissingOpenerNode(op))
+            => {
                 let OperatorNode {
                     op: _,
                     children,
@@ -494,11 +492,11 @@ impl<I, S> Node<I, S> {
             },
             Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.map_visit(visit))),
             Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.map_visit(visit))),
-            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
-                Node::UnterminatedGroup(UnterminatedGroupNode(op.map_visit(visit)))
-            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.map_visit(visit)))
+            },
+            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                Node::GroupMissingOpener(GroupMissingOpenerNode(op.map_visit(visit)))
             },
 
             Node::Box(BoxNode {
@@ -555,11 +553,11 @@ impl<I: TokenInput, S> Node<I, S> {
             },
             Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.into_owned_input())),
             Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.into_owned_input())),
-            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
-                Node::UnterminatedGroup(UnterminatedGroupNode(op.into_owned_input()))
-            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 Node::GroupMissingCloser(GroupMissingCloserNode(op.into_owned_input()))
+            },
+            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                Node::GroupMissingOpener(GroupMissingOpenerNode(op.into_owned_input()))
             },
             Node::Box(BoxNode {
                 kind,
@@ -595,8 +593,8 @@ impl<I, S: TokenSource> Node<I, S> {
             Node::Ternary(TernaryNode(op)) => op.getSource(),
             Node::Compound(CompoundNode(op)) => op.getSource(),
             Node::Group(GroupNode(op)) => op.getSource(),
-            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.getSource(),
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => op.getSource(),
+            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => op.getSource(),
             Node::Box(BoxNode { src, .. }) => src.clone(),
             Node::Code(node) => node.src.clone(),
         }
@@ -618,8 +616,8 @@ impl<I, S: TokenSource> Node<I, S> {
             Node::Group(GroupNode(op)) => op.check(),
             // FIXME: Is this `false` by default, since it's unterminated and
             //        therefore invalid syntax?
-            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.check(),
             Node::GroupMissingCloser(node) => node.check(),
+            Node::GroupMissingOpener(node) => node.check(),
             Node::SyntaxError(node) => node.check(),
             Node::Box(BoxNode { children, .. }) => children.check(),
             Node::Code(_) => panic!("unexpected CodeNode in Node::check()"),
@@ -716,6 +714,12 @@ impl<I, S> OperatorNode<I, S> {
 //======================================
 
 impl<I, S: TokenSource> GroupMissingCloserNode<I, S> {
+    pub(crate) fn check(&self) -> bool {
+        return false;
+    }
+}
+
+impl<I, S: TokenSource> GroupMissingOpenerNode<I, S> {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
