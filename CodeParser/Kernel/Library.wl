@@ -19,7 +19,7 @@ tokenizeFileFunc
 concreteParseLeafFunc
 safeStringFunc
 
-aggregate
+aggregateFunc
 abstractFunc
 
 
@@ -277,8 +277,8 @@ Which[
 
     safeStringFunc := safeStringFunc = (If[$Debug, Print["memoizing safeStringFunc"]]; loadFunc["SafeString_LibraryLink", LinkObject, LinkObject]);
 
-    aggregate := aggregate = (
-		If[$Debug, Print["memoizing aggregate"]];
+    aggregateFunc := aggregateFunc = (
+		If[$Debug, Print["memoizing aggregateFunc"]];
 		loadFunc["Aggregate_LibraryLink", LinkObject, LinkObject]
 	);
 

@@ -23,7 +23,7 @@ Needs["CodeParser`"]
 Needs["CodeParser`Quirks`"]
 Needs["CodeParser`TopLevel`"] (* for abstractTopLevelChildren *)
 Needs["CodeParser`Utils`"]
-Needs["CodeParser`Library`"] (* For aggregate, abstractFunc *)
+Needs["CodeParser`Library`"] (* For aggregateFunc, abstractFunc *)
 
 
 
@@ -38,7 +38,7 @@ Module[{agg},
 
   CodeParser`Abstract`$AggregateParseProgress = 5;
 
-  agg = aggregate[cst];
+  agg = aggregateFunc[cst];
 
 	(* NOTE:
 		This ReplaceAll forces evaluation of the 3rd argument of CodeNode.
@@ -47,7 +47,7 @@ Module[{agg},
 			* Hold[Association[]] is NOT equal to Hold[<||>].
 			  - The former is a TNORMAL expression, while the later is a
 			    TASSOCIATION, which means they are not considered SameQ.
-		    * aggregate[..] is implemented as a LibraryLink WSTP function, and
+		    * aggregateFunc[..] is implemented as a LibraryLink WSTP function, and
 			  Association expressions deserialized from WSTP are intially
 			  constructed as TNORMAL expressions. They only get turned into
 			  TASSOCIATION expressions if they are evaluated.
@@ -121,7 +121,7 @@ Module[{ast, batchMode},
 			* Hold[Association[]] is NOT equal to Hold[<||>].
 				- The former is a TNORMAL expression, while the later is a
 				TASSOCIATION, which means they are not considered SameQ.
-			* aggregate[..] is implemented as a LibraryLink WSTP function, and
+			* aggregateFunc[..] is implemented as a LibraryLink WSTP function, and
 				Association expressions deserialized from WSTP are intially
 				constructed as TNORMAL expressions. They only get turned into
 				TASSOCIATION expressions if they are evaluated.
