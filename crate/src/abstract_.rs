@@ -2816,13 +2816,20 @@ fn try_superscript_box_derivative_special_case<I: TokenInput + Debug, S: TokenSo
                 },
                     data2_
                 ],
-                t:CodeNode[Null, Derivative, _]},
+                t:CodeNode[Evaluated, Derivative, _]},
                 data1_
             ],
             ___
         },
         data_
     ]
+        => BoxNode[SuperscriptBox, {
+            abstract[a],
+            BoxNode[TagBox, {
+                GroupNode[GroupParen, {o, abstract[b], c}, data2],
+                t
+            }, data1]
+        }, data]
     */
     match Node::from(box_node.clone()) {
         LHS!(BoxNode[
@@ -2859,7 +2866,7 @@ fn try_superscript_box_derivative_special_case<I: TokenInput + Debug, S: TokenSo
                                 src: _,
                             },
                         ) if first.try_as_symbol().map(wolfram_expr::Symbol::as_str)
-                            == Some("System`Null")
+                            == Some("System`Evaluated")
                             && second.try_as_symbol().map(wolfram_expr::Symbol::as_str)
                                 == Some("System`Derivative") =>
                         {
