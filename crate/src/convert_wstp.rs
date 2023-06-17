@@ -192,7 +192,7 @@ impl UnsafeCharacterEncoding {
     pub(crate) fn put(&self, link: &mut wstp::Link) {
         link.put_function(SYMBOL_MISSING.as_str(), 1).unwrap();
 
-        let variant_name: &'static str = self.into();
+        let variant_name: &'static str = self.as_str();
 
         let name = format!("UnsafeCharacterEncoding_{variant_name}");
 
@@ -496,7 +496,7 @@ pub(crate) fn Symbol_put(self_: Symbol, callLink: &mut wstp::Link) {
 
 impl Severity {
     pub(crate) fn put(&self, link: &mut wstp::Link) {
-        let string: &'static str = self.into();
+        let string: &'static str = self.as_str();
 
         link.put_str(string).unwrap();
     }
@@ -504,7 +504,7 @@ impl Severity {
 
 impl IssueTag {
     pub(crate) fn put(&self, link: &mut wstp::Link) {
-        let string: &'static str = self.into();
+        let string: &'static str = self.as_str();
 
         link.put_str(string).unwrap();
     }

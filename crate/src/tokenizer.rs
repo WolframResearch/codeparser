@@ -76,13 +76,22 @@ pub(crate) struct SourceManager<'t> {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-#[derive(strum::IntoStaticStr, strum::EnumString)]
 pub enum UnsafeCharacterEncoding {
     // Ok = 0,
     IncompleteUTF8Sequence = 1,
     StraySurrogate = 2,
     ///
     BOM = 3,
+}
+
+impl UnsafeCharacterEncoding {
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            UnsafeCharacterEncoding::IncompleteUTF8Sequence => "IncompleteUTF8Sequence",
+            UnsafeCharacterEncoding::StraySurrogate => "StraySurrogate",
+            UnsafeCharacterEncoding::BOM => "BOM",
+        }
+    }
 }
 
 impl<'i> Tokenizer<'i> {
