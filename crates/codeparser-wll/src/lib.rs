@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 
+#[cfg(all(not(feature = "USE_MATHLINK"), not(feature = "USE_EXPR_LIB")))]
+compile_error!("codeparser-wll requires that either USE_MATHLINK or USE_EXPR_LIB are set");
+
 #[cfg(feature = "USE_MATHLINK")]
 mod convert_wstp;
 

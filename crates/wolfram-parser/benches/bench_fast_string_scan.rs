@@ -19,7 +19,7 @@ fn benchmark(c: &mut Criterion) {
 
     c.bench_function("[FSS] tokenize 2 + 2", |b| b.iter(|| parse_tokens("2 + 2")));
 
-    let boxes_wl = include_str!("../../CodeParser/Kernel/Boxes.wl");
+    let boxes_wl = include_str!("../../../CodeParser/Kernel/Boxes.wl");
     c.bench_function("[FSS] tokenize Boxes.wl", |b| {
         b.iter(|| parse_tokens(boxes_wl))
     });
