@@ -1,13 +1,9 @@
 [package]
-name = "wolfram-code-parse"
+name = "wolfram-parser"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[lib]
-# This crate can be used as Rust dependency, or as a dynamic library.
-crate-type = ["rlib", "cdylib"]
 
 
 [features]
@@ -17,8 +13,7 @@ COMPUTE_OOB = []
 FAST_STRING_SCAN = []
 
 # Features used when building the LibraryLink dynamic library.
-USE_MATHLINK = ["wolfram-library-link"]
-CHECK_ABORT = []
+CHECK_ABORT = ["wolfram-library-link"]
 
 default = ["COMPUTE_SOURCE", "CHECK_ISSUES", "COMPUTE_OOB"]
 
@@ -33,12 +28,6 @@ regex = "1.6.0"
 wolfram-expr = "0.1.4"
 
 wolfram-library-link = { version = "0.2.9", optional = true, default-features = false }
-
-[patch.crates-io]
-wolfram-library-link     = { git = "https://github.com/WolframResearch/wolfram-library-link-rs" }
-wolfram-library-link-sys = { git = "https://github.com/WolframResearch/wolfram-library-link-rs" }
-wstp     = { git = "https://github.com/WolframResearch/wstp-rs" }
-wstp-sys = { git = "https://github.com/WolframResearch/wstp-rs" }
 
 [dev-dependencies]
 pretty_assertions = "1.2.1"

@@ -1,7 +1,7 @@
 use crate::{
-    node::Node, parselet::prefix_parselet, parselet_registration::*, parser::Parser_topNode,
-    source::TOPLEVEL, tokenizer::Tokenizer_currentToken, EncodingMode, FirstLineBehavior,
-    ParserSession, QuirkSettings, SourceConvention, DEFAULT_TAB_WIDTH,
+    node::Node, parselet::prefix_parselet, parser::Parser_topNode, source::TOPLEVEL,
+    tokenizer::Tokenizer_currentToken, EncodingMode, FirstLineBehavior, ParserSession,
+    QuirkSettings, SourceConvention, DEFAULT_TAB_WIDTH,
 };
 
 

@@ -2,14 +2,14 @@ use std::{fs, path::Path};
 
 use criterion::{criterion_group, criterion_main, Criterion, SamplingMode};
 
-use wolfram_code_parse::ParseOptions;
+use wolfram_parser::ParseOptions;
 
 fn parse_tokens(input: &str) {
     parse_tokens_u8(input.as_bytes())
 }
 
 fn parse_tokens_u8(input: &[u8]) {
-    wolfram_code_parse::tokenize_bytes(input, &ParseOptions::default()).unwrap();
+    wolfram_parser::tokenize_bytes(input, &ParseOptions::default()).unwrap();
 }
 
 fn benchmark(c: &mut Criterion) {

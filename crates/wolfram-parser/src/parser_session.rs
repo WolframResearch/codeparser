@@ -44,14 +44,19 @@ pub(crate) type NodeStack<'i> = Vec<Node<BorrowedTokenInput<'i>>>;
 
 pub struct ParseResult<N> {
     /// Tokens or expressions.
-    pub(crate) nodes: NodeSeq<N>,
+    #[doc(hidden)]
+    pub nodes: NodeSeq<N>,
 
-    pub(crate) unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
+    #[doc(hidden)]
+    pub unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
 
-    pub(crate) fatal_issues: Vec<Issue>,
-    pub(crate) non_fatal_issues: Vec<Issue>,
+    #[doc(hidden)]
+    pub fatal_issues: Vec<Issue>,
+    #[doc(hidden)]
+    pub non_fatal_issues: Vec<Issue>,
 
-    pub(crate) tracked: TrackedSourceLocations,
+    #[doc(hidden)]
+    pub tracked: TrackedSourceLocations,
 }
 
 //======================================
@@ -244,7 +249,8 @@ impl<'i> ParserSession<'i> {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn concreteParseLeaf(
+    #[doc(hidden)]
+    pub fn concreteParseLeaf(
         &mut self,
         mode: StringifyMode,
     ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
@@ -264,7 +270,8 @@ impl<'i> ParserSession<'i> {
     // TODO(cleanup): What is this used for? Perhaps ultimately this is just
     //                std::str::from_utf8()?
     #[allow(dead_code)]
-    pub(crate) fn safe_string(&mut self) -> Result<&str, UnsafeCharacterEncoding> {
+    #[doc(hidden)]
+    pub fn safe_string(&mut self) -> Result<&str, UnsafeCharacterEncoding> {
         //
         // read all characters, just to set unsafeCharacterEncoding flag if necessary
         //

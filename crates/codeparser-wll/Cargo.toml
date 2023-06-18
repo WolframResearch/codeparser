@@ -6,4 +6,17 @@ publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+# This crate compiles to a dynamic library.
+crate-type = ["cdylib"]
+
+[features]
+default = ["USE_MATHLINK"]
+USE_MATHLINK = []
+
 [dependencies]
+ordered-float = "3.0"
+
+wolfram-library-link = { version = "0.2.9", default-features = false }
+wolfram-parser = { path = "../wolfram-parser", features = ["CHECK_ABORT"] }
+

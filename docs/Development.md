@@ -9,7 +9,7 @@ $ cmake -S . -B build -DMATHEMATICA_INSTALL_DIR=/Applications/Wolfram/Mathematic
 $ cmake --build build
 ```
 
-Intermediate compiled library artifacts will be built into the `./crate/target`
+Intermediate compiled library artifacts will be built into the `./target`
 directory, and a copy will be placed in the `CodeParser/LibraryResources/`
 subdirectory of the built CodeParser paclet.
 
@@ -18,7 +18,6 @@ subdirectory of the built CodeParser paclet.
 Run the compiled Rust library tests using `cargo`:
 
 ```shell
-$ cd crate
 $ cargo test
 ```
 
@@ -50,7 +49,7 @@ $ cargo build --features=USE_MATHLINK,CHECK_ABORT
 
 CodeParser has two test suites:
 
-1. Tests written in Rust, primarily located in [crate/src/tests/](../crate/src/tests/).
+1. Tests written in Rust, primarily located in [crates/wolfram-parser/src/tests/](../crates/wolfram-parser/src/tests/).
 2. Tests written in Wolfram, primarily located in [Tests](../Tests/).
 
 

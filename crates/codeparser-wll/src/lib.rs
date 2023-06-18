@@ -1,3 +1,15 @@
+#![allow(non_snake_case)]
+
+#[cfg(feature = "USE_MATHLINK")]
+mod convert_wstp;
+
+#[cfg(feature = "USE_EXPR_LIB")]
+mod convert_expr;
+
+#[cfg(feature = "USE_MATHLINK")]
+mod from_expr;
+
+
 use wolfram_library_link::{
     self as wll,
     expr::{self, Expr},
@@ -5,22 +17,18 @@ use wolfram_library_link::{
     wstp,
 };
 
-use crate::{
+use wolfram_parser::{
     abstract_::{abstract_, Aggregate},
-    convert_wstp::WstpPut,
-    from_expr::FromExpr,
-    node::{Node, SyntaxErrorKind},
+    node::Node,
+    parser_session::ParserSession,
     quirks::QuirkSettings,
-    symbol::Symbol,
+    source::{SourceConvention, DEFAULT_TAB_WIDTH},
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
     Container, ContainerBody, EncodingMode, FirstLineBehavior, StringifyMode,
 };
 
-#[cfg(feature = "USE_MATHLINK")]
-use crate::{
-    parser_session::ParserSession,
-    source::{SourceConvention, DEFAULT_TAB_WIDTH},
-};
+use crate::{convert_wstp::WstpPut, from_expr::FromExpr};
+
 
 pub(crate) type ParserSessionPtr = *mut std::ffi::c_void;
 
@@ -248,7 +256,7 @@ pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
 
     let arg = args.remove(0);
 
-    if arg.has_normal_head(&wolfram_expr::Symbol::new("System`Failure")) {
+    if arg.has_normal_head(&expr::Symbol::new("System`Failure")) {
         link.put_expr(&arg).unwrap();
         return;
     }
@@ -1021,64 +1029,6 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
 }
 
 //======================================
-// Magic number conversions
-//======================================
-
-impl TryFrom<i32> for FirstLineBehavior {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => FirstLineBehavior::NotScript,
-            1 => FirstLineBehavior::Check,
-            2 => FirstLineBehavior::Script,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
-impl TryFrom<i32> for EncodingMode {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => EncodingMode::Normal,
-            1 => EncodingMode::Box,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
-impl TryFrom<i32> for StringifyMode {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => StringifyMode::Normal,
-            1 => StringifyMode::Tag,
-            2 => StringifyMode::File,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
-impl TryFrom<i32> for SourceConvention {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => SourceConvention::LineColumn,
-            1 => SourceConvention::CharacterIndex,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
-//======================================
 // ScopedFileBuffer and related types
 //======================================
 
@@ -1213,18 +1163,6 @@ fn validatePath(path: &str) -> bool {
 // WSTP Serialization
 //======================================
 
-impl SyntaxErrorKind {
-    pub(crate) fn to_symbol(&self) -> Symbol {
-        use crate::symbol_registration::*;
-
-        match self {
-            SyntaxErrorKind::ExpectedSymbol => SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL,
-            SyntaxErrorKind::ExpectedSet => SYMBOL_SYNTAXERROR_EXPECTEDSET,
-            SyntaxErrorKind::ExpectedTilde => SYMBOL_SYNTAXERROR_EXPECTEDTILDE,
-        }
-    }
-}
-
 //==========================================================
 // WSTP Deserialization Utilities
 //==========================================================
@@ -1271,4 +1209,12 @@ fn get_args_list_impl_assuming_link_print_full_symbols(
     }
 
     Ok(elements)
+}
+
+pub(crate) fn abortQ() -> bool {
+    return unsafe { wolfram_library_link::rtl::AbortQ() } != 0;
+}
+
+mod feature {
+    pub const CHECK_ABORT: bool = true;
 }

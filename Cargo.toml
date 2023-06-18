@@ -4,3 +4,9 @@ members = [
     "crates/wolfram-parser",
     "crates/codeparser-wll"
 ]
+
+[patch.crates-io]
+wolfram-library-link     = { git = "https://github.com/WolframResearch/wolfram-library-link-rs" }
+wolfram-library-link-sys = { git = "https://github.com/WolframResearch/wolfram-library-link-rs" }
+wstp     = { git = "https://github.com/WolframResearch/wstp-rs" }
+wstp-sys = { git = "https://github.com/WolframResearch/wstp-rs" }

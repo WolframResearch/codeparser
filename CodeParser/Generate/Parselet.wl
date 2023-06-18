@@ -320,7 +320,8 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		"}\n\n",
 		"impl Operator {\n",
 		"    #[allow(dead_code)]\n",
-		"    pub(crate) fn to_symbol(self) -> Symbol {\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn to_symbol(self) -> Symbol {\n",
 		"        match self {\n",
 		KeyValueMap[
 			{k, v} |-> Replace[{k, v}, {
@@ -333,7 +334,8 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		"        }\n",
 		"    }\n",
 		"\n",
-		"    pub(crate) fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
 		"        let operator = match symbol {\n",
 		KeyValueMap[
 			{k, v} |-> Replace[{k, v}, {

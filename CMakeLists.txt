@@ -276,7 +276,7 @@ endforeach()
 #
 add_custom_command(
 	OUTPUT
-	${PROJECT_SOURCE_DIR}/crate/src/generated/long_names_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl
 
 	#
@@ -309,7 +309,7 @@ add_custom_command(
 #
 set(GENERATED_TOKENENUM_OUTPUT
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
-	${PROJECT_SOURCE_DIR}/crate/src/generated/token_enum_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/token_enum_registration.rs
 )
 
 add_custom_command(
@@ -345,7 +345,7 @@ add_custom_command(
 # Parselet files
 #
 set(GENERATED_PARSELETREGISTRATION_OUTPUT
-	${PROJECT_SOURCE_DIR}/crate/src/generated/parselet_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
 )
 
 add_custom_command(
@@ -372,7 +372,7 @@ add_custom_command(
 add_custom_command(
 	OUTPUT
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl
-	${PROJECT_SOURCE_DIR}/crate/src/generated/precedence.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence.rs
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Precedence.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -417,7 +417,7 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-	${PROJECT_SOURCE_DIR}/crate/src/generated/symbol_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/symbol_registration.rs
 
 	#
 	# remove old files that may cause conflicts
@@ -450,7 +450,7 @@ add_custom_command(
 #
 add_custom_command(
 	OUTPUT
-	${PROJECT_SOURCE_DIR}/crate/src/generated/my_string_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/my_string_registration.rs
 
 	#
 	# remove old files that may cause conflicts
@@ -553,7 +553,7 @@ endif(TRANSPORT STREQUAL ExprLib)
 #
 # Build the Rust crate and copy the dylib into the paclet
 #
-set(RUST_TARGET_DIR ${PROJECT_SOURCE_DIR}/crate/target)
+set(RUST_TARGET_DIR ${PROJECT_SOURCE_DIR}/target)
 
 # WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
 set(CODEPARSE_DYLIB ${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}/CodeParser${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -565,7 +565,7 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}
 
 	COMMAND
-	cd crate
+	cd crates/codeparser-wll
 	&&
 	${CMAKE_COMMAND} -E env
 
@@ -584,21 +584,24 @@ add_custom_command(
 	# ===== Actual command
 	cargo build
 	$<$<CONFIG:Release>:--release>
-	--features=USE_MATHLINK,CHECK_ABORT
+	--features=USE_MATHLINK
 
 	COMMAND
 	${CMAKE_COMMAND} -E copy
-	${RUST_TARGET_DIR}/$<IF:$<CONFIG:Release>,release,debug>/${CMAKE_SHARED_LIBRARY_PREFIX}wolfram_code_parse${CMAKE_SHARED_LIBRARY_SUFFIX}
+	${RUST_TARGET_DIR}/$<IF:$<CONFIG:Release>,release,debug>/${CMAKE_SHARED_LIBRARY_PREFIX}codeparser_wll${CMAKE_SHARED_LIBRARY_SUFFIX}
 	${CODEPARSE_DYLIB}
 	DEPENDS
-	${PROJECT_SOURCE_DIR}/crate/src/generated/symbol_registration.rs
-	${PROJECT_SOURCE_DIR}/crate/src/generated/precedence.rs
-	${PROJECT_SOURCE_DIR}/crate/src/generated/my_string_registration.rs
-	${PROJECT_SOURCE_DIR}/crate/src/generated/parselet_registration.rs
-	${PROJECT_SOURCE_DIR}/crate/src/generated/long_names_registration.rs
-	${PROJECT_SOURCE_DIR}/crate/*
-	${PROJECT_SOURCE_DIR}/crate/src/*
-	${PROJECT_SOURCE_DIR}/crate/src/abstract_/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/symbol_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/my_string_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/abstract_/*
+	${PROJECT_SOURCE_DIR}/crates/codeparser-wll/*
+	${PROJECT_SOURCE_DIR}/crates/codeparser-wll/src/*
 )
 
 # "Fake" named target that just runs the custom command to generate the

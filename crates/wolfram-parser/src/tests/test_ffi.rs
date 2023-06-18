@@ -3,8 +3,6 @@
 //! crate is not backwards compatible with the version the tests were initially
 //! written for.
 
-use std::mem::size_of;
-
 use pretty_assertions::assert_eq;
 
 use crate::{EncodingMode, FirstLineBehavior, SourceConvention, StringifyMode};

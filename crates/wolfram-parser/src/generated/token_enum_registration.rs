@@ -487,7 +487,7 @@ const _: () = assert!(TokenKind::Error_Unterminated_End.value() == 0x20, "Check 
 
 
 #[allow(dead_code)]
-pub(crate) fn TokenToSymbol(token: TokenKind) -> Symbol {
+pub fn TokenToSymbol(token: TokenKind) -> Symbol {
     use TokenKind::*;
     match token {
         Unknown => return SYMBOL_TOKEN_UNKNOWN,
@@ -932,7 +932,7 @@ pub(crate) fn TokenToSymbol(token: TokenKind) -> Symbol {
     }
 }
 
-pub(crate) fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {
+pub fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {
     use TokenKind::*;
     use crate::symbol_registration as st;
     let token = match symbol {

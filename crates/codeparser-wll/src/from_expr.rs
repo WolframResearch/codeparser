@@ -1,21 +1,19 @@
 use ordered_float::NotNan;
-use wolfram_expr::{symbol::SymbolRef, ExprKind, Number};
-use wolfram_library_link::expr::{Expr, Normal, Symbol};
+use wolfram_library_link::expr::{symbol::SymbolRef, Expr, ExprKind, Normal, Number, Symbol};
 
-use crate::{
+use wolfram_parser::{
     cst::CstNodeSeq,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
-        GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Node, NodeSeq, Operator,
-        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode,
+        GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Node, Operator, OperatorNode,
+        PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     quirks::QuirkSettings,
     source::{CodeAction, CodeActionKind, GeneralSource, Issue, IssueTag, Severity},
     symbol_registration::*,
     token::{OwnedTokenInput, Token, TokenKind},
     token_enum_registration::SymbolToToken,
-    Container, ContainerBody, ContainerKind, Metadata, Source, SourceLocation,
+    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, Source, SourceLocation,
     UnsafeCharacterEncoding,
 };
 
@@ -670,21 +668,15 @@ impl FromExpr for GeneralSource {
         if let Ok(start_index) = get_source_pos(&elements[0]) {
             let end_index = get_source_pos(&elements[1])?;
 
-            return Ok(GeneralSource::String(Source {
-                start: SourceLocation {
-                    first: 0,
-                    second: start_index,
-                },
-                end: SourceLocation {
-                    first: 0,
-                    // FIXME: We add one here because in Source::put() we
-                    //        subtract 1. Instead of doing this in the WL
-                    //        serialization/deserialization, rationalize the
-                    //        representation of this field in Rust/WL so that
-                    //        they're consistent by definition.
-                    second: end_index + 1,
-                },
-            }));
+            return Ok(GeneralSource::String(Source::from_character_range(
+                start_index,
+                // FIXME: We add one here because in Source::put() we
+                //        subtract 1. Instead of doing this in the WL
+                //        serialization/deserialization, rationalize the
+                //        representation of this field in Rust/WL so that
+                //        they're consistent by definition.
+                end_index + 1,
+            )));
         }
 
         let start = try_normal_with_head(&elements[0], SYMBOL_LIST)?;
@@ -712,16 +704,10 @@ impl FromExpr for GeneralSource {
         let end_first = get_source_pos(&end[0])?;
         let end_second = get_source_pos(&end[1])?;
 
-        Ok(GeneralSource::String(Source {
-            start: SourceLocation {
-                first: start_first,
-                second: start_second,
-            },
-            end: SourceLocation {
-                first: end_first,
-                second: end_second,
-            },
-        }))
+        Ok(GeneralSource::String(Source::new(
+            SourceLocation::new(start_first, start_second),
+            SourceLocation::new(end_first, end_second),
+        )))
     }
 }
 
@@ -751,7 +737,7 @@ impl FromExpr for Operator {
 
 impl FromExpr for TokenKind {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let sym: &wolfram_expr::Symbol = match expr.try_as_symbol() {
+        let sym: &wolfram_library_link::expr::Symbol = match expr.try_as_symbol() {
             Some(sym) => sym,
             None => panic!(),
         };

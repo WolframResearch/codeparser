@@ -122,7 +122,6 @@ This will override the default settings in [`.lfsconfig`](./.lfsconfig).
 Then, to begin running the benchmarks, execute:
 
 ```shell
-$ cd crate
 $ cargo bench
 ```
 

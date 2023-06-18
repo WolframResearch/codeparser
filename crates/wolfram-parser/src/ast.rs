@@ -221,7 +221,7 @@ impl<S: TokenSource> From<S> for AstMetadata {
 }
 
 impl AbstractSyntaxError {
-    pub(crate) fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             AbstractSyntaxError::CommaTopLevel => "CommaTopLevel",
             AbstractSyntaxError::OpenParen => "OpenParen",

@@ -468,7 +468,7 @@ const _: () = assert!(TokenKind::Error_Unterminated_End.value() == 0x20, \"Check
 
 {"
 #[allow(dead_code)]
-pub(crate) fn TokenToSymbol(token: TokenKind) -> Symbol {"} ~Join~
+pub fn TokenToSymbol(token: TokenKind) -> Symbol {"} ~Join~
 {"    use TokenKind::*;"} ~Join~
 {"    match token {"} ~Join~
 tokenToSymbolCases ~Join~
@@ -477,7 +477,7 @@ tokenToSymbolCases ~Join~
 "}",
 ""} ~Join~ {
 	StringJoin[
-		"pub(crate) fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {\n",
+		"pub fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {\n",
 		"    use TokenKind::*;\n",
 		"    use crate::symbol_registration as st;\n",
 		"    let token = match symbol {\n",

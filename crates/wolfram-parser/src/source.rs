@@ -379,7 +379,7 @@ pub enum Severity {
 }
 
 impl IssueTag {
-    pub(crate) fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             IssueTag::Ambiguous => "Ambiguous",
             IssueTag::UnhandledCharacter => "UnhandledCharacter",
@@ -405,7 +405,8 @@ impl IssueTag {
         }
     }
 
-    pub(crate) fn from_str(string: &str) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn from_str(string: &str) -> Option<Self> {
         let value = match string {
             "Ambiguous" => IssueTag::Ambiguous,
             "UnhandledCharacter" => IssueTag::UnhandledCharacter,
@@ -435,7 +436,7 @@ impl IssueTag {
 }
 
 impl Severity {
-    pub(crate) fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             Severity::Formatting => "Formatting",
             Severity::Remark => "Remark",
@@ -446,7 +447,8 @@ impl Severity {
         }
     }
 
-    pub(crate) fn from_str(string: &str) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn from_str(string: &str) -> Option<Self> {
         let value = match string {
             "Formatting" => Severity::Formatting,
             "Remark" => Severity::Remark,
@@ -894,6 +896,7 @@ pub fn EncodingIssue(
 //
 
 impl SourceLocation {
+    #[doc(hidden)]
     pub fn new(first: u32, second: u32) -> Self {
         Self { first, second }
     }
@@ -1060,7 +1063,8 @@ impl Source {
         }
     }
 
-    pub(crate) fn from_character_range(start: u32, end: u32) -> Self {
+    #[doc(hidden)]
+    pub fn from_character_range(start: u32, end: u32) -> Self {
         Source {
             start: SourceLocation {
                 first: 0,
@@ -1094,6 +1098,13 @@ impl Source {
                 second: 0,
             },
         }
+    }
+
+    /// Get the start and end `SourceLocation`s of this source span.
+    pub fn start_end(&self) -> (SourceLocation, SourceLocation) {
+        let Source { start, end } = *self;
+
+        (start, end)
     }
 
     pub(crate) fn character_range(&self) -> CharacterRange {
@@ -1168,7 +1179,7 @@ impl Source {
     /// Check if a [`SourceLocation`] is inside of this [`Source`] span.
     ///
     /// ```
-    /// use wolfram_code_parse::{Source, SourceLocation, test_utils::src};
+    /// use wolfram_parser::{Source, SourceLocation, test_utils::src};
     ///
     /// assert!(src!(1:3-2:0).contains(SourceLocation::new(1, 4)));
     ///
@@ -1227,7 +1238,7 @@ impl Source {
     /// [`Source`].
     ///
     /// ```
-    /// use wolfram_code_parse::{Source, SourceLocation, test_utils::src};
+    /// use wolfram_parser::{Source, SourceLocation, test_utils::src};
     ///
     /// // Complete overlap.
     /// assert!(src!(1:1-1:5).overlaps(src!(1:2-1:4)));
