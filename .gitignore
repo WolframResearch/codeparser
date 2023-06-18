@@ -3,4 +3,4 @@ build*
 
 .DS_Store
 
-/crate/target
+/target
