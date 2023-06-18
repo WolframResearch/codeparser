@@ -31,20 +31,6 @@ line using the
 $ wolfram-cli paclet test build/paclet/CodeParser Tests/TestSuite.mt
 ```
 
-#### Build the Wolfram-compatible dynamic library manually
-
-To build a dynamic library suitable for use via LibraryLink manually, run:
-
-```shell
-$ cargo build --features=USE_MATHLINK,CHECK_ABORT
-```
-
-> Note: The `USE_MATHLINK` and `CHECK_ABORT` features are opt-in because they
-> enable functionality that only works when the resulting library is loaded via
-> LibraryLink, which isn't the case when e.g. running tests via `cargo test`,
-> or when the `wolfram-code-parser` is used as a dependency from other Rust
-> crates.
-
 ## Testing
 
 CodeParser has two test suites:

@@ -5,8 +5,6 @@ use wolfram_library_link::{expr::Expr, wstp};
 use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
     cst::CstNode,
-    my_string::MyString,
-    my_string_registration::*,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
         GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator, OperatorNode, PostfixNode,
@@ -812,7 +810,7 @@ impl WstpPut for Issue {
             if !additional_descriptions.is_empty() {
                 callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
 
-                STRING_ADDITIONALDESCRIPTIONS.put(callLink);
+                callLink.put_str("AdditionalDescriptions").unwrap();
 
                 callLink
                     .put_function(SYMBOL_LIST.as_str(), additional_descriptions.len())
@@ -871,7 +869,7 @@ impl WstpPut for CodeAction {
 
                     callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
 
-                    STRING_REPLACEMENTTEXT.put(callLink);
+                    callLink.put_str("ReplacementText").unwrap();
 
                     callLink.put_str(replacement_text).unwrap();
                 }
@@ -894,7 +892,7 @@ impl WstpPut for CodeAction {
 
                     callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
 
-                    STRING_INSERTIONTEXT.put(callLink);
+                    callLink.put_str("InsertionText").unwrap();
 
                     callLink.put_str(insertion_text).unwrap();
                 }
@@ -1074,14 +1072,6 @@ impl<'i> WstpPut for ParseResult<CstNode<BorrowedTokenInput<'i>>> {
 //======================================
 // Other
 //======================================
-
-impl WstpPut for MyString {
-    fn put(&self, link: &mut wstp::Link) {
-        let MyString(val) = self;
-
-        link.put_str(val).unwrap()
-    }
-}
 
 // Note: This function can't be a method on Symbol because Symbol (currently) is
 //       a type alias to a type from wolfram_expr, and its not legal in Rust

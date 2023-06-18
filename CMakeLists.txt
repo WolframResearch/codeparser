@@ -446,34 +446,6 @@ add_custom_command(
 )
 
 #
-# String files
-#
-add_custom_command(
-	OUTPUT
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/my_string_registration.rs
-
-	#
-	# remove old files that may cause conflicts
-	#
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
-	COMMAND
-	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/String.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	DEPENDS
-	${PROJECT_SOURCE_DIR}/CodeParser/Generate/String.wl
-	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
-	${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-	${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	VERBATIM
-	WORKING_DIRECTORY
-	${PROJECT_SOURCE_DIR}
-)
-
-#
 # expr lib target
 #
 if(TRANSPORT STREQUAL ExprLib)
@@ -593,7 +565,6 @@ add_custom_command(
 	DEPENDS
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/symbol_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence.rs
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/my_string_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/*
