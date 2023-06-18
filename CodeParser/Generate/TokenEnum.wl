@@ -378,7 +378,6 @@ Which[
 ]
 
 
-tokenToSymbolCases = Row[{"        ", toTokenEnumVariant[#], " => return ", toGlobal[tokenToSymbol[#]], ","}]& /@ tokens
 
 
 tokenIsEmptyCases = Row[{"tokenIsEmpty", "[", ToString[#], "]", " ", "=", " ", "True"}]& /@ $isEmptyTokens
@@ -443,7 +442,7 @@ tokenEnumRegistrationCPPSource = tokenEnumRegistrationCPPHeader ~Join~ {
 // DO NOT MODIFY
 //
 
-use crate::symbol_registration::*;
+use crate::symbol_registration as st;
 
 //
 // TokenKind::Integer must be 0x4 to allow setting the 0b1 bit to convert to TokenKind::REAL, and 0b10 bit to convert to TokenKind::Rational
@@ -471,7 +470,20 @@ const _: () = assert!(TokenKind::Error_Unterminated_End.value() == 0x20, \"Check
 pub fn TokenToSymbol(token: TokenKind) -> Symbol {"} ~Join~
 {"    use TokenKind::*;"} ~Join~
 {"    match token {"} ~Join~
-tokenToSymbolCases ~Join~
+	Map[
+		token |-> Row[{
+			"        ",
+			toTokenEnumVariant[token],
+			" => return st::",
+			StringReplace[
+				toGlobal[tokenToSymbol[token], "UpperCamelCase"],
+				StartOfString ~~ "Symbol_" -> ""
+			],
+			","
+		}],
+		tokens
+	]
+~Join~
 { "        _ => panic!(\"Unhandled token type\"),"} ~Join~
 {"    }",
 "}",
@@ -479,10 +491,18 @@ tokenToSymbolCases ~Join~
 	StringJoin[
 		"pub fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {\n",
 		"    use TokenKind::*;\n",
-		"    use crate::symbol_registration as st;\n",
 		"    let token = match symbol {\n",
 		Map[
-			token |-> "        st::" <> toGlobal[tokenToSymbol[token]] <> " => " <> toTokenEnumVariant[token] <> ",\n",
+			token |-> StringJoin[
+				"        st::",
+				StringReplace[
+					toGlobal[tokenToSymbol[token], "UpperCamelCase"],
+					StartOfString ~~ "Symbol_" -> ""
+				],
+				" => ",
+				toTokenEnumVariant[token],
+				",\n"
+			],
 			tokens
 		],
 		"        _ => return None,\n",

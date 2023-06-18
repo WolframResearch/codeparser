@@ -26,8 +26,8 @@ use wolfram_parser::{
     parser_session::ParserSession,
     quirks::QuirkSettings,
     source::{SourceConvention, DEFAULT_TAB_WIDTH},
-    symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
-    Container, ContainerBody, EncodingMode, FirstLineBehavior, StringifyMode,
+    symbol_registration as sym, Container, ContainerBody, EncodingMode, FirstLineBehavior,
+    StringifyMode,
 };
 
 use crate::{convert_wstp::WstpPut, from_expr::FromExpr};
@@ -237,7 +237,7 @@ pub fn DestroyParserSession_LibraryLink(link: &mut wstp::Link) {
     // cannot use session after this
     //
 
-    link.put_symbol(SYMBOL_NULL.as_str()).unwrap();
+    link.put_symbol(sym::Null.as_str()).unwrap();
 }
 
 //==========================================================
@@ -674,7 +674,7 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
     match session.tokenize() {
         Ok(nodes) => nodes.put(link),
         Err(flag) => {
-            link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+            link.put_function(sym::List.as_str(), 1).unwrap();
             flag.put(link);
         },
     };
@@ -797,7 +797,7 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
     match session.tokenize() {
         Ok(nodes) => nodes.put(link),
         Err(flag) => {
-            link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+            link.put_function(sym::List.as_str(), 1).unwrap();
             flag.put(link);
         },
     };

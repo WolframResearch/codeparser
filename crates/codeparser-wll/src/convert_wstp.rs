@@ -15,7 +15,7 @@ use wolfram_parser::{
         Source, SourceLocation, StringSourceKind,
     },
     symbol::Symbol,
-    symbol_registration::{self as sym, *},
+    symbol_registration as sym,
     token::{BorrowedTokenInput, Token, TokenInput, TokenKind},
     token_enum_registration::TokenToSymbol,
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult, Tokens,
@@ -67,7 +67,7 @@ impl<S: WstpPut> WstpPut for ContainerBody<S> {
         match self {
             ContainerBody::Nodes(nodes) => nodes.put(link),
             ContainerBody::Missing(flag) => {
-                link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+                link.put_function(sym::List.as_str(), 1).unwrap();
                 flag.put(link);
             },
         }
@@ -131,7 +131,7 @@ impl WstpPut for Metadata {
             len += 1;
         }
 
-        link.put_function(SYMBOL_ASSOCIATION.as_str(), len).unwrap();
+        link.put_function(sym::Association.as_str(), len).unwrap();
 
         if let Some(issues) = syntax_issues {
             link.put_function("System`Rule", 2).unwrap();
@@ -168,7 +168,7 @@ impl WstpPut for Metadata {
 
         if !source.is_unknown() {
             link.put_function("System`Rule", 2).unwrap();
-            link.put_symbol(SYMBOL_CODEPARSER_SOURCE.as_str()).unwrap();
+            link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
             match source {
                 GeneralSource::String(source) => put_source_rhs(link, *source),
                 GeneralSource::BoxPosition(other) => put_box_position(link, other),
@@ -182,7 +182,7 @@ impl WstpPut for Metadata {
 
         if let Some(actions) = code_actions {
             link.put_function("System`Rule", 2).unwrap();
-            link.put_symbol(SYMBOL_CODEPARSER_CODEACTIONS.as_str())
+            link.put_symbol(sym::CodeParser_CodeActions.as_str())
                 .unwrap();
 
             // TODO: This clone() is unnecessarily inefficient.
@@ -219,11 +219,11 @@ impl WstpPut for AstMetadata {
 
         len += !issues.is_empty() as usize;
 
-        link.put_function(SYMBOL_ASSOCIATION.as_str(), len).unwrap();
+        link.put_function(sym::Association.as_str(), len).unwrap();
 
         if !source.is_unknown() {
             link.put_function("System`Rule", 2).unwrap();
-            link.put_symbol(SYMBOL_CODEPARSER_SOURCE.as_str()).unwrap();
+            link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
             match source {
                 GeneralSource::String(source) => put_source_rhs(link, *source),
                 GeneralSource::BoxPosition(other) => put_box_position(link, other),
@@ -250,7 +250,7 @@ impl WstpPut for AstNode {
     fn put(&self, link: &mut wstp::Link) {
         match self {
             AstNode::Leaf { kind, input, data } => {
-                link.put_function(SYMBOL_CODEPARSER_LEAFNODE.as_str(), 3)
+                link.put_function(sym::CodeParser_LeafNode.as_str(), 3)
                     .unwrap();
 
                 kind.put(link);
@@ -263,7 +263,7 @@ impl WstpPut for AstNode {
                 data.put(link);
             },
             AstNode::Error { kind, input, data } => {
-                link.put_function(SYMBOL_CODEPARSER_ERRORNODE.as_str(), 3)
+                link.put_function(sym::CodeParser_ErrorNode.as_str(), 3)
                     .unwrap();
 
                 kind.put(link);
@@ -276,12 +276,12 @@ impl WstpPut for AstNode {
                 data.put(link);
             },
             AstNode::Call { head, args, data } => {
-                link.put_function(SYMBOL_CODEPARSER_CALLNODE.as_str(), 3)
+                link.put_function(sym::CodeParser_CallNode.as_str(), 3)
                     .unwrap();
 
                 head.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+                link.put_function(sym::List.as_str(), args.len()).unwrap();
 
                 for arg in args {
                     arg.put(link);
@@ -295,7 +295,7 @@ impl WstpPut for AstNode {
 
                 head.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+                link.put_function(sym::List.as_str(), args.len()).unwrap();
 
                 for arg in args {
                     arg.put(link);
@@ -309,7 +309,7 @@ impl WstpPut for AstNode {
 
                 head.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+                link.put_function(sym::List.as_str(), args.len()).unwrap();
 
                 for arg in args {
                     arg.put(link);
@@ -327,7 +327,7 @@ impl WstpPut for AstNode {
 
                 kind.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), children.len())
+                link.put_function(sym::List.as_str(), children.len())
                     .unwrap();
 
                 for arg in children {
@@ -337,12 +337,12 @@ impl WstpPut for AstNode {
                 data.put(link);
             },
             AstNode::AbstractSyntaxError { kind, args, data } => {
-                link.put_function(SYMBOL_CODEPARSER_ABSTRACTSYNTAXERRORNODE.as_str(), 3)
+                link.put_function(sym::CodeParser_AbstractSyntaxErrorNode.as_str(), 3)
                     .unwrap();
 
                 kind.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+                link.put_function(sym::List.as_str(), args.len()).unwrap();
 
                 for arg in args {
                     arg.put(link);
@@ -351,12 +351,12 @@ impl WstpPut for AstNode {
                 data.put(link);
             },
             AstNode::Box { kind, args, data } => {
-                link.put_function(SYMBOL_CODEPARSER_BOXNODE.as_str(), 3)
+                link.put_function(sym::CodeParser_BoxNode.as_str(), 3)
                     .unwrap();
 
                 kind.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), args.len()).unwrap();
+                link.put_function(sym::List.as_str(), args.len()).unwrap();
 
                 for arg in args {
                     arg.put(link);
@@ -395,7 +395,7 @@ impl WstpPut for AstNode {
 
                 kind.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), children.len())
+                link.put_function(sym::List.as_str(), children.len())
                     .unwrap();
 
                 for child in children {
@@ -414,7 +414,7 @@ impl WstpPut for AstNode {
 
                 kind.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), children.len())
+                link.put_function(sym::List.as_str(), children.len())
                     .unwrap();
 
                 for child in children {
@@ -448,22 +448,22 @@ impl WstpPut for AstNode {
                 //     },
                 //     data1
                 // ]
-                link.put_function(SYMBOL_CODEPARSER_BOXNODE.as_str(), 3)
+                link.put_function(sym::CodeParser_BoxNode.as_str(), 3)
                     .unwrap();
 
                 BoxKind::TagBox.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+                link.put_function(sym::List.as_str(), 2).unwrap();
 
                 // GroupNode[..]
                 {
-                    link.put_function(SYMBOL_CODEPARSER_GROUPNODE.as_str(), 3)
+                    link.put_function(sym::CodeParser_GroupNode.as_str(), 3)
                         .unwrap();
 
                     Operator::CodeParser_GroupParen.put(link);
 
                     let (o, b, c, data2) = &**group;
-                    link.put_function(SYMBOL_LIST.as_str(), 3).unwrap();
+                    link.put_function(sym::List.as_str(), 3).unwrap();
                     o.put(link);
                     b.put(link);
                     c.put(link);
@@ -476,12 +476,12 @@ impl WstpPut for AstNode {
                 data1.put(link);
             },
             AstNode::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
-                link.put_function(SYMBOL_CODEPARSER_PREFIXNODE.as_str(), 3)
+                link.put_function(sym::CodeParser_PrefixNode.as_str(), 3)
                     .unwrap();
 
                 Operator::CodeParser_PrefixLinearSyntaxBang.put(link);
 
-                link.put_function(SYMBOL_LIST.as_str(), children.len())
+                link.put_function(sym::List.as_str(), children.len())
                     .unwrap();
 
                 for child in children.iter() {
@@ -520,7 +520,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
 
         if tok.isError() {
             callLink
-                .put_function(SYMBOL_CODEPARSER_ERRORNODE.as_str(), 3)
+                .put_function(sym::CodeParser_ErrorNode.as_str(), 3)
                 .unwrap();
         } else {
             //
@@ -528,7 +528,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
             //
 
             callLink
-                .put_function(SYMBOL_CODEPARSER_LEAFNODE.as_str(), 3)
+                .put_function(sym::CodeParser_LeafNode.as_str(), 3)
                 .unwrap();
         }
 
@@ -555,21 +555,21 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Node<I, S> {
             Node::Token(token) => token.put(link),
             Node::Call(node) => node.put(link),
             Node::SyntaxError(node) => node.put(link),
-            Node::Infix(InfixNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_INFIXNODE),
-            Node::Prefix(PrefixNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_PREFIXNODE),
-            Node::Postfix(PostfixNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_POSTFIXNODE),
-            Node::Binary(BinaryNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_BINARYNODE),
-            Node::Ternary(TernaryNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_TERNARYNODE),
+            Node::Infix(InfixNode(op)) => put_op(link, op, sym::CodeParser_InfixNode),
+            Node::Prefix(PrefixNode(op)) => put_op(link, op, sym::CodeParser_PrefixNode),
+            Node::Postfix(PostfixNode(op)) => put_op(link, op, sym::CodeParser_PostfixNode),
+            Node::Binary(BinaryNode(op)) => put_op(link, op, sym::CodeParser_BinaryNode),
+            Node::Ternary(TernaryNode(op)) => put_op(link, op, sym::CodeParser_TernaryNode),
             Node::PrefixBinary(PrefixBinaryNode(op)) => {
-                put_op(link, op, SYMBOL_CODEPARSER_PREFIXBINARYNODE)
+                put_op(link, op, sym::CodeParser_PrefixBinaryNode)
             },
-            Node::Compound(CompoundNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_COMPOUNDNODE),
-            Node::Group(GroupNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_GROUPNODE),
+            Node::Compound(CompoundNode(op)) => put_op(link, op, sym::CodeParser_CompoundNode),
+            Node::Group(GroupNode(op)) => put_op(link, op, sym::CodeParser_GroupNode),
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
-                put_op(link, op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
+                put_op(link, op, sym::CodeParser_GroupMissingCloserNode)
             },
             Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                put_op(link, op, SYMBOL_CODEPARSER_GROUPMISSINGOPENERNODE)
+                put_op(link, op, sym::CodeParser_GroupMissingOpenerNode)
             },
             Node::Box(box_node) => box_node.put(link),
             Node::Code(node) => node.put(link),
@@ -582,12 +582,12 @@ impl<N: WstpPut> WstpPut for NodeSeq<N> {
         let NodeSeq(vec) = self;
 
         callLink
-            .put_function(SYMBOL_LIST.as_str(), vec.len())
+            .put_function(sym::List.as_str(), vec.len())
             .unwrap();
 
         for C in vec {
             if crate::feature::CHECK_ABORT && crate::abortQ() {
-                Symbol_put(SYMBOL__ABORTED, callLink);
+                Symbol_put(sym::_Aborted, callLink);
                 continue;
             }
 
@@ -600,12 +600,11 @@ impl<'i> WstpPut for Tokens<BorrowedTokenInput<'i>> {
     fn put(&self, link: &mut wstp::Link) {
         let Tokens(tokens) = self;
 
-        link.put_function(SYMBOL_LIST.as_str(), tokens.len())
-            .unwrap();
+        link.put_function(sym::List.as_str(), tokens.len()).unwrap();
 
         for token in tokens {
             if crate::feature::CHECK_ABORT && crate::abortQ() {
-                Symbol_put(SYMBOL__ABORTED, link);
+                Symbol_put(sym::_Aborted, link);
                 continue;
             }
 
@@ -622,7 +621,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for BoxNode<I, S> {
             src,
         } = self;
 
-        link.put_function(SYMBOL_CODEPARSER_BOXNODE.as_str(), 3)
+        link.put_function(sym::CodeParser_BoxNode.as_str(), 3)
             .unwrap();
         kind.put(link);
         children.put(link);
@@ -645,7 +644,7 @@ impl<S: WstpPut> WstpPut for CodeNode<S> {
     fn put(&self, link: &mut wstp::Link) {
         let CodeNode { first, second, src } = self;
 
-        link.put_function(SYMBOL_CODEPARSER_CODENODE.as_str(), 3)
+        link.put_function(sym::CodeParser_CodeNode.as_str(), 3)
             .unwrap();
         link.put_expr(&first).unwrap();
         link.put_expr(&second).unwrap();
@@ -685,7 +684,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
         } = self;
 
         callLink
-            .put_function(SYMBOL_CODEPARSER_CALLNODE.as_str(), 3)
+            .put_function(sym::CodeParser_CallNode.as_str(), 3)
             .unwrap();
 
         if *is_concrete {
@@ -716,7 +715,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for SyntaxErrorNode<I, S> {
 
 
         callLink
-            .put_function(SYMBOL_CODEPARSER_SYNTAXERRORNODE.as_str(), 3)
+            .put_function(sym::CodeParser_SyntaxErrorNode.as_str(), 3)
             .unwrap();
 
         err.put(callLink);
@@ -737,7 +736,7 @@ impl WstpPut for SyntaxErrorKind {
 
 impl WstpPut for UnsafeCharacterEncoding {
     fn put(&self, link: &mut wstp::Link) {
-        link.put_function(SYMBOL_MISSING.as_str(), 1).unwrap();
+        link.put_function(sym::Missing.as_str(), 1).unwrap();
 
         let variant_name: &'static str = self.as_str();
 
@@ -780,26 +779,26 @@ impl WstpPut for Issue {
                 + (!additional_sources.is_empty() as usize);
 
             callLink
-                .put_function(SYMBOL_ASSOCIATION.as_str(), len)
+                .put_function(sym::Association.as_str(), len)
                 .unwrap();
 
             src.put(callLink);
 
             {
-                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                callLink.put_function(sym::Rule.as_str(), 2).unwrap();
 
-                Symbol_put(SYMBOL_CONFIDENCELEVEL, callLink);
+                Symbol_put(sym::ConfidenceLevel, callLink);
 
                 callLink.put_f64(**val).unwrap();
             }
 
             if !actions.is_empty() {
-                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                callLink.put_function(sym::Rule.as_str(), 2).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_CODEACTIONS, callLink);
+                Symbol_put(sym::CodeParser_CodeActions, callLink);
 
                 callLink
-                    .put_function(SYMBOL_LIST.as_str(), actions.len())
+                    .put_function(sym::List.as_str(), actions.len())
                     .unwrap();
 
                 for A in actions {
@@ -808,12 +807,12 @@ impl WstpPut for Issue {
             }
 
             if !additional_descriptions.is_empty() {
-                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                callLink.put_function(sym::Rule.as_str(), 2).unwrap();
 
                 callLink.put_str("AdditionalDescriptions").unwrap();
 
                 callLink
-                    .put_function(SYMBOL_LIST.as_str(), additional_descriptions.len())
+                    .put_function(sym::List.as_str(), additional_descriptions.len())
                     .unwrap();
 
                 for D in additional_descriptions {
@@ -822,12 +821,12 @@ impl WstpPut for Issue {
             }
 
             if !additional_sources.is_empty() {
-                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                callLink.put_function(sym::Rule.as_str(), 2).unwrap();
 
                 callLink.put_str("AdditionalSources").unwrap();
 
                 callLink
-                    .put_function(SYMBOL_LIST.as_str(), additional_sources.len())
+                    .put_function(sym::List.as_str(), additional_sources.len())
                     .unwrap();
 
                 for source in additional_sources {
@@ -853,21 +852,19 @@ impl WstpPut for CodeAction {
         match kind {
             CodeActionKind::ReplaceText { replacement_text } => {
                 callLink
-                    .put_function(SYMBOL_CODEPARSER_CODEACTION.as_str(), 3)
+                    .put_function(sym::CodeParser_CodeAction.as_str(), 3)
                     .unwrap();
 
                 callLink.put_str(Label).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_REPLACETEXT, callLink);
+                Symbol_put(sym::CodeParser_ReplaceText, callLink);
 
                 {
-                    callLink
-                        .put_function(SYMBOL_ASSOCIATION.as_str(), 2)
-                        .unwrap();
+                    callLink.put_function(sym::Association.as_str(), 2).unwrap();
 
                     Src.put(callLink);
 
-                    callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                    callLink.put_function(sym::Rule.as_str(), 2).unwrap();
 
                     callLink.put_str("ReplacementText").unwrap();
 
@@ -876,21 +873,19 @@ impl WstpPut for CodeAction {
             },
             CodeActionKind::InsertText { insertion_text } => {
                 callLink
-                    .put_function(SYMBOL_CODEPARSER_CODEACTION.as_str(), 3)
+                    .put_function(sym::CodeParser_CodeAction.as_str(), 3)
                     .unwrap();
 
                 callLink.put_str(Label).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_INSERTTEXT, callLink);
+                Symbol_put(sym::CodeParser_InsertText, callLink);
 
                 {
-                    callLink
-                        .put_function(SYMBOL_ASSOCIATION.as_str(), 2)
-                        .unwrap();
+                    callLink.put_function(sym::Association.as_str(), 2).unwrap();
 
                     Src.put(callLink);
 
-                    callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                    callLink.put_function(sym::Rule.as_str(), 2).unwrap();
 
                     callLink.put_str("InsertionText").unwrap();
 
@@ -899,17 +894,15 @@ impl WstpPut for CodeAction {
             },
             CodeActionKind::DeleteText => {
                 callLink
-                    .put_function(SYMBOL_CODEPARSER_CODEACTION.as_str(), 3)
+                    .put_function(sym::CodeParser_CodeAction.as_str(), 3)
                     .unwrap();
 
                 callLink.put_str(Label).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_DELETETEXT, callLink);
+                Symbol_put(sym::CodeParser_DeleteText, callLink);
 
                 {
-                    callLink
-                        .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-                        .unwrap();
+                    callLink.put_function(sym::Association.as_str(), 1).unwrap();
 
                     Src.put(callLink);
                 }
@@ -922,7 +915,7 @@ impl WstpPut for SourceLocation {
     fn put(&self, callLink: &mut wstp::Link) {
         let SourceLocation { first, second } = *self;
 
-        callLink.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+        callLink.put_function(sym::List.as_str(), 2).unwrap();
 
         callLink.put_i64(first.into()).unwrap();
 
@@ -935,13 +928,13 @@ fn put_source_rhs(link: &mut wstp::Link, source: Source) {
         StringSourceKind::LineColumnRange { .. } => {
             let (start, end) = source.start_end();
 
-            link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+            link.put_function(sym::List.as_str(), 2).unwrap();
 
             start.put(link);
             end.put(link);
         },
         StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
-            link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+            link.put_function(sym::List.as_str(), 2).unwrap();
 
             link.put_i64(start.into()).unwrap();
 
@@ -956,14 +949,14 @@ fn put_source_rhs(link: &mut wstp::Link, source: Source) {
         //  * Panic here? (The caller should construct <||>, NOT
         //    <| Source -> <unknown> |>)
         StringSourceKind::Unknown => {
-            // link.put_function(SYMBOL_LIST.as_str(), 0).unwrap();
+            // link.put_function(sym::List.as_str(), 0).unwrap();
             panic!("unable to serialize StringSourceKind::Unknown")
         },
     }
 }
 
 fn put_box_position(link: &mut wstp::Link, indexes: &Vec<usize>) {
-    link.put_function(SYMBOL_LIST.as_str(), indexes.len())
+    link.put_function(sym::List.as_str(), indexes.len())
         .unwrap();
 
     for elem in indexes {
@@ -974,11 +967,11 @@ fn put_box_position(link: &mut wstp::Link, indexes: &Vec<usize>) {
 
 impl WstpPut for Source {
     fn put(&self, link: &mut wstp::Link) {
-        link.put_function(SYMBOL_ASSOCIATION.as_str(), 1).unwrap();
+        link.put_function(sym::Association.as_str(), 1).unwrap();
 
         // Put: CodeParser`Source -> source
-        link.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
-        Symbol_put(SYMBOL_CODEPARSER_SOURCE, link);
+        link.put_function(sym::Rule.as_str(), 2).unwrap();
+        Symbol_put(sym::CodeParser_Source, link);
         put_source_rhs(link, *self)
     }
 }
@@ -987,14 +980,14 @@ impl WstpPut for GeneralSource {
     fn put(&self, link: &mut wstp::Link) {
         if self.is_unknown() {
             // Put: <||>
-            link.put_function(SYMBOL_ASSOCIATION.as_str(), 0).unwrap();
+            link.put_function(sym::Association.as_str(), 0).unwrap();
             return;
         }
 
         // Put: <| CodeParser`Source -> source |>
-        link.put_function(SYMBOL_ASSOCIATION.as_str(), 1).unwrap();
-        link.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
-        Symbol_put(SYMBOL_CODEPARSER_SOURCE, link);
+        link.put_function(sym::Association.as_str(), 1).unwrap();
+        link.put_function(sym::Rule.as_str(), 2).unwrap();
+        Symbol_put(sym::CodeParser_Source, link);
 
         match self {
             GeneralSource::String(source) => put_source_rhs(link, *source),
@@ -1005,7 +998,7 @@ impl WstpPut for GeneralSource {
 }
 
 fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<SourceLocation>) {
-    link.put_function(SYMBOL_LIST.as_str(), source_locs.len())
+    link.put_function(sym::List.as_str(), source_locs.len())
         .unwrap();
 
     for loc in source_locs {
@@ -1027,14 +1020,14 @@ impl<'i> WstpPut for ParseResult<CstNode<BorrowedTokenInput<'i>>> {
             tracked,
         } = self;
 
-        link.put_function(SYMBOL_LIST.as_str(), 6).unwrap();
+        link.put_function(sym::List.as_str(), 6).unwrap();
 
         // 1.
         // Collected expressions.
         match unsafe_character_encoding {
             None => outer_exprs.put(link),
             Some(flag) => {
-                link.put_function(SYMBOL_LIST.as_str(), 1).unwrap();
+                link.put_function(sym::List.as_str(), 1).unwrap();
                 flag.put(link);
             },
         };
@@ -1054,8 +1047,7 @@ impl<'i> WstpPut for ParseResult<CstNode<BorrowedTokenInput<'i>>> {
                 non_fatal_issues
             };
 
-            link.put_function(SYMBOL_LIST.as_str(), issues.len())
-                .unwrap();
+            link.put_function(sym::List.as_str(), issues.len()).unwrap();
 
             for issue in issues {
                 issue.put(link);

@@ -13,10 +13,7 @@ use crate::{
     feature,
     long_names::{self as LongNames, code_point_has_long_name},
     symbol::Symbol,
-    symbol_registration::{
-        SYMBOL_CODEPARSER_ENCODINGISSUE, SYMBOL_CODEPARSER_FORMATISSUE,
-        SYMBOL_CODEPARSER_SYNTAXISSUE,
-    },
+    symbol_registration as sym,
     tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
     wl_character::{EscapeStyle, WLCharacter},
 };
@@ -708,7 +705,7 @@ impl Issue {
         let val = NotNan::new(val).expect("unable to construct Issue with NaN val");
 
         Issue {
-            make_sym: SYMBOL_CODEPARSER_SYNTAXISSUE,
+            make_sym: sym::CodeParser_SyntaxIssue,
             tag,
             msg,
             sev,
@@ -783,7 +780,7 @@ pub fn SyntaxIssue(
     additional_descriptions: AdditionalDescriptionVector,
 ) -> Issue {
     Issue::new(
-        SYMBOL_CODEPARSER_SYNTAXISSUE,
+        sym::CodeParser_SyntaxIssue,
         tag,
         msg,
         sev,
@@ -804,7 +801,7 @@ pub(crate) fn FormatIssue(
     additional_descriptions: AdditionalDescriptionVector,
 ) -> Issue {
     Issue::new(
-        SYMBOL_CODEPARSER_FORMATISSUE,
+        sym::CodeParser_FormatIssue,
         tag,
         msg,
         sev,
@@ -825,7 +822,7 @@ pub fn EncodingIssue(
     additional_descriptions: AdditionalDescriptionVector,
 ) -> Issue {
     Issue::new(
-        SYMBOL_CODEPARSER_ENCODINGISSUE,
+        sym::CodeParser_EncodingIssue,
         tag,
         msg,
         sev,
