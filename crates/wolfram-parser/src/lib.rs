@@ -1,3 +1,20 @@
+//! Wolfram Language input form parser.
+//!
+//! This library implements a fully-featured parser for [Wolfram Language][WL]
+//! input form syntax. Given a string containing Wolfram Language code, either
+//! an Abstract Syntax Tree (AST) or Concrete Syntax Tree (CST) can be parsed.
+//!
+//! [WL]: https://wolfram.com/language
+//!
+//!
+//! # API
+//!
+//! Input   | Tokenize             | Parse concrete syntax    | Parse abstract syntax
+//! --------|----------------------|--------------------------|--------------------
+//! `&str`  | [`tokenize()`]       | [`parse_to_cst()`]       | [`parse_to_ast()`]
+//! `&[u8]` | [`tokenize_bytes()`] | [`parse_bytes_to_cst()`] | [`parse_bytes_to_ast()`]
+//!
+
 //
 // Lints
 //
@@ -347,7 +364,7 @@ impl ParseOptions {
 
 use crate::parser_session::ParserSession;
 
-/// Parse bytes containing Wolfram Language input into a sequence of tokens.
+/// Parse a string containing Wolfram Language input into a sequence of tokens.
 ///
 /// # Examples
 ///
@@ -355,12 +372,11 @@ use crate::parser_session::ParserSession;
 ///
 /// ```
 /// use wolfram_parser::{
-///     tokenize_bytes, ParseOptions, Tokens,
+///     tokenize, ParseOptions, Tokens,
 ///     test_utils::{token, src}
 /// };
 ///
-/// let Tokens(tokens) = tokenize_bytes(b"2 + 2", &ParseOptions::default())
-///     .unwrap();
+/// let Tokens(tokens) = tokenize("2 + 2", &ParseOptions::default());
 ///
 /// assert_eq!(tokens, &[
 ///     token![Integer, "2" @ 0, src!(1:1-1:2)],
@@ -370,6 +386,12 @@ use crate::parser_session::ParserSession;
 ///     token![Integer, "2" @ 4, src!(1:5-1:6)],
 /// ]);
 /// ```
+pub fn tokenize<'i>(input: &'i str, opts: &ParseOptions) -> Tokens<BorrowedTokenInput<'i>> {
+    tokenize_bytes(input.as_bytes(), opts)
+        .expect("unexpected character encoding error tokenizing &str")
+}
+
+/// Parse bytes containing Wolfram Language input into a sequence of tokens.
 pub fn tokenize_bytes<'i>(
     input: &'i [u8],
     opts: &ParseOptions,
@@ -398,27 +420,28 @@ pub fn tokenize_bytes<'i>(
 // Parse CST
 //======================================
 
-/// Parse a string containing Wolfram Language input into concrete syntax tree.
+/// Parse a string containing Wolfram Language input into a concrete syntax tree.
 ///
 /// # Examples
 ///
 /// Parse `2 + 2`:
 ///
 /// ```
-/// use wolfram_parser::{parse_concrete, ParseOptions};
+/// use wolfram_parser::{parse_to_cst, ParseOptions};
 ///
-/// let result = parse_concrete("2 + 2", &ParseOptions::default());
+/// let result = parse_to_cst("2 + 2", &ParseOptions::default());
 ///
 /// // TODO: assert_eq!(result.nodes(), &[]);
 /// ```
-pub fn parse_concrete<'i>(
+pub fn parse_to_cst<'i>(
     input: &'i str,
     opts: &ParseOptions,
 ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
-    parse_concrete_bytes(input.as_bytes(), opts)
+    parse_bytes_to_cst(input.as_bytes(), opts)
 }
 
-pub fn parse_concrete_bytes<'i>(
+/// Parse bytes containing Wolfram Language input into a concrete syntax tree.
+pub fn parse_bytes_to_cst<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
@@ -447,12 +470,12 @@ pub fn parse_concrete_bytes<'i>(
 //======================================
 
 /// Parse a string containing Wolfram Language input into an abstract syntax tree.
-pub fn parse_ast<'i>(input: &'i str, opts: &ParseOptions) -> ParseResult<AstNode> {
-    parse_ast_bytes(input.as_bytes(), opts)
+pub fn parse_to_ast<'i>(input: &'i str, opts: &ParseOptions) -> ParseResult<AstNode> {
+    parse_bytes_to_ast(input.as_bytes(), opts)
 }
 
 /// Parse bytes containing Wolfram Language input into an abstract syntax tree.
-pub fn parse_ast_bytes<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<AstNode> {
+pub fn parse_bytes_to_ast<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<AstNode> {
     let ParseOptions {
         first_line_behavior,
         src_convention,

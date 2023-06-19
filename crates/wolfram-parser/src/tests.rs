@@ -310,7 +310,7 @@ fn test_unterminated_group_reparse() {
 
 #[test]
 fn test_abstract_parse() {
-    let result = crate::parse_ast("2 + 2", &ParseOptions::default());
+    let result = crate::parse_to_ast("2 + 2", &ParseOptions::default());
 
     assert_eq!(
         result.nodes(),
