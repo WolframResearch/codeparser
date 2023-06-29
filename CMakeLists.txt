@@ -279,15 +279,6 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/LongNames.wl
 
-	#
-	# remove old files that may cause conflicts
-	#
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/LongNames.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -316,15 +307,6 @@ add_custom_command(
 	OUTPUT
 	${GENERATED_TOKENENUM_OUTPUT}
 
-	#
-	# remove old files that may cause conflicts
-	#
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -419,18 +401,6 @@ add_custom_command(
 	OUTPUT
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/symbol_registration.rs
 
-	#
-	# remove old files that may cause conflicts
-	#
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
-	COMMAND
-
-	# ${CMAKE_COMMAND} -E rm -f ${PROJECT_BINARY_DIR}/generated/cpp/src/lib/SymbolRegistration.cpp
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
