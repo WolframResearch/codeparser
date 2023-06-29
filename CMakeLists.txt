@@ -708,10 +708,6 @@ if(BUILD_EXE)
 	add_subdirectory(cpp/src/exe)
 endif(BUILD_EXE)
 
-if(BUILD_TESTS)
-	add_subdirectory(cpp/test)
-endif(BUILD_TESTS)
-
 if(BUILD_PACLET)
 	#
 	# paclet layout
