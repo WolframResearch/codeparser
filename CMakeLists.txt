@@ -298,14 +298,11 @@ add_custom_command(
 #
 # TokenEnum files
 #
-set(GENERATED_TOKENENUM_OUTPUT
-	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/token_enum_registration.rs
-)
 
 add_custom_command(
 	OUTPUT
-	${GENERATED_TOKENENUM_OUTPUT}
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/token_enum_registration.rs
 
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -326,13 +323,10 @@ add_custom_command(
 #
 # Parselet files
 #
-set(GENERATED_PARSELETREGISTRATION_OUTPUT
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
-)
 
 add_custom_command(
 	OUTPUT
-	${GENERATED_PARSELETREGISTRATION_OUTPUT}
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Parselet.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
@@ -341,7 +335,7 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Parselet.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 	${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-	${GENERATED_TOKENENUM_OUTPUT}
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
 	${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY
@@ -407,8 +401,7 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 	${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-	${GENERATED_PARSELETREGISTRATION_OUTPUT}
-	${GENERATED_TOKENENUM_OUTPUT}
+	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
 	${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY
