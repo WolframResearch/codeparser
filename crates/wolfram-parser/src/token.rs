@@ -115,6 +115,13 @@ impl TokenInput for OwnedTokenInput {
     }
 }
 
+impl OwnedTokenInput {
+    pub fn to_str(&self) -> &str {
+        std::str::from_utf8(self.as_bytes())
+            .expect("OwnedTokenInput::to_str(): token source is not valid UTF-8")
+    }
+}
+
 /// Borrowed subslice of the input that is associated with a particular
 /// [`Token`] instance.
 ///

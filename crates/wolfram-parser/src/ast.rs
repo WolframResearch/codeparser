@@ -4,6 +4,7 @@ use crate::{
     node::{BoxKind, CodeNode, Operator, SyntaxErrorKind},
     source::{GeneralSource, Issue},
     token::{OwnedTokenInput, TokenKind, TokenSource},
+    Source,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -172,6 +173,35 @@ impl AstNode {
             AstNode::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
                 (Vec::from(*children), data.source)
             },
+        }
+    }
+
+    pub fn source(&self) -> Source {
+        let general_source = &self.metadata().source;
+
+        match general_source {
+            GeneralSource::String(source) => *source,
+            GeneralSource::BoxPosition(_) | GeneralSource::After(_) => {
+                todo!("non-typical source: {general_source:?}")
+            },
+        }
+    }
+
+    pub(crate) fn metadata(&self) -> &AstMetadata {
+        match self {
+            AstNode::Leaf { data, .. } | AstNode::Error { data, .. } => data,
+            AstNode::Call { data, .. } => data,
+            AstNode::CallMissingCloser { data, .. } => data,
+            AstNode::UnterminatedCall { data, .. } => data,
+            AstNode::SyntaxError { data, .. } => data,
+            AstNode::AbstractSyntaxError { data, .. } => data,
+            AstNode::Box { data, .. } => data,
+            AstNode::Code { data, .. } => data,
+            AstNode::Group { data, .. } => data,
+            AstNode::GroupMissingCloser { data, .. } => data,
+            AstNode::GroupMissingOpener { data, .. } => data,
+            AstNode::TagBox_GroupParen { data, .. } => data,
+            AstNode::PrefixNode_PrefixLinearSyntaxBang(_, data) => data,
         }
     }
 }
