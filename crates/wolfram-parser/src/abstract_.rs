@@ -2776,7 +2776,7 @@ fn abstract_box_node<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 /// Handle special form of `[[x]]` in subscript
 ///
-/// Keep the [[]] structure un-abstracted
+/// Keep the `[[]]` structure un-abstracted
 //
 // FIXME: when things like SuperscriptBox[] -> Power[] and
 //        FractionBox[] -> Divide, then also do
