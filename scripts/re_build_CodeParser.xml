@@ -103,15 +103,24 @@
 			<arg value='${checkout_directory}/CodeParser' />
 		</re-cmake-exec>
 
+		<!--===============================================================-->
+		<!-- Assemble the paclet by copying the source files, building the -->
+		<!-- generated files, and compiling the CodeParser dynamic library -->
+		<!--===============================================================-->
+
 		<re-cmake-exec dir='${build.dir}'>
 			<env key='CARGO_HOME' value='${build.dir}/.cargo' />
 			<env key='RUSTUP_HOME' value='${build.dir}/.rust' />
 			<env key='PATH' value='${CARGO_PATH}' />
 			<arg line='--build .' />
-			<arg line='--target codeparser-lib' />
+			<arg line='--target assemble-paclet' />
 			<arg line='--verbose' />
 			<arg line='--config Release' />
 		</re-cmake-exec>
+
+		<!--==========================================-->
+		<!-- Code sign the CodeParser dynamic library -->
+		<!--==========================================-->
 
 		<if>
 			<not><isset property='is.unix'/></not>
@@ -123,10 +132,11 @@
 		</then>
 		</if>
 
+		<!--==============================================-->
+		<!-- Build the final CodeParser-X.Y.Z.paclet file -->
+		<!--==============================================-->
+
 		<re-cmake-exec dir='${build.dir}'>
-			<env key='CARGO_HOME' value='${build.dir}/.cargo' />
-			<env key='RUSTUP_HOME' value='${build.dir}/.rust' />
-			<env key='PATH' value='${CARGO_PATH}' />
 			<arg line='--build .' />
 			<arg line='--target create-paclet-archive' />
 			<arg line='--verbose' />
