@@ -6,7 +6,7 @@ endif()
 set(CODE "\
 Print[OutputForm[\"Calling PacletInstall...\"]]\;
 Check[
-res = PacletInstall[\"${PACLET_OUTPUT}\", ForceVersionInstall -> True]\;
+res = PacletInstall[\"${PACLET_ARCHIVE}\", ForceVersionInstall -> True]\;
 ,
 Print[OutputForm[Row[{\"$VersionNumber: \", NumberForm[$VersionNumber, {2, 1}]}]]]\;
 Print[OutputForm[Row[{\"Paclet WolframVersion: \", \"${PACLET_WOLFRAMVERSION}\"}]]]\;
