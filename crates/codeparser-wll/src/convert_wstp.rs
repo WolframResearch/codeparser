@@ -4,7 +4,6 @@ use wolfram_library_link::{expr::Expr, wstp};
 
 use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
-    cst::CstNode,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
         GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator, OperatorNode, PostfixNode,
@@ -1010,7 +1009,7 @@ fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<SourceLocati
 // Result types
 //======================================
 
-impl<'i> WstpPut for ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+impl<'i, N: WstpPut> WstpPut for ParseResult<N> {
     fn put(&self, link: &mut wstp::Link) {
         let ParseResult {
             nodes: outer_exprs,
