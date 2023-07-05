@@ -1,8 +1,9 @@
 //! Abstract syntax trees.
 
 use crate::{
+    issue::Issue,
     node::{BoxKind, CodeNode, Operator, SyntaxErrorKind},
-    source::{GeneralSource, Issue},
+    source::GeneralSource,
     token::{OwnedTokenInput, TokenKind, TokenSource},
     Source,
 };

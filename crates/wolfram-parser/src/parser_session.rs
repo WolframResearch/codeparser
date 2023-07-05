@@ -12,11 +12,12 @@ use crate::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
     cst::{CstNode, CstNodeSeq},
     feature,
+    issue::Issue,
     node::{Node, NodeSeq, TriviaSeq},
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     quirks::{self, QuirkSettings},
-    source::{Issue, SourceConvention, TOPLEVEL},
+    source::{SourceConvention, TOPLEVEL},
     token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,

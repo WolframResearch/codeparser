@@ -1,14 +1,16 @@
 use crate::{
     byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     code_point::{CodePoint::*, *},
-    feature, long_names as LongNames,
+    feature,
+    issue::{CodeAction, IssueTag, Severity, SyntaxIssue},
+    long_names as LongNames,
     long_names_registration::{
         LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
     },
     source::{
-        BufferAndLength, CodeAction, IssueTag, NextPolicy,
+        BufferAndLength, NextPolicy,
         NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
-        Severity, Source, SourceCharacter, SourceLocation, SyntaxIssue, STRING_OR_COMMENT,
+        Source, SourceCharacter, SourceLocation, STRING_OR_COMMENT,
     },
     tokenizer::Tokenizer,
     utils,

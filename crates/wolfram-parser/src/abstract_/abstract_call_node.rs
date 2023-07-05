@@ -4,11 +4,11 @@ use crate::{
     agg::LHS,
     ast::WL,
     ast::{AstMetadata, AstNode},
+    issue::{Issue, IssueTag, Severity},
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CompoundNode, GroupNode, InfixNode, Node, NodeSeq,
         Operator as Op, OperatorNode, PostfixNode, PrefixNode,
     },
-    source::{Issue, IssueTag, Severity},
     symbol as sym,
     token::{
         Token, TokenInput,

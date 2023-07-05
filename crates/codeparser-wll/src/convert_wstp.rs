@@ -4,15 +4,13 @@ use wolfram_library_link::{expr::Expr, wstp};
 
 use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
+    issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
         GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator, OperatorNode, PostfixNode,
         PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
-    source::{
-        CharacterRange, CodeAction, CodeActionKind, GeneralSource, Issue, IssueTag, Severity,
-        Source, SourceLocation, StringSourceKind,
-    },
+    source::{CharacterRange, GeneralSource, Source, SourceLocation, StringSourceKind},
     symbol::Symbol,
     symbol_registration as sym,
     token::{BorrowedTokenInput, Token, TokenInput, TokenKind},

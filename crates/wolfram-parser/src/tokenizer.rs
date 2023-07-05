@@ -10,9 +10,9 @@ use crate::{
         *,
     },
     feature,
+    issue::{CodeAction, FormatIssue, Issue, IssueTag, Severity, SyntaxIssue},
     source::{
-        Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssueTag, NextPolicy, Severity,
-        Source, SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT,
+        Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
         INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG,
     },
     token::{Token, TokenKind, TokenRef},

@@ -3,13 +3,14 @@ use wolfram_library_link::expr::{symbol::SymbolRef, Expr, ExprKind, Normal, Numb
 
 use wolfram_parser::{
     cst::CstNodeSeq,
+    issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
         GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Node, Operator, OperatorNode,
         PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     quirks::QuirkSettings,
-    source::{CodeAction, CodeActionKind, GeneralSource, Issue, IssueTag, Severity},
+    source::GeneralSource,
     symbol_registration as sym,
     token::{OwnedTokenInput, Token, TokenKind},
     token_enum_registration::SymbolToToken,
