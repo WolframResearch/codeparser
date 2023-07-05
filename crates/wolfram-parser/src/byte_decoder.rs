@@ -1256,43 +1256,58 @@ impl SourceConvention {
 /// How to manage advancing through [`SourceLocation`]s
 impl<'t> SourceManager<'t> {
     fn newline(&mut self) {
-        match self.convention {
-            SourceConvention::LineColumn => {
-                self.loc.first += 1;
-                self.loc.second = 1;
+        match self.loc {
+            SourceLocation::LineColumn { line, column } => {
+                debug_assert!(self.convention == SourceConvention::LineColumn);
+
+                *line = line.checked_add(1).expect("line overflows u32");
+                *column = 1;
             },
-            SourceConvention::CharacterIndex => {
-                self.loc.second += 1;
+            SourceLocation::CharacterIndex(index) => {
+                debug_assert!(self.convention == SourceConvention::CharacterIndex);
+
+                *index += 1;
             },
         }
     }
 
     fn windowsNewline(&mut self) {
-        match self.convention {
-            SourceConvention::LineColumn => {
-                self.loc.first += 1;
-                self.loc.second = 1;
+        match self.loc {
+            SourceLocation::LineColumn { line, column } => {
+                debug_assert!(self.convention == SourceConvention::LineColumn);
+
+                *line = line.checked_add(1).expect("line overflows u32");
+                *column = 1;
             },
-            SourceConvention::CharacterIndex => {
-                self.loc.second += 2;
+            SourceLocation::CharacterIndex(index) => {
+                debug_assert!(self.convention == SourceConvention::CharacterIndex);
+
+                *index += 2;
             },
         }
     }
 
     fn tab(&mut self) {
-        match self.convention {
-            SourceConvention::LineColumn => {
-                let currentTabStop = self.tab_width * ((self.loc.second - 1) / self.tab_width) + 1;
+        match self.loc {
+            SourceLocation::LineColumn { line: _, column } => {
+                debug_assert!(self.convention == SourceConvention::LineColumn);
 
-                self.loc.second = currentTabStop + self.tab_width;
+                let currentTabStop = self.tab_width * ((*column - 1) / self.tab_width) + 1;
+
+                *column = currentTabStop + self.tab_width;
             },
-            SourceConvention::CharacterIndex => {
-                self.loc.second += 1;
+            SourceLocation::CharacterIndex(index) => {
+                debug_assert!(self.convention == SourceConvention::CharacterIndex);
+
+                *index += 1;
             },
         }
     }
 
     fn increment(&mut self) {
-        self.loc.second += 1;
+        match self.loc {
+            SourceLocation::LineColumn { line: _, column } => *column += 1,
+            SourceLocation::CharacterIndex(index) => *index += 1,
+        }
     }
 }

@@ -912,7 +912,10 @@ impl WstpPut for CodeAction {
 
 impl WstpPut for SourceLocation {
     fn put(&self, callLink: &mut wstp::Link) {
-        let SourceLocation { first, second } = *self;
+        let (first, second) = match self {
+            SourceLocation::LineColumn { line, column } => (line.get(), *column),
+            SourceLocation::CharacterIndex(index) => (0, *index),
+        };
 
         callLink.put_function(sym::List.as_str(), 2).unwrap();
 

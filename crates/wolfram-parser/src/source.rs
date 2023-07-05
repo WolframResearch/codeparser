@@ -1,6 +1,7 @@
 use std::{
     cmp::Ordering,
     fmt::{self, Debug, Display},
+    num::NonZeroU32,
     ops::Index,
     slice::SliceIndex,
 };
@@ -208,16 +209,17 @@ pub enum SourceConvention {
 pub const DEFAULT_TAB_WIDTH: u32 = 4;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
-pub struct SourceLocation {
-    /// if source convention is LineColumn, this is Line
-    /// if source convention is SourceCharacterIndex, this is unused (always 0)
-    pub first: u32,
-
-    /// if source convention is LineColumn, this is Column
-    /// if source convention is SourceCharacterIndex, this is index
-    pub second: u32,
+pub enum SourceLocation {
+    LineColumn { line: NonZeroU32, column: u32 },
+    CharacterIndex(u32),
 }
 
+// NOTE:
+//     Keeping the size of the SourceLocation enum limited to 8 bytes depends
+//     on using NonZeroU32, so that the 0 value can be used as the enum
+//     discriminant.
+//
+//     See also: https://github.com/rust-lang/rust/pull/94075
 const _: () = assert!(
     std::mem::size_of::<SourceLocation>() == 8,
     "Check your assumptions"
@@ -225,9 +227,10 @@ const _: () = assert!(
 
 impl Display for SourceLocation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let SourceLocation { first, second } = *self;
-
-        write!(f, "{first}:{second}")
+        match self {
+            SourceLocation::LineColumn { line, column } => write!(f, "{line}:{column}"),
+            SourceLocation::CharacterIndex(index) => write!(f, "{index}"),
+        }
     }
 }
 
@@ -895,7 +898,25 @@ pub fn EncodingIssue(
 impl SourceLocation {
     #[doc(hidden)]
     pub fn new(first: u32, second: u32) -> Self {
-        Self { first, second }
+        if let Some(line) = NonZeroU32::new(first) {
+            SourceLocation::LineColumn {
+                line,
+                column: second,
+            }
+        } else {
+            debug_assert!(first == 0);
+
+            SourceLocation::CharacterIndex(second)
+        }
+    }
+
+    pub(crate) fn line_column(self) -> LineColumn {
+        match self {
+            SourceLocation::LineColumn { line, column } => LineColumn { line, column },
+            SourceLocation::CharacterIndex(_) => {
+                panic!("expected SourceLocation::LineColumn: {:?}", self)
+            },
+        }
     }
 }
 
@@ -922,20 +943,24 @@ impl SourceLocation {
 impl PartialOrd for SourceLocation {
     fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
         let a = self;
-        if a.first < b.first {
-            return Some(Ordering::Less);
+
+        match (a, b) {
+            (
+                SourceLocation::LineColumn {
+                    line: a_line,
+                    column: a_column,
+                },
+                SourceLocation::LineColumn {
+                    line: b_line,
+                    column: b_col,
+                },
+            ) => (a_line, a_column).partial_cmp(&(b_line, b_col)),
+            (SourceLocation::CharacterIndex(a_index), SourceLocation::CharacterIndex(b_index)) => {
+                a_index.partial_cmp(b_index)
+            },
+            (SourceLocation::LineColumn { .. }, SourceLocation::CharacterIndex(_)) => None,
+            (SourceLocation::CharacterIndex(_), SourceLocation::LineColumn { .. }) => None,
         }
-        if a.first == b.first {
-            return a.second.partial_cmp(&b.second);
-        }
-        if a.first != b.first {
-            return Some(Ordering::Greater);
-        }
-        if a.second < b.second {
-            return Some(Ordering::Less);
-        }
-        // return false;
-        None
     }
 }
 
@@ -959,9 +984,13 @@ impl PartialOrd for SourceLocation {
 impl SourceLocation {
     pub(crate) fn next(self) -> Self {
         if feature::COMPUTE_SOURCE {
-            let SourceLocation { first, second } = self;
-
-            SourceLocation::new(first, second + 1)
+            match self {
+                SourceLocation::LineColumn { line, column } => SourceLocation::LineColumn {
+                    line,
+                    column: column + 1,
+                },
+                SourceLocation::CharacterIndex(index) => SourceLocation::CharacterIndex(index + 1),
+            }
         } else {
             SourceLocation::new(0, 0)
         }
@@ -969,13 +998,23 @@ impl SourceLocation {
 
     pub(crate) fn previous(self) -> Self {
         if feature::COMPUTE_SOURCE {
-            let SourceLocation { first, second } = self;
-
             // TODO: What should this do if `second` is equal to 0? Can `second`
             //       even validly be equal to zero?
-            debug_assert!(second >= 1);
+            match self {
+                SourceLocation::LineColumn { line, column } => {
+                    debug_assert!(column >= 1);
 
-            SourceLocation::new(first, second - 1)
+                    SourceLocation::LineColumn {
+                        line,
+                        column: column - 1,
+                    }
+                },
+                SourceLocation::CharacterIndex(index) => {
+                    debug_assert!(index >= 1);
+
+                    SourceLocation::CharacterIndex(index - 1)
+                },
+            }
         } else {
             SourceLocation::new(0, 0)
         }
@@ -1009,6 +1048,11 @@ impl SourceLocation {
 #[cfg(feature = "BUILD_TESTS")]
 fn PrintTo(loc: &SourceLocation, s: &mut std::ostream) {
     loc.print(*s);
+}
+
+pub(crate) struct LineColumn {
+    pub line: NonZeroU32,
+    pub column: u32,
 }
 
 //
@@ -1063,14 +1107,8 @@ impl Source {
     #[doc(hidden)]
     pub fn from_character_range(start: u32, end: u32) -> Self {
         Source {
-            start: SourceLocation {
-                first: 0,
-                second: start,
-            },
-            end: SourceLocation {
-                first: 0,
-                second: end,
-            },
+            start: SourceLocation::CharacterIndex(start),
+            end: SourceLocation::CharacterIndex(end),
         }
     }
 
@@ -1086,13 +1124,10 @@ impl Source {
     pub fn unknown() -> Self {
         // Use incompatible values for `first`.
         Source {
-            start: SourceLocation {
-                first: 0,
-                second: 0,
-            },
-            end: SourceLocation {
-                first: 1,
-                second: 0,
+            start: SourceLocation::CharacterIndex(0),
+            end: SourceLocation::LineColumn {
+                line: NonZeroU32::MIN,
+                column: 0,
             },
         }
     }
@@ -1118,34 +1153,25 @@ impl Source {
 
         match (start, end) {
             (
-                SourceLocation {
-                    first: 0,
-                    second: start_char,
-                },
-                SourceLocation {
-                    first: 0,
-                    second: end_char,
-                },
+                SourceLocation::CharacterIndex(start_char),
+                SourceLocation::CharacterIndex(end_char),
             ) => StringSourceKind::CharacterRange(CharacterRange(start_char, end_char)),
             (
-                SourceLocation {
-                    first: start_line,
-                    second: start_column,
+                SourceLocation::LineColumn {
+                    line: start_line,
+                    column: start_column,
                 },
-                SourceLocation {
-                    first: end_line,
-                    second: end_column,
+                SourceLocation::LineColumn {
+                    line: end_line,
+                    column: end_column,
                 },
-            ) if start_line > 0 && end_line > 0 => StringSourceKind::LineColumnRange {
-                start_line,
+            ) => StringSourceKind::LineColumnRange {
+                start_line: start_line.get(),
                 start_column,
-                end_line,
+                end_line: end_line.get(),
                 end_column,
             },
-            (SourceLocation { first: a, .. }, SourceLocation { first: b, .. }) => {
-                debug_assert!((a, b) == (0, 1) || (a, b) == (1, 0));
-                StringSourceKind::Unknown
-            },
+            _ => StringSourceKind::Unknown,
         }
     }
 
@@ -1202,10 +1228,15 @@ impl Source {
             other => panic!("Source::contains(): Source is not a line-column range: {other:?}"),
         };
 
-        let SourceLocation {
-            first: cursorLine,
-            second: cursorCol,
-        } = cursor;
+        let SourceLocation::LineColumn {
+            line: cursorLine,
+            column: cursorCol,
+        } = cursor
+        else {
+            panic!("Source::contains(): expected cursor to be SourceLocation::LineColumn")
+        };
+
+        let cursorLine: u32 = cursorLine.get();
 
         // not in-between the lines of the spec, so no
         if !(srcLine1 <= cursorLine && cursorLine <= srcLine2) {
