@@ -60,10 +60,6 @@ macro_rules! Print {
 mod character_decoder;
 mod utils;
 
-mod integral_parselet;
-mod semi_semi_parselet;
-mod times_parselet;
-mod under_parselet;
 
 mod byte_buffer;
 mod byte_decoder;
