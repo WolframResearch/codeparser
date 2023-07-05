@@ -184,12 +184,6 @@ fn test_token_size() {
     assert_eq!(std::mem::size_of::<BorrowedTokenInput>(), 24);
 }
 
-//
-// For googletest
-//
-#[cfg(feature = "BUILD_TESTS")]
-fn PrintTo(token: &Token, stream: &mut std::ostream);
-
 impl<'i> TokenRef<'i> {
     // pub(crate) fn new(tok: TokenKind, buf: BufferAndLength, src: Source) -> Self {
     pub(crate) fn new(tok: TokenKind, buf: BufferAndLength<'i>, src: Source) -> Self {
@@ -386,14 +380,6 @@ impl<I, S> Token<I, S> {
     //     Src.print(s);
     //     s << "]";
     // }
-
-    //
-    // For googletest
-    //
-    #[cfg(feature = "BUILD_TESTS")]
-    fn PrintTo(T: &Token, s: &mut std::ostream) {
-        T.print(*s);
-    }
 }
 
 impl PartialEq<Token> for Token<BorrowedTokenInput<'_>> {

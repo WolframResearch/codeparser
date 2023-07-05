@@ -238,12 +238,6 @@ impl Debug for SourceLocation {
 // bool operator<(SourceLocation a, SourceLocation b);
 // bool operator<=(SourceLocation a, SourceLocation b);
 
-//
-// For googletest
-//
-#[cfg(feature = "BUILD_TESTS")]
-fn PrintTo(Loc: &SourceLocation, s: &mut std::ostream);
-
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum GeneralSource {
     String(Source),
@@ -307,11 +301,6 @@ impl Debug for Source {
         write!(f, "{}", self)
     }
 }
-
-// For googletest
-#[cfg(feature = "BUILD_TESTS")]
-fn PrintTo(src: &Source, s: &mut std::ostream);
-
 
 
 impl<'i, I: SliceIndex<[u8]>> Index<I> for Buffer<'i> {
@@ -583,13 +572,6 @@ impl SourceLocation {
 //     s << second;
 // }
 
-//
-// For googletest
-//
-#[cfg(feature = "BUILD_TESTS")]
-fn PrintTo(loc: &SourceLocation, s: &mut std::ostream) {
-    loc.print(*s);
-}
 
 pub(crate) struct LineColumn {
     pub line: NonZeroU32,

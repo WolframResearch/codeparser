@@ -723,11 +723,3 @@ const FROM_DIGIT_LOOKUP: [char; 256] = [
 fn fromDigit(d: u8) -> char {
     return FROM_DIGIT_LOOKUP[usize::from(d)];
 }
-
-//
-// For googletest
-//
-// #[cfg(feature = "BUILD_TESTS")]
-// fn PrintTo(c: &WLCharacter, s: &mut std::ostream) {
-//     *s << set_graphical << c << clear_graphical;
-// }
