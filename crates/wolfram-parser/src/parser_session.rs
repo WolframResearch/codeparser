@@ -16,7 +16,7 @@ use crate::{
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     quirks::{self, QuirkSettings},
-    source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
+    source::{Issue, SourceConvention, TOPLEVEL},
     token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
@@ -344,11 +344,11 @@ impl<'i> ParserSession<'i> {
         result
     }
 
-    pub(crate) fn fatalIssues(&self) -> &IssuePtrSet {
+    pub(crate) fn fatalIssues(&self) -> &Vec<Issue> {
         &self.tokenizer.fatalIssues
     }
 
-    pub(crate) fn nonFatalIssues(&self) -> &IssuePtrSet {
+    pub(crate) fn nonFatalIssues(&self) -> &Vec<Issue> {
         &self.tokenizer.nonFatalIssues
     }
 }

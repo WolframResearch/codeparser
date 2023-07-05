@@ -11,8 +11,8 @@ use crate::{
     },
     feature,
     source::{
-        Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssuePtrSet, IssueTag, NextPolicy,
-        Severity, Source, SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT,
+        Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssueTag, NextPolicy, Severity,
+        Source, SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT,
         INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG,
     },
     token::{Token, TokenKind, TokenRef},
@@ -48,8 +48,8 @@ pub struct Tokenizer<'i> {
 
     pub(crate) tracked: TrackedSourceLocations,
 
-    pub fatalIssues: IssuePtrSet,
-    pub nonFatalIssues: IssuePtrSet,
+    pub fatalIssues: Vec<Issue>,
+    pub nonFatalIssues: Vec<Issue>,
 
     pub(crate) unsafe_character_encoding_flag: Option<UnsafeCharacterEncoding>,
 }
