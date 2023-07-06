@@ -155,7 +155,10 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
                     input: _,
                     src: node_src,
                 }) => {
-                    if better_src.overlaps(*node_src) {
+                    if better_src
+                        .line_column_span()
+                        .overlaps(node_src.line_column_span())
+                    {
                         better_leaves.push(node.clone());
                     }
                 },
@@ -229,7 +232,7 @@ fn reparseUnterminatedTokenErrorNode<'i>(
 
             components.push(
                 &first_chunk[0].content
-                    [usize::try_from(better_src.start.line_column().column).unwrap() - 1..],
+                    [usize::try_from(better_src.start.line_column().column()).unwrap() - 1..],
             );
 
             if first_chunk.len() > 1 {
@@ -345,8 +348,8 @@ fn first_chunk_and_last_good_line(
             // *)
             // lines = lines[[src[[1, 1]];;src[[2, 1]]]];
 
-            let start_line = src.start.line_column().line;
-            let end_line = src.end.line_column().line;
+            let start_line = src.start.line_column().line();
+            let end_line = src.end.line_column().line();
 
             (
                 retain_range(
@@ -432,7 +435,7 @@ fn first_chunk_and_last_good_line(
                     line: src
                         .start
                         .line_column()
-                        .line
+                        .line()
                         .checked_add(u32::try_from(last_good_line_index).unwrap())
                         .expect("source line overflow u32"),
                     column: u32::try_from(last_good_line.column_width(tab_width)).unwrap() + 1,

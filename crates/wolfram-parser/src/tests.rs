@@ -154,7 +154,7 @@ fn test_something() {
                 NVToken(token![Whitespace, " " @ 3, src!(1:4-1:5)]),
                 NVToken(token![Integer, "2" @ 4, src!(1:5-1:6)]),
             ],),
-            src: src!(1:1-1:6),
+            src: src!(1:1-1:6).into(),
         }))]
     );
 
@@ -173,9 +173,9 @@ fn test_something() {
                     NVToken(token![Symbol, "x" @ 2, src!(1:3-1:4)]),
                     NVToken(token![CloseSquare, "]" @ 3, src!(1:4-1:5)]),
                 ]),
-                src: src!(1:2-1:5),
+                src: src!(1:2-1:5).into(),
             }))),
-            src: src!(1:1-1:5),
+            src: src!(1:1-1:5).into(),
             is_concrete: true,
         })]
     );
@@ -195,9 +195,9 @@ pub fn test_tokenize_is_not_idempotent() {
     assert_eq!(
         session.tokenize().unwrap().0,
         vec![
-            token![Integer, "2" @ 0, src!(0:1-0:2)],
-            token![Plus, "+" @ 1, src!(0:2-0:3)],
-            token![Integer, "2" @ 2, src!(0:3-0:4)]
+            token![Integer, "2" @ 0, src!(1-2)],
+            token![Plus, "+" @ 1, src!(2-3)],
+            token![Integer, "2" @ 2, src!(3-4)]
         ]
     );
 
@@ -219,7 +219,7 @@ fn test_character_index_source() {
                 NVToken(token![Plus, "+" @ 1, src!(2..3)]),
                 NVToken(token![Integer, "2" @ 2, src!(3..4)])
             ]),
-            src: src!(0:1-0:4),
+            src: src!(1 - 4).into(),
         }))]
     );
 }
@@ -236,7 +236,7 @@ fn test_unterminated_group_reparse() {
                     [123] @ 0,
                     src!(1:1-1:2)
                 ])]),
-                src: src!(1:1-1:2),
+                src: src!(1:1-1:2).into(),
             },
         ),)]
     );
@@ -277,7 +277,7 @@ fn test_unterminated_group_reparse() {
                     NVToken(token![Question, "?" @ 3, src!(1:4-1:5)]),
                     NVToken(token![Error_ExpectedOperand, "" @ 4, src!(1:5-1:5)]),
                 ]),
-                src: src!(1:1-1:5),
+                src: src!(1:1-1:5).into(),
             }
         ))]
     );
@@ -298,7 +298,7 @@ fn test_unterminated_group_reparse() {
                     NVToken(token![Question, "?" @ 3, src!(1:5-1:6)]),
                     NVToken(token![Error_ExpectedOperand, "" @ 4, src!(1:6-1:6)])
                 ]),
-                src: src!(1:1-1:6)
+                src: src!(1:1-1:6).into()
             }
         ))]
     );
@@ -325,7 +325,7 @@ fn test_abstract_parse() {
                     kind: TK::Integer,
                     input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {
-                        source: GeneralSource::String(src!(1:1-1:2),),
+                        source: GeneralSource::String(src!(1:1-1:2).into()),
                         issues: vec![],
                     },
                 },
@@ -333,13 +333,13 @@ fn test_abstract_parse() {
                     kind: TK::Integer,
                     input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {
-                        source: GeneralSource::String(src!(1:5-1:6),),
+                        source: GeneralSource::String(src!(1:5-1:6).into()),
                         issues: vec![],
                     },
                 },
             ],
             data: AstMetadata {
-                source: GeneralSource::String(src!(1:1-1:6),),
+                source: GeneralSource::String(src!(1:1-1:6).into()),
                 issues: vec![],
             },
         },]

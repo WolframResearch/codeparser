@@ -925,7 +925,7 @@ impl WstpPut for SourceLocation {
 
 fn put_source_rhs(link: &mut wstp::Link, source: Source) {
     match source.kind() {
-        StringSourceKind::LineColumnRange { .. } => {
+        StringSourceKind::LineColumnSpan { .. } => {
             let (start, end) = source.start_end();
 
             link.put_function(sym::List.as_str(), 2).unwrap();

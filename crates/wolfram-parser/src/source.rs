@@ -374,12 +374,7 @@ const _: () = assert!(std::mem::size_of::<Source>() == 16);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum StringSourceKind {
-    LineColumnRange {
-        start_line: u32,
-        start_column: u32,
-        end_line: u32,
-        end_column: u32,
-    },
+    LineColumnSpan(LineColumnSpan),
     CharacterRange(CharacterRange),
     /// `<||>`
     Unknown,
@@ -393,10 +388,17 @@ pub enum StringSourceKind {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct CharacterRange(pub u32, pub u32);
 
-pub(crate) struct LineColumn {
-    pub line: NonZeroU32,
-    pub column: u32,
+/// `LineColumn(line, column)`
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct LineColumn(pub NonZeroU32, pub u32);
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct LineColumnSpan {
+    pub start: LineColumn,
+    pub end: LineColumn,
 }
+
+const _: () = assert!(std::mem::size_of::<LineColumnSpan>() == 16);
 
 //======================================
 // Source types formatting impls
@@ -419,13 +421,11 @@ impl Debug for SourceLocation {
 
 impl Display for Source {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let Source { start, end } = *self;
-
         match self.kind() {
             StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
                 write!(f, "{}..{}", start, end)
             },
-            StringSourceKind::LineColumnRange { .. } => {
+            StringSourceKind::LineColumnSpan(LineColumnSpan { start, end }) => {
                 write!(f, "{start:?}-{end:?}")
             },
             StringSourceKind::Unknown => {
@@ -463,7 +463,7 @@ impl SourceLocation {
 
     pub(crate) fn line_column(self) -> LineColumn {
         match self {
-            SourceLocation::LineColumn { line, column } => LineColumn { line, column },
+            SourceLocation::LineColumn { line, column } => LineColumn(line, column),
             SourceLocation::CharacterIndex(_) => {
                 panic!("expected SourceLocation::LineColumn: {:?}", self)
             },
@@ -606,6 +606,15 @@ impl Source {
         }
     }
 
+    pub(crate) fn line_column_span(&self) -> LineColumnSpan {
+        match self.kind() {
+            StringSourceKind::LineColumnSpan(span) => span,
+            other => {
+                panic!("Source::line_column_span(): Source is not a line/column span: {other:?}")
+            },
+        }
+    }
+
     pub fn kind(self) -> StringSourceKind {
         let Source { start, end } = self;
 
@@ -623,12 +632,10 @@ impl Source {
                     line: end_line,
                     column: end_column,
                 },
-            ) => StringSourceKind::LineColumnRange {
-                start_line: start_line.get(),
-                start_column,
-                end_line: end_line.get(),
-                end_column,
-            },
+            ) => StringSourceKind::LineColumnSpan(LineColumnSpan {
+                start: LineColumn(start_line, start_column),
+                end: LineColumn(end_line, end_column),
+            }),
             _ => StringSourceKind::Unknown,
         }
     }
@@ -636,18 +643,13 @@ impl Source {
     #[allow(dead_code)]
     pub(crate) fn column_width(&self) -> usize {
         let (start_column, end_column) = match self.kind() {
-            StringSourceKind::LineColumnRange {
-                start_line,
-                end_line,
-                start_column,
-                end_column,
-            } => {
+            StringSourceKind::LineColumnSpan(LineColumnSpan { start, end }) => {
                 debug_assert!(
-                    start_line == end_line,
+                    start.line() == end.line(),
                     "StringSourceKind::column_width(): source locations are on different lines"
                 );
 
-                (start_column, end_column)
+                (start.column(), end.column())
             },
             other => panic!(
                 "StringSourceKind::column_width(): Source is not a line column span: {other:?}"
@@ -656,44 +658,52 @@ impl Source {
 
         return end_column as usize - start_column as usize;
     }
+}
 
-    /// Check if a [`SourceLocation`] is inside of this [`Source`] span.
+impl LineColumn {
+    pub fn line(self) -> NonZeroU32 {
+        let LineColumn(line, _) = self;
+
+        line
+    }
+
+    pub fn column(self) -> u32 {
+        let LineColumn(_, column) = self;
+
+        column
+    }
+}
+
+impl LineColumnSpan {
+    /// Check if a [`LineColumn`] location is inside of this [`LineColumnSpan`]
+    /// span.
     ///
     /// ```
-    /// use wolfram_parser::{Source, SourceLocation, test_utils::src};
+    /// use wolfram_parser::{source::LineColumn, test_utils::src};
     ///
-    /// assert!(src!(1:3-2:0).contains(SourceLocation::new(1, 4)));
+    /// assert!(src!(1:3-2:0).contains(src!(1:4)));
     ///
-    /// assert!(!src!(1:3-2:0).contains(SourceLocation::new(2, 4)));
+    /// assert!(!src!(1:3-2:0).contains(src!(2:4)));
     ///
-    /// assert!(src!(1:3-2:0).contains(SourceLocation::new(1, 4)));
+    /// assert!(src!(1:3-2:0).contains(src!(1:4)));
     ///
-    /// assert!(!src!(1:3-2:0).contains(SourceLocation::new(2, 4)));
+    /// assert!(!src!(1:3-2:0).contains(src!(2:4)));
     /// ```
     ///
     /// # Panics
     ///
     /// This function will panic if this [`Source`] is not a
     /// [`StringSourceKind::LineColumnRange`].
-    pub fn contains(&self, cursor: SourceLocation) -> bool {
-        let (srcLine1, srcCol1, srcLine2, srcCol2) = match self.kind() {
-            StringSourceKind::LineColumnRange {
-                start_line,
-                start_column,
-                end_line,
-                end_column,
-            } => (start_line, start_column, end_line, end_column),
-            other => panic!("Source::contains(): Source is not a line-column range: {other:?}"),
-        };
+    pub fn contains(self, cursor: LineColumn) -> bool {
+        let LineColumnSpan {
+            start: LineColumn(srcLine1, srcCol1),
+            end: LineColumn(srcLine2, srcCol2),
+        } = self;
 
-        let SourceLocation::LineColumn {
-            line: cursorLine,
-            column: cursorCol,
-        } = cursor
-        else {
-            panic!("Source::contains(): expected cursor to be SourceLocation::LineColumn")
-        };
+        let LineColumn(cursorLine, cursorCol) = cursor;
 
+        let srcLine1: u32 = srcLine1.get();
+        let srcLine2: u32 = srcLine2.get();
         let cursorLine: u32 = cursorLine.get();
 
         // not in-between the lines of the spec, so no
@@ -720,8 +730,8 @@ impl Source {
         true
     }
 
-    /// Check if this [`Source`] partially or completely overlaps with another
-    /// [`Source`].
+    /// Check if this [`LineColumnSpan`] partially or completely overlaps with
+    /// another [`LineColumnSpan`].
     ///
     /// ```
     /// use wolfram_parser::{Source, SourceLocation, test_utils::src};
@@ -740,8 +750,8 @@ impl Source {
     ///
     /// This function will panic if this [`Source`] is not a
     /// [`StringSourceKind::LineColumnRange`].
-    pub fn overlaps(&self, cursor: Source) -> bool {
-        let Source { start, end } = cursor;
+    pub fn overlaps(&self, cursor: LineColumnSpan) -> bool {
+        let LineColumnSpan { start, end } = cursor;
 
         self.contains(start) || self.contains(end)
     }
@@ -763,6 +773,42 @@ impl GeneralSource {
         }
     }
 }
+
+//======================================
+// Source type conversion impls
+//======================================
+
+impl From<LineColumnSpan> for Source {
+    fn from(value: LineColumnSpan) -> Self {
+        let LineColumnSpan {
+            start: LineColumn(start_line, start_column),
+            end: LineColumn(end_line, end_column),
+        } = value;
+
+        Source {
+            start: SourceLocation::LineColumn {
+                line: start_line,
+                column: start_column,
+            },
+            end: SourceLocation::LineColumn {
+                line: end_line,
+                column: end_column,
+            },
+        }
+    }
+}
+
+impl From<CharacterRange> for Source {
+    fn from(value: CharacterRange) -> Source {
+        let CharacterRange(start, end) = value;
+
+        Source {
+            start: SourceLocation::CharacterIndex(start),
+            end: SourceLocation::CharacterIndex(end),
+        }
+    }
+}
+
 
 //======================================
 // Source types comparision impls

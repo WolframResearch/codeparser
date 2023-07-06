@@ -1,7 +1,9 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    source::{Buffer, BufferAndLength, ByteSpan, GeneralSource, Source},
+    source::{
+        Buffer, BufferAndLength, ByteSpan, GeneralSource, LineColumn, LineColumnSpan, Source,
+    },
     tokenizer::Tokenizer,
 };
 
@@ -236,11 +238,10 @@ impl<'i> TokenRef<'i> {
                             // so nothing to do
                             //
                         },
-                        StringSourceKind::LineColumnRange {
-                            start_line,
-                            end_line,
-                            ..
-                        } => {
+                        StringSourceKind::LineColumnSpan(LineColumnSpan {
+                            start: LineColumn(start_line, _),
+                            end: LineColumn(end_line, _),
+                        }) => {
                             if start_line == end_line {
                                 if src.column_width() != buf.length() {
                                     //

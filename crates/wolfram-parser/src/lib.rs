@@ -130,21 +130,63 @@ mod tests;
 pub mod test_utils {
     #[macro_export]
     #[doc(hidden)]
+    /// Construct one of the crate source location types.
+    ///
+    /// # Examples
+    ///
+    /// Construct a [`LineColumn`][crate::source::LineColumn] location:
+    ///
+    /// ```
+    /// # use wolfram_parser::{test_utils::src, source::LineColumn};
+    /// // Line 5, column 4
+    /// let pos: LineColumn = src!(5:4);
+    /// ```
+    ///
+    /// Construct a [`LineColumnSpan`][crate::source::LineColumnSpan] span:
+    ///
+    /// ```
+    /// # use wolfram_parser::{test_utils::src, source::LineColumnSpan};
+    /// // Line 1, column 3 through line 1, column 8
+    /// let span: LineColumnSpan = src!(1:3-1:8);
+    /// ```
+    ///
+    /// Construct a [`CharacterRange`][crate::source::CharacterRange] span:
+    ///
+    /// ```
+    /// # use wolfram_parser::{test_utils::src, source::CharacterRange};
+    /// // Characters 1 through 4
+    /// let span: CharacterRange = src!(1-4);
+    /// ```
     macro_rules! src {
         // a:b
         ($line:literal : $column:literal) => {
-            $crate::Source::from_location($crate::SourceLocation::new($line, $column))
-        };
-        // a:b-c:d
-        ($line1:literal : $column1:literal  -  $line2:literal : $column2:literal) => {
-            $crate::Source::new(
-                $crate::SourceLocation::new($line1, $column1),
-                $crate::SourceLocation::new($line2, $column2),
+            $crate::source::LineColumn(
+                std::num::NonZeroU32::new($line).expect("line must not be zero"),
+                $column,
             )
         };
-        // a..b
+
+        // a:b-c:d
+        ($line1:literal : $column1:literal  -  $line2:literal : $column2:literal) => {
+            $crate::source::LineColumnSpan {
+                start: $crate::source::LineColumn(
+                    std::num::NonZeroU32::new($line1).expect("start line must not be zero"),
+                    $column1,
+                ),
+                end: $crate::source::LineColumn(
+                    std::num::NonZeroU32::new($line2).expect("end line must not be zero"),
+                    $column2,
+                ),
+            }
+        };
+
+        // TODO: Pick only one of these syntaxes to use
+        // a-b  OR  a..b
+        ($start:literal - $end:literal) => {
+            $crate::source::CharacterRange($start, $end)
+        };
         ($start:literal .. $end:literal) => {
-            $crate::Source::from_character_range($start, $end)
+            $crate::source::CharacterRange($start, $end)
         };
     }
 
@@ -188,7 +230,7 @@ pub mod test_utils {
         ($kind:ident, $input:tt @ $offset:literal, $src:expr) => {
             $crate::token::Token {
                 tok: $crate::token::TokenKind::$kind,
-                src: $src,
+                src: $crate::Source::from($src),
                 input: $crate::token::BorrowedTokenInput::new($input.as_ref(), $offset),
             }
         };
