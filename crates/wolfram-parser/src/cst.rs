@@ -4,10 +4,7 @@ use wolfram_expr::Expr;
 
 use crate::{
     source::{GeneralSource, Source},
-    token::{
-        BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind, TokenRef, TokenSource,
-    },
-    tokenizer::Tokenizer,
+    token::{OwnedTokenInput, Token, TokenInput, TokenKind, TokenSource},
     NodeSeq,
 };
 
@@ -25,15 +22,6 @@ pub(crate) type Node<I = OwnedTokenInput, S = Source> = CstNode<I, S>;
 /// So pass around a structure that contains all of the nodes from the left,
 /// including comments and whitespace.
 pub type CstNodeSeq<I = OwnedTokenInput, S = Source> = NodeSeq<Node<I, S>>;
-
-
-//
-// Used mainly for collecting trivia that has been eaten
-//
-#[derive(Debug)]
-pub(crate) struct TriviaSeq<'i> {
-    pub vec: Vec<Token<BorrowedTokenInput<'i>>>,
-}
 
 /// An expression representing a node in the syntax tree
 #[derive(Debug, Clone, PartialEq)]
@@ -365,49 +353,6 @@ impl<I: TokenInput, S> CstNodeSeq<I, S> {
         let nodes = nodes.into_iter().map(Node::into_owned_input).collect();
 
         NodeSeq(nodes)
-    }
-}
-
-//======================================
-// TriviaSeq
-//======================================
-
-impl<'i> TriviaSeq<'i> {
-    pub(crate) fn new() -> Self {
-        TriviaSeq { vec: Vec::new() }
-    }
-
-    pub fn reset(&mut self, session: &mut Tokenizer) {
-        let TriviaSeq { vec } = self;
-
-        //
-        // Just need to reset the global buffer to the buffer of the first token in the sequence
-        //
-
-        if vec.is_empty() {
-            return;
-        }
-
-        let T = &vec[0];
-
-        session.offset = T.input.byte_span().offset;
-        session.SrcLoc = T.src.start;
-
-        vec.clear();
-    }
-
-    pub fn push(&mut self, token: TokenRef<'i>) {
-        self.vec.push(token);
-    }
-
-    pub fn is_empty(&self) -> bool {
-        return self.vec.is_empty();
-    }
-
-    pub fn clear(&mut self) {
-        let TriviaSeq { vec } = self;
-
-        vec.clear();
     }
 }
 

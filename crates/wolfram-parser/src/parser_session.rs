@@ -10,7 +10,7 @@ use crate::{
     abstract_::{Abstract, Aggregate},
     ast::AstNode,
     byte_decoder::ByteDecoder_nextSourceCharacter,
-    cst::{CstNode, CstNodeSeq, TriviaSeq},
+    cst::{CstNode, CstNodeSeq},
     feature,
     issue::Issue,
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
@@ -41,6 +41,14 @@ pub struct ParserSession<'i> {
 }
 
 pub(crate) type NodeStack<'i> = Vec<CstNode<BorrowedTokenInput<'i>>>;
+
+//
+// Used mainly for collecting trivia that has been eaten
+//
+#[derive(Debug)]
+pub(crate) struct TriviaSeq<'i> {
+    pub vec: Vec<Token<BorrowedTokenInput<'i>>>,
+}
 
 pub struct ParseResult<N> {
     /// Tokens or expressions.
@@ -352,6 +360,53 @@ impl<'i> ParserSession<'i> {
         &self.tokenizer.nonFatalIssues
     }
 }
+
+//======================================
+// TriviaSeq
+//======================================
+
+impl<'i> TriviaSeq<'i> {
+    pub(crate) fn new() -> Self {
+        TriviaSeq { vec: Vec::new() }
+    }
+
+    pub fn reset(&mut self, session: &mut Tokenizer) {
+        let TriviaSeq { vec } = self;
+
+        //
+        // Just need to reset the global buffer to the buffer of the first token in the sequence
+        //
+
+        if vec.is_empty() {
+            return;
+        }
+
+        let T = &vec[0];
+
+        session.offset = T.input.byte_span().offset;
+        session.SrcLoc = T.src.start;
+
+        vec.clear();
+    }
+
+    pub fn push(&mut self, token: TokenRef<'i>) {
+        self.vec.push(token);
+    }
+
+    pub fn is_empty(&self) -> bool {
+        return self.vec.is_empty();
+    }
+
+    pub fn clear(&mut self) {
+        let TriviaSeq { vec } = self;
+
+        vec.clear();
+    }
+}
+
+//======================================
+// ParseResult
+//======================================
 
 impl<N> ParseResult<N> {
     pub fn nodes(&self) -> &[N] {

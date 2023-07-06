@@ -1,13 +1,13 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    cst::{BinaryNode, CompoundNode, CstNodeSeq, Node, Operator, TernaryNode, TriviaSeq},
+    cst::{BinaryNode, CompoundNode, CstNodeSeq, Node, Operator, TernaryNode},
     feature,
     panic_if_aborted,
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
-    parser_session::{NodeStack, ParserSession},
+    parser_session::{NodeStack, ParserSession, TriviaSeq},
     precedence::{Precedence, *},
     source::{NextPolicy, TOPLEVEL},
 
