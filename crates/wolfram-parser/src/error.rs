@@ -5,7 +5,7 @@ use crate::{
     node::{
         GroupMissingCloserNode, Node, NodeSeq, OperatorNode, UnterminatedGroupNeedsReparseNode,
     },
-    source::{Buffer, BufferAndLength, CharacterRange},
+    source::{Buffer, BufferAndLength, CharacterSpan},
     token::{BorrowedTokenInput, Token},
     Source, SourceConvention, SourceLocation, Tokens,
 };
@@ -179,8 +179,8 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
                     src: node_src,
                 }) => {
                     if is_interval_member(
-                        better_src.character_range().tuple(),
-                        node_src.character_range().tuple(),
+                        better_src.character_span().tuple(),
+                        node_src.character_span().tuple(),
                     ) {
                         better_leaves.push(node.clone());
                     }
@@ -263,7 +263,7 @@ fn reparseUnterminatedTokenErrorNode<'i>(
             make_better_input(str, better_str2)
         },
         SourceConvention::CharacterIndex => {
-            let better_str: &str = StringTake(str, better_src.character_range());
+            let better_str: &str = StringTake(str, better_src.character_span());
 
             make_better_input(str, better_str)
         },
@@ -341,7 +341,7 @@ fn first_chunk_and_last_good_line(
     // Filter `lines` into the lines that overlap with `src`
     //------------------------------------------------------
 
-    let (lines, char_ranges_of_lines): (Vec<Line>, Option<Vec<CharacterRange>>) = match convention {
+    let (lines, char_ranges_of_lines): (Vec<Line>, Option<Vec<CharacterSpan>>) = match convention {
         SourceConvention::LineColumn => {
             // (*
             // lines of the node
@@ -362,11 +362,11 @@ fn first_chunk_and_last_good_line(
         SourceConvention::CharacterIndex => {
             let specs_of_lines = lines_start_and_end_char_indexes(lines);
 
-            let CollectMultiple(lines, specs_of_lines): CollectMultiple<Line, CharacterRange> =
+            let CollectMultiple(lines, specs_of_lines): CollectMultiple<Line, CharacterSpan> =
                 specs_of_lines
-                    .flat_map(|(line, pos): (Line, CharacterRange)| {
-                        // Only returns lines that intersect with the source character range.
-                        if intersection(pos.tuple(), src.character_range().tuple()).is_some() {
+                    .flat_map(|(line, pos): (Line, CharacterSpan)| {
+                        // Only returns lines that intersect with the source character span.
+                        if intersection(pos.tuple(), src.character_span().tuple()).is_some() {
                             Some((line, pos))
                         } else {
                             None
@@ -446,7 +446,7 @@ fn first_chunk_and_last_good_line(
             // This WILL include newline at the end
             // FIXME?
 
-            let CharacterRange(original_start, _) = src.character_range();
+            let CharacterSpan(original_start, _) = src.character_span();
 
             let char_ranges_of_lines = char_ranges_of_lines.unwrap();
 
@@ -457,7 +457,7 @@ fn first_chunk_and_last_good_line(
                 u32::try_from(char_ranges_of_lines[last_good_line_index].1).unwrap() + 1;
 
 
-            Source::from_character_range(original_start, better_character_index_source_end)
+            Source::from_character_span(original_start, better_character_index_source_end)
 
             // betterSrc = {
             //     src[[1]],
@@ -480,7 +480,7 @@ fn StringLength(s: &str) -> usize {
     s.len()
 }
 
-fn StringTake(s: &str, range: CharacterRange) -> &str {
+fn StringTake(s: &str, range: CharacterSpan) -> &str {
     // FIXME: This treats WL characters as bytes.
     &s[range.to_rust_range()]
 }
@@ -494,7 +494,7 @@ fn lines_start_and_end_char_indexes(
     // TODO(optimization): Make this take an `impl Iterator<..>` instead of
     //                     an allocated Vec.
     lines: Vec<Line>,
-) -> impl Iterator<Item = (Line, CharacterRange)> {
+) -> impl Iterator<Item = (Line, CharacterSpan)> {
     // Cumulative character index.
     let mut current_character_index: u32 = 0;
 
@@ -512,7 +512,7 @@ fn lines_start_and_end_char_indexes(
 
         let end_index = current_character_index;
 
-        (line, CharacterRange(start_index, end_index))
+        (line, CharacterSpan(start_index, end_index))
     });
 
     fold_list

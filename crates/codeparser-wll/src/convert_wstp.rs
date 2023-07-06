@@ -10,7 +10,7 @@ use wolfram_parser::{
         GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator, OperatorNode, PostfixNode,
         PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
-    source::{CharacterRange, GeneralSource, Source, SourceLocation, StringSourceKind},
+    source::{CharacterSpan, GeneralSource, Source, SourceLocation, StringSourceKind},
     symbol::Symbol,
     symbol_registration as sym,
     token::{BorrowedTokenInput, Token, TokenInput, TokenKind},
@@ -933,7 +933,7 @@ fn put_source_rhs(link: &mut wstp::Link, source: Source) {
             start.put(link);
             end.put(link);
         },
-        StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
+        StringSourceKind::CharacterSpan(CharacterSpan(start, end)) => {
             link.put_function(sym::List.as_str(), 2).unwrap();
 
             link.put_i64(start.into()).unwrap();

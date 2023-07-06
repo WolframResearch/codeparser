@@ -375,7 +375,7 @@ const _: () = assert!(std::mem::size_of::<Source>() == 16);
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum StringSourceKind {
     LineColumnSpan(LineColumnSpan),
-    CharacterRange(CharacterRange),
+    CharacterSpan(CharacterSpan),
     /// `<||>`
     Unknown,
 }
@@ -384,9 +384,9 @@ pub enum StringSourceKind {
 ///
 /// This range starts indexing at 1, and is exclusive.
 ///
-/// `CharacterRange(start, end)`
+/// `CharacterSpan(start, end)`
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct CharacterRange(pub u32, pub u32);
+pub struct CharacterSpan(pub u32, pub u32);
 
 /// `LineColumn(line, column)`
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -422,7 +422,7 @@ impl Debug for SourceLocation {
 impl Display for Source {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.kind() {
-            StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
+            StringSourceKind::CharacterSpan(CharacterSpan(start, end)) => {
                 write!(f, "{}..{}", start, end)
             },
             StringSourceKind::LineColumnSpan(LineColumnSpan { start, end }) => {
@@ -525,22 +525,22 @@ impl SourceLocation {
 // }
 
 
-impl CharacterRange {
+impl CharacterSpan {
     pub(crate) fn tuple(self) -> (u32, u32) {
-        let CharacterRange(start, end) = self;
+        let CharacterSpan(start, end) = self;
 
         (start, end)
     }
 
     pub(crate) fn to_rust_range(&self) -> std::ops::Range<usize> {
-        let CharacterRange(start, end) = *self;
+        let CharacterSpan(start, end) = *self;
 
         debug_assert!(start > 0);
 
         let start = usize::try_from(start).unwrap();
         let end = usize::try_from(end).unwrap();
 
-        // -1 because CharacterRange is 1-indexed (like WL)
+        // -1 because CharacterSpan is 1-indexed (like WL)
         let start = start - 1;
         let end = end - 1;
 
@@ -563,7 +563,7 @@ impl Source {
     }
 
     #[doc(hidden)]
-    pub fn from_character_range(start: u32, end: u32) -> Self {
+    pub fn from_character_span(start: u32, end: u32) -> Self {
         Source {
             start: SourceLocation::CharacterIndex(start),
             end: SourceLocation::CharacterIndex(end),
@@ -597,11 +597,11 @@ impl Source {
         (start, end)
     }
 
-    pub(crate) fn character_range(&self) -> CharacterRange {
+    pub(crate) fn character_span(&self) -> CharacterSpan {
         match self.kind() {
-            StringSourceKind::CharacterRange(range) => range,
+            StringSourceKind::CharacterSpan(range) => range,
             other => {
-                panic!("Source::character_range(): Source is not a character range: {other:?}")
+                panic!("Source::character_span(): Source is not a character span: {other:?}")
             },
         }
     }
@@ -622,7 +622,7 @@ impl Source {
             (
                 SourceLocation::CharacterIndex(start_char),
                 SourceLocation::CharacterIndex(end_char),
-            ) => StringSourceKind::CharacterRange(CharacterRange(start_char, end_char)),
+            ) => StringSourceKind::CharacterSpan(CharacterSpan(start_char, end_char)),
             (
                 SourceLocation::LineColumn {
                     line: start_line,
@@ -798,9 +798,9 @@ impl From<LineColumnSpan> for Source {
     }
 }
 
-impl From<CharacterRange> for Source {
-    fn from(value: CharacterRange) -> Source {
-        let CharacterRange(start, end) = value;
+impl From<CharacterSpan> for Source {
+    fn from(value: CharacterSpan) -> Source {
+        let CharacterSpan(start, end) = value;
 
         Source {
             start: SourceLocation::CharacterIndex(start),

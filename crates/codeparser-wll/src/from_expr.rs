@@ -669,7 +669,7 @@ impl FromExpr for GeneralSource {
         if let Ok(start_index) = get_source_pos(&elements[0]) {
             let end_index = get_source_pos(&elements[1])?;
 
-            return Ok(GeneralSource::String(Source::from_character_range(
+            return Ok(GeneralSource::String(Source::from_character_span(
                 start_index,
                 // FIXME: We add one here because in Source::put() we
                 //        subtract 1. Instead of doing this in the WL

@@ -232,7 +232,7 @@ impl<'i> TokenRef<'i> {
                     // Spanning multiple lines is too complicated to care about
                     //
                     match src.kind() {
-                        StringSourceKind::CharacterRange(_) => {
+                        StringSourceKind::CharacterSpan(_) => {
                             //
                             // SourceConvention of "SourceCharacterIndex"
                             // so nothing to do
