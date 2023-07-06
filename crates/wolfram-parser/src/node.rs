@@ -117,7 +117,7 @@ pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I,
 #[derive(Debug, Clone, PartialEq)]
 pub struct CallNode<I = OwnedTokenInput, S = Source> {
     pub head: CstNodeSeq<I, S>,
-    pub body: Box<Node<I, S>>,
+    pub body: CallBody<I, S>,
     pub src: S,
     // Concrete Call nodes can have more than one element in `head`, and
     // serialize as `CallNode[{__}, ..]`
@@ -125,6 +125,13 @@ pub struct CallNode<I = OwnedTokenInput, S = Source> {
     // Aggregate and abstract Call nodes must have exactly one element in `head`,
     // and serialize as `CallNode[node_, ..]`.
     pub is_concrete: bool,
+}
+
+/// Subset of [`Node`] variants that are allowed as the body of a [`CallNode`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum CallBody<I = OwnedTokenInput, S = Source> {
+    Group(GroupNode<I, S>),
+    GroupMissingCloser(GroupMissingCloserNode<I, S>),
 }
 
 /// `{x}`
@@ -411,7 +418,13 @@ impl<I, S> Node<I, S> {
             }) => {
                 head.visit(visit);
 
-                body.visit(visit);
+                let OperatorNode {
+                    op: _,
+                    children,
+                    src: _,
+                } = body.as_op();
+
+                children.visit(visit);
             },
             Node::SyntaxError(SyntaxErrorNode {
                 err: _,
@@ -466,11 +479,11 @@ impl<I, S> Node<I, S> {
             }) => {
                 let head = head.map_visit(visit);
 
-                let body = body.map_visit(visit);
+                let body = body.map_op(|body_op: OperatorNode<_, _>| body_op.map_visit(visit));
 
                 Node::Call(CallNode {
                     head,
-                    body: Box::new(body),
+                    body,
                     src,
                     is_concrete,
                 })
@@ -531,7 +544,7 @@ impl<I: TokenInput, S> Node<I, S> {
                 is_concrete,
             }) => Node::Call(CallNode {
                 head: head.into_owned_input(),
-                body: Box::new(body.into_owned_input()),
+                body: body.map_op(|body_op| body_op.into_owned_input()),
                 src,
                 is_concrete,
             }),
@@ -817,16 +830,16 @@ impl<I> UnterminatedGroupNeedsReparseNode<I> {
 //======================================
 
 impl<I> CallNode<I> {
-    pub(crate) fn concrete(head: CstNodeSeq<I>, body: Node<I>) -> Self {
+    pub(crate) fn concrete(head: CstNodeSeq<I>, body: CallBody<I>) -> Self {
         debug_assert!(!head.is_empty());
 
         incr_diagnostic!(Node_CallNodeCount);
 
-        let src = Source::new_from_source(head.first().source(), body.source());
+        let src = Source::new_from_source(head.first().source(), body.as_op().getSource());
 
         CallNode {
             head,
-            body: Box::new(body),
+            body,
             src,
             is_concrete: true,
         }
@@ -870,7 +883,28 @@ impl<I, S: TokenSource> CallNode<I, S> {
         // Sanity check that check() isn't used on aggregate / abstract nodes.
         debug_assert!(is_concrete);
 
-        return head.check() && body.check();
+        return head.check() && body.as_op().check();
+    }
+}
+
+impl<I, S> CallBody<I, S> {
+    pub fn as_op(&self) -> &OperatorNode<I, S> {
+        match self {
+            CallBody::Group(GroupNode(op)) => op,
+            CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => op,
+        }
+    }
+
+    pub fn map_op<F, I2, S2>(self, func: F) -> CallBody<I2, S2>
+    where
+        F: FnOnce(OperatorNode<I, S>) -> OperatorNode<I2, S2>,
+    {
+        match self {
+            CallBody::Group(GroupNode(op)) => CallBody::Group(GroupNode(func(op))),
+            CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                CallBody::GroupMissingCloser(GroupMissingCloserNode(func(op)))
+            },
+        }
     }
 }
 

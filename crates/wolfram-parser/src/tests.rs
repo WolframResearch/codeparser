@@ -15,8 +15,8 @@ use pretty_assertions::assert_eq;
 use crate::{
     ast::{AstMetadata, AstNode},
     node::{
-        CallNode, GroupMissingCloserNode, GroupNode, InfixNode, Node, Node::Token as NVToken,
-        NodeSeq, Operator, OperatorNode,
+        CallBody, CallNode, GroupMissingCloserNode, GroupNode, InfixNode, Node,
+        Node::Token as NVToken, NodeSeq, Operator, OperatorNode,
     },
     parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},
@@ -166,7 +166,7 @@ fn test_something() {
                 "f" @ 0,
                 src!(1:1-1:2)
             ])]),
-            body: Box::new(Node::Group(GroupNode(OperatorNode {
+            body: CallBody::Group(GroupNode(OperatorNode {
                 op: Operator::CodeParser_GroupSquare,
                 children: NodeSeq(vec![
                     NVToken(token![OpenSquare, "[" @ 1, src!(1:2-1:3)]),
@@ -174,7 +174,7 @@ fn test_something() {
                     NVToken(token![CloseSquare, "]" @ 3, src!(1:4-1:5)]),
                 ]),
                 src: src!(1:2-1:5).into(),
-            }))),
+            })),
             src: src!(1:1-1:5).into(),
             is_concrete: true,
         })]

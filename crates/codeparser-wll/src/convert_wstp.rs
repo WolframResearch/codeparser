@@ -6,9 +6,10 @@ use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     node::{
-        BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
-        GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator, OperatorNode, PostfixNode,
-        PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
+        TernaryNode,
     },
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
     symbol::Symbol,
@@ -703,6 +704,17 @@ impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
         body.put(callLink);
 
         src.put(callLink);
+    }
+}
+
+impl<I: TokenInput, S: WstpPut> WstpPut for CallBody<I, S> {
+    fn put(&self, link: &mut wstp::Link) {
+        match self {
+            CallBody::Group(GroupNode(op)) => put_op(link, op, sym::CodeParser_GroupNode),
+            CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                put_op(link, op, sym::CodeParser_GroupMissingCloserNode)
+            },
+        }
     }
 }
 

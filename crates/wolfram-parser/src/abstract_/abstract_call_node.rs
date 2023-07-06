@@ -6,8 +6,8 @@ use crate::{
     ast::{AstMetadata, AstNode},
     issue::{Issue, IssueTag, Severity},
     node::{
-        BinaryNode, BoxKind, BoxNode, CallNode, CompoundNode, GroupNode, InfixNode, Node, NodeSeq,
-        Operator as Op, OperatorNode, PostfixNode, PrefixNode,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CompoundNode, GroupNode, InfixNode, Node,
+        NodeSeq, Operator as Op, OperatorNode, PostfixNode, PrefixNode,
     },
     symbol as sym,
     token::{
@@ -76,7 +76,7 @@ pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
         AggCallNode {
             head,
             body:
-                Node::Group(GroupNode(OperatorNode {
+                CallBody::Group(GroupNode(OperatorNode {
                     op: Op::CodeParser_GroupSquare,
                     children,
                     src: _,
@@ -843,7 +843,7 @@ pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
 #[derive(Debug, Clone)]
 struct AggCallNode<I, S> {
     head: Node<I, S>,
-    body: Node<I, S>,
+    body: CallBody<I, S>,
     src: S,
 }
 
@@ -865,10 +865,6 @@ impl<I: Debug, S: Debug> AggCallNode<I, S> {
 
         let head = head.into_iter().next().unwrap();
 
-        AggCallNode {
-            head: head,
-            body: *body,
-            src,
-        }
+        AggCallNode { head, body, src }
     }
 }
