@@ -4,17 +4,18 @@ use crate::{
     agg::LHS,
     ast::WL,
     ast::{AstMetadata, AstNode},
-    issue::{Issue, IssueTag, Severity},
-    node::{
+    cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CompoundNode, GroupNode, InfixNode, Node,
-        NodeSeq, Operator as Op, OperatorNode, PostfixNode, PrefixNode,
+        Operator as Op, OperatorNode, PostfixNode, PrefixNode,
     },
+    issue::{Issue, IssueTag, Severity},
     symbol as sym,
     token::{
         Token, TokenInput,
         TokenKind::{self as TK},
         TokenSource,
     },
+    NodeSeq,
 };
 
 use super::{

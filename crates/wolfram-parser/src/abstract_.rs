@@ -5,15 +5,14 @@ use std::fmt::Debug;
 use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
-    cst::CstNodeSeq,
-    issue::{Issue, IssueTag, Severity},
-    node::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Node, NodeSeq,
+    cst::{
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNodeSeq,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Node,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
         TernaryNode,
     },
+    issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
     source::GeneralSource,
     symbol::{self as sym, Symbol},
@@ -22,7 +21,7 @@ use crate::{
         TokenKind::{self, self as TK},
         TokenSource,
     },
-    Source,
+    NodeSeq, Source,
 };
 
 //==========================================================

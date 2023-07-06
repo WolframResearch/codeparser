@@ -10,10 +10,9 @@ use crate::{
     abstract_::{Abstract, Aggregate},
     ast::AstNode,
     byte_decoder::ByteDecoder_nextSourceCharacter,
-    cst::{CstNode, CstNodeSeq},
+    cst::{CstNode, CstNodeSeq, TriviaSeq},
     feature,
     issue::Issue,
-    node::{Node, NodeSeq, TriviaSeq},
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     quirks::{self, QuirkSettings},
@@ -24,7 +23,7 @@ use crate::{
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
         TrackedSourceLocations, UnsafeCharacterEncoding,
     },
-    EncodingMode, FirstLineBehavior, StringifyMode, Tokens,
+    EncodingMode, FirstLineBehavior, NodeSeq, StringifyMode, Tokens,
 };
 
 /// A parser session
@@ -41,7 +40,7 @@ pub struct ParserSession<'i> {
     pub(crate) quirk_settings: QuirkSettings,
 }
 
-pub(crate) type NodeStack<'i> = Vec<Node<BorrowedTokenInput<'i>>>;
+pub(crate) type NodeStack<'i> = Vec<CstNode<BorrowedTokenInput<'i>>>;
 
 pub struct ParseResult<N> {
     /// Tokens or expressions.
@@ -171,7 +170,7 @@ impl<'i> ParserSession<'i> {
             }
 
             if peek.tok.isTrivia() {
-                exprs.push(Node::Token(peek));
+                exprs.push(CstNode::Token(peek));
 
                 peek.skip(&mut self.tokenizer);
 

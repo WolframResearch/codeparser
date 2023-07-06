@@ -22,7 +22,7 @@ use wolfram_library_link::{
 
 use wolfram_parser::{
     abstract_::{abstract_, Aggregate},
-    node::Node,
+    cst::CstNode,
     parser_session::ParserSession,
     quirks::QuirkSettings,
     source::{SourceConvention, DEFAULT_TAB_WIDTH},
@@ -304,7 +304,7 @@ pub fn Abstract_LibraryLink(link: &mut wstp::Link) {
 
     let arg = args.remove(0);
 
-    let node = match Node::from_expr(&arg) {
+    let node = match CstNode::from_expr(&arg) {
         Ok(node) => abstract_(node),
         Err(err) => panic!("Error parsing arg: {err}: (expr: {arg})"),
     };

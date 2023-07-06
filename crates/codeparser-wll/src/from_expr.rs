@@ -3,13 +3,13 @@ use wolfram_library_link::expr::{symbol::SymbolRef, Expr, ExprKind, Normal, Numb
 
 use wolfram_parser::{
     cst::CstNodeSeq,
-    issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
-    node::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Node,
-        Operator, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode,
+    cst::{
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNode,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Operator,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
+        TernaryNode,
     },
+    issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
     source::GeneralSource,
     symbol_registration as sym,
@@ -27,7 +27,7 @@ pub(crate) trait FromExpr: Sized {
 // FromExpr impls
 //==========================================================
 
-impl FromExpr for Container<Node<OwnedTokenInput, GeneralSource>> {
+impl FromExpr for Container<CstNode<OwnedTokenInput, GeneralSource>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(
             expr,
@@ -73,7 +73,7 @@ impl FromExpr for ContainerKind {
     }
 }
 
-impl FromExpr for ContainerBody<Node<OwnedTokenInput, GeneralSource>> {
+impl FromExpr for ContainerBody<CstNode<OwnedTokenInput, GeneralSource>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(elements) = try_normal_with_head(expr, sym::List) {
             if elements.len() == 1 {
@@ -102,7 +102,7 @@ impl<N: FromExpr> FromExpr for NodeSeq<N> {
     }
 }
 
-impl FromExpr for Node<OwnedTokenInput, GeneralSource> {
+impl FromExpr for CstNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(LeafNode { kind, input, src }) = LeafNode::from_expr(expr) {
             let token = Token {
@@ -112,7 +112,7 @@ impl FromExpr for Node<OwnedTokenInput, GeneralSource> {
                     buf: input.into_bytes(),
                 },
             };
-            return Ok(Node::Token(token));
+            return Ok(CstNode::Token(token));
         }
 
 
@@ -170,7 +170,7 @@ impl FromExpr for Node<OwnedTokenInput, GeneralSource> {
 
         if let Ok(node) = CodeNode::from_expr(expr) {
             // return Ok(Self::from(node));
-            return Ok(Node::Code(node));
+            return Ok(CstNode::Code(node));
         }
 
         // todo!("expr: {expr}")
@@ -224,7 +224,7 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
             (NodeSeq(head), true)
         } else {
             // PRE_COMMIT: Is this variant used?
-            (NodeSeq(vec![Node::from_expr(&elements[0])?]), false)
+            (NodeSeq(vec![CstNode::from_expr(&elements[0])?]), false)
         };
         let body = if let Ok(group) = GroupNode::from_expr(&elements[1]) {
             CallBody::Group(group)

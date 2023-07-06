@@ -1,5 +1,5 @@
 use crate::{
-    node::{InfixNode, Operator},
+    cst::{InfixNode, Operator},
     panic_if_aborted,
     parselet::*,
     parselet_registration::*,

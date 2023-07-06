@@ -1,4 +1,4 @@
-use crate::{node::Node, token::OwnedTokenInput, NodeSeq, Source};
+use crate::{cst::Node, token::OwnedTokenInput, NodeSeq, Source};
 
 pub type AggNodeSeq<I = OwnedTokenInput, S = Source> = NodeSeq<Node<I, S>>;
 
@@ -32,14 +32,14 @@ macro_rules! WL {
     }};
 
     (ToNode[-1]) => {
-        $crate::node::Node::Token($crate::token::Token {
+        $crate::cst::Node::Token($crate::token::Token {
             tok: $crate::token::TokenKind::Integer,
             input: I::fake("-1"),
             src: S::unknown(),
         })
     };
     (ToNode[1]) => {
-        $crate::node::Node::Token($crate::token::Token {
+        $crate::cst::Node::Token($crate::token::Token {
             tok: $crate::token::TokenKind::Integer,
             input: I::fake("1"),
             src: S::unknown(),
@@ -53,7 +53,7 @@ macro_rules! WL {
     (LeafNode[$token_kind:ident, $input:literal, <||>]) => {{
         let input: &'static str = $input;
 
-        $crate::node::Node::Token($crate::token::Token {
+        $crate::cst::Node::Token($crate::token::Token {
             tok: $crate::token::TokenKind::$token_kind,
             input: I::fake(input),
             src: S::unknown(),
@@ -61,7 +61,7 @@ macro_rules! WL {
     }};
     (LeafNode[$token_kind:ident, $input:expr, <||>]) => {{
         let input: &'static str = $input;
-        $crate::node::Node::Token($crate::token::Token {
+        $crate::cst::Node::Token($crate::token::Token {
             tok: $crate::token::TokenKind::$token_kind,
             input: I::fake(input),
             src: S::unknown(),
@@ -69,7 +69,7 @@ macro_rules! WL {
     }};
     (LeafNode[$token_kind:ident, $input:literal, $data:expr]) => {{
         let input: &str = $input;
-        $crate::node::Node::Token(Token {
+        $crate::cst::Node::Token(Token {
             tok: $crate::token::TokenKind::$token_kind,
             input: I::fake(input),
             src: $data,
@@ -79,7 +79,7 @@ macro_rules! WL {
     (LeafNode[$token_kind:ident, $input:expr, $data:expr]) => {{
         let input: String = String::from($input);
 
-        $crate::node::Node::Token(Token {
+        $crate::cst::Node::Token(Token {
             tok: $crate::token::TokenKind::$token_kind,
             input: $crate::token::OwnedTokenInput {
                 buf: input.into_bytes(),
@@ -93,11 +93,11 @@ macro_rules! WL {
     //========================
 
     (InfixNode[$op:ident, { $($args:expr),*}, <||>]) => {
-        $crate::node::Node::Infix(
-            $crate::node::InfixNode(
-                $crate::node::OperatorNode {
-                    op: $crate::node::Operator::$op,
-                    children: $crate::node::NodeSeq(vec![$($args),*]),
+        $crate::cst::Node::Infix(
+            $crate::cst::InfixNode(
+                $crate::cst::OperatorNode {
+                    op: $crate::cst::Operator::$op,
+                    children: $crate::NodeSeq(vec![$($args),*]),
                     src: S::unknown()
                 }
             )
@@ -246,7 +246,7 @@ macro_rules! LHS {
     //----------------------------------
 
     ($name:ident:GroupMissingCloserNode[$($op_kind:ident)|*, _, _]) => {
-        $crate::node::CallBody::GroupMissingCloser($name @ $crate::node::GroupMissingCloserNode(OperatorNode {
+        $crate::cst::CallBody::GroupMissingCloser($name @ $crate::cst::GroupMissingCloserNode(OperatorNode {
             op: $(Op::$op_kind)|*,
             ..
         }))

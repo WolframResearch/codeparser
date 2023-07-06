@@ -2,12 +2,10 @@ use std::{num::NonZeroU32, ops::Range};
 
 use crate::{
     agg::AggNodeSeq,
-    node::{
-        GroupMissingCloserNode, Node, NodeSeq, OperatorNode, UnterminatedGroupNeedsReparseNode,
-    },
+    cst::{GroupMissingCloserNode, Node, OperatorNode, UnterminatedGroupNeedsReparseNode},
     source::{Buffer, BufferAndLength, CharacterSpan, LineColumn},
     token::{BorrowedTokenInput, Token},
-    Source, SourceConvention, SourceLocation, Tokens,
+    NodeSeq, Source, SourceConvention, SourceLocation, Tokens,
 };
 
 use once_cell::sync::Lazy;

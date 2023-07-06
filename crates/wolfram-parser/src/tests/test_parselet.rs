@@ -1,5 +1,5 @@
 use crate::{
-    node::Node, parselet::prefix_parselet, parser::Parser_topNode, source::TOPLEVEL,
+    cst::CstNode, parselet::prefix_parselet, parser::Parser_topNode, source::TOPLEVEL,
     tokenizer::Tokenizer_currentToken, EncodingMode, FirstLineBehavior, ParserSession,
     QuirkSettings, SourceConvention, DEFAULT_TAB_WIDTH,
 };
@@ -22,9 +22,9 @@ fn ParseletTest_Bug1() {
 
     prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
 
-    let P: &mut Node<_> = Parser_topNode(&mut session);
+    let P: &mut CstNode<_> = Parser_topNode(&mut session);
 
-    assert!(matches!(P, Node::Ternary(_)));
+    assert!(matches!(P, CstNode::Ternary(_)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

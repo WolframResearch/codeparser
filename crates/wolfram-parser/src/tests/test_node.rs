@@ -1,8 +1,8 @@
 use crate::{
-    node::{CompoundNode, Node, NodeSeq, Operator},
+    cst::{CompoundNode, CstNode, Operator},
     source::SourceLocation,
-    src, token, EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
-    DEFAULT_TAB_WIDTH,
+    src, token, EncodingMode, FirstLineBehavior, NodeSeq, ParserSession, QuirkSettings,
+    SourceConvention, DEFAULT_TAB_WIDTH,
 };
 
 
@@ -22,14 +22,14 @@ fn NodeTest_Bug1() {
     );
 
     let T1 = token!(Symbol, "a" @ 0, src!(1:1-1:2));
-    Args.push(Node::Token(T1));
+    Args.push(CstNode::Token(T1));
 
     let T2 = token!(UnderDot, "_." @ 1, src!(1:2-1:4));
-    Args.push(Node::Token(T2));
+    Args.push(CstNode::Token(T2));
 
     let N = CompoundNode::new(Operator::CodeParser_PatternOptionalDefault, Args);
 
-    let NSource = Node::Compound(N).getSource();
+    let NSource = CstNode::Compound(N).getSource();
 
     assert_eq!(NSource.start, SourceLocation::new(1, 1));
     assert_eq!(NSource.end, SourceLocation::new(1, 4));

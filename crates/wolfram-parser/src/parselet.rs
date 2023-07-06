@@ -7,7 +7,7 @@ mod under_parselet;
 use std::any::Any;
 
 use crate::{
-    node::{
+    cst::{
         BinaryNode, CallBody, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode,
         Operator, PostfixNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         UnterminatedGroupNeedsReparseNode,

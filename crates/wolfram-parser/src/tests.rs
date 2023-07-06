@@ -14,15 +14,15 @@ use pretty_assertions::assert_eq;
 
 use crate::{
     ast::{AstMetadata, AstNode},
-    node::{
-        CallBody, CallNode, GroupMissingCloserNode, GroupNode, InfixNode, Node,
-        Node::Token as NVToken, NodeSeq, Operator, OperatorNode,
+    cst::{
+        CallBody, CallNode, CstNode::Token as NVToken, GroupMissingCloserNode, GroupNode,
+        InfixNode, Node, Operator, OperatorNode,
     },
     parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},
     test_utils::{src, token},
     token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
-    EncodingMode, FirstLineBehavior, ParseOptions, ParseResult, QuirkSettings, Tokens,
+    EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, QuirkSettings, Tokens,
     DEFAULT_TAB_WIDTH,
 };
 

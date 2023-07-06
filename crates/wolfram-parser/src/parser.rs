@@ -1,9 +1,8 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    cst::CstNodeSeq,
+    cst::{BinaryNode, CompoundNode, CstNodeSeq, Node, Operator, TernaryNode, TriviaSeq},
     feature,
-    node::{BinaryNode, CompoundNode, Node, NodeSeq, Operator, TernaryNode, TriviaSeq},
     panic_if_aborted,
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
     parselet_registration::INFIX_PARSELETS,
@@ -16,6 +15,7 @@ use crate::{
     token_enum::Closer,
     tokenizer::{Tokenizer, Tokenizer_currentToken, Tokenizer_currentToken_stringifyAsFile},
     FirstLineBehavior,
+    NodeSeq,
 };
 
 pub struct Context {

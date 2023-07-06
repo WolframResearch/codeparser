@@ -1,5 +1,5 @@
 use crate::{
-    node::{BinaryNode, Operator, TernaryNode},
+    cst::{BinaryNode, Operator, TernaryNode},
     panic_if_aborted,
     parselet::*,
     parser::{

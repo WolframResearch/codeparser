@@ -4,13 +4,13 @@ use wolfram_library_link::{expr::Expr, wstp};
 
 use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
-    issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
-    node::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator,
+    cst::{
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNode,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Operator,
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
         TernaryNode,
     },
+    issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
     symbol::Symbol,
     symbol_registration as sym,
@@ -547,30 +547,30 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
 // Node types
 //======================================
 
-impl<I: TokenInput, S: WstpPut> WstpPut for Node<I, S> {
+impl<I: TokenInput, S: WstpPut> WstpPut for CstNode<I, S> {
     fn put(&self, link: &mut wstp::Link) {
         match self {
-            Node::Token(token) => token.put(link),
-            Node::Call(node) => node.put(link),
-            Node::SyntaxError(node) => node.put(link),
-            Node::Infix(InfixNode(op)) => put_op(link, op, sym::CodeParser_InfixNode),
-            Node::Prefix(PrefixNode(op)) => put_op(link, op, sym::CodeParser_PrefixNode),
-            Node::Postfix(PostfixNode(op)) => put_op(link, op, sym::CodeParser_PostfixNode),
-            Node::Binary(BinaryNode(op)) => put_op(link, op, sym::CodeParser_BinaryNode),
-            Node::Ternary(TernaryNode(op)) => put_op(link, op, sym::CodeParser_TernaryNode),
-            Node::PrefixBinary(PrefixBinaryNode(op)) => {
+            CstNode::Token(token) => token.put(link),
+            CstNode::Call(node) => node.put(link),
+            CstNode::SyntaxError(node) => node.put(link),
+            CstNode::Infix(InfixNode(op)) => put_op(link, op, sym::CodeParser_InfixNode),
+            CstNode::Prefix(PrefixNode(op)) => put_op(link, op, sym::CodeParser_PrefixNode),
+            CstNode::Postfix(PostfixNode(op)) => put_op(link, op, sym::CodeParser_PostfixNode),
+            CstNode::Binary(BinaryNode(op)) => put_op(link, op, sym::CodeParser_BinaryNode),
+            CstNode::Ternary(TernaryNode(op)) => put_op(link, op, sym::CodeParser_TernaryNode),
+            CstNode::PrefixBinary(PrefixBinaryNode(op)) => {
                 put_op(link, op, sym::CodeParser_PrefixBinaryNode)
             },
-            Node::Compound(CompoundNode(op)) => put_op(link, op, sym::CodeParser_CompoundNode),
-            Node::Group(GroupNode(op)) => put_op(link, op, sym::CodeParser_GroupNode),
-            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+            CstNode::Compound(CompoundNode(op)) => put_op(link, op, sym::CodeParser_CompoundNode),
+            CstNode::Group(GroupNode(op)) => put_op(link, op, sym::CodeParser_GroupNode),
+            CstNode::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 put_op(link, op, sym::CodeParser_GroupMissingCloserNode)
             },
-            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+            CstNode::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
                 put_op(link, op, sym::CodeParser_GroupMissingOpenerNode)
             },
-            Node::Box(box_node) => box_node.put(link),
-            Node::Code(node) => node.put(link),
+            CstNode::Box(box_node) => box_node.put(link),
+            CstNode::Code(node) => node.put(link),
         }
     }
 }

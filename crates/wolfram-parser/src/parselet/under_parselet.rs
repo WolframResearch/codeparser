@@ -1,5 +1,5 @@
 use crate::{
-    node::{CompoundNode, Operator},
+    cst::{CompoundNode, Operator},
     panic_if_aborted,
     parselet::*,
     parser::{

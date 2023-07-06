@@ -1,8 +1,8 @@
 //! Abstract syntax trees.
 
 use crate::{
+    cst::{BoxKind, CodeNode, Operator, SyntaxErrorKind},
     issue::Issue,
-    node::{BoxKind, CodeNode, Operator, SyntaxErrorKind},
     source::GeneralSource,
     token::{OwnedTokenInput, TokenKind, TokenSource},
     Source,
@@ -395,7 +395,7 @@ macro_rules! WL {
 
     (SyntaxErrorNode[$err_kind:ident, { $($args:expr),* }, $data:expr]) => {
         $crate::ast::AstNode::SyntaxError {
-            kind: $crate::node::SyntaxErrorKind::$err_kind,
+            kind: $crate::cst::SyntaxErrorKind::$err_kind,
             children: vec![$($args),*],
             data: $crate::ast::AstMetadata::from_src($data),
         }
