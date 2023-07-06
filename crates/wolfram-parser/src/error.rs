@@ -5,7 +5,7 @@ use crate::{
     node::{
         GroupMissingCloserNode, Node, NodeSeq, OperatorNode, UnterminatedGroupNeedsReparseNode,
     },
-    source::{Buffer, BufferAndLength, CharacterSpan},
+    source::{Buffer, BufferAndLength, CharacterSpan, LineColumn},
     token::{BorrowedTokenInput, Token},
     Source, SourceConvention, SourceLocation, Tokens,
 };
@@ -431,15 +431,14 @@ fn first_chunk_and_last_good_line(
             // FIXME?
             Source {
                 start: src.start,
-                end: SourceLocation::LineColumn {
-                    line: src
-                        .start
+                end: SourceLocation::LineColumn(LineColumn(
+                    src.start
                         .line_column()
                         .line()
                         .checked_add(u32::try_from(last_good_line_index).unwrap())
                         .expect("source line overflow u32"),
-                    column: u32::try_from(last_good_line.column_width(tab_width)).unwrap() + 1,
-                },
+                    u32::try_from(last_good_line.column_width(tab_width)).unwrap() + 1,
+                )),
             }
         },
         SourceConvention::CharacterIndex => {

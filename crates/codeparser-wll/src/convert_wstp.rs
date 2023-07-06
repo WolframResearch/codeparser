@@ -10,7 +10,7 @@ use wolfram_parser::{
         GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator, OperatorNode, PostfixNode,
         PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
-    source::{CharacterSpan, GeneralSource, Source, SourceLocation, StringSourceKind},
+    source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
     symbol::Symbol,
     symbol_registration as sym,
     token::{BorrowedTokenInput, Token, TokenInput, TokenKind},
@@ -911,7 +911,7 @@ impl WstpPut for CodeAction {
 impl WstpPut for SourceLocation {
     fn put(&self, callLink: &mut wstp::Link) {
         let (first, second) = match self {
-            SourceLocation::LineColumn { line, column } => (line.get(), *column),
+            SourceLocation::LineColumn(LineColumn(line, column)) => (line.get(), *column),
             SourceLocation::CharacterIndex(index) => (0, *index),
         };
 

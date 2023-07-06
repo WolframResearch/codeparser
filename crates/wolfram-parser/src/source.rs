@@ -332,7 +332,7 @@ pub const DEFAULT_TAB_WIDTH: u32 = 4;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub enum SourceLocation {
-    LineColumn { line: NonZeroU32, column: u32 },
+    LineColumn(LineColumn),
     CharacterIndex(u32),
 }
 
@@ -389,7 +389,7 @@ pub enum StringSourceKind {
 pub struct CharacterSpan(pub u32, pub u32);
 
 /// `LineColumn(line, column)`
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct LineColumn(pub NonZeroU32, pub u32);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -407,7 +407,7 @@ const _: () = assert!(std::mem::size_of::<LineColumnSpan>() == 16);
 impl Display for SourceLocation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SourceLocation::LineColumn { line, column } => write!(f, "{line}:{column}"),
+            SourceLocation::LineColumn(LineColumn(line, column)) => write!(f, "{line}:{column}"),
             SourceLocation::CharacterIndex(index) => write!(f, "{index}"),
         }
     }
@@ -450,10 +450,7 @@ impl SourceLocation {
     #[doc(hidden)]
     pub fn new(first: u32, second: u32) -> Self {
         if let Some(line) = NonZeroU32::new(first) {
-            SourceLocation::LineColumn {
-                line,
-                column: second,
-            }
+            SourceLocation::LineColumn(LineColumn(line, second))
         } else {
             debug_assert!(first == 0);
 
@@ -463,7 +460,7 @@ impl SourceLocation {
 
     pub(crate) fn line_column(self) -> LineColumn {
         match self {
-            SourceLocation::LineColumn { line, column } => LineColumn(line, column),
+            SourceLocation::LineColumn(lc) => lc,
             SourceLocation::CharacterIndex(_) => {
                 panic!("expected SourceLocation::LineColumn: {:?}", self)
             },
@@ -473,9 +470,8 @@ impl SourceLocation {
     pub(crate) fn next(self) -> Self {
         if feature::COMPUTE_SOURCE {
             match self {
-                SourceLocation::LineColumn { line, column } => SourceLocation::LineColumn {
-                    line,
-                    column: column + 1,
+                SourceLocation::LineColumn(LineColumn(line, column)) => {
+                    SourceLocation::LineColumn(LineColumn(line, column + 1))
                 },
                 SourceLocation::CharacterIndex(index) => SourceLocation::CharacterIndex(index + 1),
             }
@@ -489,13 +485,10 @@ impl SourceLocation {
             // TODO: What should this do if `second` is equal to 0? Can `second`
             //       even validly be equal to zero?
             match self {
-                SourceLocation::LineColumn { line, column } => {
+                SourceLocation::LineColumn(LineColumn(line, column)) => {
                     debug_assert!(column >= 1);
 
-                    SourceLocation::LineColumn {
-                        line,
-                        column: column - 1,
-                    }
+                    SourceLocation::LineColumn(LineColumn(line, column - 1))
                 },
                 SourceLocation::CharacterIndex(index) => {
                     debug_assert!(index >= 1);
@@ -583,10 +576,7 @@ impl Source {
         // Use incompatible values for `first`.
         Source {
             start: SourceLocation::CharacterIndex(0),
-            end: SourceLocation::LineColumn {
-                line: NonZeroU32::MIN,
-                column: 0,
-            },
+            end: SourceLocation::LineColumn(LineColumn(NonZeroU32::MIN, 0)),
         }
     }
 
@@ -624,14 +614,8 @@ impl Source {
                 SourceLocation::CharacterIndex(end_char),
             ) => StringSourceKind::CharacterSpan(CharacterSpan(start_char, end_char)),
             (
-                SourceLocation::LineColumn {
-                    line: start_line,
-                    column: start_column,
-                },
-                SourceLocation::LineColumn {
-                    line: end_line,
-                    column: end_column,
-                },
+                SourceLocation::LineColumn(LineColumn(start_line, start_column)),
+                SourceLocation::LineColumn(LineColumn(end_line, end_column)),
             ) => StringSourceKind::LineColumnSpan(LineColumnSpan {
                 start: LineColumn(start_line, start_column),
                 end: LineColumn(end_line, end_column),
@@ -780,20 +764,11 @@ impl GeneralSource {
 
 impl From<LineColumnSpan> for Source {
     fn from(value: LineColumnSpan) -> Self {
-        let LineColumnSpan {
-            start: LineColumn(start_line, start_column),
-            end: LineColumn(end_line, end_column),
-        } = value;
+        let LineColumnSpan { start, end } = value;
 
         Source {
-            start: SourceLocation::LineColumn {
-                line: start_line,
-                column: start_column,
-            },
-            end: SourceLocation::LineColumn {
-                line: end_line,
-                column: end_column,
-            },
+            start: SourceLocation::LineColumn(start),
+            end: SourceLocation::LineColumn(end),
         }
     }
 }
@@ -823,14 +798,8 @@ impl PartialOrd for SourceLocation {
 
         match (a, b) {
             (
-                SourceLocation::LineColumn {
-                    line: a_line,
-                    column: a_column,
-                },
-                SourceLocation::LineColumn {
-                    line: b_line,
-                    column: b_col,
-                },
+                SourceLocation::LineColumn(LineColumn(a_line, a_column)),
+                SourceLocation::LineColumn(LineColumn(b_line, b_col)),
             ) => (a_line, a_column).partial_cmp(&(b_line, b_col)),
             (SourceLocation::CharacterIndex(a_index), SourceLocation::CharacterIndex(b_index)) => {
                 a_index.partial_cmp(b_index)
