@@ -19,6 +19,9 @@ use crate::{
 
 use wolfram_expr::Expr;
 
+//==========================================================
+// Slices of source code: Buffer and BufferAndLength
+//==========================================================
 
 /// This type represents a subslice of the complete input byte sequence,
 /// starting at the specified byte [`offset`][Buffer::offset].
@@ -61,238 +64,6 @@ impl ByteSpan {
         return offset + len;
     }
 }
-
-//
-//
-//
-pub mod NextPolicyBits {
-    //
-    /// Enable character decoding issues
-    ///
-    /// "\c" gives a CharacterDecoding error (issues are ENABLED)
-    ///
-    /// (*\c*) does NOT give a CharacterDecoding error (issues are DISABLED)
-    ///
-    /// This is also used when peeking: no need to report issues while peeking
-    ///
-    /// Used By ByteDecoder, CharacterDecoder
-    //
-    pub const ENABLE_CHARACTER_DECODING_ISSUES: u8 = 0x01;
-
-    //
-    /// when inside Tokenizer_currentWLCharacter, then do not track line continuations
-    /// since Tokenizer_currentWLCharacter is implemented as Tokenizer_nextWLCharacter that is then reset, there should be no side-effects
-    //
-    pub const TRACK_LC: u8 = 0x02;
-
-    //
-    /// Used by Tokenizer
-    //
-    pub const RETURN_TOPLEVELNEWLINE: u8 = 0x04;
-
-    //
-    /// This bit serves 2 purposes:
-    /// Complex line continuations
-    /// Decrease severity of unexpected characters
-    ///
-    /// These are exactly what we care about with strings and comments, so use only a single bit for both purposes.
-    ///
-    /// NOTE: If the set:
-    /// {strings, comments}
-    /// is ever not exactly the same as the set:
-    /// (things that care about complex line continuations and decreased severity of unexpected characters)
-    /// then we need to rethink these bits.
-    ///
-    /// Complex line continuations:
-    /// Line continuations inside of strings or comments are "complex":
-    /// Formatting matters
-    ///
-    /// All other line continuations are simple:
-    /// inside or outside of other tokens
-    /// outside of strings or comments
-    ///
-    ///
-    /// Decrease severity of unexpected characters:
-    /// Outside of strings, \[RightArrow] should be a warning
-    /// Inside of strings, \[RightArrow] should be a remark
-    //
-    pub const STRING_OR_COMMENT: u8 = 0x08;
-
-    //
-    /// If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
-    ///
-    /// But obviously "123" and a`b are fine outside of #
-    ///
-    /// Also return symbols as strings, e.g., the  abc  in  #abc  is a string
-    ///
-    /// Used by Tokenizer
-    //
-    pub const TAGSLOT_BEHAVIOR_FOR_STRINGS: u8 = 0x10;
-
-    //
-    /// When tokenizing numbers, return immediately when an integer has been tokenized
-    ///
-    /// This is used when parsing Slot, SlotSequence, and Out
-    ///
-    /// For example, we must consider  `#2.c`  to be `Slot[2] . c`  and NOT  `Slot[1] 2. c`
-    //
-    pub const INTEGER_SHORT_CIRCUIT: u8 = 0x20;
-
-    //
-    // With input  "\\[Alpa]"  , then report \[Alpa] as unrecognized, even though this is valid syntax
-    //
-    pub const SCAN_FOR_UNRECOGNIZEDLONGNAMES: u8 = 0x40;
-}
-
-pub use self::NextPolicyBits::*;
-
-const _: () = assert!(
-    RETURN_TOPLEVELNEWLINE == 0x04,
-    "Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE"
-);
-
-pub(crate) type NextPolicy = u8;
-
-use NextPolicyBits::{
-    ENABLE_CHARACTER_DECODING_ISSUES, INTEGER_SHORT_CIRCUIT, RETURN_TOPLEVELNEWLINE,
-    TAGSLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
-};
-
-pub const TOPLEVEL: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
-
-#[allow(dead_code)] // TODO(cleanup): Is it meaningful that this is unused?
-pub const INSIDE_SYMBOL: NextPolicy = ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
-
-pub const INSIDE_STRINGIFY_AS_TAG: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | TAGSLOT_BEHAVIOR_FOR_STRINGS | TRACK_LC;
-pub const INSIDE_STRINGIFY_AS_FILE: NextPolicy = RETURN_TOPLEVELNEWLINE;
-
-pub const INSIDE_SLOT: NextPolicy = TAGSLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
-
-pub const INSIDE_SLOTSEQUENCE: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
-
-pub const INSIDE_OUT: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
-
-/// A single character of source code
-///
-/// The text `\[Alpha]` would be 8 separate SourceCharacters
-// TODO(cleanup): remove CodePoint, just have SourceCharacter?
-pub type SourceCharacter = CodePoint;
-
-const _: () = assert!(std::mem::size_of::<SourceCharacter>() == 4);
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum SourceConvention {
-    /// Handle next (non-newline) SourceLocation by incrementing column.
-    /// Handle next newline by incrementing line.
-    LineColumn = 0,
-    // TODO: Clarify, is this the index by unicode character(?), or the byte
-    //  offset, or something else?
-    /// Handle next (non-newline) SourceLocation by incrementing index.
-    /// Handle next newline by incrementing index.
-    CharacterIndex = 1,
-}
-
-pub const DEFAULT_TAB_WIDTH: u32 = 4;
-
-#[derive(Copy, Clone, PartialEq, Eq, Hash)]
-pub enum SourceLocation {
-    LineColumn { line: NonZeroU32, column: u32 },
-    CharacterIndex(u32),
-}
-
-// NOTE:
-//     Keeping the size of the SourceLocation enum limited to 8 bytes depends
-//     on using NonZeroU32, so that the 0 value can be used as the enum
-//     discriminant.
-//
-//     See also: https://github.com/rust-lang/rust/pull/94075
-const _: () = assert!(std::mem::size_of::<SourceLocation>() == 8);
-
-impl Display for SourceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            SourceLocation::LineColumn { line, column } => write!(f, "{line}:{column}"),
-            SourceLocation::CharacterIndex(index) => write!(f, "{index}"),
-        }
-    }
-}
-
-impl Debug for SourceLocation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
-// For LineContinuations and EmbeddedNewlines
-//
-// bool operator<(SourceLocation a, SourceLocation b);
-// bool operator<=(SourceLocation a, SourceLocation b);
-
-#[derive(Debug, Clone, PartialEq, Hash)]
-pub enum GeneralSource {
-    String(Source),
-    /// Box structure position.
-    BoxPosition(Vec<usize>),
-
-    /// `After[{..}]`
-    ///
-    /// Used to indicate the position of fake implicit Null or Times tokens, or
-    /// expected operand error tokens, that come after a specific position in
-    /// the source.
-    // TODO: Parse this into a strongly typed value
-    After(Expr),
-}
-
-#[derive(Copy, Clone, PartialEq, Hash)]
-pub struct Source {
-    pub(crate) start: SourceLocation,
-    pub(crate) end: SourceLocation,
-}
-
-const _: () = assert!(std::mem::size_of::<Source>() == 16);
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum StringSourceKind {
-    LineColumnRange {
-        start_line: u32,
-        start_column: u32,
-        end_line: u32,
-        end_column: u32,
-    },
-    CharacterRange(CharacterRange),
-    /// `<||>`
-    Unknown,
-}
-
-impl Display for Source {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let Source { start, end } = *self;
-
-        match self.kind() {
-            StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
-                write!(f, "{}..{}", start, end)
-            },
-            StringSourceKind::LineColumnRange { .. } => {
-                write!(f, "{start:?}-{end:?}")
-            },
-            StringSourceKind::Unknown => {
-                // TODO: Better formatting for this? "?"
-                write!(f, "Source unknown")
-            },
-        }
-    }
-}
-
-impl Debug for Source {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
 
 impl<'i, I: SliceIndex<[u8]>> Index<I> for Buffer<'i> {
     type Output = <I as SliceIndex<[u8]>>::Output;
@@ -412,9 +183,268 @@ impl<'i> BufferAndLength<'i> {
     // }
 }
 
+
+//==========================================================
+// Source character reading behavior
+//==========================================================
+
 //
-// SourceLocation
 //
+//
+pub mod NextPolicyBits {
+    //
+    /// Enable character decoding issues
+    ///
+    /// "\c" gives a CharacterDecoding error (issues are ENABLED)
+    ///
+    /// (*\c*) does NOT give a CharacterDecoding error (issues are DISABLED)
+    ///
+    /// This is also used when peeking: no need to report issues while peeking
+    ///
+    /// Used By ByteDecoder, CharacterDecoder
+    //
+    pub const ENABLE_CHARACTER_DECODING_ISSUES: u8 = 0x01;
+
+    //
+    /// when inside Tokenizer_currentWLCharacter, then do not track line continuations
+    /// since Tokenizer_currentWLCharacter is implemented as Tokenizer_nextWLCharacter that is then reset, there should be no side-effects
+    //
+    pub const TRACK_LC: u8 = 0x02;
+
+    //
+    /// Used by Tokenizer
+    //
+    pub const RETURN_TOPLEVELNEWLINE: u8 = 0x04;
+
+    //
+    /// This bit serves 2 purposes:
+    /// Complex line continuations
+    /// Decrease severity of unexpected characters
+    ///
+    /// These are exactly what we care about with strings and comments, so use only a single bit for both purposes.
+    ///
+    /// NOTE: If the set:
+    /// {strings, comments}
+    /// is ever not exactly the same as the set:
+    /// (things that care about complex line continuations and decreased severity of unexpected characters)
+    /// then we need to rethink these bits.
+    ///
+    /// Complex line continuations:
+    /// Line continuations inside of strings or comments are "complex":
+    /// Formatting matters
+    ///
+    /// All other line continuations are simple:
+    /// inside or outside of other tokens
+    /// outside of strings or comments
+    ///
+    ///
+    /// Decrease severity of unexpected characters:
+    /// Outside of strings, \[RightArrow] should be a warning
+    /// Inside of strings, \[RightArrow] should be a remark
+    //
+    pub const STRING_OR_COMMENT: u8 = 0x08;
+
+    //
+    /// If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
+    ///
+    /// But obviously "123" and a`b are fine outside of #
+    ///
+    /// Also return symbols as strings, e.g., the  abc  in  #abc  is a string
+    ///
+    /// Used by Tokenizer
+    //
+    pub const TAGSLOT_BEHAVIOR_FOR_STRINGS: u8 = 0x10;
+
+    //
+    /// When tokenizing numbers, return immediately when an integer has been tokenized
+    ///
+    /// This is used when parsing Slot, SlotSequence, and Out
+    ///
+    /// For example, we must consider  `#2.c`  to be `Slot[2] . c`  and NOT  `Slot[1] 2. c`
+    //
+    pub const INTEGER_SHORT_CIRCUIT: u8 = 0x20;
+
+    //
+    // With input  "\\[Alpa]"  , then report \[Alpa] as unrecognized, even though this is valid syntax
+    //
+    pub const SCAN_FOR_UNRECOGNIZEDLONGNAMES: u8 = 0x40;
+}
+
+pub use self::NextPolicyBits::*;
+
+const _: () = assert!(
+    RETURN_TOPLEVELNEWLINE == 0x04,
+    "Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE"
+);
+
+pub(crate) type NextPolicy = u8;
+
+use NextPolicyBits::{
+    ENABLE_CHARACTER_DECODING_ISSUES, INTEGER_SHORT_CIRCUIT, RETURN_TOPLEVELNEWLINE,
+    TAGSLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
+};
+
+pub const TOPLEVEL: NextPolicy =
+    ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
+
+#[allow(dead_code)] // TODO(cleanup): Is it meaningful that this is unused?
+pub const INSIDE_SYMBOL: NextPolicy = ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
+
+pub const INSIDE_STRINGIFY_AS_TAG: NextPolicy =
+    ENABLE_CHARACTER_DECODING_ISSUES | TAGSLOT_BEHAVIOR_FOR_STRINGS | TRACK_LC;
+pub const INSIDE_STRINGIFY_AS_FILE: NextPolicy = RETURN_TOPLEVELNEWLINE;
+
+pub const INSIDE_SLOT: NextPolicy = TAGSLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+
+pub const INSIDE_SLOTSEQUENCE: NextPolicy =
+    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+
+pub const INSIDE_OUT: NextPolicy =
+    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+
+
+//==========================================================
+// Locating source code
+//==========================================================
+
+/// A single character of source code
+///
+/// The text `\[Alpha]` would be 8 separate SourceCharacters
+// TODO(cleanup): remove CodePoint, just have SourceCharacter?
+pub type SourceCharacter = CodePoint;
+
+const _: () = assert!(std::mem::size_of::<SourceCharacter>() == 4);
+
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum SourceConvention {
+    /// Handle next (non-newline) SourceLocation by incrementing column.
+    /// Handle next newline by incrementing line.
+    LineColumn = 0,
+    // TODO: Clarify, is this the index by unicode character(?), or the byte
+    //  offset, or something else?
+    /// Handle next (non-newline) SourceLocation by incrementing index.
+    /// Handle next newline by incrementing index.
+    CharacterIndex = 1,
+}
+
+pub const DEFAULT_TAB_WIDTH: u32 = 4;
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+pub enum SourceLocation {
+    LineColumn { line: NonZeroU32, column: u32 },
+    CharacterIndex(u32),
+}
+
+// NOTE:
+//     Keeping the size of the SourceLocation enum limited to 8 bytes depends
+//     on using NonZeroU32, so that the 0 value can be used as the enum
+//     discriminant.
+//
+//     See also: https://github.com/rust-lang/rust/pull/94075
+const _: () = assert!(std::mem::size_of::<SourceLocation>() == 8);
+
+// For LineContinuations and EmbeddedNewlines
+//
+// bool operator<(SourceLocation a, SourceLocation b);
+// bool operator<=(SourceLocation a, SourceLocation b);
+
+#[derive(Debug, Clone, PartialEq, Hash)]
+pub enum GeneralSource {
+    String(Source),
+    /// Box structure position.
+    BoxPosition(Vec<usize>),
+
+    /// `After[{..}]`
+    ///
+    /// Used to indicate the position of fake implicit Null or Times tokens, or
+    /// expected operand error tokens, that come after a specific position in
+    /// the source.
+    // TODO: Parse this into a strongly typed value
+    After(Expr),
+}
+
+#[derive(Copy, Clone, PartialEq, Hash)]
+pub struct Source {
+    pub(crate) start: SourceLocation,
+    pub(crate) end: SourceLocation,
+}
+
+const _: () = assert!(std::mem::size_of::<Source>() == 16);
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum StringSourceKind {
+    LineColumnRange {
+        start_line: u32,
+        start_column: u32,
+        end_line: u32,
+        end_column: u32,
+    },
+    CharacterRange(CharacterRange),
+    /// `<||>`
+    Unknown,
+}
+
+/// A span of Wolfram Language input by character index.
+///
+/// This range starts indexing at 1, and is exclusive.
+///
+/// `CharacterRange(start, end)`
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct CharacterRange(pub u32, pub u32);
+
+pub(crate) struct LineColumn {
+    pub line: NonZeroU32,
+    pub column: u32,
+}
+
+//======================================
+// Source types formatting impls
+//======================================
+
+impl Display for SourceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            SourceLocation::LineColumn { line, column } => write!(f, "{line}:{column}"),
+            SourceLocation::CharacterIndex(index) => write!(f, "{index}"),
+        }
+    }
+}
+
+impl Debug for SourceLocation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl Display for Source {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let Source { start, end } = *self;
+
+        match self.kind() {
+            StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
+                write!(f, "{}..{}", start, end)
+            },
+            StringSourceKind::LineColumnRange { .. } => {
+                write!(f, "{start:?}-{end:?}")
+            },
+            StringSourceKind::Unknown => {
+                // TODO: Better formatting for this? "?"
+                write!(f, "Source unknown")
+            },
+        }
+    }
+}
+
+impl Debug for Source {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+//======================================
+// Source types inherent impls
+//======================================
 
 impl SourceLocation {
     #[doc(hidden)]
@@ -439,70 +469,7 @@ impl SourceLocation {
             },
         }
     }
-}
 
-// bool operator==(SourceLocation a, SourceLocation b) {
-//     return a.first == b.first && a.second == b.second;
-// }
-
-// bool operator<(SourceLocation a, SourceLocation b) {
-//     if (a.first < b.first) {
-//         return true;
-//     }
-//     if (a.first != b.first) {
-//         return false;
-//     }
-//     if (a.second < b.second) {
-//         return true;
-//     }
-//     return false;
-// }
-
-// TODO: Only used for assertions; make this a method
-// TODO: Replace this with derive(PartialOrd)? I think they would have the same
-//       semantics.
-impl PartialOrd for SourceLocation {
-    fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
-        let a = self;
-
-        match (a, b) {
-            (
-                SourceLocation::LineColumn {
-                    line: a_line,
-                    column: a_column,
-                },
-                SourceLocation::LineColumn {
-                    line: b_line,
-                    column: b_col,
-                },
-            ) => (a_line, a_column).partial_cmp(&(b_line, b_col)),
-            (SourceLocation::CharacterIndex(a_index), SourceLocation::CharacterIndex(b_index)) => {
-                a_index.partial_cmp(b_index)
-            },
-            (SourceLocation::LineColumn { .. }, SourceLocation::CharacterIndex(_)) => None,
-            (SourceLocation::CharacterIndex(_), SourceLocation::LineColumn { .. }) => None,
-        }
-    }
-}
-
-// bool operator<=(SourceLocation a, SourceLocation b) {
-
-//     if (a.first < b.first) {
-//         return true;
-//     }
-
-//     if (a.first != b.first) {
-//         return false;
-//     }
-
-//     if (a.second <= b.second) {
-//         return true;
-//     }
-
-//     return false;
-// }
-
-impl SourceLocation {
     pub(crate) fn next(self) -> Self {
         if feature::COMPUTE_SOURCE {
             match self {
@@ -557,29 +524,6 @@ impl SourceLocation {
 // #endif // COMPUTE_SOURCE
 // }
 
-// TODO: Display
-// void SourceLocation::print(std::ostream& s) const {
-//     s << first;
-//     s << second;
-// }
-
-
-pub(crate) struct LineColumn {
-    pub line: NonZeroU32,
-    pub column: u32,
-}
-
-//
-// Source
-//
-
-/// A span of Wolfram Language input by character index.
-///
-/// This range starts indexing at 1, and is exclusive.
-///
-/// `CharacterRange(start, end)`
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct CharacterRange(pub u32, pub u32);
 
 impl CharacterRange {
     pub(crate) fn tuple(self) -> (u32, u32) {
@@ -803,16 +747,6 @@ impl Source {
     }
 }
 
-// bool operator<(Source a, Source b) {
-//     return a.Start < b.Start;
-// }
-// PRE_COMMIT: Only used for assertions; make this a method
-impl PartialOrd for Source {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.start.partial_cmp(&other.start)
-    }
-}
-
 impl GeneralSource {
     pub fn unknown() -> Self {
         GeneralSource::String(Source::unknown())
@@ -830,6 +764,47 @@ impl GeneralSource {
     }
 }
 
+//======================================
+// Source types comparision impls
+//======================================
+
+// TODO: Only used for assertions; make this a method
+// TODO: Replace this with derive(PartialOrd)? I think they would have the same
+//       semantics.
+impl PartialOrd for SourceLocation {
+    fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
+        let a = self;
+
+        match (a, b) {
+            (
+                SourceLocation::LineColumn {
+                    line: a_line,
+                    column: a_column,
+                },
+                SourceLocation::LineColumn {
+                    line: b_line,
+                    column: b_col,
+                },
+            ) => (a_line, a_column).partial_cmp(&(b_line, b_col)),
+            (SourceLocation::CharacterIndex(a_index), SourceLocation::CharacterIndex(b_index)) => {
+                a_index.partial_cmp(b_index)
+            },
+            (SourceLocation::LineColumn { .. }, SourceLocation::CharacterIndex(_)) => None,
+            (SourceLocation::CharacterIndex(_), SourceLocation::LineColumn { .. }) => None,
+        }
+    }
+}
+
+// bool operator<(Source a, Source b) {
+//     return a.Start < b.Start;
+// }
+// PRE_COMMIT: Only used for assertions; make this a method
+impl PartialOrd for Source {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.start.partial_cmp(&other.start)
+    }
+}
+
 impl PartialOrd for GeneralSource {
     fn partial_cmp(&self, other: &GeneralSource) -> Option<Ordering> {
         match (self, other) {
@@ -839,9 +814,10 @@ impl PartialOrd for GeneralSource {
     }
 }
 
-//
-// SourceCharacter
-//
+
+//==========================================================
+// Source characters
+//==========================================================
 
 impl SourceCharacter {
     pub fn isAlphaOrDigit(&self) -> bool {
