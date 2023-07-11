@@ -57,9 +57,9 @@ pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(Operator::Bl
 
 pub(crate) const underDotParselet: UnderDotParselet = UnderDotParselet {};
 
-pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TokenKind::OpenSquare, Operator::CodeParser_GroupSquare);
+pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TokenKind::OpenSquare, GroupOperator::CodeParser_GroupSquare);
 
-pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TokenKind::LongName_LeftDoubleBracket, Operator::CodeParser_GroupDoubleBracket);
+pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TokenKind::LongName_LeftDoubleBracket, GroupOperator::CodeParser_GroupDoubleBracket);
 
 pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 
@@ -105,12 +105,12 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`Error`End
     &prefixUnhandledParselet, // Token`Dot
     &prefixUnhandledParselet, // Token`Colon
-    &GroupParselet::new(TokenKind::OpenParen, Operator::CodeParser_GroupParen), // Token`OpenParen
+    &GroupParselet::new(TokenKind::OpenParen, GroupOperator::CodeParser_GroupParen), // Token`OpenParen
     &prefixCloserParselet, // Token`CloseParen
     &squareGroupParselet, // Token`OpenSquare
     &prefixCloserParselet, // Token`CloseSquare
     &prefixCommaParselet, // Token`Comma
-    &GroupParselet::new(TokenKind::OpenCurly, Operator::List), // Token`OpenCurly
+    &GroupParselet::new(TokenKind::OpenCurly, GroupOperator::List), // Token`OpenCurly
     &prefixCloserParselet, // Token`CloseCurly
     &prefixUnhandledParselet, // Token`Equal
     &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_BANG, Operator::Not), // Token`Bang
@@ -138,7 +138,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`EqualEqual
     &under2Parselet, // Token`UnderUnder
     &underDotParselet, // Token`UnderDot
-    &GroupParselet::new(TokenKind::LessBar, Operator::Association), // Token`LessBar
+    &GroupParselet::new(TokenKind::LessBar, GroupOperator::Association), // Token`LessBar
     &(LessLessParselet {}), // Token`LessLess
     &prefixUnhandledParselet, // Token`LessGreater
     &prefixUnhandledParselet, // Token`LessEqual
@@ -182,7 +182,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`GreaterGreaterGreater
     &prefixUnhandledParselet, // Token`BarMinusGreater
     &prefixUnhandledParselet, // Token`SlashSlashEqual
-    &GroupParselet::new(TokenKind::ColonColonOpenSquare, Operator::CodeParser_GroupTypeSpecifier), // Token`ColonColonOpenSquare
+    &GroupParselet::new(TokenKind::ColonColonOpenSquare, GroupOperator::CodeParser_GroupTypeSpecifier), // Token`ColonColonOpenSquare
     &leafParselet, // Token`PercentPercent
     &PrefixOperatorParselet::new(PRECEDENCE_LINEARSYNTAX_BANG, Operator::CodeParser_PrefixLinearSyntaxBang), // Token`LinearSyntax`Bang
     &prefixUnsupportedTokenParselet, // Token`LinearSyntax`CloseParen
@@ -209,9 +209,9 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`CenterDot
     &prefixUnhandledParselet, // Token`LongName`Times
     &prefixUnhandledParselet, // Token`LongName`Divide
-    &GroupParselet::new(TokenKind::LongName_OpenCurlyQuote, Operator::CurlyQuote), // Token`LongName`OpenCurlyQuote
+    &GroupParselet::new(TokenKind::LongName_OpenCurlyQuote, GroupOperator::CurlyQuote), // Token`LongName`OpenCurlyQuote
     &prefixCloserParselet, // Token`LongName`CloseCurlyQuote
-    &GroupParselet::new(TokenKind::LongName_OpenCurlyDoubleQuote, Operator::CurlyDoubleQuote), // Token`LongName`OpenCurlyDoubleQuote
+    &GroupParselet::new(TokenKind::LongName_OpenCurlyDoubleQuote, GroupOperator::CurlyDoubleQuote), // Token`LongName`OpenCurlyDoubleQuote
     &prefixCloserParselet, // Token`LongName`CloseCurlyDoubleQuote
     &prefixUnhandledParselet, // Token`LongName`InvisibleTimes
     &prefixUnhandledParselet, // Token`LongName`LeftArrow
@@ -380,13 +380,13 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`NotRightTriangle
     &prefixUnhandledParselet, // Token`LongName`NotLeftTriangleEqual
     &prefixUnhandledParselet, // Token`LongName`NotRightTriangleEqual
-    &GroupParselet::new(TokenKind::LongName_LeftCeiling, Operator::Ceiling), // Token`LongName`LeftCeiling
+    &GroupParselet::new(TokenKind::LongName_LeftCeiling, GroupOperator::Ceiling), // Token`LongName`LeftCeiling
     &prefixCloserParselet, // Token`LongName`RightCeiling
-    &GroupParselet::new(TokenKind::LongName_LeftFloor, Operator::Floor), // Token`LongName`LeftFloor
+    &GroupParselet::new(TokenKind::LongName_LeftFloor, GroupOperator::Floor), // Token`LongName`LeftFloor
     &prefixCloserParselet, // Token`LongName`RightFloor
     &prefixUnhandledParselet, // Token`LongName`Cap
     &prefixUnhandledParselet, // Token`LongName`Cup
-    &GroupParselet::new(TokenKind::LongName_LeftAngleBracket, Operator::AngleBracket), // Token`LongName`LeftAngleBracket
+    &GroupParselet::new(TokenKind::LongName_LeftAngleBracket, GroupOperator::AngleBracket), // Token`LongName`LeftAngleBracket
     &prefixCloserParselet, // Token`LongName`RightAngleBracket
     &prefixUnhandledParselet, // Token`LongName`Perpendicular
     &prefixUnhandledParselet, // Token`LongName`LongLeftArrow
@@ -432,7 +432,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`DoubleLeftTee
     &doubleBracketGroupParselet, // Token`LongName`LeftDoubleBracket
     &prefixCloserParselet, // Token`LongName`RightDoubleBracket
-    &GroupParselet::new(TokenKind::LongName_LeftAssociation, Operator::Association), // Token`LongName`LeftAssociation
+    &GroupParselet::new(TokenKind::LongName_LeftAssociation, GroupOperator::Association), // Token`LongName`LeftAssociation
     &prefixCloserParselet, // Token`LongName`RightAssociation
     &prefixUnhandledParselet, // Token`LongName`TwoWayRule
     &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PIECEWISE, Operator::Piecewise), // Token`LongName`Piecewise
@@ -496,9 +496,9 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`ShortUpArrow
     &prefixUnhandledParselet, // Token`LongName`ShortDownArrow
     &prefixUnhandledParselet, // Token`LongName`Application
-    &GroupParselet::new(TokenKind::LongName_LeftBracketingBar, Operator::BracketingBar), // Token`LongName`LeftBracketingBar
+    &GroupParselet::new(TokenKind::LongName_LeftBracketingBar, GroupOperator::BracketingBar), // Token`LongName`LeftBracketingBar
     &prefixCloserParselet, // Token`LongName`RightBracketingBar
-    &GroupParselet::new(TokenKind::LongName_LeftDoubleBracketingBar, Operator::DoubleBracketingBar), // Token`LongName`LeftDoubleBracketingBar
+    &GroupParselet::new(TokenKind::LongName_LeftDoubleBracketingBar, GroupOperator::DoubleBracketingBar), // Token`LongName`LeftDoubleBracketingBar
     &prefixCloserParselet, // Token`LongName`RightDoubleBracketingBar
     &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CAPITALDIFFERENTIALD, Operator::CapitalDifferentialD), // Token`LongName`CapitalDifferentialD
     &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_DIFFERENTIALD, Operator::DifferentialD), // Token`LongName`DifferentialD
@@ -625,7 +625,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     (&GreaterGreaterGreaterParselet {}), // Token`GreaterGreaterGreater
     &BinaryOperatorParselet::new(PRECEDENCE_BARMINUSGREATER, Operator::Function), // Token`BarMinusGreater
     &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHEQUAL, Operator::ApplyTo), // Token`SlashSlashEqual
-    &(CallParselet::new(&GroupParselet::new(TokenKind::ColonColonOpenSquare, Operator::CodeParser_GroupTypeSpecifier))), // Token`ColonColonOpenSquare
+    &(CallParselet::new(&GroupParselet::new(TokenKind::ColonColonOpenSquare, GroupOperator::CodeParser_GroupTypeSpecifier))), // Token`ColonColonOpenSquare
     &infixImplicitTimesParselet, // Token`PercentPercent
     &infixImplicitTimesParselet, // Token`LinearSyntax`Bang
     &infixImplicitTimesParselet, // Token`LinearSyntax`CloseParen
@@ -974,7 +974,6 @@ pub enum Operator {
     Slot,
     SlotSequence,
     Out,
-    Token_Comment,
     CodeParser_InternalInvalid,
     CodeParser_Comma,
     CodeParser_PatternBlank,
@@ -1011,19 +1010,6 @@ pub enum Operator {
     CubeRoot,
     ProbabilityPr,
     CodeParser_PrefixLinearSyntaxBang,
-    CodeParser_GroupParen,
-    CodeParser_GroupSquare,
-    List,
-    Association,
-    CodeParser_GroupTypeSpecifier,
-    AngleBracket,
-    Ceiling,
-    Floor,
-    CodeParser_GroupDoubleBracket,
-    BracketingBar,
-    DoubleBracketingBar,
-    CurlyQuote,
-    CurlyDoubleQuote,
     Integrate,
     Integral,
     ContourIntegral,
@@ -1269,6 +1255,25 @@ pub enum Operator {
     InvisiblePostfixScriptBase,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum GroupOperator {
+    Token_Comment,
+    CodeParser_GroupParen,
+    CodeParser_GroupSquare,
+    List,
+    Association,
+    CodeParser_GroupTypeSpecifier,
+    AngleBracket,
+    Ceiling,
+    Floor,
+    CodeParser_GroupDoubleBracket,
+    BracketingBar,
+    DoubleBracketingBar,
+    CurlyQuote,
+    CurlyDoubleQuote,
+}
+
 impl Operator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -1295,7 +1300,6 @@ impl Operator {
             Operator::Slot => sym::Slot,
             Operator::SlotSequence => sym::SlotSequence,
             Operator::Out => sym::Out,
-            Operator::Token_Comment => sym::Token_Comment,
             Operator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
             Operator::CodeParser_Comma => sym::CodeParser_Comma,
             Operator::CodeParser_PatternBlank => sym::CodeParser_PatternBlank,
@@ -1332,19 +1336,6 @@ impl Operator {
             Operator::CubeRoot => sym::CubeRoot,
             Operator::ProbabilityPr => sym::ProbabilityPr,
             Operator::CodeParser_PrefixLinearSyntaxBang => sym::CodeParser_PrefixLinearSyntaxBang,
-            Operator::CodeParser_GroupParen => sym::CodeParser_GroupParen,
-            Operator::CodeParser_GroupSquare => sym::CodeParser_GroupSquare,
-            Operator::List => sym::List,
-            Operator::Association => sym::Association,
-            Operator::CodeParser_GroupTypeSpecifier => sym::CodeParser_GroupTypeSpecifier,
-            Operator::AngleBracket => sym::AngleBracket,
-            Operator::Ceiling => sym::Ceiling,
-            Operator::Floor => sym::Floor,
-            Operator::CodeParser_GroupDoubleBracket => sym::CodeParser_GroupDoubleBracket,
-            Operator::BracketingBar => sym::BracketingBar,
-            Operator::DoubleBracketingBar => sym::DoubleBracketingBar,
-            Operator::CurlyQuote => sym::CurlyQuote,
-            Operator::CurlyDoubleQuote => sym::CurlyDoubleQuote,
             Operator::Integrate => sym::Integrate,
             Operator::Integral => sym::Integral,
             Operator::ContourIntegral => sym::ContourIntegral,
@@ -1615,7 +1606,6 @@ impl Operator {
             sym::Slot => Operator::Slot,
             sym::SlotSequence => Operator::SlotSequence,
             sym::Out => Operator::Out,
-            sym::Token_Comment => Operator::Token_Comment,
             sym::CodeParser_InternalInvalid => Operator::CodeParser_InternalInvalid,
             sym::CodeParser_Comma => Operator::CodeParser_Comma,
             sym::CodeParser_PatternBlank => Operator::CodeParser_PatternBlank,
@@ -1652,19 +1642,6 @@ impl Operator {
             sym::CubeRoot => Operator::CubeRoot,
             sym::ProbabilityPr => Operator::ProbabilityPr,
             sym::CodeParser_PrefixLinearSyntaxBang => Operator::CodeParser_PrefixLinearSyntaxBang,
-            sym::CodeParser_GroupParen => Operator::CodeParser_GroupParen,
-            sym::CodeParser_GroupSquare => Operator::CodeParser_GroupSquare,
-            sym::List => Operator::List,
-            sym::Association => Operator::Association,
-            sym::CodeParser_GroupTypeSpecifier => Operator::CodeParser_GroupTypeSpecifier,
-            sym::AngleBracket => Operator::AngleBracket,
-            sym::Ceiling => Operator::Ceiling,
-            sym::Floor => Operator::Floor,
-            sym::CodeParser_GroupDoubleBracket => Operator::CodeParser_GroupDoubleBracket,
-            sym::BracketingBar => Operator::BracketingBar,
-            sym::DoubleBracketingBar => Operator::DoubleBracketingBar,
-            sym::CurlyQuote => Operator::CurlyQuote,
-            sym::CurlyDoubleQuote => Operator::CurlyDoubleQuote,
             sym::Integrate => Operator::Integrate,
             sym::Integral => Operator::Integral,
             sym::ContourIntegral => Operator::ContourIntegral,
@@ -1908,6 +1885,51 @@ impl Operator {
             sym::ConjugateTranspose => Operator::ConjugateTranspose,
             sym::HermitianConjugate => Operator::HermitianConjugate,
             sym::InvisiblePostfixScriptBase => Operator::InvisiblePostfixScriptBase,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl GroupOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            GroupOperator::Token_Comment => sym::Token_Comment,
+            GroupOperator::CodeParser_GroupParen => sym::CodeParser_GroupParen,
+            GroupOperator::CodeParser_GroupSquare => sym::CodeParser_GroupSquare,
+            GroupOperator::List => sym::List,
+            GroupOperator::Association => sym::Association,
+            GroupOperator::CodeParser_GroupTypeSpecifier => sym::CodeParser_GroupTypeSpecifier,
+            GroupOperator::AngleBracket => sym::AngleBracket,
+            GroupOperator::Ceiling => sym::Ceiling,
+            GroupOperator::Floor => sym::Floor,
+            GroupOperator::CodeParser_GroupDoubleBracket => sym::CodeParser_GroupDoubleBracket,
+            GroupOperator::BracketingBar => sym::BracketingBar,
+            GroupOperator::DoubleBracketingBar => sym::DoubleBracketingBar,
+            GroupOperator::CurlyQuote => sym::CurlyQuote,
+            GroupOperator::CurlyDoubleQuote => sym::CurlyDoubleQuote,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::Token_Comment => GroupOperator::Token_Comment,
+            sym::CodeParser_GroupParen => GroupOperator::CodeParser_GroupParen,
+            sym::CodeParser_GroupSquare => GroupOperator::CodeParser_GroupSquare,
+            sym::List => GroupOperator::List,
+            sym::Association => GroupOperator::Association,
+            sym::CodeParser_GroupTypeSpecifier => GroupOperator::CodeParser_GroupTypeSpecifier,
+            sym::AngleBracket => GroupOperator::AngleBracket,
+            sym::Ceiling => GroupOperator::Ceiling,
+            sym::Floor => GroupOperator::Floor,
+            sym::CodeParser_GroupDoubleBracket => GroupOperator::CodeParser_GroupDoubleBracket,
+            sym::BracketingBar => GroupOperator::BracketingBar,
+            sym::DoubleBracketingBar => GroupOperator::DoubleBracketingBar,
+            sym::CurlyQuote => GroupOperator::CurlyQuote,
+            sym::CurlyDoubleQuote => GroupOperator::CurlyDoubleQuote,
             _ => return None,
         };
 

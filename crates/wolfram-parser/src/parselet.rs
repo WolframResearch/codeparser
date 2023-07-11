@@ -8,9 +8,9 @@ use std::any::Any;
 
 use crate::{
     cst::{
-        BinaryNode, CallBody, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode,
-        Operator, PostfixNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
-        UnterminatedGroupNeedsReparseNode,
+        BinaryNode, CallBody, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode,
+        GroupOperator, InfixNode, Operator, PostfixNode, PrefixNode, SyntaxErrorKind,
+        SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
     parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
@@ -258,7 +258,7 @@ pub(crate) struct PostfixOperatorParselet /* : InfixParselet */ {
 
 #[derive(Debug)]
 pub(crate) struct GroupParselet /* : PrefixParselet */ {
-    Op: Operator,
+    Op: GroupOperator,
     closer: Closer,
 }
 
@@ -1193,14 +1193,14 @@ fn PostfixOperatorParselet_reducePostfixOperator(
 //======================================
 
 impl GroupParselet {
-    pub(crate) const fn new(Opener: TokenKind, Op: Operator) -> Self {
+    pub(crate) const fn new(Opener: TokenKind, Op: GroupOperator) -> Self {
         Self {
             Op,
             closer: GroupOpenerToCloser(Opener),
         }
     }
 
-    fn getOp(&self) -> Operator {
+    fn getOp(&self) -> GroupOperator {
         self.Op
     }
 

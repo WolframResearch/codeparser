@@ -8,7 +8,7 @@ use crate::{
     NodeSeq,
 };
 
-pub use crate::parselet_registration::Operator;
+pub use crate::parselet_registration::{GroupOperator, Operator};
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
 pub(crate) type Node<I = OwnedTokenInput, S = Source> = CstNode<I, S>;
@@ -77,8 +77,8 @@ pub enum BoxKind {
 
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
-pub struct OperatorNode<I = OwnedTokenInput, S = Source> {
-    pub op: Operator,
+pub struct OperatorNode<I = OwnedTokenInput, S = Source, O = Operator> {
+    pub op: O,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
 }
@@ -138,7 +138,7 @@ pub enum CallBody<I = OwnedTokenInput, S = Source> {
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct GroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, GroupOperator>);
 
 /// Any "compound" of tokens:
 ///
@@ -169,16 +169,20 @@ pub enum SyntaxErrorKind {
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Source>(
+    pub OperatorNode<I, S, GroupOperator>,
+);
 
 /// Only possible with boxes
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingOpenerNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct GroupMissingOpenerNode<I = OwnedTokenInput, S = Source>(
+    pub OperatorNode<I, S, GroupOperator>,
+);
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput, S = Source>(
-    pub OperatorNode<I, S>,
+    pub OperatorNode<I, S, GroupOperator>,
 );
 
 /// Node representation of a token.
@@ -398,8 +402,16 @@ impl<I, S> Node<I, S> {
             | Node::Binary(BinaryNode(op))
             | Node::Ternary(TernaryNode(op))
             | Node::PrefixBinary(PrefixBinaryNode(op))
-            | Node::Compound(CompoundNode(op))
-            | Node::Group(GroupNode(op))
+            | Node::Compound(CompoundNode(op)) => {
+                let OperatorNode {
+                    op: _,
+                    children,
+                    src: _,
+                } = op;
+
+                children.visit(visit);
+            },
+            Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
             | Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
                 let OperatorNode {
@@ -438,7 +450,7 @@ impl<I, S> Node<I, S> {
             }) => {
                 let head = head.map_visit(visit);
 
-                let body = body.map_op(|body_op: OperatorNode<_, _>| body_op.map_visit(visit));
+                let body = body.map_op(|body_op: OperatorNode<_, _, _>| body_op.map_visit(visit));
 
                 Node::Call(CallNode {
                     head,
@@ -613,8 +625,8 @@ impl LeafNode {
 // OperatorNode
 //======================================
 
-impl<I> OperatorNode<I> {
-    pub(crate) fn new(op: Operator, children: CstNodeSeq<I>) -> Self {
+impl<I, O> OperatorNode<I, Source, O> {
+    pub(crate) fn new(op: O, children: CstNodeSeq<I>) -> Self {
         assert!(!children.is_empty());
 
         let src = Source::new_from_source(children.first().source(), children.last().source());
@@ -627,8 +639,8 @@ impl<I> OperatorNode<I> {
     }
 }
 
-impl<I, S: TokenSource> OperatorNode<I, S> {
-    pub fn getOp(&self) -> Operator {
+impl<I, S: TokenSource, O: Copy> OperatorNode<I, S, O> {
+    pub fn getOp(&self) -> O {
         return self.op;
     }
 
@@ -658,8 +670,8 @@ impl<I, S: TokenSource> OperatorNode<I, S> {
     // }
 }
 
-impl<I: TokenInput, S> OperatorNode<I, S> {
-    fn into_owned_input(self) -> OperatorNode<OwnedTokenInput, S> {
+impl<I: TokenInput, S, O> OperatorNode<I, S, O> {
+    fn into_owned_input(self) -> OperatorNode<OwnedTokenInput, S, O> {
         let OperatorNode { op, children, src } = self;
 
         OperatorNode {
@@ -670,7 +682,7 @@ impl<I: TokenInput, S> OperatorNode<I, S> {
     }
 }
 
-impl<I, S> OperatorNode<I, S> {
+impl<I, S, O> OperatorNode<I, S, O> {
     pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
         let OperatorNode { op, children, src } = self;
 
@@ -753,7 +765,7 @@ impl<I> PrefixBinaryNode<I> {
 //======================================
 
 impl<I> GroupNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: GroupOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupNodeCount);
 
         GroupNode(OperatorNode::new(op, args))
@@ -769,7 +781,7 @@ impl<I> CompoundNode<I> {
 }
 
 impl<I> GroupMissingCloserNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: GroupOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
         GroupMissingCloserNode(OperatorNode::new(op, args))
@@ -777,7 +789,7 @@ impl<I> GroupMissingCloserNode<I> {
 }
 
 impl<I> UnterminatedGroupNeedsReparseNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: GroupOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
 
         UnterminatedGroupNeedsReparseNode(OperatorNode::new(op, args))
@@ -847,7 +859,7 @@ impl<I, S: TokenSource> CallNode<I, S> {
 }
 
 impl<I, S> CallBody<I, S> {
-    pub fn as_op(&self) -> &OperatorNode<I, S> {
+    pub fn as_op(&self) -> &OperatorNode<I, S, GroupOperator> {
         match self {
             CallBody::Group(GroupNode(op)) => op,
             CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => op,
@@ -856,7 +868,7 @@ impl<I, S> CallBody<I, S> {
 
     pub fn map_op<F, I2, S2>(self, func: F) -> CallBody<I2, S2>
     where
-        F: FnOnce(OperatorNode<I, S>) -> OperatorNode<I2, S2>,
+        F: FnOnce(OperatorNode<I, S, GroupOperator>) -> OperatorNode<I2, S2, GroupOperator>,
     {
         match self {
             CallBody::Group(GroupNode(op)) => CallBody::Group(GroupNode(func(op))),

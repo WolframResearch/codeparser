@@ -214,7 +214,7 @@ macro_rules! LHS {
 
     (GroupNode[$($op_kind:ident)|*, $children:ident:_, $data:ident:_]) => {
         Node::Group(GroupNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
+            op: $(GroupOperator::$op_kind)|*,
             children: $children,
             src: $data,
         }))
@@ -222,13 +222,13 @@ macro_rules! LHS {
 
     (GroupNode[$($op_kind:ident)|*, _, _]) => {
         Node::Group(GroupNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
+            op: $(GroupOperator::$op_kind)|*,
             ..
         }))
     };
     ($name:ident:GroupNode[$group_kind:ident, _, _]) => {
         CallBody::Group($name @ GroupNode(OperatorNode {
-            op: Op::$group_kind,
+            op: GroupOperator::$group_kind,
             children: _,
             src: _,
         }))
@@ -247,7 +247,7 @@ macro_rules! LHS {
 
     ($name:ident:GroupMissingCloserNode[$($op_kind:ident)|*, _, _]) => {
         $crate::cst::CallBody::GroupMissingCloser($name @ $crate::cst::GroupMissingCloserNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
+            op: $(GroupOperator::$op_kind)|*,
             ..
         }))
     };

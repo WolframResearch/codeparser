@@ -16,7 +16,7 @@ use crate::{
     ast::{AstMetadata, AstNode},
     cst::{
         CallBody, CallNode, CstNode::Token as NVToken, GroupMissingCloserNode, GroupNode,
-        InfixNode, Node, Operator, OperatorNode,
+        GroupOperator, InfixNode, Node, Operator, OperatorNode,
     },
     parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},
@@ -167,7 +167,7 @@ fn test_something() {
                 src!(1:1-1:2)
             ])]),
             body: CallBody::Group(GroupNode(OperatorNode {
-                op: Operator::CodeParser_GroupSquare,
+                op: GroupOperator::CodeParser_GroupSquare,
                 children: NodeSeq(vec![
                     NVToken(token![OpenSquare, "[" @ 1, src!(1:2-1:3)]),
                     NVToken(token![Symbol, "x" @ 2, src!(1:3-1:4)]),
@@ -230,7 +230,7 @@ fn test_unterminated_group_reparse() {
         concrete_exprs("{", ParseOptions::default()),
         &[Node::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
-                op: Operator::List,
+                op: GroupOperator::List,
                 children: NodeSeq(vec![Node::Token(token![
                     OpenCurly,
                     [123] @ 0,
@@ -269,7 +269,7 @@ fn test_unterminated_group_reparse() {
         concrete_exprs("<|\t?", ParseOptions::default().tab_width(1)),
         &[Node::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
-                op: Operator::Association,
+                op: GroupOperator::Association,
                 children: NodeSeq(vec![
                     NVToken(token![LessBar, "<|" @ 0, src!(1:1-1:3)]),
                     NVToken(token![Whitespace, "\t" @ 2, src!(1:3-1:4)]),
@@ -290,7 +290,7 @@ fn test_unterminated_group_reparse() {
         concrete_exprs("<|\t?", ParseOptions::default()),
         &[Node::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
-                op: Operator::Association,
+                op: GroupOperator::Association,
                 children: NodeSeq(vec![
                     NVToken(token![LessBar, "<|" @ 0, src!(1:1-1:3)]),
                     NVToken(token![Whitespace, "\t" @ 2, src!(1:3-1:5)]),

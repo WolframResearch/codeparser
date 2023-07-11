@@ -83,7 +83,6 @@ $Operators = Join[
 		Slot,
 		SlotSequence,
 		Out,
-		Token`Comment,
 		CodeParser`InternalInvalid,
 		CodeParser`Comma,
 		CodeParser`PatternBlank,
@@ -104,16 +103,34 @@ $Operators = Join[
 			Parselet`BinaryOperatorParselet[precedence_, op_] :> (op -> op),
 			Parselet`InfixOperatorParselet[precedence_, op_] :> (op -> op),
 			Parselet`PostfixOperatorParselet[precedence_, op_] :> (op -> op),
-			Parselet`GroupParselet[tok_, op_] :> (op -> op),
 			Parselet`IntegralParselet[op1_, op2_] :> {op1 -> op1, op2 -> op2},
+			(* These are part of $GroupOperators. *)
+			Parselet`GroupParselet[tok_, op_] -> Nothing,
 			_ -> Nothing
 		},
 		{1}
 	]
 ]
 
+$GroupOperators = Join[
+	AssociationMap[Identity, {
+		Token`Comment
+	}],
+	Association @ Cases[
+		Join[
+			Values[importedPrefixParselets],
+			Values[importedInfixParselets]
+		],
+		Parselet`GroupParselet[tok_, op_] :> (op -> op)
+	]
+]
+
 If[!MatchQ[$Operators, <| (_Symbol -> _Symbol) ... |>],
 	FatalError["Bad $Operators: ", $Operators];
+]
+
+If[!MatchQ[$GroupOperators, <| (_Symbol -> _Symbol) ... |>],
+	FatalError["Bad $GroupOperators: ", InputForm @ $GroupOperators];
 ]
 
 (*--------------*)
@@ -164,7 +181,14 @@ formatPrefix[Parselet`GroupParselet[Token`OpenSquare, CodeParser`GroupSquare]] :
 
 formatPrefix[Parselet`GroupParselet[Token`LongName`LeftDoubleBracket, CodeParser`GroupDoubleBracket]] := "&doubleBracketGroupParselet"
 
-formatPrefix[Parselet`GroupParselet[tok_, op_]] := "&GroupParselet::new(TokenKind::" <> toTokenEnumVariant[tok] <> ", " <> "Operator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
+formatPrefix[Parselet`GroupParselet[tok_, op_]] := (
+	"&GroupParselet::new(TokenKind::"
+	<> toTokenEnumVariant[tok]
+	<> ", "
+	<> "GroupOperator::"
+	<> toGlobal[op, "UpperCamelCase"]
+	<> ")"
+)
 
 (*-------------*)
 (* formatInfix *)
@@ -280,9 +304,9 @@ pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(Operator::Bl
 
 pub(crate) const underDotParselet: UnderDotParselet = UnderDotParselet {};
 
-pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TokenKind::OpenSquare, Operator::CodeParser_GroupSquare);
+pub(crate) const squareGroupParselet: GroupParselet = GroupParselet::new(TokenKind::OpenSquare, GroupOperator::CodeParser_GroupSquare);
 
-pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TokenKind::LongName_LeftDoubleBracket, Operator::CodeParser_GroupDoubleBracket);
+pub(crate) const doubleBracketGroupParselet: GroupParselet = GroupParselet::new(TokenKind::LongName_LeftDoubleBracket, GroupOperator::CodeParser_GroupDoubleBracket);
 
 pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 
@@ -307,6 +331,9 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 
 {
 	StringJoin[
+		(*----------------------------*)
+		(* Define enum Operator       *)
+		(*----------------------------*)
 		"#[allow(non_camel_case_types)]\n",
 		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
 		"pub enum Operator {\n",
@@ -318,6 +345,25 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 			$Operators
 		],
 		"}\n\n",
+
+		(*----------------------------*)
+		(* Define enum GroupOperator  *)
+		(*----------------------------*)
+		"#[allow(non_camel_case_types)]\n",
+		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
+		"pub enum GroupOperator {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$GroupOperators
+		],
+		"}\n\n",
+
+		(*----------------------------*)
+		(* Define impl Operator       *)
+		(*----------------------------*)
 		"impl Operator {\n",
 		"    #[allow(dead_code)]\n",
 		"    #[doc(hidden)]\n",
@@ -344,6 +390,43 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 				other_ :> FatalError["Unexpected operator: ", other]
 			}],
 			$Operators
+		],
+		"            _ => return None,\n",
+		"        };\n",
+		"\n",
+		"        Some(operator)\n",
+		"    }\n",
+		"}\n",
+
+		(*----------------------------*)
+		(* Define impl GroupOperator  *)
+		(*----------------------------*)
+		"impl GroupOperator {\n",
+		"    #[allow(dead_code)]\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn to_symbol(self) -> Symbol {\n",
+		"        match self {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            GroupOperator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$GroupOperators
+		],
+		"        }\n",
+		"    }\n",
+		"\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
+		"        let operator = match symbol {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => GroupOperator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$GroupOperators
 		],
 		"            _ => return None,\n",
 		"        };\n",

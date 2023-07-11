@@ -5,9 +5,9 @@ use wolfram_parser::{
     cst::CstNodeSeq,
     cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Operator,
-        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode,
+        LeafNode, Operator, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode,
+        SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
@@ -355,7 +355,7 @@ impl FromExpr for GroupNode<OwnedTokenInput, GeneralSource> {
             todo!()
         }
 
-        let op = Operator::from_expr(&elements[0]).expect("PRE_COMMIT");
+        let op = GroupOperator::from_expr(&elements[0]).expect("PRE_COMMIT");
         let children = NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -432,7 +432,7 @@ impl FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource> {
             todo!()
         }
 
-        let op = Operator::from_expr(&elements[0])?;
+        let op = GroupOperator::from_expr(&elements[0])?;
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -448,7 +448,7 @@ impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, GeneralSource> {
             todo!()
         }
 
-        let op = Operator::from_expr(&elements[0])?;
+        let op = GroupOperator::from_expr(&elements[0])?;
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -731,6 +731,20 @@ impl FromExpr for Operator {
         };
 
         match Operator::try_from_symbol(sym.as_symbol_ref()) {
+            Some(op) => Ok(op),
+            None => Err(format!("unable to match symbol '{sym}' to Operator")),
+        }
+    }
+}
+
+impl FromExpr for GroupOperator {
+    fn from_expr(expr: &Expr) -> Result<Self, String> {
+        let sym = match expr.try_as_symbol() {
+            Some(sym) => sym,
+            None => panic!(),
+        };
+
+        match GroupOperator::try_from_symbol(sym.as_symbol_ref()) {
             Some(op) => Ok(op),
             None => Err(format!("unable to match symbol '{sym}' to Operator")),
         }

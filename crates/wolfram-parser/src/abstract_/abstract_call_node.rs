@@ -5,8 +5,8 @@ use crate::{
     ast::WL,
     ast::{AstMetadata, AstNode},
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CompoundNode, GroupNode, InfixNode, Node,
-        Operator as Op, OperatorNode, PostfixNode, PrefixNode,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CompoundNode, GroupNode, GroupOperator,
+        InfixNode, Node, Operator as Op, OperatorNode, PostfixNode, PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
     symbol as sym,
@@ -78,7 +78,7 @@ pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
             head,
             body:
                 CallBody::Group(GroupNode(OperatorNode {
-                    op: Op::CodeParser_GroupSquare,
+                    op: GroupOperator::CodeParser_GroupSquare,
                     children,
                     src: _,
                 })),
@@ -86,7 +86,7 @@ pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
         } if matches!(
             children.0[1], // inner
             Node::Group(GroupNode(OperatorNode {
-                op: Op::CodeParser_GroupSquare,
+                op: GroupOperator::CodeParser_GroupSquare,
                 ..
             }))
         ) =>
