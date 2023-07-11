@@ -5,10 +5,10 @@ use wolfram_library_link::{expr::Expr, wstp};
 use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode,
-        Operator, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CompoundOperator,
+        CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
+        InfixNode, Operator, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode,
+        SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
@@ -673,6 +673,12 @@ impl WstpPut for Operator {
 }
 
 impl WstpPut for GroupOperator {
+    fn put(&self, link: &mut wstp::Link) {
+        Symbol_put(self.to_symbol(), link)
+    }
+}
+
+impl WstpPut for CompoundOperator {
     fn put(&self, link: &mut wstp::Link) {
         Symbol_put(self.to_symbol(), link)
     }

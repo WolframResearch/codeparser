@@ -176,7 +176,7 @@ macro_rules! LHS {
 
     (CompoundNode[$($op_kind:ident)|*, _, _]) => {
         Node::Compound(CompoundNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
+            op: $(crate::cst::CompoundOperator::$op_kind)|*,
             ..
         }))
     };

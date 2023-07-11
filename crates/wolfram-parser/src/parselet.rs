@@ -8,8 +8,8 @@ use std::any::Any;
 
 use crate::{
     cst::{
-        BinaryNode, CallBody, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode,
-        GroupOperator, InfixNode, Operator, PostfixNode, PrefixNode, SyntaxErrorKind,
+        BinaryNode, CallBody, CallNode, CompoundNode, CompoundOperator, GroupMissingCloserNode,
+        GroupNode, GroupOperator, InfixNode, Operator, PostfixNode, PrefixNode, SyntaxErrorKind,
         SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
@@ -356,8 +356,11 @@ pub(crate) struct PercentParselet /* : PrefixParselet */ {}
 
 #[derive(Debug)]
 pub(crate) struct UnderParselet /* : PrefixParselet */ {
-    pub BOp: Operator,
-    pub PBOp: Operator,
+    /// Operator used if this underscore pattern does not bind a named pattern
+    pub BOp: CompoundOperator,
+
+    /// Operator used if this underscore pattern does bind a named pattern
+    pub PBOp: CompoundOperator,
 }
 
 
@@ -776,9 +779,7 @@ pub(crate) fn SymbolParselet_parseInfixContextSensitive<'i>(
 }
 
 fn SymbolParselet_reducePatternBlank(session: &mut ParserSession, P: &UnderParselet) {
-    let PBOp = P.PBOp;
-
-    let node = CompoundNode::new(PBOp, Parser_popContext(session));
+    let node = CompoundNode::new(P.PBOp, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -787,7 +788,7 @@ fn SymbolParselet_reducePatternBlank(session: &mut ParserSession, P: &UnderParse
 
 fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession) {
     let node = CompoundNode::new(
-        Operator::CodeParser_PatternOptionalDefault,
+        CompoundOperator::CodeParser_PatternOptionalDefault,
         Parser_popContext(session),
     );
     Parser_pushNode(session, node);
@@ -2664,7 +2665,7 @@ fn HashParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 }
 
 fn HashParselet_reduceSlot(session: &mut ParserSession) {
-    let node = CompoundNode::new(Operator::Slot, Parser_popContext(session));
+    let node = CompoundNode::new(CompoundOperator::Slot, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2710,7 +2711,7 @@ fn HashHashParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
 }
 
 fn HashHashParselet_reduceSlotSequence(session: &mut ParserSession) {
-    let node = CompoundNode::new(Operator::SlotSequence, Parser_popContext(session));
+    let node = CompoundNode::new(CompoundOperator::SlotSequence, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2756,7 +2757,7 @@ fn PercentParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Token
 }
 
 fn PercentParselet_reduceOut(session: &mut ParserSession) {
-    let node = CompoundNode::new(Operator::Out, Parser_popContext(session));
+    let node = CompoundNode::new(CompoundOperator::Out, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

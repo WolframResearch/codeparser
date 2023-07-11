@@ -51,9 +51,9 @@ pub(crate) const colonEqualParselet: ColonEqualParselet = ColonEqualParselet::ne
 
 pub(crate) const infixDifferentialDParselet: InfixDifferentialDParselet = InfixDifferentialDParselet {};
 
-pub(crate) const under1Parselet: UnderParselet = UnderParselet::new(Operator::Blank, Operator::CodeParser_PatternBlank);
-pub(crate) const under2Parselet: UnderParselet = UnderParselet::new(Operator::BlankSequence, Operator::CodeParser_PatternBlankSequence);
-pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(Operator::BlankNullSequence, Operator::CodeParser_PatternBlankNullSequence);
+pub(crate) const under1Parselet: UnderParselet = UnderParselet::new(CompoundOperator::Blank, CompoundOperator::CodeParser_PatternBlank);
+pub(crate) const under2Parselet: UnderParselet = UnderParselet::new(CompoundOperator::BlankSequence, CompoundOperator::CodeParser_PatternBlankSequence);
+pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(CompoundOperator::BlankNullSequence, CompoundOperator::CodeParser_PatternBlankNullSequence);
 
 pub(crate) const underDotParselet: UnderDotParselet = UnderDotParselet {};
 
@@ -957,9 +957,6 @@ pub enum Operator {
     Span,
     Pattern,
     Optional,
-    Blank,
-    BlankSequence,
-    BlankNullSequence,
     Set,
     SetDelayed,
     Unset,
@@ -971,15 +968,8 @@ pub enum Operator {
     Put,
     PutAppend,
     Get,
-    Slot,
-    SlotSequence,
-    Out,
     CodeParser_InternalInvalid,
     CodeParser_Comma,
-    CodeParser_PatternBlank,
-    CodeParser_PatternBlankSequence,
-    CodeParser_PatternBlankNullSequence,
-    CodeParser_PatternOptionalDefault,
     CodeParser_TernaryTilde,
     CodeParser_TernaryOptionalPattern,
     CodeParser_InfixTilde,
@@ -1274,6 +1264,21 @@ pub enum GroupOperator {
     CurlyDoubleQuote,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CompoundOperator {
+    Blank,
+    BlankSequence,
+    BlankNullSequence,
+    Slot,
+    SlotSequence,
+    Out,
+    CodeParser_PatternBlank,
+    CodeParser_PatternBlankSequence,
+    CodeParser_PatternBlankNullSequence,
+    CodeParser_PatternOptionalDefault,
+}
+
 impl Operator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -1283,9 +1288,6 @@ impl Operator {
             Operator::Span => sym::Span,
             Operator::Pattern => sym::Pattern,
             Operator::Optional => sym::Optional,
-            Operator::Blank => sym::Blank,
-            Operator::BlankSequence => sym::BlankSequence,
-            Operator::BlankNullSequence => sym::BlankNullSequence,
             Operator::Set => sym::Set,
             Operator::SetDelayed => sym::SetDelayed,
             Operator::Unset => sym::Unset,
@@ -1297,15 +1299,8 @@ impl Operator {
             Operator::Put => sym::Put,
             Operator::PutAppend => sym::PutAppend,
             Operator::Get => sym::Get,
-            Operator::Slot => sym::Slot,
-            Operator::SlotSequence => sym::SlotSequence,
-            Operator::Out => sym::Out,
             Operator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
             Operator::CodeParser_Comma => sym::CodeParser_Comma,
-            Operator::CodeParser_PatternBlank => sym::CodeParser_PatternBlank,
-            Operator::CodeParser_PatternBlankSequence => sym::CodeParser_PatternBlankSequence,
-            Operator::CodeParser_PatternBlankNullSequence => sym::CodeParser_PatternBlankNullSequence,
-            Operator::CodeParser_PatternOptionalDefault => sym::CodeParser_PatternOptionalDefault,
             Operator::CodeParser_TernaryTilde => sym::CodeParser_TernaryTilde,
             Operator::CodeParser_TernaryOptionalPattern => sym::CodeParser_TernaryOptionalPattern,
             Operator::CodeParser_InfixTilde => sym::CodeParser_InfixTilde,
@@ -1589,9 +1584,6 @@ impl Operator {
             sym::Span => Operator::Span,
             sym::Pattern => Operator::Pattern,
             sym::Optional => Operator::Optional,
-            sym::Blank => Operator::Blank,
-            sym::BlankSequence => Operator::BlankSequence,
-            sym::BlankNullSequence => Operator::BlankNullSequence,
             sym::Set => Operator::Set,
             sym::SetDelayed => Operator::SetDelayed,
             sym::Unset => Operator::Unset,
@@ -1603,15 +1595,8 @@ impl Operator {
             sym::Put => Operator::Put,
             sym::PutAppend => Operator::PutAppend,
             sym::Get => Operator::Get,
-            sym::Slot => Operator::Slot,
-            sym::SlotSequence => Operator::SlotSequence,
-            sym::Out => Operator::Out,
             sym::CodeParser_InternalInvalid => Operator::CodeParser_InternalInvalid,
             sym::CodeParser_Comma => Operator::CodeParser_Comma,
-            sym::CodeParser_PatternBlank => Operator::CodeParser_PatternBlank,
-            sym::CodeParser_PatternBlankSequence => Operator::CodeParser_PatternBlankSequence,
-            sym::CodeParser_PatternBlankNullSequence => Operator::CodeParser_PatternBlankNullSequence,
-            sym::CodeParser_PatternOptionalDefault => Operator::CodeParser_PatternOptionalDefault,
             sym::CodeParser_TernaryTilde => Operator::CodeParser_TernaryTilde,
             sym::CodeParser_TernaryOptionalPattern => Operator::CodeParser_TernaryOptionalPattern,
             sym::CodeParser_InfixTilde => Operator::CodeParser_InfixTilde,
@@ -1930,6 +1915,43 @@ impl GroupOperator {
             sym::DoubleBracketingBar => GroupOperator::DoubleBracketingBar,
             sym::CurlyQuote => GroupOperator::CurlyQuote,
             sym::CurlyDoubleQuote => GroupOperator::CurlyDoubleQuote,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl CompoundOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            CompoundOperator::Blank => sym::Blank,
+            CompoundOperator::BlankSequence => sym::BlankSequence,
+            CompoundOperator::BlankNullSequence => sym::BlankNullSequence,
+            CompoundOperator::Slot => sym::Slot,
+            CompoundOperator::SlotSequence => sym::SlotSequence,
+            CompoundOperator::Out => sym::Out,
+            CompoundOperator::CodeParser_PatternBlank => sym::CodeParser_PatternBlank,
+            CompoundOperator::CodeParser_PatternBlankSequence => sym::CodeParser_PatternBlankSequence,
+            CompoundOperator::CodeParser_PatternBlankNullSequence => sym::CodeParser_PatternBlankNullSequence,
+            CompoundOperator::CodeParser_PatternOptionalDefault => sym::CodeParser_PatternOptionalDefault,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::Blank => CompoundOperator::Blank,
+            sym::BlankSequence => CompoundOperator::BlankSequence,
+            sym::BlankNullSequence => CompoundOperator::BlankNullSequence,
+            sym::Slot => CompoundOperator::Slot,
+            sym::SlotSequence => CompoundOperator::SlotSequence,
+            sym::Out => CompoundOperator::Out,
+            sym::CodeParser_PatternBlank => CompoundOperator::CodeParser_PatternBlank,
+            sym::CodeParser_PatternBlankSequence => CompoundOperator::CodeParser_PatternBlankSequence,
+            sym::CodeParser_PatternBlankNullSequence => CompoundOperator::CodeParser_PatternBlankNullSequence,
+            sym::CodeParser_PatternOptionalDefault => CompoundOperator::CodeParser_PatternOptionalDefault,
             _ => return None,
         };
 

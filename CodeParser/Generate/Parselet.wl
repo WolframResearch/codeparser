@@ -66,9 +66,6 @@ $Operators = Join[
 		Span,
 		Pattern,
 		Optional,
-		Blank,
-		BlankSequence,
-		BlankNullSequence,
 		Set,
 		SetDelayed,
 		Unset,
@@ -80,15 +77,8 @@ $Operators = Join[
 		Put,
 		PutAppend,
 		Get,
-		Slot,
-		SlotSequence,
-		Out,
 		CodeParser`InternalInvalid,
 		CodeParser`Comma,
-		CodeParser`PatternBlank,
-		CodeParser`PatternBlankSequence,
-		CodeParser`PatternBlankNullSequence,
-		CodeParser`PatternOptionalDefault,
 		CodeParser`TernaryTilde,
 		CodeParser`TernaryOptionalPattern,
 		CodeParser`InfixTilde
@@ -123,6 +113,21 @@ $GroupOperators = Join[
 		],
 		Parselet`GroupParselet[tok_, op_] :> (op -> op)
 	]
+]
+
+$CompoundOperators = Join[
+	AssociationMap[Identity, {
+		Blank,
+		BlankSequence,
+		BlankNullSequence,
+		Slot,
+		SlotSequence,
+		Out,
+		CodeParser`PatternBlank,
+		CodeParser`PatternBlankSequence,
+		CodeParser`PatternBlankNullSequence,
+		CodeParser`PatternOptionalDefault
+	}]
 ]
 
 If[!MatchQ[$Operators, <| (_Symbol -> _Symbol) ... |>],
@@ -298,9 +303,9 @@ pub(crate) const colonEqualParselet: ColonEqualParselet = ColonEqualParselet::ne
 
 pub(crate) const infixDifferentialDParselet: InfixDifferentialDParselet = InfixDifferentialDParselet {};
 
-pub(crate) const under1Parselet: UnderParselet = UnderParselet::new(Operator::Blank, Operator::CodeParser_PatternBlank);
-pub(crate) const under2Parselet: UnderParselet = UnderParselet::new(Operator::BlankSequence, Operator::CodeParser_PatternBlankSequence);
-pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(Operator::BlankNullSequence, Operator::CodeParser_PatternBlankNullSequence);
+pub(crate) const under1Parselet: UnderParselet = UnderParselet::new(CompoundOperator::Blank, CompoundOperator::CodeParser_PatternBlank);
+pub(crate) const under2Parselet: UnderParselet = UnderParselet::new(CompoundOperator::BlankSequence, CompoundOperator::CodeParser_PatternBlankSequence);
+pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(CompoundOperator::BlankNullSequence, CompoundOperator::CodeParser_PatternBlankNullSequence);
 
 pub(crate) const underDotParselet: UnderDotParselet = UnderDotParselet {};
 
@@ -358,6 +363,21 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 				other_ :> FatalError["Unexpected operator: ", other]
 			}],
 			$GroupOperators
+		],
+		"}\n\n",
+
+		(*------------------------------*)
+		(* Define enum CompoundOperator *)
+		(*------------------------------*)
+		"#[allow(non_camel_case_types)]\n",
+		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
+		"pub enum CompoundOperator {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$CompoundOperators
 		],
 		"}\n\n",
 
@@ -427,6 +447,43 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 				other_ :> FatalError["Unexpected operator: ", other]
 			}],
 			$GroupOperators
+		],
+		"            _ => return None,\n",
+		"        };\n",
+		"\n",
+		"        Some(operator)\n",
+		"    }\n",
+		"}\n",
+
+		(*------------------------------*)
+		(* Define impl CompoundOperator *)
+		(*------------------------------*)
+		"impl CompoundOperator {\n",
+		"    #[allow(dead_code)]\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn to_symbol(self) -> Symbol {\n",
+		"        match self {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            CompoundOperator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$CompoundOperators
+		],
+		"        }\n",
+		"    }\n",
+		"\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
+		"        let operator = match symbol {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => CompoundOperator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$CompoundOperators
 		],
 		"            _ => return None,\n",
 		"        };\n",

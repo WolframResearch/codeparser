@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    cst::{BinaryNode, CompoundNode, CstNodeSeq, Node, Operator, TernaryNode},
+    cst::{BinaryNode, CompoundNode, CompoundOperator, CstNodeSeq, Node, Operator, TernaryNode},
     feature,
     panic_if_aborted,
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
@@ -573,12 +573,12 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
             let op = op.getOp();
 
             match op {
-                Operator::CodeParser_PatternBlank
-                | Operator::CodeParser_PatternBlankSequence
-                | Operator::CodeParser_PatternBlankNullSequence
-                | Operator::Blank
-                | Operator::BlankSequence
-                | Operator::BlankNullSequence => {
+                CompoundOperator::CodeParser_PatternBlank
+                | CompoundOperator::CodeParser_PatternBlankSequence
+                | CompoundOperator::CodeParser_PatternBlankNullSequence
+                | CompoundOperator::Blank
+                | CompoundOperator::BlankSequence
+                | CompoundOperator::BlankNullSequence => {
                     return ColonLHS::Optional;
                 },
                 _ => return ColonLHS::Error,

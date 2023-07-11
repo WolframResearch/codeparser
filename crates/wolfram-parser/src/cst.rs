@@ -8,7 +8,7 @@ use crate::{
     NodeSeq,
 };
 
-pub use crate::parselet_registration::{GroupOperator, Operator};
+pub use crate::parselet_registration::{CompoundOperator, GroupOperator, Operator};
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
 pub(crate) type Node<I = OwnedTokenInput, S = Source> = CstNode<I, S>;
@@ -150,7 +150,7 @@ pub struct GroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, Gro
 /// * `##2`
 /// * `%2`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompoundNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct CompoundNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, CompoundOperator>);
 
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
@@ -380,14 +380,7 @@ impl<I, S> Node<I, S> {
                 is_concrete: _,
             }) => {
                 head.visit(visit);
-
-                let OperatorNode {
-                    op: _,
-                    children,
-                    src: _,
-                } = body.as_op();
-
-                children.visit(visit);
+                body.as_op().visit_children(visit);
             },
             Node::SyntaxError(SyntaxErrorNode {
                 err: _,
@@ -401,27 +394,11 @@ impl<I, S> Node<I, S> {
             | Node::Postfix(PostfixNode(op))
             | Node::Binary(BinaryNode(op))
             | Node::Ternary(TernaryNode(op))
-            | Node::PrefixBinary(PrefixBinaryNode(op))
-            | Node::Compound(CompoundNode(op)) => {
-                let OperatorNode {
-                    op: _,
-                    children,
-                    src: _,
-                } = op;
-
-                children.visit(visit);
-            },
+            | Node::PrefixBinary(PrefixBinaryNode(op)) => op.visit_children(visit),
+            Node::Compound(CompoundNode(op)) => op.visit_children(visit),
             Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
-            | Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                let OperatorNode {
-                    op: _,
-                    children,
-                    src: _,
-                } = op;
-
-                children.visit(visit);
-            },
+            | Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => op.visit_children(visit),
             Node::Box(BoxNode {
                 kind: _,
                 children,
@@ -683,6 +660,17 @@ impl<I: TokenInput, S, O> OperatorNode<I, S, O> {
 }
 
 impl<I, S, O> OperatorNode<I, S, O> {
+    /// Visit this node and every child node, recursively.
+    fn visit_children(&self, visit: &mut dyn FnMut(&Node<I, S>)) {
+        let OperatorNode {
+            op: _,
+            children,
+            src: _,
+        } = self;
+
+        children.visit(visit);
+    }
+
     pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
         let OperatorNode { op, children, src } = self;
 
@@ -773,7 +761,7 @@ impl<I> GroupNode<I> {
 }
 
 impl<I> CompoundNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: CompoundOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_CompoundNodeCount);
 
         CompoundNode(OperatorNode::new(op, args))
