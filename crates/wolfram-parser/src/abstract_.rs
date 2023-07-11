@@ -10,8 +10,8 @@ use crate::{
         CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
         InfixNode, Node,
         Operator::{self, self as Op},
-        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode,
+        SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
@@ -186,6 +186,11 @@ fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNod
 
 /// Returns a `LeafNode[Symbol, ..]`
 fn ToNode_Op(op: Operator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_PrefixBinaryOp(op: PrefixBinaryOperator) -> AstNode {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
     ToNode_Symbol(s)
 }
@@ -1054,11 +1059,11 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 //     data_
                 // ]
                 (
-                    Op::Integrate
-                    | Op::ContourIntegral
-                    | Op::DoubleContourIntegral
-                    | Op::ClockwiseContourIntegral
-                    | Op::CounterClockwiseContourIntegral,
+                    PrefixBinaryOperator::Integrate
+                    | PrefixBinaryOperator::ContourIntegral
+                    | PrefixBinaryOperator::DoubleContourIntegral
+                    | PrefixBinaryOperator::ClockwiseContourIntegral
+                    | PrefixBinaryOperator::CounterClockwiseContourIntegral,
                     //
                     Node::Prefix(PrefixNode(OperatorNode {
                         op: Op::DifferentialD | Op::CapitalDifferentialD,
@@ -1069,7 +1074,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     let [_, var] = expect_children(children);
 
                     WL!(CallNode[
-                        ToNode_Op(op),
+                        ToNode_PrefixBinaryOp(op),
                         {abstract_(operand1), abstract_(var)},
                         data
                     ])
@@ -1081,7 +1086,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 // PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]
                 (_, operand2) => {
                     WL!(CallNode[
-                        ToNode_Op(op),
+                        ToNode_PrefixBinaryOp(op),
                         {abstract_(operand1), abstract_(operand2)},
                         data
                     ])

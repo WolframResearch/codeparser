@@ -93,7 +93,8 @@ $Operators = Join[
 			Parselet`BinaryOperatorParselet[precedence_, op_] :> (op -> op),
 			Parselet`InfixOperatorParselet[precedence_, op_] :> (op -> op),
 			Parselet`PostfixOperatorParselet[precedence_, op_] :> (op -> op),
-			Parselet`IntegralParselet[op1_, op2_] :> {op1 -> op1, op2 -> op2},
+			(* NOTE: Ignore op2, which is part of $PrefixBinaryOperators. *)
+			Parselet`IntegralParselet[op1_, op2_] -> (op2 -> op2),
 			(* These are part of $GroupOperators. *)
 			Parselet`GroupParselet[tok_, op_] -> Nothing,
 			_ -> Nothing
@@ -101,6 +102,22 @@ $Operators = Join[
 		{1}
 	]
 ]
+
+$PrefixBinaryOperators =
+	Association @ Flatten @ Replace[
+		Join[
+			Values[importedPrefixParselets],
+			Values[importedInfixParselets]
+		],
+		{
+			(* FIXME: Make this comment more precise once infix and prefix
+			          operators are factored out of $Operators. *)
+			(* NOTE: Ignore op2, which is part of $Operators. *)
+			Parselet`IntegralParselet[op1_, op2_] :> (op1 -> op1),
+			_ -> Nothing
+		},
+		{1}
+	]
 
 $GroupOperators = Join[
 	AssociationMap[Identity, {
@@ -134,8 +151,16 @@ If[!MatchQ[$Operators, <| (_Symbol -> _Symbol) ... |>],
 	FatalError["Bad $Operators: ", $Operators];
 ]
 
+If[!MatchQ[$PrefixBinaryOperators, <| (_Symbol -> _Symbol) ... |>],
+	FatalError["Bad $PrefixBinaryOperators: ", InputForm @ $PrefixBinaryOperators];
+]
+
 If[!MatchQ[$GroupOperators, <| (_Symbol -> _Symbol) ... |>],
 	FatalError["Bad $GroupOperators: ", InputForm @ $GroupOperators];
+]
+
+If[!MatchQ[$CompoundOperators, <| (_Symbol -> _Symbol) ... |>],
+	FatalError["Bad $CompoundOperators: ", InputForm @ $CompoundOperators];
 ]
 
 (*--------------*)
@@ -178,7 +203,7 @@ formatPrefix[Parselet`LessLessParselet[]] := "&(LessLessParselet {})"
 
 formatPrefix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
 
-formatPrefix[Parselet`IntegralParselet[op1_, op2_]] := "&IntegralParselet::new(Operator::" <> toGlobal[op1, "UpperCamelCase"] <> ", Operator::" <> toGlobal[op2, "UpperCamelCase"] <> ")"
+formatPrefix[Parselet`IntegralParselet[op1_, op2_]] := "&IntegralParselet::new(PrefixBinaryOperator::" <> toGlobal[op1, "UpperCamelCase"] <> ", Operator::" <> toGlobal[op2, "UpperCamelCase"] <> ")"
 
 formatPrefix[Parselet`PrefixOperatorParselet[precedence_, op_]] := "&PrefixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "Operator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
@@ -336,6 +361,10 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 
 {
 	StringJoin[
+		(*============================*)
+		(* Define Enums               *)
+		(*============================*)
+
 		(*----------------------------*)
 		(* Define enum Operator       *)
 		(*----------------------------*)
@@ -348,6 +377,21 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 				other_ :> FatalError["Unexpected operator: ", other]
 			}],
 			$Operators
+		],
+		"}\n\n",
+
+		(*----------------------------------*)
+		(* Define enum PrefixBinaryOperator *)
+		(*----------------------------------*)
+		"#[allow(non_camel_case_types)]\n",
+		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
+		"pub enum PrefixBinaryOperator {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$PrefixBinaryOperators
 		],
 		"}\n\n",
 
@@ -381,6 +425,10 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		],
 		"}\n\n",
 
+		(*============================*)
+		(* Define Impls               *)
+		(*============================*)
+
 		(*----------------------------*)
 		(* Define impl Operator       *)
 		(*----------------------------*)
@@ -410,6 +458,43 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 				other_ :> FatalError["Unexpected operator: ", other]
 			}],
 			$Operators
+		],
+		"            _ => return None,\n",
+		"        };\n",
+		"\n",
+		"        Some(operator)\n",
+		"    }\n",
+		"}\n",
+
+		(*----------------------------------*)
+		(* Define impl PrefixBinaryOperator *)
+		(*----------------------------------*)
+		"impl PrefixBinaryOperator {\n",
+		"    #[allow(dead_code)]\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn to_symbol(self) -> Symbol {\n",
+		"        match self {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            PrefixBinaryOperator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$PrefixBinaryOperators
+		],
+		"        }\n",
+		"    }\n",
+		"\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
+		"        let operator = match symbol {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => PrefixBinaryOperator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			$PrefixBinaryOperators
 		],
 		"            _ => return None,\n",
 		"        };\n",

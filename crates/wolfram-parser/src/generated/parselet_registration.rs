@@ -276,11 +276,11 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`NotDoubleVerticalBar
     &prefixUnhandledParselet, // Token`LongName`And
     &prefixUnhandledParselet, // Token`LongName`Or
-    &IntegralParselet::new(Operator::Integrate, Operator::Integral), // Token`LongName`Integral
-    &IntegralParselet::new(Operator::ContourIntegral, Operator::ContourIntegral), // Token`LongName`ContourIntegral
-    &IntegralParselet::new(Operator::DoubleContourIntegral, Operator::DoubleContourIntegral), // Token`LongName`DoubleContourIntegral
-    &IntegralParselet::new(Operator::ClockwiseContourIntegral, Operator::ClockwiseContourIntegral), // Token`LongName`ClockwiseContourIntegral
-    &IntegralParselet::new(Operator::CounterClockwiseContourIntegral, Operator::CounterClockwiseContourIntegral), // Token`LongName`CounterClockwiseContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::Integrate, Operator::Integral), // Token`LongName`Integral
+    &IntegralParselet::new(PrefixBinaryOperator::ContourIntegral, Operator::ContourIntegral), // Token`LongName`ContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::DoubleContourIntegral, Operator::DoubleContourIntegral), // Token`LongName`DoubleContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::ClockwiseContourIntegral, Operator::ClockwiseContourIntegral), // Token`LongName`ClockwiseContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::CounterClockwiseContourIntegral, Operator::CounterClockwiseContourIntegral), // Token`LongName`CounterClockwiseContourIntegral
     &prefixUnhandledParselet, // Token`LongName`Therefore
     &prefixUnhandledParselet, // Token`LongName`Because
     &prefixUnhandledParselet, // Token`LongName`Colon
@@ -1000,7 +1000,6 @@ pub enum Operator {
     CubeRoot,
     ProbabilityPr,
     CodeParser_PrefixLinearSyntaxBang,
-    Integrate,
     Integral,
     ContourIntegral,
     DoubleContourIntegral,
@@ -1247,6 +1246,16 @@ pub enum Operator {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PrefixBinaryOperator {
+    Integrate,
+    ContourIntegral,
+    DoubleContourIntegral,
+    ClockwiseContourIntegral,
+    CounterClockwiseContourIntegral,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum GroupOperator {
     Token_Comment,
     CodeParser_GroupParen,
@@ -1331,7 +1340,6 @@ impl Operator {
             Operator::CubeRoot => sym::CubeRoot,
             Operator::ProbabilityPr => sym::ProbabilityPr,
             Operator::CodeParser_PrefixLinearSyntaxBang => sym::CodeParser_PrefixLinearSyntaxBang,
-            Operator::Integrate => sym::Integrate,
             Operator::Integral => sym::Integral,
             Operator::ContourIntegral => sym::ContourIntegral,
             Operator::DoubleContourIntegral => sym::DoubleContourIntegral,
@@ -1627,7 +1635,6 @@ impl Operator {
             sym::CubeRoot => Operator::CubeRoot,
             sym::ProbabilityPr => Operator::ProbabilityPr,
             sym::CodeParser_PrefixLinearSyntaxBang => Operator::CodeParser_PrefixLinearSyntaxBang,
-            sym::Integrate => Operator::Integrate,
             sym::Integral => Operator::Integral,
             sym::ContourIntegral => Operator::ContourIntegral,
             sym::DoubleContourIntegral => Operator::DoubleContourIntegral,
@@ -1870,6 +1877,33 @@ impl Operator {
             sym::ConjugateTranspose => Operator::ConjugateTranspose,
             sym::HermitianConjugate => Operator::HermitianConjugate,
             sym::InvisiblePostfixScriptBase => Operator::InvisiblePostfixScriptBase,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl PrefixBinaryOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            PrefixBinaryOperator::Integrate => sym::Integrate,
+            PrefixBinaryOperator::ContourIntegral => sym::ContourIntegral,
+            PrefixBinaryOperator::DoubleContourIntegral => sym::DoubleContourIntegral,
+            PrefixBinaryOperator::ClockwiseContourIntegral => sym::ClockwiseContourIntegral,
+            PrefixBinaryOperator::CounterClockwiseContourIntegral => sym::CounterClockwiseContourIntegral,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::Integrate => PrefixBinaryOperator::Integrate,
+            sym::ContourIntegral => PrefixBinaryOperator::ContourIntegral,
+            sym::DoubleContourIntegral => PrefixBinaryOperator::DoubleContourIntegral,
+            sym::ClockwiseContourIntegral => PrefixBinaryOperator::ClockwiseContourIntegral,
+            sym::CounterClockwiseContourIntegral => PrefixBinaryOperator::CounterClockwiseContourIntegral,
             _ => return None,
         };
 

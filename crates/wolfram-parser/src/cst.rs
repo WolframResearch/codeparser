@@ -8,7 +8,9 @@ use crate::{
     NodeSeq,
 };
 
-pub use crate::parselet_registration::{CompoundOperator, GroupOperator, Operator};
+pub use crate::parselet_registration::{
+    CompoundOperator, GroupOperator, Operator, PrefixBinaryOperator,
+};
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
 pub(crate) type Node<I = OwnedTokenInput, S = Source> = CstNode<I, S>;
@@ -91,11 +93,9 @@ pub struct PrefixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct BinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
-//
-// InfixNode
-//
-// a + b + c
-//
+/// InfixNode
+///
+/// `a + b + c`
 #[derive(Debug, Clone, PartialEq)]
 pub struct InfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
@@ -107,13 +107,13 @@ pub struct TernaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct PostfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
-//
-// PrefixBinaryNode
-//
-// \[Integral] f \[DifferentialD] x
-//
+/// PrefixBinaryNode
+///
+/// `\[Integral] f \[DifferentialD] x`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(
+    pub OperatorNode<I, S, PrefixBinaryOperator>,
+);
 
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
@@ -393,8 +393,8 @@ impl<I, S> Node<I, S> {
             | Node::Infix(InfixNode(op))
             | Node::Postfix(PostfixNode(op))
             | Node::Binary(BinaryNode(op))
-            | Node::Ternary(TernaryNode(op))
-            | Node::PrefixBinary(PrefixBinaryNode(op)) => op.visit_children(visit),
+            | Node::Ternary(TernaryNode(op)) => op.visit_children(visit),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => op.visit_children(visit),
             Node::Compound(CompoundNode(op)) => op.visit_children(visit),
             Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
@@ -741,7 +741,7 @@ impl<I> PostfixNode<I> {
 }
 
 impl<I> PrefixBinaryNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: PrefixBinaryOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixBinaryNodeCount);
 
         PrefixBinaryNode(OperatorNode::new(op, args))

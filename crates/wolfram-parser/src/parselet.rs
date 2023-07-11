@@ -9,8 +9,9 @@ use std::any::Any;
 use crate::{
     cst::{
         BinaryNode, CallBody, CallNode, CompoundNode, CompoundOperator, GroupMissingCloserNode,
-        GroupNode, GroupOperator, InfixNode, Operator, PostfixNode, PrefixNode, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
+        GroupNode, GroupOperator, InfixNode, Operator, PostfixNode, PrefixBinaryOperator,
+        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
     parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
@@ -320,7 +321,7 @@ pub(crate) struct ColonEqualParselet /* : BinaryOperatorParselet */ {
 
 #[derive(Debug)]
 pub(crate) struct IntegralParselet /* : PrefixParselet */ {
-    pub(crate) Op1: Operator,
+    pub(crate) Op1: PrefixBinaryOperator,
     pub(crate) Op2: Operator,
 }
 
