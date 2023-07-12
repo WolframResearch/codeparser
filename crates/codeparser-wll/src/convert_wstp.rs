@@ -8,7 +8,7 @@ use wolfram_parser::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CompoundOperator,
         CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
         InfixNode, Operator, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixBinaryOperator,
-        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
@@ -667,6 +667,12 @@ fn put_op<I: TokenInput, S: WstpPut, O: WstpPut>(
 }
 
 impl WstpPut for Operator {
+    fn put(&self, link: &mut wstp::Link) {
+        Symbol_put(self.to_symbol(), link)
+    }
+}
+
+impl WstpPut for TernaryOperator {
     fn put(&self, link: &mut wstp::Link) {
         Symbol_put(self.to_symbol(), link)
     }

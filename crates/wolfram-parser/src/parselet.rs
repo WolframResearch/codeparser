@@ -1573,7 +1573,7 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
 
 fn TildeParselet_reduceTilde(session: &mut ParserSession) {
     let node = TernaryNode::new(
-        Operator::CodeParser_TernaryTilde,
+        TernaryOperator::CodeParser_TernaryTilde,
         Parser_popContext(session),
     );
     Parser_pushNode(session, node);
@@ -1899,7 +1899,7 @@ fn EqualParselet_reduceUnset(session: &mut ParserSession) {
 }
 
 fn EqualParselet_reduceTagSet(session: &mut ParserSession) {
-    let node = TernaryNode::new(Operator::TagSet, Parser_popContext(session));
+    let node = TernaryNode::new(TernaryOperator::TagSet, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1907,7 +1907,7 @@ fn EqualParselet_reduceTagSet(session: &mut ParserSession) {
 }
 
 fn EqualParselet_reduceTagUnset(session: &mut ParserSession) {
-    let node = TernaryNode::new(Operator::TagUnset, Parser_popContext(session));
+    let node = TernaryNode::new(TernaryOperator::TagUnset, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -1988,7 +1988,7 @@ fn ColonEqualParselet_reduceSetDelayed(session: &mut ParserSession) {
 }
 
 fn ColonEqualParselet_reduceTagSetDelayed(session: &mut ParserSession) {
-    let node = TernaryNode::new(Operator::TagSetDelayed, Parser_popContext(session));
+    let node = TernaryNode::new(TernaryOperator::TagSetDelayed, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

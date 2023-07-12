@@ -960,9 +960,6 @@ pub enum Operator {
     Set,
     SetDelayed,
     Unset,
-    TagSet,
-    TagSetDelayed,
-    TagUnset,
     CompoundExpression,
     MessageName,
     Put,
@@ -970,8 +967,6 @@ pub enum Operator {
     Get,
     CodeParser_InternalInvalid,
     CodeParser_Comma,
-    CodeParser_TernaryTilde,
-    CodeParser_TernaryOptionalPattern,
     CodeParser_InfixTilde,
     Minus,
     Plus,
@@ -1288,6 +1283,17 @@ pub enum CompoundOperator {
     CodeParser_PatternOptionalDefault,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum TernaryOperator {
+    CodeParser_TernaryTilde,
+    CodeParser_TernaryOptionalPattern,
+    TagSet,
+    TagSetDelayed,
+    TagUnset,
+    Span,
+}
+
 impl Operator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -1300,9 +1306,6 @@ impl Operator {
             Operator::Set => sym::Set,
             Operator::SetDelayed => sym::SetDelayed,
             Operator::Unset => sym::Unset,
-            Operator::TagSet => sym::TagSet,
-            Operator::TagSetDelayed => sym::TagSetDelayed,
-            Operator::TagUnset => sym::TagUnset,
             Operator::CompoundExpression => sym::CompoundExpression,
             Operator::MessageName => sym::MessageName,
             Operator::Put => sym::Put,
@@ -1310,8 +1313,6 @@ impl Operator {
             Operator::Get => sym::Get,
             Operator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
             Operator::CodeParser_Comma => sym::CodeParser_Comma,
-            Operator::CodeParser_TernaryTilde => sym::CodeParser_TernaryTilde,
-            Operator::CodeParser_TernaryOptionalPattern => sym::CodeParser_TernaryOptionalPattern,
             Operator::CodeParser_InfixTilde => sym::CodeParser_InfixTilde,
             Operator::Minus => sym::Minus,
             Operator::Plus => sym::Plus,
@@ -1595,9 +1596,6 @@ impl Operator {
             sym::Set => Operator::Set,
             sym::SetDelayed => Operator::SetDelayed,
             sym::Unset => Operator::Unset,
-            sym::TagSet => Operator::TagSet,
-            sym::TagSetDelayed => Operator::TagSetDelayed,
-            sym::TagUnset => Operator::TagUnset,
             sym::CompoundExpression => Operator::CompoundExpression,
             sym::MessageName => Operator::MessageName,
             sym::Put => Operator::Put,
@@ -1605,8 +1603,6 @@ impl Operator {
             sym::Get => Operator::Get,
             sym::CodeParser_InternalInvalid => Operator::CodeParser_InternalInvalid,
             sym::CodeParser_Comma => Operator::CodeParser_Comma,
-            sym::CodeParser_TernaryTilde => Operator::CodeParser_TernaryTilde,
-            sym::CodeParser_TernaryOptionalPattern => Operator::CodeParser_TernaryOptionalPattern,
             sym::CodeParser_InfixTilde => Operator::CodeParser_InfixTilde,
             sym::Minus => Operator::Minus,
             sym::Plus => Operator::Plus,
@@ -1986,6 +1982,35 @@ impl CompoundOperator {
             sym::CodeParser_PatternBlankSequence => CompoundOperator::CodeParser_PatternBlankSequence,
             sym::CodeParser_PatternBlankNullSequence => CompoundOperator::CodeParser_PatternBlankNullSequence,
             sym::CodeParser_PatternOptionalDefault => CompoundOperator::CodeParser_PatternOptionalDefault,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl TernaryOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            TernaryOperator::CodeParser_TernaryTilde => sym::CodeParser_TernaryTilde,
+            TernaryOperator::CodeParser_TernaryOptionalPattern => sym::CodeParser_TernaryOptionalPattern,
+            TernaryOperator::TagSet => sym::TagSet,
+            TernaryOperator::TagSetDelayed => sym::TagSetDelayed,
+            TernaryOperator::TagUnset => sym::TagUnset,
+            TernaryOperator::Span => sym::Span,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::CodeParser_TernaryTilde => TernaryOperator::CodeParser_TernaryTilde,
+            sym::CodeParser_TernaryOptionalPattern => TernaryOperator::CodeParser_TernaryOptionalPattern,
+            sym::TagSet => TernaryOperator::TagSet,
+            sym::TagSetDelayed => TernaryOperator::TagSetDelayed,
+            sym::TagUnset => TernaryOperator::TagUnset,
+            sym::Span => TernaryOperator::Span,
             _ => return None,
         };
 

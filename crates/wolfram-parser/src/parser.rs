@@ -1,7 +1,10 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    cst::{BinaryNode, CompoundNode, CompoundOperator, CstNodeSeq, Node, Operator, TernaryNode},
+    cst::{
+        BinaryNode, CompoundNode, CompoundOperator, CstNodeSeq, Node, Operator, TernaryNode,
+        TernaryOperator,
+    },
     feature,
     panic_if_aborted,
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
@@ -700,7 +703,7 @@ pub(crate) fn Parser_checkSpan<'i>(session: &mut ParserSession<'i>) -> bool {
         if let Node::Ternary(TernaryNode(op)) = NN {
             let op = op.getOp();
 
-            if op == Operator::Span {
+            if op == TernaryOperator::Span {
                 return true;
             }
 

@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub use crate::parselet_registration::{
-    CompoundOperator, GroupOperator, Operator, PrefixBinaryOperator,
+    CompoundOperator, GroupOperator, Operator, PrefixBinaryOperator, TernaryOperator,
 };
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
@@ -101,7 +101,7 @@ pub struct InfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `a /: b = c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct TernaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct TernaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, TernaryOperator>);
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
@@ -392,8 +392,8 @@ impl<I, S> Node<I, S> {
             Node::Prefix(PrefixNode(op))
             | Node::Infix(InfixNode(op))
             | Node::Postfix(PostfixNode(op))
-            | Node::Binary(BinaryNode(op))
-            | Node::Ternary(TernaryNode(op)) => op.visit_children(visit),
+            | Node::Binary(BinaryNode(op)) => op.visit_children(visit),
+            Node::Ternary(TernaryNode(op)) => op.visit_children(visit),
             Node::PrefixBinary(PrefixBinaryNode(op)) => op.visit_children(visit),
             Node::Compound(CompoundNode(op)) => op.visit_children(visit),
             Node::Group(GroupNode(op))
@@ -725,7 +725,7 @@ impl<I> InfixNode<I> {
 }
 
 impl<I> TernaryNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: TernaryOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_TernaryNodeCount);
 
         TernaryNode(OperatorNode::new(op, args))

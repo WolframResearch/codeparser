@@ -310,7 +310,7 @@ fn SemiSemiParselet_reduceBinary(session: &mut ParserSession) {
 }
 
 fn SemiSemiParselet_reduceTernary(session: &mut ParserSession) {
-    let node = TernaryNode::new(Operator::Span, Parser_popContext(session));
+    let node = TernaryNode::new(TernaryOperator::Span, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

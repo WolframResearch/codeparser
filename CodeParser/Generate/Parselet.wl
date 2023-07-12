@@ -59,6 +59,11 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 (* $Operators *)
 (*------------*)
 
+$multiOperators = <|
+	Span -> {"Ternary"}
+|>
+
+
 (* Variants of `enum Operator { ... }` *)
 $Operators = Join[
 	AssociationMap[Identity, {
@@ -69,9 +74,6 @@ $Operators = Join[
 		Set,
 		SetDelayed,
 		Unset,
-		TagSet,
-		TagSetDelayed,
-		TagUnset,
 		CompoundExpression,
 		MessageName,
 		Put,
@@ -79,8 +81,6 @@ $Operators = Join[
 		Get,
 		CodeParser`InternalInvalid,
 		CodeParser`Comma,
-		CodeParser`TernaryTilde,
-		CodeParser`TernaryOptionalPattern,
 		CodeParser`InfixTilde
 	}],
 	DeleteDuplicates @ Association @ Flatten @ Replace[
@@ -100,6 +100,23 @@ $Operators = Join[
 			_ -> Nothing
 		},
 		{1}
+	]
+]
+
+$TernaryOperators = Association @ Map[
+	Replace[{
+		sym_Symbol :> (sym -> sym),
+		other_ :> FatalError["Invalid operator spec: ", InputForm[other]]
+	}],
+	Join[
+		{
+			CodeParser`TernaryTilde,
+			CodeParser`TernaryOptionalPattern,
+			TagSet,
+			TagSetDelayed,
+			TagUnset
+		},
+		Keys @ Select[$multiOperators, MemberQ["Ternary"]]
 	]
 ]
 
@@ -424,6 +441,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		formatOperatorEnumDef["PrefixBinaryOperator", $PrefixBinaryOperators],
 		formatOperatorEnumDef["GroupOperator", $GroupOperators],
 		formatOperatorEnumDef["CompoundOperator", $CompoundOperators],
+		formatOperatorEnumDef["TernaryOperator", $TernaryOperators],
 
 		(*============================*)
 		(* Define Impls               *)
@@ -432,7 +450,8 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		formatOperatorEnumImpl["Operator", $Operators],
 		formatOperatorEnumImpl["PrefixBinaryOperator", $PrefixBinaryOperators],
 		formatOperatorEnumImpl["GroupOperator", $GroupOperators],
-		formatOperatorEnumImpl["CompoundOperator", $CompoundOperators]
+		formatOperatorEnumImpl["CompoundOperator", $CompoundOperators],
+		formatOperatorEnumImpl["TernaryOperator", $TernaryOperators]
 	]
 };
 
