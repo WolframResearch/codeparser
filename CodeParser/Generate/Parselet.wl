@@ -269,6 +269,61 @@ formatInfix[Parselet`InfixToplevelNewlineParselet[]] := "&(InfixToplevelNewlineP
 formatInfix[Parselet`TimesParselet[]] := "&timesParselet"
 
 
+
+formatOperatorEnumDef[name_?StringQ, values_?AssociationQ] :=
+	StringJoin[
+		"#[allow(non_camel_case_types)]\n",
+		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
+		"pub enum " <> name <> " {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			values
+		],
+		"}\n\n"
+	]
+
+formatOperatorEnumImpl[name_?StringQ, values_?AssociationQ] :=
+	StringJoin[
+		"impl " <> name <> " {\n",
+		"    #[allow(dead_code)]\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn to_symbol(self) -> Symbol {\n",
+		"        match self {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            " <> name <> "::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			values
+		],
+		"        }\n",
+		"    }\n",
+		"\n",
+		"    #[doc(hidden)]\n",
+		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
+		"        let operator = match symbol {\n",
+		KeyValueMap[
+			{k, v} |-> Replace[{k, v}, {
+				{operator_Symbol, symbol_Symbol} :>
+					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => " <> name <> "::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+				other_ :> FatalError["Unexpected operator: ", other]
+			}],
+			values
+		],
+		"            _ => return None,\n",
+		"        };\n",
+		"\n",
+		"        Some(operator)\n",
+		"    }\n",
+		"}\n"
+	]
+
+
+
 generate[] := (
 
 Print["Generating Parselet..."];
@@ -365,237 +420,45 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		(* Define Enums               *)
 		(*============================*)
 
-		(*----------------------------*)
-		(* Define enum Operator       *)
-		(*----------------------------*)
-		"#[allow(non_camel_case_types)]\n",
-		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
-		"pub enum Operator {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$Operators
-		],
-		"}\n\n",
-
-		(*----------------------------------*)
-		(* Define enum PrefixBinaryOperator *)
-		(*----------------------------------*)
-		"#[allow(non_camel_case_types)]\n",
-		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
-		"pub enum PrefixBinaryOperator {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$PrefixBinaryOperators
-		],
-		"}\n\n",
-
-		(*----------------------------*)
-		(* Define enum GroupOperator  *)
-		(*----------------------------*)
-		"#[allow(non_camel_case_types)]\n",
-		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
-		"pub enum GroupOperator {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$GroupOperators
-		],
-		"}\n\n",
-
-		(*------------------------------*)
-		(* Define enum CompoundOperator *)
-		(*------------------------------*)
-		"#[allow(non_camel_case_types)]\n",
-		"#[derive(Debug, Copy, Clone, PartialEq)]\n",
-		"pub enum CompoundOperator {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :> "    " <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$CompoundOperators
-		],
-		"}\n\n",
+		formatOperatorEnumDef["Operator", $Operators],
+		formatOperatorEnumDef["PrefixBinaryOperator", $PrefixBinaryOperators],
+		formatOperatorEnumDef["GroupOperator", $GroupOperators],
+		formatOperatorEnumDef["CompoundOperator", $CompoundOperators],
 
 		(*============================*)
 		(* Define Impls               *)
 		(*============================*)
 
-		(*----------------------------*)
-		(* Define impl Operator       *)
-		(*----------------------------*)
-		"impl Operator {\n",
-		"    #[allow(dead_code)]\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn to_symbol(self) -> Symbol {\n",
-		"        match self {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            Operator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$Operators
-		],
-		"        }\n",
-		"    }\n",
-		"\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
-		"        let operator = match symbol {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => Operator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$Operators
-		],
-		"            _ => return None,\n",
-		"        };\n",
-		"\n",
-		"        Some(operator)\n",
-		"    }\n",
-		"}\n",
-
-		(*----------------------------------*)
-		(* Define impl PrefixBinaryOperator *)
-		(*----------------------------------*)
-		"impl PrefixBinaryOperator {\n",
-		"    #[allow(dead_code)]\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn to_symbol(self) -> Symbol {\n",
-		"        match self {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            PrefixBinaryOperator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$PrefixBinaryOperators
-		],
-		"        }\n",
-		"    }\n",
-		"\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
-		"        let operator = match symbol {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => PrefixBinaryOperator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$PrefixBinaryOperators
-		],
-		"            _ => return None,\n",
-		"        };\n",
-		"\n",
-		"        Some(operator)\n",
-		"    }\n",
-		"}\n",
-
-		(*----------------------------*)
-		(* Define impl GroupOperator  *)
-		(*----------------------------*)
-		"impl GroupOperator {\n",
-		"    #[allow(dead_code)]\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn to_symbol(self) -> Symbol {\n",
-		"        match self {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            GroupOperator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$GroupOperators
-		],
-		"        }\n",
-		"    }\n",
-		"\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
-		"        let operator = match symbol {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => GroupOperator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$GroupOperators
-		],
-		"            _ => return None,\n",
-		"        };\n",
-		"\n",
-		"        Some(operator)\n",
-		"    }\n",
-		"}\n",
-
-		(*------------------------------*)
-		(* Define impl CompoundOperator *)
-		(*------------------------------*)
-		"impl CompoundOperator {\n",
-		"    #[allow(dead_code)]\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn to_symbol(self) -> Symbol {\n",
-		"        match self {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            CompoundOperator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$CompoundOperators
-		],
-		"        }\n",
-		"    }\n",
-		"\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
-		"        let operator = match symbol {\n",
-		KeyValueMap[
-			{k, v} |-> Replace[{k, v}, {
-				{operator_Symbol, symbol_Symbol} :>
-					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => CompoundOperator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
-				other_ :> FatalError["Unexpected operator: ", other]
-			}],
-			$CompoundOperators
-		],
-		"            _ => return None,\n",
-		"        };\n",
-		"\n",
-		"        Some(operator)\n",
-		"    }\n",
-		"}\n"
+		formatOperatorEnumImpl["Operator", $Operators],
+		formatOperatorEnumImpl["PrefixBinaryOperator", $PrefixBinaryOperators],
+		formatOperatorEnumImpl["GroupOperator", $GroupOperators],
+		formatOperatorEnumImpl["CompoundOperator", $CompoundOperators]
 	]
 };
 
-Print["exporting ParseletRegistration.cpp"];
-res = Export[FileNameJoin[{generatedCPPSrcDir, "parselet_registration.rs"}], Column[parseletRegistrationCPPSource], "String"];
+	Print["exporting ParseletRegistration.cpp"];
+	res = Export[
+		FileNameJoin[{generatedCPPSrcDir, "parselet_registration.rs"}],
+		Column[parseletRegistrationCPPSource],
+		"String"
+	];
 
-Print[res];
+	Print[res];
 
-If[FailureQ[res],
-  Quit[1]
-];
+	If[FailureQ[res],
+			Quit[1]
+	];
 
-Print["Done Parselet"]
-)
+	Print["Done Parselet"]
+
+) (* generate[] *)
 
 If[!StringQ[script],
-  Quit[1]
+	Quit[1]
 ]
+
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
-generate[]
+	generate[]
 ]
 
 End[]
