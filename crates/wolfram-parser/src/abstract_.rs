@@ -10,8 +10,8 @@ use crate::{
         CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
         InfixNode, Node,
         Operator::{self, self as Op},
-        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode,
-        SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
+        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
+        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
@@ -186,6 +186,11 @@ fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNod
 
 /// Returns a `LeafNode[Symbol, ..]`
 fn ToNode_Op(op: Operator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_PostfixOp(op: PostfixOperator) -> AstNode {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
     ToNode_Symbol(s)
 }
@@ -520,10 +525,10 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             match op {
                 // PostfixNode[System`HermitianConjugate, {rand_, _}, data_]
                 // TODO(test): Add test case for this case.
-                Op::HermitianConjugate => WL!(
+                PostfixOperator::HermitianConjugate => WL!(
                     CallNode[ToNode[ConjugateTranspose], {abstract_(operand)}, data]
                 ),
-                Op::Derivative => {
+                PostfixOperator::Derivative => {
                     match rator {
                         // PostfixNode[Derivative, {rand_, LeafNode[Token`SingleQuote, _, _]}, _]
                         Node::Token(Token {
@@ -560,7 +565,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     }
                 },
                 op => WL!(
-                    CallNode[ToNode_Op(op), {abstract_(operand)}, data]
+                    CallNode[ToNode_PostfixOp(op), {abstract_(operand)}, data]
                 ),
             }
         },
@@ -1659,7 +1664,7 @@ fn derivativeOrderAndAbstractedBody<I: TokenInput + Debug, S: TokenSource + Debu
 ) -> (usize, AstNode) {
     match node {
         Node::Postfix(PostfixNode(OperatorNode {
-            op: Op::Derivative,
+            op: PostfixOperator::Derivative,
             children,
             src: _,
         })) => {

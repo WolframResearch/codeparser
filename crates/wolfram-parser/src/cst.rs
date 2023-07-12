@@ -9,7 +9,8 @@ use crate::{
 };
 
 pub use crate::parselet_registration::{
-    CompoundOperator, GroupOperator, Operator, PrefixBinaryOperator, TernaryOperator,
+    CompoundOperator, GroupOperator, Operator, PostfixOperator, PrefixBinaryOperator,
+    TernaryOperator,
 };
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
@@ -105,7 +106,7 @@ pub struct TernaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, T
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PostfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct PostfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, PostfixOperator>);
 
 /// PrefixBinaryNode
 ///
@@ -389,10 +390,9 @@ impl<I, S> Node<I, S> {
             }) => {
                 children.visit(visit);
             },
-            Node::Prefix(PrefixNode(op))
-            | Node::Infix(InfixNode(op))
-            | Node::Postfix(PostfixNode(op))
-            | Node::Binary(BinaryNode(op)) => op.visit_children(visit),
+            Node::Prefix(PrefixNode(op)) | Node::Infix(InfixNode(op)) => op.visit_children(visit),
+            Node::Postfix(PostfixNode(op)) => op.visit_children(visit),
+            Node::Binary(BinaryNode(op)) => op.visit_children(visit),
             Node::Ternary(TernaryNode(op)) => op.visit_children(visit),
             Node::PrefixBinary(PrefixBinaryNode(op)) => op.visit_children(visit),
             Node::Compound(CompoundNode(op)) => op.visit_children(visit),
@@ -733,7 +733,7 @@ impl<I> TernaryNode<I> {
 }
 
 impl<I> PostfixNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: PostfixOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
 
         PostfixNode(OperatorNode::new(op, args))

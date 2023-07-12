@@ -66,9 +66,9 @@ pub(crate) trait InfixParselet: Parselet {
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence;
 
-    fn getOp(&self) -> Operator {
+    fn getOp(&self) -> InfixParseletOperator {
         // TODO: Make this sentinel value unnecessary?
-        return Operator::CodeParser_InternalInvalid;
+        return InfixParseletOperator::Infix(Operator::CodeParser_InternalInvalid);
     }
 
     fn processImplicitTimes<'i>(
@@ -77,6 +77,34 @@ pub(crate) trait InfixParselet: Parselet {
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         return tok_in;
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) enum InfixParseletOperator {
+    Infix(Operator),
+    Postfix(PostfixOperator),
+}
+
+impl From<Operator> for InfixParseletOperator {
+    fn from(op: Operator) -> Self {
+        Self::Infix(op)
+    }
+}
+
+impl InfixParseletOperator {
+    fn unwrap_op(self) -> Operator {
+        match self {
+            InfixParseletOperator::Infix(op) => op,
+            InfixParseletOperator::Postfix(_) => panic!("expected Infix operator, got: {self:?}"),
+        }
+    }
+
+    fn unwrap_postfix_op(self) -> PostfixOperator {
+        match self {
+            InfixParseletOperator::Infix(_) => panic!("expected Postfix operator, got: {self:?}"),
+            InfixParseletOperator::Postfix(op) => op,
+        }
     }
 }
 
@@ -253,7 +281,7 @@ pub(crate) struct TimesParselet /* : InfixParselet */ {}
 #[derive(Debug)]
 pub(crate) struct PostfixOperatorParselet /* : InfixParselet */ {
     precedence: Precedence,
-    Op: Operator,
+    Op: PostfixOperator,
 }
 
 
@@ -944,8 +972,8 @@ impl InfixParselet for BinaryOperatorParselet {
         self.precedence
     }
 
-    fn getOp(&self) -> Operator {
-        self.Op
+    fn getOp(&self) -> InfixParseletOperator {
+        self.Op.into()
     }
 }
 
@@ -982,7 +1010,7 @@ fn BinaryOperatorParselet_reduceBinaryOperator(session: &mut ParserSession, P: P
         .downcast_ref::<BinaryOperatorParselet>()
         .expect("unable to downcast to BinaryOperatorParselet");
 
-    let Op = P.getOp();
+    let Op = P.getOp().unwrap_op();
 
     let node = BinaryNode::new(Op, Parser_popContext(session));
     Parser_pushNode(session, node);
@@ -1010,8 +1038,8 @@ impl InfixParselet for InfixOperatorParselet {
         self.precedence
     }
 
-    fn getOp(&self) -> Operator {
-        self.Op
+    fn getOp(&self) -> InfixParseletOperator {
+        self.Op.into()
     }
 }
 
@@ -1132,7 +1160,7 @@ fn InfixOperatorParselet_reduceInfixOperator(
     session: &mut ParserSession,
     P: &InfixOperatorParselet,
 ) {
-    let Op = P.getOp();
+    let Op = P.getOp().unwrap_op();
 
     let node = InfixNode::new(Op, Parser_popContext(session));
     Parser_pushNode(session, node);
@@ -1146,7 +1174,7 @@ fn InfixOperatorParselet_reduceInfixOperator(
 //======================================
 
 impl PostfixOperatorParselet {
-    pub(crate) const fn new(precedence: Precedence, Op: Operator) -> Self {
+    pub(crate) const fn new(precedence: Precedence, Op: PostfixOperator) -> Self {
         PostfixOperatorParselet { precedence, Op }
     }
 }
@@ -1160,8 +1188,8 @@ impl InfixParselet for PostfixOperatorParselet {
         self.precedence
     }
 
-    fn getOp(&self) -> Operator {
-        self.Op
+    fn getOp(&self) -> InfixParseletOperator {
+        InfixParseletOperator::Postfix(self.Op)
     }
 }
 
@@ -1181,7 +1209,7 @@ fn PostfixOperatorParselet_reducePostfixOperator(
     session: &mut ParserSession,
     P: &PostfixOperatorParselet,
 ) {
-    let Op = P.getOp();
+    let Op = P.getOp().unwrap_postfix_op();
 
     let node = PostfixNode::new(Op, Parser_popContext(session));
     Parser_pushNode(session, node);

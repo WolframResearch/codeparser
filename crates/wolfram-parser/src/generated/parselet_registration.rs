@@ -556,7 +556,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixImplicitTimesParselet, // Token`OpenCurly
     &infixAssertFalseParselet, // Token`CloseCurly
     &equalParselet, // Token`Equal
-    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_BANG, Operator::Factorial), // Token`Bang
+    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_BANG, PostfixOperator::Factorial), // Token`Bang
     &infixImplicitTimesParselet, // Token`Under
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`Less
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`Greater
@@ -564,17 +564,17 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_BAR, Operator::Alternatives), // Token`Bar
     &semiParselet, // Token`Semi
     &infixImplicitTimesParselet, // Token`Hash
-    &PostfixOperatorParselet::new(PRECEDENCE_AMP, Operator::Function), // Token`Amp
+    &PostfixOperatorParselet::new(PRECEDENCE_AMP, PostfixOperator::Function), // Token`Amp
     &BinaryOperatorParselet::new(PRECEDENCE_SLASH, Operator::Divide), // Token`Slash
     &BinaryOperatorParselet::new(PRECEDENCE_AT, Operator::CodeParser_BinaryAt), // Token`At
     &InfixOperatorParselet::new(PRECEDENCE_INFIX_PLUS, Operator::Plus), // Token`Plus
     (&TildeParselet {}), // Token`Tilde
     &timesParselet, // Token`Star
     &BinaryOperatorParselet::new(PRECEDENCE_CARET, Operator::Power), // Token`Caret
-    &PostfixOperatorParselet::new(PRECEDENCE_SINGLEQUOTE, Operator::Derivative), // Token`SingleQuote
+    &PostfixOperatorParselet::new(PRECEDENCE_SINGLEQUOTE, PostfixOperator::Derivative), // Token`SingleQuote
     &infixImplicitTimesParselet, // Token`Percent
     &BinaryOperatorParselet::new(PRECEDENCE_INFIX_QUESTION, Operator::PatternTest), // Token`Question
-    &PostfixOperatorParselet::new(PRECEDENCE_DOTDOT, Operator::Repeated), // Token`DotDot
+    &PostfixOperatorParselet::new(PRECEDENCE_DOTDOT, PostfixOperator::Repeated), // Token`DotDot
     (&ColonColonParselet {}), // Token`ColonColon
     &colonEqualParselet, // Token`ColonEqual
     &BinaryOperatorParselet::new(PRECEDENCE_COLONGREATER, Operator::RuleDelayed), // Token`ColonGreater
@@ -588,7 +588,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     (&GreaterGreaterParselet {}), // Token`GreaterGreater
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`GreaterEqual
     &BinaryOperatorParselet::new(PRECEDENCE_MINUSGREATER, Operator::Rule), // Token`MinusGreater
-    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_MINUSMINUS, Operator::Decrement), // Token`MinusMinus
+    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_MINUSMINUS, PostfixOperator::Decrement), // Token`MinusMinus
     &BinaryOperatorParselet::new(PRECEDENCE_MINUSEQUAL, Operator::SubtractFrom), // Token`MinusEqual
     &InfixOperatorParselet::new(PRECEDENCE_BARBAR, Operator::Or), // Token`BarBar
     &infixAssertFalseParselet, // Token`BarGreater
@@ -603,7 +603,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_SLASHSTAR, Operator::RightComposition), // Token`SlashStar
     &BinaryOperatorParselet::new(PRECEDENCE_ATAT, Operator::Apply), // Token`AtAt
     &InfixOperatorParselet::new(PRECEDENCE_ATSTAR, Operator::Composition), // Token`AtStar
-    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_PLUSPLUS, Operator::Increment), // Token`PlusPlus
+    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_PLUSPLUS, PostfixOperator::Increment), // Token`PlusPlus
     &BinaryOperatorParselet::new(PRECEDENCE_PLUSEQUAL, Operator::AddTo), // Token`PlusEqual
     &InfixOperatorParselet::new(PRECEDENCE_TILDETILDE, Operator::StringExpression), // Token`TildeTilde
     &BinaryOperatorParselet::new(PRECEDENCE_STAREQUAL, Operator::TimesBy), // Token`StarEqual
@@ -611,9 +611,9 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &BinaryOperatorParselet::new(PRECEDENCE_CARETEQUAL, Operator::UpSet), // Token`CaretEqual
     &infixImplicitTimesParselet, // Token`HashHash
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`BangEqual
-    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_BANGBANG, Operator::Factorial2), // Token`BangBang
+    &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_BANGBANG, PostfixOperator::Factorial2), // Token`BangBang
     &infixAssertFalseParselet, // Token`QuestionQuestion
-    &PostfixOperatorParselet::new(PRECEDENCE_DOTDOTDOT, Operator::RepeatedNull), // Token`DotDotDot
+    &PostfixOperatorParselet::new(PRECEDENCE_DOTDOTDOT, PostfixOperator::RepeatedNull), // Token`DotDotDot
     &InfixOperatorParselet::new(PRECEDENCE_EQUALEQUALEQUAL, Operator::SameQ), // Token`EqualEqualEqual
     &InfixOperatorParselet::new(PRECEDENCE_EQUALBANGEQUAL, Operator::UnsameQ), // Token`EqualBangEqual
     &infixImplicitTimesParselet, // Token`UnderUnderUnder
@@ -883,11 +883,11 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixAssertFalseParselet, // Token`LongName`AutoLeftMatch
     &infixAssertFalseParselet, // Token`LongName`AutoRightMatch
     &infixImplicitTimesParselet, // Token`LongName`InvisiblePrefixScriptBase
-    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE, Operator::InvisiblePostfixScriptBase), // Token`LongName`InvisiblePostfixScriptBase
-    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_TRANSPOSE, Operator::Transpose), // Token`LongName`Transpose
-    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONJUGATE, Operator::Conjugate), // Token`LongName`Conjugate
-    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONJUGATETRANSPOSE, Operator::ConjugateTranspose), // Token`LongName`ConjugateTranspose
-    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_HERMITIANCONJUGATE, Operator::HermitianConjugate), // Token`LongName`HermitianConjugate
+    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE, PostfixOperator::InvisiblePostfixScriptBase), // Token`LongName`InvisiblePostfixScriptBase
+    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_TRANSPOSE, PostfixOperator::Transpose), // Token`LongName`Transpose
+    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONJUGATE, PostfixOperator::Conjugate), // Token`LongName`Conjugate
+    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONJUGATETRANSPOSE, PostfixOperator::ConjugateTranspose), // Token`LongName`ConjugateTranspose
+    &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_HERMITIANCONJUGATE, PostfixOperator::HermitianConjugate), // Token`LongName`HermitianConjugate
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VERTICALBAR, Operator::VerticalBar), // Token`LongName`VerticalBar
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTVERTICALBAR, Operator::NotVerticalBar), // Token`LongName`NotVerticalBar
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::Distributed), // Token`LongName`Distributed
@@ -1225,6 +1225,12 @@ pub enum Operator {
     PermutationProduct,
     Colon,
     Xnor,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PostfixOperator {
+    Function,
     Repeated,
     Factorial,
     Decrement,
@@ -1241,31 +1247,23 @@ pub enum Operator {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub enum TernaryOperator {
+    CodeParser_TernaryTilde,
+    CodeParser_TernaryOptionalPattern,
+    TagSet,
+    TagSetDelayed,
+    TagUnset,
+    Span,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PrefixBinaryOperator {
     Integrate,
     ContourIntegral,
     DoubleContourIntegral,
     ClockwiseContourIntegral,
     CounterClockwiseContourIntegral,
-}
-
-#[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum GroupOperator {
-    Token_Comment,
-    CodeParser_GroupParen,
-    CodeParser_GroupSquare,
-    List,
-    Association,
-    CodeParser_GroupTypeSpecifier,
-    AngleBracket,
-    Ceiling,
-    Floor,
-    CodeParser_GroupDoubleBracket,
-    BracketingBar,
-    DoubleBracketingBar,
-    CurlyQuote,
-    CurlyDoubleQuote,
 }
 
 #[allow(non_camel_case_types)]
@@ -1285,13 +1283,21 @@ pub enum CompoundOperator {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum TernaryOperator {
-    CodeParser_TernaryTilde,
-    CodeParser_TernaryOptionalPattern,
-    TagSet,
-    TagSetDelayed,
-    TagUnset,
-    Span,
+pub enum GroupOperator {
+    Token_Comment,
+    CodeParser_GroupParen,
+    CodeParser_GroupSquare,
+    List,
+    Association,
+    CodeParser_GroupTypeSpecifier,
+    AngleBracket,
+    Ceiling,
+    Floor,
+    CodeParser_GroupDoubleBracket,
+    BracketingBar,
+    DoubleBracketingBar,
+    CurlyQuote,
+    CurlyDoubleQuote,
 }
 
 impl Operator {
@@ -1571,18 +1577,6 @@ impl Operator {
             Operator::PermutationProduct => sym::PermutationProduct,
             Operator::Colon => sym::Colon,
             Operator::Xnor => sym::Xnor,
-            Operator::Repeated => sym::Repeated,
-            Operator::Factorial => sym::Factorial,
-            Operator::Decrement => sym::Decrement,
-            Operator::Increment => sym::Increment,
-            Operator::RepeatedNull => sym::RepeatedNull,
-            Operator::Factorial2 => sym::Factorial2,
-            Operator::Derivative => sym::Derivative,
-            Operator::Transpose => sym::Transpose,
-            Operator::Conjugate => sym::Conjugate,
-            Operator::ConjugateTranspose => sym::ConjugateTranspose,
-            Operator::HermitianConjugate => sym::HermitianConjugate,
-            Operator::InvisiblePostfixScriptBase => sym::InvisiblePostfixScriptBase,
         }
     }
 
@@ -1861,18 +1855,78 @@ impl Operator {
             sym::PermutationProduct => Operator::PermutationProduct,
             sym::Colon => Operator::Colon,
             sym::Xnor => Operator::Xnor,
-            sym::Repeated => Operator::Repeated,
-            sym::Factorial => Operator::Factorial,
-            sym::Decrement => Operator::Decrement,
-            sym::Increment => Operator::Increment,
-            sym::RepeatedNull => Operator::RepeatedNull,
-            sym::Factorial2 => Operator::Factorial2,
-            sym::Derivative => Operator::Derivative,
-            sym::Transpose => Operator::Transpose,
-            sym::Conjugate => Operator::Conjugate,
-            sym::ConjugateTranspose => Operator::ConjugateTranspose,
-            sym::HermitianConjugate => Operator::HermitianConjugate,
-            sym::InvisiblePostfixScriptBase => Operator::InvisiblePostfixScriptBase,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl PostfixOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            PostfixOperator::Function => sym::Function,
+            PostfixOperator::Repeated => sym::Repeated,
+            PostfixOperator::Factorial => sym::Factorial,
+            PostfixOperator::Decrement => sym::Decrement,
+            PostfixOperator::Increment => sym::Increment,
+            PostfixOperator::RepeatedNull => sym::RepeatedNull,
+            PostfixOperator::Factorial2 => sym::Factorial2,
+            PostfixOperator::Derivative => sym::Derivative,
+            PostfixOperator::Transpose => sym::Transpose,
+            PostfixOperator::Conjugate => sym::Conjugate,
+            PostfixOperator::ConjugateTranspose => sym::ConjugateTranspose,
+            PostfixOperator::HermitianConjugate => sym::HermitianConjugate,
+            PostfixOperator::InvisiblePostfixScriptBase => sym::InvisiblePostfixScriptBase,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::Function => PostfixOperator::Function,
+            sym::Repeated => PostfixOperator::Repeated,
+            sym::Factorial => PostfixOperator::Factorial,
+            sym::Decrement => PostfixOperator::Decrement,
+            sym::Increment => PostfixOperator::Increment,
+            sym::RepeatedNull => PostfixOperator::RepeatedNull,
+            sym::Factorial2 => PostfixOperator::Factorial2,
+            sym::Derivative => PostfixOperator::Derivative,
+            sym::Transpose => PostfixOperator::Transpose,
+            sym::Conjugate => PostfixOperator::Conjugate,
+            sym::ConjugateTranspose => PostfixOperator::ConjugateTranspose,
+            sym::HermitianConjugate => PostfixOperator::HermitianConjugate,
+            sym::InvisiblePostfixScriptBase => PostfixOperator::InvisiblePostfixScriptBase,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl TernaryOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            TernaryOperator::CodeParser_TernaryTilde => sym::CodeParser_TernaryTilde,
+            TernaryOperator::CodeParser_TernaryOptionalPattern => sym::CodeParser_TernaryOptionalPattern,
+            TernaryOperator::TagSet => sym::TagSet,
+            TernaryOperator::TagSetDelayed => sym::TagSetDelayed,
+            TernaryOperator::TagUnset => sym::TagUnset,
+            TernaryOperator::Span => sym::Span,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::CodeParser_TernaryTilde => TernaryOperator::CodeParser_TernaryTilde,
+            sym::CodeParser_TernaryOptionalPattern => TernaryOperator::CodeParser_TernaryOptionalPattern,
+            sym::TagSet => TernaryOperator::TagSet,
+            sym::TagSetDelayed => TernaryOperator::TagSetDelayed,
+            sym::TagUnset => TernaryOperator::TagUnset,
+            sym::Span => TernaryOperator::Span,
             _ => return None,
         };
 
@@ -1900,6 +1954,43 @@ impl PrefixBinaryOperator {
             sym::DoubleContourIntegral => PrefixBinaryOperator::DoubleContourIntegral,
             sym::ClockwiseContourIntegral => PrefixBinaryOperator::ClockwiseContourIntegral,
             sym::CounterClockwiseContourIntegral => PrefixBinaryOperator::CounterClockwiseContourIntegral,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl CompoundOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            CompoundOperator::Blank => sym::Blank,
+            CompoundOperator::BlankSequence => sym::BlankSequence,
+            CompoundOperator::BlankNullSequence => sym::BlankNullSequence,
+            CompoundOperator::Slot => sym::Slot,
+            CompoundOperator::SlotSequence => sym::SlotSequence,
+            CompoundOperator::Out => sym::Out,
+            CompoundOperator::CodeParser_PatternBlank => sym::CodeParser_PatternBlank,
+            CompoundOperator::CodeParser_PatternBlankSequence => sym::CodeParser_PatternBlankSequence,
+            CompoundOperator::CodeParser_PatternBlankNullSequence => sym::CodeParser_PatternBlankNullSequence,
+            CompoundOperator::CodeParser_PatternOptionalDefault => sym::CodeParser_PatternOptionalDefault,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::Blank => CompoundOperator::Blank,
+            sym::BlankSequence => CompoundOperator::BlankSequence,
+            sym::BlankNullSequence => CompoundOperator::BlankNullSequence,
+            sym::Slot => CompoundOperator::Slot,
+            sym::SlotSequence => CompoundOperator::SlotSequence,
+            sym::Out => CompoundOperator::Out,
+            sym::CodeParser_PatternBlank => CompoundOperator::CodeParser_PatternBlank,
+            sym::CodeParser_PatternBlankSequence => CompoundOperator::CodeParser_PatternBlankSequence,
+            sym::CodeParser_PatternBlankNullSequence => CompoundOperator::CodeParser_PatternBlankNullSequence,
+            sym::CodeParser_PatternOptionalDefault => CompoundOperator::CodeParser_PatternOptionalDefault,
             _ => return None,
         };
 
@@ -1945,72 +2036,6 @@ impl GroupOperator {
             sym::DoubleBracketingBar => GroupOperator::DoubleBracketingBar,
             sym::CurlyQuote => GroupOperator::CurlyQuote,
             sym::CurlyDoubleQuote => GroupOperator::CurlyDoubleQuote,
-            _ => return None,
-        };
-
-        Some(operator)
-    }
-}
-impl CompoundOperator {
-    #[allow(dead_code)]
-    #[doc(hidden)]
-    pub fn to_symbol(self) -> Symbol {
-        match self {
-            CompoundOperator::Blank => sym::Blank,
-            CompoundOperator::BlankSequence => sym::BlankSequence,
-            CompoundOperator::BlankNullSequence => sym::BlankNullSequence,
-            CompoundOperator::Slot => sym::Slot,
-            CompoundOperator::SlotSequence => sym::SlotSequence,
-            CompoundOperator::Out => sym::Out,
-            CompoundOperator::CodeParser_PatternBlank => sym::CodeParser_PatternBlank,
-            CompoundOperator::CodeParser_PatternBlankSequence => sym::CodeParser_PatternBlankSequence,
-            CompoundOperator::CodeParser_PatternBlankNullSequence => sym::CodeParser_PatternBlankNullSequence,
-            CompoundOperator::CodeParser_PatternOptionalDefault => sym::CodeParser_PatternOptionalDefault,
-        }
-    }
-
-    #[doc(hidden)]
-    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
-        let operator = match symbol {
-            sym::Blank => CompoundOperator::Blank,
-            sym::BlankSequence => CompoundOperator::BlankSequence,
-            sym::BlankNullSequence => CompoundOperator::BlankNullSequence,
-            sym::Slot => CompoundOperator::Slot,
-            sym::SlotSequence => CompoundOperator::SlotSequence,
-            sym::Out => CompoundOperator::Out,
-            sym::CodeParser_PatternBlank => CompoundOperator::CodeParser_PatternBlank,
-            sym::CodeParser_PatternBlankSequence => CompoundOperator::CodeParser_PatternBlankSequence,
-            sym::CodeParser_PatternBlankNullSequence => CompoundOperator::CodeParser_PatternBlankNullSequence,
-            sym::CodeParser_PatternOptionalDefault => CompoundOperator::CodeParser_PatternOptionalDefault,
-            _ => return None,
-        };
-
-        Some(operator)
-    }
-}
-impl TernaryOperator {
-    #[allow(dead_code)]
-    #[doc(hidden)]
-    pub fn to_symbol(self) -> Symbol {
-        match self {
-            TernaryOperator::CodeParser_TernaryTilde => sym::CodeParser_TernaryTilde,
-            TernaryOperator::CodeParser_TernaryOptionalPattern => sym::CodeParser_TernaryOptionalPattern,
-            TernaryOperator::TagSet => sym::TagSet,
-            TernaryOperator::TagSetDelayed => sym::TagSetDelayed,
-            TernaryOperator::TagUnset => sym::TagUnset,
-            TernaryOperator::Span => sym::Span,
-        }
-    }
-
-    #[doc(hidden)]
-    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
-        let operator = match symbol {
-            sym::CodeParser_TernaryTilde => TernaryOperator::CodeParser_TernaryTilde,
-            sym::CodeParser_TernaryOptionalPattern => TernaryOperator::CodeParser_TernaryOptionalPattern,
-            sym::TagSet => TernaryOperator::TagSet,
-            sym::TagSetDelayed => TernaryOperator::TagSetDelayed,
-            sym::TagUnset => TernaryOperator::TagUnset,
-            sym::Span => TernaryOperator::Span,
             _ => return None,
         };
 

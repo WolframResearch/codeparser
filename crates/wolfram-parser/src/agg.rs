@@ -203,7 +203,7 @@ macro_rules! LHS {
 
     (PostfixNode[$($op_kind:ident)|*, _, _]) => {
         Node::Postfix(PostfixNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
+            op: $(crate::cst::PostfixOperator::$op_kind)|*,
             ..
         }))
     };
