@@ -254,6 +254,23 @@ If[!MatchQ[$CompoundOperators, <| (_Symbol -> _Symbol) ... |>],
 	FatalError["Bad $CompoundOperators: ", InputForm @ $CompoundOperators];
 ]
 
+(* Print[
+	"Symbols that are more than one type of operator: ",
+	Select[# > 1&] @ Counts @ Flatten @ Map[
+		Keys,
+		{
+			$InfixOperators,
+			$PrefixOperators,
+			$PostfixOperators,
+			$BinaryOperators,
+			$TernaryOperators,
+			$PrefixBinaryOperators,
+			$CompoundOperators,
+			$GroupOperators
+		}
+	]
+] *)
+
 (*--------------*)
 (* formatPrefix *)
 (*--------------*)
