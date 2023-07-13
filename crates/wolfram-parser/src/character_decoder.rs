@@ -584,161 +584,17 @@ fn CharacterDecoder_handleLongName(
         let longNameBufAndLen = BufferAndLength::between(longNameStartBuf, longNameEndBuf);
         let longNameStr = longNameBufAndLen.as_str();
 
-        if utils::isStrange(point) {
-            //
-            // Just generally strange character is in the code
-            //
-            let c = WLCharacter::new_with_escape(
-                point,
-                if LongNames::isRaw(longNameStr) {
-                    EscapeStyle::Raw
-                } else {
-                    EscapeStyle::LongName
-                },
-            );
-
-            let currentWLCharacterStartLoc = openSquareLoc.previous();
-
-            let currentSourceCharacterEndLoc = session.SrcLoc;
-
-            let graphicalStr = c.graphicalString();
-
-            let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-            let mut Actions: Vec<CodeAction> = Vec::new();
-
-            for A in utils::certainCharacterReplacementActions(c, Src) {
-                Actions.push(A);
-            }
-
-            //
-            // do not recommend replacing graphical character with literal version
-            //
-
-            //
-            // any ASCII replacements
-            //
-            for r in LongNames::asciiReplacements(point) {
-                Actions.push(CodeAction::replace_text(
-                    format!(
-                        "Replace with ``{}``",
-                        LongNames::replacementGraphical(r.clone())
-                    ),
-                    Src,
-                    r,
-                ));
-            }
-
-            if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-                //
-                // reduce severity of unexpected characters inside strings or comments
-                //
-
-                let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
-                    format!("Unexpected character: ``{graphicalStr}``."),
-                    Severity::Remark,
-                    Src,
-                    0.95,
-                    Actions,
-                    vec![],
-                );
-
-                session.addIssue(I);
-            } else if c.isStrangeWhitespace() {
-
-                // Do nothing.
+        check_strange_syntax_issue(
+            session,
+            policy,
+            point,
+            openSquareLoc,
+            if LongNames::isRaw(longNameStr) {
+                EscapeStyle::Raw
             } else {
-                let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
-                    format!("Unexpected character: ``{graphicalStr}``."),
-                    Severity::Warning,
-                    Src,
-                    0.95,
-                    Actions,
-                    vec![],
-                );
-
-                session.addIssue(I);
-            }
-        } else if utils::isMBStrange(point) {
-            //
-            // Just generally strange character is in the code
-            //
-            let c = WLCharacter::new_with_escape(
-                point,
-                if LongNames::isRaw(longNameStr) {
-                    EscapeStyle::Raw
-                } else {
-                    EscapeStyle::LongName
-                },
-            );
-
-            let currentWLCharacterStartLoc = openSquareLoc.previous();
-
-            let currentSourceCharacterEndLoc = session.SrcLoc;
-
-            let graphicalStr = c.graphicalString();
-
-            let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-            let mut Actions: Vec<CodeAction> = Vec::new();
-
-            for A in utils::certainCharacterReplacementActions(c, Src) {
-                Actions.push(A);
-            }
-
-            //
-            // do not recommend replacing graphical character with literal version
-            //
-
-            //
-            // any ASCII replacements
-            //
-            for r in LongNames::asciiReplacements(point) {
-                Actions.push(CodeAction::replace_text(
-                    format!(
-                        "Replace with ``{}``",
-                        LongNames::replacementGraphical(r.clone())
-                    ),
-                    Src,
-                    r,
-                ));
-            }
-
-            if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-                //
-                // reduce severity of unexpected characters inside strings or comments
-                //
-
-                let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
-                    format!("Unexpected character: ``{graphicalStr}``."),
-                    Severity::Remark,
-                    Src,
-                    0.85,
-                    Actions,
-                    vec![],
-                );
-
-                session.addIssue(I);
-            } else if c.isMBStrangeWhitespace() {
-
-                // Do nothing.
-            } else {
-                let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
-                    format!("Unexpected character: ``{graphicalStr}``."),
-                    Severity::Warning,
-                    Src,
-                    0.85,
-                    Actions,
-                    vec![],
-                );
-
-                session.addIssue(I);
-            }
-        }
+                EscapeStyle::LongName
+            },
+        );
     }
 
     if LongNames::isRaw(longNameStr) {
@@ -836,145 +692,7 @@ fn CharacterDecoder_handle4Hex(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    if utils::isStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Hex4);
-
-        let currentWLCharacterStartLoc = colonLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    } else if utils::isMBStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Hex4);
-
-        let currentWLCharacterStartLoc = colonLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isMBStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    }
+    check_strange_syntax_issue(session, policy, point, colonLoc, EscapeStyle::Hex4);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Hex4);
 }
@@ -1064,145 +782,7 @@ fn CharacterDecoder_handle2Hex(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    if utils::isStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Hex2);
-
-        let currentWLCharacterStartLoc = dotLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    } else if utils::isMBStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Hex2);
-
-        let currentWLCharacterStartLoc = dotLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isMBStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    };
+    check_strange_syntax_issue(session, policy, point, dotLoc, EscapeStyle::Hex2);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Hex2);
 }
@@ -1298,145 +878,7 @@ fn CharacterDecoder_handleOctal(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    if utils::isStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Octal);
-
-        let currentWLCharacterStartLoc = firstOctalLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    } else if utils::isMBStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Octal);
-
-        let currentWLCharacterStartLoc = firstOctalLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isMBStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    };
+    check_strange_syntax_issue(session, policy, point, firstOctalLoc, EscapeStyle::Octal);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Octal);
 }
@@ -1547,145 +989,7 @@ fn CharacterDecoder_handle6Hex(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    if utils::isStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Hex6);
-
-        let currentWLCharacterStartLoc = barLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    } else if utils::isMBStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, EscapeStyle::Hex6);
-
-        let currentWLCharacterStartLoc = barLoc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isMBStrangeWhitespace() {
-        } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        }
-    };
+    check_strange_syntax_issue(session, policy, point, barLoc, EscapeStyle::Hex6);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Hex6);
 }
@@ -2362,5 +1666,157 @@ fn CharacterDecoder_longNameSuggestion(input: &str) -> String {
         },
         // TODO: Return None?
         _ => String::new(),
+    }
+}
+
+pub(crate) fn check_strange_syntax_issue(
+    session: &mut Tokenizer,
+    policy: NextPolicy,
+    point: CodePoint,
+    start_loc: SourceLocation,
+    escape_style: EscapeStyle,
+) {
+    if utils::isStrange(point) {
+        //
+        // Just generally strange character is in the code
+        //
+
+        let c = WLCharacter::new_with_escape(point, escape_style);
+
+        let currentWLCharacterStartLoc = start_loc.previous();
+
+        let currentSourceCharacterEndLoc = session.SrcLoc;
+
+        let graphicalStr = c.graphicalString();
+
+        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+
+        let mut Actions: Vec<CodeAction> = Vec::new();
+
+        for A in utils::certainCharacterReplacementActions(c, Src) {
+            Actions.push(A);
+        }
+
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+
+        //
+        // any ASCII replacements
+        //
+        for r in LongNames::asciiReplacements(point) {
+            Actions.push(CodeAction::replace_text(
+                format!(
+                    "Replace with ``{}``",
+                    LongNames::replacementGraphical(r.clone())
+                ),
+                Src,
+                r,
+            ));
+        }
+
+        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
+            //
+            // reduce severity of unexpected characters inside strings or comments
+            //
+
+            let I = SyntaxIssue(
+                IssueTag::UnexpectedCharacter,
+                format!("Unexpected character: ``{graphicalStr}``."),
+                Severity::Remark,
+                Src,
+                0.95,
+                Actions,
+                vec![],
+            );
+
+            session.addIssue(I);
+        } else if c.isStrangeWhitespace() {
+
+            // Do nothing.
+        } else {
+            let I = SyntaxIssue(
+                IssueTag::UnexpectedCharacter,
+                format!("Unexpected character: ``{graphicalStr}``."),
+                Severity::Warning,
+                Src,
+                0.95,
+                Actions,
+                vec![],
+            );
+
+            session.addIssue(I);
+        }
+    } else if utils::isMBStrange(point) {
+        //
+        // Just generally strange character is in the code
+        //
+
+        let c = WLCharacter::new_with_escape(point, escape_style);
+
+        let currentWLCharacterStartLoc = start_loc.previous();
+
+        let currentSourceCharacterEndLoc = session.SrcLoc;
+
+        let graphicalStr = c.graphicalString();
+
+        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+
+        let mut Actions: Vec<CodeAction> = Vec::new();
+
+        for A in utils::certainCharacterReplacementActions(c, Src) {
+            Actions.push(A);
+        }
+
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+
+        //
+        // any ASCII replacements
+        //
+        for r in LongNames::asciiReplacements(point) {
+            Actions.push(CodeAction::replace_text(
+                format!(
+                    "Replace with ``{}``",
+                    LongNames::replacementGraphical(r.clone())
+                ),
+                Src,
+                r,
+            ));
+        }
+
+        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
+            //
+            // reduce severity of unexpected characters inside strings or comments
+            //
+
+            let I = SyntaxIssue(
+                IssueTag::UnexpectedCharacter,
+                format!("Unexpected character: ``{graphicalStr}``."),
+                Severity::Remark,
+                Src,
+                0.85,
+                Actions,
+                vec![],
+            );
+
+            session.addIssue(I);
+        } else if c.isMBStrangeWhitespace() {
+
+            // Do nothing.
+        } else {
+            let I = SyntaxIssue(
+                IssueTag::UnexpectedCharacter,
+                format!("Unexpected character: ``{graphicalStr}``."),
+                Severity::Warning,
+                Src,
+                0.85,
+                Actions,
+                vec![],
+            );
+
+            session.addIssue(I);
+        }
     }
 }
