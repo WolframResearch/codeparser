@@ -60,7 +60,7 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 (*------------*)
 
 $multiOperators = <|
-	Span -> {"Ternary"}
+	Span -> {"Binary", "Ternary"}
 |>
 
 
@@ -69,15 +69,8 @@ $Operators = Join[
 	AssociationMap[Identity, {
 		Times,
 		Span,
-		Pattern,
-		Optional,
-		Set,
-		SetDelayed,
-		Unset,
 		CompoundExpression,
 		MessageName,
-		Put,
-		PutAppend,
 		Get,
 		CodeParser`InternalInvalid,
 		CodeParser`Comma,
@@ -90,10 +83,11 @@ $Operators = Join[
 		],
 		{
 			Parselet`PrefixOperatorParselet[precedence_, op_] :> (op -> op),
-			Parselet`BinaryOperatorParselet[precedence_, op_] :> (op -> op),
 			Parselet`InfixOperatorParselet[precedence_, op_] :> (op -> op),
 			(* These are part of $PostfixOperators. *)
 			Parselet`PostfixOperatorParselet[precedence_, op_] -> Nothing,
+			$(* These are part of $BinaryOperators. *)
+			Parselet`BinaryOperatorParselet[precedence_, op_] -> Nothing,
 			(* NOTE: Ignore op2, which is part of $PrefixBinaryOperators. *)
 			Parselet`IntegralParselet[op1_, op2_] -> (op2 -> op2),
 			(* These are part of $GroupOperators. *)
@@ -119,6 +113,36 @@ $PostfixOperators = Association @ Map[
 			_ -> Nothing
 		},
 		{1}
+	]
+]
+
+$BinaryOperators = Association @ Map[
+	Replace[{
+		sym_Symbol :> (sym -> sym),
+		other_ :> FatalError["Invalid operator spec: ", InputForm[other]]
+	}],
+	Join[
+		{
+			Pattern,
+			Optional,
+			Set,
+			SetDelayed,
+			Unset,
+			Put,
+			PutAppend
+		},
+		Keys @ Select[$multiOperators, MemberQ["Binary"]],
+		Replace[
+			Join[
+				Values[importedPrefixParselets],
+				Values[importedInfixParselets]
+			],
+			{
+				Parselet`BinaryOperatorParselet[precedence_, op_] -> op,
+				_ -> Nothing
+			},
+			{1}
+		]
 	]
 ]
 
@@ -189,6 +213,10 @@ If[!MatchQ[$Operators, <| (_Symbol -> _Symbol) ... |>],
 
 If[!MatchQ[$PrefixBinaryOperators, <| (_Symbol -> _Symbol) ... |>],
 	FatalError["Bad $PrefixBinaryOperators: ", InputForm @ $PrefixBinaryOperators];
+]
+
+If[!MatchQ[$BinaryOperators, <| (_Symbol -> _Symbol) ... |>],
+	FatalError["Bad $BinaryOperators: ", InputForm @ $BinaryOperators];
 ]
 
 If[!MatchQ[$GroupOperators, <| (_Symbol -> _Symbol) ... |>],
@@ -268,7 +296,7 @@ formatInfix[Parselet`InfixImplicitTimesParselet[]] := "&infixImplicitTimesParsel
 
 
 
-formatInfix[Parselet`BinaryOperatorParselet[precedence_, op_]] := "&BinaryOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "Operator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
+formatInfix[Parselet`BinaryOperatorParselet[precedence_, op_]] := "&BinaryOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "BinaryOperator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
 formatInfix[Parselet`InfixOperatorParselet[precedence_, op_]] := "&InfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "Operator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
@@ -458,6 +486,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 
 		formatOperatorEnumDef["Operator", $Operators],
 		formatOperatorEnumDef["PostfixOperator", $PostfixOperators],
+		formatOperatorEnumDef["BinaryOperator", $BinaryOperators],
 		formatOperatorEnumDef["TernaryOperator", $TernaryOperators],
 		formatOperatorEnumDef["PrefixBinaryOperator", $PrefixBinaryOperators],
 		formatOperatorEnumDef["CompoundOperator", $CompoundOperators],
@@ -469,6 +498,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 
 		formatOperatorEnumImpl["Operator", $Operators],
 		formatOperatorEnumImpl["PostfixOperator", $PostfixOperators],
+		formatOperatorEnumImpl["BinaryOperator", $BinaryOperators],
 		formatOperatorEnumImpl["TernaryOperator", $TernaryOperators],
 		formatOperatorEnumImpl["PrefixBinaryOperator", $PrefixBinaryOperators],
 		formatOperatorEnumImpl["CompoundOperator", $CompoundOperators],

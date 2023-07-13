@@ -9,8 +9,8 @@ use crate::{
 };
 
 pub use crate::parselet_registration::{
-    CompoundOperator, GroupOperator, Operator, PostfixOperator, PrefixBinaryOperator,
-    TernaryOperator,
+    BinaryOperator, CompoundOperator, GroupOperator, Operator, PostfixOperator,
+    PrefixBinaryOperator, TernaryOperator,
 };
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
@@ -92,7 +92,7 @@ pub struct PrefixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct BinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, BinaryOperator>);
 
 /// InfixNode
 ///
@@ -709,7 +709,7 @@ impl<I> PrefixNode<I> {
 }
 
 impl<I> BinaryNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: BinaryOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
 
         BinaryNode(OperatorNode::new(op, args))

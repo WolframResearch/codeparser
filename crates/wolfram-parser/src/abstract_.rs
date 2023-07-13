@@ -6,9 +6,9 @@ use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CompoundOperator,
-        CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
-        InfixNode, Node,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
+        CompoundOperator, CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        GroupOperator, InfixNode, Node,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
         PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
@@ -191,6 +191,11 @@ fn ToNode_Op(op: Operator) -> AstNode {
 }
 
 fn ToNode_PostfixOp(op: PostfixOperator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_BinaryOp(op: BinaryOperator) -> AstNode {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
     ToNode_Symbol(s)
 }
@@ -583,13 +588,13 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             let [left, middle, right] = expect_children(children);
 
             match op {
-                Op::Divide => abstractTimes_BinaryNode([left, right], data),
+                BinaryOperator::Divide => abstractTimes_BinaryNode([left, right], data),
 
-                Operator::CodeParser_BinaryAt => WL!(
+                BinaryOperator::CodeParser_BinaryAt => WL!(
                     CallNode[abstract_(left), {abstract_(right)}, data]
                 ),
 
-                Operator::MapApply => {
+                BinaryOperator::MapApply => {
                     if quirks::is_quirk_enabled(Quirk::OldAtAtAt) {
                         let group = GroupNode(OperatorNode {
                             op: GroupOperator::List,
@@ -615,11 +620,11 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     }
                 },
 
-                Operator::CodeParser_BinarySlashSlash => WL!(
+                BinaryOperator::CodeParser_BinarySlashSlash => WL!(
                     // Make sure to reverse the arguments
                     CallNode[abstract_(right), {abstract_(left)}, data]
                 ),
-                Operator::Put | Operator::PutAppend => {
+                BinaryOperator::Put | BinaryOperator::PutAppend => {
                     let (str, data1) = match right {
                         // {left_, _, LeafNode[String, str_, data1_]}
                         Node::Token(Token {
@@ -633,7 +638,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
 
                     WL!(
                         CallNode[
-                            ToNode_Op(op),
+                            ToNode_BinaryOp(op),
                             {
                                 abstract_(left),
                                 WL!( LeafNode[String, escapeString_of_abstractFileString(str), data1] )
@@ -642,12 +647,12 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     )
                 },
 
-                Operator::Pattern => {
+                BinaryOperator::Pattern => {
                     WL!( CallNode[ToNode[Pattern], {abstract_(left), abstract_(right)}, data])
                 },
 
                 // BinaryNode[Unset, {left_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]
-                Operator::Unset => {
+                BinaryOperator::Unset => {
                     if !matches!(middle, Node::Token(Token { tok: TK::Equal, .. })) {
                         unhandled()
                     }
@@ -665,11 +670,11 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 // Related bugs: 206938
                 //
                 // BinaryNode[PatternTest, {left:BinaryNode[PatternTest, _, _], _, right_}, data_]
-                Operator::PatternTest
+                BinaryOperator::PatternTest
                     if matches!(
                         left,
                         Node::Binary(BinaryNode(OperatorNode {
-                            op: Operator::PatternTest,
+                            op: BinaryOperator::PatternTest,
                             ..
                         }))
                     ) =>
@@ -684,7 +689,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 },
 
                 op => WL!(
-                    CallNode[ToNode_Op(op), {abstract_(left), abstract_(right)}, data]
+                    CallNode[ToNode_BinaryOp(op), {abstract_(left), abstract_(right)}, data]
                 ),
             }
         },
@@ -1870,7 +1875,7 @@ fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
                 // TODO: add to kernel quirks mode
                 // TODO: add to frontend quirks mode
                 Node::Binary(BinaryNode(OperatorNode {
-                    op: Op::Divide,
+                    op: BinaryOperator::Divide,
                     ref children,
                     src: _,
                 })) => {

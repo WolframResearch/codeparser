@@ -565,19 +565,19 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &semiParselet, // Token`Semi
     &infixImplicitTimesParselet, // Token`Hash
     &PostfixOperatorParselet::new(PRECEDENCE_AMP, PostfixOperator::Function), // Token`Amp
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASH, Operator::Divide), // Token`Slash
-    &BinaryOperatorParselet::new(PRECEDENCE_AT, Operator::CodeParser_BinaryAt), // Token`At
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASH, BinaryOperator::Divide), // Token`Slash
+    &BinaryOperatorParselet::new(PRECEDENCE_AT, BinaryOperator::CodeParser_BinaryAt), // Token`At
     &InfixOperatorParselet::new(PRECEDENCE_INFIX_PLUS, Operator::Plus), // Token`Plus
     (&TildeParselet {}), // Token`Tilde
     &timesParselet, // Token`Star
-    &BinaryOperatorParselet::new(PRECEDENCE_CARET, Operator::Power), // Token`Caret
+    &BinaryOperatorParselet::new(PRECEDENCE_CARET, BinaryOperator::Power), // Token`Caret
     &PostfixOperatorParselet::new(PRECEDENCE_SINGLEQUOTE, PostfixOperator::Derivative), // Token`SingleQuote
     &infixImplicitTimesParselet, // Token`Percent
-    &BinaryOperatorParselet::new(PRECEDENCE_INFIX_QUESTION, Operator::PatternTest), // Token`Question
+    &BinaryOperatorParselet::new(PRECEDENCE_INFIX_QUESTION, BinaryOperator::PatternTest), // Token`Question
     &PostfixOperatorParselet::new(PRECEDENCE_DOTDOT, PostfixOperator::Repeated), // Token`DotDot
     (&ColonColonParselet {}), // Token`ColonColon
     &colonEqualParselet, // Token`ColonEqual
-    &BinaryOperatorParselet::new(PRECEDENCE_COLONGREATER, Operator::RuleDelayed), // Token`ColonGreater
+    &BinaryOperatorParselet::new(PRECEDENCE_COLONGREATER, BinaryOperator::RuleDelayed), // Token`ColonGreater
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`EqualEqual
     &infixImplicitTimesParselet, // Token`UnderUnder
     &infixImplicitTimesParselet, // Token`UnderDot
@@ -587,28 +587,28 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LessEqual
     (&GreaterGreaterParselet {}), // Token`GreaterGreater
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`GreaterEqual
-    &BinaryOperatorParselet::new(PRECEDENCE_MINUSGREATER, Operator::Rule), // Token`MinusGreater
+    &BinaryOperatorParselet::new(PRECEDENCE_MINUSGREATER, BinaryOperator::Rule), // Token`MinusGreater
     &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_MINUSMINUS, PostfixOperator::Decrement), // Token`MinusMinus
-    &BinaryOperatorParselet::new(PRECEDENCE_MINUSEQUAL, Operator::SubtractFrom), // Token`MinusEqual
+    &BinaryOperatorParselet::new(PRECEDENCE_MINUSEQUAL, BinaryOperator::SubtractFrom), // Token`MinusEqual
     &InfixOperatorParselet::new(PRECEDENCE_BARBAR, Operator::Or), // Token`BarBar
     &infixAssertFalseParselet, // Token`BarGreater
     &semiSemiParselet, // Token`SemiSemi
     &InfixOperatorParselet::new(PRECEDENCE_AMPAMP, Operator::And), // Token`AmpAmp
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHAT, Operator::Map), // Token`SlashAt
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSEMI, Operator::Condition), // Token`SlashSemi
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHDOT, Operator::ReplaceAll), // Token`SlashDot
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASH, Operator::CodeParser_BinarySlashSlash), // Token`SlashSlash
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHAT, BinaryOperator::Map), // Token`SlashAt
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSEMI, BinaryOperator::Condition), // Token`SlashSemi
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHDOT, BinaryOperator::ReplaceAll), // Token`SlashDot
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASH, BinaryOperator::CodeParser_BinarySlashSlash), // Token`SlashSlash
     &slashColonParselet, // Token`SlashColon
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHEQUAL, Operator::DivideBy), // Token`SlashEqual
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHEQUAL, BinaryOperator::DivideBy), // Token`SlashEqual
     &InfixOperatorParselet::new(PRECEDENCE_SLASHSTAR, Operator::RightComposition), // Token`SlashStar
-    &BinaryOperatorParselet::new(PRECEDENCE_ATAT, Operator::Apply), // Token`AtAt
+    &BinaryOperatorParselet::new(PRECEDENCE_ATAT, BinaryOperator::Apply), // Token`AtAt
     &InfixOperatorParselet::new(PRECEDENCE_ATSTAR, Operator::Composition), // Token`AtStar
     &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_PLUSPLUS, PostfixOperator::Increment), // Token`PlusPlus
-    &BinaryOperatorParselet::new(PRECEDENCE_PLUSEQUAL, Operator::AddTo), // Token`PlusEqual
+    &BinaryOperatorParselet::new(PRECEDENCE_PLUSEQUAL, BinaryOperator::AddTo), // Token`PlusEqual
     &InfixOperatorParselet::new(PRECEDENCE_TILDETILDE, Operator::StringExpression), // Token`TildeTilde
-    &BinaryOperatorParselet::new(PRECEDENCE_STAREQUAL, Operator::TimesBy), // Token`StarEqual
+    &BinaryOperatorParselet::new(PRECEDENCE_STAREQUAL, BinaryOperator::TimesBy), // Token`StarEqual
     &InfixOperatorParselet::new(PRECEDENCE_STARSTAR, Operator::NonCommutativeMultiply), // Token`StarStar
-    &BinaryOperatorParselet::new(PRECEDENCE_CARETEQUAL, Operator::UpSet), // Token`CaretEqual
+    &BinaryOperatorParselet::new(PRECEDENCE_CARETEQUAL, BinaryOperator::UpSet), // Token`CaretEqual
     &infixImplicitTimesParselet, // Token`HashHash
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`BangEqual
     &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_BANGBANG, PostfixOperator::Factorial2), // Token`BangBang
@@ -617,14 +617,14 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_EQUALEQUALEQUAL, Operator::SameQ), // Token`EqualEqualEqual
     &InfixOperatorParselet::new(PRECEDENCE_EQUALBANGEQUAL, Operator::UnsameQ), // Token`EqualBangEqual
     &infixImplicitTimesParselet, // Token`UnderUnderUnder
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHDOT, Operator::ReplaceRepeated), // Token`SlashSlashDot
-    &BinaryOperatorParselet::new(PRECEDENCE_ATATAT, Operator::MapApply), // Token`AtAtAt
-    &BinaryOperatorParselet::new(PRECEDENCE_LESSMINUSGREATER, Operator::TwoWayRule), // Token`LessMinusGreater
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHAT, Operator::MapAll), // Token`SlashSlashAt
-    &BinaryOperatorParselet::new(PRECEDENCE_CARETCOLONEQUAL, Operator::UpSetDelayed), // Token`CaretColonEqual
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHDOT, BinaryOperator::ReplaceRepeated), // Token`SlashSlashDot
+    &BinaryOperatorParselet::new(PRECEDENCE_ATATAT, BinaryOperator::MapApply), // Token`AtAtAt
+    &BinaryOperatorParselet::new(PRECEDENCE_LESSMINUSGREATER, BinaryOperator::TwoWayRule), // Token`LessMinusGreater
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHAT, BinaryOperator::MapAll), // Token`SlashSlashAt
+    &BinaryOperatorParselet::new(PRECEDENCE_CARETCOLONEQUAL, BinaryOperator::UpSetDelayed), // Token`CaretColonEqual
     (&GreaterGreaterGreaterParselet {}), // Token`GreaterGreaterGreater
-    &BinaryOperatorParselet::new(PRECEDENCE_BARMINUSGREATER, Operator::Function), // Token`BarMinusGreater
-    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHEQUAL, Operator::ApplyTo), // Token`SlashSlashEqual
+    &BinaryOperatorParselet::new(PRECEDENCE_BARMINUSGREATER, BinaryOperator::Function), // Token`BarMinusGreater
+    &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHEQUAL, BinaryOperator::ApplyTo), // Token`SlashSlashEqual
     &(CallParselet::new(&GroupParselet::new(TokenKind::ColonColonOpenSquare, GroupOperator::CodeParser_GroupTypeSpecifier))), // Token`ColonColonOpenSquare
     &infixImplicitTimesParselet, // Token`PercentPercent
     &infixImplicitTimesParselet, // Token`LinearSyntax`Bang
@@ -648,10 +648,10 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixImplicitTimesParselet, // Token`Boxes`MultiSingleQuote
     &infixImplicitTimesParselet, // Token`Boxes`MultiWhitespace
     &infixImplicitTimesParselet, // Token`LongName`Not
-    &BinaryOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_PLUSMINUS, Operator::PlusMinus), // Token`LongName`PlusMinus
+    &BinaryOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_PLUSMINUS, BinaryOperator::PlusMinus), // Token`LongName`PlusMinus
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CENTERDOT, Operator::CenterDot), // Token`LongName`CenterDot
     &timesParselet, // Token`LongName`Times
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIVIDE, Operator::Divide), // Token`LongName`Divide
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIVIDE, BinaryOperator::Divide), // Token`LongName`Divide
     &infixImplicitTimesParselet, // Token`LongName`OpenCurlyQuote
     &infixAssertFalseParselet, // Token`LongName`CloseCurlyQuote
     &infixImplicitTimesParselet, // Token`LongName`OpenCurlyDoubleQuote
@@ -702,13 +702,13 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotElement), // Token`LongName`NotElement
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::ReverseElement), // Token`LongName`ReverseElement
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotReverseElement), // Token`LongName`NotReverseElement
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_SUCHTHAT, Operator::SuchThat), // Token`LongName`SuchThat
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_SUCHTHAT, BinaryOperator::SuchThat), // Token`LongName`SuchThat
     &infixImplicitTimesParselet, // Token`LongName`Product
     &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_COPRODUCT, Operator::Coproduct), // Token`LongName`Coproduct
     &infixImplicitTimesParselet, // Token`LongName`Sum
     &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_MINUS, Operator::Plus), // Token`LongName`Minus
-    &BinaryOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_MINUSPLUS, Operator::MinusPlus), // Token`LongName`MinusPlus
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIVISIONSLASH, Operator::Divide), // Token`LongName`DivisionSlash
+    &BinaryOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_MINUSPLUS, BinaryOperator::MinusPlus), // Token`LongName`MinusPlus
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIVISIONSLASH, BinaryOperator::Divide), // Token`LongName`DivisionSlash
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_BACKSLASH, Operator::Backslash), // Token`LongName`Backslash
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_SMALLCIRCLE, Operator::SmallCircle), // Token`LongName`SmallCircle
     &infixImplicitTimesParselet, // Token`LongName`Sqrt
@@ -724,8 +724,8 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixImplicitTimesParselet, // Token`LongName`DoubleContourIntegral
     &infixImplicitTimesParselet, // Token`LongName`ClockwiseContourIntegral
     &infixImplicitTimesParselet, // Token`LongName`CounterClockwiseContourIntegral
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_THEREFORE, Operator::Therefore), // Token`LongName`Therefore
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_BECAUSE, Operator::Because), // Token`LongName`Because
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_THEREFORE, BinaryOperator::Therefore), // Token`LongName`Therefore
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_BECAUSE, BinaryOperator::Because), // Token`LongName`Because
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_COLON, Operator::Colon), // Token`LongName`Colon
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Proportion), // Token`LongName`Proportion
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Tilde), // Token`LongName`Tilde
@@ -790,14 +790,14 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INTERSECTIONOPERATORS, Operator::SquareIntersection), // Token`LongName`SquareIntersection
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_UNIONOPERATORS, Operator::SquareUnion), // Token`LongName`SquareUnion
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEPLUS, Operator::CirclePlus), // Token`LongName`CirclePlus
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEMINUS, Operator::CircleMinus), // Token`LongName`CircleMinus
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEMINUS, BinaryOperator::CircleMinus), // Token`LongName`CircleMinus
     &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_CIRCLETIMES, Operator::CircleTimes), // Token`LongName`CircleTimes
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEDOT, Operator::CircleDot), // Token`LongName`CircleDot
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RIGHTTEE, Operator::RightTee), // Token`LongName`RightTee
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_LEFTTEE, Operator::LeftTee), // Token`LongName`LeftTee
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOWNTEE, Operator::DownTee), // Token`LongName`DownTee
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_UPTEE, Operator::UpTee), // Token`LongName`UpTee
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLERIGHTTEE, Operator::DoubleRightTee), // Token`LongName`DoubleRightTee
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RIGHTTEE, BinaryOperator::RightTee), // Token`LongName`RightTee
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_LEFTTEE, BinaryOperator::LeftTee), // Token`LongName`LeftTee
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOWNTEE, BinaryOperator::DownTee), // Token`LongName`DownTee
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_UPTEE, BinaryOperator::UpTee), // Token`LongName`UpTee
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLERIGHTTEE, BinaryOperator::DoubleRightTee), // Token`LongName`DoubleRightTee
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::LeftTriangle), // Token`LongName`LeftTriangle
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::RightTriangle), // Token`LongName`RightTriangle
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::LeftTriangleEqual), // Token`LongName`LeftTriangleEqual
@@ -831,7 +831,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CUP, Operator::Cup), // Token`LongName`Cup
     &infixImplicitTimesParselet, // Token`LongName`LeftAngleBracket
     &infixAssertFalseParselet, // Token`LongName`RightAngleBracket
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_PERPENDICULAR, Operator::Perpendicular), // Token`LongName`Perpendicular
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_PERPENDICULAR, BinaryOperator::Perpendicular), // Token`LongName`Perpendicular
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::LongLeftArrow), // Token`LongName`LongLeftArrow
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::LongRightArrow), // Token`LongName`LongRightArrow
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::LongLeftRightArrow), // Token`LongName`LongLeftRightArrow
@@ -862,7 +862,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftDownTeeVector), // Token`LongName`LeftDownTeeVector
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::UpEquilibrium), // Token`LongName`UpEquilibrium
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::ReverseUpEquilibrium), // Token`LongName`ReverseUpEquilibrium
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_ROUNDIMPLIES, Operator::RoundImplies), // Token`LongName`RoundImplies
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_ROUNDIMPLIES, BinaryOperator::RoundImplies), // Token`LongName`RoundImplies
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::LeftTriangleBar), // Token`LongName`LeftTriangleBar
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::RightTriangleBar), // Token`LongName`RightTriangleBar
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_EQUIVALENT, Operator::Equivalent), // Token`LongName`Equivalent
@@ -872,12 +872,12 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NestedGreaterGreater
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::PrecedesEqual), // Token`LongName`PrecedesEqual
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::SucceedsEqual), // Token`LongName`SucceedsEqual
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLELEFTTEE, Operator::DoubleLeftTee), // Token`LongName`DoubleLeftTee
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLELEFTTEE, BinaryOperator::DoubleLeftTee), // Token`LongName`DoubleLeftTee
     &(CallParselet::new(&doubleBracketGroupParselet)), // Token`LongName`LeftDoubleBracket
     &infixAssertFalseParselet, // Token`LongName`RightDoubleBracket
     &infixImplicitTimesParselet, // Token`LongName`LeftAssociation
     &infixAssertFalseParselet, // Token`LongName`RightAssociation
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_TWOWAYRULE, Operator::TwoWayRule), // Token`LongName`TwoWayRule
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_TWOWAYRULE, BinaryOperator::TwoWayRule), // Token`LongName`TwoWayRule
     &infixImplicitTimesParselet, // Token`LongName`Piecewise
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_IMPLICITPLUS, Operator::Plus), // Token`LongName`ImplicitPlus
     &infixAssertFalseParselet, // Token`LongName`AutoLeftMatch
@@ -892,8 +892,8 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTVERTICALBAR, Operator::NotVerticalBar), // Token`LongName`NotVerticalBar
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::Distributed), // Token`LongName`Distributed
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONDITIONED, Operator::Conditioned), // Token`LongName`Conditioned
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_UNDIRECTEDEDGE, Operator::UndirectedEdge), // Token`LongName`UndirectedEdge
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIRECTEDEDGE, Operator::DirectedEdge), // Token`LongName`DirectedEdge
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_UNDIRECTEDEDGE, BinaryOperator::UndirectedEdge), // Token`LongName`UndirectedEdge
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIRECTEDEDGE, BinaryOperator::DirectedEdge), // Token`LongName`DirectedEdge
     &infixImplicitTimesParselet, // Token`LongName`ContinuedFractionK
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORPRODUCT, Operator::TensorProduct), // Token`LongName`TensorProduct
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORWEDGE, Operator::TensorWedge), // Token`LongName`TensorWedge
@@ -925,20 +925,20 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixAssertFalseParselet, // Token`LongName`MaxLimit
     &infixAssertFalseParselet, // Token`LongName`MinLimit
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CROSS, Operator::Cross), // Token`LongName`Cross
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_FUNCTION, Operator::Function), // Token`LongName`Function
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_FUNCTION, BinaryOperator::Function), // Token`LongName`Function
     &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_XNOR, Operator::Xnor), // Token`LongName`Xnor
     &infixAssertFalseParselet, // Token`LongName`DiscreteShift
     &infixAssertFalseParselet, // Token`LongName`DifferenceDelta
     &infixAssertFalseParselet, // Token`LongName`DiscreteRatio
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RULEDELAYED, Operator::RuleDelayed), // Token`LongName`RuleDelayed
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RULEDELAYED, BinaryOperator::RuleDelayed), // Token`LongName`RuleDelayed
     &infixImplicitTimesParselet, // Token`LongName`Square
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RULE, Operator::Rule), // Token`LongName`Rule
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_IMPLIES, Operator::Implies), // Token`LongName`Implies
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RULE, BinaryOperator::Rule), // Token`LongName`Rule
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_IMPLIES, BinaryOperator::Implies), // Token`LongName`Implies
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::ShortRightArrow), // Token`LongName`ShortRightArrow
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::ShortLeftArrow), // Token`LongName`ShortLeftArrow
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::ShortUpArrow), // Token`LongName`ShortUpArrow
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::ShortDownArrow), // Token`LongName`ShortDownArrow
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_APPLICATION, Operator::Application), // Token`LongName`Application
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_APPLICATION, BinaryOperator::Application), // Token`LongName`Application
     &infixImplicitTimesParselet, // Token`LongName`LeftBracketingBar
     &infixAssertFalseParselet, // Token`LongName`RightBracketingBar
     &infixImplicitTimesParselet, // Token`LongName`LeftDoubleBracketingBar
@@ -946,7 +946,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixDifferentialDParselet, // Token`LongName`CapitalDifferentialD
     &infixDifferentialDParselet, // Token`LongName`DifferentialD
     &commaParselet, // Token`LongName`InvisibleComma
-    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_INVISIBLEAPPLICATION, Operator::CodeParser_BinaryAt), // Token`LongName`InvisibleApplication
+    &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_INVISIBLEAPPLICATION, BinaryOperator::CodeParser_BinaryAt), // Token`LongName`InvisibleApplication
     &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LongEqual
 ];
 
@@ -955,15 +955,8 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 pub enum Operator {
     Times,
     Span,
-    Pattern,
-    Optional,
-    Set,
-    SetDelayed,
-    Unset,
     CompoundExpression,
     MessageName,
-    Put,
-    PutAppend,
     Get,
     CodeParser_InternalInvalid,
     CodeParser_Comma,
@@ -1000,45 +993,6 @@ pub enum Operator {
     DoubleContourIntegral,
     ClockwiseContourIntegral,
     CounterClockwiseContourIntegral,
-    Divide,
-    Power,
-    UpSet,
-    UpSetDelayed,
-    Map,
-    Rule,
-    Apply,
-    Condition,
-    ReplaceAll,
-    RuleDelayed,
-    ReplaceRepeated,
-    AddTo,
-    TimesBy,
-    SubtractFrom,
-    DivideBy,
-    TwoWayRule,
-    MapAll,
-    CodeParser_BinaryAt,
-    MapApply,
-    CodeParser_BinarySlashSlash,
-    PatternTest,
-    Function,
-    ApplyTo,
-    Implies,
-    RoundImplies,
-    DirectedEdge,
-    UndirectedEdge,
-    CircleMinus,
-    SuchThat,
-    Perpendicular,
-    Because,
-    Therefore,
-    RightTee,
-    LeftTee,
-    DoubleRightTee,
-    DoubleLeftTee,
-    UpTee,
-    DownTee,
-    Application,
     SameQ,
     UnsameQ,
     Dot,
@@ -1247,6 +1201,60 @@ pub enum PostfixOperator {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub enum BinaryOperator {
+    Pattern,
+    Optional,
+    Set,
+    SetDelayed,
+    Unset,
+    Put,
+    PutAppend,
+    Span,
+    Divide,
+    Power,
+    UpSet,
+    UpSetDelayed,
+    Map,
+    Rule,
+    Apply,
+    Condition,
+    ReplaceAll,
+    RuleDelayed,
+    ReplaceRepeated,
+    AddTo,
+    TimesBy,
+    SubtractFrom,
+    DivideBy,
+    TwoWayRule,
+    MapAll,
+    CodeParser_BinaryAt,
+    MapApply,
+    CodeParser_BinarySlashSlash,
+    PatternTest,
+    Function,
+    ApplyTo,
+    Implies,
+    RoundImplies,
+    PlusMinus,
+    DirectedEdge,
+    UndirectedEdge,
+    MinusPlus,
+    CircleMinus,
+    SuchThat,
+    Perpendicular,
+    Because,
+    Therefore,
+    RightTee,
+    LeftTee,
+    DoubleRightTee,
+    DoubleLeftTee,
+    UpTee,
+    DownTee,
+    Application,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TernaryOperator {
     CodeParser_TernaryTilde,
     CodeParser_TernaryOptionalPattern,
@@ -1307,15 +1315,8 @@ impl Operator {
         match self {
             Operator::Times => sym::Times,
             Operator::Span => sym::Span,
-            Operator::Pattern => sym::Pattern,
-            Operator::Optional => sym::Optional,
-            Operator::Set => sym::Set,
-            Operator::SetDelayed => sym::SetDelayed,
-            Operator::Unset => sym::Unset,
             Operator::CompoundExpression => sym::CompoundExpression,
             Operator::MessageName => sym::MessageName,
-            Operator::Put => sym::Put,
-            Operator::PutAppend => sym::PutAppend,
             Operator::Get => sym::Get,
             Operator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
             Operator::CodeParser_Comma => sym::CodeParser_Comma,
@@ -1352,45 +1353,6 @@ impl Operator {
             Operator::DoubleContourIntegral => sym::DoubleContourIntegral,
             Operator::ClockwiseContourIntegral => sym::ClockwiseContourIntegral,
             Operator::CounterClockwiseContourIntegral => sym::CounterClockwiseContourIntegral,
-            Operator::Divide => sym::Divide,
-            Operator::Power => sym::Power,
-            Operator::UpSet => sym::UpSet,
-            Operator::UpSetDelayed => sym::UpSetDelayed,
-            Operator::Map => sym::Map,
-            Operator::Rule => sym::Rule,
-            Operator::Apply => sym::Apply,
-            Operator::Condition => sym::Condition,
-            Operator::ReplaceAll => sym::ReplaceAll,
-            Operator::RuleDelayed => sym::RuleDelayed,
-            Operator::ReplaceRepeated => sym::ReplaceRepeated,
-            Operator::AddTo => sym::AddTo,
-            Operator::TimesBy => sym::TimesBy,
-            Operator::SubtractFrom => sym::SubtractFrom,
-            Operator::DivideBy => sym::DivideBy,
-            Operator::TwoWayRule => sym::TwoWayRule,
-            Operator::MapAll => sym::MapAll,
-            Operator::CodeParser_BinaryAt => sym::CodeParser_BinaryAt,
-            Operator::MapApply => sym::MapApply,
-            Operator::CodeParser_BinarySlashSlash => sym::CodeParser_BinarySlashSlash,
-            Operator::PatternTest => sym::PatternTest,
-            Operator::Function => sym::Function,
-            Operator::ApplyTo => sym::ApplyTo,
-            Operator::Implies => sym::Implies,
-            Operator::RoundImplies => sym::RoundImplies,
-            Operator::DirectedEdge => sym::DirectedEdge,
-            Operator::UndirectedEdge => sym::UndirectedEdge,
-            Operator::CircleMinus => sym::CircleMinus,
-            Operator::SuchThat => sym::SuchThat,
-            Operator::Perpendicular => sym::Perpendicular,
-            Operator::Because => sym::Because,
-            Operator::Therefore => sym::Therefore,
-            Operator::RightTee => sym::RightTee,
-            Operator::LeftTee => sym::LeftTee,
-            Operator::DoubleRightTee => sym::DoubleRightTee,
-            Operator::DoubleLeftTee => sym::DoubleLeftTee,
-            Operator::UpTee => sym::UpTee,
-            Operator::DownTee => sym::DownTee,
-            Operator::Application => sym::Application,
             Operator::SameQ => sym::SameQ,
             Operator::UnsameQ => sym::UnsameQ,
             Operator::Dot => sym::Dot,
@@ -1585,15 +1547,8 @@ impl Operator {
         let operator = match symbol {
             sym::Times => Operator::Times,
             sym::Span => Operator::Span,
-            sym::Pattern => Operator::Pattern,
-            sym::Optional => Operator::Optional,
-            sym::Set => Operator::Set,
-            sym::SetDelayed => Operator::SetDelayed,
-            sym::Unset => Operator::Unset,
             sym::CompoundExpression => Operator::CompoundExpression,
             sym::MessageName => Operator::MessageName,
-            sym::Put => Operator::Put,
-            sym::PutAppend => Operator::PutAppend,
             sym::Get => Operator::Get,
             sym::CodeParser_InternalInvalid => Operator::CodeParser_InternalInvalid,
             sym::CodeParser_Comma => Operator::CodeParser_Comma,
@@ -1630,45 +1585,6 @@ impl Operator {
             sym::DoubleContourIntegral => Operator::DoubleContourIntegral,
             sym::ClockwiseContourIntegral => Operator::ClockwiseContourIntegral,
             sym::CounterClockwiseContourIntegral => Operator::CounterClockwiseContourIntegral,
-            sym::Divide => Operator::Divide,
-            sym::Power => Operator::Power,
-            sym::UpSet => Operator::UpSet,
-            sym::UpSetDelayed => Operator::UpSetDelayed,
-            sym::Map => Operator::Map,
-            sym::Rule => Operator::Rule,
-            sym::Apply => Operator::Apply,
-            sym::Condition => Operator::Condition,
-            sym::ReplaceAll => Operator::ReplaceAll,
-            sym::RuleDelayed => Operator::RuleDelayed,
-            sym::ReplaceRepeated => Operator::ReplaceRepeated,
-            sym::AddTo => Operator::AddTo,
-            sym::TimesBy => Operator::TimesBy,
-            sym::SubtractFrom => Operator::SubtractFrom,
-            sym::DivideBy => Operator::DivideBy,
-            sym::TwoWayRule => Operator::TwoWayRule,
-            sym::MapAll => Operator::MapAll,
-            sym::CodeParser_BinaryAt => Operator::CodeParser_BinaryAt,
-            sym::MapApply => Operator::MapApply,
-            sym::CodeParser_BinarySlashSlash => Operator::CodeParser_BinarySlashSlash,
-            sym::PatternTest => Operator::PatternTest,
-            sym::Function => Operator::Function,
-            sym::ApplyTo => Operator::ApplyTo,
-            sym::Implies => Operator::Implies,
-            sym::RoundImplies => Operator::RoundImplies,
-            sym::DirectedEdge => Operator::DirectedEdge,
-            sym::UndirectedEdge => Operator::UndirectedEdge,
-            sym::CircleMinus => Operator::CircleMinus,
-            sym::SuchThat => Operator::SuchThat,
-            sym::Perpendicular => Operator::Perpendicular,
-            sym::Because => Operator::Because,
-            sym::Therefore => Operator::Therefore,
-            sym::RightTee => Operator::RightTee,
-            sym::LeftTee => Operator::LeftTee,
-            sym::DoubleRightTee => Operator::DoubleRightTee,
-            sym::DoubleLeftTee => Operator::DoubleLeftTee,
-            sym::UpTee => Operator::UpTee,
-            sym::DownTee => Operator::DownTee,
-            sym::Application => Operator::Application,
             sym::SameQ => Operator::SameQ,
             sym::UnsameQ => Operator::UnsameQ,
             sym::Dot => Operator::Dot,
@@ -1898,6 +1814,121 @@ impl PostfixOperator {
             sym::ConjugateTranspose => PostfixOperator::ConjugateTranspose,
             sym::HermitianConjugate => PostfixOperator::HermitianConjugate,
             sym::InvisiblePostfixScriptBase => PostfixOperator::InvisiblePostfixScriptBase,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+impl BinaryOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            BinaryOperator::Pattern => sym::Pattern,
+            BinaryOperator::Optional => sym::Optional,
+            BinaryOperator::Set => sym::Set,
+            BinaryOperator::SetDelayed => sym::SetDelayed,
+            BinaryOperator::Unset => sym::Unset,
+            BinaryOperator::Put => sym::Put,
+            BinaryOperator::PutAppend => sym::PutAppend,
+            BinaryOperator::Span => sym::Span,
+            BinaryOperator::Divide => sym::Divide,
+            BinaryOperator::Power => sym::Power,
+            BinaryOperator::UpSet => sym::UpSet,
+            BinaryOperator::UpSetDelayed => sym::UpSetDelayed,
+            BinaryOperator::Map => sym::Map,
+            BinaryOperator::Rule => sym::Rule,
+            BinaryOperator::Apply => sym::Apply,
+            BinaryOperator::Condition => sym::Condition,
+            BinaryOperator::ReplaceAll => sym::ReplaceAll,
+            BinaryOperator::RuleDelayed => sym::RuleDelayed,
+            BinaryOperator::ReplaceRepeated => sym::ReplaceRepeated,
+            BinaryOperator::AddTo => sym::AddTo,
+            BinaryOperator::TimesBy => sym::TimesBy,
+            BinaryOperator::SubtractFrom => sym::SubtractFrom,
+            BinaryOperator::DivideBy => sym::DivideBy,
+            BinaryOperator::TwoWayRule => sym::TwoWayRule,
+            BinaryOperator::MapAll => sym::MapAll,
+            BinaryOperator::CodeParser_BinaryAt => sym::CodeParser_BinaryAt,
+            BinaryOperator::MapApply => sym::MapApply,
+            BinaryOperator::CodeParser_BinarySlashSlash => sym::CodeParser_BinarySlashSlash,
+            BinaryOperator::PatternTest => sym::PatternTest,
+            BinaryOperator::Function => sym::Function,
+            BinaryOperator::ApplyTo => sym::ApplyTo,
+            BinaryOperator::Implies => sym::Implies,
+            BinaryOperator::RoundImplies => sym::RoundImplies,
+            BinaryOperator::PlusMinus => sym::PlusMinus,
+            BinaryOperator::DirectedEdge => sym::DirectedEdge,
+            BinaryOperator::UndirectedEdge => sym::UndirectedEdge,
+            BinaryOperator::MinusPlus => sym::MinusPlus,
+            BinaryOperator::CircleMinus => sym::CircleMinus,
+            BinaryOperator::SuchThat => sym::SuchThat,
+            BinaryOperator::Perpendicular => sym::Perpendicular,
+            BinaryOperator::Because => sym::Because,
+            BinaryOperator::Therefore => sym::Therefore,
+            BinaryOperator::RightTee => sym::RightTee,
+            BinaryOperator::LeftTee => sym::LeftTee,
+            BinaryOperator::DoubleRightTee => sym::DoubleRightTee,
+            BinaryOperator::DoubleLeftTee => sym::DoubleLeftTee,
+            BinaryOperator::UpTee => sym::UpTee,
+            BinaryOperator::DownTee => sym::DownTee,
+            BinaryOperator::Application => sym::Application,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::Pattern => BinaryOperator::Pattern,
+            sym::Optional => BinaryOperator::Optional,
+            sym::Set => BinaryOperator::Set,
+            sym::SetDelayed => BinaryOperator::SetDelayed,
+            sym::Unset => BinaryOperator::Unset,
+            sym::Put => BinaryOperator::Put,
+            sym::PutAppend => BinaryOperator::PutAppend,
+            sym::Span => BinaryOperator::Span,
+            sym::Divide => BinaryOperator::Divide,
+            sym::Power => BinaryOperator::Power,
+            sym::UpSet => BinaryOperator::UpSet,
+            sym::UpSetDelayed => BinaryOperator::UpSetDelayed,
+            sym::Map => BinaryOperator::Map,
+            sym::Rule => BinaryOperator::Rule,
+            sym::Apply => BinaryOperator::Apply,
+            sym::Condition => BinaryOperator::Condition,
+            sym::ReplaceAll => BinaryOperator::ReplaceAll,
+            sym::RuleDelayed => BinaryOperator::RuleDelayed,
+            sym::ReplaceRepeated => BinaryOperator::ReplaceRepeated,
+            sym::AddTo => BinaryOperator::AddTo,
+            sym::TimesBy => BinaryOperator::TimesBy,
+            sym::SubtractFrom => BinaryOperator::SubtractFrom,
+            sym::DivideBy => BinaryOperator::DivideBy,
+            sym::TwoWayRule => BinaryOperator::TwoWayRule,
+            sym::MapAll => BinaryOperator::MapAll,
+            sym::CodeParser_BinaryAt => BinaryOperator::CodeParser_BinaryAt,
+            sym::MapApply => BinaryOperator::MapApply,
+            sym::CodeParser_BinarySlashSlash => BinaryOperator::CodeParser_BinarySlashSlash,
+            sym::PatternTest => BinaryOperator::PatternTest,
+            sym::Function => BinaryOperator::Function,
+            sym::ApplyTo => BinaryOperator::ApplyTo,
+            sym::Implies => BinaryOperator::Implies,
+            sym::RoundImplies => BinaryOperator::RoundImplies,
+            sym::PlusMinus => BinaryOperator::PlusMinus,
+            sym::DirectedEdge => BinaryOperator::DirectedEdge,
+            sym::UndirectedEdge => BinaryOperator::UndirectedEdge,
+            sym::MinusPlus => BinaryOperator::MinusPlus,
+            sym::CircleMinus => BinaryOperator::CircleMinus,
+            sym::SuchThat => BinaryOperator::SuchThat,
+            sym::Perpendicular => BinaryOperator::Perpendicular,
+            sym::Because => BinaryOperator::Because,
+            sym::Therefore => BinaryOperator::Therefore,
+            sym::RightTee => BinaryOperator::RightTee,
+            sym::LeftTee => BinaryOperator::LeftTee,
+            sym::DoubleRightTee => BinaryOperator::DoubleRightTee,
+            sym::DoubleLeftTee => BinaryOperator::DoubleLeftTee,
+            sym::UpTee => BinaryOperator::UpTee,
+            sym::DownTee => BinaryOperator::DownTee,
+            sym::Application => BinaryOperator::Application,
             _ => return None,
         };
 

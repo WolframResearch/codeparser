@@ -3,11 +3,11 @@ use wolfram_library_link::expr::{symbol::SymbolRef, Expr, ExprKind, Normal, Numb
 
 use wolfram_parser::{
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode,
-        LeafNode, Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
-        PrefixBinaryOperator, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
-        TernaryOperator,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
+        CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
+        InfixNode, LeafNode, Operator, OperatorNode, PostfixNode, PostfixOperator,
+        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
+        TernaryNode, TernaryOperator,
     },
     cst::{CompoundOperator, CstNodeSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
@@ -308,7 +308,7 @@ impl FromExpr for BinaryNode<OwnedTokenInput, GeneralSource> {
             todo!()
         }
 
-        let op = Operator::from_expr(&elements[0]).expect("PRE_COMMIT");
+        let op = BinaryOperator::from_expr(&elements[0]).expect("PRE_COMMIT");
         let children = NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -746,6 +746,20 @@ impl FromExpr for PostfixOperator {
         };
 
         match PostfixOperator::try_from_symbol(sym.as_symbol_ref()) {
+            Some(op) => Ok(op),
+            None => Err(format!("unable to match symbol '{sym}' to Operator")),
+        }
+    }
+}
+
+impl FromExpr for BinaryOperator {
+    fn from_expr(expr: &Expr) -> Result<Self, String> {
+        let sym = match expr.try_as_symbol() {
+            Some(sym) => sym,
+            None => panic!(),
+        };
+
+        match BinaryOperator::try_from_symbol(sym.as_symbol_ref()) {
             Some(op) => Ok(op),
             None => Err(format!("unable to match symbol '{sym}' to Operator")),
         }

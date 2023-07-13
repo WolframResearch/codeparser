@@ -1,5 +1,5 @@
 use crate::{
-    cst::{BinaryNode, Operator, TernaryNode},
+    cst::{BinaryNode, TernaryNode},
     panic_if_aborted,
     parselet::*,
     parser::{
@@ -302,7 +302,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
 }
 
 fn SemiSemiParselet_reduceBinary(session: &mut ParserSession) {
-    let node = BinaryNode::new(Operator::Span, Parser_popContext(session));
+    let node = BinaryNode::new(BinaryOperator::Span, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
