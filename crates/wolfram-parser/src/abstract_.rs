@@ -11,7 +11,7 @@ use crate::{
         GroupOperator, InfixNode, Node,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
-        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
+        PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
@@ -186,6 +186,11 @@ fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNod
 
 /// Returns a `LeafNode[Symbol, ..]`
 fn ToNode_Op(op: Operator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_PrefixOp(op: PrefixOperator) -> AstNode {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
     ToNode_Symbol(s)
 }
@@ -431,27 +436,27 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             src: data,
         })) => match op {
             // PrefixNode[Minus, {_, rand_}, data_]
-            Operator::Minus => {
+            PrefixOperator::Minus => {
                 expect_children!(children, {_, rand:_});
 
                 abstract_(negate(rand, data))
             },
 
             // PrefixNode[Plus, {_, rand_}, _], data_
-            Op::Plus => {
+            PrefixOperator::Plus => {
                 let [_, rand] = expect_children(children);
 
                 abstractPrefixPlus(rand, data)
             },
 
             // PrefixNode[PrefixNot2, {notNotTok_, rand_}, data_]
-            Op::CodeParser_PrefixNot2 => {
+            PrefixOperator::CodeParser_PrefixNot2 => {
                 let [notNotTok, rand] = expect_children(children);
 
                 abstractNot2(rand, notNotTok, data)
             },
 
-            Op::CodeParser_PrefixLinearSyntaxBang => {
+            PrefixOperator::CodeParser_PrefixLinearSyntaxBang => {
                 let NodeSeq(children) = children;
 
                 match children.as_slice() {
@@ -486,7 +491,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             // abstract syntax Get["a"]
             //
             // PrefixNode[Get, {_, LeafNode[String, str_, data1_]}, data_]
-            Op::Get => {
+            PrefixOperator::Get => {
                 // TODO(test): Add test case for prefix get (there doesn't seem
                 //             to be one now).
                 let [_, rand] = expect_children(children);
@@ -511,7 +516,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             op => {
                 let [_, operand] = expect_children(children);
 
-                WL!( CallNode[ToNode_Op(op), {abstract_(operand)}, data])
+                WL!( CallNode[ToNode_PrefixOp(op), {abstract_(operand)}, data])
             },
         },
 
@@ -1075,7 +1080,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     | PrefixBinaryOperator::CounterClockwiseContourIntegral,
                     //
                     Node::Prefix(PrefixNode(OperatorNode {
-                        op: Op::DifferentialD | Op::CapitalDifferentialD,
+                        op: PrefixOperator::DifferentialD | PrefixOperator::CapitalDifferentialD,
                         children,
                         src: _,
                     })),
@@ -1498,7 +1503,7 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(node: Node<I, S>) -> bo
         // possiblyNegatedZeroQ[PrefixNode[Minus, { _, child_}, _]] :=
         //     possiblyNegatedZeroQ[child]
         Node::Prefix(PrefixNode(OperatorNode {
-            op: Operator::Minus,
+            op: PrefixOperator::Minus,
             children,
             src: _,
         })) => {
@@ -1565,7 +1570,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
         // negate[PrefixNode[Minus, {_, child_?possiblyNegatedZeroQ}, _], data_] :=
         //   negate[child, data]
         Node::Prefix(PrefixNode(OperatorNode {
-            op: Operator::Minus,
+            op: PrefixOperator::Minus,
             children: NodeSeq(mut children),
             src: _,
             // TODO(optimization): Avoid this clone().
@@ -1735,7 +1740,7 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
 fn flattenPrefixPlus<I: Debug, S: Debug>(node: Node<I, S>) -> Node<I, S> {
     match node {
         Node::Prefix(PrefixNode(OperatorNode {
-            op: Op::Plus,
+            op: PrefixOperator::Plus,
             children,
             src: _,
         })) => {
@@ -1797,7 +1802,7 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
     match rand {
         // PrefixNode[Plus, {_, rand_}, _], data_
         Node::Prefix(PrefixNode(OperatorNode {
-            op: Op::Plus,
+            op: PrefixOperator::Plus,
             children,
             src: _,
         })) => {
@@ -1827,7 +1832,7 @@ fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
                 // TODO: add to kernel quirks mode
                 // TODO: add to frontend quirks mode
                 Node::Prefix(PrefixNode(OperatorNode {
-                    op: Op::Minus,
+                    op: PrefixOperator::Minus,
                     ref children,
                     src: _,
                 })) => {

@@ -113,18 +113,18 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &GroupParselet::new(TokenKind::OpenCurly, GroupOperator::List), // Token`OpenCurly
     &prefixCloserParselet, // Token`CloseCurly
     &prefixUnhandledParselet, // Token`Equal
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_BANG, Operator::Not), // Token`Bang
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_BANG, PrefixOperator::Not), // Token`Bang
     &under1Parselet, // Token`Under
     &prefixUnhandledParselet, // Token`Less
     &prefixUnhandledParselet, // Token`Greater
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_MINUS, Operator::Minus), // Token`Minus
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_MINUS, PrefixOperator::Minus), // Token`Minus
     &prefixUnhandledParselet, // Token`Bar
     &prefixUnhandledParselet, // Token`Semi
     &HashParselet {}, // Token`Hash
     &prefixUnhandledParselet, // Token`Amp
     &prefixUnhandledParselet, // Token`Slash
     &prefixUnhandledParselet, // Token`At
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_PLUS, Operator::Plus), // Token`Plus
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_PLUS, PrefixOperator::Plus), // Token`Plus
     &prefixUnhandledParselet, // Token`Tilde
     &prefixUnhandledParselet, // Token`Star
     &prefixUnhandledParselet, // Token`Caret
@@ -145,7 +145,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`GreaterGreater
     &prefixUnhandledParselet, // Token`GreaterEqual
     &prefixUnhandledParselet, // Token`MinusGreater
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_MINUSMINUS, Operator::PreDecrement), // Token`MinusMinus
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_MINUSMINUS, PrefixOperator::PreDecrement), // Token`MinusMinus
     &prefixUnhandledParselet, // Token`MinusEqual
     &prefixUnhandledParselet, // Token`BarBar
     &prefixCloserParselet, // Token`BarGreater
@@ -160,7 +160,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`SlashStar
     &prefixUnhandledParselet, // Token`AtAt
     &prefixUnhandledParselet, // Token`AtStar
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_PLUSPLUS, Operator::PreIncrement), // Token`PlusPlus
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_PLUSPLUS, PrefixOperator::PreIncrement), // Token`PlusPlus
     &prefixUnhandledParselet, // Token`PlusEqual
     &prefixUnhandledParselet, // Token`TildeTilde
     &prefixUnhandledParselet, // Token`StarEqual
@@ -168,7 +168,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`CaretEqual
     &HashHashParselet {}, // Token`HashHash
     &prefixUnhandledParselet, // Token`BangEqual
-    &PrefixOperatorParselet::new(PRECEDENCE_FAKE_PREFIX_BANGBANG, Operator::CodeParser_PrefixNot2), // Token`BangBang
+    &PrefixOperatorParselet::new(PRECEDENCE_FAKE_PREFIX_BANGBANG, PrefixOperator::CodeParser_PrefixNot2), // Token`BangBang
     &prefixUnsupportedTokenParselet, // Token`QuestionQuestion
     &prefixUnhandledParselet, // Token`DotDotDot
     &prefixUnhandledParselet, // Token`EqualEqualEqual
@@ -184,7 +184,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`SlashSlashEqual
     &GroupParselet::new(TokenKind::ColonColonOpenSquare, GroupOperator::CodeParser_GroupTypeSpecifier), // Token`ColonColonOpenSquare
     &leafParselet, // Token`PercentPercent
-    &PrefixOperatorParselet::new(PRECEDENCE_LINEARSYNTAX_BANG, Operator::CodeParser_PrefixLinearSyntaxBang), // Token`LinearSyntax`Bang
+    &PrefixOperatorParselet::new(PRECEDENCE_LINEARSYNTAX_BANG, PrefixOperator::CodeParser_PrefixLinearSyntaxBang), // Token`LinearSyntax`Bang
     &prefixUnsupportedTokenParselet, // Token`LinearSyntax`CloseParen
     &prefixUnsupportedTokenParselet, // Token`LinearSyntax`At
     &prefixUnsupportedTokenParselet, // Token`LinearSyntax`Amp
@@ -204,8 +204,8 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`Boxes`StarCloseParen
     &prefixUnhandledParselet, // Token`Boxes`MultiSingleQuote
     &prefixUnhandledParselet, // Token`Boxes`MultiWhitespace
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_NOT, Operator::Not), // Token`LongName`Not
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_PLUSMINUS, Operator::PlusMinus), // Token`LongName`PlusMinus
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_NOT, PrefixOperator::Not), // Token`LongName`Not
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_PLUSMINUS, PrefixOperator::PlusMinus), // Token`LongName`PlusMinus
     &prefixUnhandledParselet, // Token`LongName`CenterDot
     &prefixUnhandledParselet, // Token`LongName`Times
     &prefixUnhandledParselet, // Token`LongName`Divide
@@ -250,37 +250,37 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`LeftArrowBar
     &prefixUnhandledParselet, // Token`LongName`RightArrowBar
     &prefixUnhandledParselet, // Token`LongName`DownArrowUpArrow
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_FORALL, Operator::ForAll), // Token`LongName`ForAll
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_FORALL, PrefixOperator::ForAll), // Token`LongName`ForAll
     &prefixUnsupportedTokenParselet, // Token`LongName`PartialD
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_EXISTS, Operator::Exists), // Token`LongName`Exists
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTEXISTS, Operator::NotExists), // Token`LongName`NotExists
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_DEL, Operator::Del), // Token`LongName`Del
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_EXISTS, PrefixOperator::Exists), // Token`LongName`Exists
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTEXISTS, PrefixOperator::NotExists), // Token`LongName`NotExists
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_DEL, PrefixOperator::Del), // Token`LongName`Del
     &prefixUnhandledParselet, // Token`LongName`Element
     &prefixUnhandledParselet, // Token`LongName`NotElement
     &prefixUnhandledParselet, // Token`LongName`ReverseElement
     &prefixUnhandledParselet, // Token`LongName`NotReverseElement
     &prefixUnhandledParselet, // Token`LongName`SuchThat
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PRODUCT, Operator::Product), // Token`LongName`Product
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_COPRODUCT, Operator::Coproduct), // Token`LongName`Coproduct
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_SUM, Operator::Sum), // Token`LongName`Sum
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_MINUS, Operator::Minus), // Token`LongName`Minus
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_MINUSPLUS, Operator::MinusPlus), // Token`LongName`MinusPlus
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PRODUCT, PrefixOperator::Product), // Token`LongName`Product
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_COPRODUCT, PrefixOperator::Coproduct), // Token`LongName`Coproduct
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_SUM, PrefixOperator::Sum), // Token`LongName`Sum
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_MINUS, PrefixOperator::Minus), // Token`LongName`Minus
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_MINUSPLUS, PrefixOperator::MinusPlus), // Token`LongName`MinusPlus
     &prefixUnhandledParselet, // Token`LongName`DivisionSlash
     &prefixUnhandledParselet, // Token`LongName`Backslash
     &prefixUnhandledParselet, // Token`LongName`SmallCircle
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_SQRT, Operator::Sqrt), // Token`LongName`Sqrt
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CUBEROOT, Operator::CubeRoot), // Token`LongName`CubeRoot
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_SQRT, PrefixOperator::Sqrt), // Token`LongName`Sqrt
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CUBEROOT, PrefixOperator::CubeRoot), // Token`LongName`CubeRoot
     &prefixUnhandledParselet, // Token`LongName`Proportional
     &prefixUnhandledParselet, // Token`LongName`Divides
     &prefixUnhandledParselet, // Token`LongName`DoubleVerticalBar
     &prefixUnhandledParselet, // Token`LongName`NotDoubleVerticalBar
     &prefixUnhandledParselet, // Token`LongName`And
     &prefixUnhandledParselet, // Token`LongName`Or
-    &IntegralParselet::new(PrefixBinaryOperator::Integrate, Operator::Integral), // Token`LongName`Integral
-    &IntegralParselet::new(PrefixBinaryOperator::ContourIntegral, Operator::ContourIntegral), // Token`LongName`ContourIntegral
-    &IntegralParselet::new(PrefixBinaryOperator::DoubleContourIntegral, Operator::DoubleContourIntegral), // Token`LongName`DoubleContourIntegral
-    &IntegralParselet::new(PrefixBinaryOperator::ClockwiseContourIntegral, Operator::ClockwiseContourIntegral), // Token`LongName`ClockwiseContourIntegral
-    &IntegralParselet::new(PrefixBinaryOperator::CounterClockwiseContourIntegral, Operator::CounterClockwiseContourIntegral), // Token`LongName`CounterClockwiseContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::Integrate, PrefixOperator::Integral), // Token`LongName`Integral
+    &IntegralParselet::new(PrefixBinaryOperator::ContourIntegral, PrefixOperator::ContourIntegral), // Token`LongName`ContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::DoubleContourIntegral, PrefixOperator::DoubleContourIntegral), // Token`LongName`DoubleContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::ClockwiseContourIntegral, PrefixOperator::ClockwiseContourIntegral), // Token`LongName`ClockwiseContourIntegral
+    &IntegralParselet::new(PrefixBinaryOperator::CounterClockwiseContourIntegral, PrefixOperator::CounterClockwiseContourIntegral), // Token`LongName`CounterClockwiseContourIntegral
     &prefixUnhandledParselet, // Token`LongName`Therefore
     &prefixUnhandledParselet, // Token`LongName`Because
     &prefixUnhandledParselet, // Token`LongName`Colon
@@ -348,7 +348,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`SquareUnion
     &prefixUnhandledParselet, // Token`LongName`CirclePlus
     &prefixUnhandledParselet, // Token`LongName`CircleMinus
-    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_CIRCLETIMES, Operator::CircleTimes), // Token`LongName`CircleTimes
+    &PrefixOperatorParselet::new(PRECEDENCE_PREFIX_LONGNAME_CIRCLETIMES, PrefixOperator::CircleTimes), // Token`LongName`CircleTimes
     &prefixUnhandledParselet, // Token`LongName`CircleDot
     &prefixUnhandledParselet, // Token`LongName`RightTee
     &prefixUnhandledParselet, // Token`LongName`LeftTee
@@ -435,11 +435,11 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &GroupParselet::new(TokenKind::LongName_LeftAssociation, GroupOperator::Association), // Token`LongName`LeftAssociation
     &prefixCloserParselet, // Token`LongName`RightAssociation
     &prefixUnhandledParselet, // Token`LongName`TwoWayRule
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PIECEWISE, Operator::Piecewise), // Token`LongName`Piecewise
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PIECEWISE, PrefixOperator::Piecewise), // Token`LongName`Piecewise
     &prefixUnhandledParselet, // Token`LongName`ImplicitPlus
     &prefixUnsupportedTokenParselet, // Token`LongName`AutoLeftMatch
     &prefixUnsupportedTokenParselet, // Token`LongName`AutoRightMatch
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_INVISIBLEPREFIXSCRIPTBASE, Operator::InvisiblePrefixScriptBase), // Token`LongName`InvisiblePrefixScriptBase
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_INVISIBLEPREFIXSCRIPTBASE, PrefixOperator::InvisiblePrefixScriptBase), // Token`LongName`InvisiblePrefixScriptBase
     &prefixUnhandledParselet, // Token`LongName`InvisiblePostfixScriptBase
     &prefixUnhandledParselet, // Token`LongName`Transpose
     &prefixUnhandledParselet, // Token`LongName`Conjugate
@@ -451,11 +451,11 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnhandledParselet, // Token`LongName`Conditioned
     &prefixUnhandledParselet, // Token`LongName`UndirectedEdge
     &prefixUnhandledParselet, // Token`LongName`DirectedEdge
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CONTINUEDFRACTIONK, Operator::ContinuedFractionK), // Token`LongName`ContinuedFractionK
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CONTINUEDFRACTIONK, PrefixOperator::ContinuedFractionK), // Token`LongName`ContinuedFractionK
     &prefixUnhandledParselet, // Token`LongName`TensorProduct
     &prefixUnhandledParselet, // Token`LongName`TensorWedge
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PROBABILITYPR, Operator::ProbabilityPr), // Token`LongName`ProbabilityPr
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_EXPECTATIONE, Operator::ExpectationE), // Token`LongName`ExpectationE
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_PROBABILITYPR, PrefixOperator::ProbabilityPr), // Token`LongName`ProbabilityPr
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_EXPECTATIONE, PrefixOperator::ExpectationE), // Token`LongName`ExpectationE
     &prefixUnhandledParselet, // Token`LongName`PermutationProduct
     &prefixUnhandledParselet, // Token`LongName`NotEqualTilde
     &prefixUnhandledParselet, // Token`LongName`NotHumpEqual
@@ -488,7 +488,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixUnsupportedTokenParselet, // Token`LongName`DifferenceDelta
     &prefixUnsupportedTokenParselet, // Token`LongName`DiscreteRatio
     &prefixUnhandledParselet, // Token`LongName`RuleDelayed
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_SQUARE, Operator::Square), // Token`LongName`Square
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_SQUARE, PrefixOperator::Square), // Token`LongName`Square
     &prefixUnhandledParselet, // Token`LongName`Rule
     &prefixUnhandledParselet, // Token`LongName`Implies
     &prefixUnhandledParselet, // Token`LongName`ShortRightArrow
@@ -500,8 +500,8 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
     &prefixCloserParselet, // Token`LongName`RightBracketingBar
     &GroupParselet::new(TokenKind::LongName_LeftDoubleBracketingBar, GroupOperator::DoubleBracketingBar), // Token`LongName`LeftDoubleBracketingBar
     &prefixCloserParselet, // Token`LongName`RightDoubleBracketingBar
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CAPITALDIFFERENTIALD, Operator::CapitalDifferentialD), // Token`LongName`CapitalDifferentialD
-    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_DIFFERENTIALD, Operator::DifferentialD), // Token`LongName`DifferentialD
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_CAPITALDIFFERENTIALD, PrefixOperator::CapitalDifferentialD), // Token`LongName`CapitalDifferentialD
+    &PrefixOperatorParselet::new(PRECEDENCE_LONGNAME_DIFFERENTIALD, PrefixOperator::DifferentialD), // Token`LongName`DifferentialD
     &prefixCommaParselet, // Token`LongName`InvisibleComma
     &prefixUnhandledParselet, // Token`LongName`InvisibleApplication
     &prefixUnhandledParselet, // Token`LongName`LongEqual
@@ -957,42 +957,10 @@ pub enum Operator {
     Span,
     CompoundExpression,
     MessageName,
-    Get,
     CodeParser_InternalInvalid,
     CodeParser_Comma,
     CodeParser_InfixTilde,
-    Minus,
     Plus,
-    Not,
-    PreIncrement,
-    PreDecrement,
-    CodeParser_PrefixNot2,
-    PlusMinus,
-    Sum,
-    Sqrt,
-    MinusPlus,
-    DifferentialD,
-    CapitalDifferentialD,
-    Del,
-    Square,
-    Product,
-    ContinuedFractionK,
-    CircleTimes,
-    ForAll,
-    Exists,
-    NotExists,
-    Coproduct,
-    Piecewise,
-    InvisiblePrefixScriptBase,
-    ExpectationE,
-    CubeRoot,
-    ProbabilityPr,
-    CodeParser_PrefixLinearSyntaxBang,
-    Integral,
-    ContourIntegral,
-    DoubleContourIntegral,
-    ClockwiseContourIntegral,
-    CounterClockwiseContourIntegral,
     SameQ,
     UnsameQ,
     Dot,
@@ -1115,8 +1083,10 @@ pub enum Operator {
     Diamond,
     Wedge,
     Vee,
+    CircleTimes,
     Star,
     VerticalTilde,
+    Coproduct,
     Cap,
     Cup,
     CirclePlus,
@@ -1179,6 +1149,44 @@ pub enum Operator {
     PermutationProduct,
     Colon,
     Xnor,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum PrefixOperator {
+    Get,
+    Minus,
+    Plus,
+    Not,
+    PreIncrement,
+    PreDecrement,
+    CodeParser_PrefixNot2,
+    PlusMinus,
+    Sum,
+    Sqrt,
+    MinusPlus,
+    DifferentialD,
+    CapitalDifferentialD,
+    Del,
+    Square,
+    Product,
+    ContinuedFractionK,
+    CircleTimes,
+    ForAll,
+    Exists,
+    NotExists,
+    Coproduct,
+    Piecewise,
+    InvisiblePrefixScriptBase,
+    ExpectationE,
+    CubeRoot,
+    ProbabilityPr,
+    CodeParser_PrefixLinearSyntaxBang,
+    Integral,
+    ContourIntegral,
+    DoubleContourIntegral,
+    ClockwiseContourIntegral,
+    CounterClockwiseContourIntegral,
 }
 
 #[allow(non_camel_case_types)]
@@ -1317,42 +1325,10 @@ impl Operator {
             Operator::Span => sym::Span,
             Operator::CompoundExpression => sym::CompoundExpression,
             Operator::MessageName => sym::MessageName,
-            Operator::Get => sym::Get,
             Operator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
             Operator::CodeParser_Comma => sym::CodeParser_Comma,
             Operator::CodeParser_InfixTilde => sym::CodeParser_InfixTilde,
-            Operator::Minus => sym::Minus,
             Operator::Plus => sym::Plus,
-            Operator::Not => sym::Not,
-            Operator::PreIncrement => sym::PreIncrement,
-            Operator::PreDecrement => sym::PreDecrement,
-            Operator::CodeParser_PrefixNot2 => sym::CodeParser_PrefixNot2,
-            Operator::PlusMinus => sym::PlusMinus,
-            Operator::Sum => sym::Sum,
-            Operator::Sqrt => sym::Sqrt,
-            Operator::MinusPlus => sym::MinusPlus,
-            Operator::DifferentialD => sym::DifferentialD,
-            Operator::CapitalDifferentialD => sym::CapitalDifferentialD,
-            Operator::Del => sym::Del,
-            Operator::Square => sym::Square,
-            Operator::Product => sym::Product,
-            Operator::ContinuedFractionK => sym::ContinuedFractionK,
-            Operator::CircleTimes => sym::CircleTimes,
-            Operator::ForAll => sym::ForAll,
-            Operator::Exists => sym::Exists,
-            Operator::NotExists => sym::NotExists,
-            Operator::Coproduct => sym::Coproduct,
-            Operator::Piecewise => sym::Piecewise,
-            Operator::InvisiblePrefixScriptBase => sym::InvisiblePrefixScriptBase,
-            Operator::ExpectationE => sym::ExpectationE,
-            Operator::CubeRoot => sym::CubeRoot,
-            Operator::ProbabilityPr => sym::ProbabilityPr,
-            Operator::CodeParser_PrefixLinearSyntaxBang => sym::CodeParser_PrefixLinearSyntaxBang,
-            Operator::Integral => sym::Integral,
-            Operator::ContourIntegral => sym::ContourIntegral,
-            Operator::DoubleContourIntegral => sym::DoubleContourIntegral,
-            Operator::ClockwiseContourIntegral => sym::ClockwiseContourIntegral,
-            Operator::CounterClockwiseContourIntegral => sym::CounterClockwiseContourIntegral,
             Operator::SameQ => sym::SameQ,
             Operator::UnsameQ => sym::UnsameQ,
             Operator::Dot => sym::Dot,
@@ -1475,8 +1451,10 @@ impl Operator {
             Operator::Diamond => sym::Diamond,
             Operator::Wedge => sym::Wedge,
             Operator::Vee => sym::Vee,
+            Operator::CircleTimes => sym::CircleTimes,
             Operator::Star => sym::Star,
             Operator::VerticalTilde => sym::VerticalTilde,
+            Operator::Coproduct => sym::Coproduct,
             Operator::Cap => sym::Cap,
             Operator::Cup => sym::Cup,
             Operator::CirclePlus => sym::CirclePlus,
@@ -1549,42 +1527,10 @@ impl Operator {
             sym::Span => Operator::Span,
             sym::CompoundExpression => Operator::CompoundExpression,
             sym::MessageName => Operator::MessageName,
-            sym::Get => Operator::Get,
             sym::CodeParser_InternalInvalid => Operator::CodeParser_InternalInvalid,
             sym::CodeParser_Comma => Operator::CodeParser_Comma,
             sym::CodeParser_InfixTilde => Operator::CodeParser_InfixTilde,
-            sym::Minus => Operator::Minus,
             sym::Plus => Operator::Plus,
-            sym::Not => Operator::Not,
-            sym::PreIncrement => Operator::PreIncrement,
-            sym::PreDecrement => Operator::PreDecrement,
-            sym::CodeParser_PrefixNot2 => Operator::CodeParser_PrefixNot2,
-            sym::PlusMinus => Operator::PlusMinus,
-            sym::Sum => Operator::Sum,
-            sym::Sqrt => Operator::Sqrt,
-            sym::MinusPlus => Operator::MinusPlus,
-            sym::DifferentialD => Operator::DifferentialD,
-            sym::CapitalDifferentialD => Operator::CapitalDifferentialD,
-            sym::Del => Operator::Del,
-            sym::Square => Operator::Square,
-            sym::Product => Operator::Product,
-            sym::ContinuedFractionK => Operator::ContinuedFractionK,
-            sym::CircleTimes => Operator::CircleTimes,
-            sym::ForAll => Operator::ForAll,
-            sym::Exists => Operator::Exists,
-            sym::NotExists => Operator::NotExists,
-            sym::Coproduct => Operator::Coproduct,
-            sym::Piecewise => Operator::Piecewise,
-            sym::InvisiblePrefixScriptBase => Operator::InvisiblePrefixScriptBase,
-            sym::ExpectationE => Operator::ExpectationE,
-            sym::CubeRoot => Operator::CubeRoot,
-            sym::ProbabilityPr => Operator::ProbabilityPr,
-            sym::CodeParser_PrefixLinearSyntaxBang => Operator::CodeParser_PrefixLinearSyntaxBang,
-            sym::Integral => Operator::Integral,
-            sym::ContourIntegral => Operator::ContourIntegral,
-            sym::DoubleContourIntegral => Operator::DoubleContourIntegral,
-            sym::ClockwiseContourIntegral => Operator::ClockwiseContourIntegral,
-            sym::CounterClockwiseContourIntegral => Operator::CounterClockwiseContourIntegral,
             sym::SameQ => Operator::SameQ,
             sym::UnsameQ => Operator::UnsameQ,
             sym::Dot => Operator::Dot,
@@ -1707,8 +1653,10 @@ impl Operator {
             sym::Diamond => Operator::Diamond,
             sym::Wedge => Operator::Wedge,
             sym::Vee => Operator::Vee,
+            sym::CircleTimes => Operator::CircleTimes,
             sym::Star => Operator::Star,
             sym::VerticalTilde => Operator::VerticalTilde,
+            sym::Coproduct => Operator::Coproduct,
             sym::Cap => Operator::Cap,
             sym::Cup => Operator::Cup,
             sym::CirclePlus => Operator::CirclePlus,
@@ -1777,6 +1725,91 @@ impl Operator {
         Some(operator)
     }
 }
+
+impl PrefixOperator {
+    #[allow(dead_code)]
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
+        match self {
+            PrefixOperator::Get => sym::Get,
+            PrefixOperator::Minus => sym::Minus,
+            PrefixOperator::Plus => sym::Plus,
+            PrefixOperator::Not => sym::Not,
+            PrefixOperator::PreIncrement => sym::PreIncrement,
+            PrefixOperator::PreDecrement => sym::PreDecrement,
+            PrefixOperator::CodeParser_PrefixNot2 => sym::CodeParser_PrefixNot2,
+            PrefixOperator::PlusMinus => sym::PlusMinus,
+            PrefixOperator::Sum => sym::Sum,
+            PrefixOperator::Sqrt => sym::Sqrt,
+            PrefixOperator::MinusPlus => sym::MinusPlus,
+            PrefixOperator::DifferentialD => sym::DifferentialD,
+            PrefixOperator::CapitalDifferentialD => sym::CapitalDifferentialD,
+            PrefixOperator::Del => sym::Del,
+            PrefixOperator::Square => sym::Square,
+            PrefixOperator::Product => sym::Product,
+            PrefixOperator::ContinuedFractionK => sym::ContinuedFractionK,
+            PrefixOperator::CircleTimes => sym::CircleTimes,
+            PrefixOperator::ForAll => sym::ForAll,
+            PrefixOperator::Exists => sym::Exists,
+            PrefixOperator::NotExists => sym::NotExists,
+            PrefixOperator::Coproduct => sym::Coproduct,
+            PrefixOperator::Piecewise => sym::Piecewise,
+            PrefixOperator::InvisiblePrefixScriptBase => sym::InvisiblePrefixScriptBase,
+            PrefixOperator::ExpectationE => sym::ExpectationE,
+            PrefixOperator::CubeRoot => sym::CubeRoot,
+            PrefixOperator::ProbabilityPr => sym::ProbabilityPr,
+            PrefixOperator::CodeParser_PrefixLinearSyntaxBang => sym::CodeParser_PrefixLinearSyntaxBang,
+            PrefixOperator::Integral => sym::Integral,
+            PrefixOperator::ContourIntegral => sym::ContourIntegral,
+            PrefixOperator::DoubleContourIntegral => sym::DoubleContourIntegral,
+            PrefixOperator::ClockwiseContourIntegral => sym::ClockwiseContourIntegral,
+            PrefixOperator::CounterClockwiseContourIntegral => sym::CounterClockwiseContourIntegral,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::Get => PrefixOperator::Get,
+            sym::Minus => PrefixOperator::Minus,
+            sym::Plus => PrefixOperator::Plus,
+            sym::Not => PrefixOperator::Not,
+            sym::PreIncrement => PrefixOperator::PreIncrement,
+            sym::PreDecrement => PrefixOperator::PreDecrement,
+            sym::CodeParser_PrefixNot2 => PrefixOperator::CodeParser_PrefixNot2,
+            sym::PlusMinus => PrefixOperator::PlusMinus,
+            sym::Sum => PrefixOperator::Sum,
+            sym::Sqrt => PrefixOperator::Sqrt,
+            sym::MinusPlus => PrefixOperator::MinusPlus,
+            sym::DifferentialD => PrefixOperator::DifferentialD,
+            sym::CapitalDifferentialD => PrefixOperator::CapitalDifferentialD,
+            sym::Del => PrefixOperator::Del,
+            sym::Square => PrefixOperator::Square,
+            sym::Product => PrefixOperator::Product,
+            sym::ContinuedFractionK => PrefixOperator::ContinuedFractionK,
+            sym::CircleTimes => PrefixOperator::CircleTimes,
+            sym::ForAll => PrefixOperator::ForAll,
+            sym::Exists => PrefixOperator::Exists,
+            sym::NotExists => PrefixOperator::NotExists,
+            sym::Coproduct => PrefixOperator::Coproduct,
+            sym::Piecewise => PrefixOperator::Piecewise,
+            sym::InvisiblePrefixScriptBase => PrefixOperator::InvisiblePrefixScriptBase,
+            sym::ExpectationE => PrefixOperator::ExpectationE,
+            sym::CubeRoot => PrefixOperator::CubeRoot,
+            sym::ProbabilityPr => PrefixOperator::ProbabilityPr,
+            sym::CodeParser_PrefixLinearSyntaxBang => PrefixOperator::CodeParser_PrefixLinearSyntaxBang,
+            sym::Integral => PrefixOperator::Integral,
+            sym::ContourIntegral => PrefixOperator::ContourIntegral,
+            sym::DoubleContourIntegral => PrefixOperator::DoubleContourIntegral,
+            sym::ClockwiseContourIntegral => PrefixOperator::ClockwiseContourIntegral,
+            sym::CounterClockwiseContourIntegral => PrefixOperator::CounterClockwiseContourIntegral,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+
 impl PostfixOperator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -1820,6 +1853,7 @@ impl PostfixOperator {
         Some(operator)
     }
 }
+
 impl BinaryOperator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -1935,6 +1969,7 @@ impl BinaryOperator {
         Some(operator)
     }
 }
+
 impl TernaryOperator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -1964,6 +1999,7 @@ impl TernaryOperator {
         Some(operator)
     }
 }
+
 impl PrefixBinaryOperator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -1991,6 +2027,7 @@ impl PrefixBinaryOperator {
         Some(operator)
     }
 }
+
 impl CompoundOperator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -2028,6 +2065,7 @@ impl CompoundOperator {
         Some(operator)
     }
 }
+
 impl GroupOperator {
     #[allow(dead_code)]
     #[doc(hidden)]
@@ -2073,3 +2111,4 @@ impl GroupOperator {
         Some(operator)
     }
 }
+

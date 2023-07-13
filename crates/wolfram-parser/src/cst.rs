@@ -10,7 +10,7 @@ use crate::{
 
 pub use crate::parselet_registration::{
     BinaryOperator, CompoundOperator, GroupOperator, Operator, PostfixOperator,
-    PrefixBinaryOperator, TernaryOperator,
+    PrefixBinaryOperator, PrefixOperator, TernaryOperator,
 };
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
@@ -88,7 +88,7 @@ pub struct OperatorNode<I = OwnedTokenInput, S = Source, O = Operator> {
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct PrefixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, PrefixOperator>);
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
@@ -390,7 +390,8 @@ impl<I, S> Node<I, S> {
             }) => {
                 children.visit(visit);
             },
-            Node::Prefix(PrefixNode(op)) | Node::Infix(InfixNode(op)) => op.visit_children(visit),
+            Node::Prefix(PrefixNode(op)) => op.visit_children(visit),
+            Node::Infix(InfixNode(op)) => op.visit_children(visit),
             Node::Postfix(PostfixNode(op)) => op.visit_children(visit),
             Node::Binary(BinaryNode(op)) => op.visit_children(visit),
             Node::Ternary(TernaryNode(op)) => op.visit_children(visit),
@@ -701,7 +702,7 @@ impl<I, S: TokenSource> GroupMissingOpenerNode<I, S> {
 //======================================
 
 impl<I> PrefixNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: PrefixOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixNodeCount);
 
         PrefixNode(OperatorNode::new(op, args))

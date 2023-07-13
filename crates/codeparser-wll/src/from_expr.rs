@@ -6,8 +6,8 @@ use wolfram_parser::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
         CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
         InfixNode, LeafNode, Operator, OperatorNode, PostfixNode, PostfixOperator,
-        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode, TernaryOperator,
+        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
+        SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     cst::{CompoundOperator, CstNodeSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
@@ -254,7 +254,7 @@ impl FromExpr for PrefixNode<OwnedTokenInput, GeneralSource> {
             todo!()
         }
 
-        let op = Operator::from_expr(&elements[0])?;
+        let op = PrefixOperator::from_expr(&elements[0])?;
         let children = NodeSeq::from_expr(&elements[1])?;
 
         let Metadata { source, .. } = Metadata::from_expr(&elements[2])?;
@@ -732,6 +732,20 @@ impl FromExpr for Operator {
         };
 
         match Operator::try_from_symbol(sym.as_symbol_ref()) {
+            Some(op) => Ok(op),
+            None => Err(format!("unable to match symbol '{sym}' to Operator")),
+        }
+    }
+}
+
+impl FromExpr for PrefixOperator {
+    fn from_expr(expr: &Expr) -> Result<Self, String> {
+        let sym = match expr.try_as_symbol() {
+            Some(sym) => sym,
+            None => panic!(),
+        };
+
+        match PrefixOperator::try_from_symbol(sym.as_symbol_ref()) {
             Some(op) => Ok(op),
             None => Err(format!("unable to match symbol '{sym}' to Operator")),
         }

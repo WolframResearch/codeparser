@@ -196,7 +196,7 @@ macro_rules! LHS {
     };
     (PrefixNode[$($op_kind:ident)|*, _, _]) => {
         Node::Prefix(PrefixNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
+            op: $($crate::cst::PrefixOperator::$op_kind)|*,
             ..
         }))
     };

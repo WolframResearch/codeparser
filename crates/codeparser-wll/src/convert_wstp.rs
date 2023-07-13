@@ -8,8 +8,8 @@ use wolfram_parser::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
         CompoundOperator, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
         GroupOperator, InfixNode, Operator, OperatorNode, PostfixNode, PostfixOperator,
-        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode, TernaryOperator,
+        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
+        SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
@@ -478,7 +478,7 @@ impl WstpPut for AstNode {
                 link.put_function(sym::CodeParser_PrefixNode.as_str(), 3)
                     .unwrap();
 
-                Operator::CodeParser_PrefixLinearSyntaxBang.put(link);
+                PrefixOperator::CodeParser_PrefixLinearSyntaxBang.put(link);
 
                 link.put_function(sym::List.as_str(), children.len())
                     .unwrap();
@@ -668,6 +668,12 @@ fn put_op<I: TokenInput, S: WstpPut, O: WstpPut>(
 }
 
 impl WstpPut for Operator {
+    fn put(&self, link: &mut wstp::Link) {
+        Symbol_put(self.to_symbol(), link)
+    }
+}
+
+impl WstpPut for PrefixOperator {
     fn put(&self, link: &mut wstp::Link) {
         Symbol_put(self.to_symbol(), link)
     }
