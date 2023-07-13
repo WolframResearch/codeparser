@@ -546,7 +546,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixAssertFalseParselet, // Token`Error`UnsupportedToken
     &infixAssertFalseParselet, // Token`Error`UnexpectedCommentCloser
     &infixImplicitTimesParselet, // Token`Error`End
-    &InfixOperatorParselet::new(PRECEDENCE_DOT, Operator::Dot), // Token`Dot
+    &InfixOperatorParselet::new(PRECEDENCE_DOT, InfixOperator::Dot), // Token`Dot
     &colonParselet, // Token`Colon
     &infixImplicitTimesParselet, // Token`OpenParen
     &infixAssertFalseParselet, // Token`CloseParen
@@ -558,16 +558,16 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &equalParselet, // Token`Equal
     &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_BANG, PostfixOperator::Factorial), // Token`Bang
     &infixImplicitTimesParselet, // Token`Under
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`Less
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`Greater
-    &InfixOperatorParselet::new(PRECEDENCE_INFIX_MINUS, Operator::Plus), // Token`Minus
-    &InfixOperatorParselet::new(PRECEDENCE_BAR, Operator::Alternatives), // Token`Bar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`Less
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`Greater
+    &InfixOperatorParselet::new(PRECEDENCE_INFIX_MINUS, InfixOperator::Plus), // Token`Minus
+    &InfixOperatorParselet::new(PRECEDENCE_BAR, InfixOperator::Alternatives), // Token`Bar
     &semiParselet, // Token`Semi
     &infixImplicitTimesParselet, // Token`Hash
     &PostfixOperatorParselet::new(PRECEDENCE_AMP, PostfixOperator::Function), // Token`Amp
     &BinaryOperatorParselet::new(PRECEDENCE_SLASH, BinaryOperator::Divide), // Token`Slash
     &BinaryOperatorParselet::new(PRECEDENCE_AT, BinaryOperator::CodeParser_BinaryAt), // Token`At
-    &InfixOperatorParselet::new(PRECEDENCE_INFIX_PLUS, Operator::Plus), // Token`Plus
+    &InfixOperatorParselet::new(PRECEDENCE_INFIX_PLUS, InfixOperator::Plus), // Token`Plus
     (&TildeParselet {}), // Token`Tilde
     &timesParselet, // Token`Star
     &BinaryOperatorParselet::new(PRECEDENCE_CARET, BinaryOperator::Power), // Token`Caret
@@ -578,44 +578,44 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     (&ColonColonParselet {}), // Token`ColonColon
     &colonEqualParselet, // Token`ColonEqual
     &BinaryOperatorParselet::new(PRECEDENCE_COLONGREATER, BinaryOperator::RuleDelayed), // Token`ColonGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`EqualEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`EqualEqual
     &infixImplicitTimesParselet, // Token`UnderUnder
     &infixImplicitTimesParselet, // Token`UnderDot
     &infixImplicitTimesParselet, // Token`LessBar
     &infixImplicitTimesParselet, // Token`LessLess
-    &InfixOperatorParselet::new(PRECEDENCE_LESSGREATER, Operator::StringJoin), // Token`LessGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LessEqual
+    &InfixOperatorParselet::new(PRECEDENCE_LESSGREATER, InfixOperator::StringJoin), // Token`LessGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LessEqual
     (&GreaterGreaterParselet {}), // Token`GreaterGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`GreaterEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`GreaterEqual
     &BinaryOperatorParselet::new(PRECEDENCE_MINUSGREATER, BinaryOperator::Rule), // Token`MinusGreater
     &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_MINUSMINUS, PostfixOperator::Decrement), // Token`MinusMinus
     &BinaryOperatorParselet::new(PRECEDENCE_MINUSEQUAL, BinaryOperator::SubtractFrom), // Token`MinusEqual
-    &InfixOperatorParselet::new(PRECEDENCE_BARBAR, Operator::Or), // Token`BarBar
+    &InfixOperatorParselet::new(PRECEDENCE_BARBAR, InfixOperator::Or), // Token`BarBar
     &infixAssertFalseParselet, // Token`BarGreater
     &semiSemiParselet, // Token`SemiSemi
-    &InfixOperatorParselet::new(PRECEDENCE_AMPAMP, Operator::And), // Token`AmpAmp
+    &InfixOperatorParselet::new(PRECEDENCE_AMPAMP, InfixOperator::And), // Token`AmpAmp
     &BinaryOperatorParselet::new(PRECEDENCE_SLASHAT, BinaryOperator::Map), // Token`SlashAt
     &BinaryOperatorParselet::new(PRECEDENCE_SLASHSEMI, BinaryOperator::Condition), // Token`SlashSemi
     &BinaryOperatorParselet::new(PRECEDENCE_SLASHDOT, BinaryOperator::ReplaceAll), // Token`SlashDot
     &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASH, BinaryOperator::CodeParser_BinarySlashSlash), // Token`SlashSlash
     &slashColonParselet, // Token`SlashColon
     &BinaryOperatorParselet::new(PRECEDENCE_SLASHEQUAL, BinaryOperator::DivideBy), // Token`SlashEqual
-    &InfixOperatorParselet::new(PRECEDENCE_SLASHSTAR, Operator::RightComposition), // Token`SlashStar
+    &InfixOperatorParselet::new(PRECEDENCE_SLASHSTAR, InfixOperator::RightComposition), // Token`SlashStar
     &BinaryOperatorParselet::new(PRECEDENCE_ATAT, BinaryOperator::Apply), // Token`AtAt
-    &InfixOperatorParselet::new(PRECEDENCE_ATSTAR, Operator::Composition), // Token`AtStar
+    &InfixOperatorParselet::new(PRECEDENCE_ATSTAR, InfixOperator::Composition), // Token`AtStar
     &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_PLUSPLUS, PostfixOperator::Increment), // Token`PlusPlus
     &BinaryOperatorParselet::new(PRECEDENCE_PLUSEQUAL, BinaryOperator::AddTo), // Token`PlusEqual
-    &InfixOperatorParselet::new(PRECEDENCE_TILDETILDE, Operator::StringExpression), // Token`TildeTilde
+    &InfixOperatorParselet::new(PRECEDENCE_TILDETILDE, InfixOperator::StringExpression), // Token`TildeTilde
     &BinaryOperatorParselet::new(PRECEDENCE_STAREQUAL, BinaryOperator::TimesBy), // Token`StarEqual
-    &InfixOperatorParselet::new(PRECEDENCE_STARSTAR, Operator::NonCommutativeMultiply), // Token`StarStar
+    &InfixOperatorParselet::new(PRECEDENCE_STARSTAR, InfixOperator::NonCommutativeMultiply), // Token`StarStar
     &BinaryOperatorParselet::new(PRECEDENCE_CARETEQUAL, BinaryOperator::UpSet), // Token`CaretEqual
     &infixImplicitTimesParselet, // Token`HashHash
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`BangEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`BangEqual
     &PostfixOperatorParselet::new(PRECEDENCE_POSTFIX_BANGBANG, PostfixOperator::Factorial2), // Token`BangBang
     &infixAssertFalseParselet, // Token`QuestionQuestion
     &PostfixOperatorParselet::new(PRECEDENCE_DOTDOTDOT, PostfixOperator::RepeatedNull), // Token`DotDotDot
-    &InfixOperatorParselet::new(PRECEDENCE_EQUALEQUALEQUAL, Operator::SameQ), // Token`EqualEqualEqual
-    &InfixOperatorParselet::new(PRECEDENCE_EQUALBANGEQUAL, Operator::UnsameQ), // Token`EqualBangEqual
+    &InfixOperatorParselet::new(PRECEDENCE_EQUALEQUALEQUAL, InfixOperator::SameQ), // Token`EqualEqualEqual
+    &InfixOperatorParselet::new(PRECEDENCE_EQUALBANGEQUAL, InfixOperator::UnsameQ), // Token`EqualBangEqual
     &infixImplicitTimesParselet, // Token`UnderUnderUnder
     &BinaryOperatorParselet::new(PRECEDENCE_SLASHSLASHDOT, BinaryOperator::ReplaceRepeated), // Token`SlashSlashDot
     &BinaryOperatorParselet::new(PRECEDENCE_ATATAT, BinaryOperator::MapApply), // Token`AtAtAt
@@ -649,7 +649,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixImplicitTimesParselet, // Token`Boxes`MultiWhitespace
     &infixImplicitTimesParselet, // Token`LongName`Not
     &BinaryOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_PLUSMINUS, BinaryOperator::PlusMinus), // Token`LongName`PlusMinus
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CENTERDOT, Operator::CenterDot), // Token`LongName`CenterDot
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CENTERDOT, InfixOperator::CenterDot), // Token`LongName`CenterDot
     &timesParselet, // Token`LongName`Times
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIVIDE, BinaryOperator::Divide), // Token`LongName`Divide
     &infixImplicitTimesParselet, // Token`LongName`OpenCurlyQuote
@@ -657,68 +657,68 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixImplicitTimesParselet, // Token`LongName`OpenCurlyDoubleQuote
     &infixAssertFalseParselet, // Token`LongName`CloseCurlyDoubleQuote
     &timesParselet, // Token`LongName`InvisibleTimes
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::LeftArrow), // Token`LongName`LeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::UpArrow), // Token`LongName`UpArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::RightArrow), // Token`LongName`RightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DownArrow), // Token`LongName`DownArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::LeftRightArrow), // Token`LongName`LeftRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::UpDownArrow), // Token`LongName`UpDownArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, Operator::UpperLeftArrow), // Token`LongName`UpperLeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, Operator::UpperRightArrow), // Token`LongName`UpperRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, Operator::LowerRightArrow), // Token`LongName`LowerRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, Operator::LowerLeftArrow), // Token`LongName`LowerLeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::LeftTeeArrow), // Token`LongName`LeftTeeArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::UpTeeArrow), // Token`LongName`UpTeeArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::RightTeeArrow), // Token`LongName`RightTeeArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DownTeeArrow), // Token`LongName`DownTeeArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::LeftVector), // Token`LongName`LeftVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::DownLeftVector), // Token`LongName`DownLeftVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::RightUpVector), // Token`LongName`RightUpVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftUpVector), // Token`LongName`LeftUpVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::RightVector), // Token`LongName`RightVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::DownRightVector), // Token`LongName`DownRightVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::RightDownVector), // Token`LongName`RightDownVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftDownVector), // Token`LongName`LeftDownVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::RightArrowLeftArrow), // Token`LongName`RightArrowLeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::UpArrowDownArrow), // Token`LongName`UpArrowDownArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::LeftArrowRightArrow), // Token`LongName`LeftArrowRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::ReverseEquilibrium), // Token`LongName`ReverseEquilibrium
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Equilibrium), // Token`LongName`Equilibrium
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::DoubleLeftArrow), // Token`LongName`DoubleLeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DoubleUpArrow), // Token`LongName`DoubleUpArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::DoubleRightArrow), // Token`LongName`DoubleRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DoubleDownArrow), // Token`LongName`DoubleDownArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::DoubleLeftRightArrow), // Token`LongName`DoubleLeftRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DoubleUpDownArrow), // Token`LongName`DoubleUpDownArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::LeftArrowBar), // Token`LongName`LeftArrowBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::RightArrowBar), // Token`LongName`RightArrowBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DownArrowUpArrow), // Token`LongName`DownArrowUpArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::LeftArrow), // Token`LongName`LeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::UpArrow), // Token`LongName`UpArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::RightArrow), // Token`LongName`RightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DownArrow), // Token`LongName`DownArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::LeftRightArrow), // Token`LongName`LeftRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::UpDownArrow), // Token`LongName`UpDownArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, InfixOperator::UpperLeftArrow), // Token`LongName`UpperLeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, InfixOperator::UpperRightArrow), // Token`LongName`UpperRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, InfixOperator::LowerRightArrow), // Token`LongName`LowerRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_DIAGONALARROWOPERATORS, InfixOperator::LowerLeftArrow), // Token`LongName`LowerLeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::LeftTeeArrow), // Token`LongName`LeftTeeArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::UpTeeArrow), // Token`LongName`UpTeeArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::RightTeeArrow), // Token`LongName`RightTeeArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DownTeeArrow), // Token`LongName`DownTeeArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::LeftVector), // Token`LongName`LeftVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::DownLeftVector), // Token`LongName`DownLeftVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::RightUpVector), // Token`LongName`RightUpVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::LeftUpVector), // Token`LongName`LeftUpVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::RightVector), // Token`LongName`RightVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::DownRightVector), // Token`LongName`DownRightVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::RightDownVector), // Token`LongName`RightDownVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::LeftDownVector), // Token`LongName`LeftDownVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::RightArrowLeftArrow), // Token`LongName`RightArrowLeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::UpArrowDownArrow), // Token`LongName`UpArrowDownArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::LeftArrowRightArrow), // Token`LongName`LeftArrowRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::ReverseEquilibrium), // Token`LongName`ReverseEquilibrium
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::Equilibrium), // Token`LongName`Equilibrium
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::DoubleLeftArrow), // Token`LongName`DoubleLeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DoubleUpArrow), // Token`LongName`DoubleUpArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::DoubleRightArrow), // Token`LongName`DoubleRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DoubleDownArrow), // Token`LongName`DoubleDownArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::DoubleLeftRightArrow), // Token`LongName`DoubleLeftRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DoubleUpDownArrow), // Token`LongName`DoubleUpDownArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::LeftArrowBar), // Token`LongName`LeftArrowBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::RightArrowBar), // Token`LongName`RightArrowBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DownArrowUpArrow), // Token`LongName`DownArrowUpArrow
     &infixImplicitTimesParselet, // Token`LongName`ForAll
     &infixAssertFalseParselet, // Token`LongName`PartialD
     &infixImplicitTimesParselet, // Token`LongName`Exists
     &infixImplicitTimesParselet, // Token`LongName`NotExists
     &infixImplicitTimesParselet, // Token`LongName`Del
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::Element), // Token`LongName`Element
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotElement), // Token`LongName`NotElement
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::ReverseElement), // Token`LongName`ReverseElement
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotReverseElement), // Token`LongName`NotReverseElement
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::Element), // Token`LongName`Element
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotElement), // Token`LongName`NotElement
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::ReverseElement), // Token`LongName`ReverseElement
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotReverseElement), // Token`LongName`NotReverseElement
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_SUCHTHAT, BinaryOperator::SuchThat), // Token`LongName`SuchThat
     &infixImplicitTimesParselet, // Token`LongName`Product
-    &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_COPRODUCT, Operator::Coproduct), // Token`LongName`Coproduct
+    &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_COPRODUCT, InfixOperator::Coproduct), // Token`LongName`Coproduct
     &infixImplicitTimesParselet, // Token`LongName`Sum
-    &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_MINUS, Operator::Plus), // Token`LongName`Minus
+    &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_MINUS, InfixOperator::Plus), // Token`LongName`Minus
     &BinaryOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_MINUSPLUS, BinaryOperator::MinusPlus), // Token`LongName`MinusPlus
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIVISIONSLASH, BinaryOperator::Divide), // Token`LongName`DivisionSlash
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_BACKSLASH, Operator::Backslash), // Token`LongName`Backslash
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_SMALLCIRCLE, Operator::SmallCircle), // Token`LongName`SmallCircle
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_BACKSLASH, InfixOperator::Backslash), // Token`LongName`Backslash
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_SMALLCIRCLE, InfixOperator::SmallCircle), // Token`LongName`SmallCircle
     &infixImplicitTimesParselet, // Token`LongName`Sqrt
     &infixImplicitTimesParselet, // Token`LongName`CubeRoot
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Proportional), // Token`LongName`Proportional
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_DIVIDES, Operator::Divisible), // Token`LongName`Divides
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLEVERTICALBAR, Operator::DoubleVerticalBar), // Token`LongName`DoubleVerticalBar
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTDOUBLEVERTICALBAR, Operator::NotDoubleVerticalBar), // Token`LongName`NotDoubleVerticalBar
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_AND, Operator::And), // Token`LongName`And
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_OR, Operator::Or), // Token`LongName`Or
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::Proportional), // Token`LongName`Proportional
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_DIVIDES, InfixOperator::Divisible), // Token`LongName`Divides
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLEVERTICALBAR, InfixOperator::DoubleVerticalBar), // Token`LongName`DoubleVerticalBar
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTDOUBLEVERTICALBAR, InfixOperator::NotDoubleVerticalBar), // Token`LongName`NotDoubleVerticalBar
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_AND, InfixOperator::And), // Token`LongName`And
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_OR, InfixOperator::Or), // Token`LongName`Or
     &infixImplicitTimesParselet, // Token`LongName`Integral
     &infixImplicitTimesParselet, // Token`LongName`ContourIntegral
     &infixImplicitTimesParselet, // Token`LongName`DoubleContourIntegral
@@ -726,152 +726,152 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixImplicitTimesParselet, // Token`LongName`CounterClockwiseContourIntegral
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_THEREFORE, BinaryOperator::Therefore), // Token`LongName`Therefore
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_BECAUSE, BinaryOperator::Because), // Token`LongName`Because
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_COLON, Operator::Colon), // Token`LongName`Colon
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Proportion), // Token`LongName`Proportion
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Tilde), // Token`LongName`Tilde
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VERTICALTILDE, Operator::VerticalTilde), // Token`LongName`VerticalTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotTilde), // Token`LongName`NotTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::EqualTilde), // Token`LongName`EqualTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::TildeEqual), // Token`LongName`TildeEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotTildeEqual), // Token`LongName`NotTildeEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::TildeFullEqual), // Token`LongName`TildeFullEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotTildeFullEqual), // Token`LongName`NotTildeFullEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::TildeTilde), // Token`LongName`TildeTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotTildeTilde), // Token`LongName`NotTildeTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::CupCap), // Token`LongName`CupCap
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::HumpDownHump), // Token`LongName`HumpDownHump
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::HumpEqual), // Token`LongName`HumpEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::DotEqual), // Token`LongName`DotEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Congruent), // Token`LongName`Congruent
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotCongruent), // Token`LongName`NotCongruent
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LessEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`GreaterEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LessFullEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`GreaterFullEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotLessFullEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotGreaterFullEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LessLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`GreaterGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotCupCap), // Token`LongName`NotCupCap
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotLessEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotGreaterEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LessTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`GreaterTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotLessTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotGreaterTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LessGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`GreaterLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotLessGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotGreaterLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Precedes), // Token`LongName`Precedes
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::Succeeds), // Token`LongName`Succeeds
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::PrecedesSlantEqual), // Token`LongName`PrecedesSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::SucceedsSlantEqual), // Token`LongName`SucceedsSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::PrecedesTilde), // Token`LongName`PrecedesTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::SucceedsTilde), // Token`LongName`SucceedsTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotPrecedes), // Token`LongName`NotPrecedes
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotSucceeds), // Token`LongName`NotSucceeds
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::Subset), // Token`LongName`Subset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::Superset), // Token`LongName`Superset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSubset), // Token`LongName`NotSubset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSuperset), // Token`LongName`NotSuperset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::SubsetEqual), // Token`LongName`SubsetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::SupersetEqual), // Token`LongName`SupersetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSubsetEqual), // Token`LongName`NotSubsetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSupersetEqual), // Token`LongName`NotSupersetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_UNIONOPERATORS, Operator::UnionPlus), // Token`LongName`UnionPlus
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::SquareSubset), // Token`LongName`SquareSubset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::SquareSuperset), // Token`LongName`SquareSuperset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::SquareSubsetEqual), // Token`LongName`SquareSubsetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::SquareSupersetEqual), // Token`LongName`SquareSupersetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INTERSECTIONOPERATORS, Operator::SquareIntersection), // Token`LongName`SquareIntersection
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_UNIONOPERATORS, Operator::SquareUnion), // Token`LongName`SquareUnion
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEPLUS, Operator::CirclePlus), // Token`LongName`CirclePlus
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_COLON, InfixOperator::Colon), // Token`LongName`Colon
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::Proportion), // Token`LongName`Proportion
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::Tilde), // Token`LongName`Tilde
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VERTICALTILDE, InfixOperator::VerticalTilde), // Token`LongName`VerticalTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotTilde), // Token`LongName`NotTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::EqualTilde), // Token`LongName`EqualTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::TildeEqual), // Token`LongName`TildeEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotTildeEqual), // Token`LongName`NotTildeEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::TildeFullEqual), // Token`LongName`TildeFullEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotTildeFullEqual), // Token`LongName`NotTildeFullEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::TildeTilde), // Token`LongName`TildeTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotTildeTilde), // Token`LongName`NotTildeTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::CupCap), // Token`LongName`CupCap
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::HumpDownHump), // Token`LongName`HumpDownHump
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::HumpEqual), // Token`LongName`HumpEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::DotEqual), // Token`LongName`DotEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::Congruent), // Token`LongName`Congruent
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotCongruent), // Token`LongName`NotCongruent
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LessEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`GreaterEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LessFullEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`GreaterFullEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotLessFullEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotGreaterFullEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LessLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`GreaterGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotCupCap), // Token`LongName`NotCupCap
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotLessEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotGreaterEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LessTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`GreaterTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotLessTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotGreaterTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LessGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`GreaterLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotLessGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotGreaterLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::Precedes), // Token`LongName`Precedes
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::Succeeds), // Token`LongName`Succeeds
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::PrecedesSlantEqual), // Token`LongName`PrecedesSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::SucceedsSlantEqual), // Token`LongName`SucceedsSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::PrecedesTilde), // Token`LongName`PrecedesTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::SucceedsTilde), // Token`LongName`SucceedsTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotPrecedes), // Token`LongName`NotPrecedes
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotSucceeds), // Token`LongName`NotSucceeds
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::Subset), // Token`LongName`Subset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::Superset), // Token`LongName`Superset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSubset), // Token`LongName`NotSubset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSuperset), // Token`LongName`NotSuperset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::SubsetEqual), // Token`LongName`SubsetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::SupersetEqual), // Token`LongName`SupersetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSubsetEqual), // Token`LongName`NotSubsetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSupersetEqual), // Token`LongName`NotSupersetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_UNIONOPERATORS, InfixOperator::UnionPlus), // Token`LongName`UnionPlus
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::SquareSubset), // Token`LongName`SquareSubset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::SquareSuperset), // Token`LongName`SquareSuperset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::SquareSubsetEqual), // Token`LongName`SquareSubsetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::SquareSupersetEqual), // Token`LongName`SquareSupersetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INTERSECTIONOPERATORS, InfixOperator::SquareIntersection), // Token`LongName`SquareIntersection
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_UNIONOPERATORS, InfixOperator::SquareUnion), // Token`LongName`SquareUnion
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEPLUS, InfixOperator::CirclePlus), // Token`LongName`CirclePlus
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEMINUS, BinaryOperator::CircleMinus), // Token`LongName`CircleMinus
-    &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_CIRCLETIMES, Operator::CircleTimes), // Token`LongName`CircleTimes
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEDOT, Operator::CircleDot), // Token`LongName`CircleDot
+    &InfixOperatorParselet::new(PRECEDENCE_INFIX_LONGNAME_CIRCLETIMES, InfixOperator::CircleTimes), // Token`LongName`CircleTimes
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CIRCLEDOT, InfixOperator::CircleDot), // Token`LongName`CircleDot
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RIGHTTEE, BinaryOperator::RightTee), // Token`LongName`RightTee
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_LEFTTEE, BinaryOperator::LeftTee), // Token`LongName`LeftTee
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOWNTEE, BinaryOperator::DownTee), // Token`LongName`DownTee
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_UPTEE, BinaryOperator::UpTee), // Token`LongName`UpTee
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLERIGHTTEE, BinaryOperator::DoubleRightTee), // Token`LongName`DoubleRightTee
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::LeftTriangle), // Token`LongName`LeftTriangle
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::RightTriangle), // Token`LongName`RightTriangle
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::LeftTriangleEqual), // Token`LongName`LeftTriangleEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::RightTriangleEqual), // Token`LongName`RightTriangleEqual
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_XOR, Operator::Xor), // Token`LongName`Xor
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NAND, Operator::Nand), // Token`LongName`Nand
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOR, Operator::Nor), // Token`LongName`Nor
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_WEDGE, Operator::Wedge), // Token`LongName`Wedge
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VEE, Operator::Vee), // Token`LongName`Vee
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INTERSECTIONOPERATORS, Operator::Intersection), // Token`LongName`Intersection
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_UNIONOPERATORS, Operator::Union), // Token`LongName`Union
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_DIAMOND, Operator::Diamond), // Token`LongName`Diamond
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_STAR, Operator::Star), // Token`LongName`Star
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LessEqualGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`GreaterEqualLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotPrecedesSlantEqual), // Token`LongName`NotPrecedesSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotSucceedsSlantEqual), // Token`LongName`NotSucceedsSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSquareSubsetEqual), // Token`LongName`NotSquareSubsetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSquareSupersetEqual), // Token`LongName`NotSquareSupersetEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotPrecedesTilde), // Token`LongName`NotPrecedesTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotSucceedsTilde), // Token`LongName`NotSucceedsTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotLeftTriangle), // Token`LongName`NotLeftTriangle
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotRightTriangle), // Token`LongName`NotRightTriangle
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotLeftTriangleEqual), // Token`LongName`NotLeftTriangleEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotRightTriangleEqual), // Token`LongName`NotRightTriangleEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::LeftTriangle), // Token`LongName`LeftTriangle
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::RightTriangle), // Token`LongName`RightTriangle
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::LeftTriangleEqual), // Token`LongName`LeftTriangleEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::RightTriangleEqual), // Token`LongName`RightTriangleEqual
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_XOR, InfixOperator::Xor), // Token`LongName`Xor
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NAND, InfixOperator::Nand), // Token`LongName`Nand
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOR, InfixOperator::Nor), // Token`LongName`Nor
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_WEDGE, InfixOperator::Wedge), // Token`LongName`Wedge
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VEE, InfixOperator::Vee), // Token`LongName`Vee
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INTERSECTIONOPERATORS, InfixOperator::Intersection), // Token`LongName`Intersection
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_UNIONOPERATORS, InfixOperator::Union), // Token`LongName`Union
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_DIAMOND, InfixOperator::Diamond), // Token`LongName`Diamond
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_STAR, InfixOperator::Star), // Token`LongName`Star
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LessEqualGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`GreaterEqualLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotPrecedesSlantEqual), // Token`LongName`NotPrecedesSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotSucceedsSlantEqual), // Token`LongName`NotSucceedsSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSquareSubsetEqual), // Token`LongName`NotSquareSubsetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSquareSupersetEqual), // Token`LongName`NotSquareSupersetEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotPrecedesTilde), // Token`LongName`NotPrecedesTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotSucceedsTilde), // Token`LongName`NotSucceedsTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotLeftTriangle), // Token`LongName`NotLeftTriangle
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotRightTriangle), // Token`LongName`NotRightTriangle
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotLeftTriangleEqual), // Token`LongName`NotLeftTriangleEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotRightTriangleEqual), // Token`LongName`NotRightTriangleEqual
     &infixImplicitTimesParselet, // Token`LongName`LeftCeiling
     &infixAssertFalseParselet, // Token`LongName`RightCeiling
     &infixImplicitTimesParselet, // Token`LongName`LeftFloor
     &infixAssertFalseParselet, // Token`LongName`RightFloor
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CAP, Operator::Cap), // Token`LongName`Cap
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CUP, Operator::Cup), // Token`LongName`Cup
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CAP, InfixOperator::Cap), // Token`LongName`Cap
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CUP, InfixOperator::Cup), // Token`LongName`Cup
     &infixImplicitTimesParselet, // Token`LongName`LeftAngleBracket
     &infixAssertFalseParselet, // Token`LongName`RightAngleBracket
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_PERPENDICULAR, BinaryOperator::Perpendicular), // Token`LongName`Perpendicular
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::LongLeftArrow), // Token`LongName`LongLeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::LongRightArrow), // Token`LongName`LongRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::LongLeftRightArrow), // Token`LongName`LongLeftRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DoubleLongLeftArrow), // Token`LongName`DoubleLongLeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DoubleLongRightArrow), // Token`LongName`DoubleLongRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DoubleLongLeftRightArrow), // Token`LongName`DoubleLongLeftRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::UpArrowBar), // Token`LongName`UpArrowBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::DownArrowBar), // Token`LongName`DownArrowBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::LeftRightVector), // Token`LongName`LeftRightVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::RightUpDownVector), // Token`LongName`RightUpDownVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::DownLeftRightVector), // Token`LongName`DownLeftRightVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftUpDownVector), // Token`LongName`LeftUpDownVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::LeftVectorBar), // Token`LongName`LeftVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::RightVectorBar), // Token`LongName`RightVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::RightUpVectorBar), // Token`LongName`RightUpVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::RightDownVectorBar), // Token`LongName`RightDownVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::DownLeftVectorBar), // Token`LongName`DownLeftVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::DownRightVectorBar), // Token`LongName`DownRightVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftUpVectorBar), // Token`LongName`LeftUpVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftDownVectorBar), // Token`LongName`LeftDownVectorBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::LeftTeeVector), // Token`LongName`LeftTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::RightTeeVector), // Token`LongName`RightTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::RightUpTeeVector), // Token`LongName`RightUpTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::RightDownTeeVector), // Token`LongName`RightDownTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::DownLeftTeeVector), // Token`LongName`DownLeftTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, Operator::DownRightTeeVector), // Token`LongName`DownRightTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftUpTeeVector), // Token`LongName`LeftUpTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::LeftDownTeeVector), // Token`LongName`LeftDownTeeVector
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::UpEquilibrium), // Token`LongName`UpEquilibrium
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, Operator::ReverseUpEquilibrium), // Token`LongName`ReverseUpEquilibrium
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::LongLeftArrow), // Token`LongName`LongLeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::LongRightArrow), // Token`LongName`LongRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::LongLeftRightArrow), // Token`LongName`LongLeftRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DoubleLongLeftArrow), // Token`LongName`DoubleLongLeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DoubleLongRightArrow), // Token`LongName`DoubleLongRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DoubleLongLeftRightArrow), // Token`LongName`DoubleLongLeftRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::UpArrowBar), // Token`LongName`UpArrowBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::DownArrowBar), // Token`LongName`DownArrowBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::LeftRightVector), // Token`LongName`LeftRightVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::RightUpDownVector), // Token`LongName`RightUpDownVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::DownLeftRightVector), // Token`LongName`DownLeftRightVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::LeftUpDownVector), // Token`LongName`LeftUpDownVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::LeftVectorBar), // Token`LongName`LeftVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::RightVectorBar), // Token`LongName`RightVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::RightUpVectorBar), // Token`LongName`RightUpVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::RightDownVectorBar), // Token`LongName`RightDownVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::DownLeftVectorBar), // Token`LongName`DownLeftVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::DownRightVectorBar), // Token`LongName`DownRightVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::LeftUpVectorBar), // Token`LongName`LeftUpVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::LeftDownVectorBar), // Token`LongName`LeftDownVectorBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::LeftTeeVector), // Token`LongName`LeftTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::RightTeeVector), // Token`LongName`RightTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::RightUpTeeVector), // Token`LongName`RightUpTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::RightDownTeeVector), // Token`LongName`RightDownTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::DownLeftTeeVector), // Token`LongName`DownLeftTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VECTOROPERATORS, InfixOperator::DownRightTeeVector), // Token`LongName`DownRightTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::LeftUpTeeVector), // Token`LongName`LeftUpTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::LeftDownTeeVector), // Token`LongName`LeftDownTeeVector
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::UpEquilibrium), // Token`LongName`UpEquilibrium
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALVECTOROPERATORS, InfixOperator::ReverseUpEquilibrium), // Token`LongName`ReverseUpEquilibrium
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_ROUNDIMPLIES, BinaryOperator::RoundImplies), // Token`LongName`RoundImplies
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::LeftTriangleBar), // Token`LongName`LeftTriangleBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::RightTriangleBar), // Token`LongName`RightTriangleBar
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_EQUIVALENT, Operator::Equivalent), // Token`LongName`Equivalent
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LessSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`GreaterSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NestedLessLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NestedGreaterGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::PrecedesEqual), // Token`LongName`PrecedesEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::SucceedsEqual), // Token`LongName`SucceedsEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::LeftTriangleBar), // Token`LongName`LeftTriangleBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::RightTriangleBar), // Token`LongName`RightTriangleBar
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_EQUIVALENT, InfixOperator::Equivalent), // Token`LongName`Equivalent
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LessSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`GreaterSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NestedLessLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NestedGreaterGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::PrecedesEqual), // Token`LongName`PrecedesEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::SucceedsEqual), // Token`LongName`SucceedsEqual
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DOUBLELEFTTEE, BinaryOperator::DoubleLeftTee), // Token`LongName`DoubleLeftTee
     &(CallParselet::new(&doubleBracketGroupParselet)), // Token`LongName`LeftDoubleBracket
     &infixAssertFalseParselet, // Token`LongName`RightDoubleBracket
@@ -879,7 +879,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixAssertFalseParselet, // Token`LongName`RightAssociation
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_TWOWAYRULE, BinaryOperator::TwoWayRule), // Token`LongName`TwoWayRule
     &infixImplicitTimesParselet, // Token`LongName`Piecewise
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_IMPLICITPLUS, Operator::Plus), // Token`LongName`ImplicitPlus
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_IMPLICITPLUS, InfixOperator::Plus), // Token`LongName`ImplicitPlus
     &infixAssertFalseParselet, // Token`LongName`AutoLeftMatch
     &infixAssertFalseParselet, // Token`LongName`AutoRightMatch
     &infixImplicitTimesParselet, // Token`LongName`InvisiblePrefixScriptBase
@@ -888,45 +888,45 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONJUGATE, PostfixOperator::Conjugate), // Token`LongName`Conjugate
     &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONJUGATETRANSPOSE, PostfixOperator::ConjugateTranspose), // Token`LongName`ConjugateTranspose
     &PostfixOperatorParselet::new(PRECEDENCE_LONGNAME_HERMITIANCONJUGATE, PostfixOperator::HermitianConjugate), // Token`LongName`HermitianConjugate
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VERTICALBAR, Operator::VerticalBar), // Token`LongName`VerticalBar
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTVERTICALBAR, Operator::NotVerticalBar), // Token`LongName`NotVerticalBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::Distributed), // Token`LongName`Distributed
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONDITIONED, Operator::Conditioned), // Token`LongName`Conditioned
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VERTICALBAR, InfixOperator::VerticalBar), // Token`LongName`VerticalBar
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_NOTVERTICALBAR, InfixOperator::NotVerticalBar), // Token`LongName`NotVerticalBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::Distributed), // Token`LongName`Distributed
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CONDITIONED, InfixOperator::Conditioned), // Token`LongName`Conditioned
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_UNDIRECTEDEDGE, BinaryOperator::UndirectedEdge), // Token`LongName`UndirectedEdge
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_DIRECTEDEDGE, BinaryOperator::DirectedEdge), // Token`LongName`DirectedEdge
     &infixImplicitTimesParselet, // Token`LongName`ContinuedFractionK
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORPRODUCT, Operator::TensorProduct), // Token`LongName`TensorProduct
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORWEDGE, Operator::TensorWedge), // Token`LongName`TensorWedge
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORPRODUCT, InfixOperator::TensorProduct), // Token`LongName`TensorProduct
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_TENSORWEDGE, InfixOperator::TensorWedge), // Token`LongName`TensorWedge
     &infixImplicitTimesParselet, // Token`LongName`ProbabilityPr
     &infixImplicitTimesParselet, // Token`LongName`ExpectationE
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_PERMUTATIONPRODUCT, Operator::PermutationProduct), // Token`LongName`PermutationProduct
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotEqualTilde), // Token`LongName`NotEqualTilde
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotHumpEqual), // Token`LongName`NotHumpEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotHumpDownHump), // Token`LongName`NotHumpDownHump
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotLeftTriangleBar), // Token`LongName`NotLeftTriangleBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotRightTriangleBar), // Token`LongName`NotRightTriangleBar
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotLessLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotNestedLessLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotLessSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotGreaterGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotNestedGreaterGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`NotGreaterSlantEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotPrecedesEqual), // Token`LongName`NotPrecedesEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, Operator::NotSucceedsEqual), // Token`LongName`NotSucceedsEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSquareSubset), // Token`LongName`NotSquareSubset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, Operator::NotSquareSuperset), // Token`LongName`NotSquareSuperset
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`Equal
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VERTICALSEPARATOR, Operator::VerticalSeparator), // Token`LongName`VerticalSeparator
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`VectorGreater
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`VectorGreaterEqual
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`VectorLess
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`VectorLessEqual
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_PERMUTATIONPRODUCT, InfixOperator::PermutationProduct), // Token`LongName`PermutationProduct
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotEqualTilde), // Token`LongName`NotEqualTilde
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotHumpEqual), // Token`LongName`NotHumpEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotHumpDownHump), // Token`LongName`NotHumpDownHump
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotLeftTriangleBar), // Token`LongName`NotLeftTriangleBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotRightTriangleBar), // Token`LongName`NotRightTriangleBar
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotLessLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotNestedLessLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotLessSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotGreaterGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotNestedGreaterGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`NotGreaterSlantEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotPrecedesEqual), // Token`LongName`NotPrecedesEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_ORDERINGOPERATORS, InfixOperator::NotSucceedsEqual), // Token`LongName`NotSucceedsEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSquareSubset), // Token`LongName`NotSquareSubset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_SETRELATIONS, InfixOperator::NotSquareSuperset), // Token`LongName`NotSquareSuperset
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`Equal
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_VERTICALSEPARATOR, InfixOperator::VerticalSeparator), // Token`LongName`VerticalSeparator
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`VectorGreater
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`VectorGreaterEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`VectorLess
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`VectorLessEqual
     &infixAssertFalseParselet, // Token`LongName`Limit
     &infixAssertFalseParselet, // Token`LongName`MaxLimit
     &infixAssertFalseParselet, // Token`LongName`MinLimit
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CROSS, Operator::Cross), // Token`LongName`Cross
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_CROSS, InfixOperator::Cross), // Token`LongName`Cross
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_FUNCTION, BinaryOperator::Function), // Token`LongName`Function
-    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_XNOR, Operator::Xnor), // Token`LongName`Xnor
+    &InfixOperatorParselet::new(PRECEDENCE_LONGNAME_XNOR, InfixOperator::Xnor), // Token`LongName`Xnor
     &infixAssertFalseParselet, // Token`LongName`DiscreteShift
     &infixAssertFalseParselet, // Token`LongName`DifferenceDelta
     &infixAssertFalseParselet, // Token`LongName`DiscreteRatio
@@ -934,10 +934,10 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixImplicitTimesParselet, // Token`LongName`Square
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_RULE, BinaryOperator::Rule), // Token`LongName`Rule
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_IMPLIES, BinaryOperator::Implies), // Token`LongName`Implies
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::ShortRightArrow), // Token`LongName`ShortRightArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, Operator::ShortLeftArrow), // Token`LongName`ShortLeftArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::ShortUpArrow), // Token`LongName`ShortUpArrow
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, Operator::ShortDownArrow), // Token`LongName`ShortDownArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::ShortRightArrow), // Token`LongName`ShortRightArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_HORIZONTALARROWS, InfixOperator::ShortLeftArrow), // Token`LongName`ShortLeftArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::ShortUpArrow), // Token`LongName`ShortUpArrow
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_VERTICALARROWOPERATORS, InfixOperator::ShortDownArrow), // Token`LongName`ShortDownArrow
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_APPLICATION, BinaryOperator::Application), // Token`LongName`Application
     &infixImplicitTimesParselet, // Token`LongName`LeftBracketingBar
     &infixAssertFalseParselet, // Token`LongName`RightBracketingBar
@@ -947,12 +947,12 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
     &infixDifferentialDParselet, // Token`LongName`DifferentialD
     &commaParselet, // Token`LongName`InvisibleComma
     &BinaryOperatorParselet::new(PRECEDENCE_LONGNAME_INVISIBLEAPPLICATION, BinaryOperator::CodeParser_BinaryAt), // Token`LongName`InvisibleApplication
-    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, Operator::CodeParser_InfixInequality), // Token`LongName`LongEqual
+    &InfixOperatorParselet::new(PRECEDENCE_CLASS_INEQUALITY, InfixOperator::CodeParser_InfixInequality), // Token`LongName`LongEqual
 ];
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Operator {
+pub enum InfixOperator {
     Times,
     Span,
     CompoundExpression,
@@ -1316,409 +1316,409 @@ pub enum GroupOperator {
     CurlyDoubleQuote,
 }
 
-impl Operator {
+impl InfixOperator {
     #[allow(dead_code)]
     #[doc(hidden)]
     pub fn to_symbol(self) -> Symbol {
         match self {
-            Operator::Times => sym::Times,
-            Operator::Span => sym::Span,
-            Operator::CompoundExpression => sym::CompoundExpression,
-            Operator::MessageName => sym::MessageName,
-            Operator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
-            Operator::CodeParser_Comma => sym::CodeParser_Comma,
-            Operator::CodeParser_InfixTilde => sym::CodeParser_InfixTilde,
-            Operator::Plus => sym::Plus,
-            Operator::SameQ => sym::SameQ,
-            Operator::UnsameQ => sym::UnsameQ,
-            Operator::Dot => sym::Dot,
-            Operator::NonCommutativeMultiply => sym::NonCommutativeMultiply,
-            Operator::And => sym::And,
-            Operator::Or => sym::Or,
-            Operator::Alternatives => sym::Alternatives,
-            Operator::StringJoin => sym::StringJoin,
-            Operator::StringExpression => sym::StringExpression,
-            Operator::Composition => sym::Composition,
-            Operator::RightComposition => sym::RightComposition,
-            Operator::Element => sym::Element,
-            Operator::Subset => sym::Subset,
-            Operator::Superset => sym::Superset,
-            Operator::SubsetEqual => sym::SubsetEqual,
-            Operator::SupersetEqual => sym::SupersetEqual,
-            Operator::NotElement => sym::NotElement,
-            Operator::NotSubset => sym::NotSubset,
-            Operator::NotSuperset => sym::NotSuperset,
-            Operator::NotSubsetEqual => sym::NotSubsetEqual,
-            Operator::NotSupersetEqual => sym::NotSupersetEqual,
-            Operator::SquareSubset => sym::SquareSubset,
-            Operator::SquareSuperset => sym::SquareSuperset,
-            Operator::NotSquareSubset => sym::NotSquareSubset,
-            Operator::NotSquareSuperset => sym::NotSquareSuperset,
-            Operator::SquareSubsetEqual => sym::SquareSubsetEqual,
-            Operator::SquareSupersetEqual => sym::SquareSupersetEqual,
-            Operator::NotSquareSubsetEqual => sym::NotSquareSubsetEqual,
-            Operator::NotSquareSupersetEqual => sym::NotSquareSupersetEqual,
-            Operator::ReverseElement => sym::ReverseElement,
-            Operator::NotReverseElement => sym::NotReverseElement,
-            Operator::Distributed => sym::Distributed,
-            Operator::Xor => sym::Xor,
-            Operator::Nand => sym::Nand,
-            Operator::Nor => sym::Nor,
-            Operator::LeftArrow => sym::LeftArrow,
-            Operator::RightArrow => sym::RightArrow,
-            Operator::LeftRightArrow => sym::LeftRightArrow,
-            Operator::LeftTeeArrow => sym::LeftTeeArrow,
-            Operator::RightTeeArrow => sym::RightTeeArrow,
-            Operator::RightArrowLeftArrow => sym::RightArrowLeftArrow,
-            Operator::LeftArrowRightArrow => sym::LeftArrowRightArrow,
-            Operator::DoubleLeftArrow => sym::DoubleLeftArrow,
-            Operator::DoubleRightArrow => sym::DoubleRightArrow,
-            Operator::DoubleLeftRightArrow => sym::DoubleLeftRightArrow,
-            Operator::LeftArrowBar => sym::LeftArrowBar,
-            Operator::RightArrowBar => sym::RightArrowBar,
-            Operator::ShortRightArrow => sym::ShortRightArrow,
-            Operator::ShortLeftArrow => sym::ShortLeftArrow,
-            Operator::UpperLeftArrow => sym::UpperLeftArrow,
-            Operator::UpperRightArrow => sym::UpperRightArrow,
-            Operator::LowerRightArrow => sym::LowerRightArrow,
-            Operator::LowerLeftArrow => sym::LowerLeftArrow,
-            Operator::LeftVector => sym::LeftVector,
-            Operator::RightVector => sym::RightVector,
-            Operator::LeftRightVector => sym::LeftRightVector,
-            Operator::LeftVectorBar => sym::LeftVectorBar,
-            Operator::RightVectorBar => sym::RightVectorBar,
-            Operator::LeftTeeVector => sym::LeftTeeVector,
-            Operator::RightTeeVector => sym::RightTeeVector,
-            Operator::DownLeftVector => sym::DownLeftVector,
-            Operator::DownRightVector => sym::DownRightVector,
-            Operator::DownLeftRightVector => sym::DownLeftRightVector,
-            Operator::DownLeftVectorBar => sym::DownLeftVectorBar,
-            Operator::DownRightVectorBar => sym::DownRightVectorBar,
-            Operator::DownLeftTeeVector => sym::DownLeftTeeVector,
-            Operator::DownRightTeeVector => sym::DownRightTeeVector,
-            Operator::UpArrow => sym::UpArrow,
-            Operator::DownArrow => sym::DownArrow,
-            Operator::UpDownArrow => sym::UpDownArrow,
-            Operator::UpTeeArrow => sym::UpTeeArrow,
-            Operator::DownTeeArrow => sym::DownTeeArrow,
-            Operator::UpArrowDownArrow => sym::UpArrowDownArrow,
-            Operator::DoubleUpArrow => sym::DoubleUpArrow,
-            Operator::DoubleDownArrow => sym::DoubleDownArrow,
-            Operator::DoubleUpDownArrow => sym::DoubleUpDownArrow,
-            Operator::DownArrowUpArrow => sym::DownArrowUpArrow,
-            Operator::LongLeftArrow => sym::LongLeftArrow,
-            Operator::LongRightArrow => sym::LongRightArrow,
-            Operator::LongLeftRightArrow => sym::LongLeftRightArrow,
-            Operator::DoubleLongLeftArrow => sym::DoubleLongLeftArrow,
-            Operator::DoubleLongRightArrow => sym::DoubleLongRightArrow,
-            Operator::DoubleLongLeftRightArrow => sym::DoubleLongLeftRightArrow,
-            Operator::UpArrowBar => sym::UpArrowBar,
-            Operator::DownArrowBar => sym::DownArrowBar,
-            Operator::ShortUpArrow => sym::ShortUpArrow,
-            Operator::ShortDownArrow => sym::ShortDownArrow,
-            Operator::RightUpVector => sym::RightUpVector,
-            Operator::LeftUpVector => sym::LeftUpVector,
-            Operator::RightDownVector => sym::RightDownVector,
-            Operator::LeftDownVector => sym::LeftDownVector,
-            Operator::RightUpDownVector => sym::RightUpDownVector,
-            Operator::LeftUpDownVector => sym::LeftUpDownVector,
-            Operator::RightUpVectorBar => sym::RightUpVectorBar,
-            Operator::RightDownVectorBar => sym::RightDownVectorBar,
-            Operator::LeftUpVectorBar => sym::LeftUpVectorBar,
-            Operator::LeftDownVectorBar => sym::LeftDownVectorBar,
-            Operator::RightUpTeeVector => sym::RightUpTeeVector,
-            Operator::RightDownTeeVector => sym::RightDownTeeVector,
-            Operator::LeftUpTeeVector => sym::LeftUpTeeVector,
-            Operator::LeftDownTeeVector => sym::LeftDownTeeVector,
-            Operator::UpEquilibrium => sym::UpEquilibrium,
-            Operator::ReverseUpEquilibrium => sym::ReverseUpEquilibrium,
-            Operator::CenterDot => sym::CenterDot,
-            Operator::Equivalent => sym::Equivalent,
-            Operator::CircleDot => sym::CircleDot,
-            Operator::Conditioned => sym::Conditioned,
-            Operator::Union => sym::Union,
-            Operator::SquareUnion => sym::SquareUnion,
-            Operator::UnionPlus => sym::UnionPlus,
-            Operator::Intersection => sym::Intersection,
-            Operator::SquareIntersection => sym::SquareIntersection,
-            Operator::TensorWedge => sym::TensorWedge,
-            Operator::TensorProduct => sym::TensorProduct,
-            Operator::Cross => sym::Cross,
-            Operator::SmallCircle => sym::SmallCircle,
-            Operator::Divisible => sym::Divisible,
-            Operator::VerticalSeparator => sym::VerticalSeparator,
-            Operator::Backslash => sym::Backslash,
-            Operator::Diamond => sym::Diamond,
-            Operator::Wedge => sym::Wedge,
-            Operator::Vee => sym::Vee,
-            Operator::CircleTimes => sym::CircleTimes,
-            Operator::Star => sym::Star,
-            Operator::VerticalTilde => sym::VerticalTilde,
-            Operator::Coproduct => sym::Coproduct,
-            Operator::Cap => sym::Cap,
-            Operator::Cup => sym::Cup,
-            Operator::CirclePlus => sym::CirclePlus,
-            Operator::VerticalBar => sym::VerticalBar,
-            Operator::DoubleVerticalBar => sym::DoubleVerticalBar,
-            Operator::NotVerticalBar => sym::NotVerticalBar,
-            Operator::NotDoubleVerticalBar => sym::NotDoubleVerticalBar,
-            Operator::LeftTriangle => sym::LeftTriangle,
-            Operator::RightTriangle => sym::RightTriangle,
-            Operator::NotLeftTriangle => sym::NotLeftTriangle,
-            Operator::NotRightTriangle => sym::NotRightTriangle,
-            Operator::LeftTriangleEqual => sym::LeftTriangleEqual,
-            Operator::RightTriangleEqual => sym::RightTriangleEqual,
-            Operator::NotLeftTriangleEqual => sym::NotLeftTriangleEqual,
-            Operator::NotRightTriangleEqual => sym::NotRightTriangleEqual,
-            Operator::LeftTriangleBar => sym::LeftTriangleBar,
-            Operator::RightTriangleBar => sym::RightTriangleBar,
-            Operator::NotLeftTriangleBar => sym::NotLeftTriangleBar,
-            Operator::NotRightTriangleBar => sym::NotRightTriangleBar,
-            Operator::TildeEqual => sym::TildeEqual,
-            Operator::NotTildeEqual => sym::NotTildeEqual,
-            Operator::TildeFullEqual => sym::TildeFullEqual,
-            Operator::NotTildeFullEqual => sym::NotTildeFullEqual,
-            Operator::Tilde => sym::Tilde,
-            Operator::NotTilde => sym::NotTilde,
-            Operator::EqualTilde => sym::EqualTilde,
-            Operator::NotEqualTilde => sym::NotEqualTilde,
-            Operator::TildeTilde => sym::TildeTilde,
-            Operator::NotTildeTilde => sym::NotTildeTilde,
-            Operator::Proportional => sym::Proportional,
-            Operator::Proportion => sym::Proportion,
-            Operator::Congruent => sym::Congruent,
-            Operator::NotCongruent => sym::NotCongruent,
-            Operator::Equilibrium => sym::Equilibrium,
-            Operator::ReverseEquilibrium => sym::ReverseEquilibrium,
-            Operator::DotEqual => sym::DotEqual,
-            Operator::Precedes => sym::Precedes,
-            Operator::Succeeds => sym::Succeeds,
-            Operator::PrecedesEqual => sym::PrecedesEqual,
-            Operator::SucceedsEqual => sym::SucceedsEqual,
-            Operator::PrecedesTilde => sym::PrecedesTilde,
-            Operator::SucceedsTilde => sym::SucceedsTilde,
-            Operator::PrecedesSlantEqual => sym::PrecedesSlantEqual,
-            Operator::SucceedsSlantEqual => sym::SucceedsSlantEqual,
-            Operator::NotPrecedes => sym::NotPrecedes,
-            Operator::NotSucceeds => sym::NotSucceeds,
-            Operator::NotPrecedesEqual => sym::NotPrecedesEqual,
-            Operator::NotSucceedsEqual => sym::NotSucceedsEqual,
-            Operator::NotPrecedesTilde => sym::NotPrecedesTilde,
-            Operator::NotSucceedsTilde => sym::NotSucceedsTilde,
-            Operator::NotPrecedesSlantEqual => sym::NotPrecedesSlantEqual,
-            Operator::NotSucceedsSlantEqual => sym::NotSucceedsSlantEqual,
-            Operator::CupCap => sym::CupCap,
-            Operator::NotCupCap => sym::NotCupCap,
-            Operator::HumpEqual => sym::HumpEqual,
-            Operator::HumpDownHump => sym::HumpDownHump,
-            Operator::NotHumpEqual => sym::NotHumpEqual,
-            Operator::NotHumpDownHump => sym::NotHumpDownHump,
-            Operator::CodeParser_InfixInequality => sym::CodeParser_InfixInequality,
-            Operator::PermutationProduct => sym::PermutationProduct,
-            Operator::Colon => sym::Colon,
-            Operator::Xnor => sym::Xnor,
+            InfixOperator::Times => sym::Times,
+            InfixOperator::Span => sym::Span,
+            InfixOperator::CompoundExpression => sym::CompoundExpression,
+            InfixOperator::MessageName => sym::MessageName,
+            InfixOperator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
+            InfixOperator::CodeParser_Comma => sym::CodeParser_Comma,
+            InfixOperator::CodeParser_InfixTilde => sym::CodeParser_InfixTilde,
+            InfixOperator::Plus => sym::Plus,
+            InfixOperator::SameQ => sym::SameQ,
+            InfixOperator::UnsameQ => sym::UnsameQ,
+            InfixOperator::Dot => sym::Dot,
+            InfixOperator::NonCommutativeMultiply => sym::NonCommutativeMultiply,
+            InfixOperator::And => sym::And,
+            InfixOperator::Or => sym::Or,
+            InfixOperator::Alternatives => sym::Alternatives,
+            InfixOperator::StringJoin => sym::StringJoin,
+            InfixOperator::StringExpression => sym::StringExpression,
+            InfixOperator::Composition => sym::Composition,
+            InfixOperator::RightComposition => sym::RightComposition,
+            InfixOperator::Element => sym::Element,
+            InfixOperator::Subset => sym::Subset,
+            InfixOperator::Superset => sym::Superset,
+            InfixOperator::SubsetEqual => sym::SubsetEqual,
+            InfixOperator::SupersetEqual => sym::SupersetEqual,
+            InfixOperator::NotElement => sym::NotElement,
+            InfixOperator::NotSubset => sym::NotSubset,
+            InfixOperator::NotSuperset => sym::NotSuperset,
+            InfixOperator::NotSubsetEqual => sym::NotSubsetEqual,
+            InfixOperator::NotSupersetEqual => sym::NotSupersetEqual,
+            InfixOperator::SquareSubset => sym::SquareSubset,
+            InfixOperator::SquareSuperset => sym::SquareSuperset,
+            InfixOperator::NotSquareSubset => sym::NotSquareSubset,
+            InfixOperator::NotSquareSuperset => sym::NotSquareSuperset,
+            InfixOperator::SquareSubsetEqual => sym::SquareSubsetEqual,
+            InfixOperator::SquareSupersetEqual => sym::SquareSupersetEqual,
+            InfixOperator::NotSquareSubsetEqual => sym::NotSquareSubsetEqual,
+            InfixOperator::NotSquareSupersetEqual => sym::NotSquareSupersetEqual,
+            InfixOperator::ReverseElement => sym::ReverseElement,
+            InfixOperator::NotReverseElement => sym::NotReverseElement,
+            InfixOperator::Distributed => sym::Distributed,
+            InfixOperator::Xor => sym::Xor,
+            InfixOperator::Nand => sym::Nand,
+            InfixOperator::Nor => sym::Nor,
+            InfixOperator::LeftArrow => sym::LeftArrow,
+            InfixOperator::RightArrow => sym::RightArrow,
+            InfixOperator::LeftRightArrow => sym::LeftRightArrow,
+            InfixOperator::LeftTeeArrow => sym::LeftTeeArrow,
+            InfixOperator::RightTeeArrow => sym::RightTeeArrow,
+            InfixOperator::RightArrowLeftArrow => sym::RightArrowLeftArrow,
+            InfixOperator::LeftArrowRightArrow => sym::LeftArrowRightArrow,
+            InfixOperator::DoubleLeftArrow => sym::DoubleLeftArrow,
+            InfixOperator::DoubleRightArrow => sym::DoubleRightArrow,
+            InfixOperator::DoubleLeftRightArrow => sym::DoubleLeftRightArrow,
+            InfixOperator::LeftArrowBar => sym::LeftArrowBar,
+            InfixOperator::RightArrowBar => sym::RightArrowBar,
+            InfixOperator::ShortRightArrow => sym::ShortRightArrow,
+            InfixOperator::ShortLeftArrow => sym::ShortLeftArrow,
+            InfixOperator::UpperLeftArrow => sym::UpperLeftArrow,
+            InfixOperator::UpperRightArrow => sym::UpperRightArrow,
+            InfixOperator::LowerRightArrow => sym::LowerRightArrow,
+            InfixOperator::LowerLeftArrow => sym::LowerLeftArrow,
+            InfixOperator::LeftVector => sym::LeftVector,
+            InfixOperator::RightVector => sym::RightVector,
+            InfixOperator::LeftRightVector => sym::LeftRightVector,
+            InfixOperator::LeftVectorBar => sym::LeftVectorBar,
+            InfixOperator::RightVectorBar => sym::RightVectorBar,
+            InfixOperator::LeftTeeVector => sym::LeftTeeVector,
+            InfixOperator::RightTeeVector => sym::RightTeeVector,
+            InfixOperator::DownLeftVector => sym::DownLeftVector,
+            InfixOperator::DownRightVector => sym::DownRightVector,
+            InfixOperator::DownLeftRightVector => sym::DownLeftRightVector,
+            InfixOperator::DownLeftVectorBar => sym::DownLeftVectorBar,
+            InfixOperator::DownRightVectorBar => sym::DownRightVectorBar,
+            InfixOperator::DownLeftTeeVector => sym::DownLeftTeeVector,
+            InfixOperator::DownRightTeeVector => sym::DownRightTeeVector,
+            InfixOperator::UpArrow => sym::UpArrow,
+            InfixOperator::DownArrow => sym::DownArrow,
+            InfixOperator::UpDownArrow => sym::UpDownArrow,
+            InfixOperator::UpTeeArrow => sym::UpTeeArrow,
+            InfixOperator::DownTeeArrow => sym::DownTeeArrow,
+            InfixOperator::UpArrowDownArrow => sym::UpArrowDownArrow,
+            InfixOperator::DoubleUpArrow => sym::DoubleUpArrow,
+            InfixOperator::DoubleDownArrow => sym::DoubleDownArrow,
+            InfixOperator::DoubleUpDownArrow => sym::DoubleUpDownArrow,
+            InfixOperator::DownArrowUpArrow => sym::DownArrowUpArrow,
+            InfixOperator::LongLeftArrow => sym::LongLeftArrow,
+            InfixOperator::LongRightArrow => sym::LongRightArrow,
+            InfixOperator::LongLeftRightArrow => sym::LongLeftRightArrow,
+            InfixOperator::DoubleLongLeftArrow => sym::DoubleLongLeftArrow,
+            InfixOperator::DoubleLongRightArrow => sym::DoubleLongRightArrow,
+            InfixOperator::DoubleLongLeftRightArrow => sym::DoubleLongLeftRightArrow,
+            InfixOperator::UpArrowBar => sym::UpArrowBar,
+            InfixOperator::DownArrowBar => sym::DownArrowBar,
+            InfixOperator::ShortUpArrow => sym::ShortUpArrow,
+            InfixOperator::ShortDownArrow => sym::ShortDownArrow,
+            InfixOperator::RightUpVector => sym::RightUpVector,
+            InfixOperator::LeftUpVector => sym::LeftUpVector,
+            InfixOperator::RightDownVector => sym::RightDownVector,
+            InfixOperator::LeftDownVector => sym::LeftDownVector,
+            InfixOperator::RightUpDownVector => sym::RightUpDownVector,
+            InfixOperator::LeftUpDownVector => sym::LeftUpDownVector,
+            InfixOperator::RightUpVectorBar => sym::RightUpVectorBar,
+            InfixOperator::RightDownVectorBar => sym::RightDownVectorBar,
+            InfixOperator::LeftUpVectorBar => sym::LeftUpVectorBar,
+            InfixOperator::LeftDownVectorBar => sym::LeftDownVectorBar,
+            InfixOperator::RightUpTeeVector => sym::RightUpTeeVector,
+            InfixOperator::RightDownTeeVector => sym::RightDownTeeVector,
+            InfixOperator::LeftUpTeeVector => sym::LeftUpTeeVector,
+            InfixOperator::LeftDownTeeVector => sym::LeftDownTeeVector,
+            InfixOperator::UpEquilibrium => sym::UpEquilibrium,
+            InfixOperator::ReverseUpEquilibrium => sym::ReverseUpEquilibrium,
+            InfixOperator::CenterDot => sym::CenterDot,
+            InfixOperator::Equivalent => sym::Equivalent,
+            InfixOperator::CircleDot => sym::CircleDot,
+            InfixOperator::Conditioned => sym::Conditioned,
+            InfixOperator::Union => sym::Union,
+            InfixOperator::SquareUnion => sym::SquareUnion,
+            InfixOperator::UnionPlus => sym::UnionPlus,
+            InfixOperator::Intersection => sym::Intersection,
+            InfixOperator::SquareIntersection => sym::SquareIntersection,
+            InfixOperator::TensorWedge => sym::TensorWedge,
+            InfixOperator::TensorProduct => sym::TensorProduct,
+            InfixOperator::Cross => sym::Cross,
+            InfixOperator::SmallCircle => sym::SmallCircle,
+            InfixOperator::Divisible => sym::Divisible,
+            InfixOperator::VerticalSeparator => sym::VerticalSeparator,
+            InfixOperator::Backslash => sym::Backslash,
+            InfixOperator::Diamond => sym::Diamond,
+            InfixOperator::Wedge => sym::Wedge,
+            InfixOperator::Vee => sym::Vee,
+            InfixOperator::CircleTimes => sym::CircleTimes,
+            InfixOperator::Star => sym::Star,
+            InfixOperator::VerticalTilde => sym::VerticalTilde,
+            InfixOperator::Coproduct => sym::Coproduct,
+            InfixOperator::Cap => sym::Cap,
+            InfixOperator::Cup => sym::Cup,
+            InfixOperator::CirclePlus => sym::CirclePlus,
+            InfixOperator::VerticalBar => sym::VerticalBar,
+            InfixOperator::DoubleVerticalBar => sym::DoubleVerticalBar,
+            InfixOperator::NotVerticalBar => sym::NotVerticalBar,
+            InfixOperator::NotDoubleVerticalBar => sym::NotDoubleVerticalBar,
+            InfixOperator::LeftTriangle => sym::LeftTriangle,
+            InfixOperator::RightTriangle => sym::RightTriangle,
+            InfixOperator::NotLeftTriangle => sym::NotLeftTriangle,
+            InfixOperator::NotRightTriangle => sym::NotRightTriangle,
+            InfixOperator::LeftTriangleEqual => sym::LeftTriangleEqual,
+            InfixOperator::RightTriangleEqual => sym::RightTriangleEqual,
+            InfixOperator::NotLeftTriangleEqual => sym::NotLeftTriangleEqual,
+            InfixOperator::NotRightTriangleEqual => sym::NotRightTriangleEqual,
+            InfixOperator::LeftTriangleBar => sym::LeftTriangleBar,
+            InfixOperator::RightTriangleBar => sym::RightTriangleBar,
+            InfixOperator::NotLeftTriangleBar => sym::NotLeftTriangleBar,
+            InfixOperator::NotRightTriangleBar => sym::NotRightTriangleBar,
+            InfixOperator::TildeEqual => sym::TildeEqual,
+            InfixOperator::NotTildeEqual => sym::NotTildeEqual,
+            InfixOperator::TildeFullEqual => sym::TildeFullEqual,
+            InfixOperator::NotTildeFullEqual => sym::NotTildeFullEqual,
+            InfixOperator::Tilde => sym::Tilde,
+            InfixOperator::NotTilde => sym::NotTilde,
+            InfixOperator::EqualTilde => sym::EqualTilde,
+            InfixOperator::NotEqualTilde => sym::NotEqualTilde,
+            InfixOperator::TildeTilde => sym::TildeTilde,
+            InfixOperator::NotTildeTilde => sym::NotTildeTilde,
+            InfixOperator::Proportional => sym::Proportional,
+            InfixOperator::Proportion => sym::Proportion,
+            InfixOperator::Congruent => sym::Congruent,
+            InfixOperator::NotCongruent => sym::NotCongruent,
+            InfixOperator::Equilibrium => sym::Equilibrium,
+            InfixOperator::ReverseEquilibrium => sym::ReverseEquilibrium,
+            InfixOperator::DotEqual => sym::DotEqual,
+            InfixOperator::Precedes => sym::Precedes,
+            InfixOperator::Succeeds => sym::Succeeds,
+            InfixOperator::PrecedesEqual => sym::PrecedesEqual,
+            InfixOperator::SucceedsEqual => sym::SucceedsEqual,
+            InfixOperator::PrecedesTilde => sym::PrecedesTilde,
+            InfixOperator::SucceedsTilde => sym::SucceedsTilde,
+            InfixOperator::PrecedesSlantEqual => sym::PrecedesSlantEqual,
+            InfixOperator::SucceedsSlantEqual => sym::SucceedsSlantEqual,
+            InfixOperator::NotPrecedes => sym::NotPrecedes,
+            InfixOperator::NotSucceeds => sym::NotSucceeds,
+            InfixOperator::NotPrecedesEqual => sym::NotPrecedesEqual,
+            InfixOperator::NotSucceedsEqual => sym::NotSucceedsEqual,
+            InfixOperator::NotPrecedesTilde => sym::NotPrecedesTilde,
+            InfixOperator::NotSucceedsTilde => sym::NotSucceedsTilde,
+            InfixOperator::NotPrecedesSlantEqual => sym::NotPrecedesSlantEqual,
+            InfixOperator::NotSucceedsSlantEqual => sym::NotSucceedsSlantEqual,
+            InfixOperator::CupCap => sym::CupCap,
+            InfixOperator::NotCupCap => sym::NotCupCap,
+            InfixOperator::HumpEqual => sym::HumpEqual,
+            InfixOperator::HumpDownHump => sym::HumpDownHump,
+            InfixOperator::NotHumpEqual => sym::NotHumpEqual,
+            InfixOperator::NotHumpDownHump => sym::NotHumpDownHump,
+            InfixOperator::CodeParser_InfixInequality => sym::CodeParser_InfixInequality,
+            InfixOperator::PermutationProduct => sym::PermutationProduct,
+            InfixOperator::Colon => sym::Colon,
+            InfixOperator::Xnor => sym::Xnor,
         }
     }
 
     #[doc(hidden)]
     pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
-            sym::Times => Operator::Times,
-            sym::Span => Operator::Span,
-            sym::CompoundExpression => Operator::CompoundExpression,
-            sym::MessageName => Operator::MessageName,
-            sym::CodeParser_InternalInvalid => Operator::CodeParser_InternalInvalid,
-            sym::CodeParser_Comma => Operator::CodeParser_Comma,
-            sym::CodeParser_InfixTilde => Operator::CodeParser_InfixTilde,
-            sym::Plus => Operator::Plus,
-            sym::SameQ => Operator::SameQ,
-            sym::UnsameQ => Operator::UnsameQ,
-            sym::Dot => Operator::Dot,
-            sym::NonCommutativeMultiply => Operator::NonCommutativeMultiply,
-            sym::And => Operator::And,
-            sym::Or => Operator::Or,
-            sym::Alternatives => Operator::Alternatives,
-            sym::StringJoin => Operator::StringJoin,
-            sym::StringExpression => Operator::StringExpression,
-            sym::Composition => Operator::Composition,
-            sym::RightComposition => Operator::RightComposition,
-            sym::Element => Operator::Element,
-            sym::Subset => Operator::Subset,
-            sym::Superset => Operator::Superset,
-            sym::SubsetEqual => Operator::SubsetEqual,
-            sym::SupersetEqual => Operator::SupersetEqual,
-            sym::NotElement => Operator::NotElement,
-            sym::NotSubset => Operator::NotSubset,
-            sym::NotSuperset => Operator::NotSuperset,
-            sym::NotSubsetEqual => Operator::NotSubsetEqual,
-            sym::NotSupersetEqual => Operator::NotSupersetEqual,
-            sym::SquareSubset => Operator::SquareSubset,
-            sym::SquareSuperset => Operator::SquareSuperset,
-            sym::NotSquareSubset => Operator::NotSquareSubset,
-            sym::NotSquareSuperset => Operator::NotSquareSuperset,
-            sym::SquareSubsetEqual => Operator::SquareSubsetEqual,
-            sym::SquareSupersetEqual => Operator::SquareSupersetEqual,
-            sym::NotSquareSubsetEqual => Operator::NotSquareSubsetEqual,
-            sym::NotSquareSupersetEqual => Operator::NotSquareSupersetEqual,
-            sym::ReverseElement => Operator::ReverseElement,
-            sym::NotReverseElement => Operator::NotReverseElement,
-            sym::Distributed => Operator::Distributed,
-            sym::Xor => Operator::Xor,
-            sym::Nand => Operator::Nand,
-            sym::Nor => Operator::Nor,
-            sym::LeftArrow => Operator::LeftArrow,
-            sym::RightArrow => Operator::RightArrow,
-            sym::LeftRightArrow => Operator::LeftRightArrow,
-            sym::LeftTeeArrow => Operator::LeftTeeArrow,
-            sym::RightTeeArrow => Operator::RightTeeArrow,
-            sym::RightArrowLeftArrow => Operator::RightArrowLeftArrow,
-            sym::LeftArrowRightArrow => Operator::LeftArrowRightArrow,
-            sym::DoubleLeftArrow => Operator::DoubleLeftArrow,
-            sym::DoubleRightArrow => Operator::DoubleRightArrow,
-            sym::DoubleLeftRightArrow => Operator::DoubleLeftRightArrow,
-            sym::LeftArrowBar => Operator::LeftArrowBar,
-            sym::RightArrowBar => Operator::RightArrowBar,
-            sym::ShortRightArrow => Operator::ShortRightArrow,
-            sym::ShortLeftArrow => Operator::ShortLeftArrow,
-            sym::UpperLeftArrow => Operator::UpperLeftArrow,
-            sym::UpperRightArrow => Operator::UpperRightArrow,
-            sym::LowerRightArrow => Operator::LowerRightArrow,
-            sym::LowerLeftArrow => Operator::LowerLeftArrow,
-            sym::LeftVector => Operator::LeftVector,
-            sym::RightVector => Operator::RightVector,
-            sym::LeftRightVector => Operator::LeftRightVector,
-            sym::LeftVectorBar => Operator::LeftVectorBar,
-            sym::RightVectorBar => Operator::RightVectorBar,
-            sym::LeftTeeVector => Operator::LeftTeeVector,
-            sym::RightTeeVector => Operator::RightTeeVector,
-            sym::DownLeftVector => Operator::DownLeftVector,
-            sym::DownRightVector => Operator::DownRightVector,
-            sym::DownLeftRightVector => Operator::DownLeftRightVector,
-            sym::DownLeftVectorBar => Operator::DownLeftVectorBar,
-            sym::DownRightVectorBar => Operator::DownRightVectorBar,
-            sym::DownLeftTeeVector => Operator::DownLeftTeeVector,
-            sym::DownRightTeeVector => Operator::DownRightTeeVector,
-            sym::UpArrow => Operator::UpArrow,
-            sym::DownArrow => Operator::DownArrow,
-            sym::UpDownArrow => Operator::UpDownArrow,
-            sym::UpTeeArrow => Operator::UpTeeArrow,
-            sym::DownTeeArrow => Operator::DownTeeArrow,
-            sym::UpArrowDownArrow => Operator::UpArrowDownArrow,
-            sym::DoubleUpArrow => Operator::DoubleUpArrow,
-            sym::DoubleDownArrow => Operator::DoubleDownArrow,
-            sym::DoubleUpDownArrow => Operator::DoubleUpDownArrow,
-            sym::DownArrowUpArrow => Operator::DownArrowUpArrow,
-            sym::LongLeftArrow => Operator::LongLeftArrow,
-            sym::LongRightArrow => Operator::LongRightArrow,
-            sym::LongLeftRightArrow => Operator::LongLeftRightArrow,
-            sym::DoubleLongLeftArrow => Operator::DoubleLongLeftArrow,
-            sym::DoubleLongRightArrow => Operator::DoubleLongRightArrow,
-            sym::DoubleLongLeftRightArrow => Operator::DoubleLongLeftRightArrow,
-            sym::UpArrowBar => Operator::UpArrowBar,
-            sym::DownArrowBar => Operator::DownArrowBar,
-            sym::ShortUpArrow => Operator::ShortUpArrow,
-            sym::ShortDownArrow => Operator::ShortDownArrow,
-            sym::RightUpVector => Operator::RightUpVector,
-            sym::LeftUpVector => Operator::LeftUpVector,
-            sym::RightDownVector => Operator::RightDownVector,
-            sym::LeftDownVector => Operator::LeftDownVector,
-            sym::RightUpDownVector => Operator::RightUpDownVector,
-            sym::LeftUpDownVector => Operator::LeftUpDownVector,
-            sym::RightUpVectorBar => Operator::RightUpVectorBar,
-            sym::RightDownVectorBar => Operator::RightDownVectorBar,
-            sym::LeftUpVectorBar => Operator::LeftUpVectorBar,
-            sym::LeftDownVectorBar => Operator::LeftDownVectorBar,
-            sym::RightUpTeeVector => Operator::RightUpTeeVector,
-            sym::RightDownTeeVector => Operator::RightDownTeeVector,
-            sym::LeftUpTeeVector => Operator::LeftUpTeeVector,
-            sym::LeftDownTeeVector => Operator::LeftDownTeeVector,
-            sym::UpEquilibrium => Operator::UpEquilibrium,
-            sym::ReverseUpEquilibrium => Operator::ReverseUpEquilibrium,
-            sym::CenterDot => Operator::CenterDot,
-            sym::Equivalent => Operator::Equivalent,
-            sym::CircleDot => Operator::CircleDot,
-            sym::Conditioned => Operator::Conditioned,
-            sym::Union => Operator::Union,
-            sym::SquareUnion => Operator::SquareUnion,
-            sym::UnionPlus => Operator::UnionPlus,
-            sym::Intersection => Operator::Intersection,
-            sym::SquareIntersection => Operator::SquareIntersection,
-            sym::TensorWedge => Operator::TensorWedge,
-            sym::TensorProduct => Operator::TensorProduct,
-            sym::Cross => Operator::Cross,
-            sym::SmallCircle => Operator::SmallCircle,
-            sym::Divisible => Operator::Divisible,
-            sym::VerticalSeparator => Operator::VerticalSeparator,
-            sym::Backslash => Operator::Backslash,
-            sym::Diamond => Operator::Diamond,
-            sym::Wedge => Operator::Wedge,
-            sym::Vee => Operator::Vee,
-            sym::CircleTimes => Operator::CircleTimes,
-            sym::Star => Operator::Star,
-            sym::VerticalTilde => Operator::VerticalTilde,
-            sym::Coproduct => Operator::Coproduct,
-            sym::Cap => Operator::Cap,
-            sym::Cup => Operator::Cup,
-            sym::CirclePlus => Operator::CirclePlus,
-            sym::VerticalBar => Operator::VerticalBar,
-            sym::DoubleVerticalBar => Operator::DoubleVerticalBar,
-            sym::NotVerticalBar => Operator::NotVerticalBar,
-            sym::NotDoubleVerticalBar => Operator::NotDoubleVerticalBar,
-            sym::LeftTriangle => Operator::LeftTriangle,
-            sym::RightTriangle => Operator::RightTriangle,
-            sym::NotLeftTriangle => Operator::NotLeftTriangle,
-            sym::NotRightTriangle => Operator::NotRightTriangle,
-            sym::LeftTriangleEqual => Operator::LeftTriangleEqual,
-            sym::RightTriangleEqual => Operator::RightTriangleEqual,
-            sym::NotLeftTriangleEqual => Operator::NotLeftTriangleEqual,
-            sym::NotRightTriangleEqual => Operator::NotRightTriangleEqual,
-            sym::LeftTriangleBar => Operator::LeftTriangleBar,
-            sym::RightTriangleBar => Operator::RightTriangleBar,
-            sym::NotLeftTriangleBar => Operator::NotLeftTriangleBar,
-            sym::NotRightTriangleBar => Operator::NotRightTriangleBar,
-            sym::TildeEqual => Operator::TildeEqual,
-            sym::NotTildeEqual => Operator::NotTildeEqual,
-            sym::TildeFullEqual => Operator::TildeFullEqual,
-            sym::NotTildeFullEqual => Operator::NotTildeFullEqual,
-            sym::Tilde => Operator::Tilde,
-            sym::NotTilde => Operator::NotTilde,
-            sym::EqualTilde => Operator::EqualTilde,
-            sym::NotEqualTilde => Operator::NotEqualTilde,
-            sym::TildeTilde => Operator::TildeTilde,
-            sym::NotTildeTilde => Operator::NotTildeTilde,
-            sym::Proportional => Operator::Proportional,
-            sym::Proportion => Operator::Proportion,
-            sym::Congruent => Operator::Congruent,
-            sym::NotCongruent => Operator::NotCongruent,
-            sym::Equilibrium => Operator::Equilibrium,
-            sym::ReverseEquilibrium => Operator::ReverseEquilibrium,
-            sym::DotEqual => Operator::DotEqual,
-            sym::Precedes => Operator::Precedes,
-            sym::Succeeds => Operator::Succeeds,
-            sym::PrecedesEqual => Operator::PrecedesEqual,
-            sym::SucceedsEqual => Operator::SucceedsEqual,
-            sym::PrecedesTilde => Operator::PrecedesTilde,
-            sym::SucceedsTilde => Operator::SucceedsTilde,
-            sym::PrecedesSlantEqual => Operator::PrecedesSlantEqual,
-            sym::SucceedsSlantEqual => Operator::SucceedsSlantEqual,
-            sym::NotPrecedes => Operator::NotPrecedes,
-            sym::NotSucceeds => Operator::NotSucceeds,
-            sym::NotPrecedesEqual => Operator::NotPrecedesEqual,
-            sym::NotSucceedsEqual => Operator::NotSucceedsEqual,
-            sym::NotPrecedesTilde => Operator::NotPrecedesTilde,
-            sym::NotSucceedsTilde => Operator::NotSucceedsTilde,
-            sym::NotPrecedesSlantEqual => Operator::NotPrecedesSlantEqual,
-            sym::NotSucceedsSlantEqual => Operator::NotSucceedsSlantEqual,
-            sym::CupCap => Operator::CupCap,
-            sym::NotCupCap => Operator::NotCupCap,
-            sym::HumpEqual => Operator::HumpEqual,
-            sym::HumpDownHump => Operator::HumpDownHump,
-            sym::NotHumpEqual => Operator::NotHumpEqual,
-            sym::NotHumpDownHump => Operator::NotHumpDownHump,
-            sym::CodeParser_InfixInequality => Operator::CodeParser_InfixInequality,
-            sym::PermutationProduct => Operator::PermutationProduct,
-            sym::Colon => Operator::Colon,
-            sym::Xnor => Operator::Xnor,
+            sym::Times => InfixOperator::Times,
+            sym::Span => InfixOperator::Span,
+            sym::CompoundExpression => InfixOperator::CompoundExpression,
+            sym::MessageName => InfixOperator::MessageName,
+            sym::CodeParser_InternalInvalid => InfixOperator::CodeParser_InternalInvalid,
+            sym::CodeParser_Comma => InfixOperator::CodeParser_Comma,
+            sym::CodeParser_InfixTilde => InfixOperator::CodeParser_InfixTilde,
+            sym::Plus => InfixOperator::Plus,
+            sym::SameQ => InfixOperator::SameQ,
+            sym::UnsameQ => InfixOperator::UnsameQ,
+            sym::Dot => InfixOperator::Dot,
+            sym::NonCommutativeMultiply => InfixOperator::NonCommutativeMultiply,
+            sym::And => InfixOperator::And,
+            sym::Or => InfixOperator::Or,
+            sym::Alternatives => InfixOperator::Alternatives,
+            sym::StringJoin => InfixOperator::StringJoin,
+            sym::StringExpression => InfixOperator::StringExpression,
+            sym::Composition => InfixOperator::Composition,
+            sym::RightComposition => InfixOperator::RightComposition,
+            sym::Element => InfixOperator::Element,
+            sym::Subset => InfixOperator::Subset,
+            sym::Superset => InfixOperator::Superset,
+            sym::SubsetEqual => InfixOperator::SubsetEqual,
+            sym::SupersetEqual => InfixOperator::SupersetEqual,
+            sym::NotElement => InfixOperator::NotElement,
+            sym::NotSubset => InfixOperator::NotSubset,
+            sym::NotSuperset => InfixOperator::NotSuperset,
+            sym::NotSubsetEqual => InfixOperator::NotSubsetEqual,
+            sym::NotSupersetEqual => InfixOperator::NotSupersetEqual,
+            sym::SquareSubset => InfixOperator::SquareSubset,
+            sym::SquareSuperset => InfixOperator::SquareSuperset,
+            sym::NotSquareSubset => InfixOperator::NotSquareSubset,
+            sym::NotSquareSuperset => InfixOperator::NotSquareSuperset,
+            sym::SquareSubsetEqual => InfixOperator::SquareSubsetEqual,
+            sym::SquareSupersetEqual => InfixOperator::SquareSupersetEqual,
+            sym::NotSquareSubsetEqual => InfixOperator::NotSquareSubsetEqual,
+            sym::NotSquareSupersetEqual => InfixOperator::NotSquareSupersetEqual,
+            sym::ReverseElement => InfixOperator::ReverseElement,
+            sym::NotReverseElement => InfixOperator::NotReverseElement,
+            sym::Distributed => InfixOperator::Distributed,
+            sym::Xor => InfixOperator::Xor,
+            sym::Nand => InfixOperator::Nand,
+            sym::Nor => InfixOperator::Nor,
+            sym::LeftArrow => InfixOperator::LeftArrow,
+            sym::RightArrow => InfixOperator::RightArrow,
+            sym::LeftRightArrow => InfixOperator::LeftRightArrow,
+            sym::LeftTeeArrow => InfixOperator::LeftTeeArrow,
+            sym::RightTeeArrow => InfixOperator::RightTeeArrow,
+            sym::RightArrowLeftArrow => InfixOperator::RightArrowLeftArrow,
+            sym::LeftArrowRightArrow => InfixOperator::LeftArrowRightArrow,
+            sym::DoubleLeftArrow => InfixOperator::DoubleLeftArrow,
+            sym::DoubleRightArrow => InfixOperator::DoubleRightArrow,
+            sym::DoubleLeftRightArrow => InfixOperator::DoubleLeftRightArrow,
+            sym::LeftArrowBar => InfixOperator::LeftArrowBar,
+            sym::RightArrowBar => InfixOperator::RightArrowBar,
+            sym::ShortRightArrow => InfixOperator::ShortRightArrow,
+            sym::ShortLeftArrow => InfixOperator::ShortLeftArrow,
+            sym::UpperLeftArrow => InfixOperator::UpperLeftArrow,
+            sym::UpperRightArrow => InfixOperator::UpperRightArrow,
+            sym::LowerRightArrow => InfixOperator::LowerRightArrow,
+            sym::LowerLeftArrow => InfixOperator::LowerLeftArrow,
+            sym::LeftVector => InfixOperator::LeftVector,
+            sym::RightVector => InfixOperator::RightVector,
+            sym::LeftRightVector => InfixOperator::LeftRightVector,
+            sym::LeftVectorBar => InfixOperator::LeftVectorBar,
+            sym::RightVectorBar => InfixOperator::RightVectorBar,
+            sym::LeftTeeVector => InfixOperator::LeftTeeVector,
+            sym::RightTeeVector => InfixOperator::RightTeeVector,
+            sym::DownLeftVector => InfixOperator::DownLeftVector,
+            sym::DownRightVector => InfixOperator::DownRightVector,
+            sym::DownLeftRightVector => InfixOperator::DownLeftRightVector,
+            sym::DownLeftVectorBar => InfixOperator::DownLeftVectorBar,
+            sym::DownRightVectorBar => InfixOperator::DownRightVectorBar,
+            sym::DownLeftTeeVector => InfixOperator::DownLeftTeeVector,
+            sym::DownRightTeeVector => InfixOperator::DownRightTeeVector,
+            sym::UpArrow => InfixOperator::UpArrow,
+            sym::DownArrow => InfixOperator::DownArrow,
+            sym::UpDownArrow => InfixOperator::UpDownArrow,
+            sym::UpTeeArrow => InfixOperator::UpTeeArrow,
+            sym::DownTeeArrow => InfixOperator::DownTeeArrow,
+            sym::UpArrowDownArrow => InfixOperator::UpArrowDownArrow,
+            sym::DoubleUpArrow => InfixOperator::DoubleUpArrow,
+            sym::DoubleDownArrow => InfixOperator::DoubleDownArrow,
+            sym::DoubleUpDownArrow => InfixOperator::DoubleUpDownArrow,
+            sym::DownArrowUpArrow => InfixOperator::DownArrowUpArrow,
+            sym::LongLeftArrow => InfixOperator::LongLeftArrow,
+            sym::LongRightArrow => InfixOperator::LongRightArrow,
+            sym::LongLeftRightArrow => InfixOperator::LongLeftRightArrow,
+            sym::DoubleLongLeftArrow => InfixOperator::DoubleLongLeftArrow,
+            sym::DoubleLongRightArrow => InfixOperator::DoubleLongRightArrow,
+            sym::DoubleLongLeftRightArrow => InfixOperator::DoubleLongLeftRightArrow,
+            sym::UpArrowBar => InfixOperator::UpArrowBar,
+            sym::DownArrowBar => InfixOperator::DownArrowBar,
+            sym::ShortUpArrow => InfixOperator::ShortUpArrow,
+            sym::ShortDownArrow => InfixOperator::ShortDownArrow,
+            sym::RightUpVector => InfixOperator::RightUpVector,
+            sym::LeftUpVector => InfixOperator::LeftUpVector,
+            sym::RightDownVector => InfixOperator::RightDownVector,
+            sym::LeftDownVector => InfixOperator::LeftDownVector,
+            sym::RightUpDownVector => InfixOperator::RightUpDownVector,
+            sym::LeftUpDownVector => InfixOperator::LeftUpDownVector,
+            sym::RightUpVectorBar => InfixOperator::RightUpVectorBar,
+            sym::RightDownVectorBar => InfixOperator::RightDownVectorBar,
+            sym::LeftUpVectorBar => InfixOperator::LeftUpVectorBar,
+            sym::LeftDownVectorBar => InfixOperator::LeftDownVectorBar,
+            sym::RightUpTeeVector => InfixOperator::RightUpTeeVector,
+            sym::RightDownTeeVector => InfixOperator::RightDownTeeVector,
+            sym::LeftUpTeeVector => InfixOperator::LeftUpTeeVector,
+            sym::LeftDownTeeVector => InfixOperator::LeftDownTeeVector,
+            sym::UpEquilibrium => InfixOperator::UpEquilibrium,
+            sym::ReverseUpEquilibrium => InfixOperator::ReverseUpEquilibrium,
+            sym::CenterDot => InfixOperator::CenterDot,
+            sym::Equivalent => InfixOperator::Equivalent,
+            sym::CircleDot => InfixOperator::CircleDot,
+            sym::Conditioned => InfixOperator::Conditioned,
+            sym::Union => InfixOperator::Union,
+            sym::SquareUnion => InfixOperator::SquareUnion,
+            sym::UnionPlus => InfixOperator::UnionPlus,
+            sym::Intersection => InfixOperator::Intersection,
+            sym::SquareIntersection => InfixOperator::SquareIntersection,
+            sym::TensorWedge => InfixOperator::TensorWedge,
+            sym::TensorProduct => InfixOperator::TensorProduct,
+            sym::Cross => InfixOperator::Cross,
+            sym::SmallCircle => InfixOperator::SmallCircle,
+            sym::Divisible => InfixOperator::Divisible,
+            sym::VerticalSeparator => InfixOperator::VerticalSeparator,
+            sym::Backslash => InfixOperator::Backslash,
+            sym::Diamond => InfixOperator::Diamond,
+            sym::Wedge => InfixOperator::Wedge,
+            sym::Vee => InfixOperator::Vee,
+            sym::CircleTimes => InfixOperator::CircleTimes,
+            sym::Star => InfixOperator::Star,
+            sym::VerticalTilde => InfixOperator::VerticalTilde,
+            sym::Coproduct => InfixOperator::Coproduct,
+            sym::Cap => InfixOperator::Cap,
+            sym::Cup => InfixOperator::Cup,
+            sym::CirclePlus => InfixOperator::CirclePlus,
+            sym::VerticalBar => InfixOperator::VerticalBar,
+            sym::DoubleVerticalBar => InfixOperator::DoubleVerticalBar,
+            sym::NotVerticalBar => InfixOperator::NotVerticalBar,
+            sym::NotDoubleVerticalBar => InfixOperator::NotDoubleVerticalBar,
+            sym::LeftTriangle => InfixOperator::LeftTriangle,
+            sym::RightTriangle => InfixOperator::RightTriangle,
+            sym::NotLeftTriangle => InfixOperator::NotLeftTriangle,
+            sym::NotRightTriangle => InfixOperator::NotRightTriangle,
+            sym::LeftTriangleEqual => InfixOperator::LeftTriangleEqual,
+            sym::RightTriangleEqual => InfixOperator::RightTriangleEqual,
+            sym::NotLeftTriangleEqual => InfixOperator::NotLeftTriangleEqual,
+            sym::NotRightTriangleEqual => InfixOperator::NotRightTriangleEqual,
+            sym::LeftTriangleBar => InfixOperator::LeftTriangleBar,
+            sym::RightTriangleBar => InfixOperator::RightTriangleBar,
+            sym::NotLeftTriangleBar => InfixOperator::NotLeftTriangleBar,
+            sym::NotRightTriangleBar => InfixOperator::NotRightTriangleBar,
+            sym::TildeEqual => InfixOperator::TildeEqual,
+            sym::NotTildeEqual => InfixOperator::NotTildeEqual,
+            sym::TildeFullEqual => InfixOperator::TildeFullEqual,
+            sym::NotTildeFullEqual => InfixOperator::NotTildeFullEqual,
+            sym::Tilde => InfixOperator::Tilde,
+            sym::NotTilde => InfixOperator::NotTilde,
+            sym::EqualTilde => InfixOperator::EqualTilde,
+            sym::NotEqualTilde => InfixOperator::NotEqualTilde,
+            sym::TildeTilde => InfixOperator::TildeTilde,
+            sym::NotTildeTilde => InfixOperator::NotTildeTilde,
+            sym::Proportional => InfixOperator::Proportional,
+            sym::Proportion => InfixOperator::Proportion,
+            sym::Congruent => InfixOperator::Congruent,
+            sym::NotCongruent => InfixOperator::NotCongruent,
+            sym::Equilibrium => InfixOperator::Equilibrium,
+            sym::ReverseEquilibrium => InfixOperator::ReverseEquilibrium,
+            sym::DotEqual => InfixOperator::DotEqual,
+            sym::Precedes => InfixOperator::Precedes,
+            sym::Succeeds => InfixOperator::Succeeds,
+            sym::PrecedesEqual => InfixOperator::PrecedesEqual,
+            sym::SucceedsEqual => InfixOperator::SucceedsEqual,
+            sym::PrecedesTilde => InfixOperator::PrecedesTilde,
+            sym::SucceedsTilde => InfixOperator::SucceedsTilde,
+            sym::PrecedesSlantEqual => InfixOperator::PrecedesSlantEqual,
+            sym::SucceedsSlantEqual => InfixOperator::SucceedsSlantEqual,
+            sym::NotPrecedes => InfixOperator::NotPrecedes,
+            sym::NotSucceeds => InfixOperator::NotSucceeds,
+            sym::NotPrecedesEqual => InfixOperator::NotPrecedesEqual,
+            sym::NotSucceedsEqual => InfixOperator::NotSucceedsEqual,
+            sym::NotPrecedesTilde => InfixOperator::NotPrecedesTilde,
+            sym::NotSucceedsTilde => InfixOperator::NotSucceedsTilde,
+            sym::NotPrecedesSlantEqual => InfixOperator::NotPrecedesSlantEqual,
+            sym::NotSucceedsSlantEqual => InfixOperator::NotSucceedsSlantEqual,
+            sym::CupCap => InfixOperator::CupCap,
+            sym::NotCupCap => InfixOperator::NotCupCap,
+            sym::HumpEqual => InfixOperator::HumpEqual,
+            sym::HumpDownHump => InfixOperator::HumpDownHump,
+            sym::NotHumpEqual => InfixOperator::NotHumpEqual,
+            sym::NotHumpDownHump => InfixOperator::NotHumpDownHump,
+            sym::CodeParser_InfixInequality => InfixOperator::CodeParser_InfixInequality,
+            sym::PermutationProduct => InfixOperator::PermutationProduct,
+            sym::Colon => InfixOperator::Colon,
+            sym::Xnor => InfixOperator::Xnor,
             _ => return None,
         };
 

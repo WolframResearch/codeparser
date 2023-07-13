@@ -96,7 +96,7 @@ macro_rules! WL {
         $crate::cst::Node::Infix(
             $crate::cst::InfixNode(
                 $crate::cst::OperatorNode {
-                    op: $crate::cst::Operator::$op,
+                    op: $crate::cst::InfixOperator::$op,
                     children: $crate::NodeSeq(vec![$($args),*]),
                     src: S::unknown()
                 }
@@ -190,7 +190,7 @@ macro_rules! LHS {
 
     (InfixNode[$($op_kind:ident)|*, _, _]) => {
         Node::Infix(InfixNode(OperatorNode {
-            op: $(Op::$op_kind)|*,
+            op: $($crate::cst::InfixOperator::$op_kind)|*,
             ..
         }))
     };

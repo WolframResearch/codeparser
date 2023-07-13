@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub use crate::parselet_registration::{
-    BinaryOperator, CompoundOperator, GroupOperator, Operator, PostfixOperator,
+    BinaryOperator, CompoundOperator, GroupOperator, InfixOperator, PostfixOperator,
     PrefixBinaryOperator, PrefixOperator, TernaryOperator,
 };
 
@@ -80,7 +80,7 @@ pub enum BoxKind {
 
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
-pub struct OperatorNode<I = OwnedTokenInput, S = Source, O = Operator> {
+pub struct OperatorNode<I = OwnedTokenInput, S = Source, O = InfixOperator> {
     pub op: O,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
@@ -718,7 +718,7 @@ impl<I> BinaryNode<I> {
 }
 
 impl<I> InfixNode<I> {
-    pub(crate) fn new(op: Operator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: InfixOperator, args: CstNodeSeq<I>) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
 
         InfixNode(OperatorNode::new(op, args))

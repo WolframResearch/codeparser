@@ -16,7 +16,7 @@ use crate::{
     ast::{AstMetadata, AstNode},
     cst::{
         CallBody, CallNode, CstNode::Token as NVToken, GroupMissingCloserNode, GroupNode,
-        GroupOperator, InfixNode, Node, Operator, OperatorNode,
+        GroupOperator, InfixNode, InfixOperator, Node, OperatorNode,
     },
     parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},
@@ -146,7 +146,7 @@ fn test_something() {
     assert_eq!(
         nodes("2 + 2"),
         vec![Node::Infix(InfixNode(OperatorNode {
-            op: Operator::Plus,
+            op: InfixOperator::Plus,
             children: NodeSeq(vec![
                 NVToken(token![Integer, "2" @ 0, src!(1:1-1:2)]),
                 NVToken(token![Whitespace, " " @ 1, src!(1:2-1:3)]),
@@ -213,7 +213,7 @@ fn test_character_index_source() {
     assert_eq!(
         concrete_exprs_character_index("2+2"),
         &[Node::Infix(InfixNode(OperatorNode {
-            op: Operator::Plus,
+            op: InfixOperator::Plus,
             children: NodeSeq(vec![
                 NVToken(token![Integer, "2" @ 0, src!(1..2)]),
                 NVToken(token![Plus, "+" @ 1, src!(2..3)]),

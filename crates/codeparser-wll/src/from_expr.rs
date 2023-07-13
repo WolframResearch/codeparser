@@ -5,7 +5,7 @@ use wolfram_parser::{
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
         CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
-        InfixNode, LeafNode, Operator, OperatorNode, PostfixNode, PostfixOperator,
+        InfixNode, InfixOperator, LeafNode, OperatorNode, PostfixNode, PostfixOperator,
         PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
         SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
@@ -273,7 +273,7 @@ impl FromExpr for InfixNode<OwnedTokenInput, GeneralSource> {
             todo!()
         }
 
-        let op = Operator::from_expr(&elements[0]).expect("PRE_COMMIT");
+        let op = InfixOperator::from_expr(&elements[0]).expect("PRE_COMMIT");
         let children = NodeSeq::from_expr(&elements[1]).expect("_PRE_COMMIT");
 
         let Metadata { source, .. } = Metadata::from_expr(&elements[2]).expect("PRE_COMMIT");
@@ -724,14 +724,14 @@ impl FromExpr for Source {
     }
 }
 
-impl FromExpr for Operator {
+impl FromExpr for InfixOperator {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let sym = match expr.try_as_symbol() {
             Some(sym) => sym,
             None => panic!(),
         };
 
-        match Operator::try_from_symbol(sym.as_symbol_ref()) {
+        match InfixOperator::try_from_symbol(sym.as_symbol_ref()) {
             Some(op) => Ok(op),
             None => Err(format!("unable to match symbol '{sym}' to Operator")),
         }

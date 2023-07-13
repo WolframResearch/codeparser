@@ -8,9 +8,9 @@ use crate::{
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
         CompoundOperator, CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode, Node,
-        Operator::{self, self as Op},
-        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
+        GroupOperator, InfixNode,
+        InfixOperator::{self, self as Op},
+        Node, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
         PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{Issue, IssueTag, Severity},
@@ -58,7 +58,7 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
 
         // Multiple implicit Times tokens may have been inserted when parsing boxes, so remove them here
         Node::Infix(InfixNode(OperatorNode {
-            op: Operator::Times,
+            op: InfixOperator::Times,
             children: NodeSeq(children),
             src,
         })) => {
@@ -69,7 +69,7 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
             //aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
 
             Node::Infix(InfixNode(OperatorNode {
-                op: Operator::Times,
+                op: InfixOperator::Times,
                 children: NodeSeq(aggregated_children),
                 src,
             }))
@@ -185,7 +185,7 @@ fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNod
 //--------------------------------------
 
 /// Returns a `LeafNode[Symbol, ..]`
-fn ToNode_Op(op: Operator) -> AstNode {
+fn ToNode_Op(op: InfixOperator) -> AstNode {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
     ToNode_Symbol(s)
 }
@@ -1593,7 +1593,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
         // negate[InfixNode[Times, children_, _], data_] :=
         //   InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>] } ~Join~ children, data]
         Node::Infix(InfixNode(OperatorNode {
-            op: Operator::Times,
+            op: InfixOperator::Times,
             children: NodeSeq(mut children),
             src: _,
         })) => {
@@ -1601,7 +1601,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
             children.insert(0, agg::WL!(ToNode[-1]));
 
             let infix = InfixNode(OperatorNode {
-                op: Operator::Times,
+                op: InfixOperator::Times,
                 children: NodeSeq(children).into_owned_input(),
                 src: data,
             });
@@ -1618,7 +1618,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
             ]);
 
             let infix = InfixNode(OperatorNode {
-                op: Operator::Times,
+                op: InfixOperator::Times,
                 children: children.into_owned_input(),
                 src: data,
             });

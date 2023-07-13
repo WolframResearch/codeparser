@@ -6,7 +6,7 @@ use crate::{
     ast::{AstMetadata, AstNode},
     cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CompoundNode, GroupNode, GroupOperator,
-        InfixNode, Node, Operator as Op, OperatorNode, PostfixNode, PrefixNode,
+        InfixNode, Node, OperatorNode, PostfixNode, PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
     symbol as sym,

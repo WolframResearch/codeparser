@@ -1,5 +1,5 @@
 use crate::{
-    cst::{InfixNode, Operator},
+    cst::InfixNode,
     panic_if_aborted,
     parselet::*,
     parselet_registration::*,
@@ -22,7 +22,7 @@ impl InfixParselet for TimesParselet {
     }
 
     fn getOp(&self) -> InfixParseletOperator {
-        return Operator::Times.into();
+        return InfixOperator::Times.into();
     }
 
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
@@ -154,7 +154,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn TimesParselet_reduceTimes(session: &mut ParserSession) {
-    let node = InfixNode::new(Operator::Times, Parser_popContext(session));
+    let node = InfixNode::new(InfixOperator::Times, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
