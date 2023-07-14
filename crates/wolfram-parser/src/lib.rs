@@ -81,8 +81,7 @@ mod wl_character;
 
 mod error;
 mod parser;
-#[doc(hidden)]
-pub mod parser_session;
+mod parser_session;
 
 mod agg;
 pub mod ast;
@@ -518,6 +517,27 @@ pub fn parse_bytes_to_ast<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResu
 //==========================================================
 // LibraryLink
 //==========================================================
+
+#[doc(hidden)]
+pub fn parse_to_token<'i>(
+    bytes: &'i [u8],
+    opts: &ParseOptions,
+    stringify_mode: StringifyMode,
+) -> ParseResult<Token<BorrowedTokenInput<'i>>> {
+    let mut session = ParserSession::new(bytes, opts);
+
+    session.concreteParseLeaf(stringify_mode)
+}
+
+#[doc(hidden)]
+pub fn safe_string<'i>(
+    bytes: &'i [u8],
+    opts: &ParseOptions,
+) -> Result<&'i str, UnsafeCharacterEncoding> {
+    let mut session = ParserSession::new(bytes, opts);
+
+    session.safe_string()
+}
 
 // TODO(cleanup): This doesn't need to be a method on ParserSession.
 pub(crate) fn abortQ() -> bool {

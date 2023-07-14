@@ -274,9 +274,7 @@ impl<'i> ParserSession<'i> {
         token
     }
 
-    #[allow(dead_code)]
-    #[doc(hidden)]
-    pub fn concreteParseLeaf(
+    pub(crate) fn concreteParseLeaf(
         &mut self,
         mode: StringifyMode,
     ) -> ParseResult<Token<BorrowedTokenInput<'i>>> {
@@ -295,7 +293,7 @@ impl<'i> ParserSession<'i> {
     //                std::str::from_utf8()?
     #[allow(dead_code)]
     #[doc(hidden)]
-    pub fn safe_string(&mut self) -> Result<&str, UnsafeCharacterEncoding> {
+    pub fn safe_string(&mut self) -> Result<&'i str, UnsafeCharacterEncoding> {
         //
         // read all characters, just to set unsafeCharacterEncoding flag if necessary
         //

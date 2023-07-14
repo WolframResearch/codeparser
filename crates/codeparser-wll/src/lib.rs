@@ -23,9 +23,8 @@ use wolfram_library_link::{
 use wolfram_parser::{
     abstract_::{abstract_, Aggregate},
     cst::CstNode,
-    parser_session::ParserSession,
     quirks::QuirkSettings,
-    source::{SourceConvention, DEFAULT_TAB_WIDTH},
+    source::SourceConvention,
     symbol_registration as sym, Container, ContainerBody, EncodingMode, FirstLineBehavior,
     ParseOptions, StringifyMode,
 };
@@ -466,11 +465,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
 
     link.new_packet().unwrap();
 
-    let mut session = ParserSession::new(&buffer, &opts);
-
-    session.concrete_parse_expressions().put(link);
-
-    drop(session);
+    wolfram_parser::parse_bytes_to_cst(&buffer, &opts).put(link);
 }
 
 //======================================
@@ -563,11 +558,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         Err(err) => todo!("FIXME: {err:?}"),
     };
 
-    let mut session = ParserSession::new(bytes.as_slice(), &opts);
-
-    session.concrete_parse_expressions().put(link);
-
-    drop(session);
+    wolfram_parser::parse_bytes_to_cst(bytes.as_slice(), &opts).put(link);
 }
 
 //==========================================================
@@ -655,17 +646,13 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
 
     link.new_packet().unwrap();
 
-    let mut session = ParserSession::new(&buffer, &opts);
-
-    match session.tokenize() {
+    match wolfram_parser::tokenize_bytes(&buffer, &opts) {
         Ok(nodes) => nodes.put(link),
         Err(flag) => {
             link.put_function(sym::List.as_str(), 1).unwrap();
             flag.put(link);
         },
-    };
-
-    drop(session);
+    }
 }
 
 //======================================
@@ -759,17 +746,13 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
         Err(err) => todo!("FIXME: {err:?}"),
     };
 
-    let mut session = ParserSession::new(bytes.as_slice(), &opts);
-
-    match session.tokenize() {
+    match wolfram_parser::tokenize_bytes(bytes.as_slice(), &opts) {
         Ok(nodes) => nodes.put(link),
         Err(flag) => {
             link.put_function(sym::List.as_str(), 1).unwrap();
             flag.put(link);
         },
-    };
-
-    drop(session);
+    }
 }
 
 //==========================================================
@@ -867,15 +850,10 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
 
     link.new_packet().unwrap();
 
-    let mut session = ParserSession::new(&buffer, &opts);
+    let stringify_mode =
+        StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value");
 
-    let result = session.concreteParseLeaf(
-        StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value"),
-    );
-
-    result.put(link);
-
-    drop(session);
+    wolfram_parser::parse_to_token(&buffer, &opts, stringify_mode).put(link);
 }
 
 //======================================
@@ -946,35 +924,10 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
 
     link.new_packet().unwrap();
 
-    let opts = ParseOptions::make(
-        FirstLineBehavior::NotScript,
-        SourceConvention::LineColumn,
-        EncodingMode::Normal,
-        DEFAULT_TAB_WIDTH,
-        QuirkSettings::default(),
-    );
-
-    let mut session = ParserSession::new(&buffer, &opts);
-
-    // if (ParserSessionInit(
-    //     session,
-    //     arr.get(),
-    //     arr.getByteCount(),
-    //     libData,
-    //     SourceConvention::LineColumn,
-    //     DEFAULT_TAB_WIDTH,
-    //     FirstLineBehavior::NotScript,
-    //     EncodingMode::Normal,
-    // )) {
-    //     return LIBRARY_FUNCTION_ERROR;
-    // }
-
-    match session.safe_string() {
+    match wolfram_parser::safe_string(&buffer, &ParseOptions::default()) {
         Ok(str) => link.put_str(str).unwrap(),
         Err(flag) => flag.put(link),
-    };
-
-    drop(session);
+    }
 }
 
 //======================================
