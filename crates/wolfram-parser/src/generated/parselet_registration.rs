@@ -1317,6 +1317,14 @@ pub enum GroupOperator {
     CurlyDoubleQuote,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CallOperator {
+    CodeParser_GroupSquare,
+    CodeParser_GroupDoubleBracket,
+    CodeParser_GroupTypeSpecifier,
+}
+
 impl Operator for InfixOperator {
     #[allow(dead_code)]
     fn to_symbol(self) -> Symbol {
@@ -2090,6 +2098,28 @@ impl Operator for GroupOperator {
             sym::DoubleBracketingBar => GroupOperator::DoubleBracketingBar,
             sym::CurlyQuote => GroupOperator::CurlyQuote,
             sym::CurlyDoubleQuote => GroupOperator::CurlyDoubleQuote,
+            _ => return None,
+        };
+
+        Some(operator)
+    }
+}
+
+impl Operator for CallOperator {
+    #[allow(dead_code)]
+    fn to_symbol(self) -> Symbol {
+        match self {
+            CallOperator::CodeParser_GroupSquare => sym::CodeParser_GroupSquare,
+            CallOperator::CodeParser_GroupDoubleBracket => sym::CodeParser_GroupDoubleBracket,
+            CallOperator::CodeParser_GroupTypeSpecifier => sym::CodeParser_GroupTypeSpecifier,
+        }
+    }
+
+    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let operator = match symbol {
+            sym::CodeParser_GroupSquare => CallOperator::CodeParser_GroupSquare,
+            sym::CodeParser_GroupDoubleBracket => CallOperator::CodeParser_GroupDoubleBracket,
+            sym::CodeParser_GroupTypeSpecifier => CallOperator::CodeParser_GroupTypeSpecifier,
             _ => return None,
         };
 

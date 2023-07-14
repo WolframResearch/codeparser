@@ -8,11 +8,6 @@ use crate::{
     NodeSeq,
 };
 
-pub use crate::parselet_registration::{
-    BinaryOperator, CompoundOperator, GroupOperator, InfixOperator, PostfixOperator,
-    PrefixBinaryOperator, PrefixOperator, TernaryOperator,
-};
-
 // TODO: #[deprecated(note = "Use CstNode instead")]
 pub(crate) type Node<I = OwnedTokenInput, S = Source> = CstNode<I, S>;
 
@@ -133,13 +128,13 @@ pub struct CallNode<I = OwnedTokenInput, S = Source> {
 /// Subset of [`CstNode`] variants that are allowed as the body of a [`CallNode`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum CallBody<I = OwnedTokenInput, S = Source> {
-    Group(GroupNode<I, S>),
-    GroupMissingCloser(GroupMissingCloserNode<I, S>),
+    Group(GroupNode<I, S, CallOperator>),
+    GroupMissingCloser(GroupMissingCloserNode<I, S, CallOperator>),
 }
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, GroupOperator>);
+pub struct GroupNode<I = OwnedTokenInput, S = Source, O = GroupOperator>(pub OperatorNode<I, S, O>);
 
 /// Any "compound" of tokens:
 ///
@@ -170,8 +165,8 @@ pub enum SyntaxErrorKind {
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Source>(
-    pub OperatorNode<I, S, GroupOperator>,
+pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Source, O = GroupOperator>(
+    pub OperatorNode<I, S, O>,
 );
 
 /// Only possible with boxes
@@ -848,7 +843,7 @@ impl<I, S: TokenSource> CallNode<I, S> {
 }
 
 impl<I, S> CallBody<I, S> {
-    pub fn as_op(&self) -> &OperatorNode<I, S, GroupOperator> {
+    pub fn as_op(&self) -> &OperatorNode<I, S, CallOperator> {
         match self {
             CallBody::Group(GroupNode(op)) => op,
             CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => op,
@@ -857,7 +852,7 @@ impl<I, S> CallBody<I, S> {
 
     pub fn map_op<F, I2, S2>(self, func: F) -> CallBody<I2, S2>
     where
-        F: FnOnce(OperatorNode<I, S, GroupOperator>) -> OperatorNode<I2, S2, GroupOperator>,
+        F: FnOnce(OperatorNode<I, S, CallOperator>) -> OperatorNode<I2, S2, CallOperator>,
     {
         match self {
             CallBody::Group(GroupNode(op)) => CallBody::Group(GroupNode(func(op))),
@@ -915,12 +910,52 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
 // Operator Enums
 //==========================================================
 
+/// Subset of [`GroupOperator`] that are valid in [`CallBody`].
+pub use crate::parselet_registration::CallOperator;
+
+pub use crate::parselet_registration::{
+    BinaryOperator, CompoundOperator, GroupOperator, InfixOperator, PostfixOperator,
+    PrefixBinaryOperator, PrefixOperator, TernaryOperator,
+};
+
 /// Marker denoting enums whose variants represent named operators, which
 /// can be converted to or from a corresponding canonical symbol representation.
 pub trait Operator: Sized + 'static {
     fn to_symbol(self) -> crate::symbol::Symbol;
 
     fn try_from_symbol(symbol: wolfram_expr::symbol::SymbolRef) -> Option<Self>;
+}
+
+impl GroupOperator {
+    // FIXME: Make this function unnecessary by removing the GroupOperator
+    //        variants that overlap with CallOperator. This will require some
+    //        refactoring of how the parser parsing of CallParselet works.
+    pub(crate) fn try_to_call_operator(self) -> Option<CallOperator> {
+        let op = match self {
+            GroupOperator::CodeParser_GroupSquare => CallOperator::CodeParser_GroupSquare,
+            GroupOperator::CodeParser_GroupTypeSpecifier => {
+                CallOperator::CodeParser_GroupTypeSpecifier
+            },
+            GroupOperator::CodeParser_GroupDoubleBracket => {
+                CallOperator::CodeParser_GroupDoubleBracket
+            },
+            GroupOperator::Token_Comment
+            | GroupOperator::CodeParser_GroupParen
+            | GroupOperator::List
+            | GroupOperator::Association
+            | GroupOperator::AngleBracket
+            | GroupOperator::Ceiling
+            | GroupOperator::Floor
+            | GroupOperator::BracketingBar
+            | GroupOperator::DoubleBracketingBar
+            | GroupOperator::CurlyQuote
+            | GroupOperator::CurlyDoubleQuote => {
+                panic!("GroupOperator::{self:?} cannot be converted to CallOperator")
+            },
+        };
+
+        Some(op)
+    }
 }
 
 //======================================

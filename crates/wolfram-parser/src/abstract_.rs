@@ -6,9 +6,9 @@ use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
-        CompoundOperator, CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CallOperator, CodeNode,
+        CompoundNode, CompoundOperator, CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode,
+        GroupNode, GroupOperator, InfixNode,
         InfixOperator::{self, self as Op},
         Node, Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
         PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
@@ -1615,7 +1615,7 @@ fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node
     Node::Call(CallNode {
         head: NodeSeq(vec![agg::WL!(ToNode[Power])]),
         body: CallBody::Group(GroupNode(OperatorNode {
-            op: GroupOperator::CodeParser_GroupSquare,
+            op: CallOperator::CodeParser_GroupSquare,
             children: NodeSeq(vec![
                 agg::WL!(LeafNode[OpenSquare, "[", <||>]),
                 agg::WL!(InfixNode[
@@ -2410,8 +2410,8 @@ fn abstractInfixTildeLeftAlreadyAbstracted<I: TokenInput + Debug, S: TokenSource
 /// Removes all commas
 ///
 /// Fills in Nulls and gives SyntaxIssues for e.g. {1,,2}
-fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug>(
-    group: GroupNode<I, S>,
+fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug, O: Operator>(
+    group: GroupNode<I, S, O>,
 ) -> AstCall {
     let GroupNode(OperatorNode {
         op: tag,
@@ -2449,9 +2449,9 @@ fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     }
 }
 
-fn abstractGroupNode_GroupMissingCloserNode<I: TokenInput + Debug, S: TokenSource + Debug>(
-    group: GroupMissingCloserNode<I, S>,
-) -> (GroupOperator, Vec<AstNode>, AstMetadata) {
+fn abstractGroupNode_GroupMissingCloserNode<I: TokenInput + Debug, S: TokenSource + Debug, O>(
+    group: GroupMissingCloserNode<I, S, O>,
+) -> (O, Vec<AstNode>, AstMetadata) {
     let GroupMissingCloserNode(OperatorNode {
         op,
         children: NodeSeq(mut children),

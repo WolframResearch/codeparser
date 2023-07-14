@@ -167,7 +167,7 @@ fn test_something() {
                 src!(1:1-1:2)
             ])]),
             body: CallBody::Group(GroupNode(OperatorNode {
-                op: GroupOperator::CodeParser_GroupSquare,
+                op: CallOperator::CodeParser_GroupSquare,
                 children: NodeSeq(vec![
                     NVToken(token![OpenSquare, "[" @ 1, src!(1:2-1:3)]),
                     NVToken(token![Symbol, "x" @ 2, src!(1:3-1:4)]),

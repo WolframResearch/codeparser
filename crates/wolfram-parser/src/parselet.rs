@@ -9,8 +9,8 @@ use std::any::Any;
 use crate::{
     cst::{
         BinaryNode, CallBody, CallNode, CompoundNode, CompoundOperator, GroupMissingCloserNode,
-        GroupNode, GroupOperator, InfixNode, InfixOperator, PostfixNode, PrefixBinaryOperator,
-        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        GroupNode, GroupOperator, InfixNode, InfixOperator, OperatorNode, PostfixNode,
+        PrefixBinaryOperator, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
@@ -1508,8 +1508,28 @@ fn CallParselet_reduceCall(session: &mut ParserSession) {
         let body = Parser_popNode(session);
 
         let body: CallBody<_> = match body {
-            crate::cst::CstNode::Group(group) => CallBody::Group(group),
-            crate::cst::CstNode::GroupMissingCloser(group) => CallBody::GroupMissingCloser(group),
+            crate::cst::CstNode::Group(group) => {
+                let GroupNode(OperatorNode { op, children, src}) = group;
+
+                let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");
+
+                let group = GroupNode(OperatorNode {
+                    op, children, src
+                });
+
+                CallBody::Group(group)
+            },
+            crate::cst::CstNode::GroupMissingCloser(group) => {
+                let GroupMissingCloserNode(OperatorNode { op, children, src}) = group;
+
+                let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");
+
+                let group = GroupMissingCloserNode(OperatorNode {
+                    op, children, src
+                });
+
+                CallBody::GroupMissingCloser(group)
+            },
             other => panic!(
                 "expected CallParselet body to reduce to a Group or GroupMissingCloser node; got: {:#?}",
                 other
