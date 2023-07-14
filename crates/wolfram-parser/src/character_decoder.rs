@@ -1669,6 +1669,8 @@ fn CharacterDecoder_longNameSuggestion(input: &str) -> String {
     }
 }
 
+/// Add an [`Issue`][crate::issue::Issue] if the specified [`CodePoint`] is
+/// a "strange" character.
 pub(crate) fn check_strange_syntax_issue(
     session: &mut Tokenizer,
     policy: NextPolicy,
@@ -1676,147 +1678,78 @@ pub(crate) fn check_strange_syntax_issue(
     start_loc: SourceLocation,
     escape_style: EscapeStyle,
 ) {
-    if utils::isStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
+    let c = WLCharacter::new_with_escape(point, escape_style);
 
-        let c = WLCharacter::new_with_escape(point, escape_style);
-
-        let currentWLCharacterStartLoc = start_loc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isStrangeWhitespace() {
-
-            // Do nothing.
+    let issue_value: f64 = if utils::isStrange(point) {
+        if c.isStrangeWhitespace() {
+            return;
         } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.95,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
+            0.95
         }
     } else if utils::isMBStrange(point) {
-        //
-        // Just generally strange character is in the code
-        //
-
-        let c = WLCharacter::new_with_escape(point, escape_style);
-
-        let currentWLCharacterStartLoc = start_loc.previous();
-
-        let currentSourceCharacterEndLoc = session.SrcLoc;
-
-        let graphicalStr = c.graphicalString();
-
-        let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
-
-        let mut Actions: Vec<CodeAction> = Vec::new();
-
-        for A in utils::certainCharacterReplacementActions(c, Src) {
-            Actions.push(A);
-        }
-
-        //
-        // do not recommend replacing graphical character with literal version
-        //
-
-        //
-        // any ASCII replacements
-        //
-        for r in LongNames::asciiReplacements(point) {
-            Actions.push(CodeAction::replace_text(
-                format!(
-                    "Replace with ``{}``",
-                    LongNames::replacementGraphical(r.clone())
-                ),
-                Src,
-                r,
-            ));
-        }
-
-        if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-            //
-            // reduce severity of unexpected characters inside strings or comments
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Remark,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
-        } else if c.isMBStrangeWhitespace() {
-
-            // Do nothing.
+        if c.isMBStrangeWhitespace() {
+            return;
         } else {
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                format!("Unexpected character: ``{graphicalStr}``."),
-                Severity::Warning,
-                Src,
-                0.85,
-                Actions,
-                vec![],
-            );
-
-            session.addIssue(I);
+            0.85
         }
+    } else {
+        return;
+    };
+
+    //
+    // Just generally strange character is in the code
+    //
+
+    let currentWLCharacterStartLoc = start_loc.previous();
+
+    let currentSourceCharacterEndLoc = session.SrcLoc;
+
+    let graphicalStr = c.graphicalString();
+
+    let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+
+    let mut Actions: Vec<CodeAction> = Vec::new();
+
+    for A in utils::certainCharacterReplacementActions(c, Src) {
+        Actions.push(A);
     }
+
+    //
+    // do not recommend replacing graphical character with literal version
+    //
+
+    //
+    // any ASCII replacements
+    //
+    for r in LongNames::asciiReplacements(point) {
+        Actions.push(CodeAction::replace_text(
+            format!(
+                "Replace with ``{}``",
+                LongNames::replacementGraphical(r.clone())
+            ),
+            Src,
+            r,
+        ));
+    }
+
+    //
+    // reduce severity of unexpected characters inside strings or comments
+    //
+    let severity = if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
+        Severity::Remark
+    } else {
+        Severity::Warning
+    };
+
+    let issue = SyntaxIssue(
+        IssueTag::UnexpectedCharacter,
+        format!("Unexpected character: ``{graphicalStr}``."),
+        severity,
+        Src,
+        issue_value,
+        Actions,
+        vec![],
+    );
+
+    session.addIssue(issue);
 }
