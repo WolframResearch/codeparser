@@ -1259,14 +1259,10 @@ impl<'t> SourceManager<'t> {
     fn newline(&mut self) {
         match self.loc {
             SourceLocation::LineColumn(LineColumn(line, column)) => {
-                debug_assert!(self.convention == SourceConvention::LineColumn);
-
                 *line = line.checked_add(1).expect("line overflows u32");
                 *column = 1;
             },
             SourceLocation::CharacterIndex(index) => {
-                debug_assert!(self.convention == SourceConvention::CharacterIndex);
-
                 *index += 1;
             },
         }
@@ -1275,14 +1271,10 @@ impl<'t> SourceManager<'t> {
     fn windowsNewline(&mut self) {
         match self.loc {
             SourceLocation::LineColumn(LineColumn(line, column)) => {
-                debug_assert!(self.convention == SourceConvention::LineColumn);
-
                 *line = line.checked_add(1).expect("line overflows u32");
                 *column = 1;
             },
             SourceLocation::CharacterIndex(index) => {
-                debug_assert!(self.convention == SourceConvention::CharacterIndex);
-
                 *index += 2;
             },
         }
@@ -1291,15 +1283,11 @@ impl<'t> SourceManager<'t> {
     fn tab(&mut self) {
         match self.loc {
             SourceLocation::LineColumn(LineColumn(_, column)) => {
-                debug_assert!(self.convention == SourceConvention::LineColumn);
-
                 let currentTabStop = self.tab_width * ((*column - 1) / self.tab_width) + 1;
 
                 *column = currentTabStop + self.tab_width;
             },
             SourceLocation::CharacterIndex(index) => {
-                debug_assert!(self.convention == SourceConvention::CharacterIndex);
-
                 *index += 1;
             },
         }

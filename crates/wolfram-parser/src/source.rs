@@ -458,15 +458,6 @@ impl SourceLocation {
         }
     }
 
-    pub(crate) fn line_column(self) -> LineColumn {
-        match self {
-            SourceLocation::LineColumn(lc) => lc,
-            SourceLocation::CharacterIndex(_) => {
-                panic!("expected SourceLocation::LineColumn: {:?}", self)
-            },
-        }
-    }
-
     pub(crate) fn next(self) -> Self {
         if feature::COMPUTE_SOURCE {
             match self {
@@ -761,6 +752,12 @@ impl GeneralSource {
 //======================================
 // Source type conversion impls
 //======================================
+
+impl From<LineColumn> for SourceLocation {
+    fn from(lc: LineColumn) -> Self {
+        SourceLocation::LineColumn(lc)
+    }
+}
 
 impl From<LineColumnSpan> for Source {
     fn from(value: LineColumnSpan) -> Self {

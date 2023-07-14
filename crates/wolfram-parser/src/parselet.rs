@@ -1444,7 +1444,6 @@ fn GroupParselet_reduceUnterminatedGroup(session: &mut ParserSession, P: &GroupP
     let node = crate::error::reparseUnterminatedGroupNode(
         node,
         input,
-        session.tokenizer.srcConvention,
         session.tokenizer.tabWidth as usize,
     );
 

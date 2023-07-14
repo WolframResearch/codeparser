@@ -5,7 +5,7 @@ use crate::{
     cst::{GroupMissingCloserNode, Node, OperatorNode, UnterminatedGroupNeedsReparseNode},
     source::{Buffer, BufferAndLength, CharacterSpan, LineColumn},
     token::{BorrowedTokenInput, Token},
-    NodeSeq, Source, SourceConvention, SourceLocation, Tokens,
+    NodeSeq, Source, SourceLocation, StringSourceKind, Tokens,
 };
 
 use once_cell::sync::Lazy;
@@ -72,12 +72,11 @@ TagSetDelayed\
 pub(crate) fn reparse_unterminated<'i>(
     nodes: AggNodeSeq<BorrowedTokenInput<'i>>,
     input: &'i str,
-    convention: SourceConvention,
     tab_width: usize,
 ) -> AggNodeSeq<BorrowedTokenInput<'i>> {
     nodes.map_visit(&mut |node| match node {
         Node::Token(token) if token.tok.isError() && token.tok.isUnterminated() => {
-            let token = reparseUnterminatedTokenErrorNode(token, input, convention, tab_width);
+            let token = reparseUnterminatedTokenErrorNode(token, input, tab_width);
 
             Node::Token(token)
         },
@@ -88,7 +87,6 @@ pub(crate) fn reparse_unterminated<'i>(
 pub(crate) fn reparse_unterminated_tokens<'i>(
     tokens: Tokens<BorrowedTokenInput<'i>>,
     input: &'i str,
-    convention: SourceConvention,
     tab_width: usize,
 ) -> Tokens<BorrowedTokenInput<'i>> {
     let Tokens(tokens) = tokens;
@@ -97,7 +95,7 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
         .into_iter()
         .map(&mut |token: Token<_>| {
             if token.tok.isError() && token.tok.isUnterminated() {
-                let token = reparseUnterminatedTokenErrorNode(token, input, convention, tab_width);
+                let token = reparseUnterminatedTokenErrorNode(token, input, tab_width);
 
                 token
             } else {
@@ -121,7 +119,6 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
 pub(crate) fn reparseUnterminatedGroupNode<'i>(
     group: UnterminatedGroupNeedsReparseNode<BorrowedTokenInput<'i>>,
     str: &'i str,
-    convention: SourceConvention,
     tab_width: usize,
 ) -> GroupMissingCloserNode<BorrowedTokenInput<'i>> {
     let UnterminatedGroupNeedsReparseNode(OperatorNode {
@@ -130,12 +127,12 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
         src,
     }) = group;
 
-    let (_, _, better_src) = process_lines(str, tab_width, convention, src);
+    let (_, _, better_src) = process_lines(str, tab_width, src);
 
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
-    let better_leaves = match convention {
-        SourceConvention::LineColumn => {
+    let better_leaves = match better_src.kind() {
+        StringSourceKind::LineColumnSpan(better_src) => {
             // Flatten out children, because there may be parsing errors from missing bracket, and
             // we do not want to propagate
             //
@@ -153,10 +150,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
                     input: _,
                     src: node_src,
                 }) => {
-                    if better_src
-                        .line_column_span()
-                        .overlaps(node_src.line_column_span())
-                    {
+                    if better_src.overlaps(node_src.line_column_span()) {
                         better_leaves.push(node.clone());
                     }
                 },
@@ -165,7 +159,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
 
             better_leaves
         },
-        SourceConvention::CharacterIndex => {
+        StringSourceKind::CharacterSpan(better_src) => {
             // Flatten out children, because there may be parsing errors from missing bracket, and
             // we do not want to propagate
             let mut better_leaves: Vec<Node<_>> = Vec::new();
@@ -176,10 +170,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
                     input: _,
                     src: node_src,
                 }) => {
-                    if is_interval_member(
-                        better_src.character_span().tuple(),
-                        node_src.character_span().tuple(),
-                    ) {
+                    if is_interval_member(better_src.tuple(), node_src.character_span().tuple()) {
                         better_leaves.push(node.clone());
                     }
                 },
@@ -188,6 +179,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
 
             better_leaves
         },
+        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
     };
 
     // Purposely only returning leaves that are in the "better" Source
@@ -211,7 +203,6 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
 fn reparseUnterminatedTokenErrorNode<'i>(
     error: Token<BorrowedTokenInput<'i>>,
     str: &'i str,
-    convention: SourceConvention,
     tab_width: usize,
 ) -> Token<BorrowedTokenInput<'i>> {
     debug_assert!(error.tok.isError() && error.tok.isUnterminated());
@@ -219,18 +210,16 @@ fn reparseUnterminatedTokenErrorNode<'i>(
     // TODO: Use `input` here to optimize the process_lines() calculation?
     let Token { tok, input: _, src } = error;
 
-    let (first_chunk, last_good_line_index, better_src) =
-        process_lines(str, tab_width, convention, src);
+    let (first_chunk, last_good_line_index, better_src) = process_lines(str, tab_width, src);
 
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
-    let better_str = match convention {
-        SourceConvention::LineColumn => {
+    let better_str = match better_src.kind() {
+        StringSourceKind::LineColumnSpan(better_src) => {
             let mut components: Vec<&str> = Vec::new();
 
             components.push(
-                &first_chunk[0].content
-                    [usize::try_from(better_src.start.line_column().column()).unwrap() - 1..],
+                &first_chunk[0].content[usize::try_from(better_src.start.column()).unwrap() - 1..],
             );
 
             if first_chunk.len() > 1 {
@@ -260,11 +249,12 @@ fn reparseUnterminatedTokenErrorNode<'i>(
 
             make_better_input(str, better_str2)
         },
-        SourceConvention::CharacterIndex => {
-            let better_str: &str = StringTake(str, better_src.character_span());
+        StringSourceKind::CharacterSpan(better_src) => {
+            let better_str: &str = StringTake(str, better_src);
 
             make_better_input(str, better_str)
         },
+        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
     };
 
     Token {
@@ -292,15 +282,10 @@ fn make_better_input<'i>(input: &str, better: &'i str) -> BorrowedTokenInput<'i>
 // Helpers
 //==========================================================
 
-fn process_lines(
-    input: &str,
-    tab_width: usize,
-    convention: SourceConvention,
-    src: Source,
-) -> (Vec<Line>, usize, Source) {
+fn process_lines(input: &str, tab_width: usize, src: Source) -> (Vec<Line>, usize, Source) {
     let lines = to_lines_and_expand_tabs(input, tab_width);
 
-    first_chunk_and_last_good_line(lines, tab_width, convention, src)
+    first_chunk_and_last_good_line(lines, tab_width, src)
 }
 
 fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
@@ -332,22 +317,21 @@ fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
 fn first_chunk_and_last_good_line(
     lines: Vec<Line>,
     tab_width: usize,
-    convention: SourceConvention,
     src: Source,
 ) -> (Vec<Line>, usize, Source) {
     //------------------------------------------------------
     // Filter `lines` into the lines that overlap with `src`
     //------------------------------------------------------
 
-    let (lines, char_ranges_of_lines): (Vec<Line>, Option<Vec<CharacterSpan>>) = match convention {
-        SourceConvention::LineColumn => {
+    let (lines, char_ranges_of_lines): (Vec<Line>, Option<Vec<CharacterSpan>>) = match src.kind() {
+        StringSourceKind::LineColumnSpan(src) => {
             // (*
             // lines of the node
             // *)
             // lines = lines[[src[[1, 1]];;src[[2, 1]]]];
 
-            let start_line = src.start.line_column().line();
-            let end_line = src.end.line_column().line();
+            let start_line = src.start.line();
+            let end_line = src.end.line();
 
             (
                 retain_range(
@@ -357,14 +341,14 @@ fn first_chunk_and_last_good_line(
                 None,
             )
         },
-        SourceConvention::CharacterIndex => {
+        StringSourceKind::CharacterSpan(src) => {
             let specs_of_lines = lines_start_and_end_char_indexes(lines);
 
             let CollectMultiple(lines, specs_of_lines): CollectMultiple<Line, CharacterSpan> =
                 specs_of_lines
                     .flat_map(|(line, pos): (Line, CharacterSpan)| {
                         // Only returns lines that intersect with the source character span.
-                        if intersection(pos.tuple(), src.character_span().tuple()).is_some() {
+                        if intersection(pos.tuple(), src.tuple()).is_some() {
                             Some((line, pos))
                         } else {
                             None
@@ -395,6 +379,7 @@ fn first_chunk_and_last_good_line(
                 lines = Extract[lines, poss];
             */
         },
+        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
     };
 
     //--------------------------
@@ -423,15 +408,14 @@ fn first_chunk_and_last_good_line(
     // Computer better Source
     //-----------------------
 
-    let better_src: Source = match convention {
-        SourceConvention::LineColumn => {
+    let better_src: Source = match src.kind() {
+        StringSourceKind::LineColumnSpan(src) => {
             // This will NOT include newline at the end
             // FIXME?
             Source {
-                start: src.start,
+                start: SourceLocation::from(src.start),
                 end: SourceLocation::LineColumn(LineColumn(
                     src.start
-                        .line_column()
                         .line()
                         .checked_add(u32::try_from(last_good_line_index).unwrap())
                         .expect("source line overflow u32"),
@@ -439,11 +423,11 @@ fn first_chunk_and_last_good_line(
                 )),
             }
         },
-        SourceConvention::CharacterIndex => {
+        StringSourceKind::CharacterSpan(src) => {
             // This WILL include newline at the end
             // FIXME?
 
-            let CharacterSpan(original_start, _) = src.character_span();
+            let CharacterSpan(original_start, _) = src;
 
             let char_ranges_of_lines = char_ranges_of_lines.unwrap();
 
@@ -464,6 +448,7 @@ fn first_chunk_and_last_good_line(
             //     ]]
             // };
         },
+        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
     };
 
     // TODO(optimization): Refactor to avoid this to_vec() call.

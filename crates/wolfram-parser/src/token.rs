@@ -1,9 +1,7 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    source::{
-        Buffer, BufferAndLength, ByteSpan, GeneralSource, LineColumn, LineColumnSpan, Source,
-    },
+    source::{Buffer, BufferAndLength, ByteSpan, GeneralSource, Source},
     tokenizer::Tokenizer,
 };
 
@@ -210,7 +208,9 @@ impl<'i> TokenRef<'i> {
             //
             TokenKind::ToplevelNewline | TokenKind::InternalNewline => {},
             _ if crate::feature::COMPUTE_SOURCE => {
-                use crate::source::{SourceCharacter, StringSourceKind};
+                use crate::source::{
+                    LineColumn, LineColumnSpan, SourceCharacter, StringSourceKind,
+                };
 
                 if tok.isEmpty() {
                     assert!(

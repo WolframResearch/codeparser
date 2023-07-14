@@ -91,7 +91,6 @@ impl<'i> ParserSession<'i> {
 
                 encodingMode,
 
-                srcConvention,
                 SrcLoc: srcConvention.newSourceLocation(),
 
                 GroupStack: Vec::new(),
@@ -316,7 +315,6 @@ impl<'i> ParserSession<'i> {
             nodes = crate::error::reparse_unterminated(
                 nodes,
                 input,
-                self.tokenizer.srcConvention,
                 usize::try_from(self.tokenizer.tabWidth).unwrap(),
             );
         }
@@ -332,7 +330,6 @@ impl<'i> ParserSession<'i> {
             tokens = crate::error::reparse_unterminated_tokens(
                 tokens,
                 input,
-                self.tokenizer.srcConvention,
                 usize::try_from(self.tokenizer.tabWidth).unwrap(),
             );
         }
