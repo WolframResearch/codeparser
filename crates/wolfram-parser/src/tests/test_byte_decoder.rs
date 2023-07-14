@@ -4,8 +4,7 @@ use crate::{
     byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     code_point::CodePoint,
     source::TOPLEVEL,
-    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
-    DEFAULT_TAB_WIDTH,
+    ParseOptions, ParserSession,
 };
 
 
@@ -13,14 +12,7 @@ use crate::{
 fn ByteDecoderTest_Basic1() {
     let strIn = "1+2";
 
-    let mut session = ParserSession::new(
-        strIn.as_bytes(),
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -61,14 +53,7 @@ fn ByteDecoderTest_Basic1() {
 fn ByteDecoderTest_Basic2() {
     let arr = &[b'1', b'+', 206, 177];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c: CodePoint = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -112,14 +97,7 @@ fn ByteDecoderTest_Basic2() {
 fn ByteDecoderTest_Basic3() {
     let arr = &[b'1', b'+', 0xE2, 0x9A, 0xA1];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -160,14 +138,7 @@ fn ByteDecoderTest_Basic3() {
 fn ByteDecoderTest_Invalid1() {
     let arr = &[b'1', b'+', 0xf8];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -210,14 +181,7 @@ fn ByteDecoderTest_Invalid1() {
 fn ByteDecoderTest_Invalid2() {
     let arr = &[b'1', b'+', 206];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -258,14 +222,7 @@ fn ByteDecoderTest_Invalid2() {
 fn ByteDecoderTest_Invalid3() {
     let arr = &[b'1', b'+', 0xE2];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -307,14 +264,7 @@ fn ByteDecoderTest_Invalid3() {
 fn ByteDecoderTest_Invalid4() {
     let arr = &[b'1', b'+', 0xE2, 0x9A];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -356,14 +306,7 @@ fn ByteDecoderTest_Invalid4() {
 fn ByteDecoderTest_Surrogate1() {
     let arr = &[b'1', b'+', 0xed, 0xa0, 0x80];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -411,14 +354,7 @@ fn ByteDecoderTest_Surrogate1() {
 fn ByteDecoderTest_Surrogate2() {
     let arr = &[b'1', b'+', 0xed, 0xb0, 0x80];
 
-    let mut session = ParserSession::new(
-        arr,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(arr, &ParseOptions::default());
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 

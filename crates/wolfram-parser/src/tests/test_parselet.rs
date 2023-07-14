@@ -1,7 +1,6 @@
 use crate::{
     cst::CstNode, parselet::prefix_parselet, parser::Parser_topNode, source::TOPLEVEL,
-    tokenizer::Tokenizer_currentToken, EncodingMode, FirstLineBehavior, ParserSession,
-    QuirkSettings, SourceConvention, DEFAULT_TAB_WIDTH,
+    tokenizer::Tokenizer_currentToken, ParseOptions, ParserSession,
 };
 
 
@@ -9,14 +8,7 @@ use crate::{
 fn ParseletTest_Bug1() {
     let strIn = "a /: b := c";
 
-    let mut session = ParserSession::new(
-        strIn.as_bytes(),
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
@@ -38,14 +30,7 @@ fn ParseletTest_Bug2() {
     //
     let strIn = "a<b ";
 
-    let mut session = ParserSession::new(
-        strIn.as_bytes(),
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
@@ -62,14 +47,7 @@ fn ParseletTest_Bug2() {
 fn ParseletTest_Bug3() {
     let strIn = "a\\[Integral]b\\[Integral]c ";
 
-    let mut session = ParserSession::new(
-        strIn.as_bytes(),
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
@@ -86,14 +64,7 @@ fn ParseletTest_Bug3() {
 fn ParseletTest_Bug4() {
     let strIn = "\\[RawLeftBrace]*\\[RawRightBrace]";
 
-    let mut session = ParserSession::new(
-        strIn.as_bytes(),
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
-        FirstLineBehavior::NotScript,
-        EncodingMode::Normal,
-        QuirkSettings::default(),
-    );
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 

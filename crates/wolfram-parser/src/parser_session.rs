@@ -23,7 +23,7 @@ use crate::{
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
         TrackedSourceLocations, UnsafeCharacterEncoding,
     },
-    EncodingMode, FirstLineBehavior, NodeSeq, StringifyMode, Tokens,
+    EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, StringifyMode, Tokens,
 };
 
 /// A parser session
@@ -72,7 +72,26 @@ pub struct ParseResult<N> {
 //======================================
 
 impl<'i> ParserSession<'i> {
-    pub fn new(
+    pub fn new(input: &'i [u8], opts: &ParseOptions) -> ParserSession<'i> {
+        let ParseOptions {
+            first_line_behavior,
+            src_convention,
+            encoding_mode,
+            tab_width,
+            quirk_settings,
+        } = *opts;
+
+        ParserSession::new_(
+            input,
+            src_convention,
+            tab_width,
+            first_line_behavior,
+            encoding_mode,
+            quirk_settings,
+        )
+    }
+
+    fn new_(
         input: &[u8],
         srcConvention: SourceConvention,
         tabWidth: u32,

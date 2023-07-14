@@ -392,8 +392,33 @@ impl Default for ParseOptions {
 }
 
 impl ParseOptions {
+    /// Helper constructor that requires every field be given a value.
+    #[doc(hidden)]
+    pub fn make(
+        first_line_behavior: FirstLineBehavior,
+        src_convention: SourceConvention,
+        encoding_mode: EncodingMode,
+        tab_width: u32,
+        quirk_settings: QuirkSettings,
+    ) -> Self {
+        ParseOptions {
+            first_line_behavior,
+            src_convention,
+            encoding_mode,
+            tab_width,
+            quirk_settings,
+        }
+    }
+
     pub fn tab_width(self, tab_width: u32) -> Self {
         ParseOptions { tab_width, ..self }
+    }
+
+    pub fn source_convention(self, src_convention: SourceConvention) -> Self {
+        ParseOptions {
+            src_convention,
+            ..self
+        }
     }
 }
 
@@ -435,22 +460,7 @@ pub fn tokenize_bytes<'i>(
     input: &'i [u8],
     opts: &ParseOptions,
 ) -> Result<Tokens<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
-    let ParseOptions {
-        first_line_behavior,
-        src_convention,
-        encoding_mode,
-        tab_width,
-        quirk_settings,
-    } = *opts;
-
-    let mut session = ParserSession::new(
-        input,
-        src_convention,
-        tab_width,
-        first_line_behavior,
-        encoding_mode,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(input, opts);
 
     session.tokenize()
 }
@@ -484,22 +494,7 @@ pub fn parse_bytes_to_cst<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
-    let ParseOptions {
-        first_line_behavior,
-        src_convention,
-        encoding_mode,
-        tab_width,
-        quirk_settings,
-    } = *opts;
-
-    let mut session = ParserSession::new(
-        bytes,
-        src_convention,
-        tab_width,
-        first_line_behavior,
-        encoding_mode,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(bytes, opts);
 
     session.concrete_parse_expressions()
 }
@@ -515,22 +510,7 @@ pub fn parse_to_ast<'i>(input: &'i str, opts: &ParseOptions) -> ParseResult<AstN
 
 /// Parse bytes containing Wolfram Language input into an abstract syntax tree.
 pub fn parse_bytes_to_ast<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<AstNode> {
-    let ParseOptions {
-        first_line_behavior,
-        src_convention,
-        encoding_mode,
-        tab_width,
-        quirk_settings,
-    } = *opts;
-
-    let mut session = ParserSession::new(
-        bytes,
-        src_convention,
-        tab_width,
-        first_line_behavior,
-        encoding_mode,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(bytes, opts);
 
     session.abstract_parse_expressions()
 }

@@ -27,7 +27,7 @@ use wolfram_parser::{
     quirks::QuirkSettings,
     source::{SourceConvention, DEFAULT_TAB_WIDTH},
     symbol_registration as sym, Container, ContainerBody, EncodingMode, FirstLineBehavior,
-    StringifyMode,
+    ParseOptions, StringifyMode,
 };
 
 use crate::{convert_wstp::WstpPut, from_expr::FromExpr};
@@ -188,6 +188,49 @@ unsafe fn read_session_from_link(link: &mut wstp::Link) -> ParserSessionPtr {
     let session = session as ParserSessionPtr;
 
     session
+}
+
+fn read_parse_options_from_link(
+    link: &mut wstp::Link,
+    encoding_mode: Option<EncodingMode>,
+) -> ParseOptions {
+    //----------------------------------------------------------
+    // Read the parser option values from the link one at a time
+    //----------------------------------------------------------
+
+    let mlSrcConvention = link.get_i32().unwrap();
+    let srcConvention =
+        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
+
+    let tabWidth =
+        u32::try_from(link.get_i64().unwrap()).expect("unable to convert tab width value to u32");
+
+    let mlFirstLineBehavior = link.get_i32().unwrap();
+
+    let firstLineBehavior =
+        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
+
+    // If no encoding mode was specified by the caller, read one from the link
+    // at this point in the argument sequence.
+    let encoding_mode: EncodingMode = encoding_mode.unwrap_or_else(|| {
+        let mlEncodingMode = link.get_i32().unwrap();
+        EncodingMode::try_from(mlEncodingMode).expect("invalid EncodingMode value")
+    });
+
+    let quirk_settings =
+        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+
+    //----------------------------------
+    // Construct the ParseOptions struct
+    //----------------------------------
+
+    ParseOptions::make(
+        firstLineBehavior,
+        srcConvention,
+        encoding_mode,
+        tabWidth,
+        quirk_settings,
+    )
 }
 
 fn read_input_bytes(link: &mut wstp::Link) -> Vec<u8> {
@@ -419,30 +462,11 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
 
     let buffer = read_input_bytes(link);
 
-    let mlSrcConvention = link.get_i32().unwrap();
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
-
-    let tabWidth =
-        u32::try_from(link.get_i64().unwrap()).expect("unable to convert tab width value to u32");
-
-    let mlFirstLineBehavior = link.get_i32().unwrap();
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
-
-    let quirk_settings =
-        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+    let opts = read_parse_options_from_link(link, Some(EncodingMode::Normal));
 
     link.new_packet().unwrap();
 
-    let mut session = ParserSession::new(
-        &buffer,
-        srcConvention,
-        tabWidth,
-        firstLineBehavior,
-        EncodingMode::Normal,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(&buffer, &opts);
 
     session.concrete_parse_expressions().put(link);
 
@@ -530,19 +554,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         panic!("insufficient permissions to read file: {path}");
     }
 
-    let mlSrcConvention = link.get_i32().unwrap();
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
-
-    let tabWidth =
-        u32::try_from(link.get_i64().unwrap()).expect("unable to convert tab width value to u32");
-
-    let mlFirstLineBehavior = link.get_i32().unwrap();
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
-
-    let quirk_settings =
-        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+    let opts = read_parse_options_from_link(link, Some(EncodingMode::Normal));
 
     link.new_packet().unwrap();
 
@@ -551,14 +563,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         Err(err) => todo!("FIXME: {err:?}"),
     };
 
-    let mut session = ParserSession::new(
-        bytes.as_slice(),
-        srcConvention,
-        tabWidth,
-        firstLineBehavior,
-        EncodingMode::Normal,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(bytes.as_slice(), &opts);
 
     session.concrete_parse_expressions().put(link);
 
@@ -646,30 +651,11 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
 
     let buffer: Vec<u8> = read_input_bytes(link);
 
-    let mlSrcConvention = link.get_i32().unwrap();
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
-
-    let tabWidth =
-        u32::try_from(link.get_i64().unwrap()).expect("unable to convert tab width value to u32");
-
-    let mlFirstLineBehavior = link.get_i32().unwrap();
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
-
-    let quirk_settings =
-        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+    let opts = read_parse_options_from_link(link, Some(EncodingMode::Normal));
 
     link.new_packet().unwrap();
 
-    let mut session = ParserSession::new(
-        &buffer,
-        srcConvention,
-        tabWidth,
-        firstLineBehavior,
-        EncodingMode::Normal,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(&buffer, &opts);
 
     match session.tokenize() {
         Ok(nodes) => nodes.put(link),
@@ -764,19 +750,7 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
         panic!("insufficient permissions to read file: {path}");
     }
 
-    let mlSrcConvention = link.get_i32().unwrap();
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
-
-    let tabWidth =
-        u32::try_from(link.get_i64().unwrap()).expect("unable to convert tab width value to u32");
-
-    let mlFirstLineBehavior = link.get_i32().unwrap();
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
-
-    let quirk_settings =
-        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+    let opts = read_parse_options_from_link(link, Some(EncodingMode::Normal));
 
     link.new_packet().unwrap();
 
@@ -785,14 +759,7 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
         Err(err) => todo!("FIXME: {err:?}"),
     };
 
-    let mut session = ParserSession::new(
-        bytes.as_slice(),
-        srcConvention,
-        tabWidth,
-        firstLineBehavior,
-        EncodingMode::Normal,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(bytes.as_slice(), &opts);
 
     match session.tokenize() {
         Ok(nodes) => nodes.put(link),
@@ -896,33 +863,11 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
 
     let stringifyMode = link.get_i32().unwrap();
 
-    let mlSrcConvention = link.get_i32().unwrap();
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
-
-    let tabWidth =
-        u32::try_from(link.get_i64().unwrap()).expect("unable to convert tab width value to u32");
-
-    let mlFirstLineBehavior = link.get_i32().unwrap();
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
-
-    let mlEncodingMode = link.get_i32().unwrap();
-    let encodingMode = EncodingMode::try_from(mlEncodingMode).expect("invalid EncodingMode value");
-
-    let quirk_settings =
-        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+    let opts = read_parse_options_from_link(link, None);
 
     link.new_packet().unwrap();
 
-    let mut session = ParserSession::new(
-        &buffer,
-        srcConvention,
-        tabWidth,
-        firstLineBehavior,
-        encodingMode,
-        quirk_settings,
-    );
+    let mut session = ParserSession::new(&buffer, &opts);
 
     let result = session.concreteParseLeaf(
         StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value"),
@@ -1001,14 +946,15 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
 
     link.new_packet().unwrap();
 
-    let mut session = ParserSession::new(
-        &buffer,
-        SourceConvention::LineColumn,
-        DEFAULT_TAB_WIDTH,
+    let opts = ParseOptions::make(
         FirstLineBehavior::NotScript,
+        SourceConvention::LineColumn,
         EncodingMode::Normal,
+        DEFAULT_TAB_WIDTH,
         QuirkSettings::default(),
     );
+
+    let mut session = ParserSession::new(&buffer, &opts);
 
     // if (ParserSessionInit(
     //     session,
