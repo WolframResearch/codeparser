@@ -5,7 +5,7 @@ use wolfram_parser::{
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
         CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
-        InfixNode, InfixOperator, LeafNode, OperatorNode, PostfixNode, PostfixOperator,
+        InfixNode, InfixOperator, LeafNode, Operator, OperatorNode, PostfixNode, PostfixOperator,
         PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
         SyntaxErrorNode, TernaryNode, TernaryOperator,
     },

@@ -7,9 +7,9 @@ use wolfram_parser::{
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
         CompoundOperator, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, OperatorNode, PostfixNode, PostfixOperator,
-        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode, TernaryOperator,
+        GroupOperator, InfixNode, InfixOperator, Operator, OperatorNode, PostfixNode,
+        PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator,
+        SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},

@@ -911,6 +911,18 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
     // }
 }
 
+//==========================================================
+// Operator Enums
+//==========================================================
+
+/// Marker denoting enums whose variants represent named operators, which
+/// can be converted to or from a corresponding canonical symbol representation.
+pub trait Operator: Sized + 'static {
+    fn to_symbol(self) -> crate::symbol::Symbol;
+
+    fn try_from_symbol(symbol: wolfram_expr::symbol::SymbolRef) -> Option<Self>;
+}
+
 //======================================
 
 impl SyntaxErrorKind {

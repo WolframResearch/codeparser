@@ -15,8 +15,8 @@ use pretty_assertions::assert_eq;
 use crate::{
     ast::{AstMetadata, AstNode},
     cst::{
-        CallBody, CallNode, CstNode::Token as NVToken, GroupMissingCloserNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, Node, OperatorNode,
+        CallBody, CallNode, CallOperator, CstNode::Token as NVToken, GroupMissingCloserNode,
+        GroupNode, GroupOperator, InfixNode, InfixOperator, Node, OperatorNode,
     },
     parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},

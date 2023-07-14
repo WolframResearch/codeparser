@@ -395,10 +395,9 @@ formatOperatorEnumDef[name_?StringQ, values_?AssociationQ] :=
 
 formatOperatorEnumImpl[name_?StringQ, values_?AssociationQ] :=
 	StringJoin[
-		"impl " <> name <> " {\n",
+		"impl Operator for " <> name <> " {\n",
 		"    #[allow(dead_code)]\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn to_symbol(self) -> Symbol {\n",
+		"    fn to_symbol(self) -> Symbol {\n",
 		"        match self {\n",
 		KeyValueMap[
 			{k, v} |-> Replace[{k, v}, {
@@ -411,8 +410,7 @@ formatOperatorEnumImpl[name_?StringQ, values_?AssociationQ] :=
 		"        }\n",
 		"    }\n",
 		"\n",
-		"    #[doc(hidden)]\n",
-		"    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
+		"    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {\n",
 		"        let operator = match symbol {\n",
 		KeyValueMap[
 			{k, v} |-> Replace[{k, v}, {
@@ -448,6 +446,7 @@ parseletRegistrationCPPSource = {
 use wolfram_expr::symbol::SymbolRef;
 
 use crate::{
+	cst::Operator,
 	token::TokenKind,
 	symbol::Symbol,
 	symbol_registration as sym,
