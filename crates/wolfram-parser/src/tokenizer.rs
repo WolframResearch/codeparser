@@ -62,6 +62,13 @@ pub struct TrackedSourceLocations {
     pub embedded_tabs: HashSet<SourceLocation>,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct InputMark {
+    offset: usize,
+    wasEOF: bool,
+    pub src_loc: SourceLocation,
+}
+
 /// A set of fields of [`Tokenizer`] used to update the current
 /// [`SourceLocation`].
 pub(crate) struct SourceManager<'t> {
@@ -196,6 +203,30 @@ impl<'i> Tokenizer<'i> {
 
     fn addEmbeddedTab(&mut self, loc: SourceLocation) {
         self.tracked.embedded_tabs.insert(loc);
+    }
+
+    /// Returns a structure representing the current position of the input
+    /// reader.
+    pub(crate) fn mark(&self) -> InputMark {
+        InputMark {
+            offset: self.offset,
+            wasEOF: self.wasEOF,
+            src_loc: self.SrcLoc,
+        }
+    }
+
+    /// Reset the current position of the input reader to the specified marked
+    /// point.
+    pub(crate) fn seek(&mut self, mark: InputMark) {
+        let InputMark {
+            offset,
+            wasEOF,
+            src_loc,
+        } = mark;
+
+        self.offset = offset;
+        self.wasEOF = wasEOF;
+        self.SrcLoc = src_loc;
     }
 }
 
@@ -865,15 +896,11 @@ pub(crate) fn Tokenizer_currentToken<'i>(
 
     policy &= !returnInternalNewlineMask; // bitwise not
 
-    let resetBuf = session.offset;
-    let resetEOF = session.wasEOF;
-    let resetLoc = session.SrcLoc;
+    let mark = session.mark();
 
     let Tok = Tokenizer_nextToken(session, policy);
 
-    session.offset = resetBuf;
-    session.wasEOF = resetEOF;
-    session.SrcLoc = resetLoc;
+    session.seek(mark);
 
     return Tok;
 }
@@ -881,29 +908,21 @@ pub(crate) fn Tokenizer_currentToken<'i>(
 pub(crate) fn Tokenizer_currentToken_stringifyAsTag<'i>(
     session: &mut Tokenizer<'i>,
 ) -> TokenRef<'i> {
-    let resetBuf = session.offset;
-    let resetEOF = session.wasEOF;
-    let resetLoc = session.SrcLoc;
+    let mark = session.mark();
 
     let Tok = Tokenizer_nextToken_stringifyAsTag(session);
 
-    session.offset = resetBuf;
-    session.wasEOF = resetEOF;
-    session.SrcLoc = resetLoc;
+    session.seek(mark);
 
     return Tok;
 }
 
 pub fn Tokenizer_currentToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
-    let resetBuf = session.offset;
-    let resetEOF = session.wasEOF;
-    let resetLoc = session.SrcLoc;
+    let mark = session.mark();
 
     let Tok = Tokenizer_nextToken_stringifyAsFile(session);
 
-    session.offset = resetBuf;
-    session.wasEOF = resetEOF;
-    session.SrcLoc = resetLoc;
+    session.seek(mark);
 
     return Tok;
 }
@@ -935,15 +954,11 @@ fn Tokenizer_nextWLCharacter<'i>(
             return c;
         }
 
-        let resetBuf = session.offset;
-        let resetEOF = session.wasEOF;
-        let resetLoc = session.SrcLoc;
+        let mark = session.mark();
 
         c = CharacterDecoder_nextWLCharacter(session, policy);
 
-        session.offset = resetBuf;
-        session.wasEOF = resetEOF;
-        session.SrcLoc = resetLoc;
+        session.seek(mark);
 
         point = c.to_point();
 
@@ -976,15 +991,11 @@ fn Tokenizer_nextWLCharacter<'i>(
 
             CharacterDecoder_nextWLCharacter(session, policy);
 
-            let resetBuf = session.offset;
-            let resetEOF = session.wasEOF;
-            let resetLoc = session.SrcLoc;
+            let mark = session.mark();
 
             c = CharacterDecoder_nextWLCharacter(session, policy);
 
-            session.offset = resetBuf;
-            session.wasEOF = resetEOF;
-            session.SrcLoc = resetLoc;
+            session.seek(mark);
 
             point = c.to_point();
         }
@@ -1009,9 +1020,7 @@ fn Tokenizer_currentWLCharacter<'i>(
     tokenStartLoc: SourceLocation,
     mut policy: NextPolicy,
 ) -> WLCharacter {
-    let resetBuf = session.offset;
-    let resetEOF = session.wasEOF;
-    let resetLoc = session.SrcLoc;
+    let mark = session.mark();
 
     //
     //
@@ -1020,9 +1029,7 @@ fn Tokenizer_currentWLCharacter<'i>(
 
     let c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-    session.offset = resetBuf;
-    session.wasEOF = resetEOF;
-    session.SrcLoc = resetLoc;
+    session.seek(mark);
 
     return c;
 }

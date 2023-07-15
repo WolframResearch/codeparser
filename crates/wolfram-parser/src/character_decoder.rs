@@ -164,15 +164,11 @@ pub(crate) fn CharacterDecoder_currentWLCharacter(
     session: &mut Tokenizer,
     policy: NextPolicy,
 ) -> WLCharacter {
-    let resetBuf = session.offset;
-    let resetEOF = session.wasEOF;
-    let resetLoc = session.SrcLoc;
+    let mark = session.mark();
 
     let c = CharacterDecoder_nextWLCharacter(session, policy);
 
-    session.offset = resetBuf;
-    session.wasEOF = resetEOF;
-    session.SrcLoc = resetLoc;
+    session.seek(mark);
 
     return c;
 }
