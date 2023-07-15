@@ -185,6 +185,26 @@ impl CodePoint {
 
         special
     }
+
+    /// Returns true if this source character is a line continuation special
+    /// character.
+    pub(crate) fn is_line_continuation(&self) -> bool {
+        let point = self;
+
+        CodePoint::LineContinuation_LineFeed.as_i32() >= point.as_i32()
+            && point.as_i32() >= CodePoint::LineContinuation_CRLF.as_i32()
+    }
+}
+
+#[test]
+fn test_code_point_is_line_continuation() {
+    assert!(!CodePoint::Char('a').is_line_continuation());
+    assert!(!CodePoint::Char('\\').is_line_continuation());
+    assert!(!CodePoint::Char('\n').is_line_continuation());
+
+    assert!(CodePoint::LineContinuation_LineFeed.is_line_continuation());
+    assert!(CodePoint::LineContinuation_CarriageReturn.is_line_continuation());
+    assert!(CodePoint::LineContinuation_CRLF.is_line_continuation());
 }
 
 impl PartialEq<char> for CodePoint {
