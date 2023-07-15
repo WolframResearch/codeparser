@@ -31,8 +31,8 @@ pub enum CodePoint {
     /// Special end of file character.
     EndOfFile, // = -1
 
-    /// Should never be used
-    AssertFalse, // = -2
+    // /// Should never be used
+    // AssertFalse, // = -2
 
     /// There is an inconsistency in WL, such that LINEARSYNTAX_SPACE does not
     /// have a dedicated code point. So invent one here.
@@ -159,7 +159,6 @@ impl CodePoint {
             },
             // Special code points
             EndOfFile => -1,
-            AssertFalse => -2,
             LinearSyntax_Space => -3,
             StringMeta_Open => -4,
             StringMeta_Close => -5,

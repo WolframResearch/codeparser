@@ -134,8 +134,6 @@ impl Display for WLCharacter {
 
         let mut i: CodePoint = self.to_point();
 
-        assert!(i != CodePoint::AssertFalse);
-
         let mut format_char = |source_char: SourceCharacter| {
             if graphical_flag {
                 // Pass down the graphical flag as an '#' ("alternate") flag.
@@ -558,10 +556,6 @@ impl WLCharacter {
 
         if val == EndOfFile {
             return false;
-        }
-
-        if val == AssertFalse {
-            assert!(false);
         }
 
         if val == CRLF {

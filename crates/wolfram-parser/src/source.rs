@@ -924,7 +924,6 @@ impl Display for SourceCharacter {
         if !graphicalFlag {
             let val = c;
 
-            assert!(val != CodePoint::AssertFalse);
             assert!(val != CodePoint::EndOfFile);
 
             crate::byte_encoder::encodeBytes(stream, val)?;
