@@ -664,11 +664,6 @@ impl LineColumnSpan {
     ///
     /// assert!(!src!(1:3-2:0).contains(src!(2:4)));
     /// ```
-    ///
-    /// # Panics
-    ///
-    /// This function will panic if this [`Source`] is not a
-    /// [`StringSourceKind::LineColumnRange`].
     pub fn contains(self, cursor: LineColumn) -> bool {
         let LineColumnSpan {
             start: LineColumn(srcLine1, srcCol1),
@@ -720,11 +715,6 @@ impl LineColumnSpan {
     ///
     /// assert!(!src!(1:1-1:5).overlaps(src!(2:1-2:5)));
     /// ```
-    ///
-    /// # Panics
-    ///
-    /// This function will panic if this [`Source`] is not a
-    /// [`StringSourceKind::LineColumnRange`].
     pub fn overlaps(&self, cursor: LineColumnSpan) -> bool {
         let LineColumnSpan { start, end } = cursor;
 
