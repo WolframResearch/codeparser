@@ -1,8 +1,8 @@
 use pretty_assertions::assert_eq;
 
 use crate::{
-    byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     code_point::CodePoint,
+    read::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     source::TOPLEVEL,
     ParseOptions, ParserSession,
 };

@@ -9,14 +9,13 @@ use Diagnostics::*;
 use crate::{
     abstract_::{Abstract, Aggregate},
     ast::AstNode,
-    byte_decoder::ByteDecoder_nextSourceCharacter,
     cst::{CstNode, CstNodeSeq},
     feature,
     issue::Issue,
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     quirks::{self, QuirkSettings},
-    read::Reader,
+    read::{ByteDecoder_nextSourceCharacter, Reader},
     source::{SourceConvention, TOPLEVEL},
     token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::{

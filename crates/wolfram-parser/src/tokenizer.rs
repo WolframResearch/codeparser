@@ -3,7 +3,6 @@
 use std::{collections::HashSet, os::raw::c_int};
 
 use crate::{
-    byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     character_decoder::CharacterDecoder_nextWLCharacter,
     code_point::{
         CodePoint::{Char, *},
@@ -11,7 +10,7 @@ use crate::{
     },
     feature,
     issue::{CodeAction, FormatIssue, IssueTag, Severity, SyntaxIssue},
-    read::Reader,
+    read::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter, Reader},
     source::{
         Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
         INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG,

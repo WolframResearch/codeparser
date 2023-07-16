@@ -61,8 +61,6 @@ mod character_decoder;
 mod utils;
 
 
-mod byte_buffer;
-mod byte_decoder;
 mod byte_encoder;
 mod code_point;
 #[doc(hidden)]
