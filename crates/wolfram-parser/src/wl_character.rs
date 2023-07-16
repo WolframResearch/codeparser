@@ -21,10 +21,10 @@ use crate::{
 /// * Hex6: `\|xxxxxx` style
 /// * Octal: `\xxx` style
 /// * LongName: Using `\[XX]` style: `\[Alpha]`, `\[Beta]`, etc.
-///
-/// Used to just be Escape, but this was observed:
-/// c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\CharacterDecoder.h(37): error C2061: syntax error: identifier 'Escape'
-///
+//
+// Used to just be Escape, but this was observed:
+// c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\CharacterDecoder.h(37): error C2061: syntax error: identifier 'Escape'
+//
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum EscapeStyle {
     None,
@@ -43,11 +43,12 @@ pub(crate) enum EscapeStyle {
 #[derive(Copy, Clone, PartialEq)]
 pub struct WLCharacter {
     val: CodePoint,
-    // PRE_COMMIT: Do these bitfields break anything?
+    escape: EscapeStyle,
+    //
     // valBits: i32, // uint32_t valBits : 21;
     // signBit: bool, // uint8_t signBit : 1;
     // escapeBits: u8, // uint8_t escapeBits : 3;
-    escape: EscapeStyle,
+    //
     // constexpr bool operator==(const WLCharacter& o) const {
     //     return valBits == o.valBits &&
     //         signBit == o.signBit &&
