@@ -7,6 +7,44 @@ use crate::{
     ParseOptions, ParserSession,
 };
 
+#[test]
+fn ByteDecoderTest_Empty() {
+    let strIn = "";
+
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    assert_eq!(session.nonFatalIssues().len(), 0);
+    assert_eq!(session.fatalIssues().len(), 0);
+}
+
 
 #[test]
 fn ByteDecoderTest_Basic1() {

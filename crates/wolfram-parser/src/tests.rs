@@ -15,9 +15,11 @@ use pretty_assertions::assert_eq;
 use crate::{
     ast::{AstMetadata, AstNode},
     cst::{
-        CallBody, CallNode, CallOperator, CstNode::Token as NVToken, GroupMissingCloserNode,
-        GroupNode, GroupOperator, InfixNode, InfixOperator, Node, OperatorNode,
+        CallBody, CallNode, CallOperator, CstNode, CstNode::Token as NVToken,
+        GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode, InfixOperator, Node,
+        OperatorNode,
     },
+    parse_bytes_to_cst,
     parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},
     test_utils::{src, token},
@@ -263,6 +265,38 @@ fn test_unterminated_group_reparse() {
                 src: src!(1:1-1:6).into()
             }
         ))]
+    );
+}
+
+#[test]
+fn test_invalid_utf8_in_middle_of_parse() {
+    // This tests what the parse result is where there are invalid UTF-8 bytes
+    // in the input followed by valid UTF-8 bytes.
+    //
+    // The presence of invalid UTF-8 shouldn't halt the parsing process.
+    let result = parse_bytes_to_cst(&[b'1', b'+', 0xE2, 0x9A, b'1'], &ParseOptions::default());
+
+    assert_eq!(
+        result.nodes.0,
+        &[CstNode::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Times,
+            children: NodeSeq(vec![
+                CstNode::Infix(InfixNode(OperatorNode {
+                    op: InfixOperator::Plus,
+                    children: NodeSeq(vec![
+                        NVToken(token![Integer, "1" @ 0, src!(1:1-1:2)]),
+                        NVToken(token![Plus, "+" @ 1, src!(1:2-1:3)]),
+                        NVToken(
+                            token![Error_UnsafeCharacterEncoding, [0xE2, 0x9A] @ 2, src!(1:3-1:4)]
+                        )
+                    ]),
+                    src: src!(1:1-1:4).into()
+                })),
+                NVToken(token!(Fake_ImplicitTimes, "" @ 4, src!(1:4-1:4))),
+                NVToken(token!(Integer, "1" @ 4, src!(1:4-1:5)))
+            ]),
+            src: src!(1:1-1:5).into()
+        }))]
     );
 }
 
