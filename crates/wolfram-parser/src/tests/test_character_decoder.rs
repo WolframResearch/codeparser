@@ -61,7 +61,7 @@ fn CharacterDecoderTest_LongName() {
 
     assert_eq!(
         c,
-        WLCharacter::new_with_escape(CodePoint::from_i32(0x03b1).unwrap(), EscapeStyle::LongName)
+        WLCharacter::new_with_escape(CodePoint::from_u32(0x03b1).unwrap(), EscapeStyle::LongName)
     );
 
     CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -96,7 +96,7 @@ fn CharacterDecoderTest_4Hex() {
 
     assert_eq!(
         c,
-        WLCharacter::new_with_escape(CodePoint::from_i32(0x03b1).unwrap(), EscapeStyle::Hex4)
+        WLCharacter::new_with_escape(CodePoint::from_u32(0x03b1).unwrap(), EscapeStyle::Hex4)
     );
 
     CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -484,7 +484,7 @@ fn CharacterDecoderTest_UnexpectedEscapeSequence() {
 
     assert_eq!(
         c,
-        WLCharacter::new_with_escape(CodePoint::from_i32(0x03b1).unwrap(), EscapeStyle::LongName)
+        WLCharacter::new_with_escape(CodePoint::from_u32(0x03b1).unwrap(), EscapeStyle::LongName)
     );
 
     CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);

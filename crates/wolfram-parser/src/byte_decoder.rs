@@ -236,8 +236,8 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Valid
             //
 
-            let decoded = ((i32::from(firstByte) & 0x1f) << 6) | (i32::from(secondByte) & 0x3f);
-            let decoded = CodePoint::from_i32(decoded).unwrap();
+            let decoded = ((u32::from(firstByte) & 0x1f) << 6) | (u32::from(secondByte) & 0x3f);
+            let decoded = CodePoint::from_u32(decoded).unwrap();
 
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -325,10 +325,10 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             //
 
             let decoded =
-                ((i32::from(firstByte) & 0x0f) << 12)
-                | ((i32::from(secondByte) & 0x3f) << 6)
-                | (i32::from(thirdByte) & 0x3f);
-            let decoded = CodePoint::from_i32(decoded).unwrap();
+                ((u32::from(firstByte) & 0x0f) << 12)
+                | ((u32::from(secondByte) & 0x3f) << 6)
+                | (u32::from(thirdByte) & 0x3f);
+            let decoded = CodePoint::from_u32(decoded).unwrap();
 
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -417,9 +417,9 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             //
 
             let decoded =
-                ((i32::from(firstByte) & 0x0f) << 12)
-                | ((i32::from(secondByte) & 0x3f) << 6)
-                | (i32::from(thirdByte) & 0x3f);
+                ((u32::from(firstByte) & 0x0f) << 12)
+                | ((u32::from(secondByte) & 0x3f) << 6)
+                | (u32::from(thirdByte) & 0x3f);
 
             if utils::isStraySurrogate(decoded) {
 
@@ -430,7 +430,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 return ByteDecoder_straySurrogate(session, resetLoc, policy);
             }
 
-            let decoded = CodePoint::from_i32(decoded).unwrap();
+            let decoded = CodePoint::from_u32(decoded).unwrap();
 
             if decoded == CODEPOINT_BOM {
 
@@ -563,11 +563,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             //
 
             let decoded =
-                ((i32::from(firstByte) & 0x07) << 18)
-                | ((i32::from(secondByte) & 0x3f) << 12)
-                | ((i32::from(thirdByte) & 0x3f) << 6)
-                | ((i32::from(fourthByte) & 0x3f));
-            let decoded = CodePoint::from_i32(decoded).unwrap();
+                ((u32::from(firstByte) & 0x07) << 18)
+                | ((u32::from(secondByte) & 0x3f) << 12)
+                | ((u32::from(thirdByte) & 0x3f) << 6)
+                | ((u32::from(fourthByte) & 0x3f));
+            let decoded = CodePoint::from_u32(decoded).unwrap();
 
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -690,12 +690,12 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Valid
             //
 
-            let decoded: i32 =
-                ( (i32::from(firstByte) & 0x07) << 18)
-                | ((i32::from(secondByte) & 0x3f) << 12)
-                | ((i32::from(thirdByte) & 0x3f) << 6)
-                | ((i32::from(fourthByte) & 0x3f));
-            let decoded = CodePoint::from_i32(decoded).unwrap();
+            let decoded: u32 =
+                ( (u32::from(firstByte) & 0x07) << 18)
+                | ((u32::from(secondByte) & 0x3f) << 12)
+                | ((u32::from(thirdByte) & 0x3f) << 6)
+                | ((u32::from(fourthByte) & 0x3f));
+            let decoded = CodePoint::from_u32(decoded).unwrap();
 
             return ByteDecoder_validMB(session, decoded, policy);
         }
@@ -818,11 +818,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Valid
             //
 
-            let decoded: i32 = ((i32::from(firstByte) & 0x07) << 18)
-                | ((i32::from(secondByte) & 0x3f) << 12)
-                | ((i32::from(thirdByte) & 0x3f) << 6)
-                | ((i32::from(fourthByte) & 0x3f));
-            let decoded = CodePoint::from_i32(decoded).unwrap();
+            let decoded: u32 = ((u32::from(firstByte) & 0x07) << 18)
+                | ((u32::from(secondByte) & 0x3f) << 12)
+                | ((u32::from(thirdByte) & 0x3f) << 6)
+                | ((u32::from(fourthByte) & 0x3f));
+            let decoded = CodePoint::from_u32(decoded).unwrap();
 
             return ByteDecoder_validMB(session, decoded, policy);
         }

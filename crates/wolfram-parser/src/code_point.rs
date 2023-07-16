@@ -109,30 +109,10 @@ impl From<u8> for CodePoint {
 
 impl CodePoint {
     // TODO(cleanup): Remove this function?
-    pub(crate) fn from_i32(value: i32) -> Option<Self> {
-        if value.is_negative() {
-            todo!("unable to construct CodePoint from non-char value: {value}");
-        }
+    pub(crate) fn from_u32(value: u32) -> Option<Self> {
+        let c = char::from_u32(value)?;
 
-        if let Ok(value_u32) = u32::try_from(value) {
-            if let Some(c) = char::from_u32(value_u32) {
-                // Sanity check that there aren't any i32 values that are both
-                // valid Unicode 'char's, and valid SpecialCodePoint values.
-                /*
-                debug_assert!(SpecialCodePoint::try_from(value).is_err());
-                */
-
-                return Some(CodePoint::Char(c));
-            }
-        }
-
-        /*
-        if let Ok(special) = SpecialCodePoint::try_from(value) {
-            return Some(CodePoint::Special(special));
-        }
-        */
-
-        None
+        Some(CodePoint::Char(c))
     }
 
     pub fn from_u8(value: u8) -> Self {
