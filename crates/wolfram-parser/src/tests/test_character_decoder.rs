@@ -1,6 +1,6 @@
 use crate::{
-    character_decoder::{CharacterDecoder_currentWLCharacter, CharacterDecoder_nextWLCharacter},
     code_point::CodePoint,
+    read::{CharacterDecoder_currentWLCharacter, CharacterDecoder_nextWLCharacter},
     source::TOPLEVEL,
     wl_character::{EscapeStyle, WLCharacter},
     ParseOptions, ParserSession,
