@@ -107,9 +107,9 @@ impl<'i> ParserSession<'i> {
                     offset: 0,
                     wasEOF: false,
                     SrcLoc: srcConvention.newSourceLocation(),
+                    tabWidth,
                 },
 
-                tabWidth,
                 firstLineBehavior,
 
                 encodingMode,
