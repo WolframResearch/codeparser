@@ -11,6 +11,7 @@ use crate::{
     },
     feature,
     issue::{CodeAction, FormatIssue, Issue, IssueTag, Severity, SyntaxIssue},
+    read::Reader,
     source::{
         Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
         INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG,
@@ -26,21 +27,12 @@ use crate::source::NextPolicyBits::*;
 
 #[derive(Debug)]
 pub(crate) struct Tokenizer<'i> {
-    /// The complete input buffer that is being parsed.
-    pub(crate) input: &'i [u8],
-
-    /// Offset of the current byte in [`input`][Tokenizer::input] that is next up to be parsed.
-    pub offset: usize,
-
-    // pub end: Buffer,
-    pub wasEOF: bool,
+    pub(crate) reader: Reader<'i>,
 
     pub tabWidth: u32,
     pub(crate) firstLineBehavior: FirstLineBehavior,
 
     pub encodingMode: EncodingMode,
-
-    pub SrcLoc: SourceLocation,
 
     pub GroupStack: Vec<Closer>,
 
@@ -59,13 +51,6 @@ pub struct TrackedSourceLocations {
     pub complex_line_continuations: HashSet<SourceLocation>,
     pub embedded_newlines: HashSet<SourceLocation>,
     pub embedded_tabs: HashSet<SourceLocation>,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub(crate) struct InputMark {
-    offset: usize,
-    wasEOF: bool,
-    pub src_loc: SourceLocation,
 }
 
 /// A set of fields of [`Tokenizer`] used to update the current
@@ -108,41 +93,21 @@ impl UnsafeCharacterEncoding {
     }
 }
 
+impl<'i> std::ops::Deref for Tokenizer<'i> {
+    type Target = Reader<'i>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.reader
+    }
+}
+
+impl<'i> std::ops::DerefMut for Tokenizer<'i> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.reader
+    }
+}
+
 impl<'i> Tokenizer<'i> {
-    /// Return a slice of the remaining input to be parsed.
-    pub(crate) fn buffer(&self) -> Buffer<'i> {
-        self.buffer_at(self.offset)
-    }
-
-    pub(crate) fn buffer_at(&self, offset: usize) -> Buffer<'i> {
-        if offset == self.input.len() {
-            // If `offset` points exactly one byte passed the end of the
-            // input, treat it as an empty buffer. We do this instead of
-            // panicking because `Buffer`'s are used similarly to start/end
-            // pointers in C/C++ to define input ranges
-            // (see BufferAndLength::between()), so to refer to a range that
-            // includes the last byte in the input, it must be possible to
-            // construct a buffer that points past the last byte.
-            return Buffer {
-                slice: &self.input[0..0],
-                offset,
-            };
-        } else if offset >= self.input.len() {
-            panic!(
-                "offset ({}) is greater than length of input ({})",
-                offset,
-                self.input.len()
-            )
-        }
-
-        let (_, rest) = self.input.split_at(offset);
-
-        Buffer {
-            slice: rest,
-            offset,
-        }
-    }
-
     pub(crate) fn setUnsafeCharacterEncodingFlag(&mut self, flag: UnsafeCharacterEncoding) {
         self.unsafe_character_encoding_flag = Some(flag);
     }
@@ -202,30 +167,6 @@ impl<'i> Tokenizer<'i> {
 
     fn addEmbeddedTab(&mut self, loc: SourceLocation) {
         self.tracked.embedded_tabs.insert(loc);
-    }
-
-    /// Returns a structure representing the current position of the input
-    /// reader.
-    pub(crate) fn mark(&self) -> InputMark {
-        InputMark {
-            offset: self.offset,
-            wasEOF: self.wasEOF,
-            src_loc: self.SrcLoc,
-        }
-    }
-
-    /// Reset the current position of the input reader to the specified marked
-    /// point.
-    pub(crate) fn seek(&mut self, mark: InputMark) {
-        let InputMark {
-            offset,
-            wasEOF,
-            src_loc,
-        } = mark;
-
-        self.offset = offset;
-        self.wasEOF = wasEOF;
-        self.SrcLoc = src_loc;
     }
 }
 
