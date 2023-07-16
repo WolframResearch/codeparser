@@ -1,6 +1,10 @@
 //! Reading Wolfram source files.
 
-use crate::source::{Buffer, SourceLocation};
+use crate::{
+    issue::{Issue, Severity},
+    source::{Buffer, SourceLocation},
+    EncodingMode, UnsafeCharacterEncoding,
+};
 
 //==========================================================
 // Types
@@ -19,6 +23,13 @@ pub(crate) struct Reader<'i> {
 
     pub(crate) SrcLoc: SourceLocation,
     pub(crate) tabWidth: u32,
+
+    pub(crate) encodingMode: EncodingMode,
+
+    pub(crate) fatalIssues: Vec<Issue>,
+    pub(crate) nonFatalIssues: Vec<Issue>,
+
+    pub(crate) unsafe_character_encoding_flag: Option<UnsafeCharacterEncoding>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -115,5 +126,46 @@ impl<'i> Reader<'i> {
         self.offset = offset;
         self.wasEOF = wasEOF;
         self.SrcLoc = src_loc;
+    }
+
+    //==================================
+    // Issue tracking
+    //==================================
+
+    pub(crate) fn setUnsafeCharacterEncodingFlag(&mut self, flag: UnsafeCharacterEncoding) {
+        self.unsafe_character_encoding_flag = Some(flag);
+    }
+
+    pub(crate) fn addIssue(&mut self, issue: Issue) {
+        if issue.sev == Severity::Fatal {
+            //
+            // There may be situations where many (1000+) fatal errors are generated.
+            // This has a noticeable impact on time to transfer for something that should be instantaneous.
+            //
+            // If there are, say, 10 fatal errors, then assume that the 11th is not going to give any new information,
+            // and ignore.
+            //
+            if self.fatalIssues.len() >= 10 {
+                return;
+            }
+
+            if !self.fatalIssues.contains(&issue) {
+                //
+                // Only insert if not already found in vector
+                //
+                // This preserves set-like behavior while also retaining insert-order
+                //
+                self.fatalIssues.push(issue);
+            }
+        } else {
+            if !self.nonFatalIssues.contains(&issue) {
+                //
+                // Only insert if not already found in vector
+                //
+                // This preserves set-like behavior while also retaining insert-order
+                //
+                self.nonFatalIssues.push(issue);
+            }
+        }
     }
 }

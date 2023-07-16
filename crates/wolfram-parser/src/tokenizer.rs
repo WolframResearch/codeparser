@@ -10,7 +10,7 @@ use crate::{
         *,
     },
     feature,
-    issue::{CodeAction, FormatIssue, Issue, IssueTag, Severity, SyntaxIssue},
+    issue::{CodeAction, FormatIssue, IssueTag, Severity, SyntaxIssue},
     read::Reader,
     source::{
         Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
@@ -20,7 +20,7 @@ use crate::{
     token_enum::Closer,
     utils,
     wl_character::{EscapeStyle, WLCharacter},
-    EncodingMode, FirstLineBehavior,
+    FirstLineBehavior,
 };
 
 use crate::source::NextPolicyBits::*;
@@ -31,16 +31,9 @@ pub(crate) struct Tokenizer<'i> {
 
     pub(crate) firstLineBehavior: FirstLineBehavior,
 
-    pub encodingMode: EncodingMode,
-
     pub GroupStack: Vec<Closer>,
 
     pub(crate) tracked: TrackedSourceLocations,
-
-    pub fatalIssues: Vec<Issue>,
-    pub nonFatalIssues: Vec<Issue>,
-
-    pub(crate) unsafe_character_encoding_flag: Option<UnsafeCharacterEncoding>,
 }
 
 #[doc(hidden)]
@@ -99,43 +92,6 @@ impl<'i> std::ops::DerefMut for Tokenizer<'i> {
 }
 
 impl<'i> Tokenizer<'i> {
-    pub(crate) fn setUnsafeCharacterEncodingFlag(&mut self, flag: UnsafeCharacterEncoding) {
-        self.unsafe_character_encoding_flag = Some(flag);
-    }
-
-    pub(crate) fn addIssue(&mut self, issue: Issue) {
-        if issue.sev == Severity::Fatal {
-            //
-            // There may be situations where many (1000+) fatal errors are generated.
-            // This has a noticeable impact on time to transfer for something that should be instantaneous.
-            //
-            // If there are, say, 10 fatal errors, then assume that the 11th is not going to give any new information,
-            // and ignore.
-            //
-            if self.fatalIssues.len() >= 10 {
-                return;
-            }
-
-            if !self.fatalIssues.contains(&issue) {
-                //
-                // Only insert if not already found in vector
-                //
-                // This preserves set-like behavior while also retaining insert-order
-                //
-                self.fatalIssues.push(issue);
-            }
-        } else {
-            if !self.nonFatalIssues.contains(&issue) {
-                //
-                // Only insert if not already found in vector
-                //
-                // This preserves set-like behavior while also retaining insert-order
-                //
-                self.nonFatalIssues.push(issue);
-            }
-        }
-    }
-
     fn addSimpleLineContinuation(&mut self, loc: SourceLocation) {
         self.tracked.simple_line_continuations.insert(loc);
     }

@@ -31,12 +31,12 @@ use crate::{
     },
     feature,
     issue::{CodeAction, EncodingIssue, IssueTag, Severity},
-    read::SourceManager,
+    read::{Reader, SourceManager},
     source::{
         LineColumn, NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention,
         SourceLocation,
     },
-    tokenizer::{Tokenizer, UnsafeCharacterEncoding},
+    tokenizer::UnsafeCharacterEncoding,
     utils,
     wl_character::{EscapeStyle, WLCharacter},
     EncodingMode,
@@ -59,7 +59,7 @@ use crate::{
 // Do not decode unsafe character encodings: incomplete sequences, stray surrogates, or BOM
 //
 pub(crate) fn ByteDecoder_nextSourceCharacter(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     policy: NextPolicy,
 ) -> SourceCharacter {
     let firstByte = ByteBuffer_currentByte(session);
@@ -100,7 +100,7 @@ pub(crate) fn ByteDecoder_nextSourceCharacter(
 }
 
 fn ByteDecoder_nextSourceCharacter_uncommon(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     policy: NextPolicy,
 ) -> SourceCharacter {
     let firstByte = ByteBuffer_nextByte(session);
@@ -802,7 +802,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
 // Postcondition: lastLoc is set to the last value of SrcLoc
 //
 pub(crate) fn ByteDecoder_currentSourceCharacter(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     policy: NextPolicy,
 ) -> SourceCharacter {
     let mark = session.mark();
@@ -815,7 +815,7 @@ pub(crate) fn ByteDecoder_currentSourceCharacter(
 }
 
 fn ByteDecoder_strangeWarning(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     decoded: CodePoint,
     currentSourceCharacterStartLoc: SourceLocation,
     policy: NextPolicy,
@@ -895,7 +895,7 @@ fn ByteDecoder_strangeWarning(
 }
 
 fn ByteDecoder_nonASCIIWarning(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     decoded: CodePoint,
     currentSourceCharacterStartLoc: SourceLocation,
 ) {
@@ -939,7 +939,7 @@ fn ByteDecoder_nonASCIIWarning(
 }
 
 fn ByteDecoder_validStrange(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     decoded: CodePoint,
     policy: NextPolicy,
 ) -> SourceCharacter {
@@ -957,7 +957,7 @@ fn ByteDecoder_validStrange(
 }
 
 fn ByteDecoder_validMB(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     decoded: CodePoint,
     policy: NextPolicy,
 ) -> SourceCharacter {
@@ -979,7 +979,7 @@ fn ByteDecoder_validMB(
 }
 
 fn ByteDecoder_incomplete1ByteSequence(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     errSrcLoc: SourceLocation,
     _policy: NextPolicy,
 ) -> SourceCharacter {
@@ -987,7 +987,7 @@ fn ByteDecoder_incomplete1ByteSequence(
 }
 
 fn ByteDecoder_incomplete2ByteSequence(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     errSrcLoc: SourceLocation,
     _policy: NextPolicy,
 ) -> SourceCharacter {
@@ -995,7 +995,7 @@ fn ByteDecoder_incomplete2ByteSequence(
 }
 
 fn ByteDecoder_incomplete3ByteSequence(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     errSrcLoc: SourceLocation,
     _policy: NextPolicy,
 ) -> SourceCharacter {
@@ -1003,7 +1003,7 @@ fn ByteDecoder_incomplete3ByteSequence(
 }
 
 fn ByteDecoder_incompleteByteSequence(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     errSrcLoc: SourceLocation,
     errChar: SourceCharacter,
 ) -> SourceCharacter {
@@ -1045,7 +1045,7 @@ fn ByteDecoder_incompleteByteSequence(
 // Related bugs: 376155
 //
 fn ByteDecoder_straySurrogate(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     errSrcLoc: SourceLocation,
     _policy: NextPolicy,
 ) -> SourceCharacter {
@@ -1084,7 +1084,7 @@ fn ByteDecoder_straySurrogate(
 }
 
 fn ByteDecoder_bom(
-    session: &mut Tokenizer,
+    session: &mut Reader,
     errSrcLoc: SourceLocation,
     _policy: NextPolicy,
 ) -> SourceCharacter {

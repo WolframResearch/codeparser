@@ -1,6 +1,6 @@
 //! A byte buffer that can return the current byte and advance to the next byte.
 
-use crate::tokenizer::Tokenizer;
+use crate::read::Reader;
 
 //
 // Precondition: buffer is pointing to current byte
@@ -8,7 +8,7 @@ use crate::tokenizer::Tokenizer;
 //
 // Return current byte
 //
-pub(crate) fn ByteBuffer_nextByte(session: &mut Tokenizer) -> u8 {
+pub(crate) fn ByteBuffer_nextByte(session: &mut Reader) -> u8 {
     // assert!((session.start <= session.buffer && session.buffer <= session.end));
 
     // if session.buffer == session.end {
@@ -28,7 +28,7 @@ pub(crate) fn ByteBuffer_nextByte(session: &mut Tokenizer) -> u8 {
     return byte;
 }
 
-pub(crate) fn ByteBuffer_currentByte(session: &Tokenizer) -> u8 {
+pub(crate) fn ByteBuffer_currentByte(session: &Reader) -> u8 {
     // assert!((session.start <= session.buffer && session.buffer <= session.end));
 
     // if session.buffer == session.end {
