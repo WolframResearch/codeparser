@@ -674,7 +674,7 @@ fn CharacterDecoder_handle4Hex(
     let d2 = i32::from(utils::toDigit(hexStartBuf[1]));
     let d1 = i32::from(utils::toDigit(hexStartBuf[2]));
     let d0 = i32::from(utils::toDigit(hexStartBuf[3]));
-    let point: codepoint = d3 << 12 | d2 << 8 | d1 << 4 | d0;
+    let point: i32 = d3 << 12 | d2 << 8 | d1 << 4 | d0;
     let mut point = CodePoint::from_i32(point).unwrap();
 
     match point {
@@ -857,7 +857,7 @@ fn CharacterDecoder_handleOctal(
     let d2 = utils::toDigit(octalStartBuf[0]);
     let d1 = utils::toDigit(octalStartBuf[1]);
     let d0 = utils::toDigit(octalStartBuf[2]);
-    let point: codepoint = i32::from(d2) << 6 | i32::from(d1) << 3 | i32::from(d0);
+    let point: i32 = i32::from(d2) << 6 | i32::from(d1) << 3 | i32::from(d0);
     let mut point = CodePoint::from_i32(point).unwrap();
 
     // FIXME: This match to do canonicalization is repeated in several places.
@@ -957,7 +957,7 @@ fn CharacterDecoder_handle6Hex(
     let d0 = utils::toDigit(hexStartBuf[5]);
     // let point: u32 = d5 << 20 | d4 << 16 | d3 << 12 | d2 << 8 | d1 << 4 | d0;
     let point: u32 = u32::from_be_bytes([0, d5 << 4 | d4, d3 << 4 | d2, d1 << 4 | d0]);
-    let point: codepoint = i32::try_from(point).expect("unable to convert u32 to i32");
+    let point: i32 = i32::try_from(point).expect("unable to convert u32 to i32");
 
     // TODO: Is this logic here correct? Why always return a \ if point is out
     //       of range?

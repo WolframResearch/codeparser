@@ -26,7 +26,6 @@
 use crate::{
     byte_buffer::{ByteBuffer_currentByte, ByteBuffer_nextByte},
     code_point::{
-        codepoint,
         CodePoint::{self, *},
         CODEPOINT_BOM,
     },
@@ -691,7 +690,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Valid
             //
 
-            let decoded: codepoint =
+            let decoded: i32 =
                 ( (i32::from(firstByte) & 0x07) << 18)
                 | ((i32::from(secondByte) & 0x3f) << 12)
                 | ((i32::from(thirdByte) & 0x3f) << 6)
@@ -819,7 +818,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Valid
             //
 
-            let decoded: codepoint = ((i32::from(firstByte) & 0x07) << 18)
+            let decoded: i32 = ((i32::from(firstByte) & 0x07) << 18)
                 | ((i32::from(secondByte) & 0x3f) << 12)
                 | ((i32::from(thirdByte) & 0x3f) << 6)
                 | ((i32::from(fourthByte) & 0x3f));

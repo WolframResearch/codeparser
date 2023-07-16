@@ -1,7 +1,5 @@
 use std::cmp::Ordering;
 
-#[allow(non_camel_case_types)]
-pub(crate) type codepoint = i32;
 
 // Validate that Rust is doing enum size optimization, by recognizing that the
 // values of the CodePoint::{Char, ..} variants are distinct.

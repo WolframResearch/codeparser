@@ -177,7 +177,7 @@ pub fn isMBStrange(point: CodePoint) -> bool {
     return false;
 }
 
-pub fn isStraySurrogate(point: codepoint) -> bool {
+pub fn isStraySurrogate(point: i32) -> bool {
     if 0xd800 <= point && point <= 0xdfff {
         return true;
     }
