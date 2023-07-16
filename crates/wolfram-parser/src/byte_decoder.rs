@@ -57,7 +57,7 @@ use crate::{
 //
 // Do not decode unsafe character encodings: incomplete sequences, stray surrogates, or BOM
 //
-pub fn ByteDecoder_nextSourceCharacter(
+pub(crate) fn ByteDecoder_nextSourceCharacter(
     session: &mut Tokenizer,
     policy: NextPolicy,
 ) -> SourceCharacter {
@@ -800,7 +800,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
 // Postcondition: lastBuf is set to the last value of buffer
 // Postcondition: lastLoc is set to the last value of SrcLoc
 //
-pub fn ByteDecoder_currentSourceCharacter(
+pub(crate) fn ByteDecoder_currentSourceCharacter(
     session: &mut Tokenizer,
     policy: NextPolicy,
 ) -> SourceCharacter {
