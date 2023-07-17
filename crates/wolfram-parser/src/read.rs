@@ -48,8 +48,9 @@ pub(crate) struct Reader<'i> {
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct InputMark {
     offset: usize,
-    wasEOF: bool,
     pub src_loc: SourceLocation,
+
+    wasEOF: Option<bool>,
 }
 
 /// A set of fields of [`Reader`] used to update the current [`SourceLocation`].
@@ -122,7 +123,7 @@ impl<'i> Reader<'i> {
     pub(crate) fn mark(&self) -> InputMark {
         InputMark {
             offset: self.offset,
-            wasEOF: self.wasEOF,
+            wasEOF: Some(self.wasEOF),
             src_loc: self.SrcLoc,
         }
     }
@@ -137,8 +138,11 @@ impl<'i> Reader<'i> {
         } = mark;
 
         self.offset = offset;
-        self.wasEOF = wasEOF;
         self.SrcLoc = src_loc;
+
+        if let Some(wasEOF) = wasEOF {
+            self.wasEOF = wasEOF;
+        }
     }
 
     //==================================
@@ -179,6 +183,18 @@ impl<'i> Reader<'i> {
                 //
                 self.nonFatalIssues.push(issue);
             }
+        }
+    }
+}
+
+impl InputMark {
+    // TODO(cleanup): Make this function unnecessary, always use Reader::mark().
+    //                Then change wasEOF back to a non-Option field.
+    pub(crate) fn new(offset: usize, src_loc: SourceLocation) -> Self {
+        InputMark {
+            offset,
+            src_loc,
+            wasEOF: None,
         }
     }
 }
