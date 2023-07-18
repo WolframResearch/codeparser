@@ -316,20 +316,6 @@ impl<N> NodeSeq<N> {
         let NodeSeq(vec) = self;
         vec.last().expect("NodeSeq::last(): vector is empty")
     }
-
-    // TODO: impl Display
-    // void NodeSeq::print(std::ostream& s) const {
-
-    //     SYMBOL_LIST.print(s);
-    //     s << "[";
-
-    //     for (auto& C : vec) {
-    //         std::visit(PrintVisitor{s}, C);
-    //         s << ", ";
-    //     }
-
-    //     s << "]";
-    // }
 }
 
 impl<I, S: TokenSource> CstNodeSeq<I, S> {
@@ -624,23 +610,6 @@ impl<I, S: TokenSource, O: Copy> OperatorNode<I, S, O> {
     pub(crate) fn check(&self) -> bool {
         return self.children.check();
     }
-
-    // TODO: impl Display
-    // void print(std::ostream& s) const {
-
-    //     MakeSym.print(s);
-    //     s << "[";
-
-    //     Op.print(s);
-    //     s << ", ";
-
-    //     children.print(s);
-    //     s << ", ";
-
-    //     src.print(s);
-
-    //     s << "]";
-    // }
 }
 
 impl<I: TokenInput, S, O> OperatorNode<I, S, O> {
@@ -810,23 +779,6 @@ impl<I, S: TokenSource> CallNode<I, S> {
         return self.src.clone();
     }
 
-    // TODO: Display
-    // void print(std::ostream& s) const {
-
-    //     SYMBOL_CODEPARSER_CALLNODE.print(s);
-    //     s << "[";
-
-    //     Head.print(s);
-    //     s << ", ";
-
-    //     std::visit(PrintVisitor{s}, Body);
-    //     s << ", ";
-
-    //     src.print(s);
-
-    //     s << "]";
-    // }
-
     pub(crate) fn check(&self) -> bool {
         let CallNode {
             head,
@@ -887,23 +839,6 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
     fn getSource(&self) -> S {
         return self.src.clone();
     }
-
-    // TODO: Display
-    // void SyntaxErrorNode::print(std::ostream& s) const {
-
-    //     SYMBOL_CODEPARSER_SYNTAXERRORNODE.print(s);
-    //     s << "[";
-
-    //     s << Err.name;
-    //     s << ", ";
-
-    //     children.print(s);
-    //     s << ", ";
-
-    //     src.print(s);
-
-    //     s << "]";
-    // }
 }
 
 //==========================================================
@@ -921,7 +856,7 @@ pub use crate::parselet_registration::{
 /// Marker denoting enums whose variants represent named operators, which
 /// can be converted to or from a corresponding canonical symbol representation.
 pub trait Operator: Sized + 'static {
-    fn to_symbol(self) -> crate::symbol::Symbol;
+    fn to_symbol(&self) -> crate::symbol::Symbol;
 
     fn try_from_symbol(symbol: wolfram_expr::symbol::SymbolRef) -> Option<Self>;
 }

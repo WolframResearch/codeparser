@@ -427,4 +427,8 @@ impl<N> ParseResult<N> {
         let NodeSeq(vec) = &self.nodes;
         vec.as_slice()
     }
+
+    pub fn node_seq(&self) -> &NodeSeq<N> {
+        &self.nodes
+    }
 }

@@ -89,6 +89,9 @@ pub mod cst;
 #[doc(hidden)]
 pub mod abstract_;
 
+#[doc(hidden)]
+pub mod fmt_as_expr;
+
 mod feature;
 
 pub mod token;
@@ -363,7 +366,7 @@ pub enum StringifyMode {
     File = 2,
 }
 
-pub struct Tokens<I = OwnedTokenInput>(pub Vec<Token<I>>);
+pub struct Tokens<I = OwnedTokenInput, S = Source>(pub Vec<Token<I, S>>);
 
 //-------------
 // ParseOptions

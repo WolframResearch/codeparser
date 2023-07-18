@@ -420,7 +420,7 @@ formatOperatorEnumImpl[name_?StringQ, values_?AssociationQ] :=
 	StringJoin[
 		"impl Operator for " <> name <> " {\n",
 		"    #[allow(dead_code)]\n",
-		"    fn to_symbol(self) -> Symbol {\n",
+		"    fn to_symbol(&self) -> Symbol {\n",
 		"        match self {\n",
 		KeyValueMap[
 			{k, v} |-> Replace[{k, v}, {

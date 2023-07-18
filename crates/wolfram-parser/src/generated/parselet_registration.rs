@@ -1327,7 +1327,7 @@ pub enum CallOperator {
 
 impl Operator for InfixOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             InfixOperator::Times => sym::Times,
             InfixOperator::Span => sym::Span,
@@ -1735,7 +1735,7 @@ impl Operator for InfixOperator {
 
 impl Operator for PrefixOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             PrefixOperator::Get => sym::Get,
             PrefixOperator::Minus => sym::Minus,
@@ -1817,7 +1817,7 @@ impl Operator for PrefixOperator {
 
 impl Operator for PostfixOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             PostfixOperator::Function => sym::Function,
             PostfixOperator::Repeated => sym::Repeated,
@@ -1859,7 +1859,7 @@ impl Operator for PostfixOperator {
 
 impl Operator for BinaryOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             BinaryOperator::Pattern => sym::Pattern,
             BinaryOperator::Optional => sym::Optional,
@@ -1973,7 +1973,7 @@ impl Operator for BinaryOperator {
 
 impl Operator for TernaryOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             TernaryOperator::CodeParser_TernaryTilde => sym::CodeParser_TernaryTilde,
             TernaryOperator::CodeParser_TernaryOptionalPattern => sym::CodeParser_TernaryOptionalPattern,
@@ -2001,7 +2001,7 @@ impl Operator for TernaryOperator {
 
 impl Operator for PrefixBinaryOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             PrefixBinaryOperator::Integrate => sym::Integrate,
             PrefixBinaryOperator::ContourIntegral => sym::ContourIntegral,
@@ -2027,7 +2027,7 @@ impl Operator for PrefixBinaryOperator {
 
 impl Operator for CompoundOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             CompoundOperator::Blank => sym::Blank,
             CompoundOperator::BlankSequence => sym::BlankSequence,
@@ -2063,7 +2063,7 @@ impl Operator for CompoundOperator {
 
 impl Operator for GroupOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             GroupOperator::Token_Comment => sym::Token_Comment,
             GroupOperator::CodeParser_GroupParen => sym::CodeParser_GroupParen,
@@ -2107,7 +2107,7 @@ impl Operator for GroupOperator {
 
 impl Operator for CallOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    fn to_symbol(&self) -> Symbol {
         match self {
             CallOperator::CodeParser_GroupSquare => sym::CodeParser_GroupSquare,
             CallOperator::CodeParser_GroupDoubleBracket => sym::CodeParser_GroupDoubleBracket,
