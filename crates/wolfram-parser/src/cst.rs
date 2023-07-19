@@ -114,15 +114,23 @@ pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
 pub struct CallNode<I = OwnedTokenInput, S = Source> {
-    pub head: CstNodeSeq<I, S>,
+    pub head: CallHead<I, S>,
     pub body: CallBody<I, S>,
     pub src: S,
-    // Concrete Call nodes can have more than one element in `head`, and
-    // serialize as `CallNode[{__}, ..]`
-    //
-    // Aggregate and abstract Call nodes must have exactly one element in `head`,
-    // and serialize as `CallNode[node_, ..]`.
-    pub is_concrete: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CallHead<I, S> {
+    /// Concrete Call nodes can have more than one element in `head`, and
+    /// serialize as `CallNode[{__}, ..]`
+    ///
+    /// Happens for e.g. `f [ x ]`, where the whitespace after `f` is a token
+    /// associated with the head.
+    Concrete(CstNodeSeq<I, S>),
+
+    /// Aggregate and abstract Call nodes must have exactly one element in `head`,
+    /// and serialize as `CallNode[node_, ..]`.
+    Aggregate(Box<CstNode<I, S>>),
 }
 
 /// Subset of [`CstNode`] variants that are allowed as the body of a [`CallNode`].
@@ -318,7 +326,7 @@ impl<N> NodeSeq<N> {
     }
 }
 
-impl<I, S: TokenSource> CstNodeSeq<I, S> {
+impl<I, S> CstNodeSeq<I, S> {
     pub(crate) fn check(&self) -> bool {
         let NodeSeq(vec) = self;
 
@@ -355,12 +363,7 @@ impl<I, S> Node<I, S> {
         // Visit child nodes.
         match self {
             Node::Token(_) => (),
-            Node::Call(CallNode {
-                head,
-                body,
-                src: _,
-                is_concrete: _,
-            }) => {
+            Node::Call(CallNode { head, body, src: _ }) => {
                 head.visit(visit);
                 body.as_op().visit_children(visit);
             },
@@ -401,22 +404,12 @@ impl<I, S> Node<I, S> {
         // Visit child nodes.
         let node: Node<I, S> = match self_ {
             Node::Token(_) => return self_,
-            Node::Call(CallNode {
-                head,
-                body,
-                src,
-                is_concrete,
-            }) => {
+            Node::Call(CallNode { head, body, src }) => {
                 let head = head.map_visit(visit);
 
                 let body = body.map_op(|body_op: OperatorNode<_, _, _>| body_op.map_visit(visit));
 
-                Node::Call(CallNode {
-                    head,
-                    body,
-                    src,
-                    is_concrete,
-                })
+                Node::Call(CallNode { head, body, src })
             },
             Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
                 let children = children.map_visit(visit);
@@ -467,16 +460,15 @@ impl<I: TokenInput, S> Node<I, S> {
     pub fn into_owned_input(self) -> Node<OwnedTokenInput, S> {
         match self {
             Node::Token(token) => Node::Token(token.into_owned_input()),
-            Node::Call(CallNode {
-                head,
-                body,
-                src,
-                is_concrete,
-            }) => Node::Call(CallNode {
-                head: head.into_owned_input(),
+            Node::Call(CallNode { head, body, src }) => Node::Call(CallNode {
+                head: match head {
+                    CallHead::Concrete(head) => CallHead::Concrete(head.into_owned_input()),
+                    CallHead::Aggregate(head) => {
+                        CallHead::Aggregate(Box::new((*head).into_owned_input()))
+                    },
+                },
                 body: body.map_op(|body_op| body_op.into_owned_input()),
                 src,
-                is_concrete,
             }),
             Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
                 Node::SyntaxError(SyntaxErrorNode {
@@ -541,7 +533,9 @@ impl<I, S: TokenSource> Node<I, S> {
             Node::Code(node) => node.src.clone(),
         }
     }
+}
 
+impl<I, S> Node<I, S> {
     // TODO(cleanup): Are these check() methods used anywhere? What do they even do?
     #[allow(dead_code)]
     fn check(&self) -> bool {
@@ -598,17 +592,19 @@ impl<I, O> OperatorNode<I, Source, O> {
     }
 }
 
-impl<I, S: TokenSource, O: Copy> OperatorNode<I, S, O> {
+impl<I, S, O: Copy> OperatorNode<I, S, O> {
     pub fn getOp(&self) -> O {
         return self.op;
     }
 
-    pub fn getSource(&self) -> S {
-        return self.src.clone();
-    }
-
     pub(crate) fn check(&self) -> bool {
         return self.children.check();
+    }
+}
+
+impl<I, S: TokenSource, O: Copy> OperatorNode<I, S, O> {
+    pub fn getSource(&self) -> S {
+        return self.src.clone();
     }
 }
 
@@ -649,13 +645,13 @@ impl<I, S, O> OperatorNode<I, S, O> {
 // Missing closer nodes
 //======================================
 
-impl<I, S: TokenSource> GroupMissingCloserNode<I, S> {
+impl<I, S> GroupMissingCloserNode<I, S> {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
 }
 
-impl<I, S: TokenSource> GroupMissingOpenerNode<I, S> {
+impl<I, S> GroupMissingOpenerNode<I, S> {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
@@ -762,10 +758,9 @@ impl<I> CallNode<I> {
         let src = Source::new_from_source(head.first().source(), body.as_op().getSource());
 
         CallNode {
-            head,
+            head: CallHead::Concrete(head),
             body,
             src,
-            is_concrete: true,
         }
     }
 }
@@ -778,19 +773,47 @@ impl<I, S: TokenSource> CallNode<I, S> {
     fn getSource(&self) -> S {
         return self.src.clone();
     }
+}
 
+impl<I, S> CallNode<I, S> {
     pub(crate) fn check(&self) -> bool {
-        let CallNode {
-            head,
-            body,
-            src: _,
-            is_concrete,
-        } = self;
+        let CallNode { head, body, src: _ } = self;
 
         // Sanity check that check() isn't used on aggregate / abstract nodes.
-        debug_assert!(is_concrete);
+        debug_assert!(matches!(head, CallHead::Concrete(_)));
 
         return head.check() && body.as_op().check();
+    }
+}
+
+impl<I, S> CallHead<I, S> {
+    pub fn aggregate(node: CstNode<I, S>) -> Self {
+        CallHead::Aggregate(Box::new(node))
+    }
+
+    /// Visit this node and every child node, recursively.
+    pub fn visit(&self, visit: &mut dyn FnMut(&CstNode<I, S>)) {
+        match self {
+            CallHead::Concrete(head) => head.visit(visit),
+            CallHead::Aggregate(head) => head.visit(visit),
+        }
+    }
+
+    pub fn map_visit(self, visit: &mut dyn FnMut(CstNode<I, S>) -> CstNode<I, S>) -> Self {
+        match self {
+            CallHead::Concrete(head) => CallHead::Concrete(head.map_visit(visit)),
+            CallHead::Aggregate(head) => {
+                let head: CstNode<I, S> = *head;
+                CallHead::Aggregate(Box::new(head.map_visit(visit)))
+            },
+        }
+    }
+
+    pub(crate) fn check(&self) -> bool {
+        match self {
+            CallHead::Concrete(head) => head.check(),
+            CallHead::Aggregate(head) => head.check(),
+        }
     }
 }
 
@@ -831,11 +854,13 @@ impl<I> SyntaxErrorNode<I> {
     }
 }
 
-impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
+impl<I, S> SyntaxErrorNode<I, S> {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
+}
 
+impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
     fn getSource(&self) -> S {
         return self.src.clone();
     }

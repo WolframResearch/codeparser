@@ -6,9 +6,9 @@ use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CallOperator, CodeNode,
-        CompoundNode, CompoundOperator, CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode,
-        GroupNode, GroupOperator, InfixNode,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator,
+        CodeNode, CompoundNode, CompoundOperator, CstNodeSeq, GroupMissingCloserNode,
+        GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode,
         InfixOperator::{self, self as Op},
         Node, Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
         PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
@@ -76,22 +76,30 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
             }))
         },
 
-        Node::Call(CallNode {
-            head,
-            body,
-            src,
-            is_concrete,
-        }) => {
-            let head = Aggregate(head);
+        Node::Call(CallNode { head, body, src }) => {
+            let head = match head {
+                CallHead::Concrete(head) => {
+                    let NodeSeq(head) = Aggregate(head);
+
+                    // Aggregating the head of a call should reduce to a seqeuence with
+                    // just one node.
+                    debug_assert!(head.len() == 1);
+                    let head = head.into_iter().next().unwrap();
+
+                    head
+                },
+                CallHead::Aggregate(_) => {
+                    panic!("unexpected CallHead::Aggregate(..)")
+                },
+            };
+
             let body = body.map_op(aggregate_op);
 
-            debug_assert!(is_concrete);
 
             Node::Call(CallNode {
-                head,
+                head: CallHead::Aggregate(Box::new(head)),
                 body,
                 src,
-                is_concrete: false,
             })
         },
 
@@ -1613,7 +1621,7 @@ fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node
         ]
     */
     Node::Call(CallNode {
-        head: NodeSeq(vec![agg::WL!(ToNode[Power])]),
+        head: CallHead::Aggregate(Box::new(agg::WL!(ToNode[Power]))),
         body: CallBody::Group(GroupNode(OperatorNode {
             op: CallOperator::CodeParser_GroupSquare,
             children: NodeSeq(vec![
@@ -1632,7 +1640,6 @@ fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node
             src: S::unknown(),
         })),
         src: data,
-        is_concrete: false,
     })
 }
 

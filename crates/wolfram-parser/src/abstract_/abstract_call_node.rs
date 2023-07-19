@@ -5,8 +5,8 @@ use crate::{
     ast::WL,
     ast::{AstMetadata, AstNode},
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CallOperator, CompoundNode, GroupNode,
-        GroupOperator, InfixNode, Node, OperatorNode, PostfixNode, PrefixNode,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator, CompoundNode,
+        CstNode, GroupNode, GroupOperator, InfixNode, Node, OperatorNode, PostfixNode, PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
     symbol as sym,
@@ -15,7 +15,6 @@ use crate::{
         TokenKind::{self as TK},
         TokenSource,
     },
-    NodeSeq,
 };
 
 use super::{
@@ -849,21 +848,14 @@ struct AggCallNode<I, S> {
 
 impl<I: Debug, S: Debug> AggCallNode<I, S> {
     fn from_cst(call: CallNode<I, S>) -> Self {
-        let CallNode {
-            head: NodeSeq(head),
-            body,
-            src,
-            is_concrete,
-        } = call;
+        let CallNode { head, body, src } = call;
 
-        // TODO(cleanup): Remove or make this a debug_assert!
-        assert!(!is_concrete);
-
-        if head.len() != 1 {
-            panic!("AggCallNode::from_cst(): CallNode head.len is not equal to 1: {head:?}");
-        }
-
-        let head = head.into_iter().next().unwrap();
+        let head: CstNode<I, S> = match head {
+            CallHead::Concrete(_) => panic!(
+                "AggCallNode::from_cst(): CallNode.head was not CallHead::Aggregate(_): {head:?}"
+            ),
+            CallHead::Aggregate(head) => *head,
+        };
 
         AggCallNode { head, body, src }
     }

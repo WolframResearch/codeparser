@@ -5,11 +5,11 @@ use wolfram_library_link::{expr::Expr, wstp};
 use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CallOperator, CodeNode,
-        CompoundNode, CompoundOperator, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode,
-        GroupNode, GroupOperator, InfixNode, InfixOperator, Operator, OperatorNode, PostfixNode,
-        PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator,
-        SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator,
+        CodeNode, CompoundNode, CompoundOperator, CstNode, GroupMissingCloserNode,
+        GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode, InfixOperator, Operator,
+        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
+        PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
@@ -723,31 +723,20 @@ impl WstpPut for CompoundOperator {
 
 impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
     fn put(&self, callLink: &mut wstp::Link) {
-        let CallNode {
-            head,
-            body,
-            src,
-            is_concrete,
-        } = self;
+        let CallNode { head, body, src } = self;
 
         callLink
             .put_function(sym::CodeParser_CallNode.as_str(), 3)
             .unwrap();
 
-        if *is_concrete {
-            head.put(callLink);
-        } else {
-            // PRE_COMMIT: A CST can contiain CallNode[{__}, ..], but an aggregated
-            //             tree must not, because abstract[..] only checks for
-            //             CallNode[node_, ..]
-            let NodeSeq(head) = head;
-            if head.len() != 1 {
-                todo!();
-            }
-
-            let head = &head[0];
-
-            head.put(callLink);
+        // A CST can contiain CallNode[{__}, ..], but an aggregated
+        // tree must not, because abstract[..] only checks for
+        // CallNode[node_, ..]
+        match head {
+            // {...}
+            CallHead::Concrete(head) => head.put(callLink),
+            // node[...]
+            CallHead::Aggregate(head) => head.put(callLink),
         }
 
         body.put(callLink);

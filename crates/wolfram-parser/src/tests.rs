@@ -15,7 +15,7 @@ use pretty_assertions::assert_eq;
 use crate::{
     ast::{AstMetadata, AstNode},
     cst::{
-        CallBody, CallNode, CallOperator, CstNode, CstNode::Token as NVToken,
+        CallBody, CallHead, CallNode, CallOperator, CstNode, CstNode::Token as NVToken,
         GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode, InfixOperator, Node,
         OperatorNode,
     },
@@ -129,11 +129,11 @@ fn test_something() {
     assert_eq!(
         nodes("f[x]"),
         vec![Node::Call(CallNode {
-            head: NodeSeq(vec![Node::Token(token![
+            head: CallHead::Concrete(NodeSeq(vec![Node::Token(token![
                 Symbol,
                 "f" @ 0,
                 src!(1:1-1:2)
-            ])]),
+            ])])),
             body: CallBody::Group(GroupNode(OperatorNode {
                 op: CallOperator::CodeParser_GroupSquare,
                 children: NodeSeq(vec![
@@ -144,7 +144,6 @@ fn test_something() {
                 src: src!(1:2-1:5).into(),
             })),
             src: src!(1:1-1:5).into(),
-            is_concrete: true,
         })]
     );
 }
