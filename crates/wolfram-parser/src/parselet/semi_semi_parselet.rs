@@ -2,12 +2,6 @@ use crate::{
     cst::{BinaryNode, TernaryNode},
     panic_if_aborted,
     parselet::*,
-    parser::{
-        Parser_checkSpan, Parser_eatTriviaButNotToplevelNewlines,
-        Parser_eatTriviaButNotToplevelNewlines_2, Parser_parseClimb, Parser_popContext,
-        Parser_pushContext, Parser_pushLeaf, Parser_pushLeafAndNext, Parser_pushNode,
-        Parser_pushTriviaSeq, Parser_topContext,
-    },
     parser_session::ParserSession,
     precedence::*,
     source::TOPLEVEL,
@@ -38,7 +32,7 @@ impl InfixParselet for SemiSemiParselet {
         // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
         //
 
-        if Parser_checkSpan(session) {
+        if session.check_span() {
             return Token::error_at_start(TokenKind::Fake_ImplicitTimes, TokIn);
         }
 
@@ -56,12 +50,9 @@ fn SemiSemiParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
     panic_if_aborted!();
 
 
-    Parser_pushLeaf(
-        session,
-        Token::error_at_start(TokenKind::Fake_ImplicitOne, TokIn),
-    );
+    session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, TokIn));
 
-    Parser_pushContext(session, PRECEDENCE_SEMISEMI);
+    session.push_context(PRECEDENCE_SEMISEMI);
 
     //
     // nextToken() is not needed after an implicit token
@@ -75,7 +66,7 @@ fn SemiSemiParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Token
     panic_if_aborted!();
 
 
-    Parser_pushLeafAndNext(session, TokIn);
+    session.push_leaf_and_next(TokIn);
 
     // MUSTTAIL
     return SemiSemiParselet_parse1(session);
@@ -90,7 +81,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    Parser_eatTriviaButNotToplevelNewlines(session, &mut SecondTok, TOPLEVEL);
+    session.eat_trivia_but_not_toplevel_newlines(&mut SecondTok, TOPLEVEL);
 
     //
     // a;;
@@ -103,10 +94,10 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
         //    ^SecondTok
         //
 
-        Parser_pushLeaf(
-            session,
-            Token::error_at_start(TokenKind::Fake_ImplicitAll, SecondTok),
-        );
+        session.push_leaf(Token::error_at_start(
+            TokenKind::Fake_ImplicitAll,
+            SecondTok,
+        ));
 
         //
         // nextToken() is not needed after an implicit token
@@ -122,7 +113,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
         //    ^SecondTok
         //
 
-        let Ctxt = Parser_topContext(session);
+        let Ctxt = session.top_context();
         assert!(Ctxt.f.is_none());
         Ctxt.f = Some(|s, _| SemiSemiParselet_parse2(s));
 
@@ -137,10 +128,10 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     //    ^~SecondTok
     //
 
-    Parser_pushLeaf(
-        session,
-        Token::error_at_start(TokenKind::Fake_ImplicitAll, SecondTok),
-    );
+    session.push_leaf(Token::error_at_start(
+        TokenKind::Fake_ImplicitAll,
+        SecondTok,
+    ));
 
     SecondTok.skip(&mut session.tokenizer);
 
@@ -151,8 +142,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    Parser_eatTriviaButNotToplevelNewlines_2(
-        session,
+    session.eat_trivia_but_not_toplevel_newlines_2(
         &mut ThirdTok,
         TOPLEVEL,
         &mut Trivia1.borrow_mut(),
@@ -181,15 +171,15 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     //      ^ThirdTok
     //
 
-    Parser_pushLeaf(session, SecondTok);
+    session.push_leaf(SecondTok);
 
     //
     // nextToken() already handled above
     //
 
-    Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
+    session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-    let Ctxt = Parser_topContext(session);
+    let Ctxt = session.top_context();
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(|s, _| SemiSemiParselet_reduceTernary(s));
 
@@ -210,8 +200,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    Parser_eatTriviaButNotToplevelNewlines_2(
-        session,
+    session.eat_trivia_but_not_toplevel_newlines_2(
         &mut ThirdTok,
         TOPLEVEL,
         &mut Trivia1.borrow_mut(),
@@ -248,8 +237,7 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    Parser_eatTriviaButNotToplevelNewlines_2(
-        session,
+    session.eat_trivia_but_not_toplevel_newlines_2(
         &mut FourthTok,
         TOPLEVEL,
         &mut Trivia2.borrow_mut(),
@@ -279,17 +267,17 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
     //       ^FourthTok
     //
 
-    Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
+    session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-    Parser_pushLeaf(session, ThirdTok);
+    session.push_leaf(ThirdTok);
 
     //
     // nextToken() already handled above
     //
 
-    Parser_pushTriviaSeq(session, &mut Trivia2.borrow_mut());
+    session.push_trivia_seq(&mut Trivia2.borrow_mut());
 
-    let Ctxt = Parser_topContext(session);
+    let Ctxt = session.top_context();
 
     // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == SemiSemiParselet_parse2 as usize);
@@ -302,17 +290,17 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
 }
 
 fn SemiSemiParselet_reduceBinary(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::Span, Parser_popContext(session));
-    Parser_pushNode(session, node);
+    let node = BinaryNode::new(BinaryOperator::Span, session.pop_context());
+    session.push_node(node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }
 
 fn SemiSemiParselet_reduceTernary(session: &mut ParserSession) {
-    let node = TernaryNode::new(TernaryOperator::Span, Parser_popContext(session));
-    Parser_pushNode(session, node);
+    let node = TernaryNode::new(TernaryOperator::Span, session.pop_context());
+    session.push_node(node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }

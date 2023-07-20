@@ -1,6 +1,6 @@
 use crate::{
-    cst::CstNode, parselet::prefix_parselet, parser::Parser_topNode, source::TOPLEVEL,
-    tokenizer::Tokenizer_currentToken, ParseOptions, ParserSession,
+    cst::CstNode, parselet::prefix_parselet, source::TOPLEVEL, tokenizer::Tokenizer_currentToken,
+    ParseOptions, ParserSession,
 };
 
 
@@ -14,7 +14,7 @@ fn ParseletTest_Bug1() {
 
     prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
 
-    let P: &mut CstNode<_> = Parser_topNode(&mut session);
+    let P: &mut CstNode<_> = session.top_node();
 
     assert!(matches!(P, CstNode::Ternary(_)));
 

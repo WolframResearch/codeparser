@@ -3,11 +3,6 @@ use crate::{
     panic_if_aborted,
     parselet::*,
     parselet_registration::*,
-    parser::{
-        Parser_eatTrivia, Parser_eatTriviaButNotToplevelNewlines_2, Parser_eatTrivia_2,
-        Parser_identity, Parser_parseClimb, Parser_popContext, Parser_pushLeafAndNext,
-        Parser_pushNode, Parser_pushTriviaSeq, Parser_topContext,
-    },
     parser_session::ParserSession,
     precedence::*,
     source::TOPLEVEL,
@@ -33,7 +28,7 @@ impl InfixParselet for TimesParselet {
 fn TimesParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
     panic_if_aborted!();
 
-    Parser_pushLeafAndNext(session, TokIn);
+    session.push_leaf_and_next(TokIn);
 
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
@@ -41,10 +36,10 @@ fn TimesParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    Parser_eatTrivia(session, &mut Tok2, TOPLEVEL);
+    session.eat_trivia(&mut Tok2, TOPLEVEL);
 
     // #if !USE_MUSTTAIL
-    let Ctxt = Parser_topContext(session);
+    let Ctxt = session.top_context();
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(Parser_identity);
 
@@ -54,7 +49,7 @@ fn TimesParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     return TimesParselet_parseLoop(session);
     // #else
-    //     auto& Ctxt = Parser_topContext(session);
+    //     auto& Ctxt = session.top_context();
     //     assert!(!Ctxt.F);
     //     Ctxt.F = TimesParselet_parseLoop;
 
@@ -77,7 +72,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 
         let mut Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        Parser_eatTrivia_2(session, &mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
+        session.eat_trivia_2(&mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
 
         let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
@@ -94,8 +89,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 
             Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-            Parser_eatTriviaButNotToplevelNewlines_2(
-                session,
+            session.eat_trivia_but_not_toplevel_newlines_2(
                 &mut Tok1,
                 TOPLEVEL,
                 &mut Trivia1.borrow_mut(),
@@ -126,16 +120,16 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
             return TimesParselet_reduceTimes(session);
         }
 
-        Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
+        session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-        Parser_pushLeafAndNext(session, Tok1);
+        session.push_leaf_and_next(Tok1);
 
         let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        Parser_eatTrivia(session, &mut Tok2, TOPLEVEL);
+        session.eat_trivia(&mut Tok2, TOPLEVEL);
 
         // #if !USE_MUSTTAIL
-        let Ctxt = Parser_topContext(session);
+        let Ctxt = session.top_context();
         assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
 
         let P2 = prefix_parselet(Tok2.tok);
@@ -143,7 +137,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
         P2.parse_prefix(session, Tok2);
     } // while (true)
       // #else
-      //     auto& Ctxt = Parser_topContext(session);
+      //     auto& Ctxt = session.top_context(;
       //     assert!(Ctxt.F == TimesParselet_parseLoop);
 
     //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
@@ -154,9 +148,9 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn TimesParselet_reduceTimes(session: &mut ParserSession) {
-    let node = InfixNode::new(InfixOperator::Times, Parser_popContext(session));
-    Parser_pushNode(session, node);
+    let node = InfixNode::new(InfixOperator::Times, session.pop_context());
+    session.push_node(node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }

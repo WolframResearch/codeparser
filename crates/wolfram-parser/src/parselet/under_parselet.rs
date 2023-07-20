@@ -2,10 +2,6 @@ use crate::{
     cst::{CompoundNode, CompoundOperator},
     panic_if_aborted,
     parselet::*,
-    parser::{
-        Parser_parseClimb, Parser_popContext, Parser_pushContext, Parser_pushLeafAndNext,
-        Parser_pushNode,
-    },
     parser_session::ParserSession,
     precedence::*,
     source::*,
@@ -43,7 +39,7 @@ fn UnderParselet_parsePrefix<'i>(
     panic_if_aborted!();
 
 
-    Parser_pushLeafAndNext(session, TokIn);
+    session.push_leaf_and_next(TokIn);
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
@@ -52,7 +48,7 @@ fn UnderParselet_parsePrefix<'i>(
         // Something like  _b
         //
 
-        Parser_pushContext(session, PRECEDENCE_HIGHEST);
+        session.push_context(PRECEDENCE_HIGHEST);
 
         //
         // Context-sensitive and OK to build stack
@@ -71,16 +67,16 @@ fn UnderParselet_parsePrefix<'i>(
         // It's nice to include the error inside of the blank
         //
 
-        Parser_pushContext(session, PRECEDENCE_HIGHEST);
+        session.push_context(PRECEDENCE_HIGHEST);
 
-        Parser_pushLeafAndNext(session, Tok);
+        session.push_leaf_and_next(Tok);
 
         // MUSTTAIL
         return UnderParselet_reduceBlank(session, P);
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }
 
 pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
@@ -99,7 +95,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
     panic_if_aborted!();
 
 
-    Parser_pushLeafAndNext(session, TokIn);
+    session.push_leaf_and_next(TokIn);
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
@@ -108,7 +104,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
         // Something like  a_b
         //
 
-        Parser_pushContext(session, PRECEDENCE_HIGHEST);
+        session.push_context(PRECEDENCE_HIGHEST);
 
         //
         // Context-sensitive and OK to build stack
@@ -127,9 +123,9 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
         // It's nice to include the error inside of the blank
         //
 
-        Parser_pushContext(session, PRECEDENCE_HIGHEST);
+        session.push_context(PRECEDENCE_HIGHEST);
 
-        Parser_pushLeafAndNext(session, Tok);
+        session.push_leaf_and_next(Tok);
 
         // MUSTTAIL
         return UnderParselet_reduceBlankContextSensitive(session, P);
@@ -142,11 +138,11 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
 fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet) {
     let BOp = P.getBOp();
 
-    let context = Parser_popContext(session);
-    Parser_pushNode(session, CompoundNode::new(BOp, context));
+    let context = session.pop_context();
+    session.push_node(CompoundNode::new(BOp, context));
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }
 
 //
@@ -155,8 +151,8 @@ fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet) {
 fn UnderParselet_reduceBlankContextSensitive(session: &mut ParserSession, P: &UnderParselet) {
     let BOp = P.getBOp();
 
-    let context = Parser_popContext(session);
-    Parser_pushNode(session, CompoundNode::new(BOp, context));
+    let context = session.pop_context();
+    session.push_node(CompoundNode::new(BOp, context));
 
     // no call needed here
     return;
@@ -182,10 +178,10 @@ fn UnderDotParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
     panic_if_aborted!();
 
 
-    Parser_pushLeafAndNext(session, TokIn);
+    session.push_leaf_and_next(TokIn);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }
 
 
@@ -204,7 +200,7 @@ pub(crate) fn UnderDotParselet_parseInfixContextSensitive<'i>(
     panic_if_aborted!();
 
 
-    Parser_pushLeafAndNext(session, TokIn);
+    session.push_leaf_and_next(TokIn);
 
     // no call needed here
     return;

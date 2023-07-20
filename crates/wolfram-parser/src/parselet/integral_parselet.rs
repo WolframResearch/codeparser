@@ -2,11 +2,6 @@ use crate::{
     cst::{PrefixBinaryNode, PrefixNode},
     panic_if_aborted,
     parselet::*,
-    parser::{
-        Parser_eatTrivia_2, Parser_eatTrivia_transparent, Parser_parseClimb, Parser_popContext,
-        Parser_pushContext_transparent, Parser_pushLeaf, Parser_pushLeafAndNext, Parser_pushNode,
-        Parser_pushTriviaSeq, Parser_topContext, Parser_topPrecedence,
-    },
     parser_session::ParserSession,
     precedence::*,
     source::TOPLEVEL,
@@ -37,9 +32,9 @@ fn IntegralParselet_parsePrefix<'i>(
 
     panic_if_aborted!();
 
-    Parser_pushLeafAndNext(session, TokIn);
+    session.push_leaf_and_next(TokIn);
 
-    let Ctxt = Parser_pushContext_transparent(
+    let Ctxt = ParserSession::push_context_transparent(
         &mut session.NodeStack,
         &mut session.ContextStack,
         PRECEDENCE_CLASS_INTEGRATIONOPERATORS,
@@ -47,7 +42,7 @@ fn IntegralParselet_parsePrefix<'i>(
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    Parser_eatTrivia_transparent(
+    ParserSession::eat_trivia_transparent(
         &mut session.NodeStack,
         &mut session.tokenizer,
         &mut Tok,
@@ -61,10 +56,7 @@ fn IntegralParselet_parsePrefix<'i>(
         // \[Integral] \[DifferentialD] x
         //
 
-        Parser_pushLeaf(
-            session,
-            Token::error_at_start(TokenKind::Fake_ImplicitOne, Tok),
-        );
+        session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, Tok));
 
         return IntegralParselet_parse1(session, P);
     }
@@ -88,7 +80,7 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    Parser_eatTrivia_2(session, &mut Tok, TOPLEVEL, &mut Trivia1.borrow_mut());
+    session.eat_trivia_2(&mut Tok, TOPLEVEL, &mut Trivia1.borrow_mut());
 
     if !(Tok.tok == TokenKind::LongName_DifferentialD
         || Tok.tok == TokenKind::LongName_CapitalDifferentialD)
@@ -99,9 +91,9 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
         return IntegralParselet_reduceIntegral(session, P);
     }
 
-    Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
+    session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-    let Ctxt = Parser_topContext(session);
+    let Ctxt = session.top_context();
     Ctxt.f = Some(IntegralParselet_reduceIntegrate);
     Ctxt.p = Some(P);
 
@@ -117,11 +109,11 @@ fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr)
         .downcast_ref::<IntegralParselet>()
         .expect("unable to downcast to IntegralParselet");
 
-    let node = PrefixBinaryNode::new(P.Op1, Parser_popContext(session));
-    Parser_pushNode(session, node);
+    let node = PrefixBinaryNode::new(P.Op1, session.pop_context());
+    session.push_node(node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }
 
 fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) {
@@ -130,11 +122,11 @@ fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) 
         .downcast_ref::<IntegralParselet>()
         .expect("unable to downcast to IntegralParselet");
 
-    let node = PrefixNode::new(P.Op2, Parser_popContext(session));
-    Parser_pushNode(session, node);
+    let node = PrefixNode::new(P.Op2, session.pop_context());
+    session.push_node(node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return session.parse_climb();
 }
 
 impl InfixParselet for InfixDifferentialDParselet {
@@ -143,7 +135,7 @@ impl InfixParselet for InfixDifferentialDParselet {
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
-        if Parser_topPrecedence(session) == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
+        if session.top_precedence() == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
             //
@@ -159,7 +151,7 @@ impl InfixParselet for InfixDifferentialDParselet {
         session: &mut ParserSession<'i>,
         TokIn: TokenRef<'i>,
     ) -> TokenRef<'i> {
-        if Parser_topPrecedence(session) == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
+        if session.top_precedence() == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
             //
