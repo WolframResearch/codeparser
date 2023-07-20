@@ -34,20 +34,16 @@ fn IntegralParselet_parsePrefix<'i>(
 
     session.push_leaf_and_next(TokIn);
 
-    let Ctxt = ParserSession::push_context_transparent(
-        &mut session.NodeStack,
-        &mut session.ContextStack,
-        PRECEDENCE_CLASS_INTEGRATIONOPERATORS,
-    );
+    let Ctxt = session.push_context(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
+
+    assert!(Ctxt.f.is_none());
+    assert!(Ctxt.p.is_none());
+    Ctxt.f = Some(IntegralParselet_parse1);
+    Ctxt.p = Some(P);
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    ParserSession::eat_trivia_transparent(
-        &mut session.NodeStack,
-        &mut session.tokenizer,
-        &mut Tok,
-        TOPLEVEL,
-    );
+    session.eat_trivia(&mut Tok, TOPLEVEL);
 
     if Tok.tok == TokenKind::LongName_DifferentialD
         || Tok.tok == TokenKind::LongName_CapitalDifferentialD
@@ -60,11 +56,6 @@ fn IntegralParselet_parsePrefix<'i>(
 
         return IntegralParselet_parse1(session, P);
     }
-
-    assert!(Ctxt.f.is_none());
-    assert!(Ctxt.p.is_none());
-    Ctxt.f = Some(IntegralParselet_parse1);
-    Ctxt.p = Some(P);
 
     // MUSTTAIL
     return session.parse_prefix(Tok);

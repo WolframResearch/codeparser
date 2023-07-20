@@ -23,7 +23,7 @@ use crate::{
     NodeSeq,
 };
 
-use self::parser_session::{NodeStack, TriviaSeq};
+use self::parser_session::TriviaSeq;
 
 
 pub use self::parser_session::ParseResult;
@@ -301,23 +301,6 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    /// [`ParserSession::eat_trivia`], but the fields of [`ParserSession`] used are
-    /// transparent to the borrow checker.
-    pub(crate) fn eat_trivia_transparent(
-        node_stack: &mut NodeStack<'i>,
-        tokenizer: &mut Tokenizer<'i>,
-        token: &mut TokenRef<'i>,
-        policy: NextPolicy,
-    ) {
-        while token.tok.isTrivia() {
-            node_stack.push(Node::Token(token.clone()));
-
-            token.skip(tokenizer);
-
-            *token = Tokenizer_currentToken(tokenizer, policy);
-        }
-    }
-
     pub(crate) fn eat_trivia_2(
         &mut self,
         token: &mut TokenRef<'i>,
@@ -379,19 +362,6 @@ impl<'i> ParserSession<'i> {
             .push(Context::new(self.NodeStack.len() - 1, prec));
 
         return self.ContextStack.last_mut().unwrap();
-    }
-
-    /// Push a context, transparently to the borrow checker.
-    pub(crate) fn push_context_transparent<'c>(
-        node_stack: &mut NodeStack,
-        context_stack: &'c mut Vec<Context>,
-        prec: Precedence,
-    ) -> &'c mut Context {
-        assert!(!node_stack.is_empty());
-
-        context_stack.push(Context::new(node_stack.len() - 1, prec));
-
-        return context_stack.last_mut().unwrap();
     }
 
     /// Removes and returns the sequence of nodes associated with the top context.

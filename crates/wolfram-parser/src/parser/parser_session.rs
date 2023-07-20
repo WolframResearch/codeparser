@@ -31,8 +31,8 @@ use crate::{
 pub(crate) struct ParserSession<'i> {
     pub(crate) tokenizer: Tokenizer<'i>,
 
-    pub(crate) NodeStack: NodeStack<'i>,
-    pub(crate) ContextStack: Vec<Context>,
+    pub(super) NodeStack: NodeStack<'i>,
+    pub(super) ContextStack: Vec<Context>,
 
     pub(crate) trivia1: Rc<RefCell<TriviaSeq<'i>>>,
     pub(crate) trivia2: Rc<RefCell<TriviaSeq<'i>>>,

@@ -858,25 +858,16 @@ fn PrefixOperatorParselet_parsePrefix<'i>(
 
     session.push_leaf_and_next(TokIn);
 
-    let ref mut Ctxt = ParserSession::push_context_transparent(
-        &mut session.NodeStack,
-        &mut session.ContextStack,
-        P.getPrecedence(),
-    );
-
-    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
-
-    ParserSession::eat_trivia_transparent(
-        &mut session.NodeStack,
-        &mut session.tokenizer,
-        &mut Tok,
-        TOPLEVEL,
-    );
+    let Ctxt = session.push_context(P.getPrecedence());
 
     assert!(Ctxt.f.is_none());
     assert!(Ctxt.p.is_none());
     Ctxt.f = Some(PrefixOperatorParselet_reducePrefixOperator);
     Ctxt.p = Some(P);
+
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
+
+    session.eat_trivia(&mut Tok, TOPLEVEL);
 
     // MUSTTAIL
     return session.parse_prefix(Tok);
