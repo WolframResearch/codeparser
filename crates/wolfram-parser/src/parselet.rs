@@ -855,12 +855,9 @@ fn PrefixOperatorParselet_parsePrefix<'i>(
 
     session.push_leaf_and_next(TokIn);
 
-    let Ctxt = session.push_context(P.getPrecedence());
+    let ctxt = session.push_context(P.getPrecedence());
 
-    assert!(Ctxt.f.is_none());
-    assert!(Ctxt.p.is_none());
-    Ctxt.f = Some(PrefixOperatorParselet_reducePrefixOperator);
-    Ctxt.p = Some(P);
+    ctxt.init_callback(PrefixOperatorParselet_reducePrefixOperator, Some(P));
 
     let tok = session.current_token_eat_trivia();
 
@@ -966,11 +963,9 @@ fn BinaryOperatorParselet_parseInfix<'i>(
 
     let tok = session.current_token_eat_trivia();
 
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    assert!(Ctxt.p.is_none());
-    Ctxt.f = Some(BinaryOperatorParselet_reduceBinaryOperator);
-    Ctxt.p = Some(P);
+    let ctxt = session.top_context();
+
+    ctxt.init_callback(BinaryOperatorParselet_reduceBinaryOperator, Some(P));
 
     // MUSTTAIL
     return session.parse_prefix(tok);
@@ -1026,10 +1021,8 @@ fn InfixOperatorParselet_parseInfix<'i>(
     let tok2 = session.current_token_eat_trivia();
 
     // #if !USE_MUSTTAIL
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    assert!(Ctxt.p.is_none());
-    Ctxt.f = Some(Parser_identity);
+    let ctxt = session.top_context();
+    ctxt.init_callback(Parser_identity, None);
 
     session.parse_prefix(tok2);
 
@@ -1095,8 +1088,8 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: &InfixOperato
         let Tok2 = session.current_token_eat_trivia();
 
         // #if !USE_MUSTTAIL
-        let ref mut Ctxt = session.top_context();
-        assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
+        let ctxt = session.top_context();
+        assert!(ctxt.is_identity());
 
         session.parse_prefix(Tok2);
     } // loop
@@ -1205,12 +1198,10 @@ fn GroupParselet_parsePrefix<'i>(
 
     session.push_group(GroupOpenerToCloser(TokIn.tok));
 
-    let ref mut Ctxt = session.push_context(PRECEDENCE_LOWEST);
+    let ctxt = session.push_context(PRECEDENCE_LOWEST);
+    ctxt.init_callback(Parser_identity, None);
 
     // #if !USE_MUSTTAIL
-    assert!(Ctxt.f.is_none());
-    assert!(Ctxt.p.is_none());
-    Ctxt.f = Some(Parser_identity);
 
     return GroupParselet_parseLoop(session, P);
     // #else
@@ -1315,8 +1306,8 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet) {
         session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
         // #if !USE_MUSTTAIL
-        let ref mut Ctxt = session.top_context();
-        assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
+        let ctxt = session.top_context();
+        assert!(ctxt.is_identity());
 
         session.parse_prefix(tok);
     } // loop
@@ -1416,10 +1407,9 @@ fn CallParselet_parseInfix<'i>(
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
     //
 
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _| CallParselet_reduceCall(s));
-    Ctxt.prec = PRECEDENCE_HIGHEST;
+    let ctxt = session.top_context();
+    ctxt.init_callback(|s, _| CallParselet_reduceCall(s), None);
+    ctxt.set_precedence(PRECEDENCE_HIGHEST);
 
     let GP = P.getGP();
 
@@ -1494,10 +1484,9 @@ fn TildeParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     let first_tok = session.current_token_eat_trivia();
 
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _| TildeParselet_parse1(s));
-    Ctxt.prec = PRECEDENCE_LOWEST;
+    let ctxt = session.top_context();
+    ctxt.init_callback(|s, _| TildeParselet_parse1(s), None);
+    ctxt.set_precedence(PRECEDENCE_LOWEST);
 
     return session.parse_prefix(first_tok);
 }
@@ -1533,11 +1522,11 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
     // Reset back to "outside" precedence
     //
 
-    let ref mut Ctxt = session.top_context();
+    let ctxt = session.top_context();
     // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == TildeParselet_parse1 as usize);
-    Ctxt.f = Some(|s, _| TildeParselet_reduceTilde(s));
-    Ctxt.prec = PRECEDENCE_TILDE;
+    ctxt.set_callback(|s, _| TildeParselet_reduceTilde(s));
+    ctxt.set_precedence(PRECEDENCE_TILDE);
 
     return session.parse_prefix(tok2);
 }
@@ -1584,27 +1573,24 @@ fn ColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     match colonLHS {
         ColonLHS::Pattern => {
-            let ref mut Ctxt = session.top_context();
-            assert!(Ctxt.f.is_none());
-            Ctxt.f = Some(|s, _| ColonParselet_reducePattern(s));
-            Ctxt.prec = PRECEDENCE_FAKE_PATTERNCOLON;
+            let ctxt = session.top_context();
+            ctxt.init_callback(|s, _| ColonParselet_reducePattern(s), None);
+            ctxt.set_precedence(PRECEDENCE_FAKE_PATTERNCOLON);
 
             return session.parse_prefix(tok);
         },
         ColonLHS::Optional => {
-            let ref mut Ctxt = session.top_context();
-            assert!(Ctxt.f.is_none());
-            Ctxt.f = Some(|s, _| ColonParselet_reduceOptional(s));
-            Ctxt.prec = PRECEDENCE_FAKE_OPTIONALCOLON;
+            let ctxt = session.top_context();
+            ctxt.init_callback(|s, _| ColonParselet_reduceOptional(s), None);
+            ctxt.set_precedence(PRECEDENCE_FAKE_OPTIONALCOLON);
 
             // MUSTTAIl
             return session.parse_prefix(tok);
         },
         ColonLHS::Error => {
-            let ref mut Ctxt = session.top_context();
-            assert!(Ctxt.f.is_none());
-            Ctxt.f = Some(|s, _| ColonParselet_reduceError(s));
-            Ctxt.prec = PRECEDENCE_FAKE_PATTERNCOLON;
+            let ctxt = session.top_context();
+            ctxt.init_callback(|s, _| ColonParselet_reduceError(s), None);
+            ctxt.set_precedence(PRECEDENCE_FAKE_PATTERNCOLON);
 
             // MUSTTAIl
             return session.parse_prefix(tok);
@@ -1663,9 +1649,8 @@ fn SlashColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Tok
 
     let tok = session.current_token_eat_trivia();
 
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _| SlashColonParselet_parse1(s));
+    let ctxt = session.top_context();
+    ctxt.init_callback(|s, _| SlashColonParselet_parse1(s), None);
 
     // MUSTTAIL
     return session.parse_prefix(tok);
@@ -1760,9 +1745,8 @@ fn EqualParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
         return EqualParselet_reduceUnset(session);
     }
 
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _| EqualParselet_reduceSet(s));
+    let ctxt = session.top_context();
+    ctxt.init_callback(|s, _| EqualParselet_reduceSet(s), None);
 
     // MUSTTAIL
     return session.parse_prefix(tok);
@@ -1794,10 +1778,10 @@ fn EqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: Token
         return EqualParselet_reduceTagUnset(session);
     }
 
-    let ref mut Ctxt = session.top_context();
+    let ctxt = session.top_context();
     // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
-    Ctxt.f = Some(|s, _| EqualParselet_reduceTagSet(s));
+    ctxt.set_callback(|s, _| EqualParselet_reduceTagSet(s));
 
     // MUSTTAIL
     return session.parse_prefix(tok);
@@ -1851,9 +1835,8 @@ fn ColonEqualParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Tok
 
     let tok = session.current_token_eat_trivia();
 
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(|s, _| ColonEqualParselet_reduceSetDelayed(s));
+    let ctxt = session.top_context();
+    ctxt.init_callback(|s, _| ColonEqualParselet_reduceSetDelayed(s), None);
 
     // MUSTTAIL
     return session.parse_prefix(tok);
@@ -1867,10 +1850,10 @@ fn ColonEqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: 
 
     let tok = session.current_token_eat_trivia();
 
-    let ref mut Ctxt = session.top_context();
+    let ctxt = session.top_context();
     // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
-    Ctxt.f = Some(|s, _| ColonEqualParselet_reduceTagSetDelayed(s));
+    ctxt.set_callback(|s, _| ColonEqualParselet_reduceTagSetDelayed(s));
 
     // MUSTTAIL
     return session.parse_prefix(tok);
@@ -1922,9 +1905,8 @@ fn CommaParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
         ));
 
         // #if !USE_MUSTTAIL
-        let ref mut Ctxt = session.top_context();
-        assert!(Ctxt.f.is_none());
-        Ctxt.f = Some(Parser_identity);
+        let ctxt = session.top_context();
+        ctxt.init_callback(Parser_identity, None);
 
         return CommaParselet_parseLoop(session);
         // #else
@@ -1938,9 +1920,8 @@ fn CommaParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
     }
 
     // #if !USE_MUSTTAIL
-    let ref mut Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(Parser_identity);
+    let ctxt = session.top_context();
+    ctxt.init_callback(Parser_identity, None);
 
     session.parse_prefix(tok2);
 
@@ -2005,8 +1986,8 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
         }
 
         // #if !USE_MUSTTAIL
-        let ref mut Ctxt = session.top_context();
-        assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
+        let ctxt = session.top_context();
+        assert!(ctxt.is_identity());
 
         session.parse_prefix(tok2);
     } // loop
@@ -2083,9 +2064,8 @@ fn SemiParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<
         //
 
         // #if !USE_MUSTTAIL
-        let ref mut Ctxt = session.top_context();
-        assert!(Ctxt.f.is_none());
-        Ctxt.f = Some(Parser_identity);
+        let ctxt = session.top_context();
+        ctxt.init_callback(Parser_identity, None);
 
         return SemiParselet_parseLoop(session);
         // #else
@@ -2104,9 +2084,8 @@ fn SemiParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<
         //
 
         // #if !USE_MUSTTAIL
-        let ref mut Ctxt = session.top_context();
-        assert!(Ctxt.f.is_none());
-        Ctxt.f = Some(Parser_identity);
+        let ctxt = session.top_context();
+        ctxt.init_callback(Parser_identity, None);
 
         session.parse_prefix(tok2);
 
@@ -2200,8 +2179,8 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
             //
 
             // #if !USE_MUSTTAIL
-            let ref mut Ctxt = session.top_context();
-            assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
+            let ctxt = session.top_context();
+            assert!(ctxt.is_identity());
 
             session.parse_prefix(tok2);
 

@@ -31,15 +31,15 @@ pub use self::parser_session::ParseResult;
 pub(crate) use self::parser_session::ParserSession;
 
 
-pub struct Context {
-    pub(crate) f: Option<ParseFunction>,
-    pub(crate) p: Option<ParseletPtr>,
+pub(crate) struct Context {
+    f: Option<ParseFunction>,
+    p: Option<ParseletPtr>,
 
     /// The position in [`ParserSession.NodeStack`][ParserSession::NodeStack]
     /// that marks the first node associated with this [`Context`].
     index: usize,
 
-    pub(crate) prec: Precedence,
+    prec: Precedence,
 }
 
 impl Debug for Context {
@@ -69,6 +69,33 @@ impl Context {
             index,
             prec,
         }
+    }
+
+    pub(crate) fn init_callback(&mut self, func: ParseFunction, parselet: Option<ParseletPtr>) {
+        assert!(self.f.is_none());
+        assert!(self.p.is_none());
+
+        self.f = Some(func);
+        self.p = parselet;
+    }
+
+    pub(crate) fn set_callback(&mut self, func: ParseFunction) {
+        assert!(self.f.is_some());
+        self.f = Some(func);
+    }
+
+    pub(crate) fn set_callback_2(&mut self, func: ParseFunction, parselet: ParseletPtr) {
+        // TODO: Should `f` already have some value in this case?
+        self.f = Some(func);
+        self.p = Some(parselet);
+    }
+
+    pub(crate) fn is_identity(&self) -> bool {
+        self.f == Some(Parser_identity)
+    }
+
+    pub(crate) fn set_precedence(&mut self, prec: Precedence) {
+        self.prec = prec;
     }
 }
 

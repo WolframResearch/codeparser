@@ -35,9 +35,8 @@ fn TimesParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
     let tok2 = session.current_token_eat_trivia();
 
     // #if !USE_MUSTTAIL
-    let Ctxt = session.top_context();
-    assert!(Ctxt.f.is_none());
-    Ctxt.f = Some(Parser_identity);
+    let ctxt = session.top_context();
+    ctxt.init_callback(Parser_identity, None);
 
     session.parse_prefix(tok2);
 
@@ -114,8 +113,8 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
         let Tok2 = session.current_token_eat_trivia();
 
         // #if !USE_MUSTTAIL
-        let Ctxt = session.top_context();
-        assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
+        let ctxt = session.top_context();
+        assert!(ctxt.is_identity());
 
         session.parse_prefix(Tok2);
     } // while (true)
