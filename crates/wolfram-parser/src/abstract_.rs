@@ -2629,7 +2629,7 @@ fn abstract_box_node<I: TokenInput + Debug, S: TokenSource + Debug>(
     WL!(BoxNode[(kind), children, data])
 }
 
-/// Handle special form of [[x]] in subscript
+/// Handle special form of `[[x]]` in subscript
 ///
 /// Keep the [[]] structure un-abstracted
 //

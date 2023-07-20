@@ -29,7 +29,7 @@ pub(crate) struct Reader<'i> {
     /// The complete input buffer that is being parsed.
     pub(crate) input: &'i [u8],
 
-    /// Offset of the current byte in [`input`][Tokenizer::input] that is next up to be parsed.
+    /// Offset of the current byte in [`input`][Reader::input] that is next up to be parsed.
     pub(crate) offset: usize,
 
     pub(crate) wasEOF: bool,

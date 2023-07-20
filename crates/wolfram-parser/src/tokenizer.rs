@@ -3138,7 +3138,7 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
 ///
 /// * number of digits handled after ., possibly 0
 /// * UNRECOGNIZED_DIGIT if base error
-/// * [`Handled::Bailout`] if not a radix point (and also backup before dot)
+/// * [`HandledFractionalPart::Bailout`] if not a radix point (and also backup before dot)
 ///
 fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
     session: &mut Tokenizer<'i>,

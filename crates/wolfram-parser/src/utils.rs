@@ -382,7 +382,7 @@ pub fn certainCharacterReplacementActions(c: WLCharacter, src: Source) -> Vec<Co
 }
 
 /// TODO(cleanup): Replace with call to `is_sorted()` method once that method is
-///                stabilized. (See: https://github.com/rust-lang/rust/issues/53485)
+///                stabilized. (See: <https://github.com/rust-lang/rust/issues/53485>)
 pub(crate) fn is_sorted<T: Ord>(slice: &[T]) -> bool {
     slice.windows(2).all(|elem| elem[0] <= elem[1])
 }
