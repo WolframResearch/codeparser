@@ -43,7 +43,7 @@ fn IntegralParselet_parsePrefix<'i>(
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     if Tok.tok == TokenKind::LongName_DifferentialD
         || Tok.tok == TokenKind::LongName_CapitalDifferentialD
@@ -69,7 +69,7 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia_2(&mut Tok, TOPLEVEL, &mut Trivia1.borrow_mut());
+    session.eat_trivia_2(&mut Tok, &mut Trivia1.borrow_mut());
 
     if !(Tok.tok == TokenKind::LongName_DifferentialD
         || Tok.tok == TokenKind::LongName_CapitalDifferentialD)

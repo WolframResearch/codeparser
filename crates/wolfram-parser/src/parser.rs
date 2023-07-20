@@ -14,7 +14,7 @@ use crate::{
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
     precedence::{Precedence, *},
-    source::{NextPolicy, TOPLEVEL},
+    source::TOPLEVEL,
 
     token::{BorrowedTokenInput, TokenKind, TokenRef},
     token_enum::Closer,
@@ -238,11 +238,7 @@ impl<'i> ParserSession<'i> {
         //
         // not in the middle of parsing anything, so toplevel newlines will delimit
         //
-        self.eat_trivia_but_not_toplevel_newlines_2(
-            &mut token,
-            TOPLEVEL,
-            &mut Trivia1.borrow_mut(),
-        );
+        self.eat_trivia_but_not_toplevel_newlines_2(&mut token, &mut Trivia1.borrow_mut());
 
         let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(token.tok.value())];
 
@@ -291,7 +287,9 @@ impl<'i> ParserSession<'i> {
         return F(self, P);
     }
 
-    pub(crate) fn eat_trivia(&mut self, token: &mut TokenRef<'i>, policy: NextPolicy) {
+    pub(crate) fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTrivia() {
             self.NodeStack.push(Node::Token(token.clone()));
 
@@ -301,12 +299,9 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn eat_trivia_2(
-        &mut self,
-        token: &mut TokenRef<'i>,
-        policy: NextPolicy,
-        Args: &mut TriviaSeq<'i>,
-    ) {
+    pub(crate) fn eat_trivia_2(&mut self, token: &mut TokenRef<'i>, Args: &mut TriviaSeq<'i>) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTrivia() {
             Args.push(token.clone());
 
@@ -326,11 +321,9 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn eat_trivia_but_not_toplevel_newlines(
-        &mut self,
-        token: &mut TokenRef<'i>,
-        policy: NextPolicy,
-    ) {
+    pub(crate) fn eat_trivia_but_not_toplevel_newlines(&mut self, token: &mut TokenRef<'i>) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTriviaButNotToplevelNewline() {
             self.NodeStack.push(Node::Token(token.clone()));
 
@@ -343,9 +336,10 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn eat_trivia_but_not_toplevel_newlines_2(
         &mut self,
         token: &mut TokenRef<'i>,
-        policy: NextPolicy,
         Args: &mut TriviaSeq<'i>,
     ) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTriviaButNotToplevelNewline() {
             Args.push(token.clone().into());
 

@@ -867,7 +867,7 @@ fn PrefixOperatorParselet_parsePrefix<'i>(
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     // MUSTTAIL
     return session.parse_prefix(Tok);
@@ -971,7 +971,7 @@ fn BinaryOperatorParselet_parseInfix<'i>(
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     let ref mut Ctxt = session.top_context();
     assert!(Ctxt.f.is_none());
@@ -1032,7 +1032,7 @@ fn InfixOperatorParselet_parseInfix<'i>(
 
     let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok2, TOPLEVEL);
+    session.eat_trivia(&mut Tok2);
 
     // #if !USE_MUSTTAIL
     let ref mut Ctxt = session.top_context();
@@ -1069,7 +1069,7 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: &InfixOperato
 
         let mut Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        session.eat_trivia_2(&mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
+        session.eat_trivia_2(&mut Tok1, &mut Trivia1.borrow_mut());
 
         let I = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
@@ -1105,7 +1105,7 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: &InfixOperato
 
         let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        session.eat_trivia(&mut Tok2, TOPLEVEL);
+        session.eat_trivia(&mut Tok2);
 
         // #if !USE_MUSTTAIL
         let ref mut Ctxt = session.top_context();
@@ -1259,7 +1259,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet) {
 
         let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        session.eat_trivia_2(&mut Tok, TOPLEVEL, &mut Trivia1.borrow_mut());
+        session.eat_trivia_2(&mut Tok, &mut Trivia1.borrow_mut());
 
         if TokenToCloser(Tok.tok) == Closr {
             //
@@ -1509,7 +1509,7 @@ fn TildeParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     let mut FirstTok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut FirstTok, TOPLEVEL);
+    session.eat_trivia(&mut FirstTok);
 
     let ref mut Ctxt = session.top_context();
     assert!(Ctxt.f.is_none());
@@ -1527,7 +1527,7 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
 
     let mut Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia_2(&mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
+    session.eat_trivia_2(&mut Tok1, &mut Trivia1.borrow_mut());
 
     if Tok1.tok != TokenKind::Tilde {
         //
@@ -1548,7 +1548,7 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
 
     let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok2, TOPLEVEL);
+    session.eat_trivia(&mut Tok2);
 
     //
     // Reset back to "outside" precedence
@@ -1603,7 +1603,7 @@ fn ColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     match colonLHS {
         ColonLHS::Pattern => {
@@ -1686,7 +1686,7 @@ fn SlashColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Tok
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     let ref mut Ctxt = session.top_context();
     assert!(Ctxt.f.is_none());
@@ -1704,7 +1704,7 @@ fn SlashColonParselet_parse1(session: &mut ParserSession) {
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia_2(&mut Tok, TOPLEVEL, &mut Trivia1.borrow_mut());
+    session.eat_trivia_2(&mut Tok, &mut Trivia1.borrow_mut());
 
     match Tok.tok {
         TokenKind::Equal => {
@@ -1773,7 +1773,7 @@ fn EqualParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     if Tok.tok == TokenKind::Dot {
         //
@@ -1809,7 +1809,7 @@ fn EqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: Token
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     if Tok.tok == TokenKind::Dot {
         //
@@ -1882,7 +1882,7 @@ fn ColonEqualParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Tok
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     let ref mut Ctxt = session.top_context();
     assert!(Ctxt.f.is_none());
@@ -1900,7 +1900,7 @@ fn ColonEqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: 
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok, TOPLEVEL);
+    session.eat_trivia(&mut Tok);
 
     let ref mut Ctxt = session.top_context();
     // TODO: Figure out how to express this logic and re-enable this assertion.
@@ -1946,7 +1946,7 @@ fn CommaParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 
     let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.eat_trivia(&mut Tok2, TOPLEVEL);
+    session.eat_trivia(&mut Tok2);
 
     if Tok2.tok == TokenKind::Comma || Tok2.tok == TokenKind::LongName_InvisibleComma {
         //
@@ -2006,7 +2006,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
 
         let mut Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        session.eat_trivia_2(&mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
+        session.eat_trivia_2(&mut Tok1, &mut Trivia1.borrow_mut());
 
         if !(Tok1.tok == TokenKind::Comma || Tok1.tok == TokenKind::LongName_InvisibleComma) {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
@@ -2025,7 +2025,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
 
         let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        session.eat_trivia(&mut Tok2, TOPLEVEL);
+        session.eat_trivia(&mut Tok2);
 
         if Tok2.tok == TokenKind::Comma || Tok2.tok == TokenKind::LongName_InvisibleComma {
             //
@@ -2112,7 +2112,7 @@ fn SemiParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<
     //
     // CompoundExpression should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines(&mut Tok2, TOPLEVEL);
+    session.eat_trivia_but_not_toplevel_newlines(&mut Tok2);
 
     if Tok2.tok == TokenKind::Semi {
         //
@@ -2194,7 +2194,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
 
         let mut Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        session.eat_trivia_2(&mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
+        session.eat_trivia_2(&mut Tok1, &mut Trivia1.borrow_mut());
 
         if Tok1.tok != TokenKind::Semi {
             //
@@ -2220,7 +2220,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
         //
         // CompoundExpression should not cross toplevel newlines
         //
-        session.eat_trivia_but_not_toplevel_newlines(&mut Tok2, TOPLEVEL);
+        session.eat_trivia_but_not_toplevel_newlines(&mut Tok2);
 
         if Tok2.tok == TokenKind::Semi {
             //
@@ -2340,7 +2340,7 @@ fn ColonColonParselet_parseLoop(session: &mut ParserSession) {
 
         let mut Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        session.eat_trivia_2(&mut Tok1, TOPLEVEL, &mut Trivia1.borrow_mut());
+        session.eat_trivia_2(&mut Tok1, &mut Trivia1.borrow_mut());
 
         if Tok1.tok != TokenKind::ColonColon {
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
