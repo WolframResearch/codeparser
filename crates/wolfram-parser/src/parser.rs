@@ -233,12 +233,11 @@ impl<'i> ParserSession<'i> {
 
         let Trivia1 = self.trivia1.clone();
 
-        let mut token = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
-
         //
         // not in the middle of parsing anything, so toplevel newlines will delimit
         //
-        self.eat_trivia_but_not_toplevel_newlines_2(&mut token, &mut Trivia1.borrow_mut());
+        let mut token =
+            self.current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia1.borrow_mut());
 
         let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(token.tok.value())];
 
@@ -287,7 +286,93 @@ impl<'i> ParserSession<'i> {
         return F(self, P);
     }
 
-    pub(crate) fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
+    //======================================
+    // Get current token after eating trivia
+    //======================================
+
+    /// Get the current token, eating trivia tokens.
+    ///
+    /// If the current token is already a non-trivia token, it will be returned.
+    ///
+    /// Otherwise, repeatedly eat the current token and append it to
+    /// [`ParserSession::NodeStack`] until the current token is no longer a
+    /// trivia token.
+    ///
+    /// This function always returns a non-trivia token
+    /// ([`TokenKind::isTrivia()`] is false).
+    pub(crate) fn current_token_eat_trivia(&mut self) -> TokenRef<'i> {
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
+
+        self.eat_trivia(&mut tok);
+
+        debug_assert!(!tok.tok.isTrivia());
+
+        tok
+    }
+
+    /// Get the current token, eating trivia tokens.
+    ///
+    /// If the current token is already a non-trivia token, it will be returned.
+    ///
+    /// Otherwise, repeatedly eat the current token and append it to
+    /// `container` until the current token is no longer a trivia token.
+    ///
+    /// This function always returns a non-trivia token
+    /// ([`TokenKind::isTrivia()`] is false).
+    pub(crate) fn current_token_eat_trivia_into(
+        &mut self,
+        container: &mut TriviaSeq<'i>,
+    ) -> TokenRef<'i> {
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
+
+        self.eat_trivia_into(&mut tok, container);
+
+        debug_assert!(!tok.tok.isTrivia());
+
+        tok
+    }
+
+    pub(crate) fn current_token_stringify_as_file_eat_trivia(&mut self) -> TokenRef<'i> {
+        let mut tok = Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
+
+        self.eat_trivia_stringify_as_file(&mut tok);
+
+        debug_assert!(!tok.tok.isTrivia());
+
+        tok
+    }
+
+    pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines(&mut self) -> TokenRef<'i> {
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
+
+        //
+        // CompoundExpression should not cross toplevel newlines
+        //
+        self.eat_trivia_but_not_toplevel_newlines(&mut tok);
+
+        tok
+    }
+
+    pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines_into(
+        &mut self,
+        container: &mut TriviaSeq<'i>,
+    ) -> TokenRef<'i> {
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
+
+        //
+        // CompoundExpression should not cross toplevel newlines
+        //
+        self.eat_trivia_but_not_toplevel_newlines_into(&mut tok, container);
+
+        tok
+    }
+
+    //----------------------------------
+    // Eat trivia helpers
+    //----------------------------------
+    // TODO(cleanup): Inline these functions into their currently only callsite?
+
+    fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
         let policy = TOPLEVEL;
 
         while token.tok.isTrivia() {
@@ -299,7 +384,7 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn eat_trivia_2(&mut self, token: &mut TokenRef<'i>, Args: &mut TriviaSeq<'i>) {
+    fn eat_trivia_into(&mut self, token: &mut TokenRef<'i>, Args: &mut TriviaSeq<'i>) {
         let policy = TOPLEVEL;
 
         while token.tok.isTrivia() {
@@ -311,7 +396,7 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn eat_trivia_stringify_as_file(&mut self, token: &mut TokenRef<'i>) {
+    fn eat_trivia_stringify_as_file(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
             self.NodeStack.push(Node::Token(token.clone()));
 
@@ -321,7 +406,7 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn eat_trivia_but_not_toplevel_newlines(&mut self, token: &mut TokenRef<'i>) {
+    fn eat_trivia_but_not_toplevel_newlines(&mut self, token: &mut TokenRef<'i>) {
         let policy = TOPLEVEL;
 
         while token.tok.isTriviaButNotToplevelNewline() {
@@ -333,7 +418,7 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn eat_trivia_but_not_toplevel_newlines_2(
+    fn eat_trivia_but_not_toplevel_newlines_into(
         &mut self,
         token: &mut TokenRef<'i>,
         Args: &mut TriviaSeq<'i>,
@@ -348,6 +433,10 @@ impl<'i> ParserSession<'i> {
             *token = Tokenizer_currentToken(&mut self.tokenizer, policy);
         }
     }
+
+    //==================================
+    // Context management
+    //==================================
 
     pub(crate) fn push_context<'s>(&'s mut self, prec: Precedence) -> &'s mut Context {
         assert!(!self.NodeStack.is_empty());
@@ -389,6 +478,10 @@ impl<'i> ParserSession<'i> {
         return self.ContextStack.last_mut().unwrap();
     }
 
+    //==================================
+    // Precedence management
+    //==================================
+
     pub(crate) fn top_precedence(&mut self) -> Precedence {
         if self.ContextStack.is_empty() {
             return PRECEDENCE_LOWEST;
@@ -404,6 +497,10 @@ impl<'i> ParserSession<'i> {
 
         ctxt.prec = prec;
     }
+
+    //==================================
+    // Node stack management
+    //==================================
 
     pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) {
         self.NodeStack.push(Node::Token(token));
@@ -453,6 +550,10 @@ impl<'i> ParserSession<'i> {
         return self.NodeStack.last_mut().unwrap();
     }
 
+    //==================================
+    // Group stack management
+    //==================================
+
     pub(crate) fn push_group(&mut self, closer: Closer) {
         self.tokenizer.GroupStack.push(closer);
     }
@@ -472,6 +573,10 @@ impl<'i> ParserSession<'i> {
 
         return false;
     }
+
+    //===================================
+    // Assorted parselet helper functions
+    //===================================
 
     pub(crate) fn check_pattern_precedence(&mut self) -> bool {
         for ctxt in self.ContextStack.iter().rev() {

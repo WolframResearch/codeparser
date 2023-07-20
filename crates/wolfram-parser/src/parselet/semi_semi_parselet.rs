@@ -4,9 +4,7 @@ use crate::{
     parselet::*,
     parser::ParserSession,
     precedence::*,
-    source::TOPLEVEL,
     token::{Token, TokenKind, TokenRef},
-    tokenizer::Tokenizer_currentToken,
 };
 
 //
@@ -75,13 +73,10 @@ fn SemiSemiParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Token
 fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     panic_if_aborted!();
 
-
-    let mut SecondTok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
-
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines(&mut SecondTok);
+    let SecondTok = session.current_token_eat_trivia_but_not_toplevel_newlines();
 
     //
     // a;;
@@ -133,14 +128,13 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
 
     SecondTok.skip(&mut session.tokenizer);
 
-    let mut ThirdTok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
-
     let Trivia1 = session.trivia1.clone();
 
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines_2(&mut ThirdTok, &mut Trivia1.borrow_mut());
+    let ThirdTok =
+        session.current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia1.borrow_mut());
 
     if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok == TokenKind::SemiSemi {
         //
@@ -187,12 +181,11 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
 
     let Trivia1 = session.trivia1.clone();
 
-    let mut ThirdTok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
-
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines_2(&mut ThirdTok, &mut Trivia1.borrow_mut());
+    let ThirdTok =
+        session.current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia1.borrow_mut());
 
     if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok != TokenKind::SemiSemi {
         //
@@ -220,12 +213,11 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
 
     let Trivia2 = session.trivia2.clone();
 
-    let mut FourthTok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
-
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines_2(&mut FourthTok, &mut Trivia2.borrow_mut());
+    let FourthTok =
+        session.current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia2.borrow_mut());
 
     if !FourthTok.tok.isPossibleBeginning() || FourthTok.tok == TokenKind::SemiSemi {
         //
