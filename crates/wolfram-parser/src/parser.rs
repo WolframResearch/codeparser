@@ -25,7 +25,10 @@ pub struct Context {
     pub(crate) f: Option<ParseFunction>,
     pub(crate) p: Option<ParseletPtr>,
 
+    /// The position in [`ParserSession.NodeStack`][ParserSession::NodeStack]
+    /// that marks the first node associated with this [`Context`].
     index: usize,
+
     pub(crate) prec: Precedence,
 }
 
@@ -367,6 +370,7 @@ pub(crate) fn Parser_pushContext_transparent<'c>(
     return context_stack.last_mut().unwrap();
 }
 
+/// Removes and returns the sequence of nodes associated with the top context.
 pub(crate) fn Parser_popContext<'i>(
     session: &mut ParserSession<'i>,
 ) -> CstNodeSeq<BorrowedTokenInput<'i>> {
@@ -379,22 +383,14 @@ pub(crate) fn Parser_popContext<'i>(
     let ctxt = session.ContextStack.pop().unwrap();
 
     //
-    // Move args from back of NodeStack to ArgsTmp
+    // Remove args from back of NodeStack
     //
 
-    let ArgsTmp: NodeSeq<_> = {
-        // let vec = vec![session.NodeStack.begin() + Ctxt.Index, session.NodeStack.end()];
-        let vec = Vec::from_iter(session.NodeStack.drain(ctxt.index..));
-        NodeSeq(vec)
-    };
+    let vec = Vec::from_iter(session.NodeStack.drain(ctxt.index..));
 
     debug_assert_eq!(session.NodeStack.len(), ctxt.index);
 
-    //
-    // return ArgsTmp
-    //
-
-    return ArgsTmp;
+    return NodeSeq(vec);
 }
 
 fn Parser_isContextStackEmpty<'i>(session: &mut ParserSession<'i>) -> bool {
