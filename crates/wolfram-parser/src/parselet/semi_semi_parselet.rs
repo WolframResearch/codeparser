@@ -32,7 +32,7 @@ impl InfixParselet for SemiSemiParselet {
         // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
         //
 
-        if session.check_span() {
+        if session.top_node_is_span() {
             return Token::error_at_start(TokenKind::Fake_ImplicitTimes, TokIn);
         }
 
