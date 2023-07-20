@@ -2,8 +2,8 @@ use std::fmt::{self, Debug};
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, CstNodeSeq, Node, TernaryNode,
-        TernaryOperator,
+        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, CstNode, CstNodeSeq, Node,
+        TernaryNode, TernaryOperator,
     },
     feature,
     panic_if_aborted,
@@ -191,6 +191,21 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 }
 
 impl<'i> ParserSession<'i> {
+    /// Pop the top context and push a new node constructed by `func`, then
+    /// call [`ParserSession::parse_climb()`].
+    pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)
+    where
+        N: Into<CstNode<BorrowedTokenInput<'i>>>,
+        F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
+    {
+        let context = self.pop_context();
+        let node = func(context).into();
+        self.push_node(node);
+
+        // MUSTTAIL
+        return self.parse_climb();
+    }
+
     pub(crate) fn parse_climb(&mut self) {
         //
         // Check isAbort() inside loops

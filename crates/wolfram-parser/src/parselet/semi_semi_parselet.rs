@@ -290,17 +290,9 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
 }
 
 fn SemiSemiParselet_reduceBinary(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::Span, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Span, ctx))
 }
 
 fn SemiSemiParselet_reduceTernary(session: &mut ParserSession) {
-    let node = TernaryNode::new(TernaryOperator::Span, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| TernaryNode::new(TernaryOperator::Span, ctx))
 }

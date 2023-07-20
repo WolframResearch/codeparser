@@ -138,11 +138,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
 fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet) {
     let BOp = P.getBOp();
 
-    let context = session.pop_context();
-    session.push_node(CompoundNode::new(BOp, context));
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| CompoundNode::new(BOp, ctx))
 }
 
 //

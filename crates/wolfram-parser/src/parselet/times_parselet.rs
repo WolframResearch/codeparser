@@ -148,9 +148,5 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn TimesParselet_reduceTimes(session: &mut ParserSession) {
-    let node = InfixNode::new(InfixOperator::Times, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| InfixNode::new(InfixOperator::Times, ctx))
 }

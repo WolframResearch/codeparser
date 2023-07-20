@@ -816,22 +816,13 @@ pub(crate) fn SymbolParselet_parseInfixContextSensitive<'i>(
 }
 
 fn SymbolParselet_reducePatternBlank(session: &mut ParserSession, P: &UnderParselet) {
-    let node = CompoundNode::new(P.PBOp, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| CompoundNode::new(P.PBOp, ctx))
 }
 
 fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession) {
-    let node = CompoundNode::new(
-        CompoundOperator::CodeParser_PatternOptionalDefault,
-        session.pop_context(),
-    );
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| {
+        CompoundNode::new(CompoundOperator::CodeParser_PatternOptionalDefault, ctx)
+    })
 }
 
 //======================================
@@ -900,11 +891,7 @@ fn PrefixOperatorParselet_reducePrefixOperator(session: &mut ParserSession, P: P
         .downcast_ref::<PrefixOperatorParselet>()
         .expect("unable to downcast to PrefixOperatorParselet");
 
-    let node = PrefixNode::new(P.getOp(), session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| PrefixNode::new(P.getOp(), ctx))
 }
 
 //======================================
@@ -1016,11 +1003,7 @@ fn BinaryOperatorParselet_reduceBinaryOperator(session: &mut ParserSession, P: P
         .downcast_ref::<BinaryOperatorParselet>()
         .expect("unable to downcast to BinaryOperatorParselet");
 
-    let node = BinaryNode::new(P.Op, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(P.Op, ctx))
 }
 
 //======================================
@@ -1166,11 +1149,7 @@ fn InfixOperatorParselet_reduceInfixOperator(
 ) {
     let Op = P.getOp().unwrap_op();
 
-    let node = InfixNode::new(Op, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| InfixNode::new(Op, ctx))
 }
 
 //======================================
@@ -1215,11 +1194,7 @@ fn PostfixOperatorParselet_reducePostfixOperator(
 ) {
     let Op = P.getOp().unwrap_postfix_op();
 
-    let node = PostfixNode::new(Op, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| PostfixNode::new(Op, ctx))
 }
 
 //======================================
@@ -1490,10 +1465,9 @@ fn CallParselet_parseInfix<'i>(
 }
 
 fn CallParselet_reduceCall(session: &mut ParserSession) {
-    {
-        let body = session.pop_node();
+    let body = session.pop_node();
 
-        let body: CallBody<_> = match body {
+    let body: CallBody<_> = match body {
             crate::cst::CstNode::Group(group) => {
                 let GroupNode(OperatorNode { op, children, src}) = group;
 
@@ -1522,12 +1496,7 @@ fn CallParselet_reduceCall(session: &mut ParserSession) {
             ),
         };
 
-        let node = CallNode::concrete(session.pop_context(), body);
-        session.push_node(node);
-    }
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| CallNode::concrete(ctx, body))
 }
 
 //======================================
@@ -1623,22 +1592,11 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
 }
 
 fn TildeParselet_reduceTilde(session: &mut ParserSession) {
-    let node = TernaryNode::new(
-        TernaryOperator::CodeParser_TernaryTilde,
-        session.pop_context(),
-    );
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| TernaryNode::new(TernaryOperator::CodeParser_TernaryTilde, ctx))
 }
 
 fn TildeParselet_reduceError(session: &mut ParserSession) {
-    let node = SyntaxErrorNode::new(SyntaxErrorKind::ExpectedTilde, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.try_continue();
+    session.reduce_and_climb(|ctx| SyntaxErrorNode::new(SyntaxErrorKind::ExpectedTilde, ctx))
 }
 
 //======================================
@@ -1713,27 +1671,15 @@ fn ColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 }
 
 fn ColonParselet_reducePattern(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::Pattern, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Pattern, ctx))
 }
 
 fn ColonParselet_reduceError(session: &mut ParserSession) {
-    let node = SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSymbol, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSymbol, ctx))
 }
 
 fn ColonParselet_reduceOptional(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::Optional, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Optional, ctx))
 }
 
 //======================================
@@ -1831,11 +1777,7 @@ fn SlashColonParselet_parse1(session: &mut ParserSession) {
 }
 
 fn SlashColonParselet_reduceError(session: &mut ParserSession) {
-    let node = SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSet, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSet, ctx))
 }
 
 //======================================
@@ -1934,35 +1876,19 @@ fn EqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: Token
 }
 
 fn EqualParselet_reduceSet(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::Set, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Set, ctx))
 }
 
 fn EqualParselet_reduceUnset(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::Unset, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Unset, ctx))
 }
 
 fn EqualParselet_reduceTagSet(session: &mut ParserSession) {
-    let node = TernaryNode::new(TernaryOperator::TagSet, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| TernaryNode::new(TernaryOperator::TagSet, ctx))
 }
 
 fn EqualParselet_reduceTagUnset(session: &mut ParserSession) {
-    let node = TernaryNode::new(TernaryOperator::TagUnset, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| TernaryNode::new(TernaryOperator::TagUnset, ctx))
 }
 
 //======================================
@@ -2031,19 +1957,11 @@ fn ColonEqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: 
 }
 
 fn ColonEqualParselet_reduceSetDelayed(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::SetDelayed, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::SetDelayed, ctx))
 }
 
 fn ColonEqualParselet_reduceTagSetDelayed(session: &mut ParserSession) {
-    let node = TernaryNode::new(TernaryOperator::TagSetDelayed, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| TernaryNode::new(TernaryOperator::TagSetDelayed, ctx))
 }
 
 //======================================
@@ -2420,11 +2338,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn SemiParselet_reduceCompoundExpression(session: &mut ParserSession) {
-    let node = InfixNode::new(InfixOperator::CompoundExpression, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| InfixNode::new(InfixOperator::CompoundExpression, ctx))
 }
 
 //======================================
@@ -2509,11 +2423,7 @@ fn ColonColonParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn ColonColonParselet_reduceMessageName(session: &mut ParserSession) {
-    let node = InfixNode::new(InfixOperator::MessageName, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| InfixNode::new(InfixOperator::MessageName, ctx))
 }
 
 //======================================
@@ -2555,11 +2465,7 @@ fn GreaterGreaterParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn:
 }
 
 fn GreaterGreaterParselet_reducePut(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::Put, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Put, ctx))
 }
 
 //======================================
@@ -2604,12 +2510,7 @@ fn GreaterGreaterGreaterParselet_parseInfix<'i>(
 }
 
 fn GreaterGreaterGreaterParselet_reducePutAppend(session: &mut ParserSession) {
-    let node = BinaryNode::new(BinaryOperator::PutAppend, session.pop_context());
-
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::PutAppend, ctx))
 }
 
 //======================================
@@ -2649,11 +2550,7 @@ fn LessLessParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
 }
 
 fn LessLessParselet_reduceGet(session: &mut ParserSession) {
-    let node = PrefixNode::new(PrefixOperator::Get, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| PrefixNode::new(PrefixOperator::Get, ctx))
 }
 
 //======================================
@@ -2705,11 +2602,7 @@ fn HashParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
 }
 
 fn HashParselet_reduceSlot(session: &mut ParserSession) {
-    let node = CompoundNode::new(CompoundOperator::Slot, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| CompoundNode::new(CompoundOperator::Slot, ctx))
 }
 
 //======================================
@@ -2751,11 +2644,7 @@ fn HashHashParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
 }
 
 fn HashHashParselet_reduceSlotSequence(session: &mut ParserSession) {
-    let node = CompoundNode::new(CompoundOperator::SlotSequence, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| CompoundNode::new(CompoundOperator::SlotSequence, ctx))
 }
 
 //======================================
@@ -2797,9 +2686,5 @@ fn PercentParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Token
 }
 
 fn PercentParselet_reduceOut(session: &mut ParserSession) {
-    let node = CompoundNode::new(CompoundOperator::Out, session.pop_context());
-    session.push_node(node);
-
-    // MUSTTAIL
-    return session.parse_climb();
+    session.reduce_and_climb(|ctx| CompoundNode::new(CompoundOperator::Out, ctx))
 }
