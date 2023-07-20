@@ -182,4 +182,3 @@ pub const PRECEDENCE_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE: u8 = 186; // prec: 93,
 pub const PRECEDENCE_HIGHEST: u8 = 188; // prec: 94, assoc: Associativity`NonRight
 pub const PRECEDENCE_SYMBOL: u8 = 188; // prec: 94, assoc: Associativity`NonRight
 pub const PRECEDENCE_UNDER: u8 = 188; // prec: 94, assoc: Associativity`NonRight
-pub const PRECEDENCE_ASSERTFALSE: u8 = 190; // prec: 95, assoc: Associativity`NonRight
