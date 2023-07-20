@@ -28,7 +28,7 @@ use crate::{
 
 /// A parser session
 #[derive(Debug)]
-pub struct ParserSession<'i> {
+pub(crate) struct ParserSession<'i> {
     pub(crate) tokenizer: Tokenizer<'i>,
 
     pub(crate) NodeStack: NodeStack<'i>,
