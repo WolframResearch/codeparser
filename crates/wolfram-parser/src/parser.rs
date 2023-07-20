@@ -7,7 +7,7 @@ use crate::{
     },
     feature,
     panic_if_aborted,
-    parselet::{InfixParselet, ParseFunction, ParseletPtr},
+    parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
     parser_session::{NodeStack, ParserSession, TriviaSeq},
@@ -191,6 +191,15 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 }
 
 impl<'i> ParserSession<'i> {
+    /// Lookup and apply the [`PrefixParselet`] implementation associated
+    /// with the [`TokenKind`] of `token`.
+    pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
+        let parselet: &dyn PrefixParselet = crate::parselet::prefix_parselet(token.tok);
+
+        // MUSTTAIL
+        parselet.parse_prefix(self, token)
+    }
+
     /// Pop the top context and push a new node constructed by `func`, then
     /// call [`ParserSession::parse_climb()`].
     pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)

@@ -1,6 +1,5 @@
 use crate::{
-    cst::CstNode, parselet::prefix_parselet, source::TOPLEVEL, tokenizer::Tokenizer_currentToken,
-    ParseOptions, ParserSession,
+    cst::CstNode, source::TOPLEVEL, tokenizer::Tokenizer_currentToken, ParseOptions, ParserSession,
 };
 
 
@@ -12,7 +11,7 @@ fn ParseletTest_Bug1() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
+    session.parse_prefix(Tok);
 
     let P: &mut CstNode<_> = session.top_node();
 
@@ -34,7 +33,7 @@ fn ParseletTest_Bug2() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
+    session.parse_prefix(Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -51,7 +50,7 @@ fn ParseletTest_Bug3() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
+    session.parse_prefix(Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -68,7 +67,7 @@ fn ParseletTest_Bug4() {
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    prefix_parselet(Tok.tok).parse_prefix(&mut session, Tok);
+    session.parse_prefix(Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

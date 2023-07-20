@@ -66,10 +66,8 @@ fn IntegralParselet_parsePrefix<'i>(
     Ctxt.f = Some(IntegralParselet_parse1);
     Ctxt.p = Some(P);
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
@@ -97,10 +95,8 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
     Ctxt.f = Some(IntegralParselet_reduceIntegrate);
     Ctxt.p = Some(P);
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr) {

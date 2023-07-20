@@ -117,10 +117,8 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
         assert!(Ctxt.f.is_none());
         Ctxt.f = Some(|s, _| SemiSemiParselet_parse2(s));
 
-        let P2 = prefix_parselet(SecondTok.tok);
-
         // MUSTTAIL
-        return P2.parse_prefix(session, SecondTok);
+        return session.parse_prefix(SecondTok);
     }
 
     //
@@ -183,10 +181,8 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(|s, _| SemiSemiParselet_reduceTernary(s));
 
-    let P2 = prefix_parselet(ThirdTok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, ThirdTok);
+    return session.parse_prefix(ThirdTok);
 }
 
 fn SemiSemiParselet_parse2(session: &mut ParserSession) {
@@ -283,10 +279,8 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
     // assert!(Ctxt.f.unwrap() as usize == SemiSemiParselet_parse2 as usize);
     Ctxt.f = Some(|s, _| SemiSemiParselet_reduceTernary(s));
 
-    let P2 = prefix_parselet(FourthTok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, FourthTok);
+    return session.parse_prefix(FourthTok);
 }
 
 fn SemiSemiParselet_reduceBinary(session: &mut ParserSession) {

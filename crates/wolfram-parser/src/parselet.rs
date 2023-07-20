@@ -879,10 +879,8 @@ fn PrefixOperatorParselet_parsePrefix<'i>(
     Ctxt.f = Some(PrefixOperatorParselet_reducePrefixOperator);
     Ctxt.p = Some(P);
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn PrefixOperatorParselet_reducePrefixOperator(session: &mut ParserSession, P: ParseletPtr) {
@@ -991,10 +989,8 @@ fn BinaryOperatorParselet_parseInfix<'i>(
     Ctxt.f = Some(BinaryOperatorParselet_reduceBinaryOperator);
     Ctxt.p = Some(P);
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn BinaryOperatorParselet_reduceBinaryOperator(session: &mut ParserSession, P: ParseletPtr) {
@@ -1054,9 +1050,7 @@ fn InfixOperatorParselet_parseInfix<'i>(
     assert!(Ctxt.p.is_none());
     Ctxt.f = Some(Parser_identity);
 
-    let P2 = prefix_parselet(Tok2.tok);
-
-    P2.parse_prefix(session, Tok2);
+    session.parse_prefix(Tok2);
 
     return InfixOperatorParselet_parseLoop(session, P);
     // #else
@@ -1127,9 +1121,7 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: &InfixOperato
         let ref mut Ctxt = session.top_context();
         assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
 
-        let P2 = prefix_parselet(Tok2.tok);
-
-        P2.parse_prefix(session, Tok2);
+        session.parse_prefix(Tok2);
     } // loop
       // #else
       //     let ref mut Ctxt = session.top_context();
@@ -1351,19 +1343,15 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet) {
         let ref mut Ctxt = session.top_context();
         assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
 
-        let P2 = prefix_parselet(Tok.tok);
-
-        P2.parse_prefix(session, Tok);
+        session.parse_prefix(Tok);
     } // loop
       // #else
       //     let ref mut Ctxt = session.top_context();
       //     assert!(Ctxt.f == GroupParselet_parseLoop);
       //     assert!(Ctxt.p == P);
 
-    //     let P2 = prefix_parselet(Tok.tok);
-
     //     // MUSTTAIL
-    //     return P2.parse_prefix(session, Tok);
+    //     return session.parse_prefix(Tok);
     // #endif // !USE_MUSTTAIL
 }
 
@@ -1538,10 +1526,7 @@ fn TildeParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
     Ctxt.f = Some(|s, _| TildeParselet_parse1(s));
     Ctxt.prec = PRECEDENCE_LOWEST;
 
-    let P2 = prefix_parselet(FirstTok.tok);
-
-    // MUSTTAIL
-    return P2.parse_prefix(session, FirstTok);
+    return session.parse_prefix(FirstTok);
 }
 
 fn TildeParselet_parse1(session: &mut ParserSession) {
@@ -1585,10 +1570,7 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
     Ctxt.f = Some(|s, _| TildeParselet_reduceTilde(s));
     Ctxt.prec = PRECEDENCE_TILDE;
 
-    let P2 = prefix_parselet(Tok2.tok);
-
-    // MUSTTAIL
-    return P2.parse_prefix(session, Tok2);
+    return session.parse_prefix(Tok2);
 }
 
 fn TildeParselet_reduceTilde(session: &mut ParserSession) {
@@ -1640,10 +1622,7 @@ fn ColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
             Ctxt.f = Some(|s, _| ColonParselet_reducePattern(s));
             Ctxt.prec = PRECEDENCE_FAKE_PATTERNCOLON;
 
-            let P2 = prefix_parselet(Tok.tok);
-
-            // MUSTTAIl
-            return P2.parse_prefix(session, Tok);
+            return session.parse_prefix(Tok);
         },
         ColonLHS::Optional => {
             let ref mut Ctxt = session.top_context();
@@ -1651,10 +1630,8 @@ fn ColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
             Ctxt.f = Some(|s, _| ColonParselet_reduceOptional(s));
             Ctxt.prec = PRECEDENCE_FAKE_OPTIONALCOLON;
 
-            let P2 = prefix_parselet(Tok.tok);
-
             // MUSTTAIl
-            return P2.parse_prefix(session, Tok);
+            return session.parse_prefix(Tok);
         },
         ColonLHS::Error => {
             let ref mut Ctxt = session.top_context();
@@ -1662,10 +1639,8 @@ fn ColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
             Ctxt.f = Some(|s, _| ColonParselet_reduceError(s));
             Ctxt.prec = PRECEDENCE_FAKE_PATTERNCOLON;
 
-            let P2 = prefix_parselet(Tok.tok);
-
             // MUSTTAIl
-            return P2.parse_prefix(session, Tok);
+            return session.parse_prefix(Tok);
         },
     }
 }
@@ -1727,10 +1702,8 @@ fn SlashColonParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Tok
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(|s, _| SlashColonParselet_parse1(s));
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn SlashColonParselet_parse1(session: &mut ParserSession) {
@@ -1830,10 +1803,8 @@ fn EqualParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(|s, _| EqualParselet_reduceSet(s));
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn EqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
@@ -1869,10 +1840,8 @@ fn EqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: Token
     // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
     Ctxt.f = Some(|s, _| EqualParselet_reduceTagSet(s));
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn EqualParselet_reduceSet(session: &mut ParserSession) {
@@ -1929,10 +1898,8 @@ fn ColonEqualParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: Tok
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(|s, _| ColonEqualParselet_reduceSetDelayed(s));
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn ColonEqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
@@ -1950,10 +1917,8 @@ fn ColonEqualParselet_parseInfixTag<'i>(session: &mut ParserSession<'i>, TokIn: 
     // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
     Ctxt.f = Some(|s, _| ColonEqualParselet_reduceTagSetDelayed(s));
 
-    let P2 = prefix_parselet(Tok.tok);
-
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return session.parse_prefix(Tok);
 }
 
 fn ColonEqualParselet_reduceSetDelayed(session: &mut ParserSession) {
@@ -2024,9 +1989,7 @@ fn CommaParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(Parser_identity);
 
-    let P2 = prefix_parselet(Tok2.tok);
-
-    P2.parse_prefix(session, Tok2);
+    session.parse_prefix(Tok2);
 
     return CommaParselet_parseLoop(session);
     // #else
@@ -2096,9 +2059,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
         let ref mut Ctxt = session.top_context();
         assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
 
-        let P2 = prefix_parselet(Tok2.tok);
-
-        P2.parse_prefix(session, Tok2);
+        session.parse_prefix(Tok2);
     } // loop
       // #else
       //     let ref mut Ctxt = session.top_context();
@@ -2200,9 +2161,7 @@ fn SemiParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<
         assert!(Ctxt.f.is_none());
         Ctxt.f = Some(Parser_identity);
 
-        let P2 = prefix_parselet(Tok2.tok);
-
-        P2.parse_prefix(session, Tok2);
+        session.parse_prefix(Tok2);
 
         return SemiParselet_parseLoop(session);
         // #else
@@ -2301,9 +2260,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
             let ref mut Ctxt = session.top_context();
             assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
 
-            let P2 = prefix_parselet(Tok2.tok);
-
-            P2.parse_prefix(session, Tok2);
+            session.parse_prefix(Tok2);
 
             continue;
             // #else
