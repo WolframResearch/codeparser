@@ -14,87 +14,81 @@ impl IntegralParselet {
 }
 
 impl PrefixParselet for IntegralParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
-        IntegralParselet_parsePrefix(session, self, token)
-    }
-}
-
-fn IntegralParselet_parsePrefix<'i>(
-    session: &mut ParserSession<'i>,
-    P: ParseletPtr,
-    TokIn: TokenRef<'i>,
-) {
-    //
-    // Something like  \[Integral] f \[DifferentialD] x
-    //
-
-    panic_if_aborted!();
-
-    session.push_leaf_and_next(TokIn);
-
-    let ctxt = session.push_context(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
-    ctxt.init_callback(IntegralParselet_parse1, Some(P));
-
-    let Tok = session.current_token_eat_trivia();
-
-    if Tok.tok == TokenKind::LongName_DifferentialD
-        || Tok.tok == TokenKind::LongName_CapitalDifferentialD
-    {
+    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
         //
-        // \[Integral] \[DifferentialD] x
+        // Something like  \[Integral] f \[DifferentialD] x
         //
 
-        session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, Tok));
+        panic_if_aborted!();
 
-        return IntegralParselet_parse1(session, P);
-    }
+        session.push_leaf_and_next(tok_in);
 
-    // MUSTTAIL
-    return session.parse_prefix(Tok);
-}
+        let ctxt = session.push_context(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
+        ctxt.init_callback(IntegralParselet::parse1, Some(self));
 
-fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
-    panic_if_aborted!();
+        let Tok = session.current_token_eat_trivia();
 
+        if Tok.tok == TokenKind::LongName_DifferentialD
+            || Tok.tok == TokenKind::LongName_CapitalDifferentialD
+        {
+            //
+            // \[Integral] \[DifferentialD] x
+            //
 
-    let Trivia1 = session.trivia1.clone();
+            session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, Tok));
 
-    let tok = session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
-
-    if !(tok.tok == TokenKind::LongName_DifferentialD
-        || tok.tok == TokenKind::LongName_CapitalDifferentialD)
-    {
-        Trivia1.borrow_mut().reset(&mut session.tokenizer);
+            return IntegralParselet::parse1(session, self);
+        }
 
         // MUSTTAIL
-        return IntegralParselet_reduceIntegral(session, P);
+        return session.parse_prefix(Tok);
+    }
+}
+
+impl IntegralParselet {
+    fn parse1(session: &mut ParserSession, P: ParseletPtr) {
+        panic_if_aborted!();
+
+
+        let Trivia1 = session.trivia1.clone();
+
+        let tok = session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+
+        if !(tok.tok == TokenKind::LongName_DifferentialD
+            || tok.tok == TokenKind::LongName_CapitalDifferentialD)
+        {
+            Trivia1.borrow_mut().reset(&mut session.tokenizer);
+
+            // MUSTTAIL
+            return IntegralParselet::reduceIntegral(session, P);
+        }
+
+        session.push_trivia_seq(&mut Trivia1.borrow_mut());
+
+        let ctxt = session.top_context();
+        ctxt.set_callback_2(IntegralParselet::reduceIntegrate, P);
+
+        // MUSTTAIL
+        return session.parse_prefix(tok);
     }
 
-    session.push_trivia_seq(&mut Trivia1.borrow_mut());
+    fn reduceIntegrate(session: &mut ParserSession, P: ParseletPtr) {
+        let P: &IntegralParselet = P
+            .as_any()
+            .downcast_ref::<IntegralParselet>()
+            .expect("unable to downcast to IntegralParselet");
 
-    let ctxt = session.top_context();
-    ctxt.set_callback_2(IntegralParselet_reduceIntegrate, P);
+        session.reduce_and_climb(|ctx| PrefixBinaryNode::new(P.Op1, ctx))
+    }
 
-    // MUSTTAIL
-    return session.parse_prefix(tok);
-}
+    fn reduceIntegral(session: &mut ParserSession, P: ParseletPtr) {
+        let P = P
+            .as_any()
+            .downcast_ref::<IntegralParselet>()
+            .expect("unable to downcast to IntegralParselet");
 
-fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr) {
-    let P: &IntegralParselet = P
-        .as_any()
-        .downcast_ref::<IntegralParselet>()
-        .expect("unable to downcast to IntegralParselet");
-
-    session.reduce_and_climb(|ctx| PrefixBinaryNode::new(P.Op1, ctx))
-}
-
-fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) {
-    let P = P
-        .as_any()
-        .downcast_ref::<IntegralParselet>()
-        .expect("unable to downcast to IntegralParselet");
-
-    session.reduce_and_climb(|ctx| PrefixNode::new(P.Op2, ctx))
+        session.reduce_and_climb(|ctx| PrefixNode::new(P.Op2, ctx))
+    }
 }
 
 impl InfixParselet for InfixDifferentialDParselet {
@@ -117,16 +111,16 @@ impl InfixParselet for InfixDifferentialDParselet {
     fn processImplicitTimes<'i>(
         &self,
         session: &mut ParserSession<'i>,
-        TokIn: TokenRef<'i>,
+        tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         if session.top_precedence() == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
             //
 
-            return TokIn;
+            return tok_in;
         }
 
-        return Token::error_at_start(TokenKind::Fake_ImplicitTimes, TokIn);
+        return Token::error_at_start(TokenKind::Fake_ImplicitTimes, tok_in);
     }
 }

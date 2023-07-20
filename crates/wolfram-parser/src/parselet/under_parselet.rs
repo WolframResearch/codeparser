@@ -20,138 +20,132 @@ impl UnderParselet {
 }
 
 impl PrefixParselet for UnderParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
-        UnderParselet_parsePrefix(session, self, token)
+    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
+        //
+        // prefix
+        //
+        // Something like  _  or  _a
+        //
+
+        panic_if_aborted!();
+
+
+        session.push_leaf_and_next(tok_in);
+
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
+
+        if Tok.tok == TokenKind::Symbol {
+            //
+            // Something like  _b
+            //
+
+            session.push_context(PRECEDENCE_HIGHEST);
+
+            //
+            // Context-sensitive and OK to build stack
+            //
+
+            SymbolParselet::parse_infix_context_sensitive(session, Tok);
+
+            // MUSTTAIL
+            return self.reduce_Blank(session);
+        }
+
+        if Tok.tok == TokenKind::Error_ExpectedLetterlike {
+            //
+            // Something like  _a`
+            //
+            // It's nice to include the error inside of the blank
+            //
+
+            session.push_context(PRECEDENCE_HIGHEST);
+
+            session.push_leaf_and_next(Tok);
+
+            // MUSTTAIL
+            return self.reduce_Blank(session);
+        }
+
+        // MUSTTAIL
+        return session.parse_climb();
     }
 }
 
-fn UnderParselet_parsePrefix<'i>(
-    session: &mut ParserSession<'i>,
-    P: &UnderParselet,
-    TokIn: TokenRef<'i>,
-) {
-    //
-    // prefix
-    //
-    // Something like  _  or  _a
-    //
-
-    panic_if_aborted!();
-
-
-    session.push_leaf_and_next(TokIn);
-
-    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
-
-    if Tok.tok == TokenKind::Symbol {
+impl UnderParselet {
+    pub(crate) fn parse_infix_context_sensitive<'i>(
+        &self,
+        session: &mut ParserSession<'i>,
+        tok_in: TokenRef<'i>,
+    ) {
         //
-        // Something like  _b
-        //
-
-        session.push_context(PRECEDENCE_HIGHEST);
-
-        //
-        // Context-sensitive and OK to build stack
-        //
-
-        SymbolParselet_parseInfixContextSensitive(session, Tok);
-
-        // MUSTTAIL
-        return UnderParselet_reduceBlank(session, P);
-    }
-
-    if Tok.tok == TokenKind::Error_ExpectedLetterlike {
-        //
-        // Something like  _a`
-        //
-        // It's nice to include the error inside of the blank
-        //
-
-        session.push_context(PRECEDENCE_HIGHEST);
-
-        session.push_leaf_and_next(Tok);
-
-        // MUSTTAIL
-        return UnderParselet_reduceBlank(session, P);
-    }
-
-    // MUSTTAIL
-    return session.parse_climb();
-}
-
-pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
-    session: &mut ParserSession<'i>,
-    P: &UnderParselet,
-    TokIn: TokenRef<'i>,
-) {
-    //
-    // infix
-    //
-    // Something like  a_b
-    //
-
-    // assert!(P);
-
-    panic_if_aborted!();
-
-
-    session.push_leaf_and_next(TokIn);
-
-    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
-
-    if Tok.tok == TokenKind::Symbol {
+        // infix
         //
         // Something like  a_b
         //
 
-        session.push_context(PRECEDENCE_HIGHEST);
+        // assert!(P);
 
-        //
-        // Context-sensitive and OK to build stack
-        //
+        panic_if_aborted!();
 
-        SymbolParselet_parseInfixContextSensitive(session, Tok);
 
-        // MUSTTAIL
-        return UnderParselet_reduceBlankContextSensitive(session, P);
+        session.push_leaf_and_next(tok_in);
+
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
+
+        if Tok.tok == TokenKind::Symbol {
+            //
+            // Something like  a_b
+            //
+
+            session.push_context(PRECEDENCE_HIGHEST);
+
+            //
+            // Context-sensitive and OK to build stack
+            //
+
+            SymbolParselet::parse_infix_context_sensitive(session, Tok);
+
+            // MUSTTAIL
+            return self.reduce_Blank_context_sensitive(session);
+        }
+
+        if Tok.tok == TokenKind::Error_ExpectedLetterlike {
+            //
+            // Something like  a_b`
+            //
+            // It's nice to include the error inside of the blank
+            //
+
+            session.push_context(PRECEDENCE_HIGHEST);
+
+            session.push_leaf_and_next(Tok);
+
+            // MUSTTAIL
+            return self.reduce_Blank_context_sensitive(session);
+        }
+
+        // no call needed here
+        return;
     }
 
-    if Tok.tok == TokenKind::Error_ExpectedLetterlike {
-        //
-        // Something like  a_b`
-        //
-        // It's nice to include the error inside of the blank
-        //
+    fn reduce_Blank(&self, session: &mut ParserSession) {
+        let BOp = self.getBOp();
 
-        session.push_context(PRECEDENCE_HIGHEST);
-
-        session.push_leaf_and_next(Tok);
-
-        // MUSTTAIL
-        return UnderParselet_reduceBlankContextSensitive(session, P);
+        session.reduce_and_climb(|ctx| CompoundNode::new(BOp, ctx))
     }
 
-    // no call needed here
-    return;
-}
+    //
+    // Called from other parselets
+    //
+    fn reduce_Blank_context_sensitive(&self, session: &mut ParserSession) {
+        let BOp = self.getBOp();
 
-fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet) {
-    let BOp = P.getBOp();
+        let context = session.pop_context();
+        session.push_node(CompoundNode::new(BOp, context));
 
-    session.reduce_and_climb(|ctx| CompoundNode::new(BOp, ctx))
-}
-
-//
-// Called from other parselets
-//
-fn UnderParselet_reduceBlankContextSensitive(session: &mut ParserSession, P: &UnderParselet) {
-    let BOp = P.getBOp();
-
-    let context = session.pop_context();
-    session.push_node(CompoundNode::new(BOp, context));
-
-    // no call needed here
-    return;
+        // no call needed here
+        return;
+    }
 }
 
 //======================================
@@ -159,45 +153,42 @@ fn UnderParselet_reduceBlankContextSensitive(session: &mut ParserSession, P: &Un
 //======================================
 
 impl PrefixParselet for UnderDotParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
-        UnderDotParselet_parsePrefix(session, token)
+    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
+        //
+        // prefix
+        //
+        // Something like  _.
+        //
+
+        panic_if_aborted!();
+
+
+        session.push_leaf_and_next(tok_in);
+
+        // MUSTTAIL
+        return session.parse_climb();
     }
 }
 
-fn UnderDotParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
+impl UnderDotParselet {
     //
-    // prefix
+    // Called from other parselets
     //
-    // Something like  _.
-    //
+    pub(crate) fn parse_infix_context_sensitive<'i>(
+        session: &mut ParserSession<'i>,
+        tok_in: TokenRef<'i>,
+    ) {
+        //
+        // infix
+        //
+        // Something like  a_.
 
-    panic_if_aborted!();
-
-
-    session.push_leaf_and_next(TokIn);
-
-    // MUSTTAIL
-    return session.parse_climb();
-}
-
-
-//
-// Called from other parselets
-//
-pub(crate) fn UnderDotParselet_parseInfixContextSensitive<'i>(
-    session: &mut ParserSession<'i>,
-    TokIn: TokenRef<'i>,
-) {
-    //
-    // infix
-    //
-    // Something like  a_.
-
-    panic_if_aborted!();
+        panic_if_aborted!();
 
 
-    session.push_leaf_and_next(TokIn);
+        session.push_leaf_and_next(tok_in);
 
-    // no call needed here
-    return;
+        // no call needed here
+        return;
+    }
 }
