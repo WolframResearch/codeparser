@@ -3,7 +3,7 @@ use crate::{
     panic_if_aborted,
     parselet::*,
     parselet_registration::*,
-    parser_session::ParserSession,
+    parser::ParserSession,
     precedence::*,
     source::TOPLEVEL,
     token::{TokenKind, TokenRef},

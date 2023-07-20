@@ -1,3 +1,6 @@
+mod parser_session;
+
+
 use std::fmt::{self, Debug};
 
 use crate::{
@@ -10,7 +13,6 @@ use crate::{
     parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
-    parser_session::{NodeStack, ParserSession, TriviaSeq},
     precedence::{Precedence, *},
     source::{NextPolicy, TOPLEVEL},
 
@@ -20,6 +22,14 @@ use crate::{
     FirstLineBehavior,
     NodeSeq,
 };
+
+use self::parser_session::{NodeStack, TriviaSeq};
+
+
+pub use self::parser_session::ParseResult;
+
+pub(crate) use self::parser_session::ParserSession;
+
 
 pub struct Context {
     pub(crate) f: Option<ParseFunction>,

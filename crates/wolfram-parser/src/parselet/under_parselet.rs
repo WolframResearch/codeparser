@@ -2,7 +2,7 @@ use crate::{
     cst::{CompoundNode, CompoundOperator},
     panic_if_aborted,
     parselet::*,
-    parser_session::ParserSession,
+    parser::ParserSession,
     precedence::*,
     source::*,
     token::{TokenKind, TokenRef},

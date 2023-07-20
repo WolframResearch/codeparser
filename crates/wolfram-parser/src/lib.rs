@@ -80,7 +80,6 @@ mod read;
 
 mod error;
 mod parser;
-mod parser_session;
 
 mod agg;
 pub mod ast;
@@ -243,12 +242,14 @@ pub mod test_utils {
 // API
 //==========================================================
 
+use crate::parser::ParserSession;
+
 //-----------
 // Re-exports
 //-----------
 
 pub use crate::{
-    parser_session::ParseResult,
+    parser::ParseResult,
     quirks::QuirkSettings,
     source::{
         ByteSpan,
@@ -426,8 +427,6 @@ impl ParseOptions {
 //======================================
 // Functions
 //======================================
-
-use crate::parser_session::ParserSession;
 
 /// Parse a string containing Wolfram Language input into a sequence of tokens.
 ///
