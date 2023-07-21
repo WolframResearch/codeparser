@@ -715,7 +715,7 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn check_tilde(&self) -> bool {
+    pub(crate) fn top_non_trivia_node_is_tilde(&self) -> bool {
         //
         // work backwards, looking for ~
         //
