@@ -48,6 +48,7 @@ impl PrefixParselet for SemiSemiParselet {
     fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
         panic_if_aborted!();
 
+        debug_assert_eq!(tok_in.tok, TokenKind::SemiSemi);
 
         session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, tok_in));
 

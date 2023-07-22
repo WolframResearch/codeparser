@@ -1370,11 +1370,14 @@ impl InfixParselet for TildeParselet {
     fn parse_infix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
         //
         // Something like  a ~f~ b
+        //                   ^
         //
         // It'd be weird if this were an "infix operator"
         //
 
         panic_if_aborted!();
+
+        debug_assert_eq!(tok_in.tok, TokenKind::Tilde);
 
 
         session.push_leaf_and_next(tok_in);
