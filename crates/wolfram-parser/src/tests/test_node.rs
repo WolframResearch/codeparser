@@ -1,8 +1,16 @@
 use crate::{
-    cst::{CompoundNode, CompoundOperator, CstNode},
+    cst::{
+        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator,
+        CstNode::{self, self as Cst},
+        OperatorNode,
+    },
     source::SourceLocation,
-    src, token, NodeSeq, ParseOptions, ParserSession,
+    src,
+    tests::nodes,
+    token, NodeSeq, ParseOptions, ParserSession, Source,
 };
+
+use pretty_assertions::assert_eq;
 
 
 #[test]
@@ -28,4 +36,51 @@ fn NodeTest_Bug1() {
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
+}
+
+#[test]
+fn test_parse_span() {
+    // Binary Span with implicit 1st arg
+    assert_eq!(
+        nodes(";; b"),
+        vec![Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Span,
+            children: NodeSeq(vec![
+                Cst::Token(token![Fake_ImplicitOne, "" @ 0, Source::from(src!(1:1-1:1))]),
+                Cst::Token(token![SemiSemi, ";;" @ 0, Source::from(src!(1:1-1:3))]),
+                Cst::Token(token![Whitespace, " " @ 2, Source::from(src!(1:3-1:4))]),
+                Cst::Token(token![
+                    Symbol,
+                    "b" @ 3,
+                    Source::from(src!(1:4-1:5))
+                ]),
+            ]),
+            src: Source::from(src!(1:1-1:5))
+        }))]
+    );
+
+
+    // Binary Span
+    assert_eq!(
+        nodes("a ;; b"),
+        vec![Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Span,
+            children: NodeSeq(vec![
+                Cst::Token(token![
+                    Symbol,
+                    "a" @ 0,
+                    Source::from(src!(1:1-1:2))
+                ]),
+                Cst::Token(token![Whitespace, " " @ 1, Source::from(src!(1:2-1:3))]),
+                Cst::Token(token![SemiSemi, ";;" @ 2, Source::from(src!(1:3-1:5))]),
+                Cst::Token(token![Whitespace, " " @ 4, Source::from(src!(1:5-1:6))]),
+                Cst::Token(token![
+                    Symbol,
+                    "b" @ 5,
+                    Source::from(src!(1:6-1:7))
+                ]),
+            ]),
+            src: Source::from(src!(1:1-1:7))
+        }))]
+    );
 }
