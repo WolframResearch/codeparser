@@ -9,10 +9,7 @@ use crate::{
     },
     feature,
     issue::{CodeAction, FormatIssue, IssueTag, Severity, SyntaxIssue},
-    read::{
-        ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter,
-        CharacterDecoder_nextWLCharacter, InputMark, Reader,
-    },
+    read::{InputMark, Reader},
     source::{
         Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
         INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG, TOPLEVEL,
@@ -93,6 +90,10 @@ impl<'i> std::ops::DerefMut for Tokenizer<'i> {
 }
 
 impl<'i> Tokenizer<'i> {
+    //==================================
+    // Read tokens
+    //==================================
+
     /// Returns the next token in the input without advancing.
     ///
     /// Consecutive calls to `peek_token()` will always return the same token.
@@ -157,6 +158,10 @@ impl<'i> Tokenizer<'i> {
     pub(crate) fn next_token(&mut self) -> TokenRef<'i> {
         Tokenizer_nextToken(self, crate::source::TOPLEVEL)
     }
+
+    //==================================
+    // Tracked locations
+    //==================================
 
     fn addSimpleLineContinuation(&mut self, loc: SourceLocation) {
         self.tracked.simple_line_continuations.insert(loc);
@@ -740,7 +745,7 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
 
     let policy = INSIDE_STRINGIFY_AS_FILE;
 
-    let c = ByteDecoder_nextSourceCharacter(session, policy);
+    let c = session.next_source_char(policy);
 
     match c {
         EndOfFile => {
@@ -847,21 +852,18 @@ fn Tokenizer_nextWLCharacter<'i>(
 ) -> WLCharacter {
     incr_diagnostic!(Tokenizer_LineContinuationCount);
 
-    let mut c = CharacterDecoder_nextWLCharacter(session, policy);
+    let mut c = session.next_wolfram_char(policy);
 
     let mut point = c.to_point();
 
     loop {
-        //
-        // this is a negative range, so remember to test with >=
-        //
         if !point.is_line_continuation() {
             return c;
         }
 
         let mark = session.mark();
 
-        c = CharacterDecoder_nextWLCharacter(session, policy);
+        c = session.next_wolfram_char(policy);
 
         session.seek(mark);
 
@@ -894,11 +896,11 @@ fn Tokenizer_nextWLCharacter<'i>(
                 }
             }
 
-            CharacterDecoder_nextWLCharacter(session, policy);
+            session.next_wolfram_char(policy);
 
             let mark = session.mark();
 
-            c = CharacterDecoder_nextWLCharacter(session, policy);
+            c = session.next_wolfram_char(policy);
 
             session.seek(mark);
 
@@ -915,7 +917,7 @@ fn Tokenizer_nextWLCharacter<'i>(
             }
         }
 
-        CharacterDecoder_nextWLCharacter(session, policy);
+        session.next_wolfram_char(policy);
     } // loop
 }
 
@@ -1116,7 +1118,7 @@ fn Tokenizer_handleComment<'i>(
 
     assert!(c == '*');
 
-    ByteDecoder_nextSourceCharacter(session, policy);
+    session.next_source_char(policy);
 
     incr_diagnostic!(Tokenizer_CommentCount);
 
@@ -1124,7 +1126,7 @@ fn Tokenizer_handleComment<'i>(
 
     let mut depth = 1;
 
-    c = ByteDecoder_nextSourceCharacter(session, policy);
+    c = session.next_source_char(policy);
 
     loop {
         //
@@ -1133,16 +1135,16 @@ fn Tokenizer_handleComment<'i>(
 
         match c {
             Char('(') => {
-                c = ByteDecoder_nextSourceCharacter(session, policy);
+                c = session.next_source_char(policy);
 
                 if c == '*' {
                     depth = depth + 1;
 
-                    c = ByteDecoder_nextSourceCharacter(session, policy);
+                    c = session.next_source_char(policy);
                 }
             },
             Char('*') => {
-                c = ByteDecoder_nextSourceCharacter(session, policy);
+                c = session.next_source_char(policy);
 
                 if c == ')' {
                     // This comment is closing
@@ -1157,7 +1159,7 @@ fn Tokenizer_handleComment<'i>(
                         );
                     }
 
-                    c = ByteDecoder_nextSourceCharacter(session, policy);
+                    c = session.next_source_char(policy);
                 }
             },
             EndOfFile => {
@@ -1172,17 +1174,17 @@ fn Tokenizer_handleComment<'i>(
                     session.addEmbeddedNewline(tokenStartLoc);
                 }
 
-                c = ByteDecoder_nextSourceCharacter(session, policy);
+                c = session.next_source_char(policy);
             },
             Char('\t') => {
                 if feature::COMPUTE_OOB {
                     session.addEmbeddedTab(tokenStartLoc);
                 }
 
-                c = ByteDecoder_nextSourceCharacter(session, policy);
+                c = session.next_source_char(policy);
             },
             _ => {
-                c = ByteDecoder_nextSourceCharacter(session, policy);
+                c = session.next_source_char(policy);
             },
         }
     } // loop
@@ -1786,7 +1788,7 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
             | '$' | '`' | '/' | '.' | '\\' | '!'
             | '-' | '_' | ':' | '*' | '~' | '?',
         ) => {
-            c = ByteDecoder_currentSourceCharacter(session, policy);
+            c = session.peek_source_char(policy);
         },
         Char('[') => {
             // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
@@ -1853,14 +1855,14 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
                 | '`' | '/' | '.' | '\\' | '!'
                 | '-' | '_' | ':' | '*' | '~' | '?',
             ) => {
-                ByteDecoder_nextSourceCharacter(session, policy);
+                session.next_source_char(policy);
 
-                c = ByteDecoder_currentSourceCharacter(session, policy);
+                c = session.peek_source_char(policy);
             },
             Char('[') => {
                 // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
 
-                ByteDecoder_nextSourceCharacter(session, policy);
+                session.next_source_char(policy);
 
                 // TODO: Make this a return value of the func below
                 let mut handled: c_int = 0;
@@ -1922,7 +1924,7 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
     // sync-up with current character
     //
 
-    c = ByteDecoder_currentSourceCharacter(session, policy);
+    c = session.peek_source_char(policy);
 
     let mut depth = 1;
 
@@ -1948,16 +1950,16 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
             Char('[') => {
                 depth = depth + 1;
 
-                ByteDecoder_nextSourceCharacter(session, policy);
+                session.next_source_char(policy);
 
-                c = ByteDecoder_currentSourceCharacter(session, policy);
+                c = session.peek_source_char(policy);
             },
             Char(']') => {
                 depth = depth - 1;
 
-                ByteDecoder_nextSourceCharacter(session, policy);
+                session.next_source_char(policy);
 
-                c = ByteDecoder_currentSourceCharacter(session, policy);
+                c = session.peek_source_char(policy);
 
                 if depth == 0 {
                     *handled = 0;
@@ -1972,9 +1974,9 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
                     return c;
                 }
 
-                ByteDecoder_nextSourceCharacter(session, policy);
+                session.next_source_char(policy);
 
-                c = ByteDecoder_currentSourceCharacter(session, policy);
+                c = session.peek_source_char(policy);
             },
         }
     } // loop
@@ -3465,7 +3467,7 @@ fn Tokenizer_handleOpenParen<'i>(
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '(');
 
-    let secondChar = ByteDecoder_currentSourceCharacter(session, policy);
+    let secondChar = session.peek_source_char(policy);
 
     //
     // Comments must start literally with (*

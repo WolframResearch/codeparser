@@ -6,7 +6,7 @@ use crate::{
     long_names_registration::{
         LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
     },
-    read::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter, Reader},
+    read::Reader,
     source::{
         BufferAndLength, NextPolicy,
         NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
@@ -112,11 +112,11 @@ const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = [
 ///                   buffer
 /// return \[Alpha]
 ///
-pub(crate) fn CharacterDecoder_nextWLCharacter(
+pub(super) fn CharacterDecoder_nextWLCharacter(
     session: &mut Reader,
     policy: NextPolicy,
 ) -> WLCharacter {
-    let mut curSource = ByteDecoder_nextSourceCharacter(session, policy);
+    let mut curSource = session.next_source_char(policy);
 
     let mut point = curSource;
 
@@ -138,7 +138,7 @@ pub(crate) fn CharacterDecoder_nextWLCharacter(
 
     let escaped = session.mark();
 
-    curSource = ByteDecoder_currentSourceCharacter(session, policy);
+    curSource = session.peek_source_char(policy);
 
     point = curSource;
 
@@ -153,20 +153,6 @@ pub(crate) fn CharacterDecoder_nextWLCharacter(
     return CHARACTER_DECODER_HANDLER_TABLE[usize::from(point_u8)](session, escaped, policy);
 }
 
-#[allow(dead_code)]
-pub(crate) fn CharacterDecoder_currentWLCharacter(
-    session: &mut Reader,
-    policy: NextPolicy,
-) -> WLCharacter {
-    let mark = session.mark();
-
-    let c = CharacterDecoder_nextWLCharacter(session, policy);
-
-    session.seek(mark);
-
-    return c;
-}
-
 fn CharacterDecoder_handleStringMetaDoubleQuote(
     session: &mut Reader,
     _: InputMark,
@@ -174,7 +160,7 @@ fn CharacterDecoder_handleStringMetaDoubleQuote(
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaDoubleQuoteCount);
 
-    ByteDecoder_nextSourceCharacter(session, policy);
+    session.next_source_char(policy);
 
     return WLCharacter::new_with_escape(StringMeta_DoubleQuote, EscapeStyle::Single);
 }
@@ -194,7 +180,7 @@ fn CharacterDecoder_handleStringMetaOpen(
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaOpenCount);
 
-    ByteDecoder_nextSourceCharacter(session, policy);
+    session.next_source_char(policy);
 
     let c = WLCharacter::new_with_escape(StringMeta_Open, EscapeStyle::Single);
 
@@ -236,7 +222,7 @@ fn CharacterDecoder_handleStringMetaClose(
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaCloseCount);
 
-    ByteDecoder_nextSourceCharacter(session, policy);
+    session.next_source_char(policy);
 
     let c = WLCharacter::new_with_escape(StringMeta_Close, EscapeStyle::Single);
 
@@ -278,7 +264,7 @@ fn CharacterDecoder_handleStringMetaBackslash(
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaBackslashCount);
 
-    ByteDecoder_nextSourceCharacter(session, policy);
+    session.next_source_char(policy);
 
     //    MUSTTAIL
     return CharacterDecoder_handleBackslash(session, policy);
@@ -299,7 +285,7 @@ fn CharacterDecoder_handleLongName(
     //
     let longNameStartBuf = session.buffer();
 
-    let mut curSource = ByteDecoder_currentSourceCharacter(session, policy);
+    let mut curSource = session.peek_source_char(policy);
 
     let mut wellFormed = false;
 
@@ -313,15 +299,15 @@ fn CharacterDecoder_handleLongName(
     if curSource.isUpper() {
         atleast1DigitOrAlpha = true;
 
-        ByteDecoder_nextSourceCharacter(session, policy);
+        session.next_source_char(policy);
 
-        curSource = ByteDecoder_currentSourceCharacter(session, policy);
+        curSource = session.peek_source_char(policy);
 
         loop {
             if curSource.isAlphaOrDigit() {
-                ByteDecoder_nextSourceCharacter(session, policy);
+                session.next_source_char(policy);
 
-                curSource = ByteDecoder_currentSourceCharacter(session, policy);
+                curSource = session.peek_source_char(policy);
             } else if curSource == ']' {
                 wellFormed = true;
 
@@ -339,9 +325,9 @@ fn CharacterDecoder_handleLongName(
         // Handle \[]
         //
 
-        ByteDecoder_nextSourceCharacter(session, policy);
+        session.next_source_char(policy);
 
-        curSource = ByteDecoder_currentSourceCharacter(session, policy);
+        curSource = session.peek_source_char(policy);
     }
 
     if !wellFormed {
@@ -556,7 +542,7 @@ fn CharacterDecoder_handleLongName(
     // Success!
     //
 
-    ByteDecoder_nextSourceCharacter(session, policy);
+    session.next_source_char(policy);
 
     let point: CodePoint = LONGNAME_TO_CODE_POINT_MAP__POINTS[found];
 
@@ -599,10 +585,10 @@ fn CharacterDecoder_handle4Hex(
     let hexStartBuf = session.buffer();
 
     for _ in 0..4 {
-        let curSource = ByteDecoder_currentSourceCharacter(session, policy);
+        let curSource = session.peek_source_char(policy);
 
         if curSource.isHex() {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
         } else {
             //
             // Not well-formed
@@ -690,10 +676,10 @@ fn CharacterDecoder_handle2Hex(
     let hexStartBuf = session.buffer();
 
     for _ in 0..2 {
-        let curSource = ByteDecoder_currentSourceCharacter(session, policy);
+        let curSource = session.peek_source_char(policy);
 
         if curSource.isHex() {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
         } else {
             //
             // Not well-formed
@@ -778,10 +764,10 @@ fn CharacterDecoder_handleOctal(
     let octalStartBuf = session.buffer_at(first_octal.offset);
 
     for _ in 0..3 - 1 {
-        let curSource = ByteDecoder_currentSourceCharacter(session, policy);
+        let curSource = session.peek_source_char(policy);
 
         if curSource.isOctal() {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
         } else {
             //
             // Not well-formed
@@ -878,10 +864,10 @@ fn CharacterDecoder_handle6Hex(
     let hexStartBuf = session.buffer();
 
     for _ in 0..6 {
-        let curSource = ByteDecoder_currentSourceCharacter(session, policy);
+        let curSource = session.peek_source_char(policy);
 
         if curSource.isHex() {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
         } else {
             //
             // Not well-formed
@@ -985,7 +971,7 @@ fn CharacterDecoder_handleBackslash(session: &mut Reader, policy: NextPolicy) ->
         //
         // will be resetting any way, so just use nextSourceCharacter here
         //
-        let mut c = ByteDecoder_nextSourceCharacter(session, policy);
+        let mut c = session.next_source_char(policy);
 
         if c == '[' {
             //
@@ -997,16 +983,16 @@ fn CharacterDecoder_handleBackslash(session: &mut Reader, policy: NextPolicy) ->
             let longNameStartBuf = session.offset;
             let longNameStartLoc = session.SrcLoc;
 
-            c = ByteDecoder_nextSourceCharacter(session, policy);
+            c = session.next_source_char(policy);
 
             let mut wellFormed = false;
 
             if c.isUpper() {
-                c = ByteDecoder_nextSourceCharacter(session, policy);
+                c = session.next_source_char(policy);
 
                 loop {
                     if c.isAlphaOrDigit() {
-                        c = ByteDecoder_nextSourceCharacter(session, policy);
+                        c = session.next_source_char(policy);
 
                         continue;
                     }
@@ -1049,9 +1035,9 @@ fn CharacterDecoder_handleUnhandledEscape(
     // Something like  \A
     //
 
-    let escapedChar = ByteDecoder_currentSourceCharacter(session, policy);
+    let escapedChar = session.peek_source_char(policy);
 
-    ByteDecoder_nextSourceCharacter(session, policy);
+    session.next_source_char(policy);
 
     //
     // Make the warnings a little more relevant
@@ -1073,7 +1059,7 @@ fn CharacterDecoder_handleUnhandledEscape(
 
             alnumRun.push(escapedChar.as_char().unwrap());
 
-            let mut curSource = ByteDecoder_currentSourceCharacter(session, policy);
+            let mut curSource = session.peek_source_char(policy);
 
             let mut wellFormed = false;
 
@@ -1081,11 +1067,11 @@ fn CharacterDecoder_handleUnhandledEscape(
                 if curSource.isAlphaOrDigit() {
                     alnumRun.push(curSource.as_char().unwrap());
 
-                    ByteDecoder_nextSourceCharacter(session, policy);
+                    session.next_source_char(policy);
 
-                    curSource = ByteDecoder_currentSourceCharacter(session, policy);
+                    curSource = session.peek_source_char(policy);
                 } else if curSource == ']' {
-                    ByteDecoder_nextSourceCharacter(session, policy);
+                    session.next_source_char(policy);
 
                     wellFormed = true;
 
@@ -1305,16 +1291,16 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
     escaped: InputMark,
     policy: NextPolicy,
 ) -> WLCharacter {
-    let curSource = ByteDecoder_currentSourceCharacter(session, policy);
+    let curSource = session.peek_source_char(policy);
 
     match curSource {
         Char('\n') => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(LineContinuation_LineFeed, EscapeStyle::Single);
         },
         Char('\r') => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(
                 LineContinuation_CarriageReturn,
@@ -1322,36 +1308,36 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
             );
         },
         CodePoint::CRLF => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(LineContinuation_CRLF, EscapeStyle::Single);
         },
         Char('[') => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             //            MUSTTAIL
             return CharacterDecoder_handleLongName(session, escaped, policy);
         },
         Char(':') => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             //            MUSTTAIL
             return CharacterDecoder_handle4Hex(session, escaped, policy);
         },
         Char('.') => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             //            MUSTTAIL
             return CharacterDecoder_handle2Hex(session, escaped, policy);
         },
         Char('|') => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             //            MUSTTAIL
             return CharacterDecoder_handle6Hex(session, escaped, policy);
         },
         Char('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7') => {
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             //            MUSTTAIL
             return CharacterDecoder_handleOctal(session, escaped, policy);
@@ -1364,7 +1350,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
         Char('b') => {
             incr_diagnostic!(CharacterDecoder_StringMetaBackspaceCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             let c = WLCharacter::new_with_escape(StringMeta_Backspace, EscapeStyle::Single);
 
@@ -1404,7 +1390,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             incr_diagnostic!(CharacterDecoder_StringMetaFormFeedCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             let c = WLCharacter::new_with_escape(StringMeta_FormFeed, EscapeStyle::Single);
 
@@ -1444,7 +1430,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             incr_diagnostic!(CharacterDecoder_StringMetaLineFeedCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(StringMeta_LineFeed, EscapeStyle::Single);
         },
@@ -1456,7 +1442,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             incr_diagnostic!(CharacterDecoder_StringMetaCarriageReturnCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(StringMeta_CarriageReturn, EscapeStyle::Single);
         },
@@ -1468,7 +1454,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             incr_diagnostic!(CharacterDecoder_StringMetaTabCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(StringMeta_Tab, EscapeStyle::Single);
         },
@@ -1479,14 +1465,14 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
         Char('!') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxBangCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_BANG, EscapeStyle::Single);
         },
         Char('%') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxPercentCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_PERCENT,
@@ -1496,14 +1482,14 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
         Char('&') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxAmpCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_AMP, EscapeStyle::Single);
         },
         Char('(') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxOpenParenCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_OPENPAREN,
@@ -1513,7 +1499,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
         Char(')') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxCloseParenCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_CLOSEPAREN,
@@ -1523,49 +1509,49 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
         Char('*') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxStarCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_STAR, EscapeStyle::Single);
         },
         Char('+') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxPlusCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_PLUS, EscapeStyle::Single);
         },
         Char('/') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxSlashCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_SLASH, EscapeStyle::Single);
         },
         Char('@') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxAtCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_AT, EscapeStyle::Single);
         },
         Char('^') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxCaretCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_CARET, EscapeStyle::Single);
         },
         Char('_') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxUnderscoreCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_UNDER, EscapeStyle::Single);
         },
         Char('`') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxBacktickCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_BACKTICK,
@@ -1575,7 +1561,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
         Char(' ') => {
             incr_diagnostic!(CharacterDecoder_LinearSyntaxSpaceCount);
 
-            ByteDecoder_nextSourceCharacter(session, policy);
+            session.next_source_char(policy);
 
             return WLCharacter::new_with_escape(LinearSyntax_Space, EscapeStyle::Single);
         },

@@ -7,17 +7,15 @@ mod character_decoder;
 
 use crate::{
     issue::{Issue, Severity},
-    source::{Buffer, SourceLocation},
+    source::{Buffer, NextPolicy, SourceCharacter, SourceLocation},
+    wl_character::WLCharacter,
     EncodingMode, UnsafeCharacterEncoding,
 };
 
-pub(crate) use self::{
-    byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
+use self::{
+    byte_decoder::ByteDecoder_nextSourceCharacter,
     character_decoder::CharacterDecoder_nextWLCharacter,
 };
-
-#[cfg(test)]
-pub(crate) use self::character_decoder::CharacterDecoder_currentWLCharacter;
 
 //==========================================================
 // Types
@@ -100,6 +98,45 @@ impl<'i> Reader<'i> {
             slice: rest,
             offset,
         }
+    }
+
+    //==================================
+    // Read source characters
+    //==================================
+
+    /// Returns the next [`SourceCharacter`] in the input without advancing.
+    #[must_use]
+    pub(crate) fn peek_source_char(&mut self, policy: NextPolicy) -> SourceCharacter {
+        let mark = self.mark();
+
+        let c = self.next_source_char(policy);
+
+        self.seek(mark);
+
+        c
+    }
+
+    pub(crate) fn next_source_char(&mut self, policy: NextPolicy) -> SourceCharacter {
+        ByteDecoder_nextSourceCharacter(self, policy)
+    }
+
+    //==================================
+    // Read Wolfram characters
+    //==================================
+
+    #[must_use]
+    pub(crate) fn peek_wolfram_char(&mut self, policy: NextPolicy) -> WLCharacter {
+        let mark = self.mark();
+
+        let c = self.next_wolfram_char(policy);
+
+        self.seek(mark);
+
+        c
+    }
+
+    pub(crate) fn next_wolfram_char(&mut self, policy: NextPolicy) -> WLCharacter {
+        CharacterDecoder_nextWLCharacter(self, policy)
     }
 
     //==================================

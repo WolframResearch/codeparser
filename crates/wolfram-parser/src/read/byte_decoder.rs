@@ -60,7 +60,7 @@ use crate::{
 //
 // Do not decode unsafe character encodings: incomplete sequences, stray surrogates, or BOM
 //
-pub(crate) fn ByteDecoder_nextSourceCharacter(
+pub(super) fn ByteDecoder_nextSourceCharacter(
     session: &mut Reader,
     policy: NextPolicy,
 ) -> SourceCharacter {
@@ -797,23 +797,6 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             return ByteDecoder_incomplete1ByteSequence(session, session.SrcLoc, policy);
         }
     }
-}
-
-//
-// Postcondition: lastBuf is set to the last value of buffer
-// Postcondition: lastLoc is set to the last value of SrcLoc
-//
-pub(crate) fn ByteDecoder_currentSourceCharacter(
-    session: &mut Reader,
-    policy: NextPolicy,
-) -> SourceCharacter {
-    let mark = session.mark();
-
-    let c = ByteDecoder_nextSourceCharacter(session, policy);
-
-    session.seek(mark);
-
-    return c;
 }
 
 fn ByteDecoder_strangeWarning(
