@@ -15,7 +15,7 @@ use crate::{
     },
     source::{
         Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
-        INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG,
+        INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG, TOPLEVEL,
     },
     token::{Token, TokenKind, TokenRef},
     token_enum::Closer,
@@ -93,6 +93,71 @@ impl<'i> std::ops::DerefMut for Tokenizer<'i> {
 }
 
 impl<'i> Tokenizer<'i> {
+    /// Returns the next token in the input without advancing.
+    ///
+    /// Consecutive calls to `peek_token()` will always return the same token.
+    ///
+    /// Use [`Tokenizer::next_token()`] to return the current token and advance
+    /// to the subsequent token.
+    #[must_use]
+    pub(crate) fn peek_token(&mut self) -> TokenRef<'i> {
+        self.peek_token_with(TOPLEVEL)
+    }
+
+    /// Returns the next token in the input without advancing, using the specified
+    /// policy settings.
+    #[must_use]
+    pub(crate) fn peek_token_with(&mut self, mut policy: NextPolicy) -> TokenRef<'i> {
+        let insideGroup: bool = !self.GroupStack.is_empty();
+
+        //
+        // if insideGroup:
+        //   returnInternalNewlineMask is 0b100
+        // else:
+        //   returnInternalNewlineMask is 0b000
+        //
+        let returnInternalNewlineMask = (insideGroup as u8) << 2;
+
+        policy &= !returnInternalNewlineMask; // bitwise not
+
+        let mark = self.mark();
+
+        let tok = Tokenizer_nextToken(self, policy);
+
+        // Reset so it is as if we didn't advance.
+        self.seek(mark);
+
+        tok
+    }
+
+    /// Returns the next token in the input and advances.
+    ///
+    /// Precondition: buffer is pointing to current token
+    ///
+    /// Postcondition: buffer is pointing to next token
+    ///
+    /// Example:
+    ///
+    /// ```text
+    /// memory: 1+\[Alpha]-2
+    ///           ^
+    ///           buffer
+    /// ```
+    ///
+    /// after calling `next_token()`:
+    ///
+    /// ```text
+    /// memory: 1+\[Alpha]-2
+    ///                   ^
+    ///                   buffer
+    /// ```
+    ///
+    /// and `\[Alpha]` is returned.
+    #[must_use]
+    pub(crate) fn next_token(&mut self) -> TokenRef<'i> {
+        Tokenizer_nextToken(self, crate::source::TOPLEVEL)
+    }
+
     fn addSimpleLineContinuation(&mut self, loc: SourceLocation) {
         self.tracked.simple_line_continuations.insert(loc);
     }
@@ -324,25 +389,7 @@ pub(crate) fn Token<'i, T: Into<TokenKind>>(
     Token::new(tok, buf, src)
 }
 
-// Precondition: buffer is pointing to current token
-// Postcondition: buffer is pointing to next token
-//
-// Example:
-// memory: 1+\[Alpha]-2
-//           ^
-//           buffer
-//
-// after calling nextToken0:
-// memory: 1+\[Alpha]-2
-//                   ^
-//                   buffer
-// return \[Alpha]
-//
-
-pub(crate) fn Tokenizer_nextToken<'i>(
-    session: &mut Tokenizer<'i>,
-    policy: NextPolicy,
-) -> TokenRef<'i> {
+fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) -> TokenRef<'i> {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
 
@@ -761,31 +808,6 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
             );
         },
     }
-}
-
-pub(crate) fn Tokenizer_currentToken<'i>(
-    session: &mut Tokenizer<'i>,
-    mut policy: NextPolicy,
-) -> TokenRef<'i> {
-    let insideGroup: bool = !session.GroupStack.is_empty();
-
-    //
-    // if insideGroup:
-    //   returnInternalNewlineMask is 0b100
-    // else:
-    //   returnInternalNewlineMask is 0b000
-    //
-    let returnInternalNewlineMask = (insideGroup as u8) << 2;
-
-    policy &= !returnInternalNewlineMask; // bitwise not
-
-    let mark = session.mark();
-
-    let Tok = Tokenizer_nextToken(session, policy);
-
-    session.seek(mark);
-
-    return Tok;
 }
 
 pub(crate) fn Tokenizer_currentToken_stringifyAsTag<'i>(

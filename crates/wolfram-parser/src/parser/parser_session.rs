@@ -19,8 +19,7 @@ use crate::{
     source::{SourceConvention, TOPLEVEL},
     token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::{
-        Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
-        Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
+        Tokenizer, Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
         TrackedSourceLocations, UnsafeCharacterEncoding,
     },
     EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, StringifyMode, Tokens,
@@ -190,7 +189,7 @@ impl<'i> ParserSession<'i> {
                 break;
             }
 
-            let peek: TokenRef = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
+            let peek: TokenRef = self.tokenizer.peek_token();
 
             if peek.tok == TokenKind::EndOfFile {
                 break;
@@ -243,15 +242,15 @@ impl<'i> ParserSession<'i> {
                 break;
             }
 
-            let Tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
+            let tok = self.tokenizer.peek_token();
 
-            if Tok.tok == TokenKind::EndOfFile {
+            if tok.tok == TokenKind::EndOfFile {
                 break;
             }
 
-            tokens.push(Tok);
+            tokens.push(tok);
 
-            Tok.skip(&mut self.tokenizer);
+            tok.skip(&mut self.tokenizer);
         } // while (true)
 
         if let Some(flag) = self.tokenizer.unsafe_character_encoding_flag {
@@ -265,7 +264,7 @@ impl<'i> ParserSession<'i> {
 
     fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Token<BorrowedTokenInput<'i>> {
         let token = match mode {
-            StringifyMode::Normal => Tokenizer_nextToken(&mut self.tokenizer, TOPLEVEL),
+            StringifyMode::Normal => self.tokenizer.next_token(),
             StringifyMode::Tag => Tokenizer_nextToken_stringifyAsTag(&mut self.tokenizer),
             StringifyMode::File => Tokenizer_nextToken_stringifyAsFile(&mut self.tokenizer),
         };
