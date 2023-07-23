@@ -367,6 +367,7 @@ pub enum StringifyMode {
     File = 2,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tokens<I = OwnedTokenInput, S = Source>(pub Vec<Token<I, S>>);
 
 //-------------
@@ -419,6 +420,14 @@ impl ParseOptions {
     pub fn source_convention(self, src_convention: SourceConvention) -> Self {
         ParseOptions {
             src_convention,
+            ..self
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn first_line_behavior(self, first_line_behavior: FirstLineBehavior) -> Self {
+        ParseOptions {
+            first_line_behavior,
             ..self
         }
     }

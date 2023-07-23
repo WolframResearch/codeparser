@@ -24,7 +24,7 @@ use crate::{
     source::{GeneralSource, SourceConvention},
     test_utils::{src, token},
     token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
-    NodeSeq, ParseOptions, ParseResult, Tokens,
+    tokenize, FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
 };
 
 pub(crate) fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
@@ -38,11 +38,7 @@ pub(crate) fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
 }
 
 pub(crate) fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
-    let mut session = ParserSession::new(input.as_bytes(), &ParseOptions::default());
-
-    let tokens: Tokens<BorrowedTokenInput> = session.tokenize().unwrap();
-
-    let Tokens(tokens) = tokens;
+    let Tokens(tokens) = tokenize(input, &ParseOptions::default());
 
     tokens
 }
@@ -296,6 +292,36 @@ fn test_invalid_utf8_in_middle_of_parse() {
             ]),
             src: src!(1:1-1:5).into()
         }))]
+    );
+}
+
+#[test]
+fn test_first_line_behavior() {
+    // FirstLineBehavior::Check without shebang
+    assert_eq!(
+        tokenize(
+            "1+2",
+            &ParseOptions::default().first_line_behavior(FirstLineBehavior::Check)
+        ),
+        Tokens(vec![
+            token![Integer, "1" @ 0, src!(1:1-1:2)],
+            token![Plus, "+" @ 1, src!(1:2-1:3)],
+            token![Integer, "2" @ 2, src!(1:3-1:4)],
+        ])
+    );
+
+    // FirstLineBehavior::Check with shebang
+    assert_eq!(
+        tokenize(
+            "#!/usr/bin/env blah \
+           \n1+2",
+            &ParseOptions::default().first_line_behavior(FirstLineBehavior::Check)
+        ),
+        Tokens(vec![
+            token![Integer, "1" @ 21, src!(2:1-2:2)],
+            token![Plus, "+" @ 22, src!(2:2-2:3)],
+            token![Integer, "2" @ 23, src!(2:3-2:4)],
+        ])
     );
 }
 
