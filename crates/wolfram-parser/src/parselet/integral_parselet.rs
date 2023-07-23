@@ -3,7 +3,7 @@ use crate::{
     panic_if_aborted,
     parselet::*,
     parser::ParserSession,
-    precedence::*,
+    precedence::Precedence,
     token::{Token, TokenKind, TokenRef},
 };
 
@@ -23,7 +23,7 @@ impl PrefixParselet for IntegralParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let ctxt = session.push_context(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
+        let ctxt = session.push_context(Precedence::CLASS_INTEGRATIONOPERATORS);
         ctxt.init_callback(IntegralParselet::parse1, Some(self));
 
         let Tok = session.current_token_eat_trivia();
@@ -96,16 +96,16 @@ impl InfixParselet for InfixDifferentialDParselet {
         panic!("illegal call to InfixDifferentialDParselet::parse_infix()")
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
-        if session.top_precedence() == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
+    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+        if session.top_precedence() == Precedence::CLASS_INTEGRATIONOPERATORS {
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
             //
 
-            return PRECEDENCE_LOWEST;
+            return None;
         }
 
-        return PRECEDENCE_FAKE_IMPLICITTIMES;
+        return Some(Precedence::FAKE_IMPLICITTIMES);
     }
 
     fn processImplicitTimes<'i>(
@@ -113,7 +113,7 @@ impl InfixParselet for InfixDifferentialDParselet {
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
-        if session.top_precedence() == PRECEDENCE_CLASS_INTEGRATIONOPERATORS {
+        if session.top_precedence() == Precedence::CLASS_INTEGRATIONOPERATORS {
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
             //

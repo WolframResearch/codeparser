@@ -473,7 +473,7 @@ use crate::{
 	token::TokenKind,
 	symbol::Symbol,
 	symbol_registration as sym,
-	precedence::*,
+	precedence::Precedence,
 	parselet::*
 };
 

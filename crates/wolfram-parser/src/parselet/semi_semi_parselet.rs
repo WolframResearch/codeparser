@@ -3,7 +3,7 @@ use crate::{
     panic_if_aborted,
     parselet::*,
     parser::ParserSession,
-    precedence::*,
+    precedence::Precedence,
     token::{Token, TokenKind, TokenRef},
 };
 
@@ -23,8 +23,8 @@ impl InfixParselet for SemiSemiParselet {
         return SemiSemiParselet::parse1(session);
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
-        return PRECEDENCE_SEMISEMI;
+    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
+        return Some(Precedence::SEMISEMI);
     }
 
     fn processImplicitTimes<'i>(
@@ -52,7 +52,7 @@ impl PrefixParselet for SemiSemiParselet {
 
         session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, tok_in));
 
-        session.push_context(PRECEDENCE_SEMISEMI);
+        session.push_context(Precedence::SEMISEMI);
 
         //
         // nextToken() is not needed after an implicit token

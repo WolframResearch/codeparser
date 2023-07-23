@@ -113,7 +113,9 @@ mod long_names_registration;
 #[path = "generated/parselet_registration.rs"]
 mod parselet_registration;
 
-#[path = "generated/precedence.rs"]
+#[path = "generated/precedence_values.rs"]
+mod precedence_values;
+
 mod precedence;
 
 

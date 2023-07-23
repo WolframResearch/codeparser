@@ -38,11 +38,34 @@ Needs["CodeTools`Generate`GenerateSources`"];
 (*
 uppercases and replaces ` with _
 *)
-toGlobal[n_] :=
-  StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
+toGlobal[n0_String] := Module[{n = n0},
+	(* TODO(cleanup): This is a workaround *)
+	If[StringStartsQ[n, "CodePoint`LongName`"],
+		n = ToUpperCase[n]
+	];
+
+	StringReplace[n, {"`" -> "_", "$" -> "_"}]
+]
+
+toGlobal[n_Symbol] := (
+	If[StringStartsQ[Context[n], "Precedence`"],
+		StringReplace[
+			toGlobal[ToUpperCase[ToString[n]]],
+			"PRECEDENCE_" -> "Precedence::"
+		]
+		,
+		toGlobal[ToUpperCase[ToString[n]]]
+	]
+)
 
 toGlobal[n_, "UpperCamelCase"] :=
   StringReplace[ToString[n], {"`" -> "_", "$" -> "_"}]
+
+
+toGlobal[sym_Symbol, "DefinePrecedence"] :=
+	StringTrim[toGlobal[sym], "Precedence::"]
+
+toGlobal[args___] := FatalError[{"BAD ARGS: ", args}]
 
 toTokenEnumVariant[name_] :=
 	StringReplace[

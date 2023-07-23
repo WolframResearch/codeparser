@@ -348,7 +348,7 @@ add_custom_command(
 add_custom_command(
 	OUTPUT
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Resources/Generated/Precedence.wl
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence_values.rs
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Precedence.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -527,7 +527,7 @@ add_custom_command(
 	${CODEPARSE_DYLIB}
 	DEPENDS
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/symbol_registration.rs
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence_values.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/*

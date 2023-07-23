@@ -4,7 +4,7 @@ use crate::{
     parselet::*,
     parselet_registration::*,
     parser::ParserSession,
-    precedence::*,
+    precedence::Precedence,
     token::{TokenKind, TokenRef},
 };
 
@@ -44,8 +44,8 @@ impl InfixParselet for TimesParselet {
         return InfixOperator::Times.into();
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
-        return PRECEDENCE_STAR;
+    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
+        return Some(Precedence::STAR);
     }
 }
 

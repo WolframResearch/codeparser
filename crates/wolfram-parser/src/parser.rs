@@ -13,7 +13,7 @@ use crate::{
     parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
-    precedence::{Precedence, *},
+    precedence::Precedence,
 
     token::{BorrowedTokenInput, TokenKind, TokenRef},
     token_enum::Closer,
@@ -38,7 +38,7 @@ pub(crate) struct Context {
     /// that marks the first node associated with this [`Context`].
     index: usize,
 
-    prec: Precedence,
+    prec: Option<Precedence>,
 }
 
 impl Debug for Context {
@@ -61,7 +61,7 @@ pub(crate) enum ColonLHS {
 }
 
 impl Context {
-    pub fn new(index: usize, prec: Precedence) -> Self {
+    pub fn new(index: usize, prec: Option<Precedence>) -> Self {
         Context {
             f: None,
             p: None,
@@ -93,8 +93,8 @@ impl Context {
         self.f == Some(Parser_identity)
     }
 
-    pub(crate) fn set_precedence(&mut self, prec: Precedence) {
-        self.prec = prec;
+    pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(&mut self, prec: P) {
+        self.prec = prec.into();
     }
 }
 
@@ -270,7 +270,7 @@ impl<'i> ParserSession<'i> {
         //   break;
         //
 
-        if (self.top_precedence() | 0x1) > TokenPrecedence {
+        if Precedence::greater(self.top_precedence(), TokenPrecedence) {
             Trivia1.borrow_mut().reset(&mut self.tokenizer);
 
             // MUSTTAIL
@@ -446,7 +446,12 @@ impl<'i> ParserSession<'i> {
     // Context management
     //==================================
 
-    pub(crate) fn push_context<'s>(&'s mut self, prec: Precedence) -> &'s mut Context {
+    pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
+        &'s mut self,
+        prec: P,
+    ) -> &'s mut Context {
+        let prec = prec.into();
+
         assert!(!self.NodeStack.is_empty());
 
         self.ContextStack
@@ -490,14 +495,16 @@ impl<'i> ParserSession<'i> {
     // Precedence management
     //==================================
 
-    pub(crate) fn top_precedence(&mut self) -> Precedence {
+    pub(crate) fn top_precedence(&mut self) -> Option<Precedence> {
         match self.ContextStack.last() {
             Some(ctxt) => ctxt.prec,
-            None => PRECEDENCE_LOWEST,
+            None => None,
         }
     }
 
-    pub(crate) fn set_precedence(&mut self, prec: Precedence) {
+    pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(&mut self, prec: P) {
+        let prec = prec.into();
+
         assert!(!self.ContextStack.is_empty());
 
         let ctxt: &mut _ = self.ContextStack.last_mut().unwrap();
@@ -587,17 +594,20 @@ impl<'i> ParserSession<'i> {
 
     pub(crate) fn check_pattern_precedence(&self) -> bool {
         for ctxt in self.ContextStack.iter().rev() {
-            let prec = ctxt.prec;
+            let Some(prec) = ctxt.prec else {
+                // Equivalent to a precedence of zero.
+                return false;
+            };
 
-            if prec > PRECEDENCE_FAKE_PATTERNCOLON {
+            if prec > Precedence::FAKE_PATTERNCOLON {
                 continue;
             }
 
-            if prec < PRECEDENCE_FAKE_PATTERNCOLON {
+            if prec < Precedence::FAKE_PATTERNCOLON {
                 return false;
             }
 
-            assert!(prec == PRECEDENCE_FAKE_PATTERNCOLON);
+            assert!(prec == Precedence::FAKE_PATTERNCOLON);
 
             return true;
         }

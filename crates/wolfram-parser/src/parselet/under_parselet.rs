@@ -3,7 +3,7 @@ use crate::{
     panic_if_aborted,
     parselet::*,
     parser::ParserSession,
-    precedence::*,
+    precedence::Precedence,
     token::{TokenKind, TokenRef},
 };
 
@@ -37,7 +37,7 @@ impl PrefixParselet for UnderParselet {
             // Something like  _b
             //
 
-            session.push_context(PRECEDENCE_HIGHEST);
+            session.push_context(Precedence::HIGHEST);
 
             //
             // Context-sensitive and OK to build stack
@@ -56,7 +56,7 @@ impl PrefixParselet for UnderParselet {
             // It's nice to include the error inside of the blank
             //
 
-            session.push_context(PRECEDENCE_HIGHEST);
+            session.push_context(Precedence::HIGHEST);
 
             session.push_leaf_and_next(tok);
 
@@ -95,7 +95,7 @@ impl UnderParselet {
             // Something like  a_b
             //
 
-            session.push_context(PRECEDENCE_HIGHEST);
+            session.push_context(Precedence::HIGHEST);
 
             //
             // Context-sensitive and OK to build stack
@@ -114,7 +114,7 @@ impl UnderParselet {
             // It's nice to include the error inside of the blank
             //
 
-            session.push_context(PRECEDENCE_HIGHEST);
+            session.push_context(Precedence::HIGHEST);
 
             session.push_leaf_and_next(tok);
 
