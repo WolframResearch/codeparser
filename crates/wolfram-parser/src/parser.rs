@@ -251,6 +251,8 @@ impl<'i> ParserSession<'i> {
         self.push_node(node);
     }
 
+    /// A complete expression was just finished being parsed, so "climb" up by
+    /// parsing the next "infix" token in the input.
     pub(crate) fn parse_climb(&mut self) {
         //
         // Check isAbort() inside loops
@@ -295,6 +297,8 @@ impl<'i> ParserSession<'i> {
         return I.parse_infix(self, token);
     }
 
+    /// Apply the continuation function from the top context to
+    /// attempt to continue parsing.
     pub(crate) fn try_continue(&mut self) {
         if self.is_context_stack_empty() {
             // no call needed here
