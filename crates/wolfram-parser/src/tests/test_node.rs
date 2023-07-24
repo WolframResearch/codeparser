@@ -4,10 +4,10 @@ use crate::{
         CstNode::{self, self as Cst},
         OperatorNode,
     },
+    macros::{src, token},
     source::SourceLocation,
-    src,
     tests::nodes,
-    token, NodeSeq, ParseOptions, ParserSession, Source,
+    NodeSeq, ParseOptions, ParserSession, Source,
 };
 
 use pretty_assertions::assert_eq;

@@ -1,6 +1,7 @@
 use crate::{
+    macros::{src, token},
     source::{NextPolicyBits::RETURN_TOPLEVELNEWLINE, SourceLocation, TOPLEVEL},
-    src, token, ParseOptions, ParserSession,
+    ParseOptions, ParserSession,
 };
 
 use pretty_assertions::assert_eq;

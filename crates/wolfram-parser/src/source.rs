@@ -656,7 +656,7 @@ impl LineColumnSpan {
     /// span.
     ///
     /// ```
-    /// use wolfram_parser::{source::LineColumn, test_utils::src};
+    /// use wolfram_parser::{source::LineColumn, macros::src};
     ///
     /// assert!(src!(1:3-2:0).contains(src!(1:4)));
     ///
@@ -706,7 +706,7 @@ impl LineColumnSpan {
     /// another [`LineColumnSpan`].
     ///
     /// ```
-    /// use wolfram_parser::{Source, SourceLocation, test_utils::src};
+    /// use wolfram_parser::{Source, SourceLocation, macros::src};
     ///
     /// // Complete overlap.
     /// assert!(src!(1:1-1:5).overlaps(src!(1:2-1:4)));
