@@ -219,6 +219,7 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 impl<'i> ParserSession<'i> {
     /// Lookup and apply the [`PrefixParselet`] implementation associated
     /// with the [`TokenKind`] of `token`.
+    // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
         let parselet: &dyn PrefixParselet = crate::parselet::prefix_parselet(token.tok);
 
