@@ -869,10 +869,8 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
 //==========================================================
 
 /// Subset of [`GroupOperator`] that are valid in [`CallBody`].
-pub use crate::parselet_registration::CallOperator;
-
-pub use crate::parselet_registration::{
-    BinaryOperator, CompoundOperator, GroupOperator, InfixOperator, PostfixOperator,
+pub use crate::generated::parselet_registration::{
+    BinaryOperator, CallOperator, CompoundOperator, GroupOperator, InfixOperator, PostfixOperator,
     PrefixBinaryOperator, PrefixOperator, TernaryOperator,
 };
 
@@ -921,7 +919,7 @@ impl GroupOperator {
 impl SyntaxErrorKind {
     #[doc(hidden)]
     pub fn to_symbol(&self) -> crate::symbol::Symbol {
-        use crate::symbol_registration as sym;
+        use crate::generated::symbol_registration as sym;
 
         match self {
             SyntaxErrorKind::ExpectedSymbol => sym::SyntaxError_ExpectedSymbol,

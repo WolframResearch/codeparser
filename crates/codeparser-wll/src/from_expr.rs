@@ -10,11 +10,10 @@ use wolfram_parser::{
         SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     cst::{CompoundOperator, CstNodeSeq},
+    generated::{symbol_registration as sym, token_enum_registration::SymbolToToken},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
     source::{Location, Source, Span},
-    symbol_registration as sym,
-    token_enum_registration::SymbolToToken,
     tokenize::{OwnedTokenInput, Token, TokenKind},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, UnsafeCharacterEncoding,
 };

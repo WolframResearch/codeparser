@@ -92,22 +92,16 @@ mod feature;
 // Generated sources
 //===================
 
+/// Contains modules whose source code is generated dynamicall at project build
+/// time.
 #[doc(hidden)]
-#[path = "generated/symbol_registration.rs"]
-pub mod symbol_registration;
-
-#[doc(hidden)]
-#[path = "generated/token_enum_registration.rs"]
-pub mod token_enum_registration;
-
-#[path = "generated/long_names_registration.rs"]
-mod long_names_registration;
-
-#[path = "generated/parselet_registration.rs"]
-mod parselet_registration;
-
-#[path = "generated/precedence_values.rs"]
-mod precedence_values;
+pub mod generated {
+    pub mod symbol_registration;
+    pub mod token_enum_registration;
+    pub(crate) mod long_names_registration;
+    pub(crate) mod parselet_registration;
+    pub(crate) mod precedence_values;
+}
 
 mod precedence;
 

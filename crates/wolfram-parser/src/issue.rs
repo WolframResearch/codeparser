@@ -3,9 +3,9 @@ use std::cmp::Ordering;
 use ordered_float::NotNan;
 
 use crate::{
+    generated::symbol_registration as sym,
     source::{Source, Span},
     symbol::Symbol,
-    symbol_registration as sym,
 };
 
 

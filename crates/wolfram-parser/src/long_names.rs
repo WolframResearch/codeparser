@@ -1,7 +1,7 @@
 //! Collection of utility functions for codepoints and long names
 
 use crate::{
-    long_names_registration::{
+    generated::long_names_registration::{
         ASCII_REPLACEMENTS_MAP, CODE_POINT_TO_LONGNAME_MAP__NAMES,
         CODE_POINT_TO_LONGNAME_MAP__POINTS, MB_NEWLINE_CODE_POINTS,
         MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS, MB_PUNCTUATION_CODE_POINTS,

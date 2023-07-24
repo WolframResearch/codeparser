@@ -10,8 +10,8 @@ use crate::{
         TernaryNode, TernaryOperator,
     },
     feature,
+    generated::parselet_registration::INFIX_PARSELETS,
     panic_if_aborted,
-    parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
     precedence::Precedence,
 

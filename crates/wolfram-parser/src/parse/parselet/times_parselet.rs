@@ -1,8 +1,8 @@
 use crate::{
     cst::InfixNode,
+    generated::parselet_registration::*,
     panic_if_aborted,
     parse::{parselet::*, ParserSession},
-    parselet_registration::*,
     precedence::Precedence,
     tokenize::{TokenKind, TokenRef},
 };

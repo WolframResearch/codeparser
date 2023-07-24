@@ -13,9 +13,9 @@ use crate::{
         PrefixBinaryOperator, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         UnterminatedGroupNeedsReparseNode,
     },
+    generated::parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
     panic_if_aborted,
     parse::{ColonLHS, ParserSession, Parser_identity},
-    parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
     precedence::Precedence,
     source::*,
     tokenize::{

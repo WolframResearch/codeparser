@@ -1,6 +1,6 @@
 use crate::{
+    generated::long_names_registration::*,
     issue::CodeAction,
-    long_names_registration::*,
     read::{
         code_point::{CodePoint::Char, *},
         wl_character::{EscapeStyle, WLCharacter},

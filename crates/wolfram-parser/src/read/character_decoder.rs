@@ -1,10 +1,11 @@
 use crate::{
     feature,
+    generated::long_names_registration::{
+        CODE_POINT_TO_LONGNAME_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__NAMES,
+        LONGNAME_TO_CODE_POINT_MAP__POINTS,
+    },
     issue::{CodeAction, IssueTag, Severity, SyntaxIssue},
     long_names as LongNames,
-    long_names_registration::{
-        LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
-    },
     read::{
         code_point::{CodePoint::*, *},
         wl_character::{EscapeStyle, WLCharacter},
@@ -1607,7 +1608,6 @@ fn CharacterDecoder_longNameSuggestion(input: String) -> String {
 }
 
 fn CharacterDecoder_longNameSuggestion(input: &str) -> String {
-    use crate::long_names_registration::CODE_POINT_TO_LONGNAME_MAP__NAMES;
     use edit_distance::edit_distance;
 
     let closest: Option<&&str> = CODE_POINT_TO_LONGNAME_MAP__NAMES
