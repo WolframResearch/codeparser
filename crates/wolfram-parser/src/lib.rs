@@ -66,7 +66,6 @@ pub mod issue;
 mod long_names;
 #[doc(hidden)]
 pub mod quirks;
-#[doc(hidden)]
 pub mod source;
 #[doc(hidden)]
 pub mod symbol;
@@ -129,7 +128,7 @@ use crate::{
     cst::CstNode,
     issue::{CodeAction, Issue},
     parse::ParserSession,
-    source::GeneralSource,
+    source::{GeneralSource, Source, SourceConvention, DEFAULT_TAB_WIDTH},
     tokenize::{BorrowedTokenInput, OwnedTokenInput, Token},
 };
 
@@ -139,21 +138,7 @@ use crate::{
 // Re-exports
 //-----------
 
-pub use crate::{
-    parse::ParseResult,
-    quirks::QuirkSettings,
-    source::{
-        ByteSpan,
-        Source,
-        SourceConvention,
-        SourceLocation,
-        StringSourceKind,
-        // TODO: Should this be a part of the public API as a constant value, or
-        //       something else 'symbolic'? E.g. prehaps this shouldn't be a
-        //       required parameter of ParserSession::new().
-        DEFAULT_TAB_WIDTH,
-    },
-};
+pub use crate::{parse::ParseResult, quirks::QuirkSettings};
 
 #[doc(hidden)]
 pub use crate::tokenize::tokenizer::UnsafeCharacterEncoding;

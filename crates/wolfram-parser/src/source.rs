@@ -52,7 +52,7 @@ const _: () = assert!(
 */
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct ByteSpan {
+pub(crate) struct ByteSpan {
     /// The offset into the [`ParserSession.input`] buffer that this token
     /// starts at.
     pub offset: usize,
@@ -193,7 +193,7 @@ impl<'i> BufferAndLength<'i> {
 //
 //
 //
-pub mod NextPolicyBits {
+pub(crate) mod NextPolicyBits {
     //
     /// Enable character decoding issues
     ///
@@ -286,22 +286,23 @@ use NextPolicyBits::{
     TAGSLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
 };
 
-pub const TOPLEVEL: NextPolicy =
+pub(crate) const TOPLEVEL: NextPolicy =
     ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
 
 #[allow(dead_code)] // TODO(cleanup): Is it meaningful that this is unused?
-pub const INSIDE_SYMBOL: NextPolicy = ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
+pub(crate) const INSIDE_SYMBOL: NextPolicy = ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
 
-pub const INSIDE_STRINGIFY_AS_TAG: NextPolicy =
+pub(crate) const INSIDE_STRINGIFY_AS_TAG: NextPolicy =
     ENABLE_CHARACTER_DECODING_ISSUES | TAGSLOT_BEHAVIOR_FOR_STRINGS | TRACK_LC;
-pub const INSIDE_STRINGIFY_AS_FILE: NextPolicy = RETURN_TOPLEVELNEWLINE;
+pub(crate) const INSIDE_STRINGIFY_AS_FILE: NextPolicy = RETURN_TOPLEVELNEWLINE;
 
-pub const INSIDE_SLOT: NextPolicy = TAGSLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+pub(crate) const INSIDE_SLOT: NextPolicy =
+    TAGSLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
-pub const INSIDE_SLOTSEQUENCE: NextPolicy =
+pub(crate) const INSIDE_SLOTSEQUENCE: NextPolicy =
     ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
-pub const INSIDE_OUT: NextPolicy =
+pub(crate) const INSIDE_OUT: NextPolicy =
     ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
 
 
@@ -330,6 +331,9 @@ pub enum SourceConvention {
     CharacterIndex = 1,
 }
 
+// TODO: Should this be a part of the public API as a constant value, or
+//       something else 'symbolic'? E.g. prehaps this shouldn't be a
+//       required parameter of ParserSession::new().
 pub const DEFAULT_TAB_WIDTH: u32 = 4;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
@@ -366,6 +370,18 @@ pub enum GeneralSource {
     After(Expr),
 }
 
+/// Specifies a region ("span") of source code between a start and end location.
+///
+/// There are two different conventions ([`SourceConvention`]) for specifying a
+/// location in source code:
+///
+/// 1. A line-column position (represented by [`LineColumn`])
+/// 2. A character position (represented by a [`u32`] count)
+///
+/// A [`Source`] can specify a source span using either of these conventions.
+///
+/// Match over [`Source::kind()`] to access the source span position information
+/// stored in a [`Source`] instance:
 #[derive(Copy, Clone, PartialEq, Hash)]
 pub struct Source {
     pub(crate) start: SourceLocation,
@@ -382,7 +398,7 @@ pub enum StringSourceKind {
     Unknown,
 }
 
-/// A span of Wolfram Language input by character index.
+/// A span of input by character start and end point.
 ///
 /// This range starts indexing at 1, and is exclusive.
 ///
@@ -390,10 +406,18 @@ pub enum StringSourceKind {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct CharacterSpan(pub u32, pub u32);
 
+/// A position in the input specified by it's line and column.
+///
 /// `LineColumn(line, column)`
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct LineColumn(pub NonZeroU32, pub u32);
+pub struct LineColumn(
+    /// The line.
+    pub NonZeroU32,
+    /// The column.
+    pub u32,
+);
 
+/// A span of input by line-column start and end point.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct LineColumnSpan {
     pub start: LineColumn,

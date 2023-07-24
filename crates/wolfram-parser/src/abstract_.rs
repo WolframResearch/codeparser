@@ -16,14 +16,14 @@ use crate::{
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
-    source::GeneralSource,
+    source::{GeneralSource, Source},
     symbol::{self as sym, Symbol},
     tokenize::{
         OwnedTokenInput, Token, TokenInput,
         TokenKind::{self, self as TK},
         TokenSource,
     },
-    NodeSeq, Source,
+    NodeSeq,
 };
 
 //==========================================================

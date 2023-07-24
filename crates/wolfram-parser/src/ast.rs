@@ -3,9 +3,8 @@
 use crate::{
     cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
-    source::GeneralSource,
+    source::{GeneralSource, Source},
     tokenize::{OwnedTokenInput, TokenKind, TokenSource},
-    Source,
 };
 
 #[derive(Debug, Clone, PartialEq)]

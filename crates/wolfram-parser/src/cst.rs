@@ -1,4 +1,6 @@
 //! Input form concrete syntax trees.
+//!
+//! [`CstNode`] — root and element type in a concrete syntax tree.
 
 use wolfram_expr::Expr;
 
@@ -89,8 +91,6 @@ pub struct PrefixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, Pr
 #[derive(Debug, Clone, PartialEq)]
 pub struct BinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, BinaryOperator>);
 
-/// InfixNode
-///
 /// `a + b + c`
 #[derive(Debug, Clone, PartialEq)]
 pub struct InfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
@@ -103,8 +103,6 @@ pub struct TernaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, T
 #[derive(Debug, Clone, PartialEq)]
 pub struct PostfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, PostfixOperator>);
 
-/// PrefixBinaryNode
-///
 /// `\[Integral] f \[DifferentialD] x`
 #[derive(Debug, Clone, PartialEq)]
 pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(

@@ -60,7 +60,7 @@ macro_rules! __src {
     };
 }
 
-/// Convenience constructor for [`Token`][crate::token::Token]s.
+/// Convenience constructor for [`Token`][crate::tokenize::Token]s.
 ///
 /// **Usage:**
 ///
@@ -70,7 +70,7 @@ macro_rules! __src {
 /// //     ^^^^^^^  ... ###  *************
 /// ```
 ///
-/// * `^^^` — [`TokenKind`][crate::token::TokenKind] variant
+/// * `^^^` — [`TokenKind`][crate::tokenize::TokenKind] variant
 /// * `...` — input content
 /// * `###` — byte offset of this token
 /// * `***` — [`Source`][crate::source::Source] of the token
