@@ -168,11 +168,7 @@ impl WstpPut for Metadata {
         if !source.is_unknown() {
             link.put_function("System`Rule", 2).unwrap();
             link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
-            match source {
-                Source::Span(span) => put_span_rhs(link, *span),
-                Source::BoxPosition(other) => put_box_position(link, other),
-                Source::After(expr) => link.put_expr(expr).unwrap(),
-            }
+            put_source_rhs(link, source);
         }
 
         if let Some(level) = confidence_level {
@@ -223,11 +219,7 @@ impl WstpPut for AstMetadata {
         if !source.is_unknown() {
             link.put_function("System`Rule", 2).unwrap();
             link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
-            match source {
-                Source::Span(span) => put_span_rhs(link, *span),
-                Source::BoxPosition(other) => put_box_position(link, other),
-                Source::After(expr) => link.put_expr(expr).unwrap(),
-            }
+            put_source_rhs(link, source);
         }
 
         if !issues.is_empty() {
@@ -877,11 +869,7 @@ impl WstpPut for Issue {
                     .unwrap();
 
                 for source in additional_sources {
-                    match source {
-                        Source::Span(span) => put_span_rhs(callLink, *span),
-                        Source::BoxPosition(other) => put_box_position(callLink, other),
-                        Source::After(expr) => callLink.put_expr(expr).unwrap(),
-                    }
+                    put_source_rhs(callLink, source);
                 }
             }
         }
@@ -973,6 +961,14 @@ impl WstpPut for Location {
     }
 }
 
+fn put_source_rhs(link: &mut wstp::Link, source: &Source) {
+    match source {
+        Source::Span(span) => put_span_rhs(link, *span),
+        Source::BoxPosition(other) => put_box_position(link, other),
+        Source::After(expr) => link.put_expr(expr).unwrap(),
+    }
+}
+
 fn put_span_rhs(link: &mut wstp::Link, source: Span) {
     match source.kind() {
         SpanKind::LineColumnSpan { .. } => {
@@ -1039,11 +1035,7 @@ impl WstpPut for Source {
         link.put_function(sym::Rule.as_str(), 2).unwrap();
         Symbol_put(sym::CodeParser_Source, link);
 
-        match self {
-            Source::Span(span) => put_span_rhs(link, *span),
-            Source::BoxPosition(other) => put_box_position(link, other),
-            Source::After(expr) => link.put_expr(expr).unwrap(),
-        }
+        put_source_rhs(link, self)
     }
 }
 
