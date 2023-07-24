@@ -756,6 +756,13 @@ impl<'i> ParserSession<'i> {
 
         let top_node: &CstNode<_> = self.NodeStack.last().unwrap();
 
+        // Note: This method should only be called in process_implicit_times(),
+        //       which itself should only be called after non-newline trivia has
+        //       been eaten.
+        debug_assert!(
+            !matches!(top_node, CstNode::Token(tok) if tok.tok.isTriviaButNotToplevelNewline())
+        );
+
         match top_node {
             // This is a BinaryNode of Span
             CstNode::Binary(BinaryNode(node)) if node.getOp() == BinaryOperator::Span => true,
