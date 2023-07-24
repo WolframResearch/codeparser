@@ -2,10 +2,8 @@ use std::fmt::{self, Debug};
 
 use crate::{
     source::{Buffer, BufferAndLength, ByteSpan, GeneralSource, Source},
-    tokenizer::Tokenizer,
+    tokenize::{TokenKind, Tokenizer},
 };
-
-pub use crate::token_enum_registration::TokenKind;
 
 pub(crate) type TokenRef<'i> = Token<BorrowedTokenInput<'i>>;
 

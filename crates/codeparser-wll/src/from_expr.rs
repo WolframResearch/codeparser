@@ -14,8 +14,8 @@ use wolfram_parser::{
     quirks::QuirkSettings,
     source::GeneralSource,
     symbol_registration as sym,
-    token::{OwnedTokenInput, Token, TokenKind},
     token_enum_registration::SymbolToToken,
+    tokenize::{OwnedTokenInput, Token, TokenKind},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, Source, SourceLocation,
     UnsafeCharacterEncoding,
 };

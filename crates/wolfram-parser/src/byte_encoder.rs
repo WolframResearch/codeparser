@@ -1,6 +1,6 @@
 use std::fmt::{self, Write};
 
-use crate::code_point::CodePoint::{self, Char, *};
+use crate::read::code_point::CodePoint::{self, Char, *};
 
 pub(crate) fn encodeBytes(stream: &mut fmt::Formatter, val: CodePoint) -> Result<(), fmt::Error> {
     match val {

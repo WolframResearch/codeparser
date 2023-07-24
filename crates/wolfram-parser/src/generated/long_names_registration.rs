@@ -1129,8 +1129,8 @@ use std::collections::HashMap;
 use once_cell::sync::Lazy;
 
 use crate::{
-	code_point::*,
-	token::TokenKind::{self, *},
+	read::code_point::*,
+	tokenize::TokenKind::{self, *},
 };
 
 

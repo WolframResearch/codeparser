@@ -12,18 +12,23 @@ use crate::{
     cst::{CstNode, CstNodeSeq},
     feature,
     issue::Issue,
-    parselet::{PrefixParselet, PrefixToplevelCloserParselet},
-    parser::{Context, Parser_handleFirstLine},
+    parse::{
+        parselet::{PrefixParselet, PrefixToplevelCloserParselet},
+        Context, Parser_handleFirstLine,
+    },
     quirks::{self, QuirkSettings},
     read::Reader,
     source::{SourceConvention, TOPLEVEL},
-    token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
-    tokenizer::{
-        Tokenizer, Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
-        TrackedSourceLocations, UnsafeCharacterEncoding,
+    tokenize::{
+        tokenizer::{
+            Tokenizer, Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
+            TrackedSourceLocations, UnsafeCharacterEncoding,
+        },
+        BorrowedTokenInput, Token, TokenKind, TokenRef,
     },
     EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, StringifyMode, Tokens,
 };
+
 
 /// A parser session
 #[derive(Debug)]

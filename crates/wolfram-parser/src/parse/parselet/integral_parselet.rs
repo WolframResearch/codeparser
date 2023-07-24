@@ -1,10 +1,9 @@
 use crate::{
     cst::{PrefixBinaryNode, PrefixNode},
     panic_if_aborted,
-    parselet::*,
-    parser::ParserSession,
+    parse::{parselet::*, ParserSession},
     precedence::Precedence,
-    token::{Token, TokenKind, TokenRef},
+    tokenize::{Token, TokenKind, TokenRef},
 };
 
 impl IntegralParselet {

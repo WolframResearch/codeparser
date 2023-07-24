@@ -4,7 +4,7 @@ use crate::{
     cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
     source::GeneralSource,
-    token::{OwnedTokenInput, TokenKind, TokenSource},
+    tokenize::{OwnedTokenInput, TokenKind, TokenSource},
     Source,
 };
 
@@ -292,8 +292,8 @@ macro_rules! WL {
         let input: String = String::from($input);
 
         let node = $crate::ast::AstNode::Leaf {
-            kind: $crate::token::TokenKind::$token_kind,
-            input: $crate::token::OwnedTokenInput {
+            kind: $crate::tokenize::TokenKind::$token_kind,
+            input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
             },
             data: AstMetadata::empty(),
@@ -307,8 +307,8 @@ macro_rules! WL {
         let src: $crate::source::GeneralSource = $data.into_general();
 
         let node = $crate::ast::AstNode::Leaf {
-            kind: $crate::token::TokenKind::$token_kind,
-            input: $crate::token::OwnedTokenInput {
+            kind: $crate::tokenize::TokenKind::$token_kind,
+            input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
             },
             data: AstMetadata::from_src(src),

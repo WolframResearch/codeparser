@@ -1,6 +1,6 @@
 use pretty_assertions::assert_eq;
 
-use crate::{code_point::CodePoint, source::TOPLEVEL, ParseOptions, ParserSession};
+use crate::{read::code_point::CodePoint, source::TOPLEVEL, ParseOptions, ParserSession};
 
 #[test]
 fn ByteDecoderTest_Empty() {

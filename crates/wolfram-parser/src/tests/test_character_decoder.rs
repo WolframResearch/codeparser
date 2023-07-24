@@ -1,7 +1,9 @@
 use crate::{
-    code_point::CodePoint,
+    read::{
+        code_point::CodePoint,
+        wl_character::{EscapeStyle, WLCharacter},
+    },
     source::TOPLEVEL,
-    wl_character::{EscapeStyle, WLCharacter},
     ParseOptions, ParserSession,
 };
 

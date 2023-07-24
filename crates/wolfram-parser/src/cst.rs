@@ -4,7 +4,7 @@ use wolfram_expr::Expr;
 
 use crate::{
     source::{GeneralSource, Source},
-    token::{OwnedTokenInput, Token, TokenInput, TokenKind, TokenSource},
+    tokenize::{OwnedTokenInput, Token, TokenInput, TokenKind, TokenSource},
     NodeSeq,
 };
 

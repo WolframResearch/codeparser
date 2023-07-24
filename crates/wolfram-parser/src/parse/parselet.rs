@@ -14,13 +14,15 @@ use crate::{
         UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
+    parse::{ColonLHS, ParserSession, Parser_identity},
     parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
-    parser::{ColonLHS, ParserSession, Parser_identity},
     precedence::Precedence,
     source::*,
-    token::{Token, TokenKind, TokenRef},
-    token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
-    tokenizer::Tokenizer_currentToken_stringifyAsTag,
+    tokenize::{
+        token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
+        tokenizer::Tokenizer_currentToken_stringifyAsTag,
+        Token, TokenKind, TokenRef,
+    },
 };
 
 pub(crate) type ParseletPtr = &'static dyn Parselet;

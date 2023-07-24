@@ -1,4 +1,4 @@
-use crate::{cst::Node, token::OwnedTokenInput, NodeSeq, Source};
+use crate::{cst::Node, tokenize::OwnedTokenInput, NodeSeq, Source};
 
 pub type AggNodeSeq<I = OwnedTokenInput, S = Source> = NodeSeq<Node<I, S>>;
 
@@ -32,15 +32,15 @@ macro_rules! WL {
     }};
 
     (ToNode[-1]) => {
-        $crate::cst::Node::Token($crate::token::Token {
-            tok: $crate::token::TokenKind::Integer,
+        $crate::cst::Node::Token($crate::tokenize::Token {
+            tok: $crate::tokenize::TokenKind::Integer,
             input: I::fake("-1"),
             src: S::unknown(),
         })
     };
     (ToNode[1]) => {
-        $crate::cst::Node::Token($crate::token::Token {
-            tok: $crate::token::TokenKind::Integer,
+        $crate::cst::Node::Token($crate::tokenize::Token {
+            tok: $crate::tokenize::TokenKind::Integer,
             input: I::fake("1"),
             src: S::unknown(),
         })
@@ -53,16 +53,16 @@ macro_rules! WL {
     (LeafNode[$token_kind:ident, $input:literal, <||>]) => {{
         let input: &'static str = $input;
 
-        $crate::cst::Node::Token($crate::token::Token {
-            tok: $crate::token::TokenKind::$token_kind,
+        $crate::cst::Node::Token($crate::tokenize::Token {
+            tok: $crate::tokenize::TokenKind::$token_kind,
             input: I::fake(input),
             src: S::unknown(),
         })
     }};
     (LeafNode[$token_kind:ident, $input:expr, <||>]) => {{
         let input: &'static str = $input;
-        $crate::cst::Node::Token($crate::token::Token {
-            tok: $crate::token::TokenKind::$token_kind,
+        $crate::cst::Node::Token($crate::tokenize::Token {
+            tok: $crate::tokenize::TokenKind::$token_kind,
             input: I::fake(input),
             src: S::unknown(),
         })
@@ -70,7 +70,7 @@ macro_rules! WL {
     (LeafNode[$token_kind:ident, $input:literal, $data:expr]) => {{
         let input: &str = $input;
         $crate::cst::Node::Token(Token {
-            tok: $crate::token::TokenKind::$token_kind,
+            tok: $crate::tokenize::TokenKind::$token_kind,
             input: I::fake(input),
             src: $data,
         })
@@ -80,8 +80,8 @@ macro_rules! WL {
         let input: String = String::from($input);
 
         $crate::cst::Node::Token(Token {
-            tok: $crate::token::TokenKind::$token_kind,
-            input: $crate::token::OwnedTokenInput {
+            tok: $crate::tokenize::TokenKind::$token_kind,
+            input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
             },
             src: $data,

@@ -1,6 +1,6 @@
 use crate::{
     long_names_registration::*,
-    wl_character::{EscapeStyle, WLCharacter},
+    read::wl_character::{EscapeStyle, WLCharacter},
 };
 
 

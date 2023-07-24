@@ -1,9 +1,11 @@
 use crate::{
-    code_point::{CodePoint::Char, *},
     issue::CodeAction,
     long_names_registration::*,
+    read::{
+        code_point::{CodePoint::Char, *},
+        wl_character::{EscapeStyle, WLCharacter},
+    },
     source::Source,
-    wl_character::{EscapeStyle, WLCharacter},
 };
 
 pub fn isStrange(point: CodePoint) -> bool {

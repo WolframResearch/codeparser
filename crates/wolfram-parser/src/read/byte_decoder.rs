@@ -24,24 +24,25 @@
 //
 
 use crate::{
-    code_point::{
-        CodePoint::{self, *},
-        CODEPOINT_BOM,
-    },
     feature,
     issue::{CodeAction, EncodingIssue, IssueTag, Severity},
     read::{
         byte_buffer::{ByteBuffer_currentByte, ByteBuffer_nextByte},
         Reader, SourceManager,
     },
+    read::{
+        code_point::{
+            CodePoint::{self, *},
+            CODEPOINT_BOM,
+        },
+        wl_character::{EscapeStyle, WLCharacter},
+    },
     source::{
         LineColumn, NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention,
         SourceLocation,
     },
-    tokenizer::UnsafeCharacterEncoding,
-    utils,
-    wl_character::{EscapeStyle, WLCharacter},
-    EncodingMode,
+    tokenize::tokenizer::UnsafeCharacterEncoding,
+    utils, EncodingMode,
 };
 
 //

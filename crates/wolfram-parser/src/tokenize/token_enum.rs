@@ -1,6 +1,6 @@
 use crate::{
     source::{NextPolicy, NextPolicyBits::RETURN_TOPLEVELNEWLINE},
-    token::TokenKind,
+    tokenize::TokenKind,
 };
 
 //

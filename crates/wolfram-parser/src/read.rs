@@ -4,17 +4,19 @@ mod byte_buffer;
 mod byte_decoder;
 mod character_decoder;
 
+pub(crate) mod code_point;
+pub(crate) mod wl_character;
+
 
 use crate::{
     issue::{Issue, Severity},
     source::{Buffer, NextPolicy, SourceCharacter, SourceLocation},
-    wl_character::WLCharacter,
     EncodingMode, UnsafeCharacterEncoding,
 };
 
 use self::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
-    character_decoder::CharacterDecoder_nextWLCharacter,
+    character_decoder::CharacterDecoder_nextWLCharacter, wl_character::WLCharacter,
 };
 
 //==========================================================

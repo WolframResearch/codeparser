@@ -5,7 +5,7 @@ use once_cell::sync::Lazy;
 use crate::{
     abstract_::expect_children,
     cst::{BinaryNode, BinaryOperator, CstNode, OperatorNode},
-    token::{Token, TokenInput, TokenKind as TK, TokenSource},
+    tokenize::{Token, TokenInput, TokenKind as TK, TokenSource},
 };
 
 // TODO(cleanup): Don't store these settings using error-prone global state.

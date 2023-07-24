@@ -1,19 +1,21 @@
 use crate::{
-    code_point::{CodePoint::*, *},
     feature,
     issue::{CodeAction, IssueTag, Severity, SyntaxIssue},
     long_names as LongNames,
     long_names_registration::{
         LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
     },
-    read::Reader,
+    read::{
+        code_point::{CodePoint::*, *},
+        wl_character::{EscapeStyle, WLCharacter},
+        Reader,
+    },
     source::{
         BufferAndLength, NextPolicy,
         NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
         Source, SourceCharacter, SourceLocation, STRING_OR_COMMENT,
     },
     utils,
-    wl_character::{EscapeStyle, WLCharacter},
 };
 
 use super::InputMark;

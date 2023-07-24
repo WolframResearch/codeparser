@@ -4,7 +4,7 @@ use crate::{
     agg::AggNodeSeq,
     cst::{GroupMissingCloserNode, Node, OperatorNode, UnterminatedGroupNeedsReparseNode},
     source::{Buffer, BufferAndLength, CharacterSpan, LineColumn},
-    token::{BorrowedTokenInput, Token},
+    tokenize::{BorrowedTokenInput, Token},
     NodeSeq, Source, SourceLocation, StringSourceKind, Tokens,
 };
 

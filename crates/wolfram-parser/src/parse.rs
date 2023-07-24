@@ -1,3 +1,4 @@
+pub(crate) mod parselet;
 mod parser_session;
 
 
@@ -10,20 +11,23 @@ use crate::{
     },
     feature,
     panic_if_aborted,
-    parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
     precedence::Precedence,
 
-    token::{BorrowedTokenInput, TokenKind, TokenRef},
-    token_enum::Closer,
-    tokenizer::{Tokenizer, Tokenizer_currentToken_stringifyAsFile},
+    tokenize::{
+        token_enum::Closer,
+        tokenizer::{Tokenizer, Tokenizer_currentToken_stringifyAsFile},
+        BorrowedTokenInput, TokenKind, TokenRef,
+    },
     FirstLineBehavior,
     NodeSeq,
 };
 
-use self::parser_session::TriviaSeq;
-
+use self::{
+    parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
+    parser_session::TriviaSeq,
+};
 
 pub use self::parser_session::ParseResult;
 
@@ -221,7 +225,7 @@ impl<'i> ParserSession<'i> {
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
-        let parselet: &dyn PrefixParselet = crate::parselet::prefix_parselet(token.tok);
+        let parselet: &dyn PrefixParselet = self::parselet::prefix_parselet(token.tok);
 
         // MUSTTAIL
         parselet.parse_prefix(self, token)
@@ -310,7 +314,7 @@ impl<'i> ParserSession<'i> {
         let F = ctxt.f.expect("Ctxt.f is unexpectedly None");
         let P = ctxt
             .p
-            .unwrap_or_else(|| &crate::parselet::PrefixAssertFalseParselet {});
+            .unwrap_or_else(|| &self::parselet::PrefixAssertFalseParselet {});
 
         // MUSTTAIL
         return F(self, P);

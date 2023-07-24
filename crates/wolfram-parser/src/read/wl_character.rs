@@ -1,14 +1,14 @@
 use std::fmt::{self, Debug, Display};
 
 use crate::{
-    code_point::{
+    long_names::{self as LongNames, code_point_to_long_name},
+    long_names_registration::*,
+    read::code_point::{
         CodePoint::{self, Char, *},
         *,
     },
-    long_names::{self as LongNames, code_point_to_long_name},
-    long_names_registration::*,
     source::SourceCharacter,
-    tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
+    tokenize::tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
 };
 
 /// The 8 styles of character escapes
@@ -480,18 +480,18 @@ impl WLCharacter {
     pub(crate) fn isMBLinearSyntax(&self) -> bool {
         match self.to_point() {
             CodePoint::Char(
-                crate::code_point::CODEPOINT_LINEARSYNTAX_CLOSEPAREN
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_BANG
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_AT
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_PERCENT
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_CARET
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_AMP
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_STAR
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_OPENPAREN
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_UNDER
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_PLUS
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_SLASH
-                | crate::code_point::CODEPOINT_LINEARSYNTAX_BACKTICK,
+                CODEPOINT_LINEARSYNTAX_CLOSEPAREN
+                | CODEPOINT_LINEARSYNTAX_BANG
+                | CODEPOINT_LINEARSYNTAX_AT
+                | CODEPOINT_LINEARSYNTAX_PERCENT
+                | CODEPOINT_LINEARSYNTAX_CARET
+                | CODEPOINT_LINEARSYNTAX_AMP
+                | CODEPOINT_LINEARSYNTAX_STAR
+                | CODEPOINT_LINEARSYNTAX_OPENPAREN
+                | CODEPOINT_LINEARSYNTAX_UNDER
+                | CODEPOINT_LINEARSYNTAX_PLUS
+                | CODEPOINT_LINEARSYNTAX_SLASH
+                | CODEPOINT_LINEARSYNTAX_BACKTICK,
             )
             | LinearSyntax_Space => true,
             _ => false,

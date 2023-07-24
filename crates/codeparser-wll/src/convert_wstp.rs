@@ -15,8 +15,8 @@ use wolfram_parser::{
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
     symbol::Symbol,
     symbol_registration as sym,
-    token::{BorrowedTokenInput, Token, TokenInput, TokenKind},
     token_enum_registration::TokenToSymbol,
+    tokenize::{BorrowedTokenInput, Token, TokenInput, TokenKind},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult, Tokens,
     UnsafeCharacterEncoding,
 };

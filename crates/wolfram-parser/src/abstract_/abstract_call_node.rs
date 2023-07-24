@@ -10,7 +10,7 @@ use crate::{
     },
     issue::{Issue, IssueTag, Severity},
     symbol as sym,
-    token::{
+    tokenize::{
         Token, TokenInput,
         TokenKind::{self as TK},
         TokenSource,

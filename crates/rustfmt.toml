@@ -3,3 +3,4 @@ max_width = 100
 match_block_trailing_comma = true
 blank_lines_upper_bound = 3
 merge_derives = false
+reorder_modules = false

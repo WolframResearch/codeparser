@@ -3,22 +3,22 @@
 use std::{collections::HashSet, os::raw::c_int};
 
 use crate::{
-    code_point::{
-        CodePoint::{Char, *},
-        *,
-    },
     feature,
     issue::{CodeAction, FormatIssue, IssueTag, Severity, SyntaxIssue},
-    read::{InputMark, Reader},
+    read::{
+        code_point::{
+            CodePoint::{Char, *},
+            *,
+        },
+        wl_character::{EscapeStyle, WLCharacter},
+        InputMark, Reader,
+    },
     source::{
         Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
         INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG, TOPLEVEL,
     },
-    token::{Token, TokenKind, TokenRef},
-    token_enum::Closer,
-    utils,
-    wl_character::{EscapeStyle, WLCharacter},
-    FirstLineBehavior,
+    tokenize::{token_enum::Closer, Token, TokenKind, TokenRef},
+    utils, FirstLineBehavior,
 };
 
 use crate::source::NextPolicyBits::*;

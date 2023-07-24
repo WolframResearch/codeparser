@@ -13,8 +13,8 @@ use crate::{
     source::{GeneralSource, LineColumn, LineColumnSpan},
     symbol::Symbol,
     symbol_registration as sym,
-    token::{Token, TokenInput, TokenSource},
     token_enum_registration::TokenToSymbol,
+    tokenize::{Token, TokenInput, TokenSource},
     NodeSeq, Source, SourceLocation, StringSourceKind, Tokens,
 };
 

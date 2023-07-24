@@ -1,10 +1,9 @@
 use crate::{
     cst::{CompoundNode, CompoundOperator},
     panic_if_aborted,
-    parselet::*,
-    parser::ParserSession,
+    parse::{parselet::*, ParserSession},
     precedence::Precedence,
-    token::{TokenKind, TokenRef},
+    tokenize::{TokenKind, TokenRef},
 };
 
 impl UnderParselet {
