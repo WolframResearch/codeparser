@@ -27,7 +27,7 @@ impl InfixParselet for SemiSemiParselet {
         return Some(Precedence::SEMISEMI);
     }
 
-    fn processImplicitTimes<'i>(
+    fn process_implicit_times<'i>(
         &self,
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,

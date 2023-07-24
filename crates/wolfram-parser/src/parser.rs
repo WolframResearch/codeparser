@@ -258,7 +258,7 @@ impl<'i> ParserSession<'i> {
 
         let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(token.tok.value())];
 
-        token = I.processImplicitTimes(self, token);
+        token = I.process_implicit_times(self, token);
 
         I = INFIX_PARSELETS[usize::from(token.tok.value())];
 

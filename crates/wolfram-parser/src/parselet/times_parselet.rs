@@ -64,7 +64,7 @@ impl TimesParselet {
 
             let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
-            tok1 = I.processImplicitTimes(session, tok1);
+            tok1 = I.process_implicit_times(session, tok1);
 
             if tok1.tok == TokenKind::Fake_ImplicitTimes {
                 //
@@ -81,7 +81,7 @@ impl TimesParselet {
 
                 I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
-                tok1 = I.processImplicitTimes(session, tok1);
+                tok1 = I.process_implicit_times(session, tok1);
             }
 
             I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
