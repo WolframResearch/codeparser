@@ -138,8 +138,7 @@ impl UnderParselet {
     fn reduce_Blank_context_sensitive(&self, session: &mut ParserSession) {
         let BOp = self.getBOp();
 
-        let context = session.pop_context();
-        session.push_node(CompoundNode::new(BOp, context));
+        session.reduce(|ctx| CompoundNode::new(BOp, ctx));
 
         // no call needed here
         return;

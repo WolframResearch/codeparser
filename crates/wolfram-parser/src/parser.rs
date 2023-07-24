@@ -234,12 +234,21 @@ impl<'i> ParserSession<'i> {
         N: Into<CstNode<BorrowedTokenInput<'i>>>,
         F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
     {
-        let context = self.pop_context();
-        let node = func(context).into();
-        self.push_node(node);
+        self.reduce(func);
 
         // MUSTTAIL
         return self.parse_climb();
+    }
+
+    /// Pop the top context and push a new node constructed by `func`.
+    pub(crate) fn reduce<N, F>(&mut self, func: F)
+    where
+        N: Into<CstNode<BorrowedTokenInput<'i>>>,
+        F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
+    {
+        let context = self.pop_context();
+        let node = func(context);
+        self.push_node(node);
     }
 
     pub(crate) fn parse_climb(&mut self) {
@@ -462,7 +471,9 @@ impl<'i> ParserSession<'i> {
     }
 
     /// Removes and returns the sequence of nodes associated with the top context.
-    pub(crate) fn pop_context(&mut self) -> CstNodeSeq<BorrowedTokenInput<'i>> {
+    ///
+    /// See [`ParserSession::reduce()`] and [`ParserSession::reduce_and_climb()`].
+    fn pop_context(&mut self) -> CstNodeSeq<BorrowedTokenInput<'i>> {
         assert!(!self.ContextStack.is_empty());
 
         //
