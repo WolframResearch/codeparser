@@ -38,8 +38,8 @@ use crate::{
         wl_character::{EscapeStyle, WLCharacter},
     },
     source::{
-        LineColumn, NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention,
-        SourceLocation,
+        LineColumn, Location, NextPolicy, NextPolicyBits::*, SourceCharacter, SourceConvention,
+        Span,
     },
     tokenize::tokenizer::UnsafeCharacterEncoding,
     utils, EncodingMode,
@@ -162,7 +162,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                         IssueTag::UnexpectedCarriageReturn,
                         format!("Unexpected ``\\r`` character."),
                         Severity::Warning,
-                        Source::new(currentSourceCharacterStartLoc, session.SrcLoc),
+                        Span::new(currentSourceCharacterStartLoc, session.SrcLoc),
                         1.0,
                         vec![],
                         vec![]
@@ -803,7 +803,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
 fn ByteDecoder_strangeWarning(
     session: &mut Reader,
     decoded: CodePoint,
-    currentSourceCharacterStartLoc: SourceLocation,
+    currentSourceCharacterStartLoc: Location,
     policy: NextPolicy,
 ) {
     let currentSourceCharacterEndLoc = session.SrcLoc;
@@ -811,7 +811,7 @@ fn ByteDecoder_strangeWarning(
     let safeAndGraphicalStr = decoded.safeAndGraphicalString();
     let graphicalStr = decoded.graphicalString();
 
-    let Src = Source::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
+    let Src = Span::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
 
     let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -883,14 +883,14 @@ fn ByteDecoder_strangeWarning(
 fn ByteDecoder_nonASCIIWarning(
     session: &mut Reader,
     decoded: CodePoint,
-    currentSourceCharacterStartLoc: SourceLocation,
+    currentSourceCharacterStartLoc: Location,
 ) {
     let currentSourceCharacterEndLoc = session.SrcLoc;
 
     let safeAndGraphicalStr = decoded.safeAndGraphicalString();
     let graphicalStr = decoded.graphicalString();
 
-    let Src = Source::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
+    let Src = Span::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
 
     let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -966,7 +966,7 @@ fn ByteDecoder_validMB(
 
 fn ByteDecoder_incomplete1ByteSequence(
     session: &mut Reader,
-    errSrcLoc: SourceLocation,
+    errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
     ByteDecoder_incompleteByteSequence(session, errSrcLoc, CodePoint::Unsafe1ByteUtf8Sequence)
@@ -974,7 +974,7 @@ fn ByteDecoder_incomplete1ByteSequence(
 
 fn ByteDecoder_incomplete2ByteSequence(
     session: &mut Reader,
-    errSrcLoc: SourceLocation,
+    errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
     ByteDecoder_incompleteByteSequence(session, errSrcLoc, CodePoint::Unsafe2ByteUtf8Sequence)
@@ -982,7 +982,7 @@ fn ByteDecoder_incomplete2ByteSequence(
 
 fn ByteDecoder_incomplete3ByteSequence(
     session: &mut Reader,
-    errSrcLoc: SourceLocation,
+    errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
     ByteDecoder_incompleteByteSequence(session, errSrcLoc, CodePoint::Unsafe3ByteUtf8Sequence)
@@ -990,7 +990,7 @@ fn ByteDecoder_incomplete3ByteSequence(
 
 fn ByteDecoder_incompleteByteSequence(
     session: &mut Reader,
-    errSrcLoc: SourceLocation,
+    errSrcLoc: Location,
     errChar: SourceCharacter,
 ) -> SourceCharacter {
     if feature::COMPUTE_SOURCE {
@@ -1006,7 +1006,7 @@ fn ByteDecoder_incompleteByteSequence(
             IssueTag::IncompleteUTF8Sequence,
             "Incomplete UTF-8 sequence.".into(),
             Severity::Fatal,
-            Source::new(errSrcLoc, errSrcLoc.next()),
+            Span::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
             vec![],
@@ -1032,7 +1032,7 @@ fn ByteDecoder_incompleteByteSequence(
 //
 fn ByteDecoder_straySurrogate(
     session: &mut Reader,
-    errSrcLoc: SourceLocation,
+    errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
     if feature::COMPUTE_SOURCE {
@@ -1048,7 +1048,7 @@ fn ByteDecoder_straySurrogate(
             IssueTag::StraySurrogate,
             "Stray surrogate.".into(),
             Severity::Fatal,
-            Source::new(errSrcLoc, errSrcLoc.next()),
+            Span::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
             vec![],
@@ -1071,7 +1071,7 @@ fn ByteDecoder_straySurrogate(
 
 fn ByteDecoder_bom(
     session: &mut Reader,
-    errSrcLoc: SourceLocation,
+    errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
     if feature::COMPUTE_SOURCE {
@@ -1087,7 +1087,7 @@ fn ByteDecoder_bom(
             IssueTag::BOM,
             "BOM.".into(),
             Severity::Fatal,
-            Source::new(errSrcLoc, errSrcLoc.next()),
+            Span::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
             vec![],
@@ -1102,23 +1102,23 @@ fn ByteDecoder_bom(
 }
 
 impl SourceConvention {
-    pub fn newSourceLocation(&self) -> SourceLocation {
+    pub fn newSourceLocation(&self) -> Location {
         match self {
-            SourceConvention::LineColumn => SourceLocation::new(1, 1),
-            SourceConvention::CharacterIndex => SourceLocation::new(0, 1),
+            SourceConvention::LineColumn => Location::new(1, 1),
+            SourceConvention::CharacterIndex => Location::new(0, 1),
         }
     }
 }
 
-/// How to manage advancing through [`SourceLocation`]s
+/// How to manage advancing through [`Location`]s
 impl<'t> SourceManager<'t> {
     fn newline(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(line, column)) => {
+            Location::LineColumn(LineColumn(line, column)) => {
                 *line = line.checked_add(1).expect("line overflows u32");
                 *column = 1;
             },
-            SourceLocation::CharacterIndex(index) => {
+            Location::CharacterIndex(index) => {
                 *index += 1;
             },
         }
@@ -1126,11 +1126,11 @@ impl<'t> SourceManager<'t> {
 
     fn windowsNewline(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(line, column)) => {
+            Location::LineColumn(LineColumn(line, column)) => {
                 *line = line.checked_add(1).expect("line overflows u32");
                 *column = 1;
             },
-            SourceLocation::CharacterIndex(index) => {
+            Location::CharacterIndex(index) => {
                 *index += 2;
             },
         }
@@ -1138,12 +1138,12 @@ impl<'t> SourceManager<'t> {
 
     fn tab(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(_, column)) => {
+            Location::LineColumn(LineColumn(_, column)) => {
                 let currentTabStop = self.tab_width * ((*column - 1) / self.tab_width) + 1;
 
                 *column = currentTabStop + self.tab_width;
             },
-            SourceLocation::CharacterIndex(index) => {
+            Location::CharacterIndex(index) => {
                 *index += 1;
             },
         }
@@ -1151,8 +1151,8 @@ impl<'t> SourceManager<'t> {
 
     fn increment(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(_, column)) => *column += 1,
-            SourceLocation::CharacterIndex(index) => *index += 1,
+            Location::LineColumn(LineColumn(_, column)) => *column += 1,
+            Location::CharacterIndex(index) => *index += 1,
         }
     }
 }

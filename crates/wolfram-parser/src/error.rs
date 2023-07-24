@@ -3,10 +3,7 @@ use std::{num::NonZeroU32, ops::Range};
 use crate::{
     agg::AggNodeSeq,
     cst::{GroupMissingCloserNode, Node, OperatorNode, UnterminatedGroupNeedsReparseNode},
-    source::{
-        Buffer, BufferAndLength, CharacterSpan, LineColumn, Source, SourceLocation,
-        StringSourceKind,
-    },
+    source::{Buffer, BufferAndLength, CharacterSpan, LineColumn, Location, Span, SpanKind},
     tokenize::{BorrowedTokenInput, Token},
     NodeSeq, Tokens,
 };
@@ -135,7 +132,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
     let better_leaves = match better_src.kind() {
-        StringSourceKind::LineColumnSpan(better_src) => {
+        SpanKind::LineColumnSpan(better_src) => {
             // Flatten out children, because there may be parsing errors from missing bracket, and
             // we do not want to propagate
             //
@@ -162,7 +159,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
 
             better_leaves
         },
-        StringSourceKind::CharacterSpan(better_src) => {
+        SpanKind::CharacterSpan(better_src) => {
             // Flatten out children, because there may be parsing errors from missing bracket, and
             // we do not want to propagate
             let mut better_leaves: Vec<Node<_>> = Vec::new();
@@ -182,7 +179,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
 
             better_leaves
         },
-        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
+        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
     // Purposely only returning leaves that are in the "better" Source
@@ -218,7 +215,7 @@ fn reparseUnterminatedTokenErrorNode<'i>(
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
     let better_str = match better_src.kind() {
-        StringSourceKind::LineColumnSpan(better_src) => {
+        SpanKind::LineColumnSpan(better_src) => {
             let mut components: Vec<&str> = Vec::new();
 
             components.push(
@@ -252,12 +249,12 @@ fn reparseUnterminatedTokenErrorNode<'i>(
 
             make_better_input(str, better_str2)
         },
-        StringSourceKind::CharacterSpan(better_src) => {
+        SpanKind::CharacterSpan(better_src) => {
             let better_str: &str = StringTake(str, better_src);
 
             make_better_input(str, better_str)
         },
-        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
+        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
     Token {
@@ -285,7 +282,7 @@ fn make_better_input<'i>(input: &str, better: &'i str) -> BorrowedTokenInput<'i>
 // Helpers
 //==========================================================
 
-fn process_lines(input: &str, tab_width: usize, src: Source) -> (Vec<Line>, usize, Source) {
+fn process_lines(input: &str, tab_width: usize, src: Span) -> (Vec<Line>, usize, Span) {
     let lines = to_lines_and_expand_tabs(input, tab_width);
 
     first_chunk_and_last_good_line(lines, tab_width, src)
@@ -320,14 +317,14 @@ fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
 fn first_chunk_and_last_good_line(
     lines: Vec<Line>,
     tab_width: usize,
-    src: Source,
-) -> (Vec<Line>, usize, Source) {
+    src: Span,
+) -> (Vec<Line>, usize, Span) {
     //------------------------------------------------------
     // Filter `lines` into the lines that overlap with `src`
     //------------------------------------------------------
 
     let (lines, char_ranges_of_lines): (Vec<Line>, Option<Vec<CharacterSpan>>) = match src.kind() {
-        StringSourceKind::LineColumnSpan(src) => {
+        SpanKind::LineColumnSpan(src) => {
             // (*
             // lines of the node
             // *)
@@ -344,7 +341,7 @@ fn first_chunk_and_last_good_line(
                 None,
             )
         },
-        StringSourceKind::CharacterSpan(src) => {
+        SpanKind::CharacterSpan(src) => {
             let specs_of_lines = lines_start_and_end_char_indexes(lines);
 
             let CollectMultiple(lines, specs_of_lines): CollectMultiple<Line, CharacterSpan> =
@@ -382,7 +379,7 @@ fn first_chunk_and_last_good_line(
                 lines = Extract[lines, poss];
             */
         },
-        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
+        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
     //--------------------------
@@ -407,17 +404,17 @@ fn first_chunk_and_last_good_line(
         last_good_line = &first_chunk[last_good_line_index];
     }
 
-    //-----------------------
-    // Computer better Source
-    //-----------------------
+    //--------------------
+    // Compute better Span
+    //--------------------
 
-    let better_src: Source = match src.kind() {
-        StringSourceKind::LineColumnSpan(src) => {
+    let better_src: Span = match src.kind() {
+        SpanKind::LineColumnSpan(src) => {
             // This will NOT include newline at the end
             // FIXME?
-            Source {
-                start: SourceLocation::from(src.start),
-                end: SourceLocation::LineColumn(LineColumn(
+            Span {
+                start: Location::from(src.start),
+                end: Location::LineColumn(LineColumn(
                     src.start
                         .line()
                         .checked_add(u32::try_from(last_good_line_index).unwrap())
@@ -426,7 +423,7 @@ fn first_chunk_and_last_good_line(
                 )),
             }
         },
-        StringSourceKind::CharacterSpan(src) => {
+        SpanKind::CharacterSpan(src) => {
             // This WILL include newline at the end
             // FIXME?
 
@@ -441,7 +438,7 @@ fn first_chunk_and_last_good_line(
                 u32::try_from(char_ranges_of_lines[last_good_line_index].1).unwrap() + 1;
 
 
-            Source::from_character_span(original_start, better_character_index_source_end)
+            Span::from_character_span(original_start, better_character_index_source_end)
 
             // betterSrc = {
             //     src[[1]],
@@ -451,7 +448,7 @@ fn first_chunk_and_last_good_line(
             //     ]]
             // };
         },
-        StringSourceKind::Unknown => panic!("unexpected StringSourceKind::Unknown"),
+        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
     // TODO(optimization): Refactor to avoid this to_vec() call.

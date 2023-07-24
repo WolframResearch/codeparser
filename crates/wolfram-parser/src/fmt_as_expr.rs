@@ -10,7 +10,7 @@ use crate::{
         PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorNode, TernaryNode,
         TernaryOperator,
     },
-    source::{GeneralSource, LineColumn, LineColumnSpan, Source, SourceLocation, StringSourceKind},
+    source::{LineColumn, LineColumnSpan, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbol_registration as sym,
     token_enum_registration::TokenToSymbol,
@@ -311,44 +311,44 @@ impl<S: TokenSource> Display for FmtAsExpr<&S> {
         let FmtAsExpr(source) = self;
 
         let source: S = (*source).clone();
-        let source: GeneralSource = source.into_general();
+        let source: Source = source.into_general();
 
         match source {
-            GeneralSource::String(source) => write!(f, "{}", FmtAsExpr(source)),
-            GeneralSource::BoxPosition(_) => todo!(),
-            GeneralSource::After(_) => todo!(),
+            Source::Span(span) => write!(f, "{}", FmtAsExpr(span)),
+            Source::BoxPosition(_) => todo!(),
+            Source::After(_) => todo!(),
         }
     }
 }
 
-impl Display for FmtAsExpr<Source> {
+impl Display for FmtAsExpr<Span> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(source) = self;
 
         match source.kind() {
-            StringSourceKind::LineColumnSpan(LineColumnSpan { start, end }) => {
+            SpanKind::LineColumnSpan(LineColumnSpan { start, end }) => {
                 write!(
                     f,
                     "{{{}, {}}}",
-                    FmtAsExpr(&SourceLocation::from(start)),
-                    FmtAsExpr(&SourceLocation::from(end))
+                    FmtAsExpr(&Location::from(start)),
+                    FmtAsExpr(&Location::from(end))
                 )
             },
-            StringSourceKind::CharacterSpan(_) => todo!(),
-            StringSourceKind::Unknown => todo!(),
+            SpanKind::CharacterSpan(_) => todo!(),
+            SpanKind::Unknown => todo!(),
         }
     }
 }
 
-impl Display for FmtAsExpr<&SourceLocation> {
+impl Display for FmtAsExpr<&Location> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(src_loc) = self;
 
         match src_loc {
-            SourceLocation::LineColumn(LineColumn(line, column)) => {
+            Location::LineColumn(LineColumn(line, column)) => {
                 write!(f, "{{{line}, {column}}}")
             },
-            SourceLocation::CharacterIndex(index) => write!(f, "{index}"),
+            Location::CharacterIndex(index) => write!(f, "{index}"),
         }
     }
 }

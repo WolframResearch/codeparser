@@ -1,14 +1,14 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    source::{Buffer, BufferAndLength, ByteSpan, GeneralSource, Source},
+    source::{Buffer, BufferAndLength, ByteSpan, Source, Span},
     tokenize::{TokenKind, Tokenizer},
 };
 
 pub(crate) type TokenRef<'i> = Token<BorrowedTokenInput<'i>>;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Token<I = OwnedTokenInput, S = Source> {
+pub struct Token<I = OwnedTokenInput, S = Span> {
     pub tok: TokenKind,
 
     pub input: I,
@@ -31,38 +31,42 @@ pub trait TokenInput: Clone {
 }
 
 pub trait TokenSource: Clone {
-    fn into_general(self) -> GeneralSource;
+    /// Canonicalize source region representation into the more general
+    /// [`Source`] type.
+    ///
+    /// Typically this means converting a [`Span`] into a [`Source`].
+    fn into_general(self) -> Source;
 
     #[doc(hidden)]
     fn unknown() -> Self;
 
-    fn from_source(source: Source) -> Self;
-}
-
-impl TokenSource for GeneralSource {
-    fn into_general(self) -> GeneralSource {
-        self
-    }
-
-    fn unknown() -> Self {
-        GeneralSource::unknown()
-    }
-
-    fn from_source(source: Source) -> Self {
-        GeneralSource::String(source)
-    }
+    fn from_span(source: Span) -> Self;
 }
 
 impl TokenSource for Source {
-    fn into_general(self) -> GeneralSource {
-        GeneralSource::String(self)
+    fn into_general(self) -> Source {
+        self
     }
 
     fn unknown() -> Self {
         Source::unknown()
     }
 
-    fn from_source(source: Source) -> Self {
+    fn from_span(source: Span) -> Self {
+        Source::Span(source)
+    }
+}
+
+impl TokenSource for Span {
+    fn into_general(self) -> Source {
+        Source::Span(self)
+    }
+
+    fn unknown() -> Self {
+        Span::unknown()
+    }
+
+    fn from_span(source: Span) -> Self {
         source
     }
 }
@@ -183,8 +187,7 @@ fn test_token_size() {
 }
 
 impl<'i> TokenRef<'i> {
-    // pub(crate) fn new(tok: TokenKind, buf: BufferAndLength, src: Source) -> Self {
-    pub(crate) fn new(tok: TokenKind, buf: BufferAndLength<'i>, src: Source) -> Self {
+    pub(crate) fn new(tok: TokenKind, buf: BufferAndLength<'i>, src: Span) -> Self {
         let token = Token {
             src,
             input: BorrowedTokenInput::from_buf(buf),
@@ -206,9 +209,7 @@ impl<'i> TokenRef<'i> {
             //
             TokenKind::ToplevelNewline | TokenKind::InternalNewline => {},
             _ if crate::feature::COMPUTE_SOURCE => {
-                use crate::source::{
-                    LineColumn, LineColumnSpan, SourceCharacter, StringSourceKind,
-                };
+                use crate::source::{LineColumn, LineColumnSpan, SourceCharacter, SpanKind};
 
                 if tok.isEmpty() {
                     assert!(
@@ -230,13 +231,13 @@ impl<'i> TokenRef<'i> {
                     // Spanning multiple lines is too complicated to care about
                     //
                     match src.kind() {
-                        StringSourceKind::CharacterSpan(_) => {
+                        SpanKind::CharacterSpan(_) => {
                             //
                             // SourceConvention of "SourceCharacterIndex"
                             // so nothing to do
                             //
                         },
-                        StringSourceKind::LineColumnSpan(LineColumnSpan {
+                        SpanKind::LineColumnSpan(LineColumnSpan {
                             start: LineColumn(start_line, _),
                             end: LineColumn(end_line, _),
                         }) => {
@@ -253,7 +254,7 @@ impl<'i> TokenRef<'i> {
                                 }
                             }
                         },
-                        StringSourceKind::Unknown => (),
+                        SpanKind::Unknown => (),
                     }
                 }
             },
@@ -265,7 +266,7 @@ impl<'i> TokenRef<'i> {
 
     pub(crate) fn at_start(error_tok: TokenKind, mut token: TokenRef<'i>) -> TokenRef<'i> {
         // The error is at the start of this token.
-        token.src = Source::from_location(token.src.start);
+        token.src = Span::from_location(token.src.start);
 
         Token::at(error_tok, token)
     }

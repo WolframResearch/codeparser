@@ -1,6 +1,6 @@
-use crate::{cst::Node, source::Source, tokenize::OwnedTokenInput, NodeSeq};
+use crate::{cst::Node, source::Span, tokenize::OwnedTokenInput, NodeSeq};
 
-pub type AggNodeSeq<I = OwnedTokenInput, S = Source> = NodeSeq<Node<I, S>>;
+pub type AggNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Node<I, S>>;
 
 //==========================================================
 // Macros

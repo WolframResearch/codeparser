@@ -12,7 +12,7 @@ use wolfram_parser::{
     cst::{CompoundOperator, CstNodeSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
-    source::{GeneralSource, Source, SourceLocation},
+    source::{Location, Source, Span},
     symbol_registration as sym,
     token_enum_registration::SymbolToToken,
     tokenize::{OwnedTokenInput, Token, TokenKind},
@@ -27,7 +27,7 @@ pub(crate) trait FromExpr: Sized {
 // FromExpr impls
 //==========================================================
 
-impl FromExpr for Container<CstNode<OwnedTokenInput, GeneralSource>> {
+impl FromExpr for Container<CstNode<OwnedTokenInput, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(
             expr,
@@ -73,7 +73,7 @@ impl FromExpr for ContainerKind {
     }
 }
 
-impl FromExpr for ContainerBody<CstNode<OwnedTokenInput, GeneralSource>> {
+impl FromExpr for ContainerBody<CstNode<OwnedTokenInput, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(elements) = try_normal_with_head(expr, sym::List) {
             if elements.len() == 1 {
@@ -102,7 +102,7 @@ impl<N: FromExpr> FromExpr for NodeSeq<N> {
     }
 }
 
-impl FromExpr for CstNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for CstNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(LeafNode { kind, input, src }) = LeafNode::from_expr(expr) {
             let token = Token {
@@ -210,7 +210,7 @@ impl FromExpr for LeafNode {
     }
 }
 
-impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for CallNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_CallNode)?;
 
@@ -242,7 +242,7 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for PrefixNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for PrefixNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_PrefixNode)?;
 
@@ -261,7 +261,7 @@ impl FromExpr for PrefixNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for InfixNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for InfixNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_InfixNode)?;
 
@@ -280,7 +280,7 @@ impl FromExpr for InfixNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for PrefixBinaryNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for PrefixBinaryNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_PrefixBinaryNode)?;
 
@@ -296,7 +296,7 @@ impl FromExpr for PrefixBinaryNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for BinaryNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for BinaryNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_BinaryNode)?;
 
@@ -312,7 +312,7 @@ impl FromExpr for BinaryNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for TernaryNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for TernaryNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_TernaryNode)?;
 
@@ -328,7 +328,7 @@ impl FromExpr for TernaryNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for PostfixNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for PostfixNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_PostfixNode)?;
 
@@ -344,7 +344,7 @@ impl FromExpr for PostfixNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl<O: FromExpr> FromExpr for GroupNode<OwnedTokenInput, GeneralSource, O> {
+impl<O: FromExpr> FromExpr for GroupNode<OwnedTokenInput, Source, O> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_GroupNode)?;
 
@@ -360,7 +360,7 @@ impl<O: FromExpr> FromExpr for GroupNode<OwnedTokenInput, GeneralSource, O> {
     }
 }
 
-impl FromExpr for BoxNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for BoxNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_BoxNode)?;
 
@@ -369,7 +369,7 @@ impl FromExpr for BoxNode<OwnedTokenInput, GeneralSource> {
         }
 
         let kind = BoxKind::from_expr(&elements[0]).expect("PRE_COMMIT");
-        let children: CstNodeSeq<OwnedTokenInput, GeneralSource> =
+        let children: CstNodeSeq<OwnedTokenInput, Source> =
             NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -405,7 +405,7 @@ impl FromExpr for BoxKind {
     }
 }
 
-impl FromExpr for CodeNode<GeneralSource> {
+impl FromExpr for CodeNode<Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_CodeNode)?;
 
@@ -421,7 +421,7 @@ impl FromExpr for CodeNode<GeneralSource> {
     }
 }
 
-impl<O: FromExpr> FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource, O> {
+impl<O: FromExpr> FromExpr for GroupMissingCloserNode<OwnedTokenInput, Source, O> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_GroupMissingCloserNode)?;
 
@@ -437,7 +437,7 @@ impl<O: FromExpr> FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSo
     }
 }
 
-impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_GroupMissingOpenerNode)?;
 
@@ -453,7 +453,7 @@ impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for CompoundNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for CompoundNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_CompoundNode)?;
 
@@ -469,7 +469,7 @@ impl FromExpr for CompoundNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl FromExpr for SyntaxErrorNode<OwnedTokenInput, GeneralSource> {
+impl FromExpr for SyntaxErrorNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_SyntaxErrorNode)?;
 
@@ -575,9 +575,9 @@ impl FromExpr for Metadata {
             }
         }
 
-        let source: GeneralSource = match source {
-            Some(source) => GeneralSource::from_expr(&source)?,
-            None => GeneralSource::unknown(),
+        let source: Source = match source {
+            Some(source) => Source::from_expr(&source)?,
+            None => Source::unknown(),
         };
 
         let syntax_issues: Option<Vec<Issue>> = match syntax_issues {
@@ -625,14 +625,14 @@ impl FromExpr for Metadata {
     }
 }
 
-impl FromExpr for GeneralSource {
+impl FromExpr for Source {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        // FIXME: This means GeneralSource::After actually covers both After
+        // FIXME: This means Source::After actually covers both After
         //        and Before. Represent this more cleanly.
         if expr.has_normal_head(&Symbol::new("System`After"))
             || expr.has_normal_head(&Symbol::new("System`Before"))
         {
-            return Ok(GeneralSource::After(expr.clone()));
+            return Ok(Source::After(expr.clone()));
         }
 
         let elements = try_normal_with_head(expr, sym::List)?;
@@ -661,15 +661,15 @@ impl FromExpr for GeneralSource {
 
             // Note: `elements` can sometimes be {}, {1, 1, 1}, etc.
             //        These are the source positions of boxes.
-            return Ok(GeneralSource::BoxPosition(indexes));
+            return Ok(Source::BoxPosition(indexes));
         }
 
         if let Ok(start_index) = get_source_pos(&elements[0]) {
             let end_index = get_source_pos(&elements[1])?;
 
-            return Ok(GeneralSource::String(Source::from_character_span(
+            return Ok(Source::Span(Span::from_character_span(
                 start_index,
-                // FIXME: We add one here because in Source::put() we
+                // FIXME: We add one here because in Span::put() we
                 //        subtract 1. Instead of doing this in the WL
                 //        serialization/deserialization, rationalize the
                 //        representation of this field in Rust/WL so that
@@ -688,7 +688,7 @@ impl FromExpr for GeneralSource {
         fn get_source_pos(expr: &Expr) -> Result<u32, String> {
             let value: i64 = match expr.kind() {
                 ExprKind::Integer(int) => *int,
-                _ => return Err(format!("expected SourceLocation u32, got: {expr}")),
+                _ => return Err(format!("expected source Location u32, got: {expr}")),
             };
 
             match u32::try_from(value) {
@@ -703,19 +703,19 @@ impl FromExpr for GeneralSource {
         let end_first = get_source_pos(&end[0])?;
         let end_second = get_source_pos(&end[1])?;
 
-        Ok(GeneralSource::String(Source::new(
-            SourceLocation::new(start_first, start_second),
-            SourceLocation::new(end_first, end_second),
+        Ok(Source::Span(Span::new(
+            Location::new(start_first, start_second),
+            Location::new(end_first, end_second),
         )))
     }
 }
 
-impl FromExpr for Source {
+impl FromExpr for Span {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        match GeneralSource::from_expr(expr)? {
-            GeneralSource::String(source) => Ok(source),
-            GeneralSource::BoxPosition(_) => todo!("Source from GeneralSource::BoxPosition"),
-            GeneralSource::After(_) => todo!("Source from GeneralSource::After"),
+        match Source::from_expr(expr)? {
+            Source::Span(span) => Ok(span),
+            Source::BoxPosition(_) => todo!("Source from Source::BoxPosition"),
+            Source::After(_) => todo!("Source from Source::After"),
         }
     }
 }
@@ -993,8 +993,8 @@ impl FromExpr for CodeAction {
             .source;
 
         let src = match src {
-            GeneralSource::String(src) => src,
-            GeneralSource::BoxPosition(_) | GeneralSource::After(_) => {
+            Source::Span(src) => src,
+            Source::BoxPosition(_) | Source::After(_) => {
                 todo!("unexpected source for CodeAction: {src:?}")
             },
         };

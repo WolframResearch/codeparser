@@ -1,6 +1,6 @@
 use crate::{
     macros::{src, token},
-    source::{NextPolicyBits::RETURN_TOPLEVELNEWLINE, SourceLocation, TOPLEVEL},
+    source::{Location, NextPolicyBits::RETURN_TOPLEVELNEWLINE, TOPLEVEL},
     ParseOptions, ParserSession,
 };
 
@@ -181,7 +181,7 @@ fn TokenizerTest_Basic4() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    assert_eq!(session.tokenizer.SrcLoc, SourceLocation::new(1, 1));
+    assert_eq!(session.tokenizer.SrcLoc, Location::new(1, 1));
 
     assert_eq!(session.tokenizer.wasEOF, false);
 
@@ -192,7 +192,7 @@ fn TokenizerTest_Basic4() {
         token!(Error_UnsafeCharacterEncoding, [0xff] @ 0, src!(1:1-1:2))
     );
 
-    assert_eq!(session.tokenizer.SrcLoc, SourceLocation::new(1, 1));
+    assert_eq!(session.tokenizer.SrcLoc, Location::new(1, 1));
 
     assert_eq!(session.tokenizer.wasEOF, false);
 
@@ -204,7 +204,7 @@ fn TokenizerTest_Basic4() {
 
     Tok.skip(&mut session.tokenizer);
 
-    assert_eq!(session.tokenizer.SrcLoc, SourceLocation::new(1, 2));
+    assert_eq!(session.tokenizer.SrcLoc, Location::new(1, 2));
 
     assert_eq!(session.tokenizer.wasEOF, true);
 

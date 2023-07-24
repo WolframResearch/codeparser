@@ -5,13 +5,13 @@
 use wolfram_expr::Expr;
 
 use crate::{
-    source::{GeneralSource, Source},
+    source::{Source, Span},
     tokenize::{OwnedTokenInput, Token, TokenInput, TokenKind, TokenSource},
     NodeSeq,
 };
 
 // TODO: #[deprecated(note = "Use CstNode instead")]
-pub(crate) type Node<I = OwnedTokenInput, S = Source> = CstNode<I, S>;
+pub(crate) type Node<I = OwnedTokenInput, S = Span> = CstNode<I, S>;
 
 /// A sequence of concrete syntax tree nodes.
 ///
@@ -21,11 +21,11 @@ pub(crate) type Node<I = OwnedTokenInput, S = Source> = CstNode<I, S>;
 ///
 /// So pass around a structure that contains all of the nodes from the left,
 /// including comments and whitespace.
-pub type CstNodeSeq<I = OwnedTokenInput, S = Source> = NodeSeq<Node<I, S>>;
+pub type CstNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Node<I, S>>;
 
 /// An expression representing a node in the syntax tree
 #[derive(Debug, Clone, PartialEq)]
-pub enum CstNode<I = OwnedTokenInput, S = Source> {
+pub enum CstNode<I = OwnedTokenInput, S = Span> {
     Token(Token<I, S>),
     Call(CallNode<I, S>),
     SyntaxError(SyntaxErrorNode<I, S>),
@@ -47,14 +47,14 @@ pub enum CstNode<I = OwnedTokenInput, S = Source> {
 
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct CodeNode<S = Source> {
+pub struct CodeNode<S = Span> {
     pub first: Expr,
     pub second: Expr,
     pub src: S,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct BoxNode<I = OwnedTokenInput, S = Source> {
+pub struct BoxNode<I = OwnedTokenInput, S = Span> {
     pub kind: BoxKind,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
@@ -77,7 +77,7 @@ pub enum BoxKind {
 
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
-pub struct OperatorNode<I = OwnedTokenInput, S = Source, O = InfixOperator> {
+pub struct OperatorNode<I = OwnedTokenInput, S = Span, O = InfixOperator> {
     pub op: O,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
@@ -85,33 +85,33 @@ pub struct OperatorNode<I = OwnedTokenInput, S = Source, O = InfixOperator> {
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, PrefixOperator>);
+pub struct PrefixNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, PrefixOperator>);
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, BinaryOperator>);
+pub struct BinaryNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, BinaryOperator>);
 
 /// `a + b + c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct InfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S>);
+pub struct InfixNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S>);
 
 /// `a /: b = c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct TernaryNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, TernaryOperator>);
+pub struct TernaryNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, TernaryOperator>);
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PostfixNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, PostfixOperator>);
+pub struct PostfixNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, PostfixOperator>);
 
 /// `\[Integral] f \[DifferentialD] x`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Source>(
+pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Span>(
     pub OperatorNode<I, S, PrefixBinaryOperator>,
 );
 
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CallNode<I = OwnedTokenInput, S = Source> {
+pub struct CallNode<I = OwnedTokenInput, S = Span> {
     pub head: CallHead<I, S>,
     pub body: CallBody<I, S>,
     pub src: S,
@@ -133,14 +133,14 @@ pub enum CallHead<I, S> {
 
 /// Subset of [`CstNode`] variants that are allowed as the body of a [`CallNode`].
 #[derive(Debug, Clone, PartialEq)]
-pub enum CallBody<I = OwnedTokenInput, S = Source> {
+pub enum CallBody<I = OwnedTokenInput, S = Span> {
     Group(GroupNode<I, S, CallOperator>),
     GroupMissingCloser(GroupMissingCloserNode<I, S, CallOperator>),
 }
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode<I = OwnedTokenInput, S = Source, O = GroupOperator>(pub OperatorNode<I, S, O>);
+pub struct GroupNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(pub OperatorNode<I, S, O>);
 
 /// Any "compound" of tokens:
 ///
@@ -152,11 +152,11 @@ pub struct GroupNode<I = OwnedTokenInput, S = Source, O = GroupOperator>(pub Ope
 /// * `##2`
 /// * `%2`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompoundNode<I = OwnedTokenInput, S = Source>(pub OperatorNode<I, S, CompoundOperator>);
+pub struct CompoundNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, CompoundOperator>);
 
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
-pub struct SyntaxErrorNode<I = OwnedTokenInput, S = Source> {
+pub struct SyntaxErrorNode<I = OwnedTokenInput, S = Span> {
     pub err: SyntaxErrorKind,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
@@ -171,19 +171,19 @@ pub enum SyntaxErrorKind {
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Source, O = GroupOperator>(
+pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(
     pub OperatorNode<I, S, O>,
 );
 
 /// Only possible with boxes
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingOpenerNode<I = OwnedTokenInput, S = Source>(
+pub struct GroupMissingOpenerNode<I = OwnedTokenInput, S = Span>(
     pub OperatorNode<I, S, GroupOperator>,
 );
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput, S = Source>(
+pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput, S = Span>(
     pub OperatorNode<I, S, GroupOperator>,
 );
 
@@ -196,7 +196,7 @@ pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput, S = Sou
 pub struct LeafNode {
     pub kind: TokenKind,
     pub input: String,
-    pub src: GeneralSource,
+    pub src: Source,
 }
 
 //======================================
@@ -576,11 +576,11 @@ impl LeafNode {
 // OperatorNode
 //======================================
 
-impl<I, O> OperatorNode<I, Source, O> {
+impl<I, O> OperatorNode<I, Span, O> {
     pub(crate) fn new(op: O, children: CstNodeSeq<I>) -> Self {
         assert!(!children.is_empty());
 
-        let src = Source::new_from_source(children.first().source(), children.last().source());
+        let src = Span::new_from_source(children.first().source(), children.last().source());
 
         OperatorNode {
             op,
@@ -753,7 +753,7 @@ impl<I> CallNode<I> {
 
         incr_diagnostic!(Node_CallNodeCount);
 
-        let src = Source::new_from_source(head.first().source(), body.as_op().getSource());
+        let src = Span::new_from_source(head.first().source(), body.as_op().getSource());
 
         CallNode {
             head: CallHead::Concrete(head),
@@ -846,7 +846,7 @@ impl<I> SyntaxErrorNode<I> {
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);
 
-        let src = Source::new_from_source(children.first().source(), children.last().source());
+        let src = Span::new_from_source(children.first().source(), children.last().source());
 
         SyntaxErrorNode { err, children, src }
     }

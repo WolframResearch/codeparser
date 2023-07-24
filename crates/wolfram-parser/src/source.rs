@@ -1,3 +1,5 @@
+//! Types representing locations in the input being processed.
+
 use std::{
     cmp::Ordering,
     fmt::{self, Debug, Display},
@@ -272,7 +274,7 @@ pub(crate) mod NextPolicyBits {
     pub const SCAN_FOR_UNRECOGNIZEDLONGNAMES: u8 = 0x40;
 }
 
-pub use self::NextPolicyBits::*;
+pub(crate) use self::NextPolicyBits::*;
 
 const _: () = assert!(
     RETURN_TOPLEVELNEWLINE == 0x04,
@@ -319,14 +321,18 @@ pub type SourceCharacter = CodePoint;
 const _: () = assert!(std::mem::size_of::<SourceCharacter>() == 4);
 
 
+/// Whether source locations are tracked by line:column number or by character
+/// index.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum SourceConvention {
-    /// Handle next (non-newline) SourceLocation by incrementing column.
+    /// Handle next (non-newline) [`Location`] by incrementing column.
+    ///
     /// Handle next newline by incrementing line.
     LineColumn = 0,
     // TODO: Clarify, is this the index by unicode character(?), or the byte
     //  offset, or something else?
-    /// Handle next (non-newline) SourceLocation by incrementing index.
+    /// Handle next (non-newline) [`Location`] by incrementing index.
+    ///
     /// Handle next newline by incrementing index.
     CharacterIndex = 1,
 }
@@ -336,29 +342,22 @@ pub enum SourceConvention {
 //       required parameter of ParserSession::new().
 pub const DEFAULT_TAB_WIDTH: u32 = 4;
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash)]
-pub enum SourceLocation {
-    LineColumn(LineColumn),
-    CharacterIndex(u32),
-}
-
-// NOTE:
-//     Keeping the size of the SourceLocation enum limited to 8 bytes depends
-//     on using NonZeroU32, so that the 0 value can be used as the enum
-//     discriminant.
-//
-//     See also: https://github.com/rust-lang/rust/pull/94075
-const _: () = assert!(std::mem::size_of::<SourceLocation>() == 8);
-
 // For LineContinuations and EmbeddedNewlines
 //
 // bool operator<(SourceLocation a, SourceLocation b);
 // bool operator<=(SourceLocation a, SourceLocation b);
 
+/// Specifies a region of source code in an input string or box structure.
 #[derive(Debug, Clone, PartialEq, Hash)]
-pub enum GeneralSource {
-    String(Source),
+pub enum Source {
+    /// Text span.
+    ///
+    /// Source was a string or file containing `InputForm` source code.
+    Span(Span),
+
     /// Box structure position.
+    ///
+    /// Source was `StandardForm` boxes.
     BoxPosition(Vec<usize>),
 
     /// `After[{..}]`
@@ -378,20 +377,37 @@ pub enum GeneralSource {
 /// 1. A line-column position (represented by [`LineColumn`])
 /// 2. A character position (represented by a [`u32`] count)
 ///
-/// A [`Source`] can specify a source span using either of these conventions.
+/// A [`Span`] can specify a source span using either of these conventions.
 ///
-/// Match over [`Source::kind()`] to access the source span position information
-/// stored in a [`Source`] instance:
+/// Match over [`Span::kind()`] to access the source span position information
+/// stored in a [`Span`] instance.
 #[derive(Copy, Clone, PartialEq, Hash)]
-pub struct Source {
-    pub(crate) start: SourceLocation,
-    pub(crate) end: SourceLocation,
+pub struct Span {
+    pub(crate) start: Location,
+    pub(crate) end: Location,
 }
 
-const _: () = assert!(std::mem::size_of::<Source>() == 16);
+const _: () = assert!(std::mem::size_of::<Span>() == 16);
 
+/// A location in the source that can be the start or end of a [`Span`].
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Location {
+    LineColumn(LineColumn),
+    CharacterIndex(u32),
+}
+
+// NOTE:
+//     Keeping the size of the Location enum limited to 8 bytes depends
+//     on using NonZeroU32, so that the 0 value can be used as the enum
+//     discriminant.
+//
+//     See also: https://github.com/rust-lang/rust/pull/94075
+const _: () = assert!(std::mem::size_of::<Location>() == 8);
+
+
+/// Location data from a [`Span`].
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum StringSourceKind {
+pub enum SpanKind {
     LineColumnSpan(LineColumnSpan),
     CharacterSpan(CharacterSpan),
     /// `<||>`
@@ -430,39 +446,39 @@ const _: () = assert!(std::mem::size_of::<LineColumnSpan>() == 16);
 // Source types formatting impls
 //======================================
 
-impl Display for SourceLocation {
+impl Display for Location {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SourceLocation::LineColumn(LineColumn(line, column)) => write!(f, "{line}:{column}"),
-            SourceLocation::CharacterIndex(index) => write!(f, "{index}"),
+            Location::LineColumn(LineColumn(line, column)) => write!(f, "{line}:{column}"),
+            Location::CharacterIndex(index) => write!(f, "{index}"),
         }
     }
 }
 
-impl Debug for SourceLocation {
+impl Debug for Location {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self)
     }
 }
 
-impl Display for Source {
+impl Display for Span {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.kind() {
-            StringSourceKind::CharacterSpan(CharacterSpan(start, end)) => {
+            SpanKind::CharacterSpan(CharacterSpan(start, end)) => {
                 write!(f, "{}..{}", start, end)
             },
-            StringSourceKind::LineColumnSpan(LineColumnSpan { start, end }) => {
+            SpanKind::LineColumnSpan(LineColumnSpan { start, end }) => {
                 write!(f, "{start:?}-{end:?}")
             },
-            StringSourceKind::Unknown => {
+            SpanKind::Unknown => {
                 // TODO: Better formatting for this? "?"
-                write!(f, "Source unknown")
+                write!(f, "Span unknown")
             },
         }
     }
 }
 
-impl Debug for Source {
+impl Debug for Span {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self)
     }
@@ -472,28 +488,28 @@ impl Debug for Source {
 // Source types inherent impls
 //======================================
 
-impl SourceLocation {
+impl Location {
     #[doc(hidden)]
     pub fn new(first: u32, second: u32) -> Self {
         if let Some(line) = NonZeroU32::new(first) {
-            SourceLocation::LineColumn(LineColumn(line, second))
+            Location::LineColumn(LineColumn(line, second))
         } else {
             debug_assert!(first == 0);
 
-            SourceLocation::CharacterIndex(second)
+            Location::CharacterIndex(second)
         }
     }
 
     pub(crate) fn next(self) -> Self {
         if feature::COMPUTE_SOURCE {
             match self {
-                SourceLocation::LineColumn(LineColumn(line, column)) => {
-                    SourceLocation::LineColumn(LineColumn(line, column + 1))
+                Location::LineColumn(LineColumn(line, column)) => {
+                    Location::LineColumn(LineColumn(line, column + 1))
                 },
-                SourceLocation::CharacterIndex(index) => SourceLocation::CharacterIndex(index + 1),
+                Location::CharacterIndex(index) => Location::CharacterIndex(index + 1),
             }
         } else {
-            SourceLocation::new(0, 0)
+            Location::new(0, 0)
         }
     }
 
@@ -502,19 +518,19 @@ impl SourceLocation {
             // TODO: What should this do if `second` is equal to 0? Can `second`
             //       even validly be equal to zero?
             match self {
-                SourceLocation::LineColumn(LineColumn(line, column)) => {
+                Location::LineColumn(LineColumn(line, column)) => {
                     debug_assert!(column >= 1);
 
-                    SourceLocation::LineColumn(LineColumn(line, column - 1))
+                    Location::LineColumn(LineColumn(line, column - 1))
                 },
-                SourceLocation::CharacterIndex(index) => {
+                Location::CharacterIndex(index) => {
                     debug_assert!(index >= 1);
 
-                    SourceLocation::CharacterIndex(index - 1)
+                    Location::CharacterIndex(index - 1)
                 },
             }
         } else {
-            SourceLocation::new(0, 0)
+            Location::new(0, 0)
         }
     }
 }
@@ -558,15 +574,15 @@ impl CharacterSpan {
     }
 }
 
-impl Source {
-    pub fn new(start: SourceLocation, end: SourceLocation) -> Self {
+impl Span {
+    pub fn new(start: Location, end: Location) -> Self {
         assert!(start <= end);
 
-        Source { start, end }
+        Span { start, end }
     }
 
-    pub fn from_location(only: SourceLocation) -> Self {
-        Source {
+    pub fn from_location(only: Location) -> Self {
+        Span {
             start: only,
             end: only,
         }
@@ -574,16 +590,16 @@ impl Source {
 
     #[doc(hidden)]
     pub fn from_character_span(start: u32, end: u32) -> Self {
-        Source {
-            start: SourceLocation::CharacterIndex(start),
-            end: SourceLocation::CharacterIndex(end),
+        Span {
+            start: Location::CharacterIndex(start),
+            end: Location::CharacterIndex(end),
         }
     }
 
-    pub fn new_from_source(start: Source, end: Source) -> Self {
+    pub(crate) fn new_from_source(start: Span, end: Span) -> Self {
         assert!(start <= end);
 
-        Source {
+        Span {
             start: start.start,
             end: end.end,
         }
@@ -591,70 +607,67 @@ impl Source {
 
     pub fn unknown() -> Self {
         // Use incompatible values for `first`.
-        Source {
-            start: SourceLocation::CharacterIndex(0),
-            end: SourceLocation::LineColumn(LineColumn(NonZeroU32::MIN, 0)),
+        Span {
+            start: Location::CharacterIndex(0),
+            end: Location::LineColumn(LineColumn(NonZeroU32::MIN, 0)),
         }
     }
 
-    /// Get the start and end `SourceLocation`s of this source span.
-    pub fn start_end(&self) -> (SourceLocation, SourceLocation) {
-        let Source { start, end } = *self;
+    /// Get the start and end [`Location`]s of this source span.
+    pub fn start_end(&self) -> (Location, Location) {
+        let Span { start, end } = *self;
 
         (start, end)
     }
 
     pub(crate) fn character_span(&self) -> CharacterSpan {
         match self.kind() {
-            StringSourceKind::CharacterSpan(range) => range,
+            SpanKind::CharacterSpan(range) => range,
             other => {
-                panic!("Source::character_span(): Source is not a character span: {other:?}")
+                panic!("Span::character_span(): Span is not a character span: {other:?}")
             },
         }
     }
 
     pub(crate) fn line_column_span(&self) -> LineColumnSpan {
         match self.kind() {
-            StringSourceKind::LineColumnSpan(span) => span,
+            SpanKind::LineColumnSpan(span) => span,
             other => {
-                panic!("Source::line_column_span(): Source is not a line/column span: {other:?}")
+                panic!("Span::line_column_span(): Span is not a line/column span: {other:?}")
             },
         }
     }
 
-    pub fn kind(self) -> StringSourceKind {
-        let Source { start, end } = self;
+    pub fn kind(self) -> SpanKind {
+        let Span { start, end } = self;
 
         match (start, end) {
+            (Location::CharacterIndex(start_char), Location::CharacterIndex(end_char)) => {
+                SpanKind::CharacterSpan(CharacterSpan(start_char, end_char))
+            },
             (
-                SourceLocation::CharacterIndex(start_char),
-                SourceLocation::CharacterIndex(end_char),
-            ) => StringSourceKind::CharacterSpan(CharacterSpan(start_char, end_char)),
-            (
-                SourceLocation::LineColumn(LineColumn(start_line, start_column)),
-                SourceLocation::LineColumn(LineColumn(end_line, end_column)),
-            ) => StringSourceKind::LineColumnSpan(LineColumnSpan {
+                Location::LineColumn(LineColumn(start_line, start_column)),
+                Location::LineColumn(LineColumn(end_line, end_column)),
+            ) => SpanKind::LineColumnSpan(LineColumnSpan {
                 start: LineColumn(start_line, start_column),
                 end: LineColumn(end_line, end_column),
             }),
-            _ => StringSourceKind::Unknown,
+            _ => SpanKind::Unknown,
         }
     }
 
     #[allow(dead_code)]
     pub(crate) fn column_width(&self) -> usize {
         let (start_column, end_column) = match self.kind() {
-            StringSourceKind::LineColumnSpan(LineColumnSpan { start, end }) => {
+            SpanKind::LineColumnSpan(LineColumnSpan { start, end }) => {
                 debug_assert!(
                     start.line() == end.line(),
-                    "StringSourceKind::column_width(): source locations are on different lines"
+                    "SpanKind::column_width(): source locations are on different lines"
                 );
 
                 (start.column(), end.column())
             },
-            other => panic!(
-                "StringSourceKind::column_width(): Source is not a line column span: {other:?}"
-            ),
+            other => panic!("SpanKind::column_width(): Span is not a line column span: {other:?}"),
         };
 
         return end_column as usize - start_column as usize;
@@ -730,7 +743,7 @@ impl LineColumnSpan {
     /// another [`LineColumnSpan`].
     ///
     /// ```
-    /// use wolfram_parser::{Source, SourceLocation, macros::src};
+    /// use wolfram_parser::{source::{Span, Location}, macros::src};
     ///
     /// // Complete overlap.
     /// assert!(src!(1:1-1:5).overlaps(src!(1:2-1:4)));
@@ -748,19 +761,19 @@ impl LineColumnSpan {
     }
 }
 
-impl GeneralSource {
+impl Source {
     pub fn unknown() -> Self {
-        GeneralSource::String(Source::unknown())
+        Source::Span(Span::unknown())
     }
 
     pub fn is_unknown(&self) -> bool {
         match self {
-            GeneralSource::String(source) => match source.kind() {
-                StringSourceKind::Unknown => true,
+            Source::Span(span) => match span.kind() {
+                SpanKind::Unknown => true,
                 _ => false,
             },
-            GeneralSource::BoxPosition(_) => false,
-            GeneralSource::After(_) => false,
+            Source::BoxPosition(_) => false,
+            Source::After(_) => false,
         }
     }
 }
@@ -769,30 +782,30 @@ impl GeneralSource {
 // Source type conversion impls
 //======================================
 
-impl From<LineColumn> for SourceLocation {
+impl From<LineColumn> for Location {
     fn from(lc: LineColumn) -> Self {
-        SourceLocation::LineColumn(lc)
+        Location::LineColumn(lc)
     }
 }
 
-impl From<LineColumnSpan> for Source {
+impl From<LineColumnSpan> for Span {
     fn from(value: LineColumnSpan) -> Self {
         let LineColumnSpan { start, end } = value;
 
-        Source {
-            start: SourceLocation::LineColumn(start),
-            end: SourceLocation::LineColumn(end),
+        Span {
+            start: Location::LineColumn(start),
+            end: Location::LineColumn(end),
         }
     }
 }
 
-impl From<CharacterSpan> for Source {
-    fn from(value: CharacterSpan) -> Source {
+impl From<CharacterSpan> for Span {
+    fn from(value: CharacterSpan) -> Span {
         let CharacterSpan(start, end) = value;
 
-        Source {
-            start: SourceLocation::CharacterIndex(start),
-            end: SourceLocation::CharacterIndex(end),
+        Span {
+            start: Location::CharacterIndex(start),
+            end: Location::CharacterIndex(end),
         }
     }
 }
@@ -805,20 +818,20 @@ impl From<CharacterSpan> for Source {
 // TODO: Only used for assertions; make this a method
 // TODO: Replace this with derive(PartialOrd)? I think they would have the same
 //       semantics.
-impl PartialOrd for SourceLocation {
+impl PartialOrd for Location {
     fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
         let a = self;
 
         match (a, b) {
             (
-                SourceLocation::LineColumn(LineColumn(a_line, a_column)),
-                SourceLocation::LineColumn(LineColumn(b_line, b_col)),
+                Location::LineColumn(LineColumn(a_line, a_column)),
+                Location::LineColumn(LineColumn(b_line, b_col)),
             ) => (a_line, a_column).partial_cmp(&(b_line, b_col)),
-            (SourceLocation::CharacterIndex(a_index), SourceLocation::CharacterIndex(b_index)) => {
+            (Location::CharacterIndex(a_index), Location::CharacterIndex(b_index)) => {
                 a_index.partial_cmp(b_index)
             },
-            (SourceLocation::LineColumn { .. }, SourceLocation::CharacterIndex(_)) => None,
-            (SourceLocation::CharacterIndex(_), SourceLocation::LineColumn { .. }) => None,
+            (Location::LineColumn { .. }, Location::CharacterIndex(_)) => None,
+            (Location::CharacterIndex(_), Location::LineColumn { .. }) => None,
         }
     }
 }
@@ -827,16 +840,16 @@ impl PartialOrd for SourceLocation {
 //     return a.Start < b.Start;
 // }
 // PRE_COMMIT: Only used for assertions; make this a method
-impl PartialOrd for Source {
+impl PartialOrd for Span {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.start.partial_cmp(&other.start)
     }
 }
 
-impl PartialOrd for GeneralSource {
-    fn partial_cmp(&self, other: &GeneralSource) -> Option<Ordering> {
+impl PartialOrd for Source {
+    fn partial_cmp(&self, other: &Source) -> Option<Ordering> {
         match (self, other) {
-            (GeneralSource::String(src1), GeneralSource::String(src2)) => src1.partial_cmp(src2),
+            (Source::Span(src1), Source::Span(src2)) => src1.partial_cmp(src2),
             _ => None,
         }
     }

@@ -12,7 +12,7 @@ use wolfram_parser::{
         PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
-    source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
+    source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbol_registration as sym,
     token_enum_registration::TokenToSymbol,
@@ -169,9 +169,9 @@ impl WstpPut for Metadata {
             link.put_function("System`Rule", 2).unwrap();
             link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
             match source {
-                GeneralSource::String(source) => put_source_rhs(link, *source),
-                GeneralSource::BoxPosition(other) => put_box_position(link, other),
-                GeneralSource::After(expr) => link.put_expr(expr).unwrap(),
+                Source::Span(span) => put_span_rhs(link, *span),
+                Source::BoxPosition(other) => put_box_position(link, other),
+                Source::After(expr) => link.put_expr(expr).unwrap(),
             }
         }
 
@@ -224,9 +224,9 @@ impl WstpPut for AstMetadata {
             link.put_function("System`Rule", 2).unwrap();
             link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
             match source {
-                GeneralSource::String(source) => put_source_rhs(link, *source),
-                GeneralSource::BoxPosition(other) => put_box_position(link, other),
-                GeneralSource::After(expr) => link.put_expr(expr).unwrap(),
+                Source::Span(span) => put_span_rhs(link, *span),
+                Source::BoxPosition(other) => put_box_position(link, other),
+                Source::After(expr) => link.put_expr(expr).unwrap(),
             }
         }
 
@@ -878,9 +878,9 @@ impl WstpPut for Issue {
 
                 for source in additional_sources {
                     match source {
-                        GeneralSource::String(source) => put_source_rhs(callLink, *source),
-                        GeneralSource::BoxPosition(other) => put_box_position(callLink, other),
-                        GeneralSource::After(expr) => callLink.put_expr(expr).unwrap(),
+                        Source::Span(span) => put_span_rhs(callLink, *span),
+                        Source::BoxPosition(other) => put_box_position(callLink, other),
+                        Source::After(expr) => callLink.put_expr(expr).unwrap(),
                     }
                 }
             }
@@ -958,11 +958,11 @@ impl WstpPut for CodeAction {
     }
 }
 
-impl WstpPut for SourceLocation {
+impl WstpPut for Location {
     fn put(&self, callLink: &mut wstp::Link) {
         let (first, second) = match self {
-            SourceLocation::LineColumn(LineColumn(line, column)) => (line.get(), *column),
-            SourceLocation::CharacterIndex(index) => (0, *index),
+            Location::LineColumn(LineColumn(line, column)) => (line.get(), *column),
+            Location::CharacterIndex(index) => (0, *index),
         };
 
         callLink.put_function(sym::List.as_str(), 2).unwrap();
@@ -973,9 +973,9 @@ impl WstpPut for SourceLocation {
     }
 }
 
-fn put_source_rhs(link: &mut wstp::Link, source: Source) {
+fn put_span_rhs(link: &mut wstp::Link, source: Span) {
     match source.kind() {
-        StringSourceKind::LineColumnSpan { .. } => {
+        SpanKind::LineColumnSpan { .. } => {
             let (start, end) = source.start_end();
 
             link.put_function(sym::List.as_str(), 2).unwrap();
@@ -983,7 +983,7 @@ fn put_source_rhs(link: &mut wstp::Link, source: Source) {
             start.put(link);
             end.put(link);
         },
-        StringSourceKind::CharacterSpan(CharacterSpan(start, end)) => {
+        SpanKind::CharacterSpan(CharacterSpan(start, end)) => {
             link.put_function(sym::List.as_str(), 2).unwrap();
 
             link.put_i64(start.into()).unwrap();
@@ -998,9 +998,9 @@ fn put_source_rhs(link: &mut wstp::Link, source: Source) {
         //  * Source -> Missing["Unknown"]
         //  * Panic here? (The caller should construct <||>, NOT
         //    <| Source -> <unknown> |>)
-        StringSourceKind::Unknown => {
+        SpanKind::Unknown => {
             // link.put_function(sym::List.as_str(), 0).unwrap();
-            panic!("unable to serialize StringSourceKind::Unknown")
+            panic!("unable to serialize SpanKind::Unknown")
         },
     }
 }
@@ -1015,18 +1015,18 @@ fn put_box_position(link: &mut wstp::Link, indexes: &Vec<usize>) {
     }
 }
 
-impl WstpPut for Source {
+impl WstpPut for Span {
     fn put(&self, link: &mut wstp::Link) {
         link.put_function(sym::Association.as_str(), 1).unwrap();
 
         // Put: CodeParser`Source -> source
         link.put_function(sym::Rule.as_str(), 2).unwrap();
         Symbol_put(sym::CodeParser_Source, link);
-        put_source_rhs(link, *self)
+        put_span_rhs(link, *self)
     }
 }
 
-impl WstpPut for GeneralSource {
+impl WstpPut for Source {
     fn put(&self, link: &mut wstp::Link) {
         if self.is_unknown() {
             // Put: <||>
@@ -1040,14 +1040,14 @@ impl WstpPut for GeneralSource {
         Symbol_put(sym::CodeParser_Source, link);
 
         match self {
-            GeneralSource::String(source) => put_source_rhs(link, *source),
-            GeneralSource::BoxPosition(other) => put_box_position(link, other),
-            GeneralSource::After(expr) => link.put_expr(expr).unwrap(),
+            Source::Span(span) => put_span_rhs(link, *span),
+            Source::BoxPosition(other) => put_box_position(link, other),
+            Source::After(expr) => link.put_expr(expr).unwrap(),
         }
     }
 }
 
-fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<SourceLocation>) {
+fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<Location>) {
     link.put_function(sym::List.as_str(), source_locs.len())
         .unwrap();
 

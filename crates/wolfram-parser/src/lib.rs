@@ -128,7 +128,7 @@ use crate::{
     cst::CstNode,
     issue::{CodeAction, Issue},
     parse::ParserSession,
-    source::{GeneralSource, Source, SourceConvention, DEFAULT_TAB_WIDTH},
+    source::{Source, SourceConvention, Span, DEFAULT_TAB_WIDTH},
     tokenize::{BorrowedTokenInput, OwnedTokenInput, Token},
 };
 
@@ -173,7 +173,7 @@ pub struct NodeSeq<N>(pub Vec<N>);
 
 #[derive(Debug)]
 pub struct Metadata {
-    pub source: GeneralSource,
+    pub source: Source,
     pub syntax_issues: Option<Vec<Issue>>,
     pub confidence_level: Option<Number>,
     pub code_actions: Option<Vec<CodeAction>>,
@@ -247,7 +247,7 @@ pub enum StringifyMode {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Tokens<I = OwnedTokenInput, S = Source>(pub Vec<Token<I, S>>);
+pub struct Tokens<I = OwnedTokenInput, S = Span>(pub Vec<Token<I, S>>);
 
 //-------------
 // ParseOptions

@@ -5,7 +5,7 @@ use crate::{
         code_point::{CodePoint::Char, *},
         wl_character::{EscapeStyle, WLCharacter},
     },
-    source::Source,
+    source::Span,
 };
 
 pub fn isStrange(point: CodePoint) -> bool {
@@ -265,7 +265,7 @@ pub fn ifASCIIWLCharacter(c_byte: u8, test: u8) -> bool {
 // \:29F4 -> \[RuleDelayed]
 // \:200B -> \[InvisibleSpace]
 //
-pub fn certainCharacterReplacementActions(c: WLCharacter, src: Source) -> Vec<CodeAction> {
+pub fn certainCharacterReplacementActions(c: WLCharacter, src: Span) -> Vec<CodeAction> {
     let mut Actions: Vec<CodeAction> = Vec::new();
 
     match c.to_point() {

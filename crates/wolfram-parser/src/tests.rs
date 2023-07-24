@@ -22,7 +22,7 @@ use crate::{
     macros::{src, token},
     parse::ParserSession,
     parse_bytes_to_cst,
-    source::{GeneralSource, SourceConvention},
+    source::{Source, SourceConvention},
     tokenize,
     tokenize::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
     FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
@@ -347,7 +347,7 @@ fn test_abstract_parse() {
                     kind: TK::Integer,
                     input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {
-                        source: GeneralSource::String(src!(1:1-1:2).into()),
+                        source: Source::Span(src!(1:1-1:2).into()),
                         issues: vec![],
                     },
                 },
@@ -355,13 +355,13 @@ fn test_abstract_parse() {
                     kind: TK::Integer,
                     input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {
-                        source: GeneralSource::String(src!(1:5-1:6).into()),
+                        source: Source::Span(src!(1:5-1:6).into()),
                         issues: vec![],
                     },
                 },
             ],
             data: AstMetadata {
-                source: GeneralSource::String(src!(1:1-1:6).into()),
+                source: Source::Span(src!(1:1-1:6).into()),
                 issues: vec![],
             },
         },]

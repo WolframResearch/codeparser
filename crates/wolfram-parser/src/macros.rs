@@ -100,7 +100,7 @@ macro_rules! __token {
     ($kind:ident, $input:tt @ $offset:literal, $src:expr) => {
         $crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$kind,
-            src: $crate::Source::from($src),
+            src: $crate::source::Span::from($src),
             input: $crate::tokenize::BorrowedTokenInput::new($input.as_ref(), $offset),
         }
     };
