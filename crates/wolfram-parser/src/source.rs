@@ -1053,53 +1053,22 @@ impl Display for SourceCharacter {
 
                 return Ok(())
             }
-            Char(CODEPOINT_LINEARSYNTAX_BANG) => {
+            Char(
+                ls @ CODEPOINT_LINEARSYNTAX_BANG
+                | ls @ CODEPOINT_LINEARSYNTAX_PERCENT
+                | ls @ CODEPOINT_LINEARSYNTAX_AMP
+                | ls @ CODEPOINT_LINEARSYNTAX_OPENPAREN
+                | ls @ CODEPOINT_LINEARSYNTAX_CLOSEPAREN
+                | ls @ CODEPOINT_LINEARSYNTAX_STAR
+                | ls @ CODEPOINT_LINEARSYNTAX_PLUS
+                | ls @ CODEPOINT_LINEARSYNTAX_SLASH
+                | ls @ CODEPOINT_LINEARSYNTAX_AT
+                | ls @ CODEPOINT_LINEARSYNTAX_CARET
+                | ls @ CODEPOINT_LINEARSYNTAX_UNDER
+                | ls @ CODEPOINT_LINEARSYNTAX_BACKTICK
+            ) => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_BANG, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_PERCENT) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_PERCENT, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_AMP) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_AMP, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_OPENPAREN, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_STAR) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_STAR, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_PLUS) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_PLUS, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_SLASH) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_SLASH, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_AT) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_AT, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_CARET) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_CARET, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_UNDER) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_UNDER, EscapeStyle::Single))
-            }
-            Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => {
-
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_LINEARSYNTAX_BACKTICK, EscapeStyle::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(ls, EscapeStyle::Single))
             }
             LinearSyntax_Space => {
 
