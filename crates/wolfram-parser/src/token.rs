@@ -265,14 +265,18 @@ impl<'i> TokenRef<'i> {
         token
     }
 
-    pub(crate) fn error_at_start(error_tok: TokenKind, mut token: TokenRef<'i>) -> TokenRef<'i> {
+    pub(crate) fn at_start(error_tok: TokenKind, mut token: TokenRef<'i>) -> TokenRef<'i> {
         // The error is at the start of this token.
         token.src = Source::from_location(token.src.start);
 
-        Token::error_at(error_tok, token)
+        Token::at(error_tok, token)
     }
 
-    pub(crate) fn error_at(error_tok: TokenKind, token: TokenRef<'i>) -> TokenRef<'i> {
+    /// Construct a new token positioned at `token` but with the [`TokenKind`]
+    /// specified by `kind`.
+    ///
+    /// Typically used to construct new error or "fake" tokens.
+    pub(crate) fn at(kind: TokenKind, token: TokenRef<'i>) -> TokenRef<'i> {
         // Note: Same as BufferAndLength(Buffer Buf), which inits the Len to 0
 
         let Token {
@@ -294,12 +298,12 @@ impl<'i> TokenRef<'i> {
             }
         }
 
-        if is_len_zero(error_tok) {
+        if is_len_zero(kind) {
             input = input.into_empty();
         }
 
         Token {
-            tok: error_tok,
+            tok: kind,
             src,
             input,
         }

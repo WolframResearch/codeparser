@@ -35,7 +35,7 @@ impl PrefixParselet for IntegralParselet {
             // \[Integral] \[DifferentialD] x
             //
 
-            session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, Tok));
+            session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitOne, Tok));
 
             return IntegralParselet::parse1(session, self);
         }
@@ -121,6 +121,6 @@ impl InfixParselet for InfixDifferentialDParselet {
             return tok_in;
         }
 
-        return Token::error_at_start(TokenKind::Fake_ImplicitTimes, tok_in);
+        return Token::at_start(TokenKind::Fake_ImplicitTimes, tok_in);
     }
 }

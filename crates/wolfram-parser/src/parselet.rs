@@ -447,15 +447,13 @@ impl PrefixParselet for PrefixCloserParselet {
         // Inside some other parselet that is not GroupParselet
         //
 
-        let createdToken: TokenRef;
-
-        if session.top_precedence() == Precedence::COMMA {
-            createdToken = Token::error_at_start(TokenKind::Error_InfixImplicitNull, tok_in);
+        let kind = if session.top_precedence() == Precedence::COMMA {
+            TokenKind::Error_InfixImplicitNull
         } else {
-            createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, tok_in);
-        }
+            TokenKind::Error_ExpectedOperand
+        };
 
-        session.push_leaf(createdToken);
+        session.push_leaf(Token::at_start(kind, tok_in));
 
         //
         // Do not take the closer.
@@ -484,7 +482,7 @@ impl PrefixParselet for PrefixToplevelCloserParselet {
         // if we are at the top, then make sure to take the token and report it
         //
 
-        session.push_leaf(Token::error_at(TokenKind::Error_UnexpectedCloser, tok_in));
+        session.push_leaf(Token::at(TokenKind::Error_UnexpectedCloser, tok_in));
 
         tok_in.skip(&mut session.tokenizer);
 
@@ -506,15 +504,13 @@ impl PrefixParselet for PrefixEndOfFileParselet {
         panic_if_aborted!();
 
 
-        let createdToken: TokenRef;
-
-        if session.top_precedence() == Precedence::COMMA {
-            createdToken = Token::error_at_start(TokenKind::Error_InfixImplicitNull, tok_in);
+        let kind = if session.top_precedence() == Precedence::COMMA {
+            TokenKind::Error_InfixImplicitNull
         } else {
-            createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, tok_in);
-        }
+            TokenKind::Error_ExpectedOperand
+        };
 
-        session.push_leaf(createdToken);
+        session.push_leaf(Token::at_start(kind, tok_in));
 
         // MUSTTAIL
         return session.try_continue();
@@ -530,7 +526,7 @@ impl PrefixParselet for PrefixUnsupportedTokenParselet {
         panic_if_aborted!();
 
 
-        session.push_leaf(Token::error_at(TokenKind::Error_UnsupportedToken, tok_in));
+        session.push_leaf(Token::at(TokenKind::Error_UnsupportedToken, tok_in));
 
         tok_in.skip(&mut session.tokenizer);
 
@@ -554,15 +550,13 @@ impl PrefixParselet for PrefixCommaParselet {
         panic_if_aborted!();
 
 
-        let createdToken: TokenRef;
-
-        if session.top_precedence() == None {
-            createdToken = Token::error_at_start(TokenKind::Error_PrefixImplicitNull, tok_in);
+        let kind = if session.top_precedence() == None {
+            TokenKind::Error_PrefixImplicitNull
         } else {
-            createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, tok_in);
-        }
+            TokenKind::Error_ExpectedOperand
+        };
 
-        session.push_leaf(createdToken);
+        session.push_leaf(Token::at_start(kind, tok_in));
 
         // MUSTTAIL
         return session.parse_climb();
@@ -580,10 +574,7 @@ impl PrefixParselet for PrefixUnhandledParselet {
         panic_if_aborted!();
 
 
-        session.push_leaf(Token::error_at_start(
-            TokenKind::Error_ExpectedOperand,
-            tok_in,
-        ));
+        session.push_leaf(Token::at_start(TokenKind::Error_ExpectedOperand, tok_in));
 
         //
         // Do not take next token
@@ -844,7 +835,7 @@ impl InfixParselet for InfixImplicitTimesParselet {
         _session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
-        return Token::error_at_start(TokenKind::Fake_ImplicitTimes, tok_in);
+        return Token::at_start(TokenKind::Fake_ImplicitTimes, tok_in);
     }
 }
 
@@ -1793,10 +1784,7 @@ impl InfixParselet for CommaParselet {
             // Something like  a,,
             //
 
-            session.push_leaf(Token::error_at_start(
-                TokenKind::Error_InfixImplicitNull,
-                tok2,
-            ));
+            session.push_leaf(Token::at_start(TokenKind::Error_InfixImplicitNull, tok2));
 
             // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
@@ -1872,10 +1860,7 @@ impl CommaParselet {
                 // Something like  a,,
                 //
 
-                session.push_leaf(Token::error_at_start(
-                    TokenKind::Error_InfixImplicitNull,
-                    tok2,
-                ));
+                session.push_leaf(Token::at_start(TokenKind::Error_InfixImplicitNull, tok2));
 
                 // #if !USE_MUSTTAIL
                 continue;
@@ -1948,7 +1933,7 @@ impl InfixParselet for SemiParselet {
             // Something like  a; ;
             //
 
-            session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitNull, tok2));
+            session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitNull, tok2));
 
             //
             // nextToken() is not needed after an implicit token
@@ -1999,7 +1984,7 @@ impl InfixParselet for SemiParselet {
         // For example:  a;&
         //
 
-        session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitNull, tok2));
+        session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitNull, tok2));
 
         //
         // nextToken() is not needed after an implicit token
@@ -2056,7 +2041,7 @@ impl SemiParselet {
                 // Something like  a;b; ;
                 //
 
-                session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitNull, tok2));
+                session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitNull, tok2));
 
                 //
                 // nextToken() is not needed after an implicit token
@@ -2099,7 +2084,7 @@ impl SemiParselet {
             // For example:  a;b;&
             //
 
-            session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitNull, tok2));
+            session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitNull, tok2));
 
             //
             // nextToken() is not needed after an implicit token

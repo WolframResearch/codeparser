@@ -37,7 +37,7 @@ impl InfixParselet for SemiSemiParselet {
         //
 
         if session.top_node_is_span() {
-            return Token::error_at_start(TokenKind::Fake_ImplicitTimes, tok_in);
+            return Token::at_start(TokenKind::Fake_ImplicitTimes, tok_in);
         }
 
         return tok_in;
@@ -50,7 +50,7 @@ impl PrefixParselet for SemiSemiParselet {
 
         debug_assert_eq!(tok_in.tok, TokenKind::SemiSemi);
 
-        session.push_leaf(Token::error_at_start(TokenKind::Fake_ImplicitOne, tok_in));
+        session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitOne, tok_in));
 
         session.push_context(Precedence::SEMISEMI);
 
@@ -83,10 +83,7 @@ impl SemiSemiParselet {
             //    ^SecondTok
             //
 
-            session.push_leaf(Token::error_at_start(
-                TokenKind::Fake_ImplicitAll,
-                SecondTok,
-            ));
+            session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitAll, SecondTok));
 
             //
             // nextToken() is not needed after an implicit token
@@ -114,10 +111,7 @@ impl SemiSemiParselet {
         //    ^~SecondTok
         //
 
-        session.push_leaf(Token::error_at_start(
-            TokenKind::Fake_ImplicitAll,
-            SecondTok,
-        ));
+        session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitAll, SecondTok));
 
         SecondTok.skip(&mut session.tokenizer);
 
