@@ -11,7 +11,7 @@ use crate::{
     utils,
 };
 
-pub fn code_point_has_long_name(point: CodePoint) -> bool {
+pub(crate) fn code_point_has_long_name(point: char) -> bool {
     // debug_assert!(CODE_POINT_TO_LONGNAME_MAP__POINTS.is_sorted());
     // CODE_POINT_TO_LONGNAME_MAP__POINTS.binary_search(&point).is_ok()
 
@@ -19,7 +19,7 @@ pub fn code_point_has_long_name(point: CodePoint) -> bool {
     //                 out binary_search(). Fix the sorting of this table so
     //                 that the debug_assert!(..is_sorted()) succeeds, and then
     //                 switch back to the binary search code.
-    CODE_POINT_TO_LONGNAME_MAP__POINTS.contains(&point)
+    CODE_POINT_TO_LONGNAME_MAP__POINTS.contains(&CodePoint::Char(point))
 }
 
 pub fn code_point_to_long_name(point: CodePoint) -> &'static str {
