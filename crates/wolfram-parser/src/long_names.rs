@@ -49,14 +49,24 @@ pub fn isRaw(long_name_str: &str) -> bool {
 }
 
 pub fn isMBNotStrangeLetterlike(point: CodePoint) -> bool {
+    // TODO(cleanup): Change param type?
+    let Some(char) = point.as_char() else {
+        return false;
+    };
+
     debug_assert!(utils::is_sorted(&MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS));
     return MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS
-        .binary_search(&point)
+        .binary_search(&char)
         .is_ok();
 }
 
 pub fn asciiReplacements(point: CodePoint) -> Vec<String> {
-    match ASCII_REPLACEMENTS_MAP.get(&point) {
+    // TODO(cleanup): Change param type?
+    let Some(char) = point.as_char() else {
+        return Vec::new();
+    };
+
+    match ASCII_REPLACEMENTS_MAP.get(&char) {
         Some(replacements) => replacements
             .into_iter()
             .map(|&s: &&str| s.to_owned())
@@ -92,13 +102,23 @@ pub fn replacementGraphical(replacement: String) -> String {
 }
 
 pub fn isMBPunctuation(point: CodePoint) -> bool {
+    // TODO(cleanup): Change param type?
+    let Some(char) = point.as_char() else {
+        return false;
+    };
+
     debug_assert!(utils::is_sorted(&MB_PUNCTUATION_CODE_POINTS));
-    return MB_PUNCTUATION_CODE_POINTS.binary_search(&point).is_ok();
+    return MB_PUNCTUATION_CODE_POINTS.binary_search(&char).is_ok();
 }
 
 pub fn isMBWhitespace(point: CodePoint) -> bool {
+    // TODO(cleanup): Change param type?
+    let Some(char) = point.as_char() else {
+        return false;
+    };
+
     debug_assert!(utils::is_sorted(&MB_WHITESPACE_CODE_POINTS));
-    return MB_WHITESPACE_CODE_POINTS.binary_search(&point).is_ok();
+    return MB_WHITESPACE_CODE_POINTS.binary_search(&char).is_ok();
 }
 
 pub fn isMBNewline(point: CodePoint) -> bool {
@@ -107,6 +127,11 @@ pub fn isMBNewline(point: CodePoint) -> bool {
 }
 
 pub fn isMBUninterpretable(point: CodePoint) -> bool {
+    // TODO(cleanup): Change param type?
+    let Some(char) = point.as_char() else {
+        return false;
+    };
+
     debug_assert!(utils::is_sorted(&MB_UNINTERPRETABLE_CODE_POINTS));
-    return MB_UNINTERPRETABLE_CODE_POINTS.binary_search(&point).is_ok();
+    return MB_UNINTERPRETABLE_CODE_POINTS.binary_search(&char).is_ok();
 }

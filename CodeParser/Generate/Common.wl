@@ -58,6 +58,14 @@ toGlobal[n_Symbol] := (
 	]
 )
 
+toGlobal[n_, "CodePoint"] :=
+	Replace[n, {
+		CodePoint`CRLF -> "CodePoint::CRLF",
+		"CodePoint`LongName`RawDoubleQuote" -> toGlobal[n],
+		"CodePoint`LongName`RawBackslash" -> toGlobal[n],
+		other_String :> StringJoin["CodePoint::from_char(", toGlobal[other], ")"]
+	}]
+
 toGlobal[n_, "UpperCamelCase"] :=
   StringReplace[ToString[n], {"`" -> "_", "$" -> "_"}]
 

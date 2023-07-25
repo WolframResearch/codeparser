@@ -5264,8 +5264,12 @@ fn Tokenizer_handleMBPunctuation<'i>(
 ) -> TokenRef<'i> {
     assert!(c.isMBPunctuation());
 
-    let Operator =
-        crate::generated::long_names_registration::LongNameCodePointToOperator(c.to_point());
+    let char = c
+        .to_point()
+        .as_char()
+        .expect("expected MBPunctuation to be char");
+
+    let Operator = crate::generated::long_names_registration::LongNameCodePointToOperator(char);
 
     return Token(
         Operator,

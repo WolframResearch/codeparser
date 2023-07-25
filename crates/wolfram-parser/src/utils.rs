@@ -72,10 +72,12 @@ pub fn isMBStrange(point: CodePoint) -> bool {
         //
         // Various curly quotes
         //
-        CODEPOINT_LONGNAME_OPENCURLYQUOTE
-        | CODEPOINT_LONGNAME_CLOSECURLYQUOTE
-        | CODEPOINT_LONGNAME_OPENCURLYDOUBLEQUOTE
-        | CODEPOINT_LONGNAME_CLOSECURLYDOUBLEQUOTE => {
+        Char(
+            CODEPOINT_LONGNAME_OPENCURLYQUOTE
+            | CODEPOINT_LONGNAME_CLOSECURLYQUOTE
+            | CODEPOINT_LONGNAME_OPENCURLYDOUBLEQUOTE
+            | CODEPOINT_LONGNAME_CLOSECURLYDOUBLEQUOTE,
+        ) => {
             return true;
         },
         //
@@ -99,7 +101,7 @@ pub fn isMBStrange(point: CodePoint) -> bool {
         //
         // U+2192
         //
-        CODEPOINT_LONGNAME_RIGHTARROW => {
+        Char(CODEPOINT_LONGNAME_RIGHTARROW) => {
             return true;
         },
         //
@@ -114,13 +116,13 @@ pub fn isMBStrange(point: CodePoint) -> bool {
         Char(CODEPOINT_RULEDELAYED) => {
             return true;
         },
-        CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK => {
+        Char(CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK) => {
             return true;
         },
         //
         // Yes, we suggest \:2061 -> \[InvisibleApplication], but that is not saying \[InvisibleApplication] is not also strange!
         //
-        CODEPOINT_LONGNAME_INVISIBLEAPPLICATION => {
+        Char(CODEPOINT_LONGNAME_INVISIBLEAPPLICATION) => {
             return true;
         },
         _ => (),
@@ -269,7 +271,7 @@ pub fn certainCharacterReplacementActions(c: WLCharacter, src: Span) -> Vec<Code
     let mut Actions: Vec<CodeAction> = Vec::new();
 
     match c.to_point() {
-        CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK => {
+        Char(CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK) => {
 
             let safeAndGraphicalStr1 = c.safeAndGraphicalString();
             let safeAndGraphicalStr2 = WLCharacter::new(CODEPOINT_LONGNAME_NOBREAK).safeAndGraphicalString();
@@ -283,7 +285,7 @@ pub fn certainCharacterReplacementActions(c: WLCharacter, src: Span) -> Vec<Code
                 (if c.escape() == EscapeStyle::None { "\u{2060}" } else {"\\[NoBreak]"}).to_owned()
             ));
         }
-        CODEPOINT_LONGNAME_RIGHTARROW |
+        Char(CODEPOINT_LONGNAME_RIGHTARROW) |
             //
             // U+279D Triangle-Headed Rightwards Arrow being used in place of \[Rule] is seen here:
             // http://mail-archive.wolfram.com/archive/t-paclets/2022/Mar00/0004.html

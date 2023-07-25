@@ -119,6 +119,10 @@ impl CodePoint {
         CodePoint::Char(char::from(value))
     }
 
+    pub(crate) const fn from_char(c: char) -> Self {
+        CodePoint::Char(c)
+    }
+
     pub fn as_char(self) -> Option<char> {
         match self {
             CodePoint::Char(c) => Some(c),
@@ -238,16 +242,3 @@ pub const CODEPOINT_LINEARSYNTAX_BACKTICK: char = '\u{f7cd}';
 // Related bugs: 366106
 //
 pub const CODEPOINT_BOM: char = '\u{feff}';
-
-//==========================================================
-// Special code points
-//==========================================================
-
-//
-// These are used by long_names_registration.rs
-//
-
-// TODO(cleanup): Remove these constants, just name the enum value directly.
-pub const CODEPOINT_CRLF: CodePoint = CodePoint::CRLF;
-pub const CODEPOINT_STRINGMETA_DOUBLEQUOTE: CodePoint = CodePoint::StringMeta_DoubleQuote;
-pub const CODEPOINT_STRINGMETA_BACKSLASH: CodePoint = CodePoint::StringMeta_Backslash;
