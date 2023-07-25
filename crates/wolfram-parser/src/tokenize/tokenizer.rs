@@ -160,6 +160,38 @@ impl<'i> Tokenizer<'i> {
     }
 
     //==================================
+    // Create tokens
+    //==================================
+
+    fn token<T: Into<TokenKind>>(
+        &self,
+        tok: T,
+        start_buf: Buffer<'i>,
+        start_loc: Location,
+    ) -> TokenRef<'i> {
+        let tok = tok.into();
+
+        let buf = Tokenizer_getTokenBufferAndLength(self, start_buf);
+
+        let span = Tokenizer_getTokenSource(self, start_loc);
+
+        Token::new(tok, buf, span)
+    }
+
+    fn token_at<T: Into<TokenKind>>(
+        &self,
+        tok: T,
+        start_buf: Buffer<'i>,
+        span: Span,
+    ) -> TokenRef<'i> {
+        let tok = tok.into();
+
+        let buf = Tokenizer_getTokenBufferAndLength(self, start_buf);
+
+        Token::new(tok, buf, span)
+    }
+
+    //==================================
     // Tracked locations
     //==================================
 
@@ -385,15 +417,6 @@ const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = [
 pub(crate) const ASCII_VTAB: char = '\x0B';
 pub(crate) const ASCII_FORM_FEED: char = '\x0C';
 
-pub(crate) fn Token<'i, T: Into<TokenKind>>(
-    tok: T,
-    buf: BufferAndLength<'i>,
-    src: Span,
-) -> TokenRef<'i> {
-    let tok = tok.into();
-    Token::new(tok, buf, src)
-}
-
 fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) -> TokenRef<'i> {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
@@ -421,21 +444,17 @@ fn Tokenizer_nextToken_uncommon<'i>(
     match c.to_point() {
         Char(_) => (),
         EndOfFile => {
-            return Token(
-                TokenKind::EndOfFile,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::EndOfFile, tokenStartBuf, tokenStartLoc);
         },
         Unsafe1ByteUtf8Sequence | Unsafe2ByteUtf8Sequence | Unsafe3ByteUtf8Sequence => {
             //
             // This will be disposed before the user sees it
             //
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnsafeCharacterEncoding,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         _ => (),
@@ -459,11 +478,11 @@ fn Tokenizer_nextToken_uncommon<'i>(
             return Tokenizer_handleSymbol(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(CODEPOINT_BEL | CODEPOINT_DEL) => {
-            return Token(TokenKind::Error_UnhandledCharacter, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return session.token(TokenKind::Error_UnhandledCharacter,  tokenStartBuf, tokenStartLoc);
         }
         Char('\t') => {
             // MUSTTAIL
-            return Token(TokenKind::Whitespace, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
         }
         Char(ASCII_VTAB | ASCII_FORM_FEED) => {
 
@@ -477,10 +496,10 @@ fn Tokenizer_nextToken_uncommon<'i>(
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return Token(
+            return session.token(
                 TokenKind::InternalNewline.with_policy(policy),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc)
+                tokenStartBuf,
+                tokenStartLoc
             );
         }
         Char('(') => {
@@ -492,7 +511,7 @@ fn Tokenizer_nextToken_uncommon<'i>(
 
             incr_diagnostic!(Tokenizer_CloseParenCount);
 
-            return Token(TokenKind::CloseParen, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return session.token(TokenKind::CloseParen,  tokenStartBuf, tokenStartLoc);
         }
         Char('+') => {
 
@@ -541,7 +560,7 @@ fn Tokenizer_nextToken_uncommon<'i>(
         }
         Char('\'') => {
 
-            return Token(TokenKind::SingleQuote, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return session.token(TokenKind::SingleQuote, tokenStartBuf, tokenStartLoc);
         }
         Char('*') => {
 
@@ -598,7 +617,7 @@ fn Tokenizer_nextToken_uncommon<'i>(
             return Tokenizer_handleTilde(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(CODEPOINT_LINEARSYNTAX_BANG) => {
-            return Token(TokenKind::LinearSyntax_Bang, Tokenizer_getTokenBufferAndLength(session, tokenStartBuf), Tokenizer_getTokenSource(session, tokenStartLoc));
+            return session.token(TokenKind::LinearSyntax_Bang, tokenStartBuf, tokenStartLoc);
         }
         Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => {
             // MUSTTAIL
@@ -620,10 +639,10 @@ fn Tokenizer_nextToken_uncommon<'i>(
     }
 
     if c.isMBUninterpretable() {
-        return Token(
+        return session.token(
             TokenKind::Error_UnhandledCharacter,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
+            tokenStartBuf,
+            tokenStartLoc,
         );
     }
 
@@ -639,11 +658,7 @@ fn Tokenizer_nextToken_uncommon<'i>(
     }
 
     if c.isMBWhitespace() {
-        return Token(
-            TokenKind::Whitespace,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
     }
 
     if c.isMBStrangeNewline() {
@@ -655,10 +670,10 @@ fn Tokenizer_nextToken_uncommon<'i>(
         //
         // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
-        return Token(
+        return session.token(
             TokenKind::InternalNewline.with_policy(policy),
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
+            tokenStartBuf,
+            tokenStartLoc,
         );
     }
 
@@ -668,10 +683,10 @@ fn Tokenizer_nextToken_uncommon<'i>(
     }
 
     if c.isMBStringMeta() {
-        return Token(
+        return session.token(
             TokenKind::Error_UnhandledCharacter,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
+            tokenStartBuf,
+            tokenStartLoc,
         );
     }
 
@@ -699,10 +714,10 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>
             // EndOfFile is special, so invent source
             //
 
-            return Token(
+            return session.token_at(
                 TokenKind::Error_ExpectedTag,
                 // BufferAndLength::from_buffer(tokenStartBuf),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
+                tokenStartBuf,
                 Span::from_location(tokenStartLoc),
             );
         },
@@ -711,10 +726,10 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>
             // Newline is special, so invent source
             //
 
-            return Token(
+            return session.token_at(
                 TokenKind::Error_ExpectedTag,
                 // BufferAndLength::from_buffer(tokenStartBuf),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
+                tokenStartBuf,
                 Span::from_location(tokenStartLoc),
             );
         },
@@ -749,10 +764,10 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
 
     match c {
         EndOfFile => {
-            return Token(
+            return session.token_at(
                 TokenKind::Error_ExpectedFile,
                 // BufferAndLength::from_buffer(tokenStartBuf),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
+                tokenStartBuf,
                 Span::from_location(tokenStartLoc),
             );
         },
@@ -771,10 +786,10 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return Token(
+            return session.token(
                 TokenKind::InternalNewline.with_policy(policy),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         Char(' ' | '\t') => {
@@ -785,11 +800,7 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
             // a >>
             //   b
             //
-            return Token(
-                TokenKind::Whitespace,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
         },
         Char('"') => {
             return Tokenizer_handleString(
@@ -942,11 +953,7 @@ fn Tokenizer_handleComma<'i>(
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_CommaCount);
 
-    return Token(
-        TokenKind::Comma,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Comma, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleLineFeed<'i>(
@@ -961,10 +968,10 @@ fn Tokenizer_handleLineFeed<'i>(
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return Token(
+    return session.token(
         TokenKind::InternalNewline.with_policy(policy),
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
+        tokenStartBuf,
+        tokenStartLoc,
     );
 }
 
@@ -977,11 +984,7 @@ fn Tokenizer_handleOpenSquare<'i>(
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_OpenSquareCount);
 
-    return Token(
-        TokenKind::OpenSquare,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::OpenSquare, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleOpenCurly<'i>(
@@ -993,11 +996,7 @@ fn Tokenizer_handleOpenCurly<'i>(
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_OpenCurlyCount);
 
-    return Token(
-        TokenKind::OpenCurly,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::OpenCurly, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleSpace<'i>(
@@ -1009,11 +1008,7 @@ fn Tokenizer_handleSpace<'i>(
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_WhitespaceCount);
 
-    return Token(
-        TokenKind::Whitespace,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleCloseSquare<'i>(
@@ -1025,11 +1020,7 @@ fn Tokenizer_handleCloseSquare<'i>(
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_CloseSquareCount);
 
-    return Token(
-        TokenKind::CloseSquare,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::CloseSquare, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleCloseCurly<'i>(
@@ -1041,11 +1032,7 @@ fn Tokenizer_handleCloseCurly<'i>(
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_CloseCurlyCount);
 
-    return Token(
-        TokenKind::CloseCurly,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::CloseCurly, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleStrangeWhitespace<'i>(
@@ -1082,11 +1069,7 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
         session.addIssue(I);
     }
 
-    return Token(
-        TokenKind::Whitespace,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
 }
 
 //
@@ -1144,21 +1127,17 @@ fn Tokenizer_handleComment<'i>(
                     depth = depth - 1;
 
                     if depth == 0 {
-                        return Token(
-                            TokenKind::Comment,
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
-                        );
+                        return session.token(TokenKind::Comment, tokenStartBuf, tokenStartLoc);
                     }
 
                     c = session.next_source_char(policy);
                 }
             },
             EndOfFile => {
-                return Token(
+                return session.token(
                     TokenKind::Error_UnterminatedComment,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
+                    tokenStartBuf,
+                    tokenStartLoc,
                 );
             },
             Char('\n' | '\r') | CRLF => {
@@ -1206,20 +1185,20 @@ fn Tokenizer_handleMBLinearSyntaxBlob<'i>(
                 depth = depth - 1;
 
                 if depth == 0 {
-                    return Token(
+                    return session.token(
                         TokenKind::LinearSyntaxBlob,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
+                        tokenStartBuf,
+                        tokenStartLoc,
                     );
                 }
 
                 c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             },
             EndOfFile => {
-                return Token(
+                return session.token(
                     TokenKind::Error_UnterminatedLinearSyntaxBlob,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
+                    tokenStartBuf,
+                    tokenStartLoc,
                 );
             },
             _ => {
@@ -1307,22 +1286,22 @@ fn Tokenizer_handleSymbol<'i>(
             // Something like  a`1
             //
 
-            return Token(
+            return session.token(
                 TokenKind::Error_ExpectedLetterlike,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         }
     } // while
 
-    return Token(
+    return session.token(
         if (policy & INSIDE_SLOT) == INSIDE_SLOT {
             TokenKind::String
         } else {
             TokenKind::Symbol
         },
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
+        tokenStartBuf,
+        tokenStartLoc,
     );
 }
 
@@ -1648,19 +1627,15 @@ fn Tokenizer_handleString<'i>(
         if terminated {
             session.offset = quot_offset.unwrap() + 1;
 
-            return Token(
-                TokenKind::String,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
         } else {
             session.offset = session.input.len();
             session.wasEOF = true;
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnterminatedString,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         }
     }
@@ -1678,17 +1653,13 @@ fn Tokenizer_handleString<'i>(
 
         match c.to_point() {
             Char('"') => {
-                return Token(
-                    TokenKind::String,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
             },
             EndOfFile => {
-                return Token(
+                return session.token(
                     TokenKind::Error_UnterminatedString,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
+                    tokenStartBuf,
+                    tokenStartLoc,
                 );
             },
             Char('\n' | '\r') | CRLF if feature::COMPUTE_OOB => {
@@ -1731,18 +1702,14 @@ fn Tokenizer_handleString_stringifyAsTag<'i>(
             policy,
         );
 
-        return Token(
-            TokenKind::String,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // Something like  a::5
     //
 
-    return Token(
+    return Token::new(
         TokenKind::Error_ExpectedTag,
         BufferAndLength::from_buffer_with_len(tokenStartBuf, 0),
         Span::from_location(tokenStartLoc),
@@ -1799,10 +1766,10 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
 
             match handled {
                 UNTERMINATED_FILESTRING => {
-                    return Token(
+                    return session.token(
                         TokenKind::Error_UnterminatedFileString,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
+                        tokenStartBuf,
+                        tokenStartLoc,
                     );
                 },
                 _ => (),
@@ -1817,10 +1784,10 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
             // So invent source
             //
 
-            return Token(
+            return session.token_at(
                 TokenKind::Error_ExpectedFile,
                 // BufferAndLength::from_buffer(tokenStartBuf),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
+                tokenStartBuf,
                 Span::from_location(tokenStartLoc),
             );
         },
@@ -1870,21 +1837,17 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
 
                 match handled {
                     UNTERMINATED_FILESTRING => {
-                        return Token(
+                        return session.token(
                             TokenKind::Error_UnterminatedFileString,
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
+                            tokenStartBuf,
+                            tokenStartLoc,
                         );
                     },
                     _ => (),
                 }
             },
             _ => {
-                return Token(
-                    TokenKind::String,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
             },
         }
     } // while
@@ -2101,11 +2064,7 @@ fn Tokenizer_handleNumber<'i>(
             // Success!
             //
 
-            return Token(
-                Ctxt.computeTok(),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
         }
 
         match c.to_point() {
@@ -2140,11 +2099,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return Token(
-                    Ctxt.computeTok(),
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             },
         }
 
@@ -2168,11 +2123,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return Token(
-                    Ctxt.computeTok(),
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             }
 
             assert!(c.to_point() == '^');
@@ -2274,11 +2225,7 @@ fn Tokenizer_handleNumber<'i>(
                             // Success!
                             //
 
-                            return Token(
-                                Ctxt.computeTok(),
-                                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                                Tokenizer_getTokenSource(session, tokenStartLoc),
-                            );
+                            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                         },
                     }
                 },
@@ -2309,11 +2256,7 @@ fn Tokenizer_handleNumber<'i>(
                     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     // nee TokenKind::Error_ExpectedDIGIT
-                    return Token(
-                        TokenKind::Error_Number,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 },
                 _ => {
                     //
@@ -2321,11 +2264,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_UNRECOGNIZEDDIGIT
-                    return Token(
-                        TokenKind::Error_Number,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 },
             }
         } // if (c.to_point() == '^')
@@ -2355,11 +2294,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_UNHANDLEDDOT
-                    return Token(
-                        TokenKind::Error_Number,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 }
 
                 //
@@ -2370,11 +2305,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return Token(
-                    Ctxt.computeTok(),
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             },
             HandledFractionalPart::Count(0) => {
                 if leadingDigitsCount == 0 {
@@ -2383,11 +2314,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_UNHANDLEDDOT
-                    return Token(
-                        TokenKind::Error_Number,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 }
 
                 //
@@ -2423,11 +2350,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return Token(
-                            Ctxt.computeTok(),
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
-                        );
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             },
@@ -2465,11 +2388,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return Token(
-                            Ctxt.computeTok(),
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
-                        );
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             },
@@ -2604,10 +2523,10 @@ fn Tokenizer_handleNumber<'i>(
                             //
 
                             // nee TokenKind::Error_ExpectedACCURACY
-                            return Token(
+                            return session.token(
                                 TokenKind::Error_Number,
-                                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                                Tokenizer_getTokenSource(session, tokenStartLoc),
+                                tokenStartBuf,
+                                tokenStartLoc,
                             );
                         }
 
@@ -2622,11 +2541,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return Token(
-                            Ctxt.computeTok(),
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
-                        );
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             }, // case '-': case '+'
@@ -2655,11 +2570,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return Token(
-                            Ctxt.computeTok(),
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
-                        );
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             },
@@ -2709,10 +2620,10 @@ fn Tokenizer_handleNumber<'i>(
                             //
 
                             // TokenKind::Error_ExpectedDIGIT
-                            return Token(
+                            return session.token(
                                 TokenKind::Error_Number,
-                                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                                Tokenizer_getTokenSource(session, tokenStartLoc),
+                                tokenStartBuf,
+                                tokenStartLoc,
                             );
                         }
 
@@ -2729,10 +2640,10 @@ fn Tokenizer_handleNumber<'i>(
                             );
 
                             // nee TokenKind::Error_ExpectedDIGIT
-                            return Token(
+                            return session.token(
                                 TokenKind::Error_Number,
-                                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                                Tokenizer_getTokenSource(session, tokenStartLoc),
+                                tokenStartBuf,
+                                tokenStartLoc,
                             );
                         }
 
@@ -2752,11 +2663,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return Token(
-                            Ctxt.computeTok(),
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
-                        );
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     } else {
                         //
                         // digit
@@ -2806,11 +2713,7 @@ fn Tokenizer_handleNumber<'i>(
                             // Success!
                             //
 
-                            return Token(
-                                Ctxt.computeTok(),
-                                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                                Tokenizer_getTokenSource(session, tokenStartLoc),
-                            );
+                            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                         }
 
                         if sign {
@@ -2824,11 +2727,7 @@ fn Tokenizer_handleNumber<'i>(
                             // Success!
                             //
 
-                            return Token(
-                                Ctxt.computeTok(),
-                                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                                Tokenizer_getTokenSource(session, tokenStartLoc),
-                            );
+                            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                         }
 
                         assert!(false);
@@ -2845,11 +2744,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_ExpectedDIGIT
-                    return Token(
-                        TokenKind::Error_Number,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 }
             }, // case '.'
             _ => (),
@@ -2867,10 +2762,10 @@ fn Tokenizer_handleNumber<'i>(
                         //
 
                         // nee TokenKind::Error_ExpectedACCURACY
-                        return Token(
+                        return session.token(
                             TokenKind::Error_Number,
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
+                            tokenStartBuf,
+                            tokenStartLoc,
                         );
                     }
                 }
@@ -2894,10 +2789,10 @@ fn Tokenizer_handleNumber<'i>(
                         //
 
                         // nee TokenKind::Error_ExpectedACCURACY
-                        return Token(
+                        return session.token(
                             TokenKind::Error_Number,
-                            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                            Tokenizer_getTokenSource(session, tokenStartLoc),
+                            tokenStartBuf,
+                            tokenStartLoc,
                         );
                     }
                 }
@@ -2906,11 +2801,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return Token(
-                    Ctxt.computeTok(),
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             },
         }
     } // if (c.to_point() == '`')
@@ -2934,11 +2825,7 @@ fn Tokenizer_handleNumber<'i>(
         // Success!
         //
 
-        return Token(
-            Ctxt.computeTok(),
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
     }
 
     assert!(c.to_point() == '^');
@@ -2968,11 +2855,7 @@ fn Tokenizer_handleNumber<'i>(
         //
 
         // TokenKind::Error_ExpectedEXPONENT
-        return Token(
-            TokenKind::Error_Number,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
     }
 
     assert!(c.isDigit());
@@ -2997,11 +2880,7 @@ fn Tokenizer_handleNumber<'i>(
         // Success!
         //
 
-        return Token(
-            Ctxt.computeTok(),
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
     }
 
     assert!(c.to_point() == '.');
@@ -3039,11 +2918,7 @@ fn Tokenizer_handleNumber<'i>(
             // Success!
             //
 
-            return Token(
-                Ctxt.computeTok(),
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
         },
         HandledFractionalPart::Count(_) => {
             //
@@ -3053,11 +2928,7 @@ fn Tokenizer_handleNumber<'i>(
             //
 
             // nee TokenKind::Error_ExpectedEXPONENT
-            return Token(
-                TokenKind::Error_Number,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
         },
     }
 }
@@ -3391,10 +3262,10 @@ fn Tokenizer_handleColon<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
+                return session.token(
                     TokenKind::ColonColonOpenSquare,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
+                    tokenStartBuf,
+                    tokenStartLoc,
                 );
             }
 
@@ -3402,11 +3273,7 @@ fn Tokenizer_handleColon<'i>(
             // ::
             //
 
-            return Token(
-                TokenKind::ColonColon,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::ColonColon, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
@@ -3415,11 +3282,7 @@ fn Tokenizer_handleColon<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::ColonEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::ColonEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('>') => {
             //
@@ -3430,22 +3293,14 @@ fn Tokenizer_handleColon<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::ColonGreater,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::ColonGreater, tokenStartBuf, tokenStartLoc);
         },
         _ => {
             //
             // :
             //
 
-            return Token(
-                TokenKind::Colon,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Colon, tokenStartBuf, tokenStartLoc);
         },
     }
 }
@@ -3479,11 +3334,7 @@ fn Tokenizer_handleOpenParen<'i>(
 
     incr_diagnostic!(Tokenizer_OpenParenCount);
 
-    return Token(
-        TokenKind::OpenParen,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::OpenParen, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleDot<'i>(
@@ -3521,33 +3372,21 @@ fn Tokenizer_handleDot<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::DotDotDot,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::DotDotDot, tokenStartBuf, tokenStartLoc);
         }
 
         //
         // ..
         //
 
-        return Token(
-            TokenKind::DotDot,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::DotDot, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // .
     //
 
-    return Token(
-        TokenKind::Dot,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Dot, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleEqual<'i>(
@@ -3574,22 +3413,14 @@ fn Tokenizer_handleEqual<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
-                    TokenKind::EqualEqualEqual,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::EqualEqualEqual, tokenStartBuf, tokenStartLoc);
             }
 
             //
             // ==
             //
 
-            return Token(
-                TokenKind::EqualEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::EqualEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('!') => {
             let bang_mark = session.mark();
@@ -3605,11 +3436,7 @@ fn Tokenizer_handleEqual<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
-                    TokenKind::EqualBangEqual,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::EqualBangEqual, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -3620,11 +3447,7 @@ fn Tokenizer_handleEqual<'i>(
 
             Tokenizer_backupAndWarn(session, bang_mark);
 
-            return Token(
-                TokenKind::Equal,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Equal, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3633,11 +3456,7 @@ fn Tokenizer_handleEqual<'i>(
     // =
     //
 
-    return Token(
-        TokenKind::Equal,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Equal, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleUnder<'i>(
@@ -3668,18 +3487,10 @@ fn Tokenizer_handleUnder<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
-                    TokenKind::UnderUnderUnder,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::UnderUnderUnder, tokenStartBuf, tokenStartLoc);
             }
 
-            return Token(
-                TokenKind::UnderUnder,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::UnderUnder, tokenStartBuf, tokenStartLoc);
         },
         Char('.') => {
             //
@@ -3728,11 +3539,7 @@ fn Tokenizer_handleUnder<'i>(
                 }
             }
 
-            return Token(
-                TokenKind::UnderDot,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::UnderDot, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3741,11 +3548,7 @@ fn Tokenizer_handleUnder<'i>(
     // _
     //
 
-    return Token(
-        TokenKind::Under,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Under, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleLess<'i>(
@@ -3767,11 +3570,7 @@ fn Tokenizer_handleLess<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::LessBar,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LessBar, tokenStartBuf, tokenStartLoc);
         },
         Char('<') => {
             //
@@ -3780,11 +3579,7 @@ fn Tokenizer_handleLess<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::LessLess,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LessLess, tokenStartBuf, tokenStartLoc);
         },
         Char('>') => {
             //
@@ -3793,11 +3588,7 @@ fn Tokenizer_handleLess<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::LessGreater,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LessGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
@@ -3806,11 +3597,7 @@ fn Tokenizer_handleLess<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::LessEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LessEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('-') => {
             let minus_mark = session.mark();
@@ -3826,11 +3613,7 @@ fn Tokenizer_handleLess<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
-                    TokenKind::LessMinusGreater,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::LessMinusGreater, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -3841,11 +3624,7 @@ fn Tokenizer_handleLess<'i>(
 
             Tokenizer_backupAndWarn(session, minus_mark);
 
-            return Token(
-                TokenKind::Less,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Less, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3854,11 +3633,7 @@ fn Tokenizer_handleLess<'i>(
     // <
     //
 
-    return Token(
-        TokenKind::Less,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Less, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleGreater<'i>(
@@ -3889,18 +3664,14 @@ fn Tokenizer_handleGreater<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
+                return session.token(
                     TokenKind::GreaterGreaterGreater,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
+                    tokenStartBuf,
+                    tokenStartLoc,
                 );
             }
 
-            return Token(
-                TokenKind::GreaterGreater,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::GreaterGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
@@ -3909,11 +3680,7 @@ fn Tokenizer_handleGreater<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::GreaterEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::GreaterEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3922,11 +3689,7 @@ fn Tokenizer_handleGreater<'i>(
     // >
     //
 
-    return Token(
-        TokenKind::Greater,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Greater, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleMinus<'i>(
@@ -3959,11 +3722,7 @@ fn Tokenizer_handleMinus<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::MinusGreater,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::MinusGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('-') => {
             //
@@ -4051,11 +3810,7 @@ fn Tokenizer_handleMinus<'i>(
                 }
             }
 
-            return Token(
-                TokenKind::MinusMinus,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::MinusMinus, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
@@ -4064,11 +3819,7 @@ fn Tokenizer_handleMinus<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::MinusEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::MinusEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4079,11 +3830,7 @@ fn Tokenizer_handleMinus<'i>(
 
     incr_diagnostic!(Tokenizer_MinusCount);
 
-    return Token(
-        TokenKind::Minus,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Minus, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleBar<'i>(
@@ -4139,11 +3886,7 @@ fn Tokenizer_handleBar<'i>(
                 }
             }
 
-            return Token(
-                TokenKind::BarGreater,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::BarGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('|') => {
             //
@@ -4152,11 +3895,7 @@ fn Tokenizer_handleBar<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::BarBar,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::BarBar, tokenStartBuf, tokenStartLoc);
         },
         Char('-') => {
             let bar_mark = session.mark();
@@ -4172,11 +3911,7 @@ fn Tokenizer_handleBar<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
-                    TokenKind::BarMinusGreater,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::BarMinusGreater, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -4187,11 +3922,7 @@ fn Tokenizer_handleBar<'i>(
 
             Tokenizer_backupAndWarn(session, bar_mark);
 
-            return Token(
-                TokenKind::Bar,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Bar, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4200,11 +3931,7 @@ fn Tokenizer_handleBar<'i>(
     // |
     //
 
-    return Token(
-        TokenKind::Bar,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Bar, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleSemi<'i>(
@@ -4225,22 +3952,14 @@ fn Tokenizer_handleSemi<'i>(
 
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return Token(
-            TokenKind::SemiSemi,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::SemiSemi, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // ;
     //
 
-    return Token(
-        TokenKind::Semi,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Semi, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleBang<'i>(
@@ -4262,11 +3981,7 @@ fn Tokenizer_handleBang<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::BangEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::BangEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('!') => {
             //
@@ -4275,11 +3990,7 @@ fn Tokenizer_handleBang<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::BangBang,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::BangBang, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4288,11 +3999,7 @@ fn Tokenizer_handleBang<'i>(
     // !
     //
 
-    return Token(
-        TokenKind::Bang,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Bang, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleHash<'i>(
@@ -4313,11 +4020,7 @@ fn Tokenizer_handleHash<'i>(
 
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return Token(
-            TokenKind::HashHash,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::HashHash, tokenStartBuf, tokenStartLoc);
     }
 
     //
@@ -4326,11 +4029,7 @@ fn Tokenizer_handleHash<'i>(
 
     incr_diagnostic!(Tokenizer_HashCount);
 
-    return Token(
-        TokenKind::Hash,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Hash, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handlePercent<'i>(
@@ -4361,22 +4060,14 @@ fn Tokenizer_handlePercent<'i>(
             c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         } // while
 
-        return Token(
-            TokenKind::PercentPercent,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::PercentPercent, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // %
     //
 
-    return Token(
-        TokenKind::Percent,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Percent, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleAmp<'i>(
@@ -4397,11 +4088,7 @@ fn Tokenizer_handleAmp<'i>(
 
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return Token(
-            TokenKind::AmpAmp,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::AmpAmp, tokenStartBuf, tokenStartLoc);
     }
 
     //
@@ -4410,11 +4097,7 @@ fn Tokenizer_handleAmp<'i>(
 
     incr_diagnostic!(Tokenizer_AmpCount);
 
-    return Token(
-        TokenKind::Amp,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Amp, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleSlash<'i>(
@@ -4436,11 +4119,7 @@ fn Tokenizer_handleSlash<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::SlashAt,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::SlashAt, tokenStartBuf, tokenStartLoc);
         },
         Char(';') => {
             //
@@ -4449,11 +4128,7 @@ fn Tokenizer_handleSlash<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::SlashSemi,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::SlashSemi, tokenStartBuf, tokenStartLoc);
         },
         Char('.') => {
             let dot_mark = session.mark();
@@ -4467,11 +4142,7 @@ fn Tokenizer_handleSlash<'i>(
                 // /.
                 //
 
-                return Token(
-                    TokenKind::SlashDot,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::SlashDot, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -4482,11 +4153,7 @@ fn Tokenizer_handleSlash<'i>(
 
             Tokenizer_backupAndWarn(session, dot_mark);
 
-            return Token(
-                TokenKind::Slash,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Slash, tokenStartBuf, tokenStartLoc);
         },
         Char('/') => {
             //
@@ -4505,11 +4172,7 @@ fn Tokenizer_handleSlash<'i>(
 
                     Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    return Token(
-                        TokenKind::SlashSlashDot,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::SlashSlashDot, tokenStartBuf, tokenStartLoc);
                 },
                 Char('@') => {
                     //
@@ -4518,11 +4181,7 @@ fn Tokenizer_handleSlash<'i>(
 
                     Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    return Token(
-                        TokenKind::SlashSlashAt,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::SlashSlashAt, tokenStartBuf, tokenStartLoc);
                 },
                 Char('=') => {
                     //
@@ -4531,11 +4190,7 @@ fn Tokenizer_handleSlash<'i>(
 
                     Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    return Token(
-                        TokenKind::SlashSlashEqual,
-                        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                        Tokenizer_getTokenSource(session, tokenStartLoc),
-                    );
+                    return session.token(TokenKind::SlashSlashEqual, tokenStartBuf, tokenStartLoc);
                 },
                 _ => (),
             }
@@ -4544,11 +4199,7 @@ fn Tokenizer_handleSlash<'i>(
             // //
             //
 
-            return Token(
-                TokenKind::SlashSlash,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::SlashSlash, tokenStartBuf, tokenStartLoc);
         },
         Char(':') => {
             //
@@ -4557,11 +4208,7 @@ fn Tokenizer_handleSlash<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::SlashColon,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::SlashColon, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
@@ -4570,11 +4217,7 @@ fn Tokenizer_handleSlash<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::SlashEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::SlashEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('*') => {
             //
@@ -4583,11 +4226,7 @@ fn Tokenizer_handleSlash<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::SlashStar,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::SlashStar, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4596,11 +4235,7 @@ fn Tokenizer_handleSlash<'i>(
     // /
     //
 
-    return Token(
-        TokenKind::Slash,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Slash, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleAt<'i>(
@@ -4627,22 +4262,14 @@ fn Tokenizer_handleAt<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
-                    TokenKind::AtAtAt,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::AtAtAt, tokenStartBuf, tokenStartLoc);
             }
 
             //
             // @@
             //
 
-            return Token(
-                TokenKind::AtAt,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::AtAt, tokenStartBuf, tokenStartLoc);
         },
         Char('*') => {
             //
@@ -4651,11 +4278,7 @@ fn Tokenizer_handleAt<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::AtStar,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::AtStar, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4664,11 +4287,7 @@ fn Tokenizer_handleAt<'i>(
     // @
     //
 
-    return Token(
-        TokenKind::At,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::At, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handlePlus<'i>(
@@ -4722,11 +4341,7 @@ fn Tokenizer_handlePlus<'i>(
                 }
             }
 
-            return Token(
-                TokenKind::PlusPlus,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::PlusPlus, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
@@ -4735,11 +4350,7 @@ fn Tokenizer_handlePlus<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::PlusEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::PlusEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4750,11 +4361,7 @@ fn Tokenizer_handlePlus<'i>(
 
     incr_diagnostic!(Tokenizer_PlusCount);
 
-    return Token(
-        TokenKind::Plus,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Plus, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleTilde<'i>(
@@ -4775,22 +4382,14 @@ fn Tokenizer_handleTilde<'i>(
 
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return Token(
-            TokenKind::TildeTilde,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::TildeTilde, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // ~
     //
 
-    return Token(
-        TokenKind::Tilde,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Tilde, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleQuestion<'i>(
@@ -4811,22 +4410,14 @@ fn Tokenizer_handleQuestion<'i>(
 
         Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return Token(
-            TokenKind::QuestionQuestion,
-            Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-            Tokenizer_getTokenSource(session, tokenStartLoc),
-        );
+        return session.token(TokenKind::QuestionQuestion, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // ?
     //
 
-    return Token(
-        TokenKind::Question,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Question, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleStar<'i>(
@@ -4848,11 +4439,7 @@ fn Tokenizer_handleStar<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::StarEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::StarEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('*') => {
             //
@@ -4861,11 +4448,7 @@ fn Tokenizer_handleStar<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::StarStar,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::StarStar, tokenStartBuf, tokenStartLoc);
         },
         Char(')') => {
             //
@@ -4874,10 +4457,10 @@ fn Tokenizer_handleStar<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnexpectedCommentCloser,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         _ => (),
@@ -4887,11 +4470,7 @@ fn Tokenizer_handleStar<'i>(
     // *
     //
 
-    return Token(
-        TokenKind::Star,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Star, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleCaret<'i>(
@@ -4918,22 +4497,14 @@ fn Tokenizer_handleCaret<'i>(
 
                 Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return Token(
-                    TokenKind::CaretColonEqual,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
-                );
+                return session.token(TokenKind::CaretColonEqual, tokenStartBuf, tokenStartLoc);
             }
 
             //
             // Has to be ^:=
             //
 
-            return Token(
-                TokenKind::Error_ExpectedEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::Error_ExpectedEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
@@ -4942,11 +4513,7 @@ fn Tokenizer_handleCaret<'i>(
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return Token(
-                TokenKind::CaretEqual,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::CaretEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4955,11 +4522,7 @@ fn Tokenizer_handleCaret<'i>(
     // ^
     //
 
-    return Token(
-        TokenKind::Caret,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Caret, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleUnhandledBackslash<'i>(
@@ -5024,17 +4587,17 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             }
 
             if wellFormed {
-                return Token(
+                return session.token(
                     TokenKind::Error_UnhandledCharacter,
-                    Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                    Tokenizer_getTokenSource(session, tokenStartLoc),
+                    tokenStartBuf,
+                    tokenStartLoc,
                 );
             }
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnhandledCharacter,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         Char(':') => {
@@ -5060,10 +4623,10 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnhandledCharacter,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         Char('.') => {
@@ -5089,10 +4652,10 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnhandledCharacter,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         Char('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7') => {
@@ -5118,10 +4681,10 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnhandledCharacter,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         Char('|') => {
@@ -5146,17 +4709,17 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return Token(
+            return session.token(
                 TokenKind::Error_UnhandledCharacter,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         EndOfFile => {
-            return Token(
+            return session.token(
                 TokenKind::Error_UnhandledCharacter,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         _ => (),
@@ -5166,10 +4729,10 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
     // Nothing special, just read next single character
     //
 
-    return Token(
+    return session.token(
         TokenKind::Error_UnhandledCharacter,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
+        tokenStartBuf,
+        tokenStartLoc,
     );
 }
 
@@ -5207,10 +4770,10 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return Token(
+    return session.token(
         TokenKind::InternalNewline.with_policy(policy),
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
+        tokenStartBuf,
+        tokenStartLoc,
     );
 }
 
@@ -5248,11 +4811,7 @@ fn Tokenizer_handleMBStrangeWhitespace<'i>(
         session.addIssue(I);
     }
 
-    return Token(
-        TokenKind::Whitespace,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleMBPunctuation<'i>(
@@ -5271,11 +4830,7 @@ fn Tokenizer_handleMBPunctuation<'i>(
 
     let Operator = crate::generated::long_names_registration::LongNameCodePointToOperator(char);
 
-    return Token(
-        Operator,
-        Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-        Tokenizer_getTokenSource(session, tokenStartLoc),
-    );
+    return session.token(Operator, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleNakedMBLinearSyntax<'i>(
@@ -5289,81 +4844,49 @@ fn Tokenizer_handleNakedMBLinearSyntax<'i>(
 
     match c.to_point() {
         Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => {
-            return Token(
+            return session.token(
                 TokenKind::LinearSyntax_CloseParen,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_AT) => {
-            return Token(
-                TokenKind::LinearSyntax_At,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_At, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_PERCENT) => {
-            return Token(
+            return session.token(
                 TokenKind::LinearSyntax_Percent,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         Char(CODEPOINT_LINEARSYNTAX_CARET) => {
-            return Token(
-                TokenKind::LinearSyntax_Caret,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_Caret, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_AMP) => {
-            return Token(
-                TokenKind::LinearSyntax_Amp,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_Amp, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_STAR) => {
-            return Token(
-                TokenKind::LinearSyntax_Star,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_Star, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_UNDER) => {
-            return Token(
-                TokenKind::LinearSyntax_Under,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_Under, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_PLUS) => {
-            return Token(
-                TokenKind::LinearSyntax_Plus,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_Plus, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_SLASH) => {
-            return Token(
-                TokenKind::LinearSyntax_Slash,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_Slash, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => {
-            return Token(
+            return session.token(
                 TokenKind::LinearSyntax_BackTick,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
+                tokenStartBuf,
+                tokenStartLoc,
             );
         },
         CodePoint::LinearSyntax_Space => {
-            return Token(
-                TokenKind::LinearSyntax_Space,
-                Tokenizer_getTokenBufferAndLength(session, tokenStartBuf),
-                Tokenizer_getTokenSource(session, tokenStartLoc),
-            );
+            return session.token(TokenKind::LinearSyntax_Space, tokenStartBuf, tokenStartLoc);
         },
         _ => todo!(),
     }
