@@ -32,74 +32,44 @@ type HandlerFunction = for<'i, 's> fn(
     policy: NextPolicy,
 ) -> WLCharacter;
 
-macro_rules! U {
-    () => {
-        CharacterDecoder_handleUncommon
-    };
-}
-
-macro_rules! A {
-    () => {
-        CharacterDecoder_handleAssertFalse
-    };
-}
-
 /// Lookup table for handling ASCII byte values preceeded by a backslash.
 ///
-/// This lookup table is equivalent to the following `match` statement:
-///
-/// ```ignore
-/// let handler = match point_u8 {
-///     00..=31 => CharacterDecoder_handleAssertFalse,
-///     32 => CharacterDecoder_handleUncommon,
-///     33 => CharacterDecoder_handleUncommon,
-///     34 => CharacterDecoder_handleStringMetaDoubleQuote,
-///     35..=59 => CharacterDecoder_handleUncommon,
-///     60 => CharacterDecoder_handleStringMetaOpen,
-///     61 => CharacterDecoder_handleUncommon,
-///     62 => CharacterDecoder_handleStringMetaClose,
-///     63..=91 => CharacterDecoder_handleUncommon,
-///     92 => CharacterDecoder_handleStringMetaBackslash,
-///     93..=126 => CharacterDecoder_handleUncommon,
-///     127 => CharacterDecoder_handleAssertFalse,
-///     128..=255 => panic!("invalid ASCII byte value: {point_u8}"),
-/// };
-/// ```
+/// This lookup table is equivalent to the match statement used in this
+/// `const` definition to populate the table.
 ///
 /// However, the lookup table-based implementation performs ~10-15% better than
 /// the `match` statement version on some of the large benchmarks.
-#[rustfmt::skip]
-const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = [
-    // 00-31: handleAssertFalse
-    A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(),
-    A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(), A!(),
-    A!(), A!(), A!(), A!(), A!(), A!(),
-    // 32-33: handleUncommon
-    U!(), U!(),
-    // 34:
-    CharacterDecoder_handleStringMetaDoubleQuote,
-    // 35-59: handleUncommon
-    U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(),
-    U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(),
-    // 60:
-    CharacterDecoder_handleStringMetaOpen,
-    // 61:
-    U!(),
-    // 62:
-    CharacterDecoder_handleStringMetaClose,
-    // 63-91:
-    U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(),
-    U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(),
-    U!(), U!(), U!(),
-    // 92:
-    CharacterDecoder_handleStringMetaBackslash,
-    // 93-126: handleUncommon
-    U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(),
-    U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(),
-    U!(), U!(), U!(), U!(), U!(), U!(), U!(), U!(),
-    // 127: handleAssertFalse
-    A!(),
-];
+const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = {
+    let mut table: [HandlerFunction; 128] = [CharacterDecoder_handleAssertFalse; 128];
+
+    let mut i: u8 = 0;
+    loop {
+        table[i as usize] = match i {
+            00..=31 => CharacterDecoder_handleAssertFalse,
+            32 => CharacterDecoder_handleUncommon,
+            33 => CharacterDecoder_handleUncommon,
+            34 => CharacterDecoder_handleStringMetaDoubleQuote,
+            35..=59 => CharacterDecoder_handleUncommon,
+            60 => CharacterDecoder_handleStringMetaOpen,
+            61 => CharacterDecoder_handleUncommon,
+            62 => CharacterDecoder_handleStringMetaClose,
+            63..=91 => CharacterDecoder_handleUncommon,
+            92 => CharacterDecoder_handleStringMetaBackslash,
+            93..=126 => CharacterDecoder_handleUncommon,
+            127 => CharacterDecoder_handleAssertFalse,
+            // "invalid ASCII byte value: {i}"
+            128..=255 => panic!(),
+        };
+
+        if i >= 127 {
+            break;
+        }
+
+        i += 1;
+    }
+
+    table
+};
 
 /// Precondition: buffer is pointing to current WLCharacter
 /// Postcondition: buffer is pointing to next WLCharacter
