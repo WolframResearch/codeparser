@@ -260,19 +260,6 @@ struct NumberTokenizationContext {
     Base: c_int,
 }
 
-impl NumberTokenizationContext {
-    pub fn new() -> Self {
-        NumberTokenizationContext {
-            InvalidBase: false,
-            UnrecognizedDigit: false,
-            NegativeExponent: false,
-            Real: false,
-            NonZeroExponentDigitCount: 0,
-            Base: 0,
-        }
-    }
-}
-
 // TODO: Why does putting this type in the root module cause Rust Analyzer
 //             to not work on this file?
 // pub mod handler {
@@ -2858,6 +2845,17 @@ fn Tokenizer_handleNumber<'i>(
 }
 
 impl NumberTokenizationContext {
+    pub(crate) fn new() -> Self {
+        NumberTokenizationContext {
+            InvalidBase: false,
+            UnrecognizedDigit: false,
+            NegativeExponent: false,
+            Real: false,
+            NonZeroExponentDigitCount: 0,
+            Base: 0,
+        }
+    }
+
     fn computeTok(&self) -> TokenKind {
         //
         // We wait until returning to handle these errors because we do not want invalid base or unrecognized digit to prevent further parsing
