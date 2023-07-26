@@ -534,6 +534,13 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/abstract_/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/read/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/bin/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/tests/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/tokenize/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/parse/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/parse/parselet/*
 	${PROJECT_SOURCE_DIR}/crates/codeparser-wll/*
 	${PROJECT_SOURCE_DIR}/crates/codeparser-wll/src/*
 )
