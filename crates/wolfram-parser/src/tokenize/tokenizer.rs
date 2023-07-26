@@ -285,146 +285,58 @@ type HandlerFunction = for<'p, 'i> fn(
 ) -> TokenRef<'i>;
 // }
 
-// use self::handler::HandlerFunction;
+/// Lookup table for handling ASCII characters that start a token.
+///
+/// This lookup table is equivalent to the match statement used in this `const`
+/// definition to populate the table. However, using a lookup table instead of
+/// a match is an optimization—doing an offset jump is more efficient than a
+/// series of comparisions to find the right match arm.
+///
+/// See also `CHARACTER_DECODER_HANDLER_TABLE` in character_decoder.rs.
+#[rustfmt::skip]
+const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = {
+    let mut table: [HandlerFunction; 128] = [Tokenizer_nextToken_uncommon; 128];
 
-// #define U Tokenizer_nextToken_uncommon
+    let mut i: u8 = 0;
+    loop {
+        table[i as usize] = match i {
+            0..=9 => Tokenizer_nextToken_uncommon,
+            10 => Tokenizer_handleLineFeed,
+            11..=31 => Tokenizer_nextToken_uncommon,
+            32 => Tokenizer_handleSpace,
+            33 => Tokenizer_nextToken_uncommon,      // !
+            34 => Tokenizer_handleString,            // "
+            35 => Tokenizer_nextToken_uncommon,      // #
+            36 => Tokenizer_handleSymbol,            // $
+            37..=43 => Tokenizer_nextToken_uncommon,
+            44 => Tokenizer_handleComma,             // ,
+            45 => Tokenizer_handleMinus,             // -
+            46..=47 => Tokenizer_nextToken_uncommon,
+            48..=57 => Tokenizer_handleNumber,       // 0-9
+            58..=64 => Tokenizer_nextToken_uncommon,
+            65..=90 => Tokenizer_handleSymbol,       // A-Z
+            91 => Tokenizer_handleOpenSquare,        // [
+            92 => Tokenizer_nextToken_uncommon,      // \
+            93 => Tokenizer_handleCloseSquare,       // ]
+            94..=96 => Tokenizer_nextToken_uncommon,
+            97..=122 => Tokenizer_handleSymbol,      // a-z
+            123 => Tokenizer_handleOpenCurly,        // {
+            124 => Tokenizer_nextToken_uncommon,     // |
+            125 => Tokenizer_handleCloseCurly,       // }
+            126..=127 => Tokenizer_nextToken_uncommon,
+            // Not a valid ASCII character
+            128..=255 => panic!(),
+        };
 
-macro_rules! U {
-    () => {
-        Tokenizer_nextToken_uncommon
-    };
-}
+        if i >= 127 {
+            break;
+        }
 
-const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = [
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    Tokenizer_handleLineFeed,
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    Tokenizer_handleSpace,
-    U!(),
-    Tokenizer_handleString,
-    U!(),
-    Tokenizer_handleSymbol,
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    Tokenizer_handleComma,
-    Tokenizer_handleMinus,
-    U!(),
-    U!(),
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    Tokenizer_handleNumber,
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    U!(),
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleOpenSquare,
-    U!(),
-    Tokenizer_handleCloseSquare,
-    U!(),
-    U!(),
-    U!(),
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleSymbol,
-    Tokenizer_handleOpenCurly,
-    U!(),
-    Tokenizer_handleCloseCurly,
-    U!(),
-    U!(),
-];
+        i += 1;
+    }
+
+    table
+};
 
 pub(crate) const ASCII_VTAB: char = '\x0B';
 pub(crate) const ASCII_FORM_FEED: char = '\x0C';
