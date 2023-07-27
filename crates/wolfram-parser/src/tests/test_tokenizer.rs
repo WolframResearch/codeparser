@@ -1,6 +1,7 @@
 use crate::{
     macros::{src, token},
     source::{Location, NextPolicyBits::RETURN_TOPLEVELNEWLINE, TOPLEVEL},
+    tests::tokens,
     ParseOptions, ParserSession, Tokens,
 };
 
@@ -325,5 +326,26 @@ fn test_escaped_ascii_del() {
     assert_eq!(
         tokens.as_slice(),
         [token![Error_UnhandledCharacter, [b'\\', 127] @ 0, src!(1:1-1:3)]]
+    );
+}
+
+#[test]
+fn test_tokenizing_escaped_chars() {
+    // Test that escaped chars can be used outside of strings
+    assert_eq!(
+        // 0x33 is ASCII '3'
+        tokens(r#"12\.33"#),
+        [token![Integer, r#"12\.33"# @ 0, src!(1:1-1:7)]]
+    );
+
+    assert_eq!(
+        // 0x0A is ASCII '3'
+        tokens(r#"12\.0A3"#),
+        [
+            token![Integer, r#"12"# @ 0, src!(1:1-1:3)],
+            token![ToplevelNewline, r#"\.0A"# @ 2, src!(1:3-1:7)],
+            // An escaped newline doesn't increment the Location line number
+            token![Integer, r#"3"# @ 6, src!(1:7-1:8)]
+        ]
     );
 }
