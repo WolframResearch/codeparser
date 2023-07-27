@@ -453,7 +453,7 @@ fn Tokenizer_nextToken_uncommon<'i>(
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
             return session.token(
-                TokenKind::InternalNewline.with_policy(policy), token_start);
+                TokenKind::newline_with_policy(policy), token_start);
         }
         Char('(') => {
 
@@ -622,10 +622,8 @@ fn Tokenizer_nextToken_uncommon<'i>(
         //
         // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
-        return session.token(
-            TokenKind::InternalNewline.with_policy(policy),
-            token_start,
-        );
+        return session
+            .token(TokenKind::newline_with_policy(policy), token_start);
     }
 
     if c.isMBPunctuation() {
@@ -726,10 +724,8 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return session.token(
-                TokenKind::InternalNewline.with_policy(policy),
-                token_start,
-            );
+            return session
+                .token(TokenKind::newline_with_policy(policy), token_start);
         },
         Char(' ' | '\t') => {
             //
@@ -896,8 +892,7 @@ fn Tokenizer_handleLineFeed<'i>(
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return session
-        .token(TokenKind::InternalNewline.with_policy(policy), token_start);
+    return session.token(TokenKind::newline_with_policy(policy), token_start);
 }
 
 fn Tokenizer_handleOpenSquare<'i>(
@@ -4528,8 +4523,7 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return session
-        .token(TokenKind::InternalNewline.with_policy(policy), token_start);
+    return session.token(TokenKind::newline_with_policy(policy), token_start);
 }
 
 fn Tokenizer_handleMBStrangeWhitespace<'i>(
