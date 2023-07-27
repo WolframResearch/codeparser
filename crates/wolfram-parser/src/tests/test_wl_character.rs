@@ -1,6 +1,6 @@
 use crate::{
     generated::long_names_registration::*,
-    read::wl_character::{EscapeStyle, WLCharacter},
+    read::wl_character::{Escape, WLCharacter},
 };
 
 
@@ -21,262 +21,206 @@ fn WLCharacterTest_Bug2() {
 
 #[test]
 fn WLCharacterTest_RawGraphical() {
-    let mut c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWTAB,
-        EscapeStyle::Raw,
-    );
+    let mut c =
+        WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWTAB, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "\\t");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_NEWLINE,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_NEWLINE, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "\\n");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWRETURN,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWRETURN, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "\\r");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWESCAPE,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWESCAPE, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "\\[RawEscape]");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWSPACE,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWSPACE, Escape::Raw);
 
     assert_eq!(c.graphicalString(), " ");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWEXCLAMATION,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "!");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWDOUBLEQUOTE,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "\\\"");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWNUMBERSIGN,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "#");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWDOLLAR,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWDOLLAR, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "$");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWPERCENT,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "%");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWAMPERSAND,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "&");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWQUOTE,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWQUOTE, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "'");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWLEFTPARENTHESIS,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "(");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWRIGHTPARENTHESIS,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), ")");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWSTAR,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWSTAR, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "*");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWPLUS,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWPLUS, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "+");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWCOMMA,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWCOMMA, Escape::Raw);
 
     assert_eq!(c.graphicalString(), ",");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWDASH,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWDASH, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "-");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWDOT,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWDOT, Escape::Raw);
 
     assert_eq!(c.graphicalString(), ".");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWSLASH,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWSLASH, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "/");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWCOLON,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWCOLON, Escape::Raw);
 
     assert_eq!(c.graphicalString(), ":");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWSEMICOLON,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), ";");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWLESS,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWLESS, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "<");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWEQUAL,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWEQUAL, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "=");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWGREATER,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), ">");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWQUESTION,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "?");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWAT,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWAT, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "@");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWLEFTBRACKET,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "[");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWBACKSLASH,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "\\\\");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWRIGHTBRACKET,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "]");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWWEDGE,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWWEDGE, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "^");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWUNDERSCORE,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "_");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWBACKQUOTE,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "`");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWLEFTBRACE,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "{");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWVERTICALBAR,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "|");
 
     c = WLCharacter::new_with_escape(
         CODEPOINT_LONGNAME_RAWRIGHTBRACE,
-        EscapeStyle::Raw,
+        Escape::Raw,
     );
 
     assert_eq!(c.graphicalString(), "}");
 
-    c = WLCharacter::new_with_escape(
-        CODEPOINT_LONGNAME_RAWTILDE,
-        EscapeStyle::Raw,
-    );
+    c = WLCharacter::new_with_escape(CODEPOINT_LONGNAME_RAWTILDE, Escape::Raw);
 
     assert_eq!(c.graphicalString(), "~");
 }

@@ -10,7 +10,7 @@ use crate::{
             CodePoint::{Char, *},
             *,
         },
-        wl_character::{EscapeStyle, WLCharacter},
+        wl_character::{Escape, WLCharacter},
         InputMark, Reader,
     },
     source::{
@@ -3129,8 +3129,7 @@ fn Tokenizer_handleOpenParen<'i>(
     // Comments must start literally with (*
     // Escaped characters do not work
     //
-    if (c.to_point() == '(' && c.escape() == EscapeStyle::None)
-        && secondChar == '*'
+    if (c.to_point() == '(' && c.escape() == Escape::None) && secondChar == '*'
     {
         //
         // secondChar is a SourceCharacter, so cannot MUSTTAIL

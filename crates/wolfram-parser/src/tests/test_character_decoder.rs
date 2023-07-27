@@ -1,7 +1,7 @@
 use crate::{
     read::{
         code_point::CodePoint,
-        wl_character::{EscapeStyle, WLCharacter},
+        wl_character::{Escape, WLCharacter},
     },
     source::TOPLEVEL,
     ParseOptions, ParserSession,
@@ -66,7 +66,7 @@ fn CharacterDecoderTest_LongName() {
         c,
         WLCharacter::new_with_escape(
             CodePoint::from_u32(0x03b1).unwrap(),
-            EscapeStyle::LongName
+            Escape::LongName
         )
     );
 
@@ -105,7 +105,7 @@ fn CharacterDecoderTest_4Hex() {
         c,
         WLCharacter::new_with_escape(
             CodePoint::from_u32(0x03b1).unwrap(),
-            EscapeStyle::Hex4
+            Escape::Hex4
         )
     );
 
@@ -140,7 +140,7 @@ fn CharacterDecoderTest_2Hex() {
 
     c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
 
-    assert_eq!(c, WLCharacter::new_with_escape(242, EscapeStyle::Hex2));
+    assert_eq!(c, WLCharacter::new_with_escape(242, Escape::Hex2));
 
     session.tokenizer.next_wolfram_char(TOPLEVEL);
 
@@ -173,7 +173,7 @@ fn CharacterDecoderTest_Octal() {
 
     c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
 
-    assert_eq!(c, WLCharacter::new_with_escape(219, EscapeStyle::Octal));
+    assert_eq!(c, WLCharacter::new_with_escape(219, Escape::Octal));
 
     session.tokenizer.next_wolfram_char(TOPLEVEL);
 
@@ -206,7 +206,7 @@ fn CharacterDecoderTest_6Hex() {
 
     c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
 
-    assert_eq!(c, WLCharacter::new_with_escape(242, EscapeStyle::Hex6));
+    assert_eq!(c, WLCharacter::new_with_escape(242, Escape::Hex6));
 
     session.tokenizer.next_wolfram_char(TOPLEVEL);
 
@@ -239,7 +239,7 @@ fn CharacterDecoderTest_Raw() {
 
     c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
 
-    assert_eq!(c, WLCharacter::new_with_escape('^', EscapeStyle::Raw));
+    assert_eq!(c, WLCharacter::new_with_escape('^', Escape::Raw));
 
     session.tokenizer.next_wolfram_char(TOPLEVEL);
 
@@ -504,7 +504,7 @@ fn CharacterDecoderTest_UnexpectedEscapeSequence() {
         c,
         WLCharacter::new_with_escape(
             CodePoint::from_u32(0x03b1).unwrap(),
-            EscapeStyle::LongName
+            Escape::LongName
         )
     );
 

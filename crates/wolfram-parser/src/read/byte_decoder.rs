@@ -32,7 +32,7 @@ use crate::{
     },
     read::{
         code_point::{CodePoint, CODEPOINT_BOM},
-        wl_character::{EscapeStyle, WLCharacter},
+        wl_character::{Escape, WLCharacter},
     },
     source::{
         LineColumn, Location, NextPolicy, NextPolicyBits::*, SourceCharacter,
@@ -813,7 +813,7 @@ fn ByteDecoder_strangeWarning(
 
     let mut Actions: Vec<CodeAction> = Vec::new();
 
-    let c = WLCharacter::new_with_escape(decoded, EscapeStyle::None);
+    let c = WLCharacter::new_with_escape(decoded, Escape::None);
 
     let certainCharacterActions =
         utils::certainCharacterReplacementActions(c, Src);

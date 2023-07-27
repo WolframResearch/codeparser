@@ -3,7 +3,7 @@ use crate::{
     issue::CodeAction,
     read::{
         code_point::{CodePoint::Char, *},
-        wl_character::{EscapeStyle, WLCharacter},
+        wl_character::{Escape, WLCharacter},
     },
     source::Span,
 };
@@ -288,7 +288,7 @@ pub fn certainCharacterReplacementActions(
             Actions.push(CodeAction::replace_text(
                 format!("Replace ``{safeAndGraphicalStr1}`` with ``{safeAndGraphicalStr2}``"),
                 src,
-                (if c.escape() == EscapeStyle::None { "\u{2060}" } else {"\\[NoBreak]"}).to_owned()
+                (if c.escape() == Escape::None { "\u{2060}" } else {"\\[NoBreak]"}).to_owned()
             ));
         }
         Char(CODEPOINT_LONGNAME_RIGHTARROW) |
@@ -307,7 +307,7 @@ pub fn certainCharacterReplacementActions(
             Actions.push(CodeAction::replace_text(
                 format!("Replace ``{safeAndGraphicalStr1}`` with ``{safeAndGraphicalStr2}``"),
                 src,
-                (if c.escape() == EscapeStyle::None { "\u{F522}" } else { "\\[Rule]" }).to_owned()
+                (if c.escape() == Escape::None { "\u{F522}" } else { "\\[Rule]" }).to_owned()
             ));
         }
         Char(CODEPOINT_RULEDELAYED) => {
@@ -321,7 +321,7 @@ pub fn certainCharacterReplacementActions(
             Actions.push(CodeAction::replace_text(
                 format!("Replace ``{safeAndGraphicalStr1}`` with ``{safeAndGraphicalStr2}``"),
                 src,
-                (if c.escape() == EscapeStyle::None { "\u{F51F}" } else { "\\[RuleDelayed]" }).to_owned()
+                (if c.escape() == Escape::None { "\u{F51F}" } else { "\\[RuleDelayed]" }).to_owned()
             ));
         }
         Char(CODEPOINT_FUNCTIONAPPLICATION) => {
@@ -335,7 +335,7 @@ pub fn certainCharacterReplacementActions(
             Actions.push(CodeAction::replace_text(
                 format!("Replace ``{safeAndGraphicalStr1}`` with ``{safeAndGraphicalStr2}``"),
                 src,
-                (if c.escape() == EscapeStyle::None { "\u{F76D}" } else { "\\[InvisibleApplication]"}).to_owned()
+                (if c.escape() == Escape::None { "\u{F76D}" } else { "\\[InvisibleApplication]"}).to_owned()
             ));
 
             Actions.push(CodeAction::delete_text(
@@ -354,7 +354,7 @@ pub fn certainCharacterReplacementActions(
             Actions.push(CodeAction::replace_text(
                 format!("Replace ``{safeAndGraphicalStr1}`` with ``{safeAndGraphicalStr2}``"),
                 src,
-                if c.escape() == EscapeStyle::None { "\u{F765}" } else { "\\[InvisibleComma]" }.to_owned()
+                if c.escape() == Escape::None { "\u{F765}" } else { "\\[InvisibleComma]" }.to_owned()
             ));
         },
         Char(CODEPOINT_INVISIBLEPLUS) => {
@@ -368,7 +368,7 @@ pub fn certainCharacterReplacementActions(
             Actions.push(CodeAction::replace_text(
                 format!("Replace ``{safeAndGraphicalStr1}`` with ``{safeAndGraphicalStr2}``"),
                 src,
-                if c.escape() == EscapeStyle::None { "\u{F39E}" } else { "\\[ImplicitPlus]" }.to_owned()
+                if c.escape() == Escape::None { "\u{F39E}" } else { "\\[ImplicitPlus]" }.to_owned()
             ));
         },
         Char(CODEPOINT_ZEROWIDTHSPACE) => {
@@ -382,7 +382,7 @@ pub fn certainCharacterReplacementActions(
             Actions.push(CodeAction::replace_text(
                 format!("Replace ``{safeAndGraphicalStr1}`` with ``{safeAndGraphicalStr2}``"),
                 src,
-                if c.escape() == EscapeStyle::None { "\u{F360}" } else {"\\[InvisibleSpace]"}.to_owned()
+                if c.escape() == Escape::None { "\u{F360}" } else {"\\[InvisibleSpace]"}.to_owned()
             ));
         },
         _ => ()
