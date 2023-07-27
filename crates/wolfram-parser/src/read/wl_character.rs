@@ -450,9 +450,9 @@ impl WLCharacter {
     }
 
     pub(crate) fn isControl(&self) -> bool {
-        let val = self.to_point().as_i32();
+        let point = self.to_point();
 
-        if !(0x00 <= val && val <= 0x7f) {
+        if !point.is_ascii() {
             return false;
         }
 
@@ -524,7 +524,7 @@ impl WLCharacter {
         //
         // Reject if single byte, should use isLetterlike()
         //
-        if 0x00 <= val.as_i32() && val.as_i32() <= 0x7f {
+        if val.is_ascii() {
             return false;
         }
 

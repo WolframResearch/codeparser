@@ -33,7 +33,7 @@ pub fn isMBStrange(point: CodePoint) -> bool {
     //
     // Reject if ASCII, should use isStrange()
     //
-    if 0x00 <= point.as_i32() && point.as_i32() <= 0x7f {
+    if point.is_ascii() {
         return false;
     }
 
