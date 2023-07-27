@@ -29,7 +29,10 @@ impl Precedence {
     }
 
     /// Returns true if `lhs` is greater then `rhs`.
-    pub(crate) fn greater(lhs: Option<Precedence>, rhs: Option<Precedence>) -> bool {
+    pub(crate) fn greater(
+        lhs: Option<Precedence>,
+        rhs: Option<Precedence>,
+    ) -> bool {
         let lhs = lhs.map(Precedence::bits).unwrap_or(0);
         let rhs = rhs.map(Precedence::bits).unwrap_or(0);
 

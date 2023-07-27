@@ -1,7 +1,9 @@
 #![allow(non_snake_case)]
 
 #[cfg(all(not(feature = "USE_MATHLINK"), not(feature = "USE_EXPR_LIB")))]
-compile_error!("codeparser-wll requires that either USE_MATHLINK or USE_EXPR_LIB are set");
+compile_error!(
+    "codeparser-wll requires that either USE_MATHLINK or USE_EXPR_LIB are set"
+);
 
 #[cfg(feature = "USE_MATHLINK")]
 mod convert_wstp;
@@ -26,7 +28,8 @@ use wolfram_parser::{
     generated::symbol_registration as sym,
     quirks::QuirkSettings,
     source::SourceConvention,
-    Container, ContainerBody, EncodingMode, FirstLineBehavior, ParseOptions, StringifyMode,
+    Container, ContainerBody, EncodingMode, FirstLineBehavior, ParseOptions,
+    StringifyMode,
 };
 
 use crate::{convert_wstp::WstpPut, from_expr::FromExpr};
@@ -37,7 +40,8 @@ pub(crate) type ParserSessionPtr = *mut std::ffi::c_void;
 #[cfg(feature = "USE_EXPR_LIB")]
 type expr = *mut std::ffi::c_void;
 
-pub(crate) const SIZEOF_VOID_P: usize = std::mem::size_of::<*mut std::ffi::c_void>();
+pub(crate) const SIZEOF_VOID_P: usize =
+    std::mem::size_of::<*mut std::ffi::c_void>();
 
 //======================================
 // Types
@@ -198,26 +202,27 @@ fn read_parse_options_from_link(
     //----------------------------------------------------------
 
     let mlSrcConvention = link.get_i32().unwrap();
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
+    let srcConvention = SourceConvention::try_from(mlSrcConvention)
+        .expect("invalid SourceConvention value");
 
-    let tabWidth =
-        u32::try_from(link.get_i64().unwrap()).expect("unable to convert tab width value to u32");
+    let tabWidth = u32::try_from(link.get_i64().unwrap())
+        .expect("unable to convert tab width value to u32");
 
     let mlFirstLineBehavior = link.get_i32().unwrap();
 
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
+    let firstLineBehavior = FirstLineBehavior::try_from(mlFirstLineBehavior)
+        .expect("invalid FirstLineBehavior value");
 
     // If no encoding mode was specified by the caller, read one from the link
     // at this point in the argument sequence.
     let encoding_mode: EncodingMode = encoding_mode.unwrap_or_else(|| {
         let mlEncodingMode = link.get_i32().unwrap();
-        EncodingMode::try_from(mlEncodingMode).expect("invalid EncodingMode value")
+        EncodingMode::try_from(mlEncodingMode)
+            .expect("invalid EncodingMode value")
     });
 
-    let quirk_settings =
-        QuirkSettings::from_expr(&get_expr(link).unwrap()).expect("invalid quirks settings value");
+    let quirk_settings = QuirkSettings::from_expr(&get_expr(link).unwrap())
+        .expect("invalid quirks settings value");
 
     //----------------------------------
     // Construct the ParseOptions struct
@@ -242,7 +247,8 @@ fn read_input_bytes(link: &mut wstp::Link) -> Vec<u8> {
         panic!("input byte array has incorrect format: expected 1 argument, got {len}")
     }
 
-    let arr: wstp::Array<u8> = link.get_u8_array().expect("unable to read Array of u8");
+    let arr: wstp::Array<u8> =
+        link.get_u8_array().expect("unable to read Array of u8");
 
     assert_eq!(arr.rank(), 1);
 
@@ -404,15 +410,15 @@ pub fn ConcreteParseBytes_LibraryLink(
     let arr = ScopedNumericArray(libData, Args[1]);
 
     let mlSrcConvention = MArgument_getInteger(Args[2]);
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
+    let srcConvention = SourceConvention::try_from(mlSrcConvention)
+        .expect("invalid SourceConvention value");
 
     let mlTabWidth = MArgument_getInteger(Args[3]);
     let tabWidth = mlTabWidth as u32;
 
     let mlFirstLineBehavior = MArgument_getInteger(Args[4]);
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
+    let firstLineBehavior = FirstLineBehavior::try_from(mlFirstLineBehavior)
+        .expect("invalid FirstLineBehavior value");
 
     let numBytes = arr.len();
 
@@ -586,15 +592,15 @@ fn TokenizeBytes_LibraryLink(
     let arr = ScopedNumericArray(libData, Args[1]);
 
     let mlSrcConvention = MArgument_getInteger(Args[2]);
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
+    let srcConvention = SourceConvention::try_from(mlSrcConvention)
+        .expect("invalid SourceConvention value");
 
     let mlTabWidth = MArgument_getInteger(Args[3]);
     let tabWidth = mlTabWidth as c_int;
 
     let mlFirstLineBehavior = MArgument_getInteger(Args[4]);
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
+    let firstLineBehavior = FirstLineBehavior::try_from(mlFirstLineBehavior)
+        .expect("invalid FirstLineBehavior value");
 
     let numBytes = arr.len();
 
@@ -782,18 +788,19 @@ fn ConcreteParseLeaf_LibraryLink(
     let stringifyMode = MArgument_getInteger(Args[2]);
 
     let mlSrcConvention = MArgument_getInteger(Args[3]);
-    let srcConvention =
-        SourceConvention::try_from(mlSrcConvention).expect("invalid SourceConvention value");
+    let srcConvention = SourceConvention::try_from(mlSrcConvention)
+        .expect("invalid SourceConvention value");
 
     let mlTabWidth = MArgument_getInteger(Args[4]);
     let tabWidth = mlTabWidth as _cint;
 
     let mlFirstLineBehavior = MArgument_getInteger(Args[5]);
-    let firstLineBehavior =
-        FirstLineBehavior::try_from(mlFirstLineBehavior).expect("invalid FirstLineBehavior value");
+    let firstLineBehavior = FirstLineBehavior::try_from(mlFirstLineBehavior)
+        .expect("invalid FirstLineBehavior value");
 
     let mlEncodingMode = MArgument_getInteger(Args[6]);
-    let encodingMode = EncodingMode::try_from(mlEncodingMode).expect("invalid EncodingMode value");
+    let encodingMode = EncodingMode::try_from(mlEncodingMode)
+        .expect("invalid EncodingMode value");
 
     let numBytes = arr.len();
 
@@ -814,7 +821,8 @@ fn ConcreteParseLeaf_LibraryLink(
 
     let C = ParserSessionConcreteParseLeaf(
         session,
-        StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value"),
+        StringifyMode::try_from(stringifyMode)
+            .expect("invalid StringifyMode value"),
     );
 
     let e = NodeContainerToExpr(session, C);
@@ -850,8 +858,8 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
 
     link.new_packet().unwrap();
 
-    let stringify_mode =
-        StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value");
+    let stringify_mode = StringifyMode::try_from(stringifyMode)
+        .expect("invalid StringifyMode value");
 
     wolfram_parser::parse_to_token(&buffer, &opts, stringify_mode).put(link);
 }
@@ -1051,12 +1059,15 @@ struct ScopedNumericArray {
 fn validatePath(path: &str) -> bool {
     use std::ffi::c_char;
 
-    let cstr = std::ffi::CString::new(path).expect("unable to convert file path to CString");
+    let cstr = std::ffi::CString::new(path)
+        .expect("unable to convert file path to CString");
 
     let cptr: *const c_char = cstr.as_ptr();
     let cptr = cptr as *mut c_char;
 
-    let is_valid = unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as c_char) } != 0;
+    let is_valid =
+        unsafe { wolfram_library_link::rtl::validatePath(cptr, 'R' as c_char) }
+            != 0;
 
     return is_valid;
 }
@@ -1106,7 +1117,9 @@ fn get_args_list_impl_assuming_link_print_full_symbols(
     let mut elements: Vec<Expr> = Vec::new();
 
     for _ in 0..arg_count {
-        let elem = link.get_expr_with_resolver(&mut assume_link_print_full_symbols_resolver)?;
+        let elem = link.get_expr_with_resolver(
+            &mut assume_link_print_full_symbols_resolver,
+        )?;
         elements.push(elem);
     }
 

@@ -14,7 +14,8 @@ use pretty_assertions::assert_eq;
 fn TokenizerTest_Bug1() {
     let strIn = "\\.GG";
 
-    let session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -27,7 +28,8 @@ fn TokenizerTest_Bug1() {
 fn TokenizerTest_Bug2() {
     let strIn = "<<<";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok = session.tokenizer.peek_token();
 
@@ -44,7 +46,8 @@ fn TokenizerTest_Bug2() {
 fn TokenizerTest_Bug3() {
     let strIn = "\\\r";
 
-    let session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -54,7 +57,8 @@ fn TokenizerTest_Bug3() {
 fn TokenizerTest_Bug4() {
     let strIn = "\\[";
 
-    let session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -64,7 +68,8 @@ fn TokenizerTest_Bug4() {
 fn TokenizerTest_Bug5() {
     let strIn = "\"a\\\\\r\nb\"";
 
-    let session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -74,7 +79,8 @@ fn TokenizerTest_Bug5() {
 fn TokenizerTest_IntegerRealMixup() {
     let strIn = "0..";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok1 = session.tokenizer.peek_token();
 
@@ -100,7 +106,8 @@ fn TokenizerTest_IntegerRealMixup() {
 fn TokenizerTest_Basic2() {
     let strIn = "\\[Alpha]bc+1";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok1 = session.tokenizer.peek_token();
 
@@ -132,7 +139,8 @@ fn TokenizerTest_Basic2() {
 fn TokenizerTest_OldAssert1() {
     let strIn = "8*";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let Tok = session.tokenizer.peek_token();
 
@@ -146,7 +154,8 @@ fn TokenizerTest_OldAssert1() {
 fn TokenizerTest_Basic3() {
     let strIn = "{\n}";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut Tok = session.tokenizer.peek_token();
 
@@ -228,7 +237,8 @@ fn TokenizerTest_Crash1() {
 fn TokenizerTest_LineContinuation1() {
     let strIn = "ab\\\ncd";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut Tok = session.tokenizer.peek_token();
 
@@ -248,7 +258,8 @@ fn TokenizerTest_LineContinuation1() {
 fn TokenizerTest_LineContinuation2() {
     let strIn = "ab\\\r\ncd";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut Tok = session.tokenizer.peek_token();
 
@@ -268,7 +279,8 @@ fn TokenizerTest_LineContinuation2() {
 fn TokenizerTest_LineContinuation3() {
     let strIn = "ab\\\rcd";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut Tok = session.tokenizer.peek_token();
 
@@ -288,7 +300,8 @@ fn TokenizerTest_LineContinuation3() {
 fn TokenizerTest_LineContinuation4() {
     let strIn = "1\\\n";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut Tok = session.tokenizer.peek_token();
 
@@ -306,7 +319,8 @@ fn TokenizerTest_LineContinuation4() {
 
 #[test]
 fn test_escaped_ascii_del() {
-    let Tokens(tokens) = crate::tokenize_bytes(&[b'\\', 127], &ParseOptions::default()).unwrap();
+    let Tokens(tokens) =
+        crate::tokenize_bytes(&[b'\\', 127], &ParseOptions::default()).unwrap();
 
     assert_eq!(
         tokens.as_slice(),

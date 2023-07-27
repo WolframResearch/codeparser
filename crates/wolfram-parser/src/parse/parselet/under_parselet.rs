@@ -7,7 +7,10 @@ use crate::{
 };
 
 impl UnderParselet {
-    pub(crate) const fn new(BOp: CompoundOperator, PBOp: CompoundOperator) -> Self {
+    pub(crate) const fn new(
+        BOp: CompoundOperator,
+        PBOp: CompoundOperator,
+    ) -> Self {
         Self { BOp, PBOp }
     }
 
@@ -17,7 +20,11 @@ impl UnderParselet {
 }
 
 impl PrefixParselet for UnderParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
+    fn parse_prefix<'i>(
+        &'static self,
+        session: &mut ParserSession<'i>,
+        tok_in: TokenRef<'i>,
+    ) {
         //
         // prefix
         //
@@ -149,7 +156,11 @@ impl UnderParselet {
 //======================================
 
 impl PrefixParselet for UnderDotParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
+    fn parse_prefix<'i>(
+        &'static self,
+        session: &mut ParserSession<'i>,
+        tok_in: TokenRef<'i>,
+    ) {
         //
         // prefix
         //

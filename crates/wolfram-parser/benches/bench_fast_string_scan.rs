@@ -17,7 +17,9 @@ fn benchmark(c: &mut Criterion) {
     println!("FSS: FAST_STRING_SCAN = true");
     println!("================\n");
 
-    c.bench_function("[FSS] tokenize 2 + 2", |b| b.iter(|| parse_tokens("2 + 2")));
+    c.bench_function("[FSS] tokenize 2 + 2", |b| {
+        b.iter(|| parse_tokens("2 + 2"))
+    });
 
     let boxes_wl = include_str!("../../../CodeParser/Kernel/Boxes.wl");
     c.bench_function("[FSS] tokenize Boxes.wl", |b| {
@@ -36,13 +38,15 @@ fn benchmark_large_files(c: &mut Criterion) {
     // Large files
     //------------
 
-    let relief_plot = fs::read(Path::new("../Tests/files/large/ReliefPlot.nb")).unwrap();
+    let relief_plot =
+        fs::read(Path::new("../Tests/files/large/ReliefPlot.nb")).unwrap();
     group.bench_function("[FSS] tokenize ReliefPlot.nb", |b| {
         b.iter(|| parse_tokens_u8(&relief_plot))
     });
 
     let expanded_company_data_new =
-        fs::read(Path::new("../Tests/files/large/expandedCompanyDataNew1.m")).unwrap();
+        fs::read(Path::new("../Tests/files/large/expandedCompanyDataNew1.m"))
+            .unwrap();
     group.bench_function("[FSS] tokenize expandedCompanyDataNew1.m", |b| {
         b.iter(|| parse_tokens_u8(&expanded_company_data_new))
     });
@@ -55,7 +59,8 @@ fn benchmark_large_files(c: &mut Criterion) {
     group.sample_size(30);
 
     let geomagnetic_models =
-        fs::read(Path::new("../Tests/files/large/geomagneticmodels.m")).unwrap();
+        fs::read(Path::new("../Tests/files/large/geomagneticmodels.m"))
+            .unwrap();
     group.bench_function("[FSS] tokenize geomagneticmodels.m", |b| {
         b.iter(|| parse_tokens_u8(&geomagnetic_models))
     });

@@ -1,12 +1,15 @@
 use pretty_assertions::assert_eq;
 
-use crate::{read::code_point::CodePoint, source::TOPLEVEL, ParseOptions, ParserSession};
+use crate::{
+    read::code_point::CodePoint, source::TOPLEVEL, ParseOptions, ParserSession,
+};
 
 #[test]
 fn ByteDecoderTest_Empty() {
     let strIn = "";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
 
@@ -45,7 +48,8 @@ fn ByteDecoderTest_Empty() {
 fn ByteDecoderTest_Basic1() {
     let strIn = "1+2";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
 

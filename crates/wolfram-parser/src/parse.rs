@@ -6,8 +6,8 @@ use std::fmt::{self, Debug};
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, CstNode, CstNodeSeq, Node,
-        TernaryNode, TernaryOperator,
+        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, CstNode,
+        CstNodeSeq, Node, TernaryNode, TernaryOperator,
     },
     feature,
     generated::parselet_registration::INFIX_PARSELETS,
@@ -74,7 +74,11 @@ impl Context {
         }
     }
 
-    pub(crate) fn init_callback(&mut self, func: ParseFunction, parselet: Option<ParseletPtr>) {
+    pub(crate) fn init_callback(
+        &mut self,
+        func: ParseFunction,
+        parselet: Option<ParseletPtr>,
+    ) {
         assert!(self.f.is_none());
         assert!(self.p.is_none());
 
@@ -87,7 +91,11 @@ impl Context {
         self.f = Some(func);
     }
 
-    pub(crate) fn set_callback_2(&mut self, func: ParseFunction, parselet: ParseletPtr) {
+    pub(crate) fn set_callback_2(
+        &mut self,
+        func: ParseFunction,
+        parselet: ParseletPtr,
+    ) {
         // TODO: Should `f` already have some value in this case?
         self.f = Some(func);
         self.p = Some(parselet);
@@ -97,7 +105,10 @@ impl Context {
         self.f == Some(Parser_identity)
     }
 
-    pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(&mut self, prec: P) {
+    pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(
+        &mut self,
+        prec: P,
+    ) {
         self.prec = prec.into();
     }
 }
@@ -225,7 +236,8 @@ impl<'i> ParserSession<'i> {
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
-        let parselet: &dyn PrefixParselet = self::parselet::prefix_parselet(token.tok);
+        let parselet: &dyn PrefixParselet =
+            self::parselet::prefix_parselet(token.tok);
 
         // MUSTTAIL
         parselet.parse_prefix(self, token)
@@ -268,10 +280,13 @@ impl<'i> ParserSession<'i> {
         //
         // not in the middle of parsing anything, so toplevel newlines will delimit
         //
-        let mut token =
-            self.current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia1.borrow_mut());
+        let mut token = self
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(
+                &mut Trivia1.borrow_mut(),
+            );
 
-        let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(token.tok.value())];
+        let mut I: &dyn InfixParselet =
+            INFIX_PARSELETS[usize::from(token.tok.value())];
 
         token = I.process_implicit_times(self, token);
 
@@ -366,8 +381,11 @@ impl<'i> ParserSession<'i> {
         tok
     }
 
-    pub(crate) fn current_token_stringify_as_file_eat_trivia(&mut self) -> TokenRef<'i> {
-        let mut tok = Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
+    pub(crate) fn current_token_stringify_as_file_eat_trivia(
+        &mut self,
+    ) -> TokenRef<'i> {
+        let mut tok =
+            Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
 
         self.eat_trivia_stringify_as_file(&mut tok);
 
@@ -376,7 +394,9 @@ impl<'i> ParserSession<'i> {
         tok
     }
 
-    pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines(&mut self) -> TokenRef<'i> {
+    pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines(
+        &mut self,
+    ) -> TokenRef<'i> {
         let mut tok = self.tokenizer.peek_token();
 
         //
@@ -416,7 +436,11 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    fn eat_trivia_into(&mut self, token: &mut TokenRef<'i>, Args: &mut TriviaSeq<'i>) {
+    fn eat_trivia_into(
+        &mut self,
+        token: &mut TokenRef<'i>,
+        Args: &mut TriviaSeq<'i>,
+    ) {
         while token.tok.isTrivia() {
             Args.push(token.clone());
 
@@ -432,11 +456,15 @@ impl<'i> ParserSession<'i> {
 
             token.skip(&mut self.tokenizer);
 
-            *token = Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
+            *token =
+                Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
         }
     }
 
-    fn eat_trivia_but_not_toplevel_newlines(&mut self, token: &mut TokenRef<'i>) {
+    fn eat_trivia_but_not_toplevel_newlines(
+        &mut self,
+        token: &mut TokenRef<'i>,
+    ) {
         while token.tok.isTriviaButNotToplevelNewline() {
             self.NodeStack.push(Node::Token(token.clone()));
 
@@ -522,7 +550,10 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(&mut self, prec: P) {
+    pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(
+        &mut self,
+        prec: P,
+    ) {
         let prec = prec.into();
 
         assert!(!self.ContextStack.is_empty());
@@ -578,7 +609,9 @@ impl<'i> ParserSession<'i> {
     }
 
     #[cfg(test)]
-    pub(crate) fn top_node<'s>(&'s mut self) -> &'s mut Node<BorrowedTokenInput<'i>> {
+    pub(crate) fn top_node<'s>(
+        &'s mut self,
+    ) -> &'s mut Node<BorrowedTokenInput<'i>> {
         assert!(!self.NodeStack.is_empty());
 
         return self.NodeStack.last_mut().unwrap();
@@ -696,7 +729,9 @@ impl<'i> ParserSession<'i> {
 
                         return ColonLHS::Pattern;
                     },
-                    TokenKind::Under | TokenKind::UnderUnder | TokenKind::UnderUnderUnder => {
+                    TokenKind::Under
+                    | TokenKind::UnderUnder
+                    | TokenKind::UnderUnderUnder => {
                         //
                         // Something like  _:b
                         //                  ^ Optional
@@ -769,9 +804,17 @@ impl<'i> ParserSession<'i> {
 
         match top_node {
             // This is a BinaryNode of Span
-            CstNode::Binary(BinaryNode(node)) if node.getOp() == BinaryOperator::Span => true,
+            CstNode::Binary(BinaryNode(node))
+                if node.getOp() == BinaryOperator::Span =>
+            {
+                true
+            },
             // This is a TernaryNode of Span
-            CstNode::Ternary(TernaryNode(node)) if node.getOp() == TernaryOperator::Span => true,
+            CstNode::Ternary(TernaryNode(node))
+                if node.getOp() == TernaryOperator::Span =>
+            {
+                true
+            },
             _ => false,
         }
     }

@@ -21,12 +21,14 @@ use crate::{
     source::{SourceConvention, TOPLEVEL},
     tokenize::{
         tokenizer::{
-            Tokenizer, Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
-            TrackedSourceLocations, UnsafeCharacterEncoding,
+            Tokenizer, Tokenizer_nextToken_stringifyAsFile,
+            Tokenizer_nextToken_stringifyAsTag, TrackedSourceLocations,
+            UnsafeCharacterEncoding,
         },
         BorrowedTokenInput, Token, TokenKind, TokenRef,
     },
-    EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, StringifyMode, Tokens,
+    EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, StringifyMode,
+    Tokens,
 };
 
 
@@ -174,7 +176,9 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub fn concrete_parse_expressions(&mut self) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+    pub fn concrete_parse_expressions(
+        &mut self,
+    ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
         quirks::set_quirks(self.quirk_settings);
 
         #[cfg(feature = "DIAGNOSTICS")]
@@ -239,7 +243,9 @@ impl<'i> ParserSession<'i> {
         return self.create_parse_result(exprs);
     }
 
-    pub fn tokenize(&mut self) -> Result<Tokens<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
+    pub fn tokenize(
+        &mut self,
+    ) -> Result<Tokens<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
         let mut tokens = Vec::new();
 
         loop {
@@ -267,11 +273,18 @@ impl<'i> ParserSession<'i> {
         return Ok(tokens);
     }
 
-    fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Token<BorrowedTokenInput<'i>> {
+    fn concreteParseLeaf0(
+        &mut self,
+        mode: StringifyMode,
+    ) -> Token<BorrowedTokenInput<'i>> {
         let token = match mode {
             StringifyMode::Normal => self.tokenizer.next_token(),
-            StringifyMode::Tag => Tokenizer_nextToken_stringifyAsTag(&mut self.tokenizer),
-            StringifyMode::File => Tokenizer_nextToken_stringifyAsFile(&mut self.tokenizer),
+            StringifyMode::Tag => {
+                Tokenizer_nextToken_stringifyAsTag(&mut self.tokenizer)
+            },
+            StringifyMode::File => {
+                Tokenizer_nextToken_stringifyAsFile(&mut self.tokenizer)
+            },
         };
 
         token
@@ -360,7 +373,9 @@ impl<'i> ParserSession<'i> {
     fn create_parse_result<N>(&self, nodes: NodeSeq<N>) -> ParseResult<N> {
         let result = ParseResult {
             nodes,
-            unsafe_character_encoding: self.tokenizer.unsafe_character_encoding_flag,
+            unsafe_character_encoding: self
+                .tokenizer
+                .unsafe_character_encoding_flag,
             fatal_issues: self.fatalIssues().clone(),
             non_fatal_issues: self.nonFatalIssues().clone(),
             tracked: self.tokenizer.tracked.clone(),

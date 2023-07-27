@@ -2,8 +2,14 @@ use std::{num::NonZeroU32, ops::Range};
 
 use crate::{
     agg::AggNodeSeq,
-    cst::{GroupMissingCloserNode, Node, OperatorNode, UnterminatedGroupNeedsReparseNode},
-    source::{Buffer, BufferAndLength, CharacterSpan, LineColumn, Location, Span, SpanKind},
+    cst::{
+        GroupMissingCloserNode, Node, OperatorNode,
+        UnterminatedGroupNeedsReparseNode,
+    },
+    source::{
+        Buffer, BufferAndLength, CharacterSpan, LineColumn, Location, Span,
+        SpanKind,
+    },
     tokenize::{BorrowedTokenInput, Token},
     NodeSeq, Tokens,
 };
@@ -11,7 +17,8 @@ use crate::{
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-const SPLIT_LINES_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new("\r\n|\n|\r|$").unwrap());
+const SPLIT_LINES_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new("\r\n|\n|\r|$").unwrap());
 
 const CHUNK_PAT: Lazy<Regex> = Lazy::new(|| {
     /*
@@ -75,8 +82,11 @@ pub(crate) fn reparse_unterminated<'i>(
     tab_width: usize,
 ) -> AggNodeSeq<BorrowedTokenInput<'i>> {
     nodes.map_visit(&mut |node| match node {
-        Node::Token(token) if token.tok.isError() && token.tok.isUnterminated() => {
-            let token = reparseUnterminatedTokenErrorNode(token, input, tab_width);
+        Node::Token(token)
+            if token.tok.isError() && token.tok.isUnterminated() =>
+        {
+            let token =
+                reparseUnterminatedTokenErrorNode(token, input, tab_width);
 
             Node::Token(token)
         },
@@ -95,7 +105,8 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
         .into_iter()
         .map(&mut |token: Token<_>| {
             if token.tok.isError() && token.tok.isUnterminated() {
-                let token = reparseUnterminatedTokenErrorNode(token, input, tab_width);
+                let token =
+                    reparseUnterminatedTokenErrorNode(token, input, tab_width);
 
                 token
             } else {
@@ -170,7 +181,10 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
                     input: _,
                     src: node_src,
                 }) => {
-                    if is_interval_member(better_src.tuple(), node_src.character_span().tuple()) {
+                    if is_interval_member(
+                        better_src.tuple(),
+                        node_src.character_span().tuple(),
+                    ) {
                         better_leaves.push(node.clone());
                     }
                 },
@@ -210,7 +224,8 @@ fn reparseUnterminatedTokenErrorNode<'i>(
     // TODO: Use `input` here to optimize the process_lines() calculation?
     let Token { tok, input: _, src } = error;
 
-    let (first_chunk, last_good_line_index, better_src) = process_lines(str, tab_width, src);
+    let (first_chunk, last_good_line_index, better_src) =
+        process_lines(str, tab_width, src);
 
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
@@ -219,7 +234,8 @@ fn reparseUnterminatedTokenErrorNode<'i>(
             let mut components: Vec<&str> = Vec::new();
 
             components.push(
-                &first_chunk[0].content[usize::try_from(better_src.start.column()).unwrap() - 1..],
+                &first_chunk[0].content
+                    [usize::try_from(better_src.start.column()).unwrap() - 1..],
             );
 
             if first_chunk.len() > 1 {
@@ -241,7 +257,8 @@ fn reparseUnterminatedTokenErrorNode<'i>(
 
                 debug_assert!(last.is_empty());
 
-                let start_offset = first.as_ptr() as usize - str.as_ptr() as usize;
+                let start_offset =
+                    first.as_ptr() as usize - str.as_ptr() as usize;
                 let end_offset = last.as_ptr() as usize - str.as_ptr() as usize;
 
                 &str[start_offset..end_offset]
@@ -264,7 +281,10 @@ fn reparseUnterminatedTokenErrorNode<'i>(
     }
 }
 
-fn make_better_input<'i>(input: &str, better: &'i str) -> BorrowedTokenInput<'i> {
+fn make_better_input<'i>(
+    input: &str,
+    better: &'i str,
+) -> BorrowedTokenInput<'i> {
     let offset = better.as_ptr() as usize - input.as_ptr() as usize;
 
     BorrowedTokenInput {
@@ -282,7 +302,11 @@ fn make_better_input<'i>(input: &str, better: &'i str) -> BorrowedTokenInput<'i>
 // Helpers
 //==========================================================
 
-fn process_lines(input: &str, tab_width: usize, src: Span) -> (Vec<Line>, usize, Span) {
+fn process_lines(
+    input: &str,
+    tab_width: usize,
+    src: Span,
+) -> (Vec<Line>, usize, Span) {
     let lines = to_lines_and_expand_tabs(input, tab_width);
 
     first_chunk_and_last_good_line(lines, tab_width, src)
@@ -323,29 +347,32 @@ fn first_chunk_and_last_good_line(
     // Filter `lines` into the lines that overlap with `src`
     //------------------------------------------------------
 
-    let (lines, char_ranges_of_lines): (Vec<Line>, Option<Vec<CharacterSpan>>) = match src.kind() {
-        SpanKind::LineColumnSpan(src) => {
-            // (*
-            // lines of the node
-            // *)
-            // lines = lines[[src[[1, 1]];;src[[2, 1]]]];
+    let (lines, char_ranges_of_lines): (Vec<Line>, Option<Vec<CharacterSpan>>) =
+        match src.kind() {
+            SpanKind::LineColumnSpan(src) => {
+                // (*
+                // lines of the node
+                // *)
+                // lines = lines[[src[[1, 1]];;src[[2, 1]]]];
 
-            let start_line = src.start.line();
-            let end_line = src.end.line();
+                let start_line = src.start.line();
+                let end_line = src.end.line();
 
-            (
-                retain_range(
-                    lines,
-                    to_zero_index(start_line)..to_zero_index(end_line) + 1,
-                ),
-                None,
-            )
-        },
-        SpanKind::CharacterSpan(src) => {
-            let specs_of_lines = lines_start_and_end_char_indexes(lines);
+                (
+                    retain_range(
+                        lines,
+                        to_zero_index(start_line)..to_zero_index(end_line) + 1,
+                    ),
+                    None,
+                )
+            },
+            SpanKind::CharacterSpan(src) => {
+                let specs_of_lines = lines_start_and_end_char_indexes(lines);
 
-            let CollectMultiple(lines, specs_of_lines): CollectMultiple<Line, CharacterSpan> =
-                specs_of_lines
+                let CollectMultiple(lines, specs_of_lines): CollectMultiple<
+                    Line,
+                    CharacterSpan,
+                > = specs_of_lines
                     .flat_map(|(line, pos): (Line, CharacterSpan)| {
                         // Only returns lines that intersect with the source character span.
                         if intersection(pos.tuple(), src.tuple()).is_some() {
@@ -357,30 +384,30 @@ fn first_chunk_and_last_good_line(
                     .collect();
 
 
-            (lines, Some(specs_of_lines))
+                (lines, Some(specs_of_lines))
 
-            /*
-                (*
-                Include the newline at the end
-                *)
-                takeSpecsOfLines = {
-                    #[[1]] + 1,
-                    #[[2]]
-                }& /@ Partition[
-                    FoldList[#1 + StringLength[#2[[1]]] + StringLength[#2[[2]]]&, 0, lines],
-                    2,
-                    1
-                ];
+                /*
+                    (*
+                    Include the newline at the end
+                    *)
+                    takeSpecsOfLines = {
+                        #[[1]] + 1,
+                        #[[2]]
+                    }& /@ Partition[
+                        FoldList[#1 + StringLength[#2[[1]]] + StringLength[#2[[2]]]&, 0, lines],
+                        2,
+                        1
+                    ];
 
-                test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
+                    test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
 
-                poss = Position[takeSpecsOfLines, _?test, {1}, Heads -> False];
+                    poss = Position[takeSpecsOfLines, _?test, {1}, Heads -> False];
 
-                lines = Extract[lines, poss];
-            */
-        },
-        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
-    };
+                    lines = Extract[lines, poss];
+                */
+            },
+            SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
+        };
 
     //--------------------------
     // Find first "useful" chunk
@@ -417,9 +444,13 @@ fn first_chunk_and_last_good_line(
                 end: Location::LineColumn(LineColumn(
                     src.start
                         .line()
-                        .checked_add(u32::try_from(last_good_line_index).unwrap())
+                        .checked_add(
+                            u32::try_from(last_good_line_index).unwrap(),
+                        )
                         .expect("source line overflow u32"),
-                    u32::try_from(last_good_line.column_width(tab_width)).unwrap() + 1,
+                    u32::try_from(last_good_line.column_width(tab_width))
+                        .unwrap()
+                        + 1,
                 )),
             }
         },
@@ -435,10 +466,15 @@ fn first_chunk_and_last_good_line(
             // assert_eq!(char_ranges_of_lines.len(), first_chunk.len());
 
             let better_character_index_source_end =
-                u32::try_from(char_ranges_of_lines[last_good_line_index].1).unwrap() + 1;
+                u32::try_from(char_ranges_of_lines[last_good_line_index].1)
+                    .unwrap()
+                    + 1;
 
 
-            Span::from_character_span(original_start, better_character_index_source_end)
+            Span::from_character_span(
+                original_start,
+                better_character_index_source_end,
+            )
 
             // betterSrc = {
             //     src[[1]],
@@ -486,7 +522,10 @@ fn lines_start_and_end_char_indexes(
         let start_index = current_character_index;
 
         current_character_index = current_character_index
-            .checked_add(u32::try_from(StringLength(content) + StringLength(newline)).unwrap())
+            .checked_add(
+                u32::try_from(StringLength(content) + StringLength(newline))
+                    .unwrap(),
+            )
             // Unlikely that this will fail, but could happen if
             // someone tries to parse a >4GB file, which is
             // conceivable for large WL notebook / data files.
@@ -604,7 +643,10 @@ impl<'i> Line<'i> {
     }
 }
 
-fn split_terminator_keep<'i>(input: &'i str, regex: &Regex) -> Vec<(&'i str, &'i str)> {
+fn split_terminator_keep<'i>(
+    input: &'i str,
+    regex: &Regex,
+) -> Vec<(&'i str, &'i str)> {
     let mut result = Vec::new();
     let mut last = 0;
 

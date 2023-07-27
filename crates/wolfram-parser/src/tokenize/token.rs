@@ -119,8 +119,9 @@ impl TokenInput for OwnedTokenInput {
 
 impl OwnedTokenInput {
     pub fn to_str(&self) -> &str {
-        std::str::from_utf8(self.as_bytes())
-            .expect("OwnedTokenInput::to_str(): token source is not valid UTF-8")
+        std::str::from_utf8(self.as_bytes()).expect(
+            "OwnedTokenInput::to_str(): token source is not valid UTF-8",
+        )
     }
 }
 
@@ -187,7 +188,11 @@ fn test_token_size() {
 }
 
 impl<'i> TokenRef<'i> {
-    pub(crate) fn new(tok: TokenKind, buf: BufferAndLength<'i>, src: Span) -> Self {
+    pub(crate) fn new(
+        tok: TokenKind,
+        buf: BufferAndLength<'i>,
+        src: Span,
+    ) -> Self {
         let token = Token {
             src,
             input: BorrowedTokenInput::from_buf(buf),
@@ -209,7 +214,9 @@ impl<'i> TokenRef<'i> {
             //
             TokenKind::ToplevelNewline | TokenKind::InternalNewline => {},
             _ if crate::feature::COMPUTE_SOURCE => {
-                use crate::source::{LineColumn, LineColumnSpan, SourceCharacter, SpanKind};
+                use crate::source::{
+                    LineColumn, LineColumnSpan, SourceCharacter, SpanKind,
+                };
 
                 if tok.isEmpty() {
                     assert!(
@@ -250,7 +257,10 @@ impl<'i> TokenRef<'i> {
                                     // Note that this also catches changes in character representation, e.g.,
                                     // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
                                     //
-                                    assert!(!buf.containsOnlyASCII() || buf.containsTab());
+                                    assert!(
+                                        !buf.containsOnlyASCII()
+                                            || buf.containsTab()
+                                    );
                                 }
                             }
                         },
@@ -264,7 +274,10 @@ impl<'i> TokenRef<'i> {
         token
     }
 
-    pub(crate) fn at_start(error_tok: TokenKind, mut token: TokenRef<'i>) -> TokenRef<'i> {
+    pub(crate) fn at_start(
+        error_tok: TokenKind,
+        mut token: TokenRef<'i>,
+    ) -> TokenRef<'i> {
         // The error is at the start of this token.
         token.src = Span::from_location(token.src.start);
 
@@ -413,7 +426,9 @@ impl Debug for OwnedTokenInput {
                 .debug_struct("OwnedTokenInput")
                 .field("buf", &str)
                 .finish(),
-            Err(_) => f.debug_struct("OwnedTokenInput").field("buf", buf).finish(),
+            Err(_) => {
+                f.debug_struct("OwnedTokenInput").field("buf", buf).finish()
+            },
         }
     }
 }

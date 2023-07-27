@@ -15,21 +15,24 @@ use pretty_assertions::assert_eq;
 use crate::{
     ast::{AstMetadata, AstNode},
     cst::{
-        CallBody, CallHead, CallNode, CallOperator, CstNode, CstNode::Token as NVToken,
-        GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode, InfixOperator, Node,
-        OperatorNode,
+        CallBody, CallHead, CallNode, CallOperator, CstNode,
+        CstNode::Token as NVToken, GroupMissingCloserNode, GroupNode,
+        GroupOperator, InfixNode, InfixOperator, Node, OperatorNode,
     },
     macros::{src, token},
     parse::ParserSession,
     parse_bytes_to_cst,
     source::{Source, SourceConvention},
     tokenize,
-    tokenize::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
+    tokenize::{
+        BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK,
+    },
     FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
 };
 
 pub(crate) fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
-    let mut session = ParserSession::new(input.as_bytes(), &ParseOptions::default());
+    let mut session =
+        ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
     let result = session.concrete_parse_expressions();
 
@@ -44,7 +47,10 @@ pub(crate) fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
     tokens
 }
 
-fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Node<BorrowedTokenInput>> {
+fn concrete_exprs(
+    input: &str,
+    opts: ParseOptions,
+) -> Vec<Node<BorrowedTokenInput>> {
     let mut session = ParserSession::new(input.as_bytes(), &opts);
 
     let ParseResult { nodes, .. } = session.concrete_parse_expressions();
@@ -54,10 +60,13 @@ fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Node<BorrowedTokenInpu
     nodes
 }
 
-fn concrete_exprs_character_index(input: &str) -> Vec<Node<BorrowedTokenInput>> {
+fn concrete_exprs_character_index(
+    input: &str,
+) -> Vec<Node<BorrowedTokenInput>> {
     let mut session = ParserSession::new(
         input.as_bytes(),
-        &ParseOptions::default().source_convention(SourceConvention::CharacterIndex),
+        &ParseOptions::default()
+            .source_convention(SourceConvention::CharacterIndex),
     );
 
     let ParseResult { nodes, .. } = session.concrete_parse_expressions();
@@ -149,7 +158,8 @@ fn test_something() {
 pub fn test_tokenize_is_not_idempotent() {
     let mut session = ParserSession::new(
         "2+2".as_bytes(),
-        &ParseOptions::default().source_convention(SourceConvention::CharacterIndex),
+        &ParseOptions::default()
+            .source_convention(SourceConvention::CharacterIndex),
     );
 
     assert_eq!(
@@ -233,9 +243,13 @@ fn test_unterminated_group_reparse() {
                 children: NodeSeq(vec![
                     NVToken(token![LessBar, "<|" @ 0, src!(1:1-1:3)]),
                     NVToken(token![Whitespace, "\t" @ 2, src!(1:3-1:4)]),
-                    NVToken(token![Error_ExpectedOperand, "" @ 3, src!(1:4-1:4)]),
+                    NVToken(
+                        token![Error_ExpectedOperand, "" @ 3, src!(1:4-1:4)]
+                    ),
                     NVToken(token![Question, "?" @ 3, src!(1:4-1:5)]),
-                    NVToken(token![Error_ExpectedOperand, "" @ 4, src!(1:5-1:5)]),
+                    NVToken(
+                        token![Error_ExpectedOperand, "" @ 4, src!(1:5-1:5)]
+                    ),
                 ]),
                 src: src!(1:1-1:5).into(),
             }
@@ -254,9 +268,13 @@ fn test_unterminated_group_reparse() {
                 children: NodeSeq(vec![
                     NVToken(token![LessBar, "<|" @ 0, src!(1:1-1:3)]),
                     NVToken(token![Whitespace, "\t" @ 2, src!(1:3-1:5)]),
-                    NVToken(token![Error_ExpectedOperand, "" @ 3, src!(1:5-1:5)]),
+                    NVToken(
+                        token![Error_ExpectedOperand, "" @ 3, src!(1:5-1:5)]
+                    ),
                     NVToken(token![Question, "?" @ 3, src!(1:5-1:6)]),
-                    NVToken(token![Error_ExpectedOperand, "" @ 4, src!(1:6-1:6)])
+                    NVToken(
+                        token![Error_ExpectedOperand, "" @ 4, src!(1:6-1:6)]
+                    )
                 ]),
                 src: src!(1:1-1:6).into()
             }
@@ -270,7 +288,10 @@ fn test_invalid_utf8_in_middle_of_parse() {
     // in the input followed by valid UTF-8 bytes.
     //
     // The presence of invalid UTF-8 shouldn't halt the parsing process.
-    let result = parse_bytes_to_cst(&[b'1', b'+', 0xE2, 0x9A, b'1'], &ParseOptions::default());
+    let result = parse_bytes_to_cst(
+        &[b'1', b'+', 0xE2, 0x9A, b'1'],
+        &ParseOptions::default(),
+    );
 
     assert_eq!(
         result.nodes.0,
@@ -302,7 +323,8 @@ fn test_first_line_behavior() {
     assert_eq!(
         tokenize(
             "1+2",
-            &ParseOptions::default().first_line_behavior(FirstLineBehavior::Check)
+            &ParseOptions::default()
+                .first_line_behavior(FirstLineBehavior::Check)
         ),
         Tokens(vec![
             token![Integer, "1" @ 0, src!(1:1-1:2)],
@@ -316,7 +338,8 @@ fn test_first_line_behavior() {
         tokenize(
             "#!/usr/bin/env blah \
            \n1+2",
-            &ParseOptions::default().first_line_behavior(FirstLineBehavior::Check)
+            &ParseOptions::default()
+                .first_line_behavior(FirstLineBehavior::Check)
         ),
         Tokens(vec![
             token![Integer, "1" @ 21, src!(2:1-2:2)],

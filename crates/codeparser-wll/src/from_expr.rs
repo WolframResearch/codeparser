@@ -1,21 +1,28 @@
 use ordered_float::NotNan;
-use wolfram_library_link::expr::{symbol::SymbolRef, Expr, ExprKind, Normal, Number, Symbol};
+use wolfram_library_link::expr::{
+    symbol::SymbolRef, Expr, ExprKind, Normal, Number, Symbol,
+};
 
 use wolfram_parser::{
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator,
-        CodeNode, CompoundNode, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, LeafNode, Operator, OperatorNode, PostfixNode,
-        PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator,
-        SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
+        CallNode, CallOperator, CodeNode, CompoundNode, CstNode,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        GroupOperator, InfixNode, InfixOperator, LeafNode, Operator,
+        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
+        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
+        SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     cst::{CompoundOperator, CstNodeSeq},
-    generated::{symbol_registration as sym, token_enum_registration::SymbolToToken},
+    generated::{
+        symbol_registration as sym, token_enum_registration::SymbolToToken,
+    },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
     source::{Location, Source, Span},
     tokenize::{OwnedTokenInput, Token, TokenKind},
-    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, UnsafeCharacterEncoding,
+    Container, ContainerBody, ContainerKind, Metadata, NodeSeq,
+    UnsafeCharacterEncoding,
 };
 
 pub(crate) trait FromExpr: Sized {
@@ -39,7 +46,9 @@ impl FromExpr for Container<CstNode<OwnedTokenInput, Source>> {
 
         let kind = match ContainerKind::from_expr(&elements[0]) {
             Ok(kind) => kind,
-            Err(err) => return Err(format!("invalid Container: {expr}: {err}")),
+            Err(err) => {
+                return Err(format!("invalid Container: {expr}: {err}"))
+            },
         };
         let body = ContainerBody::from_expr(&elements[1]).expect("PRE_COMMIT");
         let metadata = Metadata::from_expr(&elements[2])?;
@@ -76,7 +85,9 @@ impl FromExpr for ContainerBody<CstNode<OwnedTokenInput, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(elements) = try_normal_with_head(expr, sym::List) {
             if elements.len() == 1 {
-                if let Ok(node) = UnsafeCharacterEncoding::from_expr(&elements[0]) {
+                if let Ok(node) =
+                    UnsafeCharacterEncoding::from_expr(&elements[0])
+                {
                     return Ok(ContainerBody::Missing(node));
                 }
             }
@@ -199,7 +210,11 @@ impl FromExpr for LeafNode {
         let kind = TokenKind::from_expr(&elements[0])?;
         let input: String = match elements[1].try_as_str() {
             Some(string) => string.to_owned(),
-            None => return Err(format!("expected 2nd element of LeafNode to be string")),
+            None => {
+                return Err(format!(
+                    "expected 2nd element of LeafNode to be string"
+                ))
+            },
         };
         let Metadata { source, .. } = Metadata::from_expr(&elements[2])?;
 
@@ -228,7 +243,9 @@ impl FromExpr for CallNode<OwnedTokenInput, Source> {
 
         let body = if let Ok(group) = GroupNode::from_expr(&elements[1]) {
             CallBody::Group(group)
-        } else if let Ok(group) = GroupMissingCloserNode::from_expr(&elements[1]) {
+        } else if let Ok(group) =
+            GroupMissingCloserNode::from_expr(&elements[1])
+        {
             CallBody::GroupMissingCloser(group)
         } else {
             todo!("unexpected CallNode body: {}", elements[1])
@@ -271,7 +288,8 @@ impl FromExpr for InfixNode<OwnedTokenInput, Source> {
         let op = InfixOperator::from_expr(&elements[0]).expect("PRE_COMMIT");
         let children = NodeSeq::from_expr(&elements[1]).expect("_PRE_COMMIT");
 
-        let Metadata { source, .. } = Metadata::from_expr(&elements[2]).expect("PRE_COMMIT");
+        let Metadata { source, .. } =
+            Metadata::from_expr(&elements[2]).expect("PRE_COMMIT");
 
         let src = source;
 
@@ -281,7 +299,8 @@ impl FromExpr for InfixNode<OwnedTokenInput, Source> {
 
 impl FromExpr for PrefixBinaryNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_PrefixBinaryNode)?;
+        let elements =
+            try_normal_with_head(expr, sym::CodeParser_PrefixBinaryNode)?;
 
         if elements.len() != 3 {
             todo!()
@@ -420,9 +439,12 @@ impl FromExpr for CodeNode<Source> {
     }
 }
 
-impl<O: FromExpr> FromExpr for GroupMissingCloserNode<OwnedTokenInput, Source, O> {
+impl<O: FromExpr> FromExpr
+    for GroupMissingCloserNode<OwnedTokenInput, Source, O>
+{
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_GroupMissingCloserNode)?;
+        let elements =
+            try_normal_with_head(expr, sym::CodeParser_GroupMissingCloserNode)?;
 
         if elements.len() != 3 {
             todo!()
@@ -438,7 +460,8 @@ impl<O: FromExpr> FromExpr for GroupMissingCloserNode<OwnedTokenInput, Source, O
 
 impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_GroupMissingOpenerNode)?;
+        let elements =
+            try_normal_with_head(expr, sym::CodeParser_GroupMissingOpenerNode)?;
 
         if elements.len() != 3 {
             todo!()
@@ -454,7 +477,8 @@ impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, Source> {
 
 impl FromExpr for CompoundNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_CompoundNode)?;
+        let elements =
+            try_normal_with_head(expr, sym::CodeParser_CompoundNode)?;
 
         if elements.len() != 3 {
             todo!()
@@ -470,7 +494,8 @@ impl FromExpr for CompoundNode<OwnedTokenInput, Source> {
 
 impl FromExpr for SyntaxErrorNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_SyntaxErrorNode)?;
+        let elements =
+            try_normal_with_head(expr, sym::CodeParser_SyntaxErrorNode)?;
 
         if elements.len() != 3 {
             todo!()
@@ -489,7 +514,9 @@ impl FromExpr for SyntaxErrorNode<OwnedTokenInput, Source> {
 
         let err = match SyntaxErrorKind::from_str(variant_name) {
             Some(kind) => kind,
-            None => panic!("unrecognized SyntaxErrorKind name: '{variant_name}'"),
+            None => {
+                panic!("unrecognized SyntaxErrorKind name: '{variant_name}'")
+            },
         };
 
         let children = NodeSeq::from_expr(&elements[1])?;
@@ -516,7 +543,8 @@ impl FromExpr for UnsafeCharacterEncoding {
             todo!()
         }
 
-        let variant_name: &str = err.trim_start_matches("UnsafeCharacterEncoding_");
+        let variant_name: &str =
+            err.trim_start_matches("UnsafeCharacterEncoding_");
 
         let kind = match UnsafeCharacterEncoding::from_str(variant_name) {
             Some(kind) => kind,
@@ -687,12 +715,18 @@ impl FromExpr for Source {
         fn get_source_pos(expr: &Expr) -> Result<u32, String> {
             let value: i64 = match expr.kind() {
                 ExprKind::Integer(int) => *int,
-                _ => return Err(format!("expected source Location u32, got: {expr}")),
+                _ => {
+                    return Err(format!(
+                        "expected source Location u32, got: {expr}"
+                    ))
+                },
             };
 
             match u32::try_from(value) {
                 Ok(value) => Ok(value),
-                Err(_) => Err(format!("source location component overflows u32: {value}")),
+                Err(_) => Err(format!(
+                    "source location component overflows u32: {value}"
+                )),
             }
         }
 
@@ -847,14 +881,17 @@ impl FromExpr for CompoundOperator {
 
 impl FromExpr for TokenKind {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let sym: &wolfram_library_link::expr::Symbol = match expr.try_as_symbol() {
-            Some(sym) => sym,
-            None => panic!(),
-        };
+        let sym: &wolfram_library_link::expr::Symbol =
+            match expr.try_as_symbol() {
+                Some(sym) => sym,
+                None => panic!(),
+            };
 
         let kind = match SymbolToToken(sym.as_symbol_ref()) {
             Some(kind) => kind,
-            None => return Err(format!("symbol is not a known TokenKind: {sym}")),
+            None => {
+                return Err(format!("symbol is not a known TokenKind: {sym}"))
+            },
         };
 
         Ok(kind)
@@ -918,7 +955,9 @@ impl FromExpr for Issue {
             todo!("unexpected SimpleLineContinuations field in Issue metadata");
         }
         if complex_line_continuations.is_some() {
-            todo!("unexpected ComplexLineContinuations field in Issue metadata");
+            todo!(
+                "unexpected ComplexLineContinuations field in Issue metadata"
+            );
         }
 
         let tag = IssueTag::from_str(tag).expect("PRE_COMMIT");
@@ -938,7 +977,8 @@ impl FromExpr for Issue {
             src: source,
             val,
             actions: code_actions.unwrap_or_else(Vec::new),
-            additional_descriptions: additional_descriptions.unwrap_or_else(Vec::new),
+            additional_descriptions: additional_descriptions
+                .unwrap_or_else(Vec::new),
             // FIXME: These aren't always empty.
             additional_sources: vec![],
         })
@@ -954,7 +994,8 @@ impl FromExpr for CodeAction {
             todo!()
         }
 
-        let label: String = elements[0].try_as_str().expect("PRE_COMMIT").to_owned();
+        let label: String =
+            elements[0].try_as_str().expect("PRE_COMMIT").to_owned();
         let kind: &Symbol = elements[1].try_as_symbol().expect("PRE_COMMIT");
         let assoc = Association::from_expr(&elements[2]).expect("PRE_COMMIT");
 
@@ -967,7 +1008,8 @@ impl FromExpr for CodeAction {
                 let text: &Expr = assoc
                     .lookup(&Expr::string("ReplacementText"))
                     .expect("PRE_COMMIT");
-                let text: String = text.try_as_str().expect("PRE_COMMIT").to_owned();
+                let text: String =
+                    text.try_as_str().expect("PRE_COMMIT").to_owned();
 
                 CodeActionKind::ReplaceText {
                     replacement_text: text,
@@ -977,7 +1019,8 @@ impl FromExpr for CodeAction {
                 let text: &Expr = assoc
                     .lookup(&Expr::string("InsertionText"))
                     .expect("PRE_COMMIT");
-                let text: String = text.try_as_str().expect("PRE_COMMIT").to_owned();
+                let text: String =
+                    text.try_as_str().expect("PRE_COMMIT").to_owned();
 
                 CodeActionKind::InsertText {
                     insertion_text: text,

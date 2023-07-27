@@ -40,7 +40,9 @@ impl TokenKind {
     }
 
     pub(crate) fn with_policy(self, policy: NextPolicy) -> Self {
-        if self == TokenKind::InternalNewline && policy & RETURN_TOPLEVELNEWLINE != 0 {
+        if self == TokenKind::InternalNewline
+            && policy & RETURN_TOPLEVELNEWLINE != 0
+        {
             return TokenKind::ToplevelNewline;
         }
 
@@ -124,16 +126,28 @@ impl TokenKind {
 pub(crate) const fn GroupOpenerToCloser(token: TokenKind) -> Closer {
     match token {
         TokenKind::ColonColonOpenSquare => Closer::CloseSquare,
-        TokenKind::LongName_LeftAngleBracket => Closer::LongName_RightAngleBracket,
-        TokenKind::LongName_LeftAssociation => Closer::LongName_RightAssociation,
-        TokenKind::LongName_LeftBracketingBar => Closer::LongName_RightBracketingBar,
+        TokenKind::LongName_LeftAngleBracket => {
+            Closer::LongName_RightAngleBracket
+        },
+        TokenKind::LongName_LeftAssociation => {
+            Closer::LongName_RightAssociation
+        },
+        TokenKind::LongName_LeftBracketingBar => {
+            Closer::LongName_RightBracketingBar
+        },
         TokenKind::LongName_LeftCeiling => Closer::LongName_RightCeiling,
-        TokenKind::LongName_LeftDoubleBracket => Closer::LongName_RightDoubleBracket,
-        TokenKind::LongName_LeftDoubleBracketingBar => Closer::LongName_RightDoubleBracketingBar,
+        TokenKind::LongName_LeftDoubleBracket => {
+            Closer::LongName_RightDoubleBracket
+        },
+        TokenKind::LongName_LeftDoubleBracketingBar => {
+            Closer::LongName_RightDoubleBracketingBar
+        },
         TokenKind::LongName_LeftFloor => Closer::LongName_RightFloor,
         TokenKind::LessBar => Closer::BarGreater,
         TokenKind::OpenCurly => Closer::CloseCurly,
-        TokenKind::LongName_OpenCurlyDoubleQuote => Closer::LongName_CloseCurlyDoubleQuote,
+        TokenKind::LongName_OpenCurlyDoubleQuote => {
+            Closer::LongName_CloseCurlyDoubleQuote
+        },
         TokenKind::LongName_OpenCurlyQuote => Closer::LongName_CloseCurlyQuote,
         TokenKind::OpenParen => Closer::CloseParen,
         TokenKind::OpenSquare => Closer::CloseSquare,
@@ -145,16 +159,28 @@ pub(crate) fn TokenToCloser(token: TokenKind) -> Closer {
     match token {
         TokenKind::BarGreater => Closer::BarGreater,
         TokenKind::CloseCurly => Closer::CloseCurly,
-        TokenKind::LongName_CloseCurlyDoubleQuote => Closer::LongName_CloseCurlyDoubleQuote,
+        TokenKind::LongName_CloseCurlyDoubleQuote => {
+            Closer::LongName_CloseCurlyDoubleQuote
+        },
         TokenKind::LongName_CloseCurlyQuote => Closer::LongName_CloseCurlyQuote,
         TokenKind::CloseParen => Closer::CloseParen,
         TokenKind::CloseSquare => Closer::CloseSquare,
-        TokenKind::LongName_RightAngleBracket => Closer::LongName_RightAngleBracket,
-        TokenKind::LongName_RightAssociation => Closer::LongName_RightAssociation,
-        TokenKind::LongName_RightBracketingBar => Closer::LongName_RightBracketingBar,
+        TokenKind::LongName_RightAngleBracket => {
+            Closer::LongName_RightAngleBracket
+        },
+        TokenKind::LongName_RightAssociation => {
+            Closer::LongName_RightAssociation
+        },
+        TokenKind::LongName_RightBracketingBar => {
+            Closer::LongName_RightBracketingBar
+        },
         TokenKind::LongName_RightCeiling => Closer::LongName_RightCeiling,
-        TokenKind::LongName_RightDoubleBracket => Closer::LongName_RightDoubleBracket,
-        TokenKind::LongName_RightDoubleBracketingBar => Closer::LongName_RightDoubleBracketingBar,
+        TokenKind::LongName_RightDoubleBracket => {
+            Closer::LongName_RightDoubleBracket
+        },
+        TokenKind::LongName_RightDoubleBracketingBar => {
+            Closer::LongName_RightDoubleBracketingBar
+        },
         TokenKind::LongName_RightFloor => Closer::LongName_RightFloor,
         _ => Closer::AssertFalse,
     }

@@ -298,7 +298,10 @@ impl ParseOptions {
     }
 
     #[doc(hidden)]
-    pub fn first_line_behavior(self, first_line_behavior: FirstLineBehavior) -> Self {
+    pub fn first_line_behavior(
+        self,
+        first_line_behavior: FirstLineBehavior,
+    ) -> Self {
         ParseOptions {
             first_line_behavior,
             ..self
@@ -332,7 +335,10 @@ impl ParseOptions {
 ///     token![Integer, "2" @ 4, src!(1:5-1:6)],
 /// ]);
 /// ```
-pub fn tokenize<'i>(input: &'i str, opts: &ParseOptions) -> Tokens<BorrowedTokenInput<'i>> {
+pub fn tokenize<'i>(
+    input: &'i str,
+    opts: &ParseOptions,
+) -> Tokens<BorrowedTokenInput<'i>> {
     tokenize_bytes(input.as_bytes(), opts)
         .expect("unexpected character encoding error tokenizing &str")
 }
@@ -386,12 +392,18 @@ pub fn parse_bytes_to_cst<'i>(
 //======================================
 
 /// Parse a string containing Wolfram Language input into an abstract syntax tree.
-pub fn parse_to_ast<'i>(input: &'i str, opts: &ParseOptions) -> ParseResult<AstNode> {
+pub fn parse_to_ast<'i>(
+    input: &'i str,
+    opts: &ParseOptions,
+) -> ParseResult<AstNode> {
     parse_bytes_to_ast(input.as_bytes(), opts)
 }
 
 /// Parse bytes containing Wolfram Language input into an abstract syntax tree.
-pub fn parse_bytes_to_ast<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<AstNode> {
+pub fn parse_bytes_to_ast<'i>(
+    bytes: &'i [u8],
+    opts: &ParseOptions,
+) -> ParseResult<AstNode> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.abstract_parse_expressions()

@@ -2,7 +2,10 @@ use std::fmt::{self, Write};
 
 use crate::read::code_point::CodePoint::{self, Char, *};
 
-pub(crate) fn encodeBytes(stream: &mut fmt::Formatter, val: CodePoint) -> Result<(), fmt::Error> {
+pub(crate) fn encodeBytes(
+    stream: &mut fmt::Formatter,
+    val: CodePoint,
+) -> Result<(), fmt::Error> {
     match val {
         Char(c) => stream.write_char(c),
         CodePoint::CRLF => {
@@ -14,7 +17,9 @@ pub(crate) fn encodeBytes(stream: &mut fmt::Formatter, val: CodePoint) -> Result
         //
         // e.g., GTest was trying to print
         //
-        Unsafe1ByteUtf8Sequence | Unsafe2ByteUtf8Sequence | Unsafe3ByteUtf8Sequence => {
+        Unsafe1ByteUtf8Sequence
+        | Unsafe2ByteUtf8Sequence
+        | Unsafe3ByteUtf8Sequence => {
             //
             // Print U+FFFD (REPLACEMENT CHARACTER)
             //

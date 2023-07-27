@@ -103,7 +103,10 @@ impl<'i> BufferAndLength<'i> {
     /// character in `end` will *not* be in the resulting buffer).
     //
     // TODO: Change the second parameter to be a usize.
-    pub fn between<'s, 'e>(start: Buffer<'s>, end: Buffer<'e>) -> BufferAndLength<'s> {
+    pub fn between<'s, 'e>(
+        start: Buffer<'s>,
+        end: Buffer<'e>,
+    ) -> BufferAndLength<'s> {
         debug_assert!(start.offset <= end.offset);
 
         let size = end.offset - start.offset;
@@ -120,7 +123,8 @@ impl<'i> BufferAndLength<'i> {
 
     // PRE_COMMIT: Make this fallible?
     pub fn as_str(&self) -> &str {
-        std::str::from_utf8(self.as_bytes()).expect("unable to convert BufferAndLength to &str")
+        std::str::from_utf8(self.as_bytes())
+            .expect("unable to convert BufferAndLength to &str")
     }
 
     // BufferAndLength::BufferAndLength(Buffer Buf, size_t Len) : Buf(Buf), Len(Len) {
@@ -284,15 +288,16 @@ const _: () = assert!(
 pub(crate) type NextPolicy = u8;
 
 use NextPolicyBits::{
-    ENABLE_CHARACTER_DECODING_ISSUES, INTEGER_SHORT_CIRCUIT, RETURN_TOPLEVELNEWLINE,
-    TAGSLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
+    ENABLE_CHARACTER_DECODING_ISSUES, INTEGER_SHORT_CIRCUIT,
+    RETURN_TOPLEVELNEWLINE, TAGSLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
 };
 
 pub(crate) const TOPLEVEL: NextPolicy =
     ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
 
 #[allow(dead_code)] // TODO(cleanup): Is it meaningful that this is unused?
-pub(crate) const INSIDE_SYMBOL: NextPolicy = ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
+pub(crate) const INSIDE_SYMBOL: NextPolicy =
+    ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
 
 pub(crate) const INSIDE_STRINGIFY_AS_TAG: NextPolicy =
     ENABLE_CHARACTER_DECODING_ISSUES | TAGSLOT_BEHAVIOR_FOR_STRINGS | TRACK_LC;
@@ -449,7 +454,9 @@ const _: () = assert!(std::mem::size_of::<LineColumnSpan>() == 16);
 impl Display for Location {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Location::LineColumn(LineColumn(line, column)) => write!(f, "{line}:{column}"),
+            Location::LineColumn(LineColumn(line, column)) => {
+                write!(f, "{line}:{column}")
+            },
             Location::CharacterIndex(index) => write!(f, "{index}"),
         }
     }
@@ -506,7 +513,9 @@ impl Location {
                 Location::LineColumn(LineColumn(line, column)) => {
                     Location::LineColumn(LineColumn(line, column + 1))
                 },
-                Location::CharacterIndex(index) => Location::CharacterIndex(index + 1),
+                Location::CharacterIndex(index) => {
+                    Location::CharacterIndex(index + 1)
+                },
             }
         } else {
             Location::new(0, 0)
@@ -642,9 +651,10 @@ impl Span {
         let Span { start, end } = self;
 
         match (start, end) {
-            (Location::CharacterIndex(start_char), Location::CharacterIndex(end_char)) => {
-                SpanKind::CharacterSpan(CharacterSpan(start_char, end_char))
-            },
+            (
+                Location::CharacterIndex(start_char),
+                Location::CharacterIndex(end_char),
+            ) => SpanKind::CharacterSpan(CharacterSpan(start_char, end_char)),
             (
                 Location::LineColumn(LineColumn(start_line, start_column)),
                 Location::LineColumn(LineColumn(end_line, end_column)),
@@ -827,9 +837,10 @@ impl PartialOrd for Location {
                 Location::LineColumn(LineColumn(a_line, a_column)),
                 Location::LineColumn(LineColumn(b_line, b_col)),
             ) => (a_line, a_column).partial_cmp(&(b_line, b_col)),
-            (Location::CharacterIndex(a_index), Location::CharacterIndex(b_index)) => {
-                a_index.partial_cmp(b_index)
-            },
+            (
+                Location::CharacterIndex(a_index),
+                Location::CharacterIndex(b_index),
+            ) => a_index.partial_cmp(b_index),
             (Location::LineColumn { .. }, Location::CharacterIndex(_)) => None,
             (Location::CharacterIndex(_), Location::LineColumn { .. }) => None,
         }
@@ -928,7 +939,9 @@ impl SourceCharacter {
 
     pub fn isMBUnsafeUTF8Sequence(&self) -> bool {
         match self {
-            Unsafe1ByteUtf8Sequence | Unsafe2ByteUtf8Sequence | Unsafe3ByteUtf8Sequence => true,
+            Unsafe1ByteUtf8Sequence
+            | Unsafe2ByteUtf8Sequence
+            | Unsafe3ByteUtf8Sequence => true,
             _ => false,
         }
     }

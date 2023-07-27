@@ -5,19 +5,23 @@ use wolfram_library_link::{expr::Expr, wstp};
 use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator,
-        CodeNode, CompoundNode, CompoundOperator, CstNode, GroupMissingCloserNode,
-        GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode, InfixOperator, Operator,
-        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
-        PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
+        CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator,
+        CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        GroupOperator, InfixNode, InfixOperator, Operator, OperatorNode,
+        PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
+        PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
+        TernaryNode, TernaryOperator,
     },
-    generated::{symbol_registration as sym, token_enum_registration::TokenToSymbol},
+    generated::{
+        symbol_registration as sym, token_enum_registration::TokenToSymbol,
+    },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     tokenize::{BorrowedTokenInput, Token, TokenInput, TokenKind},
-    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult, Tokens,
-    UnsafeCharacterEncoding,
+    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult,
+    Tokens, UnsafeCharacterEncoding,
 };
 
 use crate::from_expr::List;
@@ -246,8 +250,8 @@ impl WstpPut for AstNode {
                 kind.put(link);
 
                 let input: &[u8] = &input.as_bytes();
-                let input =
-                    std::str::from_utf8(input).expect("token source span is not valid UTF-8");
+                let input = std::str::from_utf8(input)
+                    .expect("token source span is not valid UTF-8");
                 link.put_str(input).unwrap();
 
                 data.put(link);
@@ -259,8 +263,8 @@ impl WstpPut for AstNode {
                 kind.put(link);
 
                 let input: &[u8] = &input.as_bytes();
-                let input =
-                    std::str::from_utf8(input).expect("error token source span is not valid UTF-8");
+                let input = std::str::from_utf8(input)
+                    .expect("error token source span is not valid UTF-8");
                 link.put_str(input).unwrap();
 
                 data.put(link);
@@ -280,8 +284,11 @@ impl WstpPut for AstNode {
                 data.put(link);
             },
             AstNode::CallMissingCloser { head, args, data } => {
-                link.put_function(sym::CodeParser_CallMissingCloserNode.as_str(), 3)
-                    .unwrap();
+                link.put_function(
+                    sym::CodeParser_CallMissingCloserNode.as_str(),
+                    3,
+                )
+                .unwrap();
 
                 head.put(link);
 
@@ -294,8 +301,11 @@ impl WstpPut for AstNode {
                 data.put(link);
             },
             AstNode::UnterminatedCall { head, args, data } => {
-                link.put_function(sym::CodeParser_UnterminatedCallNode.as_str(), 3)
-                    .unwrap();
+                link.put_function(
+                    sym::CodeParser_UnterminatedCallNode.as_str(),
+                    3,
+                )
+                .unwrap();
 
                 head.put(link);
 
@@ -327,8 +337,11 @@ impl WstpPut for AstNode {
                 data.put(link);
             },
             AstNode::AbstractSyntaxError { kind, args, data } => {
-                link.put_function(sym::CodeParser_AbstractSyntaxErrorNode.as_str(), 3)
-                    .unwrap();
+                link.put_function(
+                    sym::CodeParser_AbstractSyntaxErrorNode.as_str(),
+                    3,
+                )
+                .unwrap();
 
                 kind.put(link);
 
@@ -380,8 +393,11 @@ impl WstpPut for AstNode {
                 children,
                 data,
             } => {
-                link.put_function(sym::CodeParser_GroupMissingCloserNode.as_str(), 3)
-                    .unwrap();
+                link.put_function(
+                    sym::CodeParser_GroupMissingCloserNode.as_str(),
+                    3,
+                )
+                .unwrap();
 
                 kind.put(link);
 
@@ -399,8 +415,11 @@ impl WstpPut for AstNode {
                 children,
                 data,
             } => {
-                link.put_function(sym::CodeParser_GroupMissingOpenerNode.as_str(), 3)
-                    .unwrap();
+                link.put_function(
+                    sym::CodeParser_GroupMissingOpenerNode.as_str(),
+                    3,
+                )
+                .unwrap();
 
                 kind.put(link);
 
@@ -528,7 +547,8 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
         // let source: &[u8] = &session.tokenizer.input[span.offset..span.offset + span.len];
         let source: &[u8] = &input.as_bytes();
 
-        let source = std::str::from_utf8(source).expect("token source span is not valid UTF-8");
+        let source = std::str::from_utf8(source)
+            .expect("token source span is not valid UTF-8");
         callLink.put_str(source).unwrap();
 
         src.put(callLink);
@@ -545,16 +565,30 @@ impl<I: TokenInput, S: WstpPut> WstpPut for CstNode<I, S> {
             CstNode::Token(token) => token.put(link),
             CstNode::Call(node) => node.put(link),
             CstNode::SyntaxError(node) => node.put(link),
-            CstNode::Infix(InfixNode(op)) => put_op(link, op, sym::CodeParser_InfixNode),
-            CstNode::Prefix(PrefixNode(op)) => put_op(link, op, sym::CodeParser_PrefixNode),
-            CstNode::Postfix(PostfixNode(op)) => put_op(link, op, sym::CodeParser_PostfixNode),
-            CstNode::Binary(BinaryNode(op)) => put_op(link, op, sym::CodeParser_BinaryNode),
-            CstNode::Ternary(TernaryNode(op)) => put_op(link, op, sym::CodeParser_TernaryNode),
+            CstNode::Infix(InfixNode(op)) => {
+                put_op(link, op, sym::CodeParser_InfixNode)
+            },
+            CstNode::Prefix(PrefixNode(op)) => {
+                put_op(link, op, sym::CodeParser_PrefixNode)
+            },
+            CstNode::Postfix(PostfixNode(op)) => {
+                put_op(link, op, sym::CodeParser_PostfixNode)
+            },
+            CstNode::Binary(BinaryNode(op)) => {
+                put_op(link, op, sym::CodeParser_BinaryNode)
+            },
+            CstNode::Ternary(TernaryNode(op)) => {
+                put_op(link, op, sym::CodeParser_TernaryNode)
+            },
             CstNode::PrefixBinary(PrefixBinaryNode(op)) => {
                 put_op(link, op, sym::CodeParser_PrefixBinaryNode)
             },
-            CstNode::Compound(CompoundNode(op)) => put_op(link, op, sym::CodeParser_CompoundNode),
-            CstNode::Group(GroupNode(op)) => put_op(link, op, sym::CodeParser_GroupNode),
+            CstNode::Compound(CompoundNode(op)) => {
+                put_op(link, op, sym::CodeParser_CompoundNode)
+            },
+            CstNode::Group(GroupNode(op)) => {
+                put_op(link, op, sym::CodeParser_GroupNode)
+            },
             CstNode::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 put_op(link, op, sym::CodeParser_GroupMissingCloserNode)
             },
@@ -739,7 +773,9 @@ impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
 impl<I: TokenInput, S: WstpPut> WstpPut for CallBody<I, S> {
     fn put(&self, link: &mut wstp::Link) {
         match self {
-            CallBody::Group(GroupNode(op)) => put_op(link, op, sym::CodeParser_GroupNode),
+            CallBody::Group(GroupNode(op)) => {
+                put_op(link, op, sym::CodeParser_GroupNode)
+            },
             CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 put_op(link, op, sym::CodeParser_GroupMissingCloserNode)
             },
@@ -850,7 +886,10 @@ impl WstpPut for Issue {
                 callLink.put_str("AdditionalDescriptions").unwrap();
 
                 callLink
-                    .put_function(sym::List.as_str(), additional_descriptions.len())
+                    .put_function(
+                        sym::List.as_str(),
+                        additional_descriptions.len(),
+                    )
                     .unwrap();
 
                 for D in additional_descriptions {
@@ -894,7 +933,9 @@ impl WstpPut for CodeAction {
                 Symbol_put(sym::CodeParser_ReplaceText, callLink);
 
                 {
-                    callLink.put_function(sym::Association.as_str(), 2).unwrap();
+                    callLink
+                        .put_function(sym::Association.as_str(), 2)
+                        .unwrap();
 
                     Src.put(callLink);
 
@@ -915,7 +956,9 @@ impl WstpPut for CodeAction {
                 Symbol_put(sym::CodeParser_InsertText, callLink);
 
                 {
-                    callLink.put_function(sym::Association.as_str(), 2).unwrap();
+                    callLink
+                        .put_function(sym::Association.as_str(), 2)
+                        .unwrap();
 
                     Src.put(callLink);
 
@@ -936,7 +979,9 @@ impl WstpPut for CodeAction {
                 Symbol_put(sym::CodeParser_DeleteText, callLink);
 
                 {
-                    callLink.put_function(sym::Association.as_str(), 1).unwrap();
+                    callLink
+                        .put_function(sym::Association.as_str(), 1)
+                        .unwrap();
 
                     Src.put(callLink);
                 }
@@ -948,7 +993,9 @@ impl WstpPut for CodeAction {
 impl WstpPut for Location {
     fn put(&self, callLink: &mut wstp::Link) {
         let (first, second) = match self {
-            Location::LineColumn(LineColumn(line, column)) => (line.get(), *column),
+            Location::LineColumn(LineColumn(line, column)) => {
+                (line.get(), *column)
+            },
             Location::CharacterIndex(index) => (0, *index),
         };
 
@@ -1005,7 +1052,8 @@ fn put_box_position(link: &mut wstp::Link, indexes: &Vec<usize>) {
         .unwrap();
 
     for elem in indexes {
-        let elem = i64::try_from(*elem).expect("box position usize index overflows i64");
+        let elem = i64::try_from(*elem)
+            .expect("box position usize index overflows i64");
         link.put_i64(elem).unwrap();
     }
 }

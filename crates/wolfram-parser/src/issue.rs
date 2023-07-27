@@ -87,18 +87,24 @@ impl IssueTag {
             IssueTag::UnexpectedCharacter => "UnexpectedCharacter",
             IssueTag::UnexpectedCarriageReturn => "UnexpectedCarriageReturn",
             IssueTag::UnexpectedSpaceCharacter => "UnexpectedSpaceCharacter",
-            IssueTag::UnexpectedNewlineCharacter => "UnexpectedNewlineCharacter",
+            IssueTag::UnexpectedNewlineCharacter => {
+                "UnexpectedNewlineCharacter"
+            },
             IssueTag::UnexpectedDot => "UnexpectedDot",
             IssueTag::UnexpectedSign => "UnexpectedSign",
             IssueTag::UnexpectedImplicitTimes => "UnexpectedImplicitTimes",
-            IssueTag::UnexpectedLetterlikeCharacter => "UnexpectedLetterlikeCharacter",
+            IssueTag::UnexpectedLetterlikeCharacter => {
+                "UnexpectedLetterlikeCharacter"
+            },
             IssueTag::UnrecognizedLongName => "UnrecognizedLongName",
             IssueTag::UndocumentedSlotSyntax => "UndocumentedSlotSyntax",
             IssueTag::NonASCIICharacter => "NonASCIICharacter",
             IssueTag::IncompleteUTF8Sequence => "IncompleteUTF8Sequence",
             IssueTag::StraySurrogate => "StraySurrogate",
             IssueTag::BOM => "BOM",
-            IssueTag::SyntaxUndocumentedMessageName => "SyntaxUndocumentedMessageName",
+            IssueTag::SyntaxUndocumentedMessageName => {
+                "SyntaxUndocumentedMessageName"
+            },
             IssueTag::PrefixNotNot => "PrefixNotNot",
             IssueTag::StrangeCall => "StrangeCall",
             IssueTag::StrangeCallSlotSequence => "StrangeCallSlotSequence",
@@ -114,18 +120,24 @@ impl IssueTag {
             "UnexpectedCharacter" => IssueTag::UnexpectedCharacter,
             "UnexpectedCarriageReturn" => IssueTag::UnexpectedCarriageReturn,
             "UnexpectedSpaceCharacter" => IssueTag::UnexpectedSpaceCharacter,
-            "UnexpectedNewlineCharacter" => IssueTag::UnexpectedNewlineCharacter,
+            "UnexpectedNewlineCharacter" => {
+                IssueTag::UnexpectedNewlineCharacter
+            },
             "UnexpectedDot" => IssueTag::UnexpectedDot,
             "UnexpectedSign" => IssueTag::UnexpectedSign,
             "UnexpectedImplicitTimes" => IssueTag::UnexpectedImplicitTimes,
-            "UnexpectedLetterlikeCharacter" => IssueTag::UnexpectedLetterlikeCharacter,
+            "UnexpectedLetterlikeCharacter" => {
+                IssueTag::UnexpectedLetterlikeCharacter
+            },
             "UnrecognizedLongName" => IssueTag::UnrecognizedLongName,
             "UndocumentedSlotSyntax" => IssueTag::UndocumentedSlotSyntax,
             "NonASCIICharacter" => IssueTag::NonASCIICharacter,
             "IncompleteUTF8Sequence" => IssueTag::IncompleteUTF8Sequence,
             "StraySurrogate" => IssueTag::StraySurrogate,
             "BOM" => IssueTag::BOM,
-            "SyntaxUndocumentedMessageName" => IssueTag::SyntaxUndocumentedMessageName,
+            "SyntaxUndocumentedMessageName" => {
+                IssueTag::SyntaxUndocumentedMessageName
+            },
             "PrefixNotNot" => IssueTag::PrefixNotNot,
             "StrangeCall" => IssueTag::StrangeCall,
             "StrangeCallSlotSequence" => IssueTag::StrangeCallSlotSequence,
@@ -170,7 +182,11 @@ impl Severity {
 
 
 impl CodeAction {
-    pub fn replace_text(label: String, src: Span, replacement_text: String) -> Self {
+    pub fn replace_text(
+        label: String,
+        src: Span,
+        replacement_text: String,
+    ) -> Self {
         CodeAction {
             label,
             src,
@@ -178,7 +194,11 @@ impl CodeAction {
         }
     }
 
-    pub fn insert_text(label: String, src: Span, insertion_text: String) -> Self {
+    pub fn insert_text(
+        label: String,
+        src: Span,
+        insertion_text: String,
+    ) -> Self {
         CodeAction {
             label,
             src,
@@ -256,7 +276,8 @@ impl Issue {
         actions: Vec<CodeAction>,
         additional_descriptions: AdditionalDescriptionVector,
     ) -> Issue {
-        let val = NotNan::new(val).expect("unable to construct Issue with NaN val");
+        let val =
+            NotNan::new(val).expect("unable to construct Issue with NaN val");
 
         Issue {
             make_sym,
@@ -271,8 +292,15 @@ impl Issue {
         }
     }
 
-    pub(crate) fn syntax(tag: IssueTag, msg: String, sev: Severity, src: Source, val: f64) -> Self {
-        let val = NotNan::new(val).expect("unable to construct Issue with NaN val");
+    pub(crate) fn syntax(
+        tag: IssueTag,
+        msg: String,
+        sev: Severity,
+        src: Source,
+        val: f64,
+    ) -> Self {
+        let val =
+            NotNan::new(val).expect("unable to construct Issue with NaN val");
 
         Issue {
             make_sym: sym::CodeParser_SyntaxIssue,
@@ -287,7 +315,10 @@ impl Issue {
         }
     }
 
-    pub fn with_additional_sources(self, additional_sources: Vec<Source>) -> Self {
+    pub fn with_additional_sources(
+        self,
+        additional_sources: Vec<Source>,
+    ) -> Self {
         debug_assert!(self.additional_sources.is_empty());
 
         Issue {
@@ -296,7 +327,10 @@ impl Issue {
         }
     }
 
-    pub fn with_additional_descriptions(self, additional_descriptions: Vec<String>) -> Self {
+    pub fn with_additional_descriptions(
+        self,
+        additional_descriptions: Vec<String>,
+    ) -> Self {
         debug_assert!(self.additional_descriptions.is_empty());
 
         Issue {

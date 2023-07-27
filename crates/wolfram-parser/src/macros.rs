@@ -40,11 +40,13 @@ macro_rules! __src {
     ($line1:literal : $column1:literal  -  $line2:literal : $column2:literal) => {
         $crate::source::LineColumnSpan {
             start: $crate::source::LineColumn(
-                std::num::NonZeroU32::new($line1).expect("start line must not be zero"),
+                std::num::NonZeroU32::new($line1)
+                    .expect("start line must not be zero"),
                 $column1,
             ),
             end: $crate::source::LineColumn(
-                std::num::NonZeroU32::new($line2).expect("end line must not be zero"),
+                std::num::NonZeroU32::new($line2)
+                    .expect("end line must not be zero"),
                 $column2,
             ),
         }
@@ -101,7 +103,10 @@ macro_rules! __token {
         $crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$kind,
             src: $crate::source::Span::from($src),
-            input: $crate::tokenize::BorrowedTokenInput::new($input.as_ref(), $offset),
+            input: $crate::tokenize::BorrowedTokenInput::new(
+                $input.as_ref(),
+                $offset,
+            ),
         }
     };
 }

@@ -4,13 +4,16 @@ use std::fmt::Display;
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CompoundNode, CompoundOperator,
-        CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode,
-        InfixOperator, Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
-        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorNode, TernaryNode,
-        TernaryOperator,
+        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CompoundNode,
+        CompoundOperator, CstNode, GroupMissingCloserNode,
+        GroupMissingOpenerNode, GroupNode, InfixNode, InfixOperator, Operator,
+        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
+        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorNode,
+        TernaryNode, TernaryOperator,
     },
-    generated::{symbol_registration as sym, token_enum_registration::TokenToSymbol},
+    generated::{
+        symbol_registration as sym, token_enum_registration::TokenToSymbol,
+    },
     source::{LineColumn, LineColumnSpan, Location, Source, Span, SpanKind},
     symbol::Symbol,
     tokenize::{Token, TokenInput, TokenSource},
@@ -23,7 +26,9 @@ pub struct FmtAsExpr<T>(pub T);
 // Impls
 //==========================================================
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&NodeSeq<CstNode<I, S>>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&NodeSeq<CstNode<I, S>>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(NodeSeq(nodes)) = self;
 
@@ -41,7 +46,9 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&NodeSeq<CstNode<I, S>
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&NodeSeq<Token<I, S>>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&NodeSeq<Token<I, S>>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(NodeSeq(tokens)) = self;
 
@@ -91,8 +98,8 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&Token<I, S>> {
 
 
 
-        let source =
-            std::str::from_utf8(input.as_bytes()).expect("token source span is not valid UTF-8");
+        let source = std::str::from_utf8(input.as_bytes())
+            .expect("token source span is not valid UTF-8");
 
         // FIXME: This should escape internal characters correctly.
         write!(f, "\"{source}\"")?;
@@ -114,14 +121,26 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CstNode<I, S>> {
             CstNode::SyntaxError(node) => write!(f, "{}", FmtAsExpr(node))?,
             CstNode::Prefix(PrefixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
             CstNode::Infix(InfixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
-            CstNode::Postfix(PostfixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            CstNode::Postfix(PostfixNode(op)) => {
+                write!(f, "{}", FmtAsExpr(op))?
+            },
             CstNode::Binary(BinaryNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
-            CstNode::Ternary(TernaryNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
-            CstNode::PrefixBinary(PrefixBinaryNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
-            CstNode::Compound(CompoundNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            CstNode::Ternary(TernaryNode(op)) => {
+                write!(f, "{}", FmtAsExpr(op))?
+            },
+            CstNode::PrefixBinary(PrefixBinaryNode(op)) => {
+                write!(f, "{}", FmtAsExpr(op))?
+            },
+            CstNode::Compound(CompoundNode(op)) => {
+                write!(f, "{}", FmtAsExpr(op))?
+            },
             CstNode::Group(node) => write!(f, "{}", FmtAsExpr(node))?,
-            CstNode::GroupMissingCloser(node) => write!(f, "{}", FmtAsExpr(node))?,
-            CstNode::GroupMissingOpener(node) => write!(f, "{}", FmtAsExpr(node))?,
+            CstNode::GroupMissingCloser(node) => {
+                write!(f, "{}", FmtAsExpr(node))?
+            },
+            CstNode::GroupMissingOpener(node) => {
+                write!(f, "{}", FmtAsExpr(node))?
+            },
             CstNode::Box(_) => todo!(),
             CstNode::Code(_) => todo!(),
         }
@@ -168,12 +187,16 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CallBody<I, S>> {
 
         match call_body {
             CallBody::Group(group) => write!(f, "{}", FmtAsExpr(group)),
-            CallBody::GroupMissingCloser(group) => write!(f, "{}", FmtAsExpr(group)),
+            CallBody::GroupMissingCloser(group) => {
+                write!(f, "{}", FmtAsExpr(group))
+            },
         }
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&SyntaxErrorNode<I, S>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&SyntaxErrorNode<I, S>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(SyntaxErrorNode { err, children, src }) = self;
 
@@ -197,7 +220,9 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&SyntaxErrorNode<I, S>
 // Operator node variants
 //--------------------------------------
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, PrefixOperator>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&OperatorNode<I, S, PrefixOperator>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(op) = self;
 
@@ -205,7 +230,9 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, Pr
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, InfixOperator>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&OperatorNode<I, S, InfixOperator>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(op) = self;
 
@@ -213,7 +240,9 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, In
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, PostfixOperator>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&OperatorNode<I, S, PostfixOperator>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(op) = self;
 
@@ -221,7 +250,9 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, Po
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, BinaryOperator>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&OperatorNode<I, S, BinaryOperator>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(op) = self;
 
@@ -229,7 +260,9 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, Bi
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, TernaryOperator>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&OperatorNode<I, S, TernaryOperator>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(op) = self;
 
@@ -247,7 +280,9 @@ impl<I: TokenInput, S: TokenSource> Display
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, CompoundOperator>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&OperatorNode<I, S, CompoundOperator>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(op) = self;
 
@@ -255,7 +290,9 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&OperatorNode<I, S, Co
     }
 }
 
-impl<I: TokenInput, S: TokenSource, O: Operator> Display for FmtAsExpr<&GroupNode<I, S, O>> {
+impl<I: TokenInput, S: TokenSource, O: Operator> Display
+    for FmtAsExpr<&GroupNode<I, S, O>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(GroupNode(op)) = self;
 
@@ -273,7 +310,9 @@ impl<I: TokenInput, S: TokenSource, O: Operator> Display
     }
 }
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&GroupMissingOpenerNode<I, S>> {
+impl<I: TokenInput, S: TokenSource> Display
+    for FmtAsExpr<&GroupMissingOpenerNode<I, S>>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(GroupMissingOpenerNode(op)) = self;
 

@@ -95,8 +95,8 @@ fn CrashTest_Crash3() {
 #[test]
 fn CrashTest_Crash4() {
     let arr: &[u8] = &[
-        b'\\', b'[', b'I', b'n', b't', b'e', b'g', b'r', b'a', b'l', b']', b'\\', b'[', b'S', b'u',
-        b'm', b']',
+        b'\\', b'[', b'I', b'n', b't', b'e', b'g', b'r', b'a', b'l', b']',
+        b'\\', b'[', b'S', b'u', b'm', b']',
     ];
 
     let bufAndLen = arr;
@@ -117,7 +117,8 @@ fn CrashTest_Crash5() {
 
     let mut session = ParserSession::new(
         bufAndLen,
-        &ParseOptions::default().source_convention(SourceConvention::CharacterIndex),
+        &ParseOptions::default()
+            .source_convention(SourceConvention::CharacterIndex),
     );
 
     let _ = session.concrete_parse_expressions();

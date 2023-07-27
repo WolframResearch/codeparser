@@ -9,7 +9,11 @@ use crate::{
 
 
 impl InfixParselet for TimesParselet {
-    fn parse_infix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
+    fn parse_infix<'i>(
+        &'static self,
+        session: &mut ParserSession<'i>,
+        tok_in: TokenRef<'i>,
+    ) {
         panic_if_aborted!();
 
         session.push_leaf_and_next(tok_in);
@@ -59,9 +63,11 @@ impl TimesParselet {
 
             let Trivia1 = session.trivia1.clone();
 
-            let mut tok1 = session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+            let mut tok1 = session
+                .current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
 
-            let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(tok1.tok.value())];
+            let mut I: &dyn InfixParselet =
+                INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
             tok1 = I.process_implicit_times(session, tok1);
 
@@ -74,9 +80,10 @@ impl TimesParselet {
 
                 Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
-                tok1 = session.current_token_eat_trivia_but_not_toplevel_newlines_into(
-                    &mut Trivia1.borrow_mut(),
-                );
+                tok1 = session
+                    .current_token_eat_trivia_but_not_toplevel_newlines_into(
+                        &mut Trivia1.borrow_mut(),
+                    );
 
                 I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
@@ -127,6 +134,7 @@ impl TimesParselet {
     }
 
     fn reduce_Times(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| InfixNode::new(InfixOperator::Times, ctx))
+        session
+            .reduce_and_climb(|ctx| InfixNode::new(InfixOperator::Times, ctx))
     }
 }

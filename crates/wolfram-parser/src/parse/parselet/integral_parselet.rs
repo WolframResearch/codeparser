@@ -7,13 +7,20 @@ use crate::{
 };
 
 impl IntegralParselet {
-    pub(crate) const fn new(Op1: PrefixBinaryOperator, Op2: PrefixOperator) -> Self {
+    pub(crate) const fn new(
+        Op1: PrefixBinaryOperator,
+        Op2: PrefixOperator,
+    ) -> Self {
         IntegralParselet { Op1, Op2 }
     }
 }
 
 impl PrefixParselet for IntegralParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
+    fn parse_prefix<'i>(
+        &'static self,
+        session: &mut ParserSession<'i>,
+        tok_in: TokenRef<'i>,
+    ) {
         //
         // Something like  \[Integral] f \[DifferentialD] x
         //
@@ -34,7 +41,8 @@ impl PrefixParselet for IntegralParselet {
             // \[Integral] \[DifferentialD] x
             //
 
-            session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitOne, Tok));
+            session
+                .push_leaf(Token::at_start(TokenKind::Fake_ImplicitOne, Tok));
 
             return IntegralParselet::parse1(session, self);
         }
@@ -51,7 +59,8 @@ impl IntegralParselet {
 
         let Trivia1 = session.trivia1.clone();
 
-        let tok = session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+        let tok =
+            session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
 
         if !(tok.tok == TokenKind::LongName_DifferentialD
             || tok.tok == TokenKind::LongName_CapitalDifferentialD)
@@ -91,7 +100,11 @@ impl IntegralParselet {
 }
 
 impl InfixParselet for InfixDifferentialDParselet {
-    fn parse_infix(&'static self, _session: &mut ParserSession, _token: TokenRef) {
+    fn parse_infix(
+        &'static self,
+        _session: &mut ParserSession,
+        _token: TokenRef,
+    ) {
         panic!("illegal call to InfixDifferentialDParselet::parse_infix()")
     }
 

@@ -10,7 +10,8 @@ impl Token {
 
         if tok.isError() {
             if tok.isUnterminated() {
-                head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.toExpr(session);
+                head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE
+                    .toExpr(session);
             } else {
                 head = SYMBOL_CODEPARSER_ERRORNODE.toExpr(session);
             }
@@ -291,8 +292,13 @@ impl Issue {
 
                 let ConfidenceLevelRuleExpr = Expr_BuildExprA(head, 2);
 
-                let ConfidenceLevelSymExpr = SYMBOL_CONFIDENCELEVEL.toExpr(session);
-                Expr_InsertA(ConfidenceLevelRuleExpr, 0 + 1, ConfidenceLevelSymExpr);
+                let ConfidenceLevelSymExpr =
+                    SYMBOL_CONFIDENCELEVEL.toExpr(session);
+                Expr_InsertA(
+                    ConfidenceLevelRuleExpr,
+                    0 + 1,
+                    ConfidenceLevelSymExpr,
+                );
 
                 let ValExpr = Expr_FromReal64(Val);
                 Expr_InsertA(ConfidenceLevelRuleExpr, 1 + 1, ValExpr);
@@ -307,13 +313,15 @@ impl Issue {
 
                 let CodeActionsRuleExpr = Expr_BuildExprA(head, 2);
 
-                let CodeActionsSymExpr = SYMBOL_CODEPARSER_CODEACTIONS.toExpr(session);
+                let CodeActionsSymExpr =
+                    SYMBOL_CODEPARSER_CODEACTIONS.toExpr(session);
                 Expr_InsertA(CodeActionsRuleExpr, 0 + 1, CodeActionsSymExpr);
 
                 {
                     let head = SYMBOL_LIST.toExpr(session);
 
-                    let CodeActionsListExpr = Expr_BuildExprA(head, (Actions.len()));
+                    let CodeActionsListExpr =
+                        Expr_BuildExprA(head, (Actions.len()));
 
                     let mut j: c_int = 0;
                     for A in Actions {
@@ -324,7 +332,11 @@ impl Issue {
                         j += 1;
                     }
 
-                    Expr_InsertA(CodeActionsRuleExpr, 1 + 1, CodeActionsListExpr);
+                    Expr_InsertA(
+                        CodeActionsRuleExpr,
+                        1 + 1,
+                        CodeActionsListExpr,
+                    );
                 }
 
                 Expr_InsertA(DataExpr, i + 1, CodeActionsRuleExpr);
@@ -336,7 +348,8 @@ impl Issue {
 
                 let AdditionalDescriptionsRuleExpr = Expr_BuildExprA(head, 2);
 
-                let AdditionalDescriptionsStrExpr = STRING_ADDITIONALDESCRIPTIONS.toExpr(session);
+                let AdditionalDescriptionsStrExpr =
+                    STRING_ADDITIONALDESCRIPTIONS.toExpr(session);
                 Expr_InsertA(
                     AdditionalDescriptionsRuleExpr,
                     0 + 1,
@@ -351,9 +364,14 @@ impl Issue {
 
                     let j: c_int = 0;
                     for D in AdditionalDescriptions {
-                        let DExpr = Expr_UTF8BytesToStringExpr((D.c_str()), (D.len()));
+                        let DExpr =
+                            Expr_UTF8BytesToStringExpr((D.c_str()), (D.len()));
 
-                        Expr_InsertA(AdditionalDescriptionsListExpr, j + 1, DExpr);
+                        Expr_InsertA(
+                            AdditionalDescriptionsListExpr,
+                            j + 1,
+                            DExpr,
+                        );
 
                         j += 1;
                     }
@@ -390,7 +408,8 @@ impl CodeAction {
 
                 let e = Expr_BuildExprA(head, 3);
 
-                let LabelExpr = Expr_UTF8BytesToStringExpr((Label.c_str()), (Label.len()));
+                let LabelExpr =
+                    Expr_UTF8BytesToStringExpr((Label.c_str()), (Label.len()));
                 Expr_InsertA(e, 0 + 1, LabelExpr);
 
                 let CommandExpr = SYMBOL_CODEPARSER_REPLACETEXT.toExpr(session);
@@ -409,14 +428,23 @@ impl CodeAction {
 
                         let ReplacementTextRuleExpr = Expr_BuildExprA(head, 2);
 
-                        let ReplacementTextStrExpr = STRING_REPLACEMENTTEXT.toExpr(session);
-                        Expr_InsertA(ReplacementTextRuleExpr, 0 + 1, ReplacementTextStrExpr);
+                        let ReplacementTextStrExpr =
+                            STRING_REPLACEMENTTEXT.toExpr(session);
+                        Expr_InsertA(
+                            ReplacementTextRuleExpr,
+                            0 + 1,
+                            ReplacementTextStrExpr,
+                        );
 
                         let ReplacementTextExpr = Expr_UTF8BytesToStringExpr(
                             (ReplacementText.c_str()),
                             (ReplacementText.len()),
                         );
-                        Expr_InsertA(ReplacementTextRuleExpr, 1 + 1, ReplacementTextExpr);
+                        Expr_InsertA(
+                            ReplacementTextRuleExpr,
+                            1 + 1,
+                            ReplacementTextExpr,
+                        );
 
                         Expr_InsertA(DataExpr, 1 + 1, ReplacementTextRuleExpr);
                     }
@@ -431,7 +459,8 @@ impl CodeAction {
 
                 let e = Expr_BuildExprA(head, 3);
 
-                let LabelExpr = Expr_UTF8BytesToStringExpr((Label.c_str()), (Label.len()));
+                let LabelExpr =
+                    Expr_UTF8BytesToStringExpr((Label.c_str()), (Label.len()));
                 Expr_InsertA(e, 0 + 1, LabelExpr);
 
                 let CommandExpr = SYMBOL_CODEPARSER_INSERTTEXT.toExpr(session);
@@ -450,14 +479,23 @@ impl CodeAction {
 
                         let InsertionTextRuleExpr = Expr_BuildExprA(head, 2);
 
-                        let InsertionTextStrExpr = STRING_INSERTIONTEXT.toExpr(session);
-                        Expr_InsertA(InsertionTextRuleExpr, 0 + 1, InsertionTextStrExpr);
+                        let InsertionTextStrExpr =
+                            STRING_INSERTIONTEXT.toExpr(session);
+                        Expr_InsertA(
+                            InsertionTextRuleExpr,
+                            0 + 1,
+                            InsertionTextStrExpr,
+                        );
 
                         let InsertionTextExpr = Expr_UTF8BytesToStringExpr(
                             (InsertionText.c_str()),
                             (InsertionText.len()),
                         );
-                        Expr_InsertA(InsertionTextRuleExpr, 1 + 1, InsertionTextExpr);
+                        Expr_InsertA(
+                            InsertionTextRuleExpr,
+                            1 + 1,
+                            InsertionTextExpr,
+                        );
 
                         Expr_InsertA(DataExpr, 1 + 1, InsertionTextRuleExpr);
                     }
@@ -472,7 +510,8 @@ impl CodeAction {
 
                 let e = Expr_BuildExprA(head, 3);
 
-                let LabelExpr = Expr_UTF8BytesToStringExpr((Label.c_str()), (Label.len()));
+                let LabelExpr =
+                    Expr_UTF8BytesToStringExpr((Label.c_str()), (Label.len()));
                 Expr_InsertA(e, 0 + 1, LabelExpr);
 
                 let CommandExpr = SYMBOL_CODEPARSER_DELETETEXT.toExpr(session);

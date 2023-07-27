@@ -143,7 +143,8 @@ impl CodePoint {
         let special: i32 = match self {
             Char(c) => {
                 let as_u32 = u32::from(c);
-                return i32::try_from(as_u32).expect("unable to convert char to i32");
+                return i32::try_from(as_u32)
+                    .expect("unable to convert char to i32");
             },
             // Special code points
             EndOfFile => -1,

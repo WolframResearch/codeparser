@@ -35,8 +35,8 @@ use crate::{
         wl_character::{EscapeStyle, WLCharacter},
     },
     source::{
-        LineColumn, Location, NextPolicy, NextPolicyBits::*, SourceCharacter, SourceConvention,
-        Span,
+        LineColumn, Location, NextPolicy, NextPolicyBits::*, SourceCharacter,
+        SourceConvention, Span,
     },
     tokenize::tokenizer::UnsafeCharacterEncoding,
     utils, EncodingMode,
@@ -808,13 +808,15 @@ fn ByteDecoder_strangeWarning(
     let safeAndGraphicalStr = decoded.safeAndGraphicalString();
     let graphicalStr = decoded.graphicalString();
 
-    let Src = Span::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
+    let Src =
+        Span::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
 
     let mut Actions: Vec<CodeAction> = Vec::new();
 
     let c = WLCharacter::new_with_escape(decoded, EscapeStyle::None);
 
-    let certainCharacterActions = utils::certainCharacterReplacementActions(c, Src);
+    let certainCharacterActions =
+        utils::certainCharacterReplacementActions(c, Src);
 
     for A in certainCharacterActions {
         Actions.push(A);
@@ -887,7 +889,8 @@ fn ByteDecoder_nonASCIIWarning(
     let safeAndGraphicalStr = decoded.safeAndGraphicalString();
     let graphicalStr = decoded.graphicalString();
 
-    let Src = Span::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
+    let Src =
+        Span::new(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
 
     let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -933,7 +936,12 @@ fn ByteDecoder_validStrange(
     if feature::CHECK_ISSUES {
         let currentSourceCharacterStartLoc = session.SrcLoc.previous();
 
-        ByteDecoder_strangeWarning(session, decoded, currentSourceCharacterStartLoc, policy);
+        ByteDecoder_strangeWarning(
+            session,
+            decoded,
+            currentSourceCharacterStartLoc,
+            policy,
+        );
     }
 
     return decoded;
@@ -952,9 +960,18 @@ fn ByteDecoder_validMB(
         let currentSourceCharacterStartLoc = session.SrcLoc.previous();
 
         if crate::utils::isMBStrange(decoded) {
-            ByteDecoder_strangeWarning(session, decoded, currentSourceCharacterStartLoc, policy);
+            ByteDecoder_strangeWarning(
+                session,
+                decoded,
+                currentSourceCharacterStartLoc,
+                policy,
+            );
         } else if session.encodingMode == EncodingMode::Normal {
-            ByteDecoder_nonASCIIWarning(session, decoded, currentSourceCharacterStartLoc);
+            ByteDecoder_nonASCIIWarning(
+                session,
+                decoded,
+                currentSourceCharacterStartLoc,
+            );
         }
     }
 
@@ -966,7 +983,11 @@ fn ByteDecoder_incomplete1ByteSequence(
     errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
-    ByteDecoder_incompleteByteSequence(session, errSrcLoc, CodePoint::Unsafe1ByteUtf8Sequence)
+    ByteDecoder_incompleteByteSequence(
+        session,
+        errSrcLoc,
+        CodePoint::Unsafe1ByteUtf8Sequence,
+    )
 }
 
 fn ByteDecoder_incomplete2ByteSequence(
@@ -974,7 +995,11 @@ fn ByteDecoder_incomplete2ByteSequence(
     errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
-    ByteDecoder_incompleteByteSequence(session, errSrcLoc, CodePoint::Unsafe2ByteUtf8Sequence)
+    ByteDecoder_incompleteByteSequence(
+        session,
+        errSrcLoc,
+        CodePoint::Unsafe2ByteUtf8Sequence,
+    )
 }
 
 fn ByteDecoder_incomplete3ByteSequence(
@@ -982,7 +1007,11 @@ fn ByteDecoder_incomplete3ByteSequence(
     errSrcLoc: Location,
     _policy: NextPolicy,
 ) -> SourceCharacter {
-    ByteDecoder_incompleteByteSequence(session, errSrcLoc, CodePoint::Unsafe3ByteUtf8Sequence)
+    ByteDecoder_incompleteByteSequence(
+        session,
+        errSrcLoc,
+        CodePoint::Unsafe3ByteUtf8Sequence,
+    )
 }
 
 fn ByteDecoder_incompleteByteSequence(
@@ -1019,7 +1048,9 @@ fn ByteDecoder_incompleteByteSequence(
     // Related bugs: 366106, 376155
     //
 
-    session.setUnsafeCharacterEncodingFlag(UnsafeCharacterEncoding::IncompleteUTF8Sequence);
+    session.setUnsafeCharacterEncodingFlag(
+        UnsafeCharacterEncoding::IncompleteUTF8Sequence,
+    );
 
     return errChar;
 }
@@ -1061,7 +1092,9 @@ fn ByteDecoder_straySurrogate(
     // Related bugs: 366106, 376155
     //
 
-    session.setUnsafeCharacterEncodingFlag(UnsafeCharacterEncoding::StraySurrogate);
+    session.setUnsafeCharacterEncodingFlag(
+        UnsafeCharacterEncoding::StraySurrogate,
+    );
 
     return CodePoint::from(CodePoint::Unsafe3ByteUtf8Sequence);
 }
@@ -1136,7 +1169,8 @@ impl<'t> SourceManager<'t> {
     fn tab(&mut self) {
         match self.loc {
             Location::LineColumn(LineColumn(_, column)) => {
-                let currentTabStop = self.tab_width * ((*column - 1) / self.tab_width) + 1;
+                let currentTabStop =
+                    self.tab_width * ((*column - 1) / self.tab_width) + 1;
 
                 *column = currentTabStop + self.tab_width;
             },

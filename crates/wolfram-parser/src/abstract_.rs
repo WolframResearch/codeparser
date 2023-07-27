@@ -6,13 +6,14 @@ use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator,
-        CodeNode, CompoundNode, CompoundOperator, CstNodeSeq, GroupMissingCloserNode,
-        GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
+        CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator,
+        CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        GroupOperator, InfixNode,
         InfixOperator::{self, self as Op},
-        Node, Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
-        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode, TernaryOperator,
+        Node, Operator, OperatorNode, PostfixNode, PostfixOperator,
+        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator,
+        SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
@@ -30,7 +31,9 @@ use crate::{
 // Aggregate
 //==========================================================
 
-pub fn Aggregate<I: Debug, S: Debug>(agg: CstNodeSeq<I, S>) -> AggNodeSeq<I, S> {
+pub fn Aggregate<I: Debug, S: Debug>(
+    agg: CstNodeSeq<I, S>,
+) -> AggNodeSeq<I, S> {
     let NodeSeq(agg) = agg;
 
     let agg_children = agg.into_iter().flat_map(aggregate_replace).collect();
@@ -38,7 +41,9 @@ pub fn Aggregate<I: Debug, S: Debug>(agg: CstNodeSeq<I, S>) -> AggNodeSeq<I, S> 
     NodeSeq(agg_children)
 }
 
-fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>> {
+fn aggregate_replace<I: Debug, S: Debug>(
+    node: Node<I, S>,
+) -> Option<Node<I, S>> {
     let node: Node<_, _> = match node {
         // Remove comments, whitespace, and newlines
         Node::Token(Token {
@@ -136,14 +141,24 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
         }),
 
         Node::Infix(InfixNode(op)) => Node::Infix(InfixNode(aggregate_op(op))),
-        Node::Prefix(PrefixNode(op)) => Node::Prefix(PrefixNode(aggregate_op(op))),
-        Node::Postfix(PostfixNode(op)) => Node::Postfix(PostfixNode(aggregate_op(op))),
-        Node::Binary(BinaryNode(op)) => Node::Binary(BinaryNode(aggregate_op(op))),
-        Node::Ternary(TernaryNode(op)) => Node::Ternary(TernaryNode(aggregate_op(op))),
+        Node::Prefix(PrefixNode(op)) => {
+            Node::Prefix(PrefixNode(aggregate_op(op)))
+        },
+        Node::Postfix(PostfixNode(op)) => {
+            Node::Postfix(PostfixNode(aggregate_op(op)))
+        },
+        Node::Binary(BinaryNode(op)) => {
+            Node::Binary(BinaryNode(aggregate_op(op)))
+        },
+        Node::Ternary(TernaryNode(op)) => {
+            Node::Ternary(TernaryNode(aggregate_op(op)))
+        },
         Node::PrefixBinary(PrefixBinaryNode(op)) => {
             Node::PrefixBinary(PrefixBinaryNode(aggregate_op(op)))
         },
-        Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(aggregate_op(op))),
+        Node::Compound(CompoundNode(op)) => {
+            Node::Compound(CompoundNode(aggregate_op(op)))
+        },
     };
 
     /* FIXME: Port these:
@@ -175,7 +190,9 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
     Some(node)
 }
 
-fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNode<I, S, O> {
+fn aggregate_op<I: Debug, S: Debug, O>(
+    op: OperatorNode<I, S, O>,
+) -> OperatorNode<I, S, O> {
     let OperatorNode { op, children, src } = op;
 
     OperatorNode {
@@ -291,7 +308,9 @@ pub(crate) fn Abstract<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 // TODO(cleanup): Make this private again. Abstract(..) is the crate-public
 //                interface.
-pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>) -> AstNode {
+pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
+    node: Node<I, S>,
+) -> AstNode {
     match node {
         Node::Token(token) => return abstract_replace_token(token),
         Node::Compound(CompoundNode(OperatorNode {
@@ -523,7 +542,8 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                             tok: TK::SingleQuote,
                             ..
                         }) => {
-                            let (order, abstractedBody) = derivativeOrderAndAbstractedBody(operand);
+                            let (order, abstractedBody) =
+                                derivativeOrderAndAbstractedBody(operand);
 
                             WL!(CallNode[
                                 WL!(CallNode[
@@ -571,7 +591,9 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             let [left, middle, right] = expect_children(children);
 
             match op {
-                BinaryOperator::Divide => abstractTimes_BinaryNode([left, right], data),
+                BinaryOperator::Divide => {
+                    abstractTimes_BinaryNode([left, right], data)
+                },
 
                 BinaryOperator::CodeParser_BinaryAt => WL!(
                     CallNode[abstract_(left), {abstract_(right)}, data]
@@ -636,11 +658,15 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
 
                 // BinaryNode[Unset, {left_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]
                 BinaryOperator::Unset => {
-                    if !matches!(middle, Node::Token(Token { tok: TK::Equal, .. })) {
+                    if !matches!(
+                        middle,
+                        Node::Token(Token { tok: TK::Equal, .. })
+                    ) {
                         unhandled()
                     }
 
-                    if !matches!(right, Node::Token(Token { tok: TK::Dot, .. })) {
+                    if !matches!(right, Node::Token(Token { tok: TK::Dot, .. }))
+                    {
                         unhandled()
                     }
 
@@ -687,7 +713,9 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
         })) => {
             match op {
                 // InfixNode[InfixInequality, children_, data_]
-                Op::CodeParser_InfixInequality => abstractInfixInequality(children, data),
+                Op::CodeParser_InfixInequality => {
+                    abstractInfixInequality(children, data)
+                },
 
                 // Handle SameQ and UnsameQ specially because they do not
                 // participate in the InfixBinaryAt quirk
@@ -696,7 +724,8 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 Op::SameQ | Op::UnsameQ if is_odd(children.len()) => {
                     let children = part_span_even_children(children, None);
 
-                    let children = children.into_iter().map(abstract_).collect();
+                    let children =
+                        children.into_iter().map(abstract_).collect();
 
                     WL!( CallNode[ToNode(op), children, data] )
                 },
@@ -727,7 +756,9 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
 
                     let processed = children
                         .into_iter()
-                        .map(|node| processInfixBinaryAtQuirk(node, "Divisible"))
+                        .map(|node| {
+                            processInfixBinaryAtQuirk(node, "Divisible")
+                        })
                         // make sure to reverse children of Divisible
                         .rev()
                         .map(abstract_)
@@ -740,7 +771,10 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 Op::CompoundExpression => {
                     // Skip every other child, which are Semi tokens.
                     //   children[[;; ;; 2]]
-                    let children = part_span_even_children(children, Some(TokenKind::Semi));
+                    let children = part_span_even_children(
+                        children,
+                        Some(TokenKind::Semi),
+                    );
 
                     let children = children
                         .into_iter()
@@ -760,14 +794,18 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
 
                 // InfixNode[MessageName, children_, data_]
                 Op::MessageName => {
-                    let children = part_span_even_children(children, Some(TK::ColonColon));
+                    let children =
+                        part_span_even_children(children, Some(TK::ColonColon));
 
                     abstractMessageName(children, data)
                 },
 
                 Op::CodeParser_InfixTilde => {
                     // children[[;; ;;2]]
-                    let children = part_span_even_children(children, Some(TokenKind::Tilde));
+                    let children = part_span_even_children(
+                        children,
+                        Some(TokenKind::Tilde),
+                    );
 
                     abstractInfixTilde(children, data)
                 },
@@ -787,7 +825,10 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     let children = children
                         .into_iter()
                         .map(|child| {
-                            processInfixBinaryAtQuirk(child, op.to_symbol().symbol_name().as_str())
+                            processInfixBinaryAtQuirk(
+                                child,
+                                op.to_symbol().symbol_name().as_str(),
+                            )
                         })
                         .map(abstract_)
                         .collect();
@@ -807,7 +848,8 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             children,
             src: data,
         })) => {
-            let [left, _, middle, middle_right, right] = expect_children(children);
+            let [left, _, middle, middle_right, right] =
+                expect_children(children);
 
             match op {
                 TernaryOperator::CodeParser_TernaryTilde => {
@@ -855,11 +897,15 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 // Allow non-Symbols for left; not a syntax error
                 // TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]
                 TernaryOperator::TagUnset => {
-                    if !matches!(middle_right, Node::Token(Token { tok: TK::Equal, .. })) {
+                    if !matches!(
+                        middle_right,
+                        Node::Token(Token { tok: TK::Equal, .. })
+                    ) {
                         unhandled()
                     }
 
-                    if !matches!(right, Node::Token(Token { tok: TK::Dot, .. })) {
+                    if !matches!(right, Node::Token(Token { tok: TK::Dot, .. }))
+                    {
                         unhandled()
                     }
 
@@ -907,8 +953,10 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                                 ..
                             })), _],
                         ) => {
-                            let comma_children = part_span_even_children(comma_children, None);
-                            let comma_children = Abstract(NodeSeq(comma_children));
+                            let comma_children =
+                                part_span_even_children(comma_children, None);
+                            let comma_children =
+                                Abstract(NodeSeq(comma_children));
 
                             WL!( AbstractSyntaxErrorNode[OpenParen, comma_children, data] )
                         },
@@ -919,7 +967,8 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                         // GroupNode[GroupParen, children_, data_]
                         Err(children) => {
                             // children[[2 ;; -2]]
-                            let children = part_span_drop_first_and_last(children);
+                            let children =
+                                part_span_drop_first_and_last(children);
                             let children = Abstract(NodeSeq(children));
 
                             WL!( AbstractSyntaxErrorNode[OpenParen, children, data] )
@@ -936,83 +985,103 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 // naked \[LeftDoubleBracket]\[RightDoubleBracket]
 
                 // GroupNode[GroupSquare, children_, data_]
-                GroupOperator::CodeParser_GroupSquare => match children.0.as_slice() {
-                    // GroupNode[GroupSquare, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
-                    [_, Node::Infix(InfixNode(OperatorNode {
-                        op: Op::CodeParser_Comma,
-                        children: NodeSeq(comma_children),
-                        ..
-                    })), _] => {
-                        let comma_children = part_span_even_children(comma_children.clone(), None);
-                        let comma_children = Abstract(NodeSeq(comma_children));
+                GroupOperator::CodeParser_GroupSquare => {
+                    match children.0.as_slice() {
+                        // GroupNode[GroupSquare, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
+                        [_, Node::Infix(InfixNode(OperatorNode {
+                            op: Op::CodeParser_Comma,
+                            children: NodeSeq(comma_children),
+                            ..
+                        })), _] => {
+                            let comma_children = part_span_even_children(
+                                comma_children.clone(),
+                                None,
+                            );
+                            let comma_children =
+                                Abstract(NodeSeq(comma_children));
 
-                        WL!( AbstractSyntaxErrorNode[OpenSquare, comma_children, data] )
-                    },
-                    // GroupNode[GroupSquare, {_, child_, _}, data_]
-                    [_, child, _] => {
-                        WL!( AbstractSyntaxErrorNode[OpenSquare, { abstract_(child.clone()) }, data] )
-                    },
-                    // GroupNode[GroupSquare, {_, _}, data_]
-                    [_, _] => {
-                        WL!( AbstractSyntaxErrorNode[OpenSquare, {}, data] )
-                    },
-                    _ => unhandled(),
+                            WL!( AbstractSyntaxErrorNode[OpenSquare, comma_children, data] )
+                        },
+                        // GroupNode[GroupSquare, {_, child_, _}, data_]
+                        [_, child, _] => {
+                            WL!( AbstractSyntaxErrorNode[OpenSquare, { abstract_(child.clone()) }, data] )
+                        },
+                        // GroupNode[GroupSquare, {_, _}, data_]
+                        [_, _] => {
+                            WL!( AbstractSyntaxErrorNode[OpenSquare, {}, data] )
+                        },
+                        _ => unhandled(),
+                    }
                 },
 
                 // GroupNode[GroupTypeSpecifier, children_, data_]
-                GroupOperator::CodeParser_GroupTypeSpecifier => match children.0.as_slice() {
-                    // GroupNode[GroupTypeSpecifier, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
-                    [_, Node::Infix(InfixNode(OperatorNode {
-                        op: Op::CodeParser_Comma,
-                        children: NodeSeq(comma_children),
-                        ..
-                    })), _] => {
-                        let comma_children = part_span_even_children(comma_children.clone(), None);
-                        let comma_children = Abstract(NodeSeq(comma_children));
+                GroupOperator::CodeParser_GroupTypeSpecifier => {
+                    match children.0.as_slice() {
+                        // GroupNode[GroupTypeSpecifier, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
+                        [_, Node::Infix(InfixNode(OperatorNode {
+                            op: Op::CodeParser_Comma,
+                            children: NodeSeq(comma_children),
+                            ..
+                        })), _] => {
+                            let comma_children = part_span_even_children(
+                                comma_children.clone(),
+                                None,
+                            );
+                            let comma_children =
+                                Abstract(NodeSeq(comma_children));
 
-                        WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, comma_children, data] )
-                    },
-                    // GroupNode[GroupTypeSpecifier, {_, child_, _}, data_]
-                    [_, child, _] => {
-                        WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, { abstract_(child.clone()) }, data] )
-                    },
-                    // GroupNode[GroupTypeSpecifier, {_, _}, data_]
-                    [_, _] => {
-                        WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, {}, data] )
-                    },
-                    _ => unhandled(),
+                            WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, comma_children, data] )
+                        },
+                        // GroupNode[GroupTypeSpecifier, {_, child_, _}, data_]
+                        [_, child, _] => {
+                            WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, { abstract_(child.clone()) }, data] )
+                        },
+                        // GroupNode[GroupTypeSpecifier, {_, _}, data_]
+                        [_, _] => {
+                            WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, {}, data] )
+                        },
+                        _ => unhandled(),
+                    }
                 },
 
                 // GroupNode[GroupDoubleBracket, children_, data_]
-                GroupOperator::CodeParser_GroupDoubleBracket => match children.0.as_slice() {
-                    // GroupNode[GroupDoubleBracket, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
-                    [_, Node::Infix(InfixNode(OperatorNode {
-                        op: Op::CodeParser_Comma,
-                        children: NodeSeq(comma_children),
-                        ..
-                    })), _] => {
-                        let comma_children = part_span_even_children(comma_children.clone(), None);
-                        let comma_children = Abstract(NodeSeq(comma_children));
+                GroupOperator::CodeParser_GroupDoubleBracket => {
+                    match children.0.as_slice() {
+                        // GroupNode[GroupDoubleBracket, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
+                        [_, Node::Infix(InfixNode(OperatorNode {
+                            op: Op::CodeParser_Comma,
+                            children: NodeSeq(comma_children),
+                            ..
+                        })), _] => {
+                            let comma_children = part_span_even_children(
+                                comma_children.clone(),
+                                None,
+                            );
+                            let comma_children =
+                                Abstract(NodeSeq(comma_children));
 
-                        WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, comma_children, data] )
-                    },
-                    // GroupNode[GroupDoubleBracket, {_, child_, _}, data_]
-                    [_, child, _] => {
-                        WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, { abstract_(child.clone()) }, data] )
-                    },
-                    // GroupNode[GroupDoubleBracket, {_, _}, data_]
-                    [_, _] => {
-                        WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, {}, data] )
-                    },
-                    _ => unhandled(),
+                            WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, comma_children, data] )
+                        },
+                        // GroupNode[GroupDoubleBracket, {_, child_, _}, data_]
+                        [_, child, _] => {
+                            WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, { abstract_(child.clone()) }, data] )
+                        },
+                        // GroupNode[GroupDoubleBracket, {_, _}, data_]
+                        [_, _] => {
+                            WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, {}, data] )
+                        },
+                        _ => unhandled(),
+                    }
                 },
 
                 // GroupNode[tag_, children_, data_]
-                _ => AstNode::from(abstractGroupNode(GroupNode(OperatorNode {
-                    op,
-                    children,
-                    src: data,
-                }))),
+                _ => {
+                    AstNode::from(abstractGroupNode(GroupNode(OperatorNode {
+                        op,
+                        children,
+                        src: data,
+                    })))
+                },
             }
         },
 
@@ -1020,7 +1089,8 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
         // GroupMissingCloserNode
         //==============================
         Node::GroupMissingCloser(node) => {
-            let (op, abstracted_children, data) = abstractGroupNode_GroupMissingCloserNode(node);
+            let (op, abstracted_children, data) =
+                abstractGroupNode_GroupMissingCloserNode(node);
 
             AstNode::GroupMissingCloser {
                 kind: op,
@@ -1032,7 +1102,9 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
         //==============================
         // GroupMissingOpenerNode
         //==============================
-        Node::GroupMissingOpener(node) => abstractGroupNode_GroupMissingOpenerNode(node),
+        Node::GroupMissingOpener(node) => {
+            abstractGroupNode_GroupMissingOpenerNode(node)
+        },
 
         //=================
         // PrefixBinaryNode
@@ -1058,7 +1130,9 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     | PrefixBinaryOperator::CounterClockwiseContourIntegral,
                     //
                     Node::Prefix(PrefixNode(OperatorNode {
-                        op: PrefixOperator::DifferentialD | PrefixOperator::CapitalDifferentialD,
+                        op:
+                            PrefixOperator::DifferentialD
+                            | PrefixOperator::CapitalDifferentialD,
                         children,
                         src: _,
                     })),
@@ -1132,12 +1206,16 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             (SyntaxErrorKind::ExpectedSymbol, [left, _, right]) => WL!(
                 SyntaxErrorNode[ExpectedSymbol, {abstract_(left.clone()), abstract_(right.clone())}, data]
             ),
-            _ => todo!("unhandled SyntaxErrorNode content: ({err:?}, {children:?})"),
+            _ => todo!(
+                "unhandled SyntaxErrorNode content: ({err:?}, {children:?})"
+            ),
         },
     }
 }
 
-fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> AstNode {
+fn abstract_replace_token<I: TokenInput, S: TokenSource>(
+    token: Token<I, S>,
+) -> AstNode {
     let Token {
         tok: kind,
         input,
@@ -1157,7 +1235,8 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
             count += str.matches("\\045").count();
             count += str.matches("\\[RawPercent]").count();
 
-            let count = i64::try_from(count).expect("Out[..] %-sequence overflows i64");
+            let count =
+                i64::try_from(count).expect("Out[..] %-sequence overflows i64");
 
             WL!(CallNode[
                 ToNode(CompoundOperator::Out),
@@ -1166,13 +1245,21 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
             ])
         },
         TokenKind::Under => WL!( CallNode[ToNode[Blank], {}, data] ),
-        TokenKind::UnderUnder => WL!( CallNode[ToNode[BlankSequence], {}, data] ),
-        TokenKind::UnderUnderUnder => WL!( CallNode[ToNode[BlankNullSequence], {}, data] ),
+        TokenKind::UnderUnder => {
+            WL!( CallNode[ToNode[BlankSequence], {}, data] )
+        },
+        TokenKind::UnderUnderUnder => {
+            WL!( CallNode[ToNode[BlankNullSequence], {}, data] )
+        },
         TokenKind::UnderDot => {
             WL!( CallNode[ToNode[Optional], { WL!(CallNode[ToNode[Blank], {}, data.clone()]) }, data] )
         },
-        TokenKind::Hash => WL!( CallNode[ToNode[Slot], { ToNode_Integer(1) }, data] ),
-        TokenKind::HashHash => WL!( CallNode[ToNode[SlotSequence], { ToNode_Integer(1) }, data] ),
+        TokenKind::Hash => {
+            WL!( CallNode[ToNode[Slot], { ToNode_Integer(1) }, data] )
+        },
+        TokenKind::HashHash => {
+            WL!( CallNode[ToNode[SlotSequence], { ToNode_Integer(1) }, data] )
+        },
         TokenKind::Percent => WL!( CallNode[ToNode[Out], {}, data] ),
 
         TokenKind::Fake_ImplicitOne => WL!( LeafNode[Integer, "1", data] ),
@@ -1180,7 +1267,8 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
         //        into the wrong context if System` is not on $ContextPath?
         TokenKind::Fake_ImplicitAll => WL!( LeafNode[Symbol, "All", data] ),
 
-        TokenKind::Error_PrefixImplicitNull | TokenKind::Error_InfixImplicitNull => {
+        TokenKind::Error_PrefixImplicitNull
+        | TokenKind::Error_InfixImplicitNull => {
             WL!( LeafNode[Symbol, "Null", data] )
         },
 
@@ -1198,7 +1286,8 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
                 },
 
                 // "\[Degree]"
-                "\u{00b0}" | "\\[Degree]" | "\\:00b0" | "\\.b0" | "\\260" | "\\|0000b0" => {
+                "\u{00b0}" | "\\[Degree]" | "\\:00b0" | "\\.b0" | "\\260"
+                | "\\|0000b0" => {
                     WL!( LeafNode[Symbol, "Degree", data] )
                 },
 
@@ -1416,11 +1505,10 @@ fn parenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: &Node<I, S>) -> bool {
             children,
             src: _,
         })) => {
-            let [_, child, _]: &[_; 3] = children
-                .0
-                .as_slice()
-                .try_into()
-                .expect("GroupParen Group node has unexpected number of children");
+            let [_, child, _]: &[_; 3] =
+                children.0.as_slice().try_into().expect(
+                    "GroupParen Group node has unexpected number of children",
+                );
 
             parenthesizedIntegerOrRealQ(child)
         },
@@ -1436,7 +1524,9 @@ fn parenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: &Node<I, S>) -> bool {
     }
 }
 
-fn extractParenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: Node<I, S>) -> Node<I, S> {
+fn extractParenthesizedIntegerOrRealQ<I: Debug, S: Debug>(
+    node: Node<I, S>,
+) -> Node<I, S> {
     debug_assert!(parenthesizedIntegerOrRealQ(&node));
 
     match node {
@@ -1447,9 +1537,9 @@ fn extractParenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: Node<I, S>) -> N
             children: NodeSeq(children),
             src: _,
         })) => {
-            let [_, child, _]: [_; 3] = children
-                .try_into()
-                .expect("GroupParen Group node has unexpected number of children");
+            let [_, child, _]: [_; 3] = children.try_into().expect(
+                "GroupParen Group node has unexpected number of children",
+            );
 
             child
         },
@@ -1459,7 +1549,9 @@ fn extractParenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: Node<I, S>) -> N
 
 // TODO(optimization): Make this take a `&Node`, so we don't have to
 //                     clone at the callsite to this function.
-fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(node: Node<I, S>) -> bool {
+fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
+    node: Node<I, S>,
+) -> bool {
     match node {
         // possiblyNegatedZeroQ[LeafNode[Integer, "0", _]] := True
         Node::Token(Token {
@@ -1544,7 +1636,9 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
             children: NodeSeq(mut children),
             src: _,
             // TODO(optimization): Avoid this clone().
-        })) if possiblyNegatedZeroQ(children[1].clone()) => negate(children.remove(1), data),
+        })) if possiblyNegatedZeroQ(children[1].clone()) => {
+            negate(children.remove(1), data)
+        },
         // negate[PrefixNode[Minus, {_, child_?possiblyNegatedZeroQ}, _], data_] :=
         //   negate[child, data]
         Node::Prefix(PrefixNode(OperatorNode {
@@ -1552,7 +1646,9 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
             children: NodeSeq(mut children),
             src: _,
             // TODO(optimization): Avoid this clone().
-        })) if possiblyNegatedZeroQ(children[1].clone()) => negate(children.remove(1), data),
+        })) if possiblyNegatedZeroQ(children[1].clone()) => {
+            negate(children.remove(1), data)
+        },
         // negate[node_?parenthesizedIntegerOrRealQ, data_] :=
         //   negate[node[[2, 2]], data]
         node if parenthesizedIntegerOrRealQ(&node) => {
@@ -1608,7 +1704,10 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 //======================================
 
-fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node<I, S> {
+fn reciprocate<I: TokenInput, S: TokenSource>(
+    node: Node<I, S>,
+    data: S,
+) -> Node<I, S> {
     /*
         CallNode[
             ToNode[Power],
@@ -1646,7 +1745,10 @@ fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node
 //======================================
 
 /// Collect all of the `'` in `f'''[x]`
-fn derivativeOrderAndAbstractedBody<I: TokenInput + Debug, S: TokenSource + Debug>(
+fn derivativeOrderAndAbstractedBody<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
     node: Node<I, S>,
 ) -> (usize, AstNode) {
     match node {
@@ -1690,12 +1792,17 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
 
                 match (opData, rand.source().into_general()) {
                     (a, b) if a.is_unknown() || b.is_unknown() => S::unknown(),
-                    (Source::Span(opData), Source::Span(rand)) => S::from_span(Span {
-                        start: opData.start,
-                        end: rand.end,
-                    }),
-                    (Source::BoxPosition(_), _) | (_, Source::BoxPosition(_)) => {
-                        todo!("processPlusPair synthetic source of BoxPosition's")
+                    (Source::Span(opData), Source::Span(rand)) => {
+                        S::from_span(Span {
+                            start: opData.start,
+                            end: rand.end,
+                        })
+                    },
+                    (Source::BoxPosition(_), _)
+                    | (_, Source::BoxPosition(_)) => {
+                        todo!(
+                            "processPlusPair synthetic source of BoxPosition's"
+                        )
                     },
                     (Source::After(_), _) | (_, Source::After(_)) => {
                         todo!("processPlusPair synthetic source of After's")
@@ -1756,7 +1863,8 @@ fn abstractPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
         children.into_iter().map(flattenPrefixPlus)
     };
 
-    let processed = flattened.map(|node| processInfixBinaryAtQuirk(node, "Plus"));
+    let processed =
+        flattened.map(|node| processInfixBinaryAtQuirk(node, "Plus"));
 
     let children = processed.map(abstract_).collect();
 
@@ -1902,10 +2010,13 @@ fn abstractTimes_BinaryNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     [left, right]: [Node<I, S>; 2],
     data: S,
 ) -> AstNode {
-    let children = flattenTimes(vec![left, reciprocate(right, data.clone())], data.clone())
-        .into_iter()
-        .map(abstract_)
-        .collect();
+    let children = flattenTimes(
+        vec![left, reciprocate(right, data.clone())],
+        data.clone(),
+    )
+    .into_iter()
+    .map(abstract_)
+    .collect();
 
     WL!( CallNode[ToNode[Times], children, data] )
 }
@@ -2063,22 +2174,33 @@ fn simplifyInfixInequality<S: TokenSource>(
     // let rators = part_span_even_children(part_span_drop_first_and_last(processed), None);
     // let rands = part_span_even_children(processed, None);
 
-    let rators: Vec<Symbol> = processed.1.iter().map(|(rator, _)| *rator).collect();
+    let rators: Vec<Symbol> =
+        processed.1.iter().map(|(rator, _)| *rator).collect();
     // TODO(optimization): Refactor to remove clone()'s
     let rands: Vec<AstNode> = std::iter::once(processed.0.clone())
         .chain(processed.1.clone().into_iter().map(|(_, rand)| rand))
         .collect();
 
-    let all_rators = |needle: Symbol| -> bool { rators.iter().all(|rator| *rator == needle) };
+    let all_rators = |needle: Symbol| -> bool {
+        rators.iter().all(|rator| *rator == needle)
+    };
 
     //
     // Try simple cases of all the same operator first
     //
     match rators {
-        _ if all_rators(sym::Equal) => WL!(CallNode[ToNode_Symbol(sym::Equal), rands, data]),
-        _ if all_rators(sym::Unequal) => WL!(CallNode[ToNode_Symbol(sym::Unequal), rands, data]),
-        _ if all_rators(sym::Greater) => WL!(CallNode[ToNode_Symbol(sym::Greater), rands, data]),
-        _ if all_rators(sym::Less) => WL!(CallNode[ToNode_Symbol(sym::Less), rands, data]),
+        _ if all_rators(sym::Equal) => {
+            WL!(CallNode[ToNode_Symbol(sym::Equal), rands, data])
+        },
+        _ if all_rators(sym::Unequal) => {
+            WL!(CallNode[ToNode_Symbol(sym::Unequal), rands, data])
+        },
+        _ if all_rators(sym::Greater) => {
+            WL!(CallNode[ToNode_Symbol(sym::Greater), rands, data])
+        },
+        _ if all_rators(sym::Less) => {
+            WL!(CallNode[ToNode_Symbol(sym::Less), rands, data])
+        },
         _ if all_rators(sym::GreaterEqual) => {
             WL!(CallNode[ToNode_Symbol(sym::GreaterEqual), rands, data])
         },
@@ -2109,7 +2231,9 @@ fn simplifyInfixInequality<S: TokenSource>(
         _ if all_rators(sym::LessGreater) => {
             WL!(CallNode[ToNode_Symbol(sym::LessGreater), rands, data])
         },
-        _ if all_rators(sym::LessLess) => WL!(CallNode[ToNode_Symbol(sym::LessLess), rands, data]),
+        _ if all_rators(sym::LessLess) => {
+            WL!(CallNode[ToNode_Symbol(sym::LessLess), rands, data])
+        },
         _ if all_rators(sym::LessTilde) => {
             WL!(CallNode[ToNode_Symbol(sym::LessTilde), rands, data])
         },
@@ -2140,7 +2264,9 @@ fn simplifyInfixInequality<S: TokenSource>(
         _ if all_rators(sym::NotGreaterTilde) => {
             WL!(CallNode[ToNode_Symbol(sym::NotGreaterTilde), rands, data])
         },
-        _ if all_rators(sym::NotLess) => WL!(CallNode[ToNode_Symbol(sym::NotLess), rands, data]),
+        _ if all_rators(sym::NotLess) => {
+            WL!(CallNode[ToNode_Symbol(sym::NotLess), rands, data])
+        },
         _ if all_rators(sym::NotLessEqual) => {
             WL!(CallNode[ToNode_Symbol(sym::NotLessEqual), rands, data])
         },
@@ -2319,9 +2445,10 @@ fn vectorInequalityAffinity(op: Symbol) -> Option<bool> {
         //
         // Definitely a VectorInequality
         //
-        sym::VectorLess | sym::VectorGreater | sym::VectorLessEqual | sym::VectorGreaterEqual => {
-            true
-        },
+        sym::VectorLess
+        | sym::VectorGreater
+        | sym::VectorLessEqual
+        | sym::VectorGreaterEqual => true,
 
         _ => panic!("vectorInequalityAffinity(): unrecognized symbol: {op:?}"),
     };
@@ -2352,7 +2479,11 @@ fn abstractInfixTilde<I: TokenInput + Debug, S: TokenSource + Debug>(
         [_, _, _] => {
             let [left, middle, right] = expect_children(NodeSeq(children));
 
-            abstractInfixTildeLeftAlreadyAbstracted(abstract_(left), vec![middle, right], data)
+            abstractInfixTildeLeftAlreadyAbstracted(
+                abstract_(left),
+                vec![middle, right],
+                data,
+            )
         },
         // abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_, right_, rest___}, dataIn_]] :=
         //     abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTilde[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
@@ -2369,11 +2500,16 @@ fn abstractInfixTilde<I: TokenInput + Debug, S: TokenSource + Debug>(
                 data,
             )
         },
-        _ => panic!("abstractInfixTilde: invalid number of children: {children:?}"),
+        _ => panic!(
+            "abstractInfixTilde: invalid number of children: {children:?}"
+        ),
     }
 }
 
-fn abstractInfixTildeLeftAlreadyAbstracted<I: TokenInput + Debug, S: TokenSource + Debug>(
+fn abstractInfixTildeLeftAlreadyAbstracted<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
     left: AstNode,
     rest: Vec<Node<I, S>>,
     data: S,
@@ -2415,7 +2551,11 @@ fn abstractInfixTildeLeftAlreadyAbstracted<I: TokenInput + Debug, S: TokenSource
 /// Removes all commas
 ///
 /// Fills in Nulls and gives SyntaxIssues for e.g. {1,,2}
-fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug, O: Operator>(
+fn abstractGroupNode<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+    O: Operator,
+>(
     group: GroupNode<I, S, O>,
 ) -> AstCall {
     let GroupNode(OperatorNode {
@@ -2454,7 +2594,11 @@ fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug, O: Operator>
     }
 }
 
-fn abstractGroupNode_GroupMissingCloserNode<I: TokenInput + Debug, S: TokenSource + Debug, O>(
+fn abstractGroupNode_GroupMissingCloserNode<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+    O,
+>(
     group: GroupMissingCloserNode<I, S, O>,
 ) -> (O, Vec<AstNode>, AstMetadata) {
     let GroupMissingCloserNode(OperatorNode {
@@ -2475,7 +2619,10 @@ fn abstractGroupNode_GroupMissingCloserNode<I: TokenInput + Debug, S: TokenSourc
     (op, abstractedChildren, AstMetadata::from_src(data))
 }
 
-fn abstractGroupNode_GroupMissingOpenerNode<I: TokenInput + Debug, S: TokenSource + Debug>(
+fn abstractGroupNode_GroupMissingOpenerNode<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
     group: GroupMissingOpenerNode<I, S>,
 ) -> AstNode {
     let GroupMissingOpenerNode(OperatorNode {
@@ -2634,7 +2781,10 @@ fn abstract_box_node<I: TokenInput + Debug, S: TokenSource + Debug>(
 // FIXME: when things like SuperscriptBox[] -> Power[] and
 //        FractionBox[] -> Divide, then also do
 //        SubscriptBox[..., [[]] ] -> Part
-fn try_subscript_box_part_special_cases<I: TokenInput + Debug, S: TokenSource + Debug>(
+fn try_subscript_box_part_special_cases<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
     box_node: BoxNode<I, S>,
 ) -> Result<AstNode, BoxNode<I, S>> {
     /* Original WL pattern:
@@ -2797,7 +2947,10 @@ fn try_subscript_box_part_special_cases<I: TokenInput + Debug, S: TokenSource + 
 //        SuperscriptBox[..., TagBox[(), Derivative] ] -> Derivative
 //
 // FIXME: maybe first arg of TagBox should be treated as a CodeNode and not parsed at all
-fn try_superscript_box_derivative_special_case<I: TokenInput + Debug, S: TokenSource + Debug>(
+fn try_superscript_box_derivative_special_case<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
     box_node: BoxNode<I, S>,
 ) -> Result<AstNode, BoxNode<I, S>> {
     /* Original WL pattern that the nested Rust match/if let statements below
@@ -2866,9 +3019,13 @@ fn try_superscript_box_derivative_special_case<I: TokenInput + Debug, S: TokenSo
                                 ref second,
                                 src: _,
                             },
-                        ) if first.try_as_symbol().map(wolfram_expr::Symbol::as_str)
+                        ) if first
+                            .try_as_symbol()
+                            .map(wolfram_expr::Symbol::as_str)
                             == Some("System`Evaluated")
-                            && second.try_as_symbol().map(wolfram_expr::Symbol::as_str)
+                            && second
+                                .try_as_symbol()
+                                .map(wolfram_expr::Symbol::as_str)
                                 == Some("System`Derivative") =>
                         {
                             let [o, b, c] = expect_children(children2);
@@ -2882,7 +3039,8 @@ fn try_superscript_box_derivative_special_case<I: TokenInput + Debug, S: TokenSo
                                 let c = abstract_(c);
 
                                 let t = {
-                                    let CodeNode { first, second, src } = t.clone();
+                                    let CodeNode { first, second, src } =
+                                        t.clone();
                                     CodeNode {
                                         first,
                                         second,
@@ -2972,7 +3130,9 @@ fn is_expected_separator<I, S>(
 }
 
 /// `children[[2 ;; -2]]`
-fn part_span_drop_first_and_last<I, S>(mut children: Vec<Node<I, S>>) -> Vec<Node<I, S>> {
+fn part_span_drop_first_and_last<I, S>(
+    mut children: Vec<Node<I, S>>,
+) -> Vec<Node<I, S>> {
     children.remove(0);
     children.pop().unwrap();
     children

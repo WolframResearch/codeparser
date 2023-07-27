@@ -123,7 +123,10 @@ pub(crate) fn is_quirk_enabled(quirk: Quirk) -> bool {
     }
 }
 
-pub(crate) fn processInfixBinaryAtQuirk<I: TokenInput + Debug, S: TokenSource + Debug>(
+pub(crate) fn processInfixBinaryAtQuirk<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
     node: CstNode<I, S>,
     symName: &str,
 ) -> CstNode<I, S> {

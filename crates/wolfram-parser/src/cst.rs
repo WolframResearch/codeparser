@@ -85,11 +85,15 @@ pub struct OperatorNode<I = OwnedTokenInput, S = Span, O = InfixOperator> {
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, PrefixOperator>);
+pub struct PrefixNode<I = OwnedTokenInput, S = Span>(
+    pub OperatorNode<I, S, PrefixOperator>,
+);
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, BinaryOperator>);
+pub struct BinaryNode<I = OwnedTokenInput, S = Span>(
+    pub OperatorNode<I, S, BinaryOperator>,
+);
 
 /// `a + b + c`
 #[derive(Debug, Clone, PartialEq)]
@@ -97,11 +101,15 @@ pub struct InfixNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S>);
 
 /// `a /: b = c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct TernaryNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, TernaryOperator>);
+pub struct TernaryNode<I = OwnedTokenInput, S = Span>(
+    pub OperatorNode<I, S, TernaryOperator>,
+);
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PostfixNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, PostfixOperator>);
+pub struct PostfixNode<I = OwnedTokenInput, S = Span>(
+    pub OperatorNode<I, S, PostfixOperator>,
+);
 
 /// `\[Integral] f \[DifferentialD] x`
 #[derive(Debug, Clone, PartialEq)]
@@ -140,7 +148,9 @@ pub enum CallBody<I = OwnedTokenInput, S = Span> {
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(pub OperatorNode<I, S, O>);
+pub struct GroupNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(
+    pub OperatorNode<I, S, O>,
+);
 
 /// Any "compound" of tokens:
 ///
@@ -152,7 +162,9 @@ pub struct GroupNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(pub Opera
 /// * `##2`
 /// * `%2`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompoundNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S, CompoundOperator>);
+pub struct CompoundNode<I = OwnedTokenInput, S = Span>(
+    pub OperatorNode<I, S, CompoundOperator>,
+);
 
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
@@ -171,9 +183,11 @@ pub enum SyntaxErrorKind {
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(
-    pub OperatorNode<I, S, O>,
-);
+pub struct GroupMissingCloserNode<
+    I = OwnedTokenInput,
+    S = Span,
+    O = GroupOperator,
+>(pub OperatorNode<I, S, O>);
 
 /// Only possible with boxes
 #[derive(Debug, Clone, PartialEq)]
@@ -183,9 +197,10 @@ pub struct GroupMissingOpenerNode<I = OwnedTokenInput, S = Span>(
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput, S = Span>(
-    pub OperatorNode<I, S, GroupOperator>,
-);
+pub(crate) struct UnterminatedGroupNeedsReparseNode<
+    I = OwnedTokenInput,
+    S = Span,
+>(pub OperatorNode<I, S, GroupOperator>);
 
 /// Node representation of a token.
 ///
@@ -266,7 +281,10 @@ impl<I, S> CstNodeSeq<I, S> {
         }
     }
 
-    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
+    pub fn map_visit(
+        self,
+        visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>,
+    ) -> Self {
         let NodeSeq(elements) = self;
 
         let elements = elements
@@ -377,11 +395,15 @@ impl<I, S> Node<I, S> {
             Node::Postfix(PostfixNode(op)) => op.visit_children(visit),
             Node::Binary(BinaryNode(op)) => op.visit_children(visit),
             Node::Ternary(TernaryNode(op)) => op.visit_children(visit),
-            Node::PrefixBinary(PrefixBinaryNode(op)) => op.visit_children(visit),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => {
+                op.visit_children(visit)
+            },
             Node::Compound(CompoundNode(op)) => op.visit_children(visit),
             Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
-            | Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => op.visit_children(visit),
+            | Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                op.visit_children(visit)
+            },
             Node::Box(BoxNode {
                 kind: _,
                 children,
@@ -395,7 +417,10 @@ impl<I, S> Node<I, S> {
     }
 
     /// Transform this node tree by visiting this node and every child node, recursively.
-    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
+    pub fn map_visit(
+        self,
+        visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>,
+    ) -> Self {
         // Visit the current node.
         let self_ = visit(self);
 
@@ -405,7 +430,9 @@ impl<I, S> Node<I, S> {
             Node::Call(CallNode { head, body, src }) => {
                 let head = head.map_visit(visit);
 
-                let body = body.map_op(|body_op: OperatorNode<_, _, _>| body_op.map_visit(visit));
+                let body = body.map_op(|body_op: OperatorNode<_, _, _>| {
+                    body_op.map_visit(visit)
+                });
 
                 Node::Call(CallNode { head, body, src })
             },
@@ -415,21 +442,39 @@ impl<I, S> Node<I, S> {
                 Node::SyntaxError(SyntaxErrorNode { err, children, src })
             },
 
-            Node::Infix(InfixNode(op)) => Node::Infix(InfixNode(op.map_visit(visit))),
-            Node::Prefix(PrefixNode(op)) => Node::Prefix(PrefixNode(op.map_visit(visit))),
-            Node::Postfix(PostfixNode(op)) => Node::Postfix(PostfixNode(op.map_visit(visit))),
-            Node::Binary(BinaryNode(op)) => Node::Binary(BinaryNode(op.map_visit(visit))),
-            Node::Ternary(TernaryNode(op)) => Node::Ternary(TernaryNode(op.map_visit(visit))),
+            Node::Infix(InfixNode(op)) => {
+                Node::Infix(InfixNode(op.map_visit(visit)))
+            },
+            Node::Prefix(PrefixNode(op)) => {
+                Node::Prefix(PrefixNode(op.map_visit(visit)))
+            },
+            Node::Postfix(PostfixNode(op)) => {
+                Node::Postfix(PostfixNode(op.map_visit(visit)))
+            },
+            Node::Binary(BinaryNode(op)) => {
+                Node::Binary(BinaryNode(op.map_visit(visit)))
+            },
+            Node::Ternary(TernaryNode(op)) => {
+                Node::Ternary(TernaryNode(op.map_visit(visit)))
+            },
             Node::PrefixBinary(PrefixBinaryNode(op)) => {
                 Node::PrefixBinary(PrefixBinaryNode(op.map_visit(visit)))
             },
-            Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.map_visit(visit))),
-            Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.map_visit(visit))),
+            Node::Compound(CompoundNode(op)) => {
+                Node::Compound(CompoundNode(op.map_visit(visit)))
+            },
+            Node::Group(GroupNode(op)) => {
+                Node::Group(GroupNode(op.map_visit(visit)))
+            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
-                Node::GroupMissingCloser(GroupMissingCloserNode(op.map_visit(visit)))
+                Node::GroupMissingCloser(GroupMissingCloserNode(
+                    op.map_visit(visit),
+                ))
             },
             Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                Node::GroupMissingOpener(GroupMissingOpenerNode(op.map_visit(visit)))
+                Node::GroupMissingOpener(GroupMissingOpenerNode(
+                    op.map_visit(visit),
+                ))
             },
 
             Node::Box(BoxNode {
@@ -460,10 +505,12 @@ impl<I: TokenInput, S> Node<I, S> {
             Node::Token(token) => Node::Token(token.into_owned_input()),
             Node::Call(CallNode { head, body, src }) => Node::Call(CallNode {
                 head: match head {
-                    CallHead::Concrete(head) => CallHead::Concrete(head.into_owned_input()),
-                    CallHead::Aggregate(head) => {
-                        CallHead::Aggregate(Box::new((*head).into_owned_input()))
+                    CallHead::Concrete(head) => {
+                        CallHead::Concrete(head.into_owned_input())
                     },
+                    CallHead::Aggregate(head) => CallHead::Aggregate(Box::new(
+                        (*head).into_owned_input(),
+                    )),
                 },
                 body: body.map_op(|body_op| body_op.into_owned_input()),
                 src,
@@ -475,21 +522,39 @@ impl<I: TokenInput, S> Node<I, S> {
                     src,
                 })
             },
-            Node::Prefix(PrefixNode(op)) => Node::Prefix(PrefixNode(op.into_owned_input())),
-            Node::Infix(InfixNode(op)) => Node::Infix(InfixNode(op.into_owned_input())),
-            Node::Postfix(PostfixNode(op)) => Node::Postfix(PostfixNode(op.into_owned_input())),
-            Node::Binary(BinaryNode(op)) => Node::Binary(BinaryNode(op.into_owned_input())),
-            Node::Ternary(TernaryNode(op)) => Node::Ternary(TernaryNode(op.into_owned_input())),
+            Node::Prefix(PrefixNode(op)) => {
+                Node::Prefix(PrefixNode(op.into_owned_input()))
+            },
+            Node::Infix(InfixNode(op)) => {
+                Node::Infix(InfixNode(op.into_owned_input()))
+            },
+            Node::Postfix(PostfixNode(op)) => {
+                Node::Postfix(PostfixNode(op.into_owned_input()))
+            },
+            Node::Binary(BinaryNode(op)) => {
+                Node::Binary(BinaryNode(op.into_owned_input()))
+            },
+            Node::Ternary(TernaryNode(op)) => {
+                Node::Ternary(TernaryNode(op.into_owned_input()))
+            },
             Node::PrefixBinary(PrefixBinaryNode(op)) => {
                 Node::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
             },
-            Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.into_owned_input())),
-            Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.into_owned_input())),
+            Node::Compound(CompoundNode(op)) => {
+                Node::Compound(CompoundNode(op.into_owned_input()))
+            },
+            Node::Group(GroupNode(op)) => {
+                Node::Group(GroupNode(op.into_owned_input()))
+            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
-                Node::GroupMissingCloser(GroupMissingCloserNode(op.into_owned_input()))
+                Node::GroupMissingCloser(GroupMissingCloserNode(
+                    op.into_owned_input(),
+                ))
             },
             Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                Node::GroupMissingOpener(GroupMissingOpenerNode(op.into_owned_input()))
+                Node::GroupMissingOpener(GroupMissingOpenerNode(
+                    op.into_owned_input(),
+                ))
             },
             Node::Box(BoxNode {
                 kind,
@@ -525,8 +590,12 @@ impl<I, S: TokenSource> Node<I, S> {
             Node::Ternary(TernaryNode(op)) => op.getSource(),
             Node::Compound(CompoundNode(op)) => op.getSource(),
             Node::Group(GroupNode(op)) => op.getSource(),
-            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => op.getSource(),
-            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => op.getSource(),
+            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                op.getSource()
+            },
+            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                op.getSource()
+            },
             Node::Box(BoxNode { src, .. }) => src.clone(),
             Node::Code(node) => node.src.clone(),
         }
@@ -580,7 +649,10 @@ impl<I, O> OperatorNode<I, Span, O> {
     pub(crate) fn new(op: O, children: CstNodeSeq<I>) -> Self {
         assert!(!children.is_empty());
 
-        let src = Span::new_from_source(children.first().source(), children.last().source());
+        let src = Span::new_from_source(
+            children.first().source(),
+            children.last().source(),
+        );
 
         OperatorNode {
             op,
@@ -630,7 +702,10 @@ impl<I, S, O> OperatorNode<I, S, O> {
         children.visit(visit);
     }
 
-    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
+    pub fn map_visit(
+        self,
+        visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>,
+    ) -> Self {
         let OperatorNode { op, children, src } = self;
 
         let children = children.map_visit(visit);
@@ -753,7 +828,10 @@ impl<I> CallNode<I> {
 
         incr_diagnostic!(Node_CallNodeCount);
 
-        let src = Span::new_from_source(head.first().source(), body.as_op().getSource());
+        let src = Span::new_from_source(
+            head.first().source(),
+            body.as_op().getSource(),
+        );
 
         CallNode {
             head: CallHead::Concrete(head),
@@ -797,9 +875,14 @@ impl<I, S> CallHead<I, S> {
         }
     }
 
-    pub fn map_visit(self, visit: &mut dyn FnMut(CstNode<I, S>) -> CstNode<I, S>) -> Self {
+    pub fn map_visit(
+        self,
+        visit: &mut dyn FnMut(CstNode<I, S>) -> CstNode<I, S>,
+    ) -> Self {
         match self {
-            CallHead::Concrete(head) => CallHead::Concrete(head.map_visit(visit)),
+            CallHead::Concrete(head) => {
+                CallHead::Concrete(head.map_visit(visit))
+            },
             CallHead::Aggregate(head) => {
                 let head: CstNode<I, S> = *head;
                 CallHead::Aggregate(Box::new(head.map_visit(visit)))
@@ -825,10 +908,14 @@ impl<I, S> CallBody<I, S> {
 
     pub fn map_op<F, I2, S2>(self, func: F) -> CallBody<I2, S2>
     where
-        F: FnOnce(OperatorNode<I, S, CallOperator>) -> OperatorNode<I2, S2, CallOperator>,
+        F: FnOnce(
+            OperatorNode<I, S, CallOperator>,
+        ) -> OperatorNode<I2, S2, CallOperator>,
     {
         match self {
-            CallBody::Group(GroupNode(op)) => CallBody::Group(GroupNode(func(op))),
+            CallBody::Group(GroupNode(op)) => {
+                CallBody::Group(GroupNode(func(op)))
+            },
             CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 CallBody::GroupMissingCloser(GroupMissingCloserNode(func(op)))
             },
@@ -846,7 +933,10 @@ impl<I> SyntaxErrorNode<I> {
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);
 
-        let src = Span::new_from_source(children.first().source(), children.last().source());
+        let src = Span::new_from_source(
+            children.first().source(),
+            children.last().source(),
+        );
 
         SyntaxErrorNode { err, children, src }
     }
@@ -870,8 +960,9 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
 
 /// Subset of [`GroupOperator`] that are valid in [`CallBody`].
 pub use crate::generated::parselet_registration::{
-    BinaryOperator, CallOperator, CompoundOperator, GroupOperator, InfixOperator, PostfixOperator,
-    PrefixBinaryOperator, PrefixOperator, TernaryOperator,
+    BinaryOperator, CallOperator, CompoundOperator, GroupOperator,
+    InfixOperator, PostfixOperator, PrefixBinaryOperator, PrefixOperator,
+    TernaryOperator,
 };
 
 /// Marker denoting enums whose variants represent named operators, which
@@ -879,7 +970,8 @@ pub use crate::generated::parselet_registration::{
 pub trait Operator: Sized + 'static {
     fn to_symbol(&self) -> crate::symbol::Symbol;
 
-    fn try_from_symbol(symbol: wolfram_expr::symbol::SymbolRef) -> Option<Self>;
+    fn try_from_symbol(symbol: wolfram_expr::symbol::SymbolRef)
+        -> Option<Self>;
 }
 
 impl GroupOperator {
@@ -888,7 +980,9 @@ impl GroupOperator {
     //        refactoring of how the parser parsing of CallParselet works.
     pub(crate) fn try_to_call_operator(self) -> Option<CallOperator> {
         let op = match self {
-            GroupOperator::CodeParser_GroupSquare => CallOperator::CodeParser_GroupSquare,
+            GroupOperator::CodeParser_GroupSquare => {
+                CallOperator::CodeParser_GroupSquare
+            },
             GroupOperator::CodeParser_GroupTypeSpecifier => {
                 CallOperator::CodeParser_GroupTypeSpecifier
             },
