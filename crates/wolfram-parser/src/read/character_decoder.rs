@@ -41,6 +41,7 @@ type HandlerFunction = for<'i, 's> fn(
 ///
 /// However, the lookup table-based implementation performs ~10-15% better than
 /// the `match` statement version on some of the large benchmarks.
+#[rustfmt::skip]
 const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = {
     let mut table: [HandlerFunction; 128] = [|_, _, _| unimplemented!(); 128];
 
@@ -48,15 +49,15 @@ const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = {
     loop {
         table[i as usize] = match i {
             00..=31 => CharacterDecoder_handleUncommon,
-            32 => CharacterDecoder_handleUncommon,
-            33 => CharacterDecoder_handleUncommon,
-            34 => CharacterDecoder_handleStringMetaDoubleQuote,
+            32 => CharacterDecoder_handleUncommon,              // SPACE
+            33 => CharacterDecoder_handleUncommon,              // !
+            34 => CharacterDecoder_handleStringMetaDoubleQuote, // "
             35..=59 => CharacterDecoder_handleUncommon,
-            60 => CharacterDecoder_handleStringMetaOpen,
-            61 => CharacterDecoder_handleUncommon,
-            62 => CharacterDecoder_handleStringMetaClose,
+            60 => CharacterDecoder_handleStringMetaOpen,        // <
+            61 => CharacterDecoder_handleUncommon,              // =
+            62 => CharacterDecoder_handleStringMetaClose,       // >
             63..=91 => CharacterDecoder_handleUncommon,
-            92 => CharacterDecoder_handleStringMetaBackslash,
+            92 => CharacterDecoder_handleStringMetaBackslash,   // \
             93..=127 => CharacterDecoder_handleUncommon,
             // "invalid ASCII byte value: {i}"
             128..=255 => panic!(),
