@@ -156,34 +156,18 @@ impl Display for WLCharacter {
             EscapeStyle::Single => {
                 format_char(SourceCharacter::from('\\'))?;
 
-                let source_char: SourceCharacter = match i {
-                    CodePoint::StringMeta_Backspace => {
-                        SourceCharacter::from('b')
-                    },
-                    CodePoint::StringMeta_FormFeed => {
-                        SourceCharacter::from('f')
-                    },
-                    CodePoint::StringMeta_LineFeed => {
-                        SourceCharacter::from('n')
-                    },
-                    CodePoint::StringMeta_CarriageReturn => {
-                        SourceCharacter::from('r')
-                    },
-                    CodePoint::StringMeta_Tab => SourceCharacter::from('t'),
-                    CodePoint::StringMeta_Open => SourceCharacter::from('<'),
-                    CodePoint::StringMeta_Close => SourceCharacter::from('>'),
-                    CodePoint::StringMeta_DoubleQuote => {
-                        SourceCharacter::from('"')
-                    },
-                    CodePoint::StringMeta_Backslash => {
-                        SourceCharacter::from('\\')
-                    },
-                    CodePoint::LineContinuation_LineFeed => {
-                        SourceCharacter::from('\n')
-                    },
-                    CodePoint::LineContinuation_CarriageReturn => {
-                        SourceCharacter::from('\r')
-                    },
+                let source_char: char = match i {
+                    CodePoint::StringMeta_Backspace => 'b',
+                    CodePoint::StringMeta_FormFeed => 'f',
+                    CodePoint::StringMeta_LineFeed => 'n',
+                    CodePoint::StringMeta_CarriageReturn => 'r',
+                    CodePoint::StringMeta_Tab => 't',
+                    CodePoint::StringMeta_Open => '<',
+                    CodePoint::StringMeta_Close => '>',
+                    CodePoint::StringMeta_DoubleQuote => '"',
+                    CodePoint::StringMeta_Backslash => '\\',
+                    CodePoint::LineContinuation_LineFeed => '\n',
+                    CodePoint::LineContinuation_CarriageReturn => '\r',
                     CodePoint::LineContinuation_CRLF => {
                         if graphical_flag {
                             write!(s, "{:#}", SourceCharacter::from('\r'))?;
@@ -195,45 +179,23 @@ impl Display for WLCharacter {
 
                         return Ok(());
                     },
-                    Char(CODEPOINT_LINEARSYNTAX_BANG) => {
-                        SourceCharacter::from('!')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_PERCENT) => {
-                        SourceCharacter::from('%')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_AMP) => {
-                        SourceCharacter::from('&')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => {
-                        SourceCharacter::from('(')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => {
-                        SourceCharacter::from(')')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_STAR) => {
-                        SourceCharacter::from('*')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_PLUS) => {
-                        SourceCharacter::from('+')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_SLASH) => {
-                        SourceCharacter::from('/')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_AT) => {
-                        SourceCharacter::from('@')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_CARET) => {
-                        SourceCharacter::from('^')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_UNDER) => {
-                        SourceCharacter::from('_')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => {
-                        SourceCharacter::from('`')
-                    },
-                    CodePoint::LinearSyntax_Space => SourceCharacter::from(' '),
+                    Char(CODEPOINT_LINEARSYNTAX_BANG) => '!',
+                    Char(CODEPOINT_LINEARSYNTAX_PERCENT) => '%',
+                    Char(CODEPOINT_LINEARSYNTAX_AMP) => '&',
+                    Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => '(',
+                    Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => ')',
+                    Char(CODEPOINT_LINEARSYNTAX_STAR) => '*',
+                    Char(CODEPOINT_LINEARSYNTAX_PLUS) => '+',
+                    Char(CODEPOINT_LINEARSYNTAX_SLASH) => '/',
+                    Char(CODEPOINT_LINEARSYNTAX_AT) => '@',
+                    Char(CODEPOINT_LINEARSYNTAX_CARET) => '^',
+                    Char(CODEPOINT_LINEARSYNTAX_UNDER) => '_',
+                    Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => '`',
+                    CodePoint::LinearSyntax_Space => ' ',
                     _ => todo!(),
                 };
+
+                let source_char = SourceCharacter::from(source_char);
 
                 if graphical_flag {
                     return write!(s, "{:#}", source_char);
