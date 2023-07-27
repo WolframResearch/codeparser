@@ -1,7 +1,7 @@
 use crate::{
     macros::{src, token},
     source::{Location, NextPolicyBits::RETURN_TOPLEVELNEWLINE, TOPLEVEL},
-    ParseOptions, ParserSession,
+    ParseOptions, ParserSession, Tokens,
 };
 
 use pretty_assertions::assert_eq;
@@ -302,4 +302,14 @@ fn TokenizerTest_LineContinuation4() {
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
+}
+
+#[test]
+fn test_escaped_ascii_del() {
+    let Tokens(tokens) = crate::tokenize_bytes(&[b'\\', 127], &ParseOptions::default()).unwrap();
+
+    assert_eq!(
+        tokens.as_slice(),
+        [token![Error_UnhandledCharacter, [b'\\', 127] @ 0, src!(1:1-1:3)]]
+    );
 }
