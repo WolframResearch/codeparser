@@ -82,7 +82,6 @@ pub(crate) trait InfixParselet: Parselet {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum InfixParseletOperator {
-    Prefix(PrefixOperator),
     Infix(InfixOperator),
     Postfix(PostfixOperator),
     Binary(BinaryOperator),
@@ -94,39 +93,9 @@ impl From<InfixOperator> for InfixParseletOperator {
     }
 }
 
-impl From<PrefixOperator> for InfixParseletOperator {
-    fn from(op: PrefixOperator) -> Self {
-        Self::Prefix(op)
-    }
-}
-
 impl From<BinaryOperator> for InfixParseletOperator {
     fn from(op: BinaryOperator) -> Self {
         Self::Binary(op)
-    }
-}
-
-impl InfixParseletOperator {
-    fn unwrap_op(self) -> InfixOperator {
-        match self {
-            InfixParseletOperator::Infix(op) => op,
-            InfixParseletOperator::Prefix(_)
-            | InfixParseletOperator::Postfix(_)
-            | InfixParseletOperator::Binary(_) => {
-                panic!("expected Infix operator, got: {self:?}")
-            },
-        }
-    }
-
-    fn unwrap_postfix_op(self) -> PostfixOperator {
-        match self {
-            InfixParseletOperator::Prefix(_)
-            | InfixParseletOperator::Infix(_)
-            | InfixParseletOperator::Binary(_) => {
-                panic!("expected Postfix operator, got: {self:?}")
-            },
-            InfixParseletOperator::Postfix(op) => op,
-        }
     }
 }
 
@@ -857,10 +826,6 @@ impl PrefixOperatorParselet {
     fn getPrecedence(&self) -> Option<Precedence> {
         return Some(self.precedence);
     }
-
-    fn getOp(&self) -> PrefixOperator {
-        self.Op
-    }
 }
 
 impl PrefixParselet for PrefixOperatorParselet {
@@ -894,7 +859,7 @@ impl PrefixOperatorParselet {
             .downcast_ref::<PrefixOperatorParselet>()
             .expect("unable to downcast to PrefixOperatorParselet");
 
-        session.reduce_and_climb(|ctx| PrefixNode::new(P.getOp(), ctx))
+        session.reduce_and_climb(|ctx| PrefixNode::new(P.Op, ctx))
     }
 }
 
@@ -1104,8 +1069,6 @@ impl InfixOperatorParselet {
 
             let I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
-            let Op = self.getOp();
-
             //
             // Cannot just compare tokens
             //
@@ -1119,7 +1082,7 @@ impl InfixOperatorParselet {
             //
             // then just compare parselets directly here
             //
-            if I.getOp() != Op {
+            if I.getOp() != self.getOp() {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //
@@ -1155,7 +1118,7 @@ impl InfixOperatorParselet {
     }
 
     fn reduce_infix_operator(&self, session: &mut ParserSession) {
-        let Op = self.getOp().unwrap_op();
+        let Op = self.Op;
 
         session.reduce_and_climb(|ctx| InfixNode::new(Op, ctx))
     }
@@ -1200,9 +1163,7 @@ impl InfixParselet for PostfixOperatorParselet {
 
 impl PostfixOperatorParselet {
     fn reduce_postfix_operator(&self, session: &mut ParserSession) {
-        let Op = self.getOp().unwrap_postfix_op();
-
-        session.reduce_and_climb(|ctx| PostfixNode::new(Op, ctx))
+        session.reduce_and_climb(|ctx| PostfixNode::new(self.Op, ctx))
     }
 }
 
@@ -1216,10 +1177,6 @@ impl GroupParselet {
             Op,
             closer: GroupOpenerToCloser(Opener),
         }
-    }
-
-    fn getOp(&self) -> GroupOperator {
-        self.Op
     }
 
     fn getCloser(&self) -> Closer {
@@ -1367,7 +1324,7 @@ impl GroupParselet {
     }
 
     fn reduce_group(&self, session: &mut ParserSession) {
-        let op = self.getOp();
+        let op = self.Op;
 
         session.pop_group();
 
@@ -1375,7 +1332,7 @@ impl GroupParselet {
     }
 
     fn reduce_missing_closer(&self, session: &mut ParserSession) {
-        let op = self.getOp();
+        let op = self.Op;
 
         session.pop_group();
 
@@ -1386,7 +1343,7 @@ impl GroupParselet {
     }
 
     fn reduce_unterminated_group(&self, session: &mut ParserSession) {
-        let op = self.getOp();
+        let op = self.Op;
 
         // The input MUST be valid UTF-8, because we only reduce an *unterminated*
         // group node if we've read an EOF (which is how we know it must be

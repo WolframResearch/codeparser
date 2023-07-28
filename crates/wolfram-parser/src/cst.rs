@@ -663,10 +663,6 @@ impl<I, O> OperatorNode<I, Span, O> {
 }
 
 impl<I, S, O: Copy> OperatorNode<I, S, O> {
-    pub fn getOp(&self) -> O {
-        return self.op;
-    }
-
     pub(crate) fn check(&self) -> bool {
         return self.children.check();
     }
