@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    source::{Buffer, BufferAndLength, ByteSpan, Source, Span},
+    source::{Buffer, BufferAndLength, Source, Span},
     tokenize::{TokenKind, Tokenizer},
 };
 
@@ -91,8 +91,6 @@ impl<'i> TokenInput for BorrowedTokenInput<'i> {
             buf: BufferAndLength {
                 buf: Buffer {
                     slice: input.as_bytes(),
-                    // FIXME: Fake offset okay? Use usize::MAX instead?
-                    offset: 0,
                 },
             },
         }
@@ -144,22 +142,16 @@ pub struct OwnedTokenInput {
 
 impl<'i> BorrowedTokenInput<'i> {
     #[doc(hidden)]
-    pub fn new(slice: &'i [u8], offset: usize) -> Self {
+    pub fn new(slice: &'i [u8]) -> Self {
         BorrowedTokenInput {
             buf: BufferAndLength {
-                buf: Buffer { slice, offset },
+                buf: Buffer { slice },
             },
         }
     }
 
     pub(crate) fn from_buf(buf: BufferAndLength<'i>) -> Self {
         BorrowedTokenInput { buf: buf }
-    }
-
-    pub(crate) fn byte_span(&self) -> ByteSpan {
-        let BorrowedTokenInput { buf } = self;
-
-        buf.byte_span()
     }
 
     fn into_empty(self) -> Self {
@@ -177,14 +169,14 @@ impl<'i> BorrowedTokenInput<'i> {
 //
 // TODO(optimize): In the C++ version (which used bitfields to pack the `len` to
 //                 48 bits), this was 32 bytes.
-const _: () = assert!(std::mem::size_of::<TokenRef>() == 48);
-const _: () = assert!(std::mem::size_of::<BorrowedTokenInput>() == 24);
+const _: () = assert!(std::mem::size_of::<TokenRef>() == 40);
+const _: () = assert!(std::mem::size_of::<BorrowedTokenInput>() == 16);
 
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn test_token_size() {
-    assert_eq!(std::mem::size_of::<TokenRef>(), 48);
-    assert_eq!(std::mem::size_of::<BorrowedTokenInput>(), 24);
+    assert_eq!(std::mem::size_of::<TokenRef>(), 40);
+    assert_eq!(std::mem::size_of::<BorrowedTokenInput>(), 16);
 }
 
 impl<'i> TokenRef<'i> {
@@ -335,22 +327,21 @@ impl<I: TokenInput, S> Token<I, S> {
 }
 
 impl<'i> TokenRef<'i> {
-    fn end(&self) -> usize {
-        return self.input.byte_span().end();
-    }
-
     pub(crate) fn reset(&self, session: &mut Tokenizer) {
         //
         //
         // Just need to reset the global buffer to the buffer of the token
         //
 
-        session.offset = self.input.byte_span().offset;
+        session.offset = session.offset_of(self.input.buf.buf);
         session.SrcLoc = self.src.start;
     }
 
     pub(crate) fn skip(&self, session: &mut Tokenizer) {
-        session.offset = self.end();
+        let end = session.offset_of(self.input.buf.buf)
+            + self.input.buf.buf.slice.len();
+
+        session.offset = end;
         session.wasEOF = self.tok == TokenKind::EndOfFile;
         session.SrcLoc = self.src.end;
     }

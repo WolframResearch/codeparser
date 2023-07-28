@@ -76,44 +76,52 @@ fn concrete_exprs_character_index(
     nodes
 }
 
+#[test]
+fn test_1p2() {
+    assert_eq!(
+        tokens("1+2"),
+        vec![
+            token![Integer, "1", src!(1:1-1:2)],
+            token![Plus, "+", src!(1:2-1:3)],
+            token![Integer, "2", src!(1:3-1:4)],
+        ]
+    );
+}
 
 #[test]
 fn test_something() {
-    assert_eq!(
-        tokens("123"),
-        vec![token![Integer, "123" @ 0, src!(1:1-1:4)]]
-    );
+    assert_eq!(tokens("123"), vec![token![Integer, "123", src!(1:1-1:4)]]);
 
     assert_eq!(
         nodes("foo"),
-        vec![NVToken(token![Symbol, "foo" @ 0, src!(1:1-1:4)])]
+        vec![NVToken(token![Symbol, "foo", src!(1:1-1:4)])]
     );
 
     assert_eq!(
         tokens("a+b"),
         vec![
-            token![Symbol, "a" @ 0, src!(1:1-1:2)],
-            token![Plus, "+" @ 1, src!(1:2-1:3)],
-            token![Symbol, "b" @ 2, src!(1:3-1:4)],
+            token![Symbol, "a", src!(1:1-1:2)],
+            token![Plus, "+", src!(1:2-1:3)],
+            token![Symbol, "b", src!(1:3-1:4)],
         ]
     );
 
     assert_eq!(
         tokens("!a"),
         vec![
-            token![Bang, "!" @ 0, src!(1:1-1:2)],
-            token![Symbol, "a" @ 1, src!(1:2-1:3)]
+            token![Bang, "!", src!(1:1-1:2)],
+            token![Symbol, "a", src!(1:2-1:3)]
         ]
     );
 
     assert_eq!(
         tokens("2 + 2"),
         vec![
-            token![Integer, "2" @ 0, src!(1:1-1:2)],
-            token![Whitespace, " " @ 1, src!(1:2-1:3)],
-            token![Plus, "+" @ 2, src!(1:3-1:4)],
-            token![Whitespace, " " @ 3, src!(1:4-1:5)],
-            token![Integer, "2" @ 4, src!(1:5-1:6)],
+            token![Integer, "2", src!(1:1-1:2)],
+            token![Whitespace, " ", src!(1:2-1:3)],
+            token![Plus, "+", src!(1:3-1:4)],
+            token![Whitespace, " ", src!(1:4-1:5)],
+            token![Integer, "2", src!(1:5-1:6)],
         ]
     );
 
@@ -122,11 +130,11 @@ fn test_something() {
         vec![Node::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
-                NVToken(token![Integer, "2" @ 0, src!(1:1-1:2)]),
-                NVToken(token![Whitespace, " " @ 1, src!(1:2-1:3)]),
-                NVToken(token![Plus, "+" @ 2, src!(1:3-1:4)]),
-                NVToken(token![Whitespace, " " @ 3, src!(1:4-1:5)]),
-                NVToken(token![Integer, "2" @ 4, src!(1:5-1:6)]),
+                NVToken(token![Integer, "2", src!(1:1-1:2)]),
+                NVToken(token![Whitespace, " ", src!(1:2-1:3)]),
+                NVToken(token![Plus, "+", src!(1:3-1:4)]),
+                NVToken(token![Whitespace, " ", src!(1:4-1:5)]),
+                NVToken(token![Integer, "2", src!(1:5-1:6)]),
             ],),
             src: src!(1:1-1:6).into(),
         }))]
@@ -137,15 +145,15 @@ fn test_something() {
         vec![Node::Call(CallNode {
             head: CallHead::Concrete(NodeSeq(vec![Node::Token(token![
                 Symbol,
-                "f" @ 0,
+                "f",
                 src!(1:1-1:2)
             ])])),
             body: CallBody::Group(GroupNode(OperatorNode {
                 op: CallOperator::CodeParser_GroupSquare,
                 children: NodeSeq(vec![
-                    NVToken(token![OpenSquare, "[" @ 1, src!(1:2-1:3)]),
-                    NVToken(token![Symbol, "x" @ 2, src!(1:3-1:4)]),
-                    NVToken(token![CloseSquare, "]" @ 3, src!(1:4-1:5)]),
+                    NVToken(token![OpenSquare, "[", src!(1:2-1:3)]),
+                    NVToken(token![Symbol, "x", src!(1:3-1:4)]),
+                    NVToken(token![CloseSquare, "]", src!(1:4-1:5)]),
                 ]),
                 src: src!(1:2-1:5).into(),
             })),
@@ -165,9 +173,9 @@ pub fn test_tokenize_is_not_idempotent() {
     assert_eq!(
         session.tokenize().unwrap().0,
         vec![
-            token![Integer, "2" @ 0, src!(1-2)],
-            token![Plus, "+" @ 1, src!(2-3)],
-            token![Integer, "2" @ 2, src!(3-4)]
+            token![Integer, "2", src!(1 - 2)],
+            token![Plus, "+", src!(2 - 3)],
+            token![Integer, "2", src!(3 - 4)]
         ]
     );
 
@@ -185,9 +193,9 @@ fn test_character_index_source() {
         &[Node::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
-                NVToken(token![Integer, "2" @ 0, src!(1..2)]),
-                NVToken(token![Plus, "+" @ 1, src!(2..3)]),
-                NVToken(token![Integer, "2" @ 2, src!(3..4)])
+                NVToken(token![Integer, "2", src!(1..2)]),
+                NVToken(token![Plus, "+", src!(2..3)]),
+                NVToken(token![Integer, "2", src!(3..4)])
             ]),
             src: src!(1 - 4).into(),
         }))]
@@ -203,7 +211,7 @@ fn test_unterminated_group_reparse() {
                 op: GroupOperator::List,
                 children: NodeSeq(vec![Node::Token(token![
                     OpenCurly,
-                    [123] @ 0,
+                    [123],
                     src!(1:1-1:2)
                 ])]),
                 src: src!(1:1-1:2).into(),
@@ -217,7 +225,7 @@ fn test_unterminated_group_reparse() {
         concrete_exprs("\"\n", ParseOptions::default()),
         &[Node::Token(token![
             Error_UnterminatedString,
-            "\"" @ 0,
+            "\"",
             src!(1:1-1:2)
         ])]
     );
@@ -227,7 +235,7 @@ fn test_unterminated_group_reparse() {
         concrete_exprs_character_index("\"\n"),
         &[NVToken(token![
             Error_UnterminatedString,
-            "\"\n" @ 0,
+            "\"\n",
             src!(1..3)
         ])]
     );
@@ -241,15 +249,11 @@ fn test_unterminated_group_reparse() {
             OperatorNode {
                 op: GroupOperator::Association,
                 children: NodeSeq(vec![
-                    NVToken(token![LessBar, "<|" @ 0, src!(1:1-1:3)]),
-                    NVToken(token![Whitespace, "\t" @ 2, src!(1:3-1:4)]),
-                    NVToken(
-                        token![Error_ExpectedOperand, "" @ 3, src!(1:4-1:4)]
-                    ),
-                    NVToken(token![Question, "?" @ 3, src!(1:4-1:5)]),
-                    NVToken(
-                        token![Error_ExpectedOperand, "" @ 4, src!(1:5-1:5)]
-                    ),
+                    NVToken(token![LessBar, "<|", src!(1:1-1:3)]),
+                    NVToken(token![Whitespace, "\t", src!(1:3-1:4)]),
+                    NVToken(token![Error_ExpectedOperand, "", src!(1:4-1:4)]),
+                    NVToken(token![Question, "?", src!(1:4-1:5)]),
+                    NVToken(token![Error_ExpectedOperand, "", src!(1:5-1:5)]),
                 ]),
                 src: src!(1:1-1:5).into(),
             }
@@ -266,15 +270,11 @@ fn test_unterminated_group_reparse() {
             OperatorNode {
                 op: GroupOperator::Association,
                 children: NodeSeq(vec![
-                    NVToken(token![LessBar, "<|" @ 0, src!(1:1-1:3)]),
-                    NVToken(token![Whitespace, "\t" @ 2, src!(1:3-1:5)]),
-                    NVToken(
-                        token![Error_ExpectedOperand, "" @ 3, src!(1:5-1:5)]
-                    ),
-                    NVToken(token![Question, "?" @ 3, src!(1:5-1:6)]),
-                    NVToken(
-                        token![Error_ExpectedOperand, "" @ 4, src!(1:6-1:6)]
-                    )
+                    NVToken(token![LessBar, "<|", src!(1:1-1:3)]),
+                    NVToken(token![Whitespace, "\t", src!(1:3-1:5)]),
+                    NVToken(token![Error_ExpectedOperand, "", src!(1:5-1:5)]),
+                    NVToken(token![Question, "?", src!(1:5-1:6)]),
+                    NVToken(token![Error_ExpectedOperand, "", src!(1:6-1:6)])
                 ]),
                 src: src!(1:1-1:6).into()
             }
@@ -301,16 +301,18 @@ fn test_invalid_utf8_in_middle_of_parse() {
                 CstNode::Infix(InfixNode(OperatorNode {
                     op: InfixOperator::Plus,
                     children: NodeSeq(vec![
-                        NVToken(token![Integer, "1" @ 0, src!(1:1-1:2)]),
-                        NVToken(token![Plus, "+" @ 1, src!(1:2-1:3)]),
-                        NVToken(
-                            token![Error_UnsafeCharacterEncoding, [0xE2, 0x9A] @ 2, src!(1:3-1:4)]
-                        )
+                        NVToken(token![Integer, "1", src!(1:1-1:2)]),
+                        NVToken(token![Plus, "+", src!(1:2-1:3)]),
+                        NVToken(token![
+                            Error_UnsafeCharacterEncoding,
+                            [0xE2, 0x9A],
+                            src!(1:3-1:4)
+                        ])
                     ]),
                     src: src!(1:1-1:4).into()
                 })),
-                NVToken(token!(Fake_ImplicitTimes, "" @ 4, src!(1:4-1:4))),
-                NVToken(token!(Integer, "1" @ 4, src!(1:4-1:5)))
+                NVToken(token!(Fake_ImplicitTimes, "", src!(1:4-1:4))),
+                NVToken(token!(Integer, "1", src!(1:4-1:5)))
             ]),
             src: src!(1:1-1:5).into()
         }))]
@@ -327,9 +329,9 @@ fn test_first_line_behavior() {
                 .first_line_behavior(FirstLineBehavior::Check)
         ),
         Tokens(vec![
-            token![Integer, "1" @ 0, src!(1:1-1:2)],
-            token![Plus, "+" @ 1, src!(1:2-1:3)],
-            token![Integer, "2" @ 2, src!(1:3-1:4)],
+            token![Integer, "1", src!(1:1-1:2)],
+            token![Plus, "+", src!(1:2-1:3)],
+            token![Integer, "2", src!(1:3-1:4)],
         ])
     );
 
@@ -342,9 +344,9 @@ fn test_first_line_behavior() {
                 .first_line_behavior(FirstLineBehavior::Check)
         ),
         Tokens(vec![
-            token![Integer, "1" @ 21, src!(2:1-2:2)],
-            token![Plus, "+" @ 22, src!(2:2-2:3)],
-            token![Integer, "2" @ 23, src!(2:3-2:4)],
+            token![Integer, "1", src!(2:1-2:2)],
+            token![Plus, "+", src!(2:2-2:3)],
+            token![Integer, "2", src!(2:3-2:4)],
         ])
     );
 }

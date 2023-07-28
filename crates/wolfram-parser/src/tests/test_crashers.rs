@@ -14,13 +14,13 @@ fn CrashTest_Crash0_tokens() {
 
     let mut tok = session.tokenizer.peek_token();
 
-    assert_eq!(tok, token!(Integer, "1" @ 0, src!(1:1-1:2)));
+    assert_eq!(tok, token!(Integer, "1", src!(1:1-1:2)));
 
     let _ = session.tokenizer.next_token();
 
     tok = session.tokenizer.peek_token();
 
-    assert_eq!(tok, token!(EndOfFile, "\\\n" @ 1, src!(1:2-2:1)));
+    assert_eq!(tok, token!(EndOfFile, "\\\n", src!(1:2-2:1)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

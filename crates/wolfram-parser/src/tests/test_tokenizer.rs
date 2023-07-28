@@ -85,19 +85,19 @@ fn TokenizerTest_IntegerRealMixup() {
 
     let Tok1 = session.tokenizer.peek_token();
 
-    assert_eq!(Tok1, token!(Integer, "0" @ 0, src!(1:1-1:2)));
+    assert_eq!(Tok1, token!(Integer, "0", src!(1:1-1:2)));
 
     Tok1.skip(&mut session.tokenizer);
 
     let Tok2 = session.tokenizer.peek_token();
 
-    assert_eq!(Tok2, token!(DotDot, ".." @ 1, src!(1:2-1:4)));
+    assert_eq!(Tok2, token!(DotDot, "..", src!(1:2-1:4)));
 
     Tok2.skip(&mut session.tokenizer);
 
     let Tok3 = session.tokenizer.peek_token();
 
-    assert_eq!(Tok3, token!(EndOfFile, "" @ 3, src!(1:4-1:4)));
+    assert_eq!(Tok3, token!(EndOfFile, "", src!(1:4-1:4)));
 
     assert_eq!(session.nonFatalIssues().len(), 1);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -112,25 +112,25 @@ fn TokenizerTest_Basic2() {
 
     let Tok1 = session.tokenizer.peek_token();
 
-    assert_eq!(Tok1, token!(Symbol, "\\[Alpha]bc" @ 0, src!(1:1-1:11)));
+    assert_eq!(Tok1, token!(Symbol, "\\[Alpha]bc", src!(1:1-1:11)));
 
     Tok1.skip(&mut session.tokenizer);
 
     let Tok2 = session.tokenizer.peek_token();
 
-    assert_eq!(Tok2, token!(Plus, "+" @ 10, src!(1:11-1:12)));
+    assert_eq!(Tok2, token!(Plus, "+", src!(1:11-1:12)));
 
     Tok2.skip(&mut session.tokenizer);
 
     let Tok3 = session.tokenizer.peek_token();
 
-    assert_eq!(Tok3, token!(Integer, "1" @ 11, src!(1:12-1:13)));
+    assert_eq!(Tok3, token!(Integer, "1", src!(1:12-1:13)));
 
     Tok3.skip(&mut session.tokenizer);
 
     let Tok4 = session.tokenizer.peek_token();
 
-    assert_eq!(Tok4, token!(EndOfFile, "" @ 12, src!(1:13-1:13)));
+    assert_eq!(Tok4, token!(EndOfFile, "", src!(1:13-1:13)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -145,7 +145,7 @@ fn TokenizerTest_OldAssert1() {
 
     let Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(Integer, "8" @ 0, src!(1:1-1:2)));
+    assert_eq!(Tok, token!(Integer, "8", src!(1:1-1:2)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -160,7 +160,7 @@ fn TokenizerTest_Basic3() {
 
     let mut Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(OpenCurly, "{" @ 0, src!(1:1-1:2)));
+    assert_eq!(Tok, token!(OpenCurly, "{", src!(1:1-1:2)));
 
     Tok.skip(&mut session.tokenizer);
 
@@ -171,13 +171,13 @@ fn TokenizerTest_Basic3() {
         .tokenizer
         .peek_token_with(TOPLEVEL & !(RETURN_TOPLEVELNEWLINE));
 
-    assert_eq!(Tok, token!(InternalNewline, "\n" @ 1, src!(1:2-2:1)));
+    assert_eq!(Tok, token!(InternalNewline, "\n", src!(1:2-2:1)));
 
     Tok.skip(&mut session.tokenizer);
 
     Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(CloseCurly, "}" @ 2, src!(2:1-2:2)));
+    assert_eq!(Tok, token!(CloseCurly, "}", src!(2:1-2:2)));
 
     Tok.skip(&mut session.tokenizer);
 
@@ -199,7 +199,7 @@ fn TokenizerTest_Basic4() {
 
     assert_eq!(
         Tok,
-        token!(Error_UnsafeCharacterEncoding, [0xff] @ 0, src!(1:1-1:2))
+        token!(Error_UnsafeCharacterEncoding, [0xff], src!(1:1-1:2))
     );
 
     assert_eq!(session.tokenizer.SrcLoc, Location::new(1, 1));
@@ -210,7 +210,7 @@ fn TokenizerTest_Basic4() {
 
     Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(EndOfFile, "" @ 1, src!(1:2-1:2)));
+    assert_eq!(Tok, token!(EndOfFile, "", src!(1:2-1:2)));
 
     Tok.skip(&mut session.tokenizer);
 
@@ -243,13 +243,13 @@ fn TokenizerTest_LineContinuation1() {
 
     let mut Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(Symbol, "ab\\\ncd" @ 0, src!(1:1-2:3)));
+    assert_eq!(Tok, token!(Symbol, "ab\\\ncd", src!(1:1-2:3)));
 
     let _ = session.tokenizer.next_token();
 
     Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(EndOfFile, "" @ 6, src!(2:3-2:3)));
+    assert_eq!(Tok, token!(EndOfFile, "", src!(2:3-2:3)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -264,13 +264,13 @@ fn TokenizerTest_LineContinuation2() {
 
     let mut Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(Symbol, "ab\\\r\ncd" @ 0, src!(1:1-2:3)));
+    assert_eq!(Tok, token!(Symbol, "ab\\\r\ncd", src!(1:1-2:3)));
 
     let _ = session.tokenizer.next_token();
 
     Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(EndOfFile, "" @ 7, src!(2:3-2:3)));
+    assert_eq!(Tok, token!(EndOfFile, "", src!(2:3-2:3)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -285,13 +285,13 @@ fn TokenizerTest_LineContinuation3() {
 
     let mut Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(Symbol, "ab\\\rcd" @ 0, src!(1:1-2:3)));
+    assert_eq!(Tok, token!(Symbol, "ab\\\rcd", src!(1:1-2:3)));
 
     let _ = session.tokenizer.next_token();
 
     Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(EndOfFile, "" @ 6, src!(2:3-2:3)));
+    assert_eq!(Tok, token!(EndOfFile, "", src!(2:3-2:3)));
 
     assert_eq!(session.nonFatalIssues().len(), 1);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -306,13 +306,13 @@ fn TokenizerTest_LineContinuation4() {
 
     let mut Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(Integer, "1" @ 0, src!(1:1-1:2)));
+    assert_eq!(Tok, token!(Integer, "1", src!(1:1-1:2)));
 
     let _ = session.tokenizer.next_token();
 
     Tok = session.tokenizer.peek_token();
 
-    assert_eq!(Tok, token!(EndOfFile, "\\\n" @ 1, src!(1:2-2:1)));
+    assert_eq!(Tok, token!(EndOfFile, "\\\n", src!(1:2-2:1)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -325,7 +325,11 @@ fn test_escaped_ascii_del() {
 
     assert_eq!(
         tokens.as_slice(),
-        [token![Error_UnhandledCharacter, [b'\\', 127] @ 0, src!(1:1-1:3)]]
+        [token![
+            Error_UnhandledCharacter,
+            [b'\\', 127],
+            src!(1:1-1:3)
+        ]]
     );
 }
 
@@ -335,17 +339,17 @@ fn test_tokenizing_escaped_chars() {
     assert_eq!(
         // 0x33 is ASCII '3'
         tokens(r#"12\.33"#),
-        [token![Integer, r#"12\.33"# @ 0, src!(1:1-1:7)]]
+        [token![Integer, r#"12\.33"#, src!(1:1-1:7)]]
     );
 
     assert_eq!(
         // 0x0A is ASCII '3'
         tokens(r#"12\.0A3"#),
         [
-            token![Integer, r#"12"# @ 0, src!(1:1-1:3)],
-            token![ToplevelNewline, r#"\.0A"# @ 2, src!(1:3-1:7)],
+            token![Integer, r#"12"#, src!(1:1-1:3)],
+            token![ToplevelNewline, r#"\.0A"#, src!(1:3-1:7)],
             // An escaped newline doesn't increment the Location line number
-            token![Integer, r#"3"# @ 6, src!(1:7-1:8)]
+            token![Integer, r#"3"#, src!(1:7-1:8)]
         ]
     );
 }

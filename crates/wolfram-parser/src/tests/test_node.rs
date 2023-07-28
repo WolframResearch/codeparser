@@ -22,10 +22,10 @@ fn NodeTest_Bug1() {
     let session =
         ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
-    let T1 = token!(Symbol, "a" @ 0, src!(1:1-1:2));
+    let T1 = token!(Symbol, "a", src!(1:1-1:2));
     Args.push(CstNode::Token(T1));
 
-    let T2 = token!(UnderDot, "_." @ 1, src!(1:2-1:4));
+    let T2 = token!(UnderDot, "_.", src!(1:2-1:4));
     Args.push(CstNode::Token(T2));
 
     let N = CompoundNode::new(
@@ -50,20 +50,14 @@ fn test_parse_span() {
         vec![Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Span,
             children: NodeSeq(vec![
-                Cst::Token(
-                    token![Fake_ImplicitOne, "" @ 0, Span::from(src!(1:1-1:1))]
-                ),
-                Cst::Token(
-                    token![SemiSemi, ";;" @ 0, Span::from(src!(1:1-1:3))]
-                ),
-                Cst::Token(
-                    token![Whitespace, " " @ 2, Span::from(src!(1:3-1:4))]
-                ),
                 Cst::Token(token![
-                    Symbol,
-                    "b" @ 3,
-                    Span::from(src!(1:4-1:5))
+                    Fake_ImplicitOne,
+                    "",
+                    Span::from(src!(1:1-1:1))
                 ]),
+                Cst::Token(token![SemiSemi, ";;", Span::from(src!(1:1-1:3))]),
+                Cst::Token(token![Whitespace, " ", Span::from(src!(1:3-1:4))]),
+                Cst::Token(token![Symbol, "b", Span::from(src!(1:4-1:5))]),
             ]),
             src: Span::from(src!(1:1-1:5))
         }))]
@@ -76,25 +70,11 @@ fn test_parse_span() {
         vec![Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Span,
             children: NodeSeq(vec![
-                Cst::Token(token![
-                    Symbol,
-                    "a" @ 0,
-                    Span::from(src!(1:1-1:2))
-                ]),
-                Cst::Token(
-                    token![Whitespace, " " @ 1, Span::from(src!(1:2-1:3))]
-                ),
-                Cst::Token(
-                    token![SemiSemi, ";;" @ 2, Span::from(src!(1:3-1:5))]
-                ),
-                Cst::Token(
-                    token![Whitespace, " " @ 4, Span::from(src!(1:5-1:6))]
-                ),
-                Cst::Token(token![
-                    Symbol,
-                    "b" @ 5,
-                    Span::from(src!(1:6-1:7))
-                ]),
+                Cst::Token(token![Symbol, "a", Span::from(src!(1:1-1:2))]),
+                Cst::Token(token![Whitespace, " ", Span::from(src!(1:2-1:3))]),
+                Cst::Token(token![SemiSemi, ";;", Span::from(src!(1:3-1:5))]),
+                Cst::Token(token![Whitespace, " ", Span::from(src!(1:5-1:6))]),
+                Cst::Token(token![Symbol, "b", Span::from(src!(1:6-1:7))]),
             ]),
             src: Span::from(src!(1:1-1:7))
         }))]

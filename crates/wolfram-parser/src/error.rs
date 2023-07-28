@@ -264,12 +264,12 @@ fn reparseUnterminatedTokenErrorNode<'i>(
                 &str[start_offset..end_offset]
             };
 
-            make_better_input(str, better_str2)
+            make_better_input(better_str2)
         },
         SpanKind::CharacterSpan(better_src) => {
             let better_str: &str = StringTake(str, better_src);
 
-            make_better_input(str, better_str)
+            make_better_input(better_str)
         },
         SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
@@ -281,17 +281,11 @@ fn reparseUnterminatedTokenErrorNode<'i>(
     }
 }
 
-fn make_better_input<'i>(
-    input: &str,
-    better: &'i str,
-) -> BorrowedTokenInput<'i> {
-    let offset = better.as_ptr() as usize - input.as_ptr() as usize;
-
+fn make_better_input<'i>(better: &'i str) -> BorrowedTokenInput<'i> {
     BorrowedTokenInput {
         buf: BufferAndLength {
             buf: Buffer {
                 slice: better.as_bytes(),
-                offset,
             },
         },
     }

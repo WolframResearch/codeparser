@@ -70,7 +70,7 @@ struct TokenStart<'i> {
     loc: Location,
 }
 
-const _: () = assert!(std::mem::size_of::<TokenStart>() == 32);
+const _: () = assert!(std::mem::size_of::<TokenStart>() == 24);
 const _: () = assert!(std::mem::size_of::<&TokenStart>() == 8);
 
 impl UnsafeCharacterEncoding {
@@ -1778,7 +1778,7 @@ fn Tokenizer_handleNumber<'i>(
     //
     // TODO(cleanup): Replace InputMark::new() with new InputMark::from_token_start()?
     let mut leading_digits_end_mark =
-        InputMark::new(token_start.buf.offset, token_start.loc);
+        InputMark::new(session.offset_of(token_start.buf), token_start.loc);
 
     let mut caret1Buf: Option<Buffer> = None;
     let mut caret_1_mark: Option<InputMark> = None;
@@ -1945,8 +1945,13 @@ fn Tokenizer_handleNumber<'i>(
                 Ctxt.InvalidBase = true;
             } else {
                 // PRE_COMMIT: Compute string length differently
-                let baseStrLen =
-                    caret1Buf.unwrap().offset - nonZeroStartBuf.offset;
+                let baseStrLen = BufferAndLength::between(
+                    nonZeroStartBuf,
+                    caret1Buf.unwrap(),
+                )
+                .buf
+                .slice
+                .len();
 
                 //
                 // bases can only be between 2 and 36, so we know they can only be 1 or 2 characters

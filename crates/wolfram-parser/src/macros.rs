@@ -68,13 +68,12 @@ macro_rules! __src {
 ///
 /// ```
 /// # use wolfram_parser::macros::{src, token};
-/// token!(Integer, "5" @ 0, src!(1:1-1:2));
-/// //     ^^^^^^^  ... ###  *************
+/// token!(Integer, "5", src!(1:1-1:2));
+/// //     ^^^^^^^  ...  *************
 /// ```
 ///
 /// * `^^^` — [`TokenKind`][crate::tokenize::TokenKind] variant
 /// * `...` — input content
-/// * `###` — byte offset of this token
 /// * `***` — [`Source`][crate::source::Source] of the token
 ///
 /// # Example
@@ -91,22 +90,19 @@ macro_rules! __src {
 /// let Tokens(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).unwrap();
 ///
 /// assert_eq!(tokens, &[
-///     token!(Symbol, b"foo" @ 0, src!(1:1-1:4)),
-///     token!(Plus, b"+" @ 3, src!(1:4-1:5)),
-///     token!(Integer, b"1" @ 4, src!(1:5-1:6)),
+///     token!(Symbol, b"foo", src!(1:1-1:4)),
+///     token!(Plus, b"+", src!(1:4-1:5)),
+///     token!(Integer, b"1", src!(1:5-1:6)),
 /// ]);
 /// ```
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __token {
-    ($kind:ident, $input:tt @ $offset:literal, $src:expr) => {
+    ($kind:ident, $input:tt, $src:expr) => {
         $crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$kind,
             src: $crate::source::Span::from($src),
-            input: $crate::tokenize::BorrowedTokenInput::new(
-                $input.as_ref(),
-                $offset,
-            ),
+            input: $crate::tokenize::BorrowedTokenInput::new($input.as_ref()),
         }
     };
 }

@@ -328,11 +328,11 @@ impl ParseOptions {
 /// let Tokens(tokens) = tokenize("2 + 2", &ParseOptions::default());
 ///
 /// assert_eq!(tokens, &[
-///     token![Integer, "2" @ 0, src!(1:1-1:2)],
-///     token![Whitespace, " " @ 1, src!(1:2-1:3)],
-///     token![Plus, "+" @ 2, src!(1:3-1:4)],
-///     token![Whitespace, " " @ 3, src!(1:4-1:5)],
-///     token![Integer, "2" @ 4, src!(1:5-1:6)],
+///     token![Integer, "2", src!(1:1-1:2)],
+///     token![Whitespace, " ", src!(1:2-1:3)],
+///     token![Plus, "+", src!(1:3-1:4)],
+///     token![Whitespace, " ", src!(1:4-1:5)],
+///     token![Integer, "2", src!(1:5-1:6)],
 /// ]);
 /// ```
 pub fn tokenize<'i>(
