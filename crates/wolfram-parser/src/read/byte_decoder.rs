@@ -144,7 +144,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             }
 
             if feature::CHECK_ISSUES {
-                if (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES {
+                if policy.contains(ENABLE_CHARACTER_DECODING_ISSUES) {
 
                     //
                     // No CodeAction here
@@ -845,7 +845,7 @@ fn ByteDecoder_strangeWarning(
         ));
     }
 
-    if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
+    if policy.contains(STRING_OR_COMMENT) {
         //
         // reduce severity of unexpected characters inside strings or comments
         //

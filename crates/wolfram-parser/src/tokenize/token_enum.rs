@@ -41,7 +41,7 @@ impl TokenKind {
 
     /// Returns either [`TokenKind::ToplevelNewline`] or [`TokenKind::InternalNewline`]
     pub(crate) fn newline_with_policy(policy: NextPolicy) -> Self {
-        if policy & RETURN_TOPLEVELNEWLINE != 0 {
+        if policy.contains(RETURN_TOPLEVELNEWLINE) {
             return TokenKind::ToplevelNewline;
         } else {
             TokenKind::InternalNewline

@@ -172,10 +172,68 @@ impl<'i> BufferAndLength<'i> {
 // Source character reading behavior
 //==========================================================
 
-//
-//
-//
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+pub(crate) struct NextPolicy(u8);
+
+impl NextPolicy {
+    #[allow(dead_code)]
+    const fn bits(&self) -> u8 {
+        let NextPolicy(bits) = *self;
+
+        bits
+    }
+
+    pub(crate) fn from_bits(bits: u8) -> Self {
+        NextPolicy(bits)
+    }
+
+    /// Returns true if all the bits in `other` are set in `self`.
+    #[inline(always)]
+    pub(crate) fn contains(&self, other: NextPolicy) -> bool {
+        let NextPolicy(self_bits) = *self;
+        let NextPolicy(other_bits) = other;
+
+        self_bits & other_bits == other_bits
+    }
+
+    #[inline(always)]
+    pub(crate) fn without(self, other: NextPolicy) -> NextPolicy {
+        let NextPolicy(self_bits) = self;
+        let NextPolicy(other_bits) = other;
+
+        NextPolicy(self_bits & !other_bits)
+    }
+
+    #[inline(always)]
+    pub(crate) fn remove(&mut self, other: NextPolicy) {
+        *self = self.without(other);
+    }
+}
+
+impl std::ops::BitOr for NextPolicy {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        let NextPolicy(self_bits) = self;
+        let NextPolicy(rhs_bits) = rhs;
+
+        NextPolicy(self_bits | rhs_bits)
+    }
+}
+
+impl std::ops::BitOrAssign for NextPolicy {
+    fn bitor_assign(&mut self, rhs: Self) {
+        let NextPolicy(self_bits) = self;
+        let NextPolicy(rhs_bits) = rhs;
+
+        *self_bits |= rhs_bits;
+    }
+}
+
 pub(crate) mod NextPolicyBits {
+    use super::NextPolicy;
+
     //
     /// Enable character decoding issues
     ///
@@ -187,18 +245,19 @@ pub(crate) mod NextPolicyBits {
     ///
     /// Used By ByteDecoder, CharacterDecoder
     //
-    pub const ENABLE_CHARACTER_DECODING_ISSUES: u8 = 0x01;
+    pub(crate) const ENABLE_CHARACTER_DECODING_ISSUES: NextPolicy =
+        NextPolicy(0x01);
 
     //
     /// when inside Tokenizer_currentWLCharacter, then do not track line continuations
     /// since Tokenizer_currentWLCharacter is implemented as Tokenizer_nextWLCharacter that is then reset, there should be no side-effects
     //
-    pub const TRACK_LC: u8 = 0x02;
+    pub(crate) const TRACK_LC: NextPolicy = NextPolicy(0x02);
 
     //
     /// Used by Tokenizer
     //
-    pub const RETURN_TOPLEVELNEWLINE: u8 = 0x04;
+    pub(crate) const RETURN_TOPLEVELNEWLINE: NextPolicy = NextPolicy(0x04);
 
     //
     /// This bit serves 2 purposes:
@@ -226,7 +285,7 @@ pub(crate) mod NextPolicyBits {
     /// Outside of strings, \[RightArrow] should be a warning
     /// Inside of strings, \[RightArrow] should be a remark
     //
-    pub const STRING_OR_COMMENT: u8 = 0x08;
+    pub(crate) const STRING_OR_COMMENT: NextPolicy = NextPolicy(0x08);
 
     //
     /// If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
@@ -237,7 +296,8 @@ pub(crate) mod NextPolicyBits {
     ///
     /// Used by Tokenizer
     //
-    pub const TAGSLOT_BEHAVIOR_FOR_STRINGS: u8 = 0x10;
+    pub(crate) const TAGSLOT_BEHAVIOR_FOR_STRINGS: NextPolicy =
+        NextPolicy(0x10);
 
     //
     /// When tokenizing numbers, return immediately when an integer has been tokenized
@@ -246,47 +306,53 @@ pub(crate) mod NextPolicyBits {
     ///
     /// For example, we must consider  `#2.c`  to be `Slot[2] . c`  and NOT  `Slot[1] 2. c`
     //
-    pub const INTEGER_SHORT_CIRCUIT: u8 = 0x20;
+    pub(crate) const INTEGER_SHORT_CIRCUIT: NextPolicy = NextPolicy(0x20);
 
     //
     // With input  "\\[Alpa]"  , then report \[Alpa] as unrecognized, even though this is valid syntax
     //
-    pub const SCAN_FOR_UNRECOGNIZEDLONGNAMES: u8 = 0x40;
+    pub(crate) const SCAN_FOR_UNRECOGNIZEDLONGNAMES: NextPolicy =
+        NextPolicy(0x40);
 }
 
 pub(crate) use self::NextPolicyBits::*;
 
 const _: () = assert!(
-    RETURN_TOPLEVELNEWLINE == 0x04,
+    RETURN_TOPLEVELNEWLINE.bits() == 0x04,
     "Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE"
 );
-
-pub(crate) type NextPolicy = u8;
 
 use NextPolicyBits::{
     ENABLE_CHARACTER_DECODING_ISSUES, INTEGER_SHORT_CIRCUIT,
     RETURN_TOPLEVELNEWLINE, TAGSLOT_BEHAVIOR_FOR_STRINGS, TRACK_LC,
 };
 
-pub(crate) const TOPLEVEL: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | TRACK_LC;
+pub(crate) const TOPLEVEL: NextPolicy = NextPolicy(
+    ENABLE_CHARACTER_DECODING_ISSUES.0 | RETURN_TOPLEVELNEWLINE.0 | TRACK_LC.0,
+);
 
 #[allow(dead_code)] // TODO(cleanup): Is it meaningful that this is unused?
 pub(crate) const INSIDE_SYMBOL: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | TRACK_LC;
+    NextPolicy(ENABLE_CHARACTER_DECODING_ISSUES.0 | TRACK_LC.0);
 
-pub(crate) const INSIDE_STRINGIFY_AS_TAG: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | TAGSLOT_BEHAVIOR_FOR_STRINGS | TRACK_LC;
+pub(crate) const INSIDE_STRINGIFY_AS_TAG: NextPolicy = NextPolicy(
+    ENABLE_CHARACTER_DECODING_ISSUES.0
+        | TAGSLOT_BEHAVIOR_FOR_STRINGS.0
+        | TRACK_LC.0,
+);
 pub(crate) const INSIDE_STRINGIFY_AS_FILE: NextPolicy = RETURN_TOPLEVELNEWLINE;
 
-pub(crate) const INSIDE_SLOT: NextPolicy =
-    TAGSLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+pub(crate) const INSIDE_SLOT: NextPolicy = NextPolicy(
+    TAGSLOT_BEHAVIOR_FOR_STRINGS.0 | INTEGER_SHORT_CIRCUIT.0 | TRACK_LC.0,
+);
 
-pub(crate) const INSIDE_SLOTSEQUENCE: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+pub(crate) const INSIDE_SLOTSEQUENCE: NextPolicy = NextPolicy(
+    ENABLE_CHARACTER_DECODING_ISSUES.0 | INTEGER_SHORT_CIRCUIT.0 | TRACK_LC.0,
+);
 
-pub(crate) const INSIDE_OUT: NextPolicy =
-    ENABLE_CHARACTER_DECODING_ISSUES | INTEGER_SHORT_CIRCUIT | TRACK_LC;
+pub(crate) const INSIDE_OUT: NextPolicy = NextPolicy(
+    ENABLE_CHARACTER_DECODING_ISSUES.0 | INTEGER_SHORT_CIRCUIT.0 | TRACK_LC.0,
+);
 
 
 //==========================================================

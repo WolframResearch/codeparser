@@ -147,7 +147,7 @@ impl<'i> Tokenizer<'i> {
         //
         let returnInternalNewlineMask = (insideGroup as u8) << 2;
 
-        policy &= !returnInternalNewlineMask; // bitwise not
+        policy.remove(NextPolicy::from_bits(returnInternalNewlineMask));
 
         let mark = self.mark();
 
@@ -816,7 +816,7 @@ fn Tokenizer_nextWLCharacter<'i>(
         while c.isWhitespace() {
             if feature::COMPUTE_OOB {
                 if c.point == '\t' {
-                    if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
+                    if policy.contains(STRING_OR_COMMENT) {
                         //
                         // It is possible to have e.g.:
                         //
@@ -838,8 +838,8 @@ fn Tokenizer_nextWLCharacter<'i>(
         }
 
         if feature::COMPUTE_OOB {
-            if (policy & TRACK_LC) == TRACK_LC {
-                if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
+            if policy.contains(TRACK_LC) {
+                if policy.contains(STRING_OR_COMMENT) {
                     session.addComplexLineContinuation(token_start.loc);
                 } else {
                     session.addSimpleLineContinuation(token_start.loc);
@@ -861,7 +861,7 @@ fn Tokenizer_currentWLCharacter<'i>(
     //
     //
     //
-    policy &= !TRACK_LC; // bitwise not
+    policy.remove(TRACK_LC);
 
     let c = Tokenizer_nextWLCharacter(session, token_start, policy);
 
@@ -1132,7 +1132,7 @@ fn Tokenizer_handleSymbol<'i>(
             break;
         }
 
-        if feature::CHECK_ISSUES && (policy & INSIDE_SLOT) == INSIDE_SLOT {
+        if feature::CHECK_ISSUES && policy.contains(INSIDE_SLOT) {
             //
             // Something like  #`a
             //
@@ -1179,7 +1179,7 @@ fn Tokenizer_handleSymbol<'i>(
     } // while
 
     return session.token(
-        if (policy & INSIDE_SLOT) == INSIDE_SLOT {
+        if policy.contains(INSIDE_SLOT) {
             TokenKind::String
         } else {
             TokenKind::Symbol
@@ -1206,7 +1206,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
 
     #[cfg(feature = "CHECK_ISSUES")]
     if c.to_point() == '$' {
-        if (policy & INSIDE_SLOT) == INSIDE_SLOT {
+        if policy.contains(INSIDE_SLOT) {
             //
             // Something like  #$a
             //
@@ -1241,7 +1241,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
             0.80,
         )
     } else if !c.isAlpha() {
-        if (policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG {
+        if policy.contains(INSIDE_STRINGIFY_AS_TAG) {
             //
             // Something like  a::\[Beta]
             //
@@ -1276,7 +1276,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
 
             #[cfg(feature = "CHECK_ISSUES")]
             if c.to_point() == '$' {
-                if (policy & INSIDE_SLOT) == INSIDE_SLOT {
+                if policy.contains(INSIDE_SLOT) {
                     //
                     // Something like  #$a
                     //
@@ -1310,8 +1310,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                     0.80,
                 )
             } else if !c.isAlphaOrDigit() {
-                if (policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG
-                {
+                if policy.contains(INSIDE_STRINGIFY_AS_TAG) {
                     //
                     // Something like  a::b\[Beta]
                     //
@@ -1358,7 +1357,7 @@ fn Tokenizer_handleString<'i>(
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '"');
 
-    if feature::CHECK_ISSUES && (policy & INSIDE_SLOT) == INSIDE_SLOT {
+    if feature::CHECK_ISSUES && policy.contains(INSIDE_SLOT) {
         //
         // Something like  #"a"
         //
@@ -1825,7 +1824,7 @@ fn Tokenizer_handleNumber<'i>(
             leading_digits_end_mark = session.mark();
         }
 
-        if (policy & INTEGER_SHORT_CIRCUIT) == INTEGER_SHORT_CIRCUIT {
+        if policy.contains(INTEGER_SHORT_CIRCUIT) {
             #[cfg(feature = "CHECK_ISSUES")]
             if c.to_point() == '.' {
                 //

@@ -169,7 +169,7 @@ fn TokenizerTest_Basic3() {
     //
     Tok = session
         .tokenizer
-        .peek_token_with(TOPLEVEL & !(RETURN_TOPLEVELNEWLINE));
+        .peek_token_with(TOPLEVEL.without(RETURN_TOPLEVELNEWLINE));
 
     assert_eq!(Tok, token!(InternalNewline, "\n", src!(1:2-2:1)));
 
