@@ -61,10 +61,8 @@ impl TimesParselet {
             panic_if_aborted!();
 
 
-            let Trivia1 = session.trivia1.clone();
-
-            let mut tok1 = session
-                .current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+            let (mut trivia1, mut tok1) =
+                session.current_token_eat_trivia_into();
 
             let mut I: &dyn InfixParselet =
                 INFIX_PARSELETS[usize::from(tok1.tok.value())];
@@ -78,12 +76,10 @@ impl TimesParselet {
                 // so reset and try again
                 //
 
-                Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                trivia1.reset(&mut session.tokenizer);
 
-                tok1 = session
-                    .current_token_eat_trivia_but_not_toplevel_newlines_into(
-                        &mut Trivia1.borrow_mut(),
-                    );
+                (trivia1, tok1) = session
+                    .current_token_eat_trivia_but_not_toplevel_newlines_into();
 
                 I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
@@ -104,13 +100,13 @@ impl TimesParselet {
                 // Tok.tok != tok_in.tok, so break
                 //
 
-                Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
                 return TimesParselet::reduce_Times(session);
             }
 
-            session.push_trivia_seq(&mut Trivia1.borrow_mut());
+            session.push_trivia_seq(trivia1);
 
             session.push_leaf_and_next(tok1);
 

@@ -1062,10 +1062,7 @@ impl InfixOperatorParselet {
             panic_if_aborted!();
 
 
-            let Trivia1 = session.trivia1.clone();
-
-            let tok1 = session
-                .current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             let I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
@@ -1087,13 +1084,13 @@ impl InfixOperatorParselet {
                 // Tok.tok != tok_in.tok, so break
                 //
 
-                Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
                 return self.reduce_infix_operator(session);
             }
 
-            session.push_trivia_seq(&mut Trivia1.borrow_mut());
+            session.push_trivia_seq(trivia1);
 
             session.push_leaf_and_next(tok1);
 
@@ -1234,17 +1231,14 @@ impl GroupParselet {
 
             let Closr = self.getCloser();
 
-            let Trivia1 = session.trivia1.clone();
-
-            let tok = session
-                .current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+            let (trivia1, tok) = session.current_token_eat_trivia_into();
 
             if TokenToCloser(tok.tok) == Closr {
                 //
                 // Everything is good
                 //
 
-                session.push_trivia_seq(&mut Trivia1.borrow_mut());
+                session.push_trivia_seq(trivia1);
 
                 session.push_leaf_and_next(tok);
 
@@ -1267,7 +1261,7 @@ impl GroupParselet {
                     // Do not consume the bad closer now
                     //
 
-                    Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                    trivia1.reset(&mut session.tokenizer);
 
                     // MUSTTAIl
                     return self.reduce_missing_closer(session);
@@ -1278,7 +1272,7 @@ impl GroupParselet {
                 //                   ^
                 //
 
-                session.push_trivia_seq(&mut Trivia1.borrow_mut());
+                session.push_trivia_seq(trivia1);
 
                 // #if !USE_MUSTTAIL
                 (PrefixToplevelCloserParselet {}).parse_prefix(session, tok);
@@ -1295,7 +1289,7 @@ impl GroupParselet {
                 // Handle something like   { a EOF
                 //
 
-                Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
                 return self.reduce_unterminated_group(session);
@@ -1305,7 +1299,7 @@ impl GroupParselet {
             // Handle the expression
             //
 
-            session.push_trivia_seq(&mut Trivia1.borrow_mut());
+            session.push_trivia_seq(trivia1);
 
             // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
@@ -1493,10 +1487,7 @@ impl TildeParselet {
         panic_if_aborted!();
 
 
-        let Trivia1 = session.trivia1.clone();
-
-        let tok1 =
-            session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+        let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
         if tok1.tok != TokenKind::Tilde {
             //
@@ -1505,13 +1496,13 @@ impl TildeParselet {
             // Not structurally correct, so return SyntaxErrorNode
             //
 
-            Trivia1.borrow_mut().reset(&mut session.tokenizer);
+            trivia1.reset(&mut session.tokenizer);
 
             // MUSTTAIL
             return TildeParselet::reduce_error(session);
         }
 
-        session.push_trivia_seq(&mut Trivia1.borrow_mut());
+        session.push_trivia_seq(trivia1);
 
         session.push_leaf_and_next(tok1);
 
@@ -1678,14 +1669,11 @@ impl SlashColonParselet {
         panic_if_aborted!();
 
 
-        let Trivia1 = session.trivia1.clone();
-
-        let tok =
-            session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+        let (trivia1, tok) = session.current_token_eat_trivia_into();
 
         match tok.tok {
             TokenKind::Equal => {
-                session.push_trivia_seq(&mut Trivia1.borrow_mut());
+                session.push_trivia_seq(trivia1);
 
                 session.set_precedence(Precedence::EQUAL);
 
@@ -1693,7 +1681,7 @@ impl SlashColonParselet {
                 return EqualParselet::parse_infix_tag(session, tok);
             },
             TokenKind::ColonEqual => {
-                session.push_trivia_seq(&mut Trivia1.borrow_mut());
+                session.push_trivia_seq(trivia1);
 
                 session.set_precedence(Precedence::COLONEQUAL);
 
@@ -1703,7 +1691,7 @@ impl SlashColonParselet {
             _ => (),
         } // switch
 
-        Trivia1.borrow_mut().reset(&mut session.tokenizer);
+        trivia1.reset(&mut session.tokenizer);
 
         //
         // Anything other than:
@@ -2001,15 +1989,12 @@ impl CommaParselet {
             panic_if_aborted!();
 
 
-            let Trivia1 = session.trivia1.clone();
-
-            let tok1 = session
-                .current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             if !(tok1.tok == TokenKind::Comma
                 || tok1.tok == TokenKind::LongName_InvisibleComma)
             {
-                Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
                 return CommaParselet::reduce_comma(session);
@@ -2019,7 +2004,7 @@ impl CommaParselet {
             // Something like  a,b
             //
 
-            session.push_trivia_seq(&mut Trivia1.borrow_mut());
+            session.push_trivia_seq(trivia1);
 
             session.push_leaf_and_next(tok1);
 
@@ -2191,17 +2176,14 @@ impl SemiParselet {
             panic_if_aborted!();
 
 
-            let Trivia1 = session.trivia1.clone();
-
-            let tok1 = session
-                .current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             if tok1.tok != TokenKind::Semi {
                 //
                 // Something like  a;b
                 //
 
-                Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
                 return SemiParselet::reduce_CompoundExpression(session);
@@ -2211,7 +2193,7 @@ impl SemiParselet {
             // Something like  a;b
             //
 
-            session.push_trivia_seq(&mut Trivia1.borrow_mut());
+            session.push_trivia_seq(trivia1);
 
             session.push_leaf_and_next(tok1);
 
@@ -2346,19 +2328,16 @@ impl ColonColonParselet {
             panic_if_aborted!();
 
 
-            let Trivia1 = session.trivia1.clone();
-
-            let tok1 = session
-                .current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             if tok1.tok != TokenKind::ColonColon {
-                Trivia1.borrow_mut().reset(&mut session.tokenizer);
+                trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
                 return ColonColonParselet::reduce_MessageName(session);
             }
 
-            session.push_trivia_seq(&mut Trivia1.borrow_mut());
+            session.push_trivia_seq(trivia1);
 
             session.push_leaf_and_next(tok1);
 

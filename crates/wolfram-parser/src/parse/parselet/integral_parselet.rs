@@ -57,21 +57,18 @@ impl IntegralParselet {
         panic_if_aborted!();
 
 
-        let Trivia1 = session.trivia1.clone();
-
-        let tok =
-            session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+        let (trivia1, tok) = session.current_token_eat_trivia_into();
 
         if !(tok.tok == TokenKind::LongName_DifferentialD
             || tok.tok == TokenKind::LongName_CapitalDifferentialD)
         {
-            Trivia1.borrow_mut().reset(&mut session.tokenizer);
+            trivia1.reset(&mut session.tokenizer);
 
             // MUSTTAIL
             return IntegralParselet::reduceIntegral(session, P);
         }
 
-        session.push_trivia_seq(&mut Trivia1.borrow_mut());
+        session.push_trivia_seq(trivia1);
 
         let ctxt = session.top_context();
         ctxt.set_callback_2(IntegralParselet::reduceIntegrate, P);
