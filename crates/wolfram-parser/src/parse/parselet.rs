@@ -14,7 +14,7 @@ use crate::{
         PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         UnterminatedGroupNeedsReparseNode,
     },
-    generated::parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
+    generated::parselet_registration::{INFIX_PARSELETS, *},
     panic_if_aborted,
     parse::{ColonLHS, ParserSession, Parser_identity},
     precedence::Precedence,
@@ -97,17 +97,6 @@ impl From<BinaryOperator> for InfixParseletOperator {
     fn from(op: BinaryOperator) -> Self {
         Self::Binary(op)
     }
-}
-
-//--------------------------------------
-// Access parselet for token
-//--------------------------------------
-
-/// Get the [`PrefixParselet`] implementation associated with this token.
-pub(crate) fn prefix_parselet(tok: TokenKind) -> PrefixParseletPtr {
-    let index = usize::from(tok.value());
-
-    PREFIX_PARSELETS[index]
 }
 
 //======================================

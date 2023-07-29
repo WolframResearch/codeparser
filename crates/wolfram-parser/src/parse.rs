@@ -10,7 +10,7 @@ use crate::{
         CstNodeSeq, Node, TernaryNode, TernaryOperator,
     },
     feature,
-    generated::parselet_registration::INFIX_PARSELETS,
+    generated::parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS},
     panic_if_aborted,
     // parselet::Parselet,
     precedence::Precedence,
@@ -236,8 +236,10 @@ impl<'i> ParserSession<'i> {
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
-        let parselet: &dyn PrefixParselet =
-            self::parselet::prefix_parselet(token.tok);
+        let index = usize::from(token.tok.value());
+
+        // Get the [`PrefixParselet`] implementation associated with this token.
+        let parselet: &dyn PrefixParselet = PREFIX_PARSELETS[index];
 
         // MUSTTAIL
         parselet.parse_prefix(self, token)
