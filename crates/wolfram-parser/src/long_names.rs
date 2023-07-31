@@ -2,8 +2,8 @@
 
 use crate::{
     generated::long_names_registration::{
-        ASCII_REPLACEMENTS_MAP, CODE_POINT_TO_LONGNAME_MAP__NAMES,
-        CODE_POINT_TO_LONGNAME_MAP__POINTS, MB_NEWLINE_CODE_POINTS,
+        ASCII_REPLACEMENTS_MAP, CODEPOINT_TO_LONGNAME_MAP,
+        LONGNAME_TO_CODEPOINT_MAP, MB_NEWLINE_CODE_POINTS,
         MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS, MB_PUNCTUATION_CODE_POINTS,
         MB_UNINTERPRETABLE_CODE_POINTS, MB_WHITESPACE_CODE_POINTS, RAW_SET,
     },
@@ -11,35 +11,43 @@ use crate::{
     utils,
 };
 
-pub(crate) fn code_point_has_long_name(point: char) -> bool {
-    // debug_assert!(CODE_POINT_TO_LONGNAME_MAP__POINTS.is_sorted());
-    // CODE_POINT_TO_LONGNAME_MAP__POINTS.binary_search(&point).is_ok()
-
-    // TODO(optimize): This linear search is likely slower than the commented
-    //                 out binary_search(). Fix the sorting of this table so
-    //                 that the debug_assert!(..is_sorted()) succeeds, and then
-    //                 switch back to the binary search code.
-    CODE_POINT_TO_LONGNAME_MAP__POINTS.contains(&CodePoint::Char(point))
+pub(crate) fn codepoint_has_longname(point: char) -> bool {
+    codepoint_to_longname(CodePoint::Char(point)).is_some()
 }
 
-pub fn code_point_to_long_name(point: CodePoint) -> &'static str {
-    // debug_assert!(CODE_POINT_TO_LONGNAME_MAP__POINTS.is_sorted());
-    // let idx: usize = CODE_POINT_TO_LONGNAME_MAP__POINTS
-    //     .binary_search(&point)
-    //     .expect("unable to find long name for code point");
+pub(crate) fn codepoint_to_longname(point: CodePoint) -> Option<&'static str> {
+    // NOTE: This assertion currently spuriously fails because the
+    //       StringMeta_DoubleQuote and StringMeta_Backslash codepoints are fake
+    //       codepoints with negative values.
+    /*
+    debug_assert!(utils::is_sorted_by(
+        &CODEPOINT_TO_LONGNAME_MAP,
+        |(point, _): &(CodePoint, &str)| *point
+    ));
+    */
 
-    // TODO(optimize): This linear search is likely slower than the commented
-    //                 out binary_search(). Fix the sorting of this table so
-    //                 that the debug_assert!(..is_sorted()) succeeds, and then
-    //                 switch back to the binary search code.
-    let idx: usize = CODE_POINT_TO_LONGNAME_MAP__POINTS
-        .iter()
-        .position(|p| *p == point)
-        .expect("unable to find long name for code point");
+    let index: usize = CODEPOINT_TO_LONGNAME_MAP
+        .binary_search_by(|(cp, _)| cp.cmp(&point))
+        .ok()?;
 
-    let long_name: &str = CODE_POINT_TO_LONGNAME_MAP__NAMES[idx];
+    let (_, longname) = CODEPOINT_TO_LONGNAME_MAP[index];
 
-    long_name
+    Some(longname)
+}
+
+pub(crate) fn longname_to_codepoint(longname: &str) -> Option<CodePoint> {
+    debug_assert!(utils::is_sorted_by(
+        &LONGNAME_TO_CODEPOINT_MAP,
+        |(str, _): &(&str, CodePoint)| *str
+    ));
+
+    let index: usize = LONGNAME_TO_CODEPOINT_MAP
+        .binary_search_by(|&(str, _)| str.cmp(longname))
+        .ok()?;
+
+    let (_, point) = LONGNAME_TO_CODEPOINT_MAP[index];
+
+    Some(point)
 }
 
 /// Is this \[Raw] something?

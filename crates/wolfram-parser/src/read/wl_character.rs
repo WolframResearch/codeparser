@@ -2,7 +2,7 @@ use std::fmt::{self, Debug, Display};
 
 use crate::{
     generated::long_names_registration::*,
-    long_names::{self as LongNames, code_point_to_long_name},
+    long_names::{self as LongNames, codepoint_to_longname},
     read::code_point::{
         CodePoint::{self, Char, *},
         *,
@@ -200,7 +200,8 @@ impl Display for WLCharacter {
                 }
             },
             Escape::LongName => {
-                let LongName: &str = code_point_to_long_name(i);
+                let LongName: &str = codepoint_to_longname(i)
+                    .expect("unable to find longname for codepoint");
 
                 format_char(SourceCharacter::from('\\'))?;
                 format_char(SourceCharacter::from('['))?;

@@ -247,41 +247,39 @@ insertNewlines[strings_] :=
 
 
 
-longNameToCodePointMapNames = {
-  "//",
-  "//",
-  "//",
-  "pub const LONGNAME_TO_CODE_POINT_MAP__NAMES: [&str; LONGNAMES_COUNT] = ["} ~Join~
-  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{escapeString[#], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
-  {"];",
-  ""}
+longNameToCodePointMap = {StringJoin[
+	"\n\n",
+	"/// Sorted by the longname string value\n",
+	"pub const LONGNAME_TO_CODEPOINT_MAP: [(&str, CodePoint); LONGNAMES_COUNT] = [\n",
+	StringJoin @ Map[
+		longname |-> StringJoin[
+			"\t(",
+			escapeString[longname],
+			", ",
+			toGlobal["CodePoint`LongName`" <> longname, "CodePoint"],
+			"),\n"
+		],
+		$lexSortedImportedLongNames
+	],
+	"];\n"
+]}
 
-longNameToCodePointMapPoints = {
-  "//",
-  "//",
-  "//",
-  "pub const LONGNAME_TO_CODE_POINT_MAP__POINTS: [CodePoint; LONGNAMES_COUNT] = ["} ~Join~
-  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#, "CodePoint"], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
-  {"];",
-  ""}
-
-codePointToLongNameMapPoints = {
-  "//",
-  "//",
-  "//",
-  "pub const CODE_POINT_TO_LONGNAME_MAP__POINTS: [CodePoint; LONGNAMES_COUNT] = ["} ~Join~
-  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#, "CodePoint"], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"];",
-  ""}
-
-codePointToLongNameMapNames = {
-  "//",
-  "//",
-  "//",
-  "pub const CODE_POINT_TO_LONGNAME_MAP__NAMES: [&str; LONGNAMES_COUNT] = ["} ~Join~
-  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{escapeString[#], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"];",
-  ""}
+codePointToLongNameMap = {StringJoin[
+	"\n\n",
+	"/// Sorted by the longname codepoint value\n",
+	"pub const CODEPOINT_TO_LONGNAME_MAP: [(CodePoint, &str); LONGNAMES_COUNT] = [\n",
+	StringJoin @ Map[
+		longname |-> StringJoin[
+			"\t(",
+			toGlobal["CodePoint`LongName`" <> longname, "CodePoint"],
+			", ",
+			escapeString[longname],
+			"),\n"
+		],
+		SortBy[Keys[importedLongNames], longNameToCharacterCode]
+	],
+	"];\n"
+]}
 
 rawSet = {
   "//",
@@ -435,10 +433,8 @@ use crate::{
 };
 
 "} ~Join~
-longNameToCodePointMapNames ~Join~
-longNameToCodePointMapPoints ~Join~
-codePointToLongNameMapPoints ~Join~
-codePointToLongNameMapNames ~Join~
+longNameToCodePointMap ~Join~
+codePointToLongNameMap ~Join~
 rawSet ~Join~
 notStrangeLetterlikeSource ~Join~
 asciiReplacementsSource ~Join~

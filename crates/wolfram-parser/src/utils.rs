@@ -396,3 +396,12 @@ pub fn certainCharacterReplacementActions(
 pub(crate) fn is_sorted<T: Ord>(slice: &[T]) -> bool {
     slice.windows(2).all(|elem| elem[0] <= elem[1])
 }
+
+/// TODO(cleanup): Replace with call to `is_sorted_by()` method once that method is
+///                stabilized. (See: <https://github.com/rust-lang/rust/issues/53485>)
+pub(crate) fn is_sorted_by<T, B: Ord, F: Fn(&T) -> B>(
+    slice: &[T],
+    by: F,
+) -> bool {
+    slice.windows(2).all(|elem| by(&elem[0]) <= by(&elem[1]))
+}
