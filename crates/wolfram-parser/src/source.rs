@@ -1156,12 +1156,7 @@ impl Display for SourceCharacter {
                 //
                 // C1 control characters
                 //
-            Char(
-                '\u{80}' | '\u{81}' | '\u{82}' | '\u{83}' | '\u{84}' | '\u{85}' | '\u{86}' | '\u{87}' |
-                '\u{88}' | '\u{89}' | '\u{8a}' | '\u{8b}' | '\u{8c}' | '\u{8d}' | '\u{8e}' | '\u{8f}' |
-                '\u{90}' | '\u{91}' | '\u{92}' | '\u{93}' | '\u{94}' | '\u{95}' | '\u{96}' | '\u{97}' |
-                '\u{98}' | '\u{99}' | '\u{9a}' | '\u{9b}' | '\u{9c}' | '\u{9d}' | '\u{9e}' | '\u{9f}'
-            ) => {
+            Char('\u{80}' ..= '\u{9f}') => {
                 return write!(stream, "{:#}", WLCharacter::new_with_escape(val, Escape::Hex2))
             }
             Char(char) => char,
