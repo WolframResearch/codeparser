@@ -1170,65 +1170,31 @@ impl Display for SourceCharacter {
 
         let val: char = val;
 
-        if val > '\u{ffff}' {
-            if codepoint_has_longname(val) {
+        let escape: Option<Escape> =
+            if val > '\u{7f}' && codepoint_has_longname(val) {
                 //
-                // Use LongName if available
+                // Use LongName if available and not ASCII
                 //
+                Some(Escape::LongName)
+            } else if val > '\u{ffff}' {
+                Some(Escape::Hex6)
+            } else if val > '\u{ff}' {
+                Some(Escape::Hex4)
+            } else if val > '\u{7f}' {
+                Some(Escape::Hex2)
+            } else {
+                None
+            };
 
-                return write!(
-                    stream,
-                    "{:#}",
-                    WLCharacter::new_with_escape(val, Escape::LongName)
-                );
-            }
-
+        if let Some(escape) = escape {
             return write!(
                 stream,
                 "{:#}",
-                WLCharacter::new_with_escape(val, Escape::Hex6)
+                WLCharacter::new_with_escape(val, escape)
             );
         }
 
-        if val > '\u{ff}' {
-            if codepoint_has_longname(val) {
-                //
-                // Use LongName if available
-                //
-
-                return write!(
-                    stream,
-                    "{:#}",
-                    WLCharacter::new_with_escape(val, Escape::LongName)
-                );
-            }
-
-            return write!(
-                stream,
-                "{:#}",
-                WLCharacter::new_with_escape(val, Escape::Hex4)
-            );
-        }
-
-        if val > '\u{7f}' {
-            if codepoint_has_longname(val) {
-                //
-                // Use LongName if available
-                //
-
-                return write!(
-                    stream,
-                    "{:#}",
-                    WLCharacter::new_with_escape(val, Escape::LongName)
-                );
-            }
-
-            return write!(
-                stream,
-                "{:#}",
-                WLCharacter::new_with_escape(val, Escape::Hex2)
-            );
-        }
+        debug_assert!(val.is_ascii());
 
         //
         // ASCII is untouched
