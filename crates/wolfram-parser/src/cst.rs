@@ -1009,7 +1009,7 @@ impl GroupOperator {
 impl SyntaxErrorKind {
     #[doc(hidden)]
     pub fn to_symbol(&self) -> crate::symbol::Symbol {
-        use crate::generated::symbol_registration as sym;
+        use crate::symbols as sym;
 
         match self {
             SyntaxErrorKind::ExpectedSymbol => sym::SyntaxError_ExpectedSymbol,

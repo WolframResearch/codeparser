@@ -18,7 +18,7 @@ macro_rules! WL {
     (ToNode[$sym:ident]) => {{
         // Sanity check that `$sym` is a System` symbol.
         {
-            let _: $crate::symbol::Symbol = $crate::generated::symbol_registration::$sym;
+            let _: $crate::symbol::Symbol = $crate::symbols::$sym;
         }
 
         let sym: &'static str = stringify!($sym);

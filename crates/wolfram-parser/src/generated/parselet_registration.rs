@@ -11,7 +11,7 @@ use crate::{
 	cst::Operator,
 	tokenize::TokenKind,
 	symbol::Symbol,
-	generated::symbol_registration as sym,
+	symbols as sym,
 	precedence::Precedence,
 	parse::parselet::*
 };

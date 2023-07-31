@@ -1,20 +1,24 @@
-//
-// AUTO GENERATED FILE
-// DO NOT MODIFY
-//
+//! All symbols that are used by CodeParser
 
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
+#![cfg_attr(rustfmt, rustfmt_skip)]
 
 use crate::symbol::Symbol;
 
+// NOTE: // Symbols are fully qualified using "<context>`<symbolname>" instead of just
+// "<symbolname>".
+//
+// We want to fully-qualify symbol names over the wire.
+// This allows library->kernel traffic to work when CodeParser` is not on $ContextPath.
+// However, it is still not possible to fully-qualify System` symbols
+// Related bugs: 283291, 284492
+// So also make library->kernel traffic match this behavior
 
-//
-// All symbols that are used by CodeParser
-//
 //======================================
 // Symbols
 //======================================
+
 pub const CodeParser_AbstractSyntaxErrorNode: Symbol = unsafe { Symbol::unchecked_new("CodeParser`AbstractSyntaxErrorNode") };
 pub const CodeParser_BinaryAt: Symbol = unsafe { Symbol::unchecked_new("CodeParser`BinaryAt") };
 pub const CodeParser_BinaryNode: Symbol = unsafe { Symbol::unchecked_new("CodeParser`BinaryNode") };

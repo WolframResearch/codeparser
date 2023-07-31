@@ -442,7 +442,7 @@ tokenEnumRegistrationCPPSource = tokenEnumRegistrationCPPHeader ~Join~ {
 // DO NOT MODIFY
 //
 
-use crate::generated::symbol_registration as st;
+use crate::symbols as st;
 
 //
 // TokenKind::Integer must be 0x4 to allow setting the 0b1 bit to convert to TokenKind::REAL, and 0b10 bit to convert to TokenKind::Rational

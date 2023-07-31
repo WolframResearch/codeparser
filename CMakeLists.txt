@@ -389,26 +389,6 @@ add_custom_command(
 )
 
 #
-# Symbol files
-#
-add_custom_command(
-	OUTPUT
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/symbol_registration.rs
-
-	COMMAND
-	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	DEPENDS
-	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
-	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
-	${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
-	${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	VERBATIM
-	WORKING_DIRECTORY
-	${PROJECT_SOURCE_DIR}
-)
-
-#
 # expr lib target
 #
 if(TRANSPORT STREQUAL ExprLib)
@@ -526,7 +506,6 @@ add_custom_command(
 	${RUST_TARGET_DIR}/$<IF:$<CONFIG:Release>,release,debug>/${CMAKE_SHARED_LIBRARY_PREFIX}codeparser_wll${CMAKE_SHARED_LIBRARY_SUFFIX}
 	${CODEPARSE_DYLIB}
 	DEPENDS
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/symbol_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence_values.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs

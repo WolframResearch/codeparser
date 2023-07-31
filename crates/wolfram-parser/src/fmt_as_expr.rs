@@ -11,11 +11,10 @@ use crate::{
         PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorNode,
         TernaryNode, TernaryOperator,
     },
-    generated::{
-        symbol_registration as sym, token_enum_registration::TokenToSymbol,
-    },
+    generated::token_enum_registration::TokenToSymbol,
     source::{LineColumn, LineColumnSpan, Location, Source, Span, SpanKind},
     symbol::Symbol,
+    symbols as sym,
     tokenize::{Token, TokenInput, TokenSource},
     NodeSeq, Tokens,
 };

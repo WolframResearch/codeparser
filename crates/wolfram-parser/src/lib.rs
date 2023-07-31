@@ -88,15 +88,10 @@ pub mod fmt_as_expr;
 
 mod feature;
 
-//===================
-// Generated sources
-//===================
-
-/// Contains modules whose source code is generated dynamicall at project build
+/// Contains modules whose source code is generated dynamically at project build
 /// time.
 #[doc(hidden)]
 pub mod generated {
-    pub mod symbol_registration;
     pub mod token_enum_registration;
     pub(crate) mod long_names_registration;
     pub(crate) mod parselet_registration;
@@ -104,6 +99,8 @@ pub mod generated {
 }
 
 mod precedence;
+#[doc(hidden)]
+pub mod symbols;
 
 
 #[cfg(test)]
