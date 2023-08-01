@@ -529,7 +529,7 @@ pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 //
 //
 
-pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() as usize] = ["} ~Join~
+pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::Count.value() as usize] = ["} ~Join~
 
 (Row[{"    ", formatPrefix[PrefixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
@@ -538,7 +538,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TokenKind::Count.value() 
 //
 //
 //
-pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as usize] = ["} ~Join~
+pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::Count.value() as usize] = ["} ~Join~
 
 (Row[{"    ", formatInfix[InfixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
