@@ -263,8 +263,21 @@ impl<'i> ParserSession<'i> {
         N: Into<CstNode<BorrowedTokenInput<'i>>>,
         F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
     {
-        let context = self.pop_context();
-        let node = func(context);
+        // Remove the top context
+        let ctxt = self
+            .ContextStack
+            .pop()
+            .expect("context stack was unexpectedly empty");
+
+        // Remove nodes associated with `ctxt` from back of NodeStack
+        let nodes = Vec::from_iter(self.NodeStack.drain(ctxt.index..));
+
+        debug_assert_eq!(self.NodeStack.len(), ctxt.index);
+
+        // "Reduce" the nodes associated with the popped context using
+        // the provided callback.
+        let node = func(NodeSeq(nodes));
+
         self.push_node(node);
     }
 
@@ -485,29 +498,6 @@ impl<'i> ParserSession<'i> {
             .push(Context::new(self.NodeStack.len() - 1, prec));
 
         return self.ContextStack.last_mut().unwrap();
-    }
-
-    /// Removes and returns the sequence of nodes associated with the top context.
-    ///
-    /// See [`ParserSession::reduce()`] and [`ParserSession::reduce_and_climb()`].
-    fn pop_context(&mut self) -> CstNodeSeq<BorrowedTokenInput<'i>> {
-        assert!(!self.ContextStack.is_empty());
-
-        //
-        // get the top Context
-        //
-
-        let ctxt = self.ContextStack.pop().unwrap();
-
-        //
-        // Remove args from back of NodeStack
-        //
-
-        let vec = Vec::from_iter(self.NodeStack.drain(ctxt.index..));
-
-        debug_assert_eq!(self.NodeStack.len(), ctxt.index);
-
-        return NodeSeq(vec);
     }
 
     fn is_context_stack_empty(&mut self) -> bool {
