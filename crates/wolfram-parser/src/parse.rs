@@ -328,7 +328,7 @@ impl<'i> ParserSession<'i> {
     /// Apply the continuation function from the top context to
     /// attempt to continue parsing.
     pub(crate) fn try_continue(&mut self) {
-        if self.is_context_stack_empty() {
+        if self.ContextStack.is_empty() {
             // no call needed here
             return;
         }
@@ -498,10 +498,6 @@ impl<'i> ParserSession<'i> {
             .push(Context::new(self.NodeStack.len() - 1, prec));
 
         return self.ContextStack.last_mut().unwrap();
-    }
-
-    fn is_context_stack_empty(&mut self) -> bool {
-        return self.ContextStack.is_empty();
     }
 
     pub(crate) fn top_context<'s>(&'s mut self) -> &'s mut Context {
