@@ -27,8 +27,7 @@ use wolfram_expr::Expr;
 // Slices of source code: Buffer and BufferAndLength
 //==========================================================
 
-/// This type represents a subslice of the complete input byte sequence,
-/// starting at the specified byte [`offset`][Buffer::offset].
+/// This type represents a subslice of the complete input byte sequence.
 ///
 /// Note that the length of [`slice`][Buffer::slice] is NOT guaranteed to correspond to any
 /// semantically meaningful span of the input. (For that, see [`BufferAndLength`]).

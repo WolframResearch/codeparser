@@ -64,8 +64,7 @@ impl TimesParselet {
             let (mut trivia1, mut tok1) =
                 session.current_token_eat_trivia_into();
 
-            let mut I: &dyn InfixParselet =
-                INFIX_PARSELETS[usize::from(tok1.tok.value())];
+            let mut I: &dyn InfixParselet = tok1.tok.infix_parselet();
 
             tok1 = I.process_implicit_times(session, tok1);
 
@@ -81,12 +80,12 @@ impl TimesParselet {
                 (trivia1, tok1) = session
                     .current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-                I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
+                I = tok1.tok.infix_parselet();
 
                 tok1 = I.process_implicit_times(session, tok1);
             }
 
-            I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
+            I = tok1.tok.infix_parselet();
 
             //
             // Cannot just compare tokens
