@@ -94,7 +94,7 @@ impl TimesParselet {
             //
             // and we want only a single Infix node created
             //
-            if I.as_any().type_id() != timesParselet.as_any().type_id() {
+            if I.getOp() != timesParselet.getOp() {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //
