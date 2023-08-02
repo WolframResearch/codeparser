@@ -586,9 +586,8 @@ impl PrefixParselet for PrefixUnhandledParselet {
         // TODO(cleanup): This call does nothing? Add test and remove.
         let _ = session.tokenizer.peek_token();
 
-        let I = tok_in.tok.infix_parselet();
-
-        let TokenPrecedence = I.getPrecedence(session);
+        let TokenPrecedence =
+            tok_in.tok.infix_parselet().getPrecedence(session);
 
         //
         // if (Ctxt.prec > TokenPrecedence)
@@ -615,10 +614,8 @@ impl PrefixParselet for PrefixUnhandledParselet {
 
         session.push_context(TokenPrecedence);
 
-        let P2 = tok_in.tok.infix_parselet();
-
         // MUSTTAIL
-        return P2.parse_infix(session, tok_in);
+        return session.parse_infix(tok_in);
     }
 }
 
@@ -1047,8 +1044,6 @@ impl InfixOperatorParselet {
 
             let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
-            let I = tok1.tok.infix_parselet();
-
             //
             // Cannot just compare tokens
             //
@@ -1062,7 +1057,7 @@ impl InfixOperatorParselet {
             //
             // then just compare parselets directly here
             //
-            if I.getOp() != self.getOp() {
+            if tok1.tok.infix_parselet().getOp() != self.getOp() {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //

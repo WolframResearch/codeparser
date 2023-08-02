@@ -64,9 +64,10 @@ impl TimesParselet {
             let (mut trivia1, mut tok1) =
                 session.current_token_eat_trivia_into();
 
-            let mut I: &dyn InfixParselet = tok1.tok.infix_parselet();
-
-            tok1 = I.process_implicit_times(session, tok1);
+            tok1 = tok1
+                .tok
+                .infix_parselet()
+                .process_implicit_times(session, tok1);
 
             if tok1.tok == TokenKind::Fake_ImplicitTimes {
                 //
@@ -80,12 +81,11 @@ impl TimesParselet {
                 (trivia1, tok1) = session
                     .current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-                I = tok1.tok.infix_parselet();
-
-                tok1 = I.process_implicit_times(session, tok1);
+                tok1 = tok1
+                    .tok
+                    .infix_parselet()
+                    .process_implicit_times(session, tok1);
             }
-
-            I = tok1.tok.infix_parselet();
 
             //
             // Cannot just compare tokens
@@ -94,7 +94,7 @@ impl TimesParselet {
             //
             // and we want only a single Infix node created
             //
-            if I.getOp() != timesParselet.getOp() {
+            if tok1.tok.infix_parselet().getOp() != timesParselet.getOp() {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //

@@ -244,6 +244,13 @@ impl<'i> ParserSession<'i> {
         token.tok.prefix_parselet().parse_prefix(self, token)
     }
 
+    /// Lookup and apply the [`InfixParselet`] implementation associated
+    /// with the [`TokenKind`] of `token`.
+    // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
+    fn parse_infix(&mut self, token: TokenRef<'i>) {
+        token.tok.infix_parselet().parse_infix(self, token)
+    }
+
     /// Pop the top context and push a new node constructed by `func`, then
     /// call [`ParserSession::parse_climb()`].
     pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)
@@ -295,13 +302,12 @@ impl<'i> ParserSession<'i> {
         let (trivia1, mut token) =
             self.current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-        let mut I: &dyn InfixParselet = token.tok.infix_parselet();
+        token = token
+            .tok
+            .infix_parselet()
+            .process_implicit_times(self, token);
 
-        token = I.process_implicit_times(self, token);
-
-        I = token.tok.infix_parselet();
-
-        let TokenPrecedence = I.getPrecedence(self);
+        let TokenPrecedence = token.tok.infix_parselet().getPrecedence(self);
 
         //
         // if (Ctxt.Prec > TokenPrecedence)
@@ -322,7 +328,7 @@ impl<'i> ParserSession<'i> {
         self.push_trivia_seq(trivia1);
 
         // MUSTTAIL
-        return I.parse_infix(self, token);
+        return self.parse_infix(token);
     }
 
     /// Apply the continuation function from the top context to
