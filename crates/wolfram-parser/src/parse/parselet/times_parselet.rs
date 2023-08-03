@@ -64,10 +64,7 @@ impl TimesParselet {
             let (mut trivia1, mut tok1) =
                 session.current_token_eat_trivia_into();
 
-            tok1 = tok1
-                .tok
-                .infix_parselet()
-                .process_implicit_times(session, tok1);
+            tok1 = session.do_process_implicit_times(tok1);
 
             if tok1.tok == TokenKind::Fake_ImplicitTimes {
                 //
@@ -81,10 +78,7 @@ impl TimesParselet {
                 (trivia1, tok1) = session
                     .current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-                tok1 = tok1
-                    .tok
-                    .infix_parselet()
-                    .process_implicit_times(session, tok1);
+                tok1 = session.do_process_implicit_times(tok1)
             }
 
             //
