@@ -1,3 +1,37 @@
+//! Parser implementation.
+//!
+//! # Parser Design
+//!
+//! Each parse of a Wolfram input is managed by a [`ParserSession`] instance.
+//!
+//! Parsing logic is structured into individual "modules" calls *parselets*.
+//!
+//! There are two kinds of parselet:
+//!
+//! * [`PrefixParselet`] — invoked when there is no previous expression in the
+//!   current context.
+//! * [`InfixParselet`] — invoked when there is a previous expression in the
+//!   current context.
+//!
+//! Every token is associated with one [`PrefixParselet`] instance
+//! ([`TokenKind::prefix_parselet()`]) and one
+//! [`InfixParselet`] instance ([`TokenKind::infix_parselet()`]), which are
+//! invoked, respectively, when that token is encountered in "prefix" or "infix"
+//! position.
+//!
+//! Parselet implementations will typically read the current or next token,
+//! do a bit of logic, optionally push a node onto the node stack, and then
+//! either:
+//!
+//! 1. Call [`parse_prefix()`][ParserSession::parse_prefix] on the next token in the input
+//! 2. Call [`parse_infix()`][ParserSession::parse_infix] on the next token in the input
+//! 3. Call [`reduce_and_climb()`][ParserSession::reduce_and_climb] to push a
+//!    completed parsed expression onto the node stack and parse the next token
+//!    using `parse_infix()`.
+//! 4. Call [`try_continue()`][ParserSession::try_continue] to invoke the
+//!    continuation function from the top context on the context stack.
+
+
 pub(crate) mod parselet;
 mod parser_session;
 
