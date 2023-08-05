@@ -455,7 +455,10 @@ pub enum TokenKind {
     LongName_InvisibleComma = 434, // { group2Bits:0, group1Bits:0, enum:434, 0b1_1011_0010 }
     LongName_InvisibleApplication = 435, // { group2Bits:0, group1Bits:0, enum:435, 0b1_1011_0011 }
     LongName_LongEqual = 436, // { group2Bits:0, group1Bits:0, enum:436, 0b1_1011_0100 }
-    Count = 437, // { group2Bits:0, group1Bits:0, enum:437, 0b1_1011_0101 }
+}
+
+impl TokenKind {
+	pub const COUNT: usize = 437;
 }
 
 //
@@ -927,7 +930,6 @@ pub fn TokenToSymbol(token: TokenKind) -> Symbol {
         LongName_InvisibleComma => return st::Token_LongName_InvisibleComma,
         LongName_InvisibleApplication => return st::Token_LongName_InvisibleApplication,
         LongName_LongEqual => return st::Token_LongName_LongEqual,
-        Count => return st::Token_Count,
         _ => panic!("Unhandled token type"),
     }
 }
@@ -1372,7 +1374,6 @@ pub fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {
         st::Token_LongName_InvisibleComma => LongName_InvisibleComma,
         st::Token_LongName_InvisibleApplication => LongName_InvisibleApplication,
         st::Token_LongName_LongEqual => LongName_LongEqual,
-        st::Token_Count => Count,
         _ => return None,
     };
 

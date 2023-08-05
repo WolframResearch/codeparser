@@ -68,7 +68,7 @@ pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 //
 //
 
-pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::Count.value() as usize] = [
+pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::COUNT] = [
     &prefixErrorParselet, // Token`Unknown
     &prefixEndOfFileParselet, // Token`EndOfFile
     &symbolParselet, // Token`Symbol
@@ -511,7 +511,7 @@ pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::Count.value(
 //
 //
 //
-pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::Count.value() as usize] = [
+pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::COUNT] = [
     &infixAssertFalseParselet, // Token`Unknown
     &infixAssertFalseParselet, // Token`EndOfFile
     &infixImplicitTimesParselet, // Token`Symbol

@@ -502,6 +502,7 @@ add_custom_command(
 	${CMAKE_COMMAND} -E copy
 	${RUST_TARGET_DIR}/$<IF:$<CONFIG:Release>,release,debug>/${CMAKE_SHARED_LIBRARY_PREFIX}codeparser_wll${CMAKE_SHARED_LIBRARY_SUFFIX}
 	${CODEPARSE_DYLIB}
+
 	DEPENDS
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence_values.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs

@@ -544,7 +544,5 @@ Token`LongName`CapitalDifferentialD -> Next,
 Token`LongName`DifferentialD -> Next,
 Token`LongName`InvisibleComma -> Next,
 Token`LongName`InvisibleApplication -> Next,
-Token`LongName`LongEqual -> Next,
-
-Token`Count -> Next
+Token`LongName`LongEqual -> Next
 |>
