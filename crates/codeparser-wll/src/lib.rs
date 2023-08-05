@@ -938,6 +938,30 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
 }
 
 //======================================
+// TokenIsEmpty
+//======================================
+
+#[cfg(feature = "USE_MATHLINK")]
+#[wll::export(wstp)]
+fn TokenIsEmpty_LibraryLink(link: &mut wstp::Link) {
+    let len = match link.test_head("List") {
+        Ok(len) => len,
+        Err(err) => panic!("expected List: {err}"),
+    };
+
+    if len != 1 {
+        panic!()
+    }
+
+    let tok_kind = wolfram_parser::tokenize::TokenKind::from_expr(
+        &get_expr(link).unwrap(),
+    )
+    .expect("invalid TokenKind value");
+
+    link.put_expr(&Expr::from(tok_kind.isEmpty())).unwrap();
+}
+
+//======================================
 // ScopedFileBuffer and related types
 //======================================
 

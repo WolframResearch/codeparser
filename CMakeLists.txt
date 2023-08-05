@@ -128,6 +128,7 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Trees.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/TopLevel.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/ToString.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/TokenEnum.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Utils.wl
 )
 
@@ -141,7 +142,6 @@ set(PACLETINFO_IN_SOURCE
 
 set(GENERATED_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/RowBox.wl
-	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
 )
 
 set(GENERATED_WL_PACLET_RESOURCES_SOURCES
@@ -301,13 +301,11 @@ add_custom_command(
 
 add_custom_command(
 	OUTPUT
-	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/token_enum_registration.rs
 
 	COMMAND
 	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	COMMAND
-	${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+
 	DEPENDS
 	${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
@@ -335,7 +333,6 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Parselet.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 	${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-	${PROJECT_BINARY_DIR}/paclet/CodeParser/Kernel/TokenEnum.wl
 	${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY
@@ -509,6 +506,7 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence_values.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/parselet_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/token_enum_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/*
@@ -516,7 +514,6 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/read/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/bin/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/tests/*
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/tokenize/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/parse/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/parse/parselet/*
