@@ -68,15 +68,20 @@ If[FailureQ[importedTokenEnumSource],
 
 cur = 0;
 enumMap = <||>;
-KeyValueMap[(
-  Which[
-    IntegerQ[#2], cur = #2,
-    #2 === Next, cur++,
-    True, cur = enumMap[#2]
-  ];
-  AssociateTo[enumMap, #1 -> cur])&
-  ,
-  importedTokenEnumSource
+KeyValueMap[
+	{token, value} |-> (
+		Which[
+			IntegerQ[value],
+				cur = value,
+			value === Next,
+				cur++,
+			True,
+				cur = enumMap[value]
+		];
+
+		AssociateTo[enumMap, token -> cur]
+	),
+	importedTokenEnumSource
 ];
 
 (*
@@ -359,23 +364,20 @@ isEmpty[tok_ /; MemberQ[$isEmptyTokens, tok]] := True
 isEmpty[_] = False
 
 
-group1Bits[tok_] := group1Bits[tok] =
-Which[
-  isPossibleBeginning[tok], BitShiftLeft[2^^01, 9],
-  isCloser[tok],            BitShiftLeft[2^^10, 9],
-  isError[tok],             BitShiftLeft[2^^11, 9],
-  True,                     BitShiftLeft[2^^00, 9]
-]
+group1Bits[tok_] :=
+	Which[
+		isPossibleBeginning[tok], "PossibleBeginning",
+		isCloser[tok],            "Closer",
+		isError[tok],             "Error",
+		True,                     None
+	]
 
 
-group2Bits[tok_] := group2Bits[tok] =
-Which[
-  isEmpty[tok],         BitShiftLeft[2^^01, 9 + 2],
-(*unused,               BitShiftLeft[2^^10, 9 + 2],*)
-(*unused,               BitShiftLeft[2^^11, 9 + 2],*)
-  True,                 BitShiftLeft[2^^00, 9 + 2]
-
-]
+group2Bits[tok_] :=
+	Replace[isEmpty[tok], {
+		True -> "Empty",
+		False -> None
+	}]
 
 
 
@@ -395,6 +397,55 @@ use crate::symbol::Symbol;
 use wolfram_expr::symbol::SymbolRef;
 
 //
+// Computing TokenKind variant value
+//
+
+#[rustfmt::skip]
+pub(crate) enum Group1 {
+    PossibleBeginning = 0b01,
+    Closer            = 0b10,
+    Error             = 0b11,
+    None              = 0b00,
+}
+
+pub(crate) enum Group2 {
+    Empty = 0b01,
+    None,
+}
+
+macro_rules! variant {
+    ($count:literal, $group1:ident, Empty) => {
+        variant_value($count, Group1::$group1, Group2::Empty)
+    };
+
+    ($count:literal, Empty) => {
+        variant_value($count, Group1::None, Group2::Empty)
+    };
+
+    ($count:literal, $group1:ident) => {
+        variant_value($count, Group1::$group1, Group2::None)
+    };
+
+    ($count:literal) => {
+        variant_value($count, Group1::None, Group2::None)
+    };
+}
+
+#[rustfmt::skip]
+const fn variant_value(count: u16, group1: Group1, group2: Group2) -> u16 {
+    // The unique count should only use the first 9 bits.
+    debug_assert!(count & 0b1_1111_1111 == count);
+
+    let group1 = group1 as u16;
+    let group2 = group2 as u16;
+
+    debug_assert!(group1 <= 3); // Must fit in 0bXX
+    debug_assert!(group2 <= 3); // Must fit in 0bXX
+
+    count | group1 << 9 | group2 << 11
+}
+
+//
 // All token enums
 //
 
@@ -403,20 +454,24 @@ use wolfram_expr::symbol::SymbolRef;
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u16)]
 pub enum TokenKind {"} ~Join~
-KeyValueMap[(
-  (* Row[{"    ",   StringReplace[ToString[#], {"`" -> "_", "$" -> "_"}], " = ", *)
-  Row[{
-	"    ",
-	toTokenEnumVariant[#1],
-	" = ",
-    BitOr[
-      group2Bits[#1],
-      group1Bits[#1],
-      #2
-    ], ", // { group2Bits:", group2Bits[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, ", ", StringJoin["0b", {StringTake[#, {1, 1}], "_", StringTake[#, {2, 5}], "_", StringTake[#, {6, 9}]}&[IntegerString[#2, 2, 9]]], " }"
-  }])&
-  ,
-  KeyDrop[enumMap, Token`Error`First]
+KeyValueMap[
+	Function @ StringJoin[{
+		"    ",
+		toTokenEnumVariant[#1],
+		StringRepeat[" ", 40 - StringLength @ toTokenEnumVariant[#1]],
+		" = variant!(",
+		ToString[#2],
+		Replace[group1Bits[#1], {
+			s_?StringQ :> ", " <> s,
+			None -> ""
+		}],
+		Replace[group2Bits[#1], {
+			s_?StringQ :> ", " <> s,
+			None -> ""
+		}],
+		"),"
+	}],
+	KeyDrop[enumMap, Token`Error`First]
 ] ~Join~ {
 	"}\n",
 	"impl TokenKind {",
