@@ -405,3 +405,24 @@ pub(crate) fn is_sorted_by<T, B: Ord, F: Fn(&T) -> B>(
 ) -> bool {
     slice.windows(2).all(|elem| by(&elem[0]) <= by(&elem[1]))
 }
+
+macro_rules! from_fn {
+    ([$ty:ty, $len:literal], $default:expr, |$index:ident: usize| $expr:expr) => {{
+        let mut table: [$ty; $len] = [$default; $len];
+
+        let mut $index: usize = 0;
+        loop {
+            if $index >= $len {
+                break;
+            }
+
+            table[$index] = $expr;
+
+            $index += 1;
+        }
+
+        table
+    }};
+}
+
+pub(crate) use from_fn;
