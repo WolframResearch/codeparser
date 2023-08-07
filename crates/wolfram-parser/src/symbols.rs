@@ -429,7 +429,6 @@ pub const Token_EqualBangEqual: Symbol = unsafe { Symbol::unchecked_new("Token`E
 pub const Token_EqualEqual: Symbol = unsafe { Symbol::unchecked_new("Token`EqualEqual") };
 pub const Token_EqualEqualEqual: Symbol = unsafe { Symbol::unchecked_new("Token`EqualEqualEqual") };
 pub const Token_Error_Aborted: Symbol = unsafe { Symbol::unchecked_new("Token`Error`Aborted") };
-pub const Token_Error_End: Symbol = unsafe { Symbol::unchecked_new("Token`Error`End") };
 pub const Token_Error_ExpectedEqual: Symbol = unsafe { Symbol::unchecked_new("Token`Error`ExpectedEqual") };
 pub const Token_Error_ExpectedFile: Symbol = unsafe { Symbol::unchecked_new("Token`Error`ExpectedFile") };
 pub const Token_Error_ExpectedLetterlike: Symbol = unsafe { Symbol::unchecked_new("Token`Error`ExpectedLetterlike") };

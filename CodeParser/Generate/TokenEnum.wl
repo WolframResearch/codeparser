@@ -281,7 +281,6 @@ isCloser[_] = False
 
 
 
-isError[Token`Error`First] = True
 isError[Token`Error`Unknown] = True
 isError[Token`Error`ExpectedEqual] = True
 isError[Token`Error`Number] = True
@@ -301,7 +300,6 @@ isError[Token`Error`PrefixImplicitNull] = True
 isError[Token`Error`InfixImplicitNull] = True
 isError[Token`Error`UnsafeCharacterEncoding] = True
 isError[Token`Error`UnexpectedCommentCloser] = True
-isError[Token`Error`End] = True
 
 isError[_] = False
 
@@ -471,11 +469,11 @@ KeyValueMap[
 		}],
 		"),"
 	}],
-	KeyDrop[enumMap, Token`Error`First]
+	enumMap
 ] ~Join~ {
 	"}\n",
 	"impl TokenKind {",
-	"	pub const COUNT: usize = " <> ToString[Length[enumMap] - 3] <> ";",
+	"	pub const COUNT: usize = " <> ToString[Length[tokens]] <> ";",
 	"}"
 };
 

@@ -103,7 +103,6 @@ pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::COUNT] = [
     &prefixErrorParselet, // Token`Error`UnterminatedLinearSyntaxBlob
     &prefixErrorParselet, // Token`Error`UnsupportedToken
     &prefixErrorParselet, // Token`Error`UnexpectedCommentCloser
-    &prefixUnhandledParselet, // Token`Error`End
     &prefixUnhandledParselet, // Token`Dot
     &prefixUnhandledParselet, // Token`Colon
     &GroupParselet::new(TokenKind::OpenParen, GroupOperator::CodeParser_GroupParen), // Token`OpenParen
@@ -546,7 +545,6 @@ pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::COUNT] = [
     &infixAssertFalseParselet, // Token`Error`UnterminatedLinearSyntaxBlob
     &infixAssertFalseParselet, // Token`Error`UnsupportedToken
     &infixAssertFalseParselet, // Token`Error`UnexpectedCommentCloser
-    &infixImplicitTimesParselet, // Token`Error`End
     &InfixOperatorParselet::new(Precedence::DOT, InfixOperator::Dot), // Token`Dot
     &colonParselet, // Token`Colon
     &infixImplicitTimesParselet, // Token`OpenParen
