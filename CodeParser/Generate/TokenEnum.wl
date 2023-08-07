@@ -43,23 +43,6 @@ GroupOpenerToCloser[Token`LongName`OpenCurlyQuote] = Closer`LongName`CloseCurlyQ
 GroupOpenerToCloser[Token`LongName`OpenCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
 
 
-TokenToCloser[Token`CloseCurly] = Closer`CloseCurly
-TokenToCloser[Token`BarGreater] = Closer`BarGreater
-TokenToCloser[Token`CloseSquare] = Closer`CloseSquare
-TokenToCloser[Token`CloseParen] = Closer`CloseParen
-
-TokenToCloser[Token`LongName`RightAngleBracket] = Closer`LongName`RightAngleBracket
-TokenToCloser[Token`LongName`RightCeiling] = Closer`LongName`RightCeiling
-TokenToCloser[Token`LongName`RightFloor] = Closer`LongName`RightFloor
-TokenToCloser[Token`LongName`RightDoubleBracket] = Closer`LongName`RightDoubleBracket
-TokenToCloser[Token`LongName`RightBracketingBar] = Closer`LongName`RightBracketingBar
-TokenToCloser[Token`LongName`RightDoubleBracketingBar] = Closer`LongName`RightDoubleBracketingBar
-TokenToCloser[Token`LongName`RightAssociation] = Closer`LongName`RightAssociation
-TokenToCloser[Token`LongName`CloseCurlyQuote] = Closer`LongName`CloseCurlyQuote
-TokenToCloser[Token`LongName`CloseCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
-
-
-
 If[FailureQ[importedTokenEnumSource],
   Print[importedTokenEnumSource];
   Quit[1]
