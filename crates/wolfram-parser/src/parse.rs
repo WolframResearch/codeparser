@@ -256,14 +256,14 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 impl TokenKind {
     /// Get the [`PrefixParselet`] implementation associated with this token.
     fn prefix_parselet(&self) -> &'static dyn PrefixParselet {
-        let index = usize::from(self.value());
+        let index = usize::from(self.id());
 
         PREFIX_PARSELETS[index]
     }
 
     /// Get the [`InfixParselet`] implementation associated with this token.
     fn infix_parselet(&self) -> &'static dyn InfixParselet {
-        let index = usize::from(self.value());
+        let index = usize::from(self.id());
 
         INFIX_PARSELETS[index]
     }

@@ -35,7 +35,7 @@ impl TokenKind {
     }
 
     // TODO: This is only used with TOKEN_COUNT -- remove this?
-    pub(crate) const fn value(self) -> u16 {
+    pub(crate) const fn id(self) -> u16 {
         let value: u16 = self as u16;
         return value & 0x1ff;
     }

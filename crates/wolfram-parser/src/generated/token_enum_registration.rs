@@ -529,16 +529,16 @@ use crate::symbols as st;
 //
 // TokenKind::Integer must be 0x4 to allow setting the 0b1 bit to convert to TokenKind::REAL, and 0b10 bit to convert to TokenKind::Rational
 //
-const _: () = assert!(TokenKind::Integer.value() == 0x4, "Check your assumptions");
-const _: () = assert!(TokenKind::Real.value() == 0x5, "Check your assumptions");
-const _: () = assert!(TokenKind::Rational.value() == 0x6, "Check your assumptions");
+const _: () = assert!(TokenKind::Integer.id() == 0x4, "Check your assumptions");
+const _: () = assert!(TokenKind::Real.id() == 0x5, "Check your assumptions");
+const _: () = assert!(TokenKind::Rational.id() == 0x6, "Check your assumptions");
 
 //
 // TokenKind::InternalNewline must be 0x8 to allow setting the 0b100 bit to convert to TokenKind::ToplevelNewline
 //
-const _: () = assert!(TokenKind::InternalNewline.value() == 0b1000, "Check your assumptions");
-const _: () = assert!(TokenKind::ToplevelNewline.value() == 0b1100, "Check your assumptions");
-//const _: () = assert!(TokenKind::Error_First.value() == 0x10, "Check your assumptions");
+const _: () = assert!(TokenKind::InternalNewline.id() == 0b1000, "Check your assumptions");
+const _: () = assert!(TokenKind::ToplevelNewline.id() == 0b1100, "Check your assumptions");
+//const _: () = assert!(TokenKind::Error_First.id() == 0x10, "Check your assumptions");
 
 
 #[allow(dead_code)]
