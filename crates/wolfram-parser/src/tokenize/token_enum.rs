@@ -69,56 +69,24 @@ impl TokenKind {
         return (self.bits() & 0x1fc) == 0x08;
     }
 
-    //
-    // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0000_0110_0000_0000 (0x600)
-    // And test against 0b0000_0010_0000_0000 (0x200)
-    //
     pub const fn isPossibleBeginning(self) -> bool {
         return self.bits() & Group1::MASK == Group1::PossibleBeginning as u16;
     }
 
-    //
-    // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0000_0110_0000_0000 (0x600)
-    // And test against 0b0000_0100_0000_0000 (0x400)
-    //
     pub const fn isCloser(self) -> bool {
         return self.bits() & Group1::MASK == Group1::Closer as u16;
     }
 
-    //
-    // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0000_0110_0000_0000 (0x600)
-    // And test against 0b0000_0110_0000_0000 (0x600)
-    //
     pub const fn isError(self) -> bool {
         return self.bits() & Group1::MASK == Group1::Error as u16;
     }
 
-    //
-    // isUnterminated value matches: 0b0000_000x_xxxx_xxxx (x is unknown)
-    //
-    // Only valid if already checked isError
-    //
-    //         Mask off 0b0000_0000_0001_1100 (0x1c)
-    // And test against 0b0000_0000_0001_1100 (0x1c)
-    //
     pub const fn isUnterminated(self) -> bool {
-        return (self.bits() & 0x1c) == 0x1c;
+        return self.bits() & Group2::MASK == Group2::Unterminated as u16;
     }
 
-    //
-    // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
-    //
-    //         Mask off 0b0001_1000_0000_0000 (0x1800)
-    // And test against 0b0000_1000_0000_0000 (0x0800)
-    //
     pub const fn isEmpty(self) -> bool {
-        return (self.bits() & Group2::MASK) == Group2::Empty as u16;
+        return self.bits() & Group2::MASK == Group2::Empty as u16;
     }
 }
 

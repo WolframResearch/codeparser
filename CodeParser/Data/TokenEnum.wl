@@ -64,12 +64,10 @@ while also allowing fast testing of trivia (just a bit mask) and also fast testi
 non-ToplevelNewline trivia (also just a bit mask)
 *)
 Token`Error`UnterminatedComment -> Next, (*28*)
-Token`Error`Unterminated`First -> Token`Error`UnterminatedComment,
 Token`Error`UnterminatedString -> Next,
 Token`Error`UnterminatedFileString -> Next,
 Token`Error`UnterminatedLinearSyntaxBlob -> Next,
 Token`Error`UnsupportedToken -> Next, (*32*)
-Token`Error`Unterminated`End -> Token`Error`UnsupportedToken,
 Token`Error`UnexpectedCommentCloser -> Next,
 
 (* 1 character tokens *)

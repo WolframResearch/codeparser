@@ -19,22 +19,26 @@ pub(crate) enum Group1 {
     None              = 0b00 << 9,
 }
 
+#[rustfmt::skip]
 pub(crate) enum Group2 {
-    Empty = 0b01 << 11,
-    None  = 0b00 << 11,
+    Empty        = 0b01 << 11,
+    Unterminated = 0b10 << 11,
+    None         = 0b00 << 11,
 }
 
 impl Group1 {
-	pub(crate) const MASK: u16 = 0b11 << 9;
+    /// Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
+    pub(crate) const MASK: u16 = 0b11 << 9;
 }
 
 impl Group2 {
-	pub(crate) const MASK: u16 = 0b11 << 11;
+    /// Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
+    pub(crate) const MASK: u16 = 0b11 << 11;
 }
 
 macro_rules! variant {
-    ($count:literal, $group1:ident, Empty) => {
-        variant_value($count, Group1::$group1, Group2::Empty)
+    ($count:literal, $group1:ident, $group2:ident) => {
+        variant_value($count, Group1::$group1, Group2::$group2)
     };
 
     ($count:literal, Empty) => {
@@ -56,7 +60,7 @@ const fn variant_value(count: u16, group1: Group1, group2: Group2) -> u16 {
     let group2 = group2 as u16;
 
     // The unique count should only use the first 9 bits.
-	// Group1 uses the next two bits, and Group2 the two bits after that.
+    // Group1 uses the next two bits, and Group2 the two bits after that.
     debug_assert!(count  & 0b0000_0001_1111_1111 == count );
     debug_assert!(group1 & 0b0000_0110_0000_0000 == group1);
     debug_assert!(group2 & 0b0001_1000_0000_0000 == group2);
@@ -101,13 +105,11 @@ pub enum TokenKind {
     Error_PrefixImplicitNull                 = variant!(25, Error, Empty),
     Error_InfixImplicitNull                  = variant!(26, Error, Empty),
     Error_UnsafeCharacterEncoding            = variant!(27, Error),
-    Error_UnterminatedComment                = variant!(28, Error),
-    Error_Unterminated_First                 = variant!(28),
-    Error_UnterminatedString                 = variant!(29, Error),
-    Error_UnterminatedFileString             = variant!(30, Error),
-    Error_UnterminatedLinearSyntaxBlob       = variant!(31, Error),
+    Error_UnterminatedComment                = variant!(28, Error, Unterminated),
+    Error_UnterminatedString                 = variant!(29, Error, Unterminated),
+    Error_UnterminatedFileString             = variant!(30, Error, Unterminated),
+    Error_UnterminatedLinearSyntaxBlob       = variant!(31, Error, Unterminated),
     Error_UnsupportedToken                   = variant!(32, Error),
-    Error_Unterminated_End                   = variant!(32),
     Error_UnexpectedCommentCloser            = variant!(33, Error),
     Dot                                      = variant!(34),
     Colon                                    = variant!(35),
@@ -537,12 +539,6 @@ const _: () = assert!(TokenKind::Rational.value() == 0x6, "Check your assumption
 const _: () = assert!(TokenKind::InternalNewline.value() == 0b1000, "Check your assumptions");
 const _: () = assert!(TokenKind::ToplevelNewline.value() == 0b1100, "Check your assumptions");
 //const _: () = assert!(TokenKind::Error_First.value() == 0x10, "Check your assumptions");
-
-//
-// TokenKind::Error_Unterminated_First must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
-//
-const _: () = assert!(TokenKind::Error_Unterminated_First.value() == 0x1c, "Check your assumptions");
-const _: () = assert!(TokenKind::Error_Unterminated_End.value() == 0x20, "Check your assumptions");
 
 
 #[allow(dead_code)]
@@ -985,7 +981,6 @@ pub fn TokenToSymbol(token: TokenKind) -> Symbol {
         LongName_InvisibleComma => return st::Token_LongName_InvisibleComma,
         LongName_InvisibleApplication => return st::Token_LongName_InvisibleApplication,
         LongName_LongEqual => return st::Token_LongName_LongEqual,
-        _ => panic!("Unhandled token type"),
     }
 }
 
