@@ -4,21 +4,28 @@ use criterion::{criterion_group, criterion_main, Criterion, SamplingMode};
 
 use wolfram_parser::ParseOptions;
 
-fn parse_tokens(input: &str) {
-    parse_tokens_u8(input.as_bytes())
+fn tokenize(input: &str) {
+    tokenize_bytes(input.as_bytes())
 }
 
-fn parse_tokens_u8(input: &[u8]) {
+fn tokenize_bytes(input: &[u8]) {
     wolfram_parser::tokenize_bytes(input, &ParseOptions::default()).unwrap();
 }
 
+fn parse(input: &str) {
+    wolfram_parser::parse_to_cst(input, &ParseOptions::default());
+}
+
+fn parse_bytes(input: &[u8]) {
+    wolfram_parser::parse_bytes_to_cst(input, &ParseOptions::default());
+}
+
 fn benchmark(c: &mut Criterion) {
-    c.bench_function("tokenize 2 + 2", |b| b.iter(|| parse_tokens("2 + 2")));
+    c.bench_function("tokenize 2 + 2", |b| b.iter(|| tokenize("2 + 2")));
 
     let boxes_wl = include_str!("../../../CodeParser/Kernel/Boxes.wl");
-    c.bench_function("tokenize Boxes.wl", |b| {
-        b.iter(|| parse_tokens(boxes_wl))
-    });
+    c.bench_function("tokenize Boxes.wl", |b| b.iter(|| tokenize(boxes_wl)));
+    c.bench_function("parse CST of Boxes.wl", |b| b.iter(|| parse(boxes_wl)));
 
     benchmark_large_files(c);
 }
@@ -35,7 +42,10 @@ fn benchmark_large_files(c: &mut Criterion) {
     let relief_plot =
         fs::read(Path::new("../../Tests/files/large/ReliefPlot.nb")).unwrap();
     group.bench_function("tokenize ReliefPlot.nb", |b| {
-        b.iter(|| parse_tokens_u8(&relief_plot))
+        b.iter(|| tokenize_bytes(&relief_plot))
+    });
+    group.bench_function("parse CST of ReliefPlot.nb", |b| {
+        b.iter(|| parse_bytes(&relief_plot))
     });
 
     let expanded_company_data_new = fs::read(Path::new(
@@ -43,7 +53,10 @@ fn benchmark_large_files(c: &mut Criterion) {
     ))
     .unwrap();
     group.bench_function("tokenize expandedCompanyDataNew1.m", |b| {
-        b.iter(|| parse_tokens_u8(&expanded_company_data_new))
+        b.iter(|| tokenize_bytes(&expanded_company_data_new))
+    });
+    group.bench_function("parse CST of expandedCompanyDataNew1.m", |b| {
+        b.iter(|| parse_bytes(&expanded_company_data_new))
     });
 
     //-------------
@@ -57,7 +70,10 @@ fn benchmark_large_files(c: &mut Criterion) {
         fs::read(Path::new("../../Tests/files/large/geomagneticmodels.m"))
             .unwrap();
     group.bench_function("tokenize geomagneticmodels.m", |b| {
-        b.iter(|| parse_tokens_u8(&geomagnetic_models))
+        b.iter(|| tokenize_bytes(&geomagnetic_models))
+    });
+    group.bench_function("parse CST of geomagneticmodels.m", |b| {
+        b.iter(|| parse_bytes(&geomagnetic_models))
     });
 }
 
