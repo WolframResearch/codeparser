@@ -13,15 +13,23 @@ use wolfram_expr::symbol::SymbolRef;
 
 #[rustfmt::skip]
 pub(crate) enum Group1 {
-    PossibleBeginning = 0b01,
-    Closer            = 0b10,
-    Error             = 0b11,
-    None              = 0b00,
+    PossibleBeginning = 0b01 << 9,
+    Closer            = 0b10 << 9,
+    Error             = 0b11 << 9,
+    None              = 0b00 << 9,
 }
 
 pub(crate) enum Group2 {
-    Empty = 0b01,
-    None,
+    Empty = 0b01 << 11,
+    None  = 0b00 << 11,
+}
+
+impl Group1 {
+	pub(crate) const MASK: u16 = 0b11 << 9;
+}
+
+impl Group2 {
+	pub(crate) const MASK: u16 = 0b11 << 11;
 }
 
 macro_rules! variant {
@@ -44,16 +52,16 @@ macro_rules! variant {
 
 #[rustfmt::skip]
 const fn variant_value(count: u16, group1: Group1, group2: Group2) -> u16 {
-    // The unique count should only use the first 9 bits.
-    debug_assert!(count & 0b1_1111_1111 == count);
-
     let group1 = group1 as u16;
     let group2 = group2 as u16;
 
-    debug_assert!(group1 <= 3); // Must fit in 0bXX
-    debug_assert!(group2 <= 3); // Must fit in 0bXX
+    // The unique count should only use the first 9 bits.
+	// Group1 uses the next two bits, and Group2 the two bits after that.
+    debug_assert!(count  & 0b0000_0001_1111_1111 == count );
+    debug_assert!(group1 & 0b0000_0110_0000_0000 == group1);
+    debug_assert!(group2 & 0b0001_1000_0000_0000 == group2);
 
-    count | group1 << 9 | group2 << 11
+    count | group1 | group2
 }
 
 //

@@ -1,4 +1,5 @@
 use crate::{
+    generated::token_enum_registration::{Group1, Group2},
     source::{NextPolicy, NextPolicyBits::RETURN_TOPLEVELNEWLINE},
     tokenize::TokenKind,
 };
@@ -75,7 +76,7 @@ impl TokenKind {
     // And test against 0b0000_0010_0000_0000 (0x200)
     //
     pub const fn isPossibleBeginning(self) -> bool {
-        return (self.bits() & 0x600) == 0x200;
+        return self.bits() & Group1::MASK == Group1::PossibleBeginning as u16;
     }
 
     //
@@ -85,7 +86,7 @@ impl TokenKind {
     // And test against 0b0000_0100_0000_0000 (0x400)
     //
     pub const fn isCloser(self) -> bool {
-        return (self.bits() & 0x600) == 0x400;
+        return self.bits() & Group1::MASK == Group1::Closer as u16;
     }
 
     //
@@ -95,7 +96,7 @@ impl TokenKind {
     // And test against 0b0000_0110_0000_0000 (0x600)
     //
     pub const fn isError(self) -> bool {
-        return (self.bits() & 0x600) == 0x600;
+        return self.bits() & Group1::MASK == Group1::Error as u16;
     }
 
     //
@@ -117,7 +118,7 @@ impl TokenKind {
     // And test against 0b0000_1000_0000_0000 (0x0800)
     //
     pub const fn isEmpty(self) -> bool {
-        return (self.bits() & 0x1800) == 0x0800;
+        return (self.bits() & Group2::MASK) == Group2::Empty as u16;
     }
 }
 
