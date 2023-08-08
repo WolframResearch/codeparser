@@ -15,10 +15,8 @@ use crate::{
         SyntaxErrorNode, TernaryNode, TernaryOperator,
         UnterminatedGroupNeedsReparseNode,
     },
-    generated::parselet_registration::{
-        under1Parselet, under2Parselet, under3Parselet,
-    },
     panic_if_aborted,
+    parse::token_parselets::{under1Parselet, under2Parselet, under3Parselet},
     parse::{ColonLHS, ParserSession, Parser_identity},
     precedence::Precedence,
     source::*,

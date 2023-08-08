@@ -954,8 +954,8 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
 // Operator Enums
 //==========================================================
 
-/// Subset of [`GroupOperator`] that are valid in [`CallBody`].
-pub use crate::generated::parselet_registration::{
+// TODO(cleanup): Import these from parse directly instead of re-exporting here.
+pub use crate::parse::operators::{
     BinaryOperator, CallOperator, CompoundOperator, GroupOperator,
     InfixOperator, PostfixOperator, PrefixBinaryOperator, PrefixOperator,
     TernaryOperator,

@@ -558,7 +558,24 @@ pub fn TokenToSymbol(token: TokenKind) -> Symbol {"} ~Join~
 		"    };\n",
 		"\n",
 		"    Some(token)\n",
-		"}\n"
+		"}\n",
+		"\n",
+		"impl TokenKind {\n",
+		"    pub(crate) const VARIANTS: [TokenKind; TokenKind::COUNT] = [\n",
+		KeyValueMap[
+			{token, id} |-> StringJoin[
+				"        TokenKind::",
+				toTokenEnumVariant[token],
+				", ",
+				StringRepeat[" ", 40 - StringLength @ toTokenEnumVariant[token]],
+				"// ",
+				ToString[id],
+				"\n"
+			],
+			enumMap
+		],
+		"    ];\n",
+		"}"
 	]
 };
 

@@ -1,3 +1,10 @@
+(* FIXME:
+	The information in this file is duplicated in token_parselets.rs.
+	This duplication should be fixed soon.
+
+	This file is read in by the RowBox.wl parsing generation logic, and used
+	by CodeFormatter.
+*)
 
 (*
 CodeParser Data file

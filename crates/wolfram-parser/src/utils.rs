@@ -407,7 +407,7 @@ pub(crate) fn is_sorted_by<T, B: Ord, F: Fn(&T) -> B>(
 }
 
 macro_rules! from_fn {
-    ([$ty:ty, $len:literal], $default:expr, |$index:ident: usize| $expr:expr) => {{
+    ([$ty:ty, $len:expr], $default:expr, |$index:ident: usize| $expr:expr) => {{
         let mut table: [$ty; $len] = [$default; $len];
 
         let mut $index: usize = 0;
