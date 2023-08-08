@@ -296,29 +296,6 @@ add_custom_command(
 )
 
 #
-# TokenEnum files
-#
-
-add_custom_command(
-	OUTPUT
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/token_enum_registration.rs
-
-	COMMAND
-	${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-
-	DEPENDS
-	${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
-	${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
-	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
-	${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-	${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
-	VERBATIM
-	WORKING_DIRECTORY
-	${PROJECT_SOURCE_DIR}
-)
-
-#
 # Precedence files
 #
 add_custom_command(
@@ -485,7 +462,6 @@ add_custom_command(
 	DEPENDS
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/precedence_values.rs
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/long_names_registration.rs
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/generated/token_enum_registration.rs
 	${PROJECT_SOURCE_DIR}/crates/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/*

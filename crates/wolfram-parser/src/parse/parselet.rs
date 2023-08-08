@@ -21,7 +21,7 @@ use crate::{
     precedence::Precedence,
     source::*,
     tokenize::{
-        token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
+        token_kind::{Closer, GroupOpenerToCloser, TokenToCloser},
         tokenizer::Tokenizer_currentToken_stringifyAsTag,
         Token, TokenKind, TokenRef,
     },

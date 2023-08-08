@@ -18,7 +18,7 @@ use crate::{
         INSIDE_SLOT, INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG,
         TOPLEVEL,
     },
-    tokenize::{token_enum::Closer, Token, TokenKind, TokenRef},
+    tokenize::{token_kind::Closer, Token, TokenKind, TokenRef},
     utils::{self, from_fn},
     FirstLineBehavior,
 };

@@ -426,3 +426,45 @@ macro_rules! from_fn {
 }
 
 pub(crate) use from_fn;
+
+//======================================
+// String comparision and slice contains in `const`
+//======================================
+
+pub(crate) const fn contains(slice: &[&str], needle: &str) -> bool {
+    let mut i = 0;
+    loop {
+        if i >= slice.len() {
+            return false;
+        }
+
+        let elem = slice[i];
+
+        if const_str_equal(elem, needle) {
+            return true;
+        }
+
+        i += 1;
+    }
+}
+
+const fn const_str_equal(lhs: &str, rhs: &str) -> bool {
+    const_slice_equal(lhs.as_bytes(), rhs.as_bytes())
+}
+
+const fn const_slice_equal(lhs: &[u8], rhs: &[u8]) -> bool {
+    if lhs.len() != rhs.len() {
+        return false;
+    }
+
+    let mut i = 0;
+    while i < lhs.len() {
+        if lhs[i] != rhs[i] {
+            return false;
+        }
+
+        i += 1;
+    }
+
+    true
+}

@@ -1,15 +1,14 @@
-//
-// AUTO GENERATED FILE
-// DO NOT MODIFY
-//
-
-use crate::symbol::Symbol;
+use crate::{
+    source::{NextPolicy, NextPolicyBits::RETURN_TOPLEVELNEWLINE},
+    symbol::Symbol,
+    utils::contains,
+};
 
 use wolfram_expr::symbol::SymbolRef;
 
-//
+//======================================
 // Computing TokenKind variant value
-//
+//======================================
 
 #[rustfmt::skip]
 pub(crate) enum Group1 {
@@ -36,488 +35,843 @@ impl Group2 {
     pub(crate) const MASK: u16 = 0b11 << 11;
 }
 
-macro_rules! variant {
-    ($count:literal, $group1:ident, $group2:ident) => {
-        variant_value($count, Group1::$group1, Group2::$group2)
-    };
+const POSSIBLE_BEGINNING: &[&str] = &[
+    "Symbol",
+    "String",
+    "Integer",
+    "Real",
+    "Rational",
+    "LinearSyntaxBlob",
+    "Percent",
+    "PercentPercent",
+    "Hash",
+    "HashHash",
+    "Under",
+    "UnderUnder",
+    "UnderUnderUnder",
+    "UnderDot",
+    "SemiSemi",
+    //
+    // Prefix operators
+    //
+    "Bang",
+    "Minus",
+    "Plus",
+    "LessLess",
+    "MinusMinus",
+    "PlusPlus",
+    "BangBang",
+    //
+    // Openers
+    //
+    "OpenParen",
+    "OpenCurly",
+    "LessBar",
+    "LongName_LeftCeiling",
+    "LongName_LeftFloor",
+    "LongName_LeftAngleBracket",
+    "LongName_LeftBracketingBar",
+    "LongName_LeftDoubleBracketingBar",
+    "LongName_LeftAssociation",
+    "LongName_OpenCurlyQuote",
+    "LongName_OpenCurlyDoubleQuote",
+    //
+    // these openers are Call syntax and NOT possible beginning
+    //
+    // "OpenSquare"
+    // | "ColonColonOpenSquare"
+    // | "LongName_LeftDoubleBracket"
+    //
 
-    ($count:literal, Empty) => {
-        variant_value($count, Group1::None, Group2::Empty)
-    };
+    //
+    // Prefix linear syntax operators
+    //
+    "LinearSyntax_Bang",
+    //
+    // Integration operators
+    //
+    "LongName_Integral",
+    "LongName_ContourIntegral",
+    "LongName_DoubleContourIntegral",
+    "LongName_ClockwiseContourIntegral",
+    "LongName_CounterClockwiseContourIntegral",
+    //
+    // Prefix LongName operators
+    //
+    "LongName_Not",
+    "LongName_PlusMinus",
+    "LongName_Sum",
+    "LongName_ForAll",
+    "LongName_Exists",
+    "LongName_NotExists",
+    "LongName_Del",
+    "LongName_Product",
+    "LongName_Coproduct",
+    "LongName_Minus",
+    "LongName_MinusPlus",
+    "LongName_Sqrt",
+    "LongName_CubeRoot",
+    "LongName_CircleTimes",
+    "LongName_Piecewise",
+    "LongName_InvisiblePrefixScriptBase",
+    "LongName_ContinuedFractionK",
+    "LongName_ProbabilityPr",
+    "LongName_ExpectationE",
+    "LongName_CapitalDifferentialD",
+    "LongName_DifferentialD",
+    "LongName_Square",
+];
 
-    ($count:literal, $group1:ident) => {
-        variant_value($count, Group1::$group1, Group2::None)
-    };
+const EMPTY: &[&str] = &[
+    // EndOfFile is not empty
+    // It is a single byte 0xff
+    // FIXME: Update the Rust port to use this optimization (and benchmark it)
+    "EndOfFile",
+    "Fake_ImplicitTimes",
+    "Error_Aborted",
+    "Fake_ImplicitNull",
+    "Fake_ImplicitOne",
+    "Fake_ImplicitAll",
+    "Error_ExpectedOperand",
+    "Error_ExpectedTag",
+    "Error_ExpectedFile",
+    "Error_PrefixImplicitNull",
+    "Error_InfixImplicitNull",
+    //
+    // Newlines are not empty
+    //
+    // Token`ToplevelNewline
+    // Token`InternalNewline
+];
 
-    ($count:literal) => {
-        variant_value($count, Group1::None, Group2::None)
-    };
+const UNTERMINATED: &[&str] = &[
+    "Error_UnterminatedComment",
+    "Error_UnterminatedString",
+    "Error_UnterminatedFileString",
+    "Error_UnterminatedLinearSyntaxBlob",
+];
+
+const CLOSERS: &[&str] = &[
+    "BarGreater",
+    "CloseCurly",
+    "CloseParen",
+    "CloseSquare",
+    "LongName_CloseCurlyDoubleQuote",
+    "LongName_CloseCurlyQuote",
+    "LongName_RightAngleBracket",
+    "LongName_RightAssociation",
+    "LongName_RightBracketingBar",
+    "LongName_RightCeiling",
+    "LongName_RightDoubleBracket",
+    "LongName_RightDoubleBracketingBar",
+    "LongName_RightFloor",
+];
+
+const ERROR: &[&str] = &[
+    "Error_Unknown",
+    "Error_ExpectedEqual",
+    "Error_Number",
+    "Error_UnhandledCharacter",
+    "Error_ExpectedLetterlike",
+    "Error_Aborted",
+    "Error_ExpectedOperand",
+    "Error_ExpectedTag",
+    "Error_ExpectedFile",
+    "Error_UnsupportedToken",
+    "Error_UnexpectedCloser",
+    "Error_UnterminatedComment",
+    "Error_UnterminatedString",
+    "Error_UnterminatedFileString",
+    "Error_UnterminatedLinearSyntaxBlob",
+    "Error_PrefixImplicitNull",
+    "Error_InfixImplicitNull",
+    "Error_UnsafeCharacterEncoding",
+    "Error_UnexpectedCommentCloser",
+];
+
+const fn is_possible_beginning(variant: &str) -> bool {
+    contains(POSSIBLE_BEGINNING, variant)
+}
+
+const fn is_empty(variant: &str) -> bool {
+    contains(EMPTY, variant)
+}
+
+const fn is_unterminated(variant: &str) -> bool {
+    contains(UNTERMINATED, variant)
+}
+
+const fn is_closer(variant: &str) -> bool {
+    contains(CLOSERS, variant)
+}
+
+const fn is_error(variant: &str) -> bool {
+    contains(ERROR, variant)
 }
 
 #[rustfmt::skip]
-const fn variant_value(count: u16, group1: Group1, group2: Group2) -> u16 {
+const fn variant(id: u16, name: &str) -> u16 {
+    let group1 = if is_possible_beginning(name) {
+        Group1::PossibleBeginning
+    } else if is_closer(name) {
+        Group1::Closer
+    } else if is_error(name) {
+        Group1::Error
+    } else {
+        Group1::None
+    };
+
+    let group2 = if is_empty(name) {
+        Group2::Empty
+    } else if is_unterminated(name) {
+        Group2::Unterminated
+    } else {
+        Group2::None
+    };
+
+    //
+    // Construct the `u16` representation
+    //
+
     let group1 = group1 as u16;
     let group2 = group2 as u16;
 
-    // The unique count should only use the first 9 bits.
+    // The unique id should only use the first 9 bits.
     // Group1 uses the next two bits, and Group2 the two bits after that.
-    debug_assert!(count  & 0b0000_0001_1111_1111 == count );
+    debug_assert!(id     & 0b0000_0001_1111_1111 == id);
     debug_assert!(group1 & 0b0000_0110_0000_0000 == group1);
     debug_assert!(group2 & 0b0001_1000_0000_0000 == group2);
 
-    count | group1 | group2
+    id | group1 | group2
+}
+
+/// Used to define the [`TokenKind`] enum.
+macro_rules! token_kind {
+    (
+        $(
+            $( #[$cfgs:meta] )*
+            $variant:ident = $id:literal
+
+        ),* $(,)?
+    ) => {
+        /// Complete enumeration of all tokens in Wolfram Language
+        #[allow(non_camel_case_types)]
+        #[derive(Debug, Copy, Clone, PartialEq)]
+        #[repr(u16)]
+        pub enum TokenKind {
+            $(
+                $( #[$cfgs] )*
+                $variant = variant($id, stringify!($variant)),
+            )*
+        }
+    };
 }
 
 //
-// All token enums
+// All token enum variants
 //
 
-#[allow(non_camel_case_types)]
-#[rustfmt::skip]
-#[derive(Debug, Copy, Clone, PartialEq)]
-#[repr(u16)]
-pub enum TokenKind {
-    Unknown                                  = variant!(0),
-    EndOfFile                                = variant!(1, Empty),
-    Symbol                                   = variant!(2, PossibleBeginning),
-    String                                   = variant!(3, PossibleBeginning),
-    Integer                                  = variant!(4, PossibleBeginning),
-    Real                                     = variant!(5, PossibleBeginning),
-    Rational                                 = variant!(6, PossibleBeginning),
-    LinearSyntaxBlob                         = variant!(7, PossibleBeginning),
-    InternalNewline                          = variant!(8),
-    Comment                                  = variant!(9),
-    Whitespace                               = variant!(10),
-    Buffer1                                  = variant!(11),
-    ToplevelNewline                          = variant!(12),
-    Buffer2                                  = variant!(13),
-    Buffer3                                  = variant!(14),
-    Buffer4                                  = variant!(15),
-    Error_ExpectedEqual                      = variant!(16, Error),
-    Error_Number                             = variant!(17, Error),
-    Error_UnhandledCharacter                 = variant!(18, Error),
-    Error_ExpectedLetterlike                 = variant!(19, Error),
-    Error_Aborted                            = variant!(20, Error, Empty),
-    Error_ExpectedOperand                    = variant!(21, Error, Empty),
-    Error_ExpectedTag                        = variant!(22, Error, Empty),
-    Error_ExpectedFile                       = variant!(23, Error, Empty),
-    Error_UnexpectedCloser                   = variant!(24, Error),
-    Error_PrefixImplicitNull                 = variant!(25, Error, Empty),
-    Error_InfixImplicitNull                  = variant!(26, Error, Empty),
-    Error_UnsafeCharacterEncoding            = variant!(27, Error),
-    Error_UnterminatedComment                = variant!(28, Error, Unterminated),
-    Error_UnterminatedString                 = variant!(29, Error, Unterminated),
-    Error_UnterminatedFileString             = variant!(30, Error, Unterminated),
-    Error_UnterminatedLinearSyntaxBlob       = variant!(31, Error, Unterminated),
-    Error_UnsupportedToken                   = variant!(32, Error),
-    Error_UnexpectedCommentCloser            = variant!(33, Error),
-    Dot                                      = variant!(34),
-    Colon                                    = variant!(35),
-    OpenParen                                = variant!(36, PossibleBeginning),
-    CloseParen                               = variant!(37, Closer),
-    OpenSquare                               = variant!(38),
-    CloseSquare                              = variant!(39, Closer),
-    Comma                                    = variant!(40),
-    OpenCurly                                = variant!(41, PossibleBeginning),
-    CloseCurly                               = variant!(42, Closer),
-    Equal                                    = variant!(43),
-    Bang                                     = variant!(44, PossibleBeginning),
-    Under                                    = variant!(45, PossibleBeginning),
-    Less                                     = variant!(46),
-    Greater                                  = variant!(47),
-    Minus                                    = variant!(48, PossibleBeginning),
-    Bar                                      = variant!(49),
-    Semi                                     = variant!(50),
-    Hash                                     = variant!(51, PossibleBeginning),
-    Amp                                      = variant!(52),
-    Slash                                    = variant!(53),
-    At                                       = variant!(54),
-    Plus                                     = variant!(55, PossibleBeginning),
-    Tilde                                    = variant!(56),
-    Star                                     = variant!(57),
-    Caret                                    = variant!(58),
-    SingleQuote                              = variant!(59),
-    Percent                                  = variant!(60, PossibleBeginning),
-    Question                                 = variant!(61),
-    DotDot                                   = variant!(62),
-    ColonColon                               = variant!(63),
-    ColonEqual                               = variant!(64),
-    ColonGreater                             = variant!(65),
-    EqualEqual                               = variant!(66),
-    UnderUnder                               = variant!(67, PossibleBeginning),
-    UnderDot                                 = variant!(68, PossibleBeginning),
-    LessBar                                  = variant!(69, PossibleBeginning),
-    LessLess                                 = variant!(70, PossibleBeginning),
-    LessGreater                              = variant!(71),
-    LessEqual                                = variant!(72),
-    GreaterGreater                           = variant!(73),
-    GreaterEqual                             = variant!(74),
-    MinusGreater                             = variant!(75),
-    MinusMinus                               = variant!(76, PossibleBeginning),
-    MinusEqual                               = variant!(77),
-    BarBar                                   = variant!(78),
-    BarGreater                               = variant!(79, Closer),
-    SemiSemi                                 = variant!(80, PossibleBeginning),
-    AmpAmp                                   = variant!(81),
-    SlashAt                                  = variant!(82),
-    SlashSemi                                = variant!(83),
-    SlashDot                                 = variant!(84),
-    SlashSlash                               = variant!(85),
-    SlashColon                               = variant!(86),
-    SlashEqual                               = variant!(87),
-    SlashStar                                = variant!(88),
-    AtAt                                     = variant!(89),
-    AtStar                                   = variant!(90),
-    PlusPlus                                 = variant!(91, PossibleBeginning),
-    PlusEqual                                = variant!(92),
-    TildeTilde                               = variant!(93),
-    StarEqual                                = variant!(94),
-    StarStar                                 = variant!(95),
-    CaretEqual                               = variant!(96),
-    HashHash                                 = variant!(97, PossibleBeginning),
-    BangEqual                                = variant!(98),
-    BangBang                                 = variant!(99, PossibleBeginning),
-    QuestionQuestion                         = variant!(100),
-    DotDotDot                                = variant!(101),
-    EqualEqualEqual                          = variant!(102),
-    EqualBangEqual                           = variant!(103),
-    UnderUnderUnder                          = variant!(104, PossibleBeginning),
-    SlashSlashDot                            = variant!(105),
-    AtAtAt                                   = variant!(106),
-    LessMinusGreater                         = variant!(107),
-    SlashSlashAt                             = variant!(108),
-    CaretColonEqual                          = variant!(109),
-    GreaterGreaterGreater                    = variant!(110),
-    BarMinusGreater                          = variant!(111),
-    SlashSlashEqual                          = variant!(112),
-    ColonColonOpenSquare                     = variant!(113),
-    PercentPercent                           = variant!(114, PossibleBeginning),
-    LinearSyntax_Bang                        = variant!(115, PossibleBeginning),
-    LinearSyntax_CloseParen                  = variant!(116),
-    LinearSyntax_At                          = variant!(117),
-    LinearSyntax_Amp                         = variant!(118),
-    LinearSyntax_Star                        = variant!(119),
-    LinearSyntax_Under                       = variant!(120),
-    LinearSyntax_Caret                       = variant!(121),
-    LinearSyntax_Space                       = variant!(122),
-    LinearSyntax_Percent                     = variant!(123),
-    LinearSyntax_Plus                        = variant!(124),
-    LinearSyntax_Slash                       = variant!(125),
-    LinearSyntax_BackTick                    = variant!(126),
-    Fake_ImplicitTimes                       = variant!(127, Empty),
-    Fake_ImplicitNull                        = variant!(128, Empty),
-    Fake_ImplicitOne                         = variant!(129, Empty),
-    Fake_ImplicitAll                         = variant!(130, Empty),
-    Boxes_OpenParenStar                      = variant!(131),
-    Boxes_StarCloseParen                     = variant!(132),
-    Boxes_MultiSingleQuote                   = variant!(133),
-    Boxes_MultiWhitespace                    = variant!(134),
-    LongName_Not                             = variant!(135, PossibleBeginning),
-    LongName_PlusMinus                       = variant!(136, PossibleBeginning),
-    LongName_CenterDot                       = variant!(137),
-    LongName_Times                           = variant!(138),
-    LongName_Divide                          = variant!(139),
-    LongName_OpenCurlyQuote                  = variant!(140, PossibleBeginning),
-    LongName_CloseCurlyQuote                 = variant!(141, Closer),
-    LongName_OpenCurlyDoubleQuote            = variant!(142, PossibleBeginning),
-    LongName_CloseCurlyDoubleQuote           = variant!(143, Closer),
-    LongName_InvisibleTimes                  = variant!(144),
-    LongName_LeftArrow                       = variant!(145),
-    LongName_UpArrow                         = variant!(146),
-    LongName_RightArrow                      = variant!(147),
-    LongName_DownArrow                       = variant!(148),
-    LongName_LeftRightArrow                  = variant!(149),
-    LongName_UpDownArrow                     = variant!(150),
-    LongName_UpperLeftArrow                  = variant!(151),
-    LongName_UpperRightArrow                 = variant!(152),
-    LongName_LowerRightArrow                 = variant!(153),
-    LongName_LowerLeftArrow                  = variant!(154),
-    LongName_LeftTeeArrow                    = variant!(155),
-    LongName_UpTeeArrow                      = variant!(156),
-    LongName_RightTeeArrow                   = variant!(157),
-    LongName_DownTeeArrow                    = variant!(158),
-    LongName_LeftVector                      = variant!(159),
-    LongName_DownLeftVector                  = variant!(160),
-    LongName_RightUpVector                   = variant!(161),
-    LongName_LeftUpVector                    = variant!(162),
-    LongName_RightVector                     = variant!(163),
-    LongName_DownRightVector                 = variant!(164),
-    LongName_RightDownVector                 = variant!(165),
-    LongName_LeftDownVector                  = variant!(166),
-    LongName_RightArrowLeftArrow             = variant!(167),
-    LongName_UpArrowDownArrow                = variant!(168),
-    LongName_LeftArrowRightArrow             = variant!(169),
-    LongName_ReverseEquilibrium              = variant!(170),
-    LongName_Equilibrium                     = variant!(171),
-    LongName_DoubleLeftArrow                 = variant!(172),
-    LongName_DoubleUpArrow                   = variant!(173),
-    LongName_DoubleRightArrow                = variant!(174),
-    LongName_DoubleDownArrow                 = variant!(175),
-    LongName_DoubleLeftRightArrow            = variant!(176),
-    LongName_DoubleUpDownArrow               = variant!(177),
-    LongName_LeftArrowBar                    = variant!(178),
-    LongName_RightArrowBar                   = variant!(179),
-    LongName_DownArrowUpArrow                = variant!(180),
-    LongName_ForAll                          = variant!(181, PossibleBeginning),
-    LongName_PartialD                        = variant!(182),
-    LongName_Exists                          = variant!(183, PossibleBeginning),
-    LongName_NotExists                       = variant!(184, PossibleBeginning),
-    LongName_Del                             = variant!(185, PossibleBeginning),
-    LongName_Element                         = variant!(186),
-    LongName_NotElement                      = variant!(187),
-    LongName_ReverseElement                  = variant!(188),
-    LongName_NotReverseElement               = variant!(189),
-    LongName_SuchThat                        = variant!(190),
-    LongName_Product                         = variant!(191, PossibleBeginning),
-    LongName_Coproduct                       = variant!(192, PossibleBeginning),
-    LongName_Sum                             = variant!(193, PossibleBeginning),
-    LongName_Minus                           = variant!(194, PossibleBeginning),
-    LongName_MinusPlus                       = variant!(195, PossibleBeginning),
-    LongName_DivisionSlash                   = variant!(196),
-    LongName_Backslash                       = variant!(197),
-    LongName_SmallCircle                     = variant!(198),
-    LongName_Sqrt                            = variant!(199, PossibleBeginning),
-    LongName_CubeRoot                        = variant!(200, PossibleBeginning),
-    LongName_Proportional                    = variant!(201),
-    LongName_Divides                         = variant!(202),
-    LongName_DoubleVerticalBar               = variant!(203),
-    LongName_NotDoubleVerticalBar            = variant!(204),
-    LongName_And                             = variant!(205),
-    LongName_Or                              = variant!(206),
-    LongName_Integral                        = variant!(207, PossibleBeginning),
-    LongName_ContourIntegral                 = variant!(208, PossibleBeginning),
-    LongName_DoubleContourIntegral           = variant!(209, PossibleBeginning),
-    LongName_ClockwiseContourIntegral        = variant!(210, PossibleBeginning),
-    LongName_CounterClockwiseContourIntegral = variant!(211, PossibleBeginning),
-    LongName_Therefore                       = variant!(212),
-    LongName_Because                         = variant!(213),
-    LongName_Colon                           = variant!(214),
-    LongName_Proportion                      = variant!(215),
-    LongName_Tilde                           = variant!(216),
-    LongName_VerticalTilde                   = variant!(217),
-    LongName_NotTilde                        = variant!(218),
-    LongName_EqualTilde                      = variant!(219),
-    LongName_TildeEqual                      = variant!(220),
-    LongName_NotTildeEqual                   = variant!(221),
-    LongName_TildeFullEqual                  = variant!(222),
-    LongName_NotTildeFullEqual               = variant!(223),
-    LongName_TildeTilde                      = variant!(224),
-    LongName_NotTildeTilde                   = variant!(225),
-    LongName_CupCap                          = variant!(226),
-    LongName_HumpDownHump                    = variant!(227),
-    LongName_HumpEqual                       = variant!(228),
-    LongName_DotEqual                        = variant!(229),
-    LongName_NotEqual                        = variant!(230),
-    LongName_Congruent                       = variant!(231),
-    LongName_NotCongruent                    = variant!(232),
-    LongName_LessEqual                       = variant!(233),
-    LongName_GreaterEqual                    = variant!(234),
-    LongName_LessFullEqual                   = variant!(235),
-    LongName_GreaterFullEqual                = variant!(236),
-    LongName_NotLessFullEqual                = variant!(237),
-    LongName_NotGreaterFullEqual             = variant!(238),
-    LongName_LessLess                        = variant!(239),
-    LongName_GreaterGreater                  = variant!(240),
-    LongName_NotCupCap                       = variant!(241),
-    LongName_NotLess                         = variant!(242),
-    LongName_NotGreater                      = variant!(243),
-    LongName_NotLessEqual                    = variant!(244),
-    LongName_NotGreaterEqual                 = variant!(245),
-    LongName_LessTilde                       = variant!(246),
-    LongName_GreaterTilde                    = variant!(247),
-    LongName_NotLessTilde                    = variant!(248),
-    LongName_NotGreaterTilde                 = variant!(249),
-    LongName_LessGreater                     = variant!(250),
-    LongName_GreaterLess                     = variant!(251),
-    LongName_NotLessGreater                  = variant!(252),
-    LongName_NotGreaterLess                  = variant!(253),
-    LongName_Precedes                        = variant!(254),
-    LongName_Succeeds                        = variant!(255),
-    LongName_PrecedesSlantEqual              = variant!(256),
-    LongName_SucceedsSlantEqual              = variant!(257),
-    LongName_PrecedesTilde                   = variant!(258),
-    LongName_SucceedsTilde                   = variant!(259),
-    LongName_NotPrecedes                     = variant!(260),
-    LongName_NotSucceeds                     = variant!(261),
-    LongName_Subset                          = variant!(262),
-    LongName_Superset                        = variant!(263),
-    LongName_NotSubset                       = variant!(264),
-    LongName_NotSuperset                     = variant!(265),
-    LongName_SubsetEqual                     = variant!(266),
-    LongName_SupersetEqual                   = variant!(267),
-    LongName_NotSubsetEqual                  = variant!(268),
-    LongName_NotSupersetEqual                = variant!(269),
-    LongName_UnionPlus                       = variant!(270),
-    LongName_SquareSubset                    = variant!(271),
-    LongName_SquareSuperset                  = variant!(272),
-    LongName_SquareSubsetEqual               = variant!(273),
-    LongName_SquareSupersetEqual             = variant!(274),
-    LongName_SquareIntersection              = variant!(275),
-    LongName_SquareUnion                     = variant!(276),
-    LongName_CirclePlus                      = variant!(277),
-    LongName_CircleMinus                     = variant!(278),
-    LongName_CircleTimes                     = variant!(279, PossibleBeginning),
-    LongName_CircleDot                       = variant!(280),
-    LongName_RightTee                        = variant!(281),
-    LongName_LeftTee                         = variant!(282),
-    LongName_DownTee                         = variant!(283),
-    LongName_UpTee                           = variant!(284),
-    LongName_DoubleRightTee                  = variant!(285),
-    LongName_LeftTriangle                    = variant!(286),
-    LongName_RightTriangle                   = variant!(287),
-    LongName_LeftTriangleEqual               = variant!(288),
-    LongName_RightTriangleEqual              = variant!(289),
-    LongName_Xor                             = variant!(290),
-    LongName_Nand                            = variant!(291),
-    LongName_Nor                             = variant!(292),
-    LongName_Wedge                           = variant!(293),
-    LongName_Vee                             = variant!(294),
-    LongName_Intersection                    = variant!(295),
-    LongName_Union                           = variant!(296),
-    LongName_Diamond                         = variant!(297),
-    LongName_Star                            = variant!(298),
-    LongName_LessEqualGreater                = variant!(299),
-    LongName_GreaterEqualLess                = variant!(300),
-    LongName_NotPrecedesSlantEqual           = variant!(301),
-    LongName_NotSucceedsSlantEqual           = variant!(302),
-    LongName_NotSquareSubsetEqual            = variant!(303),
-    LongName_NotSquareSupersetEqual          = variant!(304),
-    LongName_NotPrecedesTilde                = variant!(305),
-    LongName_NotSucceedsTilde                = variant!(306),
-    LongName_NotLeftTriangle                 = variant!(307),
-    LongName_NotRightTriangle                = variant!(308),
-    LongName_NotLeftTriangleEqual            = variant!(309),
-    LongName_NotRightTriangleEqual           = variant!(310),
-    LongName_LeftCeiling                     = variant!(311, PossibleBeginning),
-    LongName_RightCeiling                    = variant!(312, Closer),
-    LongName_LeftFloor                       = variant!(313, PossibleBeginning),
-    LongName_RightFloor                      = variant!(314, Closer),
-    LongName_Cap                             = variant!(315),
-    LongName_Cup                             = variant!(316),
-    LongName_LeftAngleBracket                = variant!(317, PossibleBeginning),
-    LongName_RightAngleBracket               = variant!(318, Closer),
-    LongName_Perpendicular                   = variant!(319),
-    LongName_LongLeftArrow                   = variant!(320),
-    LongName_LongRightArrow                  = variant!(321),
-    LongName_LongLeftRightArrow              = variant!(322),
-    LongName_DoubleLongLeftArrow             = variant!(323),
-    LongName_DoubleLongRightArrow            = variant!(324),
-    LongName_DoubleLongLeftRightArrow        = variant!(325),
-    LongName_UpArrowBar                      = variant!(326),
-    LongName_DownArrowBar                    = variant!(327),
-    LongName_LeftRightVector                 = variant!(328),
-    LongName_RightUpDownVector               = variant!(329),
-    LongName_DownLeftRightVector             = variant!(330),
-    LongName_LeftUpDownVector                = variant!(331),
-    LongName_LeftVectorBar                   = variant!(332),
-    LongName_RightVectorBar                  = variant!(333),
-    LongName_RightUpVectorBar                = variant!(334),
-    LongName_RightDownVectorBar              = variant!(335),
-    LongName_DownLeftVectorBar               = variant!(336),
-    LongName_DownRightVectorBar              = variant!(337),
-    LongName_LeftUpVectorBar                 = variant!(338),
-    LongName_LeftDownVectorBar               = variant!(339),
-    LongName_LeftTeeVector                   = variant!(340),
-    LongName_RightTeeVector                  = variant!(341),
-    LongName_RightUpTeeVector                = variant!(342),
-    LongName_RightDownTeeVector              = variant!(343),
-    LongName_DownLeftTeeVector               = variant!(344),
-    LongName_DownRightTeeVector              = variant!(345),
-    LongName_LeftUpTeeVector                 = variant!(346),
-    LongName_LeftDownTeeVector               = variant!(347),
-    LongName_UpEquilibrium                   = variant!(348),
-    LongName_ReverseUpEquilibrium            = variant!(349),
-    LongName_RoundImplies                    = variant!(350),
-    LongName_LeftTriangleBar                 = variant!(351),
-    LongName_RightTriangleBar                = variant!(352),
-    LongName_Equivalent                      = variant!(353),
-    LongName_LessSlantEqual                  = variant!(354),
-    LongName_GreaterSlantEqual               = variant!(355),
-    LongName_NestedLessLess                  = variant!(356),
-    LongName_NestedGreaterGreater            = variant!(357),
-    LongName_PrecedesEqual                   = variant!(358),
-    LongName_SucceedsEqual                   = variant!(359),
-    LongName_DoubleLeftTee                   = variant!(360),
-    LongName_LeftDoubleBracket               = variant!(361),
-    LongName_RightDoubleBracket              = variant!(362, Closer),
-    LongName_LeftAssociation                 = variant!(363, PossibleBeginning),
-    LongName_RightAssociation                = variant!(364, Closer),
-    LongName_TwoWayRule                      = variant!(365),
-    LongName_Piecewise                       = variant!(366, PossibleBeginning),
-    LongName_ImplicitPlus                    = variant!(367),
-    LongName_AutoLeftMatch                   = variant!(368),
-    LongName_AutoRightMatch                  = variant!(369),
-    LongName_InvisiblePrefixScriptBase       = variant!(370, PossibleBeginning),
-    LongName_InvisiblePostfixScriptBase      = variant!(371),
-    LongName_Transpose                       = variant!(372),
-    LongName_Conjugate                       = variant!(373),
-    LongName_ConjugateTranspose              = variant!(374),
-    LongName_HermitianConjugate              = variant!(375),
-    LongName_VerticalBar                     = variant!(376),
-    LongName_NotVerticalBar                  = variant!(377),
-    LongName_Distributed                     = variant!(378),
-    LongName_Conditioned                     = variant!(379),
-    LongName_UndirectedEdge                  = variant!(380),
-    LongName_DirectedEdge                    = variant!(381),
-    LongName_ContinuedFractionK              = variant!(382, PossibleBeginning),
-    LongName_TensorProduct                   = variant!(383),
-    LongName_TensorWedge                     = variant!(384),
-    LongName_ProbabilityPr                   = variant!(385, PossibleBeginning),
-    LongName_ExpectationE                    = variant!(386, PossibleBeginning),
-    LongName_PermutationProduct              = variant!(387),
-    LongName_NotEqualTilde                   = variant!(388),
-    LongName_NotHumpEqual                    = variant!(389),
-    LongName_NotHumpDownHump                 = variant!(390),
-    LongName_NotLeftTriangleBar              = variant!(391),
-    LongName_NotRightTriangleBar             = variant!(392),
-    LongName_NotLessLess                     = variant!(393),
-    LongName_NotNestedLessLess               = variant!(394),
-    LongName_NotLessSlantEqual               = variant!(395),
-    LongName_NotGreaterGreater               = variant!(396),
-    LongName_NotNestedGreaterGreater         = variant!(397),
-    LongName_NotGreaterSlantEqual            = variant!(398),
-    LongName_NotPrecedesEqual                = variant!(399),
-    LongName_NotSucceedsEqual                = variant!(400),
-    LongName_NotSquareSubset                 = variant!(401),
-    LongName_NotSquareSuperset               = variant!(402),
-    LongName_Equal                           = variant!(403),
-    LongName_VerticalSeparator               = variant!(404),
-    LongName_VectorGreater                   = variant!(405),
-    LongName_VectorGreaterEqual              = variant!(406),
-    LongName_VectorLess                      = variant!(407),
-    LongName_VectorLessEqual                 = variant!(408),
-    LongName_Limit                           = variant!(409),
-    LongName_MaxLimit                        = variant!(410),
-    LongName_MinLimit                        = variant!(411),
-    LongName_Cross                           = variant!(412),
-    LongName_Function                        = variant!(413),
-    LongName_Xnor                            = variant!(414),
-    LongName_DiscreteShift                   = variant!(415),
-    LongName_DifferenceDelta                 = variant!(416),
-    LongName_DiscreteRatio                   = variant!(417),
-    LongName_RuleDelayed                     = variant!(418),
-    LongName_Square                          = variant!(419, PossibleBeginning),
-    LongName_Rule                            = variant!(420),
-    LongName_Implies                         = variant!(421),
-    LongName_ShortRightArrow                 = variant!(422),
-    LongName_ShortLeftArrow                  = variant!(423),
-    LongName_ShortUpArrow                    = variant!(424),
-    LongName_ShortDownArrow                  = variant!(425),
-    LongName_Application                     = variant!(426),
-    LongName_LeftBracketingBar               = variant!(427, PossibleBeginning),
-    LongName_RightBracketingBar              = variant!(428, Closer),
-    LongName_LeftDoubleBracketingBar         = variant!(429, PossibleBeginning),
-    LongName_RightDoubleBracketingBar        = variant!(430, Closer),
-    LongName_CapitalDifferentialD            = variant!(431, PossibleBeginning),
-    LongName_DifferentialD                   = variant!(432, PossibleBeginning),
-    LongName_InvisibleComma                  = variant!(433),
-    LongName_InvisibleApplication            = variant!(434),
-    LongName_LongEqual                       = variant!(435),
+token_kind! {
+    Unknown                                  = 0,
+    EndOfFile                                = 1,
+    Symbol                                   = 2,
+    String                                   = 3,
+    Integer                                  = 4,
+    Real                                     = 5,
+    Rational                                 = 6,
+    LinearSyntaxBlob                         = 7,
+
+    // trivia
+    //
+    // Any Buffers before trivia and any Buffers after trivia serve the purpose of
+    // allowing fast testing of trivia (just a bit mask)
+    InternalNewline                          = 8, // 8
+    Comment                                  = 9,
+    Whitespace                               = 10,
+    Buffer1                                  = 11,
+    ToplevelNewline                          = 12,
+
+    Buffer2                                  = 13,
+    Buffer3                                  = 14,
+    Buffer4                                  = 15,
+
+    //----------------------------------
+    // errors
+    //----------------------------------
+
+    Error_ExpectedEqual                      = 16, // 16
+    Error_Number                             = 17,
+    Error_UnhandledCharacter                 = 18,
+    Error_ExpectedLetterlike                 = 19,
+    Error_Aborted                            = 20,
+    Error_ExpectedOperand                    = 21,
+    Error_ExpectedTag                        = 22,
+    Error_ExpectedFile                       = 23,
+    Error_UnexpectedCloser                   = 24,
+    /// Implicit `Null` in `f[,2]`
+    Error_PrefixImplicitNull                 = 25,
+    /// Implicit `Null` in `f[1,]`
+    Error_InfixImplicitNull                  = 26,
+
+    Error_UnsafeCharacterEncoding            = 27,
+
+    // Unterminated errors
+    //
+    // Any Buffers before trivia and any Buffers after trivia serve the purpose
+    // of giving the correct values to Token`InternalNewline and
+    // Token`ToplevelNewline so that the single bit 0b100 can be set to turn
+    // Token`InternalNewline into Token`ToplevelNewline while also allowing fast
+    // testing of trivia (just a bit mask) and also fast testing of
+    // non-ToplevelNewline trivia (also just a bit mask)
+    Error_UnterminatedComment                = 28, // 28
+    Error_UnterminatedString                 = 29,
+    Error_UnterminatedFileString             = 30,
+    Error_UnterminatedLinearSyntaxBlob       = 31,
+    Error_UnsupportedToken                   = 32, // 32
+    Error_UnexpectedCommentCloser            = 33,
+
+    //----------------------------------
+    // 1 character tokens
+    //----------------------------------
+
+    /** `.` */ Dot                           = 34,
+    /** `:` */ Colon                         = 35,
+    /** `(` */ OpenParen                     = 36,
+    /** `)` */ CloseParen                    = 37,
+    /** `[` */ OpenSquare                    = 38,
+    /** `]` */ CloseSquare                   = 39,
+    /** `,` */ Comma                         = 40,
+    /** `{` */ OpenCurly                     = 41,
+    /** `}` */ CloseCurly                    = 42,
+    /** `=` */ Equal                         = 43,
+    /** `!` */ Bang                          = 44,
+    /** `_` */ Under                         = 45,
+    /** `<` */ Less                          = 46,
+    /** `>` */ Greater                       = 47,
+    /** `-` */ Minus                         = 48,
+    /** `|` */ Bar                           = 49,
+    /** `;` */ Semi                          = 50,
+    /** `#` */ Hash                          = 51,
+    /** `&` */ Amp                           = 52,
+    /** `/` */ Slash                         = 53,
+    /** `@` */ At                            = 54,
+    /** `+` */ Plus                          = 55,
+    /** `~` */ Tilde                         = 56,
+    /** `*` */ Star                          = 57,
+    /** `^` */ Caret                         = 58,
+    /** `'` */ SingleQuote                   = 59,
+    /** `%` */ Percent                       = 60,
+    /** `?` */ Question                      = 61,
+
+    //----------------------------------
+    // 2 character tokens
+    //----------------------------------
+
+    /** `..` */ DotDot                       = 62,
+    /** `::` */ ColonColon                   = 63,
+    /** `:=` */ ColonEqual                   = 64,
+    /** `:>` */ ColonGreater                 = 65,
+    /** `==` */ EqualEqual                   = 66,
+    /** `__` */ UnderUnder                   = 67,
+    /** `_.` */ UnderDot                     = 68,
+    /** `<|` */ LessBar                      = 69,
+    /** `<<` */ LessLess                     = 70,
+    /** `<>` */ LessGreater                  = 71,
+    /** `<=` */ LessEqual                    = 72,
+    /** `>>` */ GreaterGreater               = 73,
+    /** `>=` */ GreaterEqual                 = 74,
+    /** `->` */ MinusGreater                 = 75,
+    /** `--` */ MinusMinus                   = 76,
+    /** `-=` */ MinusEqual                   = 77,
+    /** `||` */ BarBar                       = 78,
+    /** `|>` */ BarGreater                   = 79,
+    /** `;;` */ SemiSemi                     = 80,
+    /** `&&` */ AmpAmp                       = 81,
+    /** `/@` */ SlashAt                      = 82,
+    /** `/;` */ SlashSemi                    = 83,
+    /** `/.` */ SlashDot                     = 84,
+    /** `//` */ SlashSlash                   = 85,
+    /** `/;` */ SlashColon                   = 86,
+    /** `/=` */ SlashEqual                   = 87,
+    /// `/*`
+    SlashStar                                = 88,
+    /** `@@` */ AtAt                         = 89,
+    /** `@*` */ AtStar                       = 90,
+    /** `++` */ PlusPlus                     = 91,
+    /** `+=` */ PlusEqual                    = 92,
+    /** `~~` */ TildeTilde                   = 93,
+    /** `*=` */ StarEqual                    = 94,
+    /** `**` */ StarStar                     = 95,
+    /** `^=` */ CaretEqual                   = 96,
+    /** `##` */ HashHash                     = 97,
+    /** `!=` */ BangEqual                    = 98,
+    /// `!!`
+    ///
+    /// `!!` is a real token: postfix for `Factorial2`,
+    /// so when prefix `!!` is encountered, it is convenient to also treat it as
+    /// a single token
+    ///
+    /// `!!a` is `Not[Not[a]]`
+    BangBang                                 = 99,
+    /** `??` */ QuestionQuestion             = 100,
+
+    //----------------------------------
+    // 3 character tokens
+    //----------------------------------
+
+    /** `...` */ DotDotDot                   = 101,
+    /** `===` */ EqualEqualEqual             = 102,
+    /** `=!=` */ EqualBangEqual              = 103,
+    /** `___` */ UnderUnderUnder             = 104,
+    /** `//.` */ SlashSlashDot               = 105,
+    /** `@@@` */ AtAtAt                      = 106,
+    /** `<->` */ LessMinusGreater            = 107,
+    /** `//@` */ SlashSlashAt                = 108,
+    /** `^:=` */ CaretColonEqual             = 109,
+    /** `>>>` */ GreaterGreaterGreater       = 110,
+    /// `|->` — new in 12.2
+    BarMinusGreater                          = 111,
+    /// `//=` — new in 12.2
+    SlashSlashEqual                          = 112,
+    /// `::[` — new in 13.1
+    ColonColonOpenSquare                     = 113,
+
+    //----------------------------------
+    // variable length character tokens
+    //----------------------------------
+
+    /** `%%` */ PercentPercent               = 114,
+
+    //----------------------------------
+    // Linear syntax tokens
+    //----------------------------------
+
+    /** `\!` */ LinearSyntax_Bang            = 115,
+    /** `\)` */ LinearSyntax_CloseParen      = 116,
+    /** `\@` */ LinearSyntax_At              = 117,
+    /** `\&` */ LinearSyntax_Amp             = 118,
+    /** `\*` */ LinearSyntax_Star            = 119,
+    /** `\_` */ LinearSyntax_Under           = 120,
+    /** `\^` */ LinearSyntax_Caret           = 121,
+    /** `\ ` */ LinearSyntax_Space           = 122,
+    /** `\%` */ LinearSyntax_Percent         = 123,
+    /** `\+` */ LinearSyntax_Plus            = 124,
+    /** `\/` */ LinearSyntax_Slash           = 125,
+    /** `` \` `` */ LinearSyntax_BackTick    = 126,
+
+    //----------------------------------
+    // Fake tokens
+    //----------------------------------
+
+    /// Implicit `Times` operator in `a b`
+    Fake_ImplicitTimes                       = 127,
+    /// Implicit `Null` in `a;`
+    Fake_ImplicitNull                        = 128,
+    /// Implicit `1` in `;;b`
+    Fake_ImplicitOne                         = 129,
+    /// Implicit `All` in `a;;`
+    Fake_ImplicitAll                         = 130,
+
+    /// Used when parsing boxes
+    ///
+    /// The FE treats `(*` and `*)` as tokens
+    Boxes_OpenParenStar                      = 131,
+
+    //
+    // variable length character tokens
+    //
+
+    /// The FE treats `*****)` as a single token
+    Boxes_StarCloseParen                     = 132,
+    /// The FE treats `''''` as a single token
+    Boxes_MultiSingleQuote                   = 133,
+    /// The FE treats `<space><space><space>` as a single token
+    Boxes_MultiWhitespace                    = 134,
+
+    // Token`Boxes`LongName`LeftSkeleton -> Next,
+    // Token`Boxes`LongName`RightSkeleton -> Next,
+
+    // (*
+    // Parsing  f.m  as a leaf from the front end (from example input such as <<f.m)
+    // *)
+    // (*Token`Other -> Next,*)
+
+    //----------------------------------
+    // All multi-byte character tokens
+    //
+    // Luckily, they all have long names to use for identification
+    //----------------------------------
+
+    LongName_Not                             = 135,
+    LongName_PlusMinus                       = 136,
+    LongName_CenterDot                       = 137,
+    LongName_Times                           = 138,
+    LongName_Divide                          = 139,
+    LongName_OpenCurlyQuote                  = 140,
+    LongName_CloseCurlyQuote                 = 141,
+    LongName_OpenCurlyDoubleQuote            = 142,
+    LongName_CloseCurlyDoubleQuote           = 143,
+    LongName_InvisibleTimes                  = 144,
+    LongName_LeftArrow                       = 145,
+    LongName_UpArrow                         = 146,
+    LongName_RightArrow                      = 147,
+    LongName_DownArrow                       = 148,
+    LongName_LeftRightArrow                  = 149,
+    LongName_UpDownArrow                     = 150,
+    LongName_UpperLeftArrow                  = 151,
+    LongName_UpperRightArrow                 = 152,
+    LongName_LowerRightArrow                 = 153,
+    LongName_LowerLeftArrow                  = 154,
+    LongName_LeftTeeArrow                    = 155,
+    LongName_UpTeeArrow                      = 156,
+    LongName_RightTeeArrow                   = 157,
+    LongName_DownTeeArrow                    = 158,
+    LongName_LeftVector                      = 159,
+    LongName_DownLeftVector                  = 160,
+    LongName_RightUpVector                   = 161,
+    LongName_LeftUpVector                    = 162,
+    LongName_RightVector                     = 163,
+    LongName_DownRightVector                 = 164,
+    LongName_RightDownVector                 = 165,
+    LongName_LeftDownVector                  = 166,
+    LongName_RightArrowLeftArrow             = 167,
+    LongName_UpArrowDownArrow                = 168,
+    LongName_LeftArrowRightArrow             = 169,
+    LongName_ReverseEquilibrium              = 170,
+    LongName_Equilibrium                     = 171,
+    LongName_DoubleLeftArrow                 = 172,
+    LongName_DoubleUpArrow                   = 173,
+    LongName_DoubleRightArrow                = 174,
+    LongName_DoubleDownArrow                 = 175,
+    LongName_DoubleLeftRightArrow            = 176,
+    LongName_DoubleUpDownArrow               = 177,
+    LongName_LeftArrowBar                    = 178,
+    LongName_RightArrowBar                   = 179,
+    LongName_DownArrowUpArrow                = 180,
+    LongName_ForAll                          = 181,
+    LongName_PartialD                        = 182,
+    LongName_Exists                          = 183,
+    LongName_NotExists                       = 184,
+    LongName_Del                             = 185,
+    LongName_Element                         = 186,
+    LongName_NotElement                      = 187,
+    LongName_ReverseElement                  = 188,
+    LongName_NotReverseElement               = 189,
+    LongName_SuchThat                        = 190,
+    LongName_Product                         = 191,
+    LongName_Coproduct                       = 192,
+    LongName_Sum                             = 193,
+    LongName_Minus                           = 194,
+    LongName_MinusPlus                       = 195,
+    LongName_DivisionSlash                   = 196,
+    LongName_Backslash                       = 197,
+    LongName_SmallCircle                     = 198,
+    LongName_Sqrt                            = 199,
+    LongName_CubeRoot                        = 200,
+    LongName_Proportional                    = 201,
+    LongName_Divides                         = 202,
+    LongName_DoubleVerticalBar               = 203,
+    LongName_NotDoubleVerticalBar            = 204,
+    LongName_And                             = 205,
+    LongName_Or                              = 206,
+    LongName_Integral                        = 207,
+    LongName_ContourIntegral                 = 208,
+    LongName_DoubleContourIntegral           = 209,
+    LongName_ClockwiseContourIntegral        = 210,
+    LongName_CounterClockwiseContourIntegral = 211,
+    LongName_Therefore                       = 212,
+    LongName_Because                         = 213,
+    LongName_Colon                           = 214,
+    LongName_Proportion                      = 215,
+    LongName_Tilde                           = 216,
+    LongName_VerticalTilde                   = 217,
+    LongName_NotTilde                        = 218,
+    LongName_EqualTilde                      = 219,
+    LongName_TildeEqual                      = 220,
+    LongName_NotTildeEqual                   = 221,
+    LongName_TildeFullEqual                  = 222,
+    LongName_NotTildeFullEqual               = 223,
+    LongName_TildeTilde                      = 224,
+    LongName_NotTildeTilde                   = 225,
+    LongName_CupCap                          = 226,
+    LongName_HumpDownHump                    = 227,
+    LongName_HumpEqual                       = 228,
+    LongName_DotEqual                        = 229,
+    LongName_NotEqual                        = 230,
+    LongName_Congruent                       = 231,
+    LongName_NotCongruent                    = 232,
+    LongName_LessEqual                       = 233,
+    LongName_GreaterEqual                    = 234,
+    LongName_LessFullEqual                   = 235,
+    LongName_GreaterFullEqual                = 236,
+    LongName_NotLessFullEqual                = 237,
+    LongName_NotGreaterFullEqual             = 238,
+    LongName_LessLess                        = 239,
+    LongName_GreaterGreater                  = 240,
+    LongName_NotCupCap                       = 241,
+    LongName_NotLess                         = 242,
+    LongName_NotGreater                      = 243,
+    LongName_NotLessEqual                    = 244,
+    LongName_NotGreaterEqual                 = 245,
+    LongName_LessTilde                       = 246,
+    LongName_GreaterTilde                    = 247,
+    LongName_NotLessTilde                    = 248,
+    LongName_NotGreaterTilde                 = 249,
+    LongName_LessGreater                     = 250,
+    LongName_GreaterLess                     = 251,
+    LongName_NotLessGreater                  = 252,
+    LongName_NotGreaterLess                  = 253,
+    LongName_Precedes                        = 254,
+    LongName_Succeeds                        = 255,
+    LongName_PrecedesSlantEqual              = 256,
+    LongName_SucceedsSlantEqual              = 257,
+    LongName_PrecedesTilde                   = 258,
+    LongName_SucceedsTilde                   = 259,
+    LongName_NotPrecedes                     = 260,
+    LongName_NotSucceeds                     = 261,
+    LongName_Subset                          = 262,
+    LongName_Superset                        = 263,
+    LongName_NotSubset                       = 264,
+    LongName_NotSuperset                     = 265,
+    LongName_SubsetEqual                     = 266,
+    LongName_SupersetEqual                   = 267,
+    LongName_NotSubsetEqual                  = 268,
+    LongName_NotSupersetEqual                = 269,
+    LongName_UnionPlus                       = 270,
+    LongName_SquareSubset                    = 271,
+    LongName_SquareSuperset                  = 272,
+    LongName_SquareSubsetEqual               = 273,
+    LongName_SquareSupersetEqual             = 274,
+    LongName_SquareIntersection              = 275,
+    LongName_SquareUnion                     = 276,
+    LongName_CirclePlus                      = 277,
+    LongName_CircleMinus                     = 278,
+    LongName_CircleTimes                     = 279,
+    LongName_CircleDot                       = 280,
+    LongName_RightTee                        = 281,
+    LongName_LeftTee                         = 282,
+    LongName_DownTee                         = 283,
+    LongName_UpTee                           = 284,
+    LongName_DoubleRightTee                  = 285,
+    LongName_LeftTriangle                    = 286,
+    LongName_RightTriangle                   = 287,
+    LongName_LeftTriangleEqual               = 288,
+    LongName_RightTriangleEqual              = 289,
+    LongName_Xor                             = 290,
+    LongName_Nand                            = 291,
+    LongName_Nor                             = 292,
+    LongName_Wedge                           = 293,
+    LongName_Vee                             = 294,
+    LongName_Intersection                    = 295,
+    LongName_Union                           = 296,
+    LongName_Diamond                         = 297,
+    LongName_Star                            = 298,
+    LongName_LessEqualGreater                = 299,
+    LongName_GreaterEqualLess                = 300,
+    LongName_NotPrecedesSlantEqual           = 301,
+    LongName_NotSucceedsSlantEqual           = 302,
+    LongName_NotSquareSubsetEqual            = 303,
+    LongName_NotSquareSupersetEqual          = 304,
+    LongName_NotPrecedesTilde                = 305,
+    LongName_NotSucceedsTilde                = 306,
+    LongName_NotLeftTriangle                 = 307,
+    LongName_NotRightTriangle                = 308,
+    LongName_NotLeftTriangleEqual            = 309,
+    LongName_NotRightTriangleEqual           = 310,
+    LongName_LeftCeiling                     = 311,
+    LongName_RightCeiling                    = 312,
+    LongName_LeftFloor                       = 313,
+    LongName_RightFloor                      = 314,
+    LongName_Cap                             = 315,
+    LongName_Cup                             = 316,
+    LongName_LeftAngleBracket                = 317,
+    LongName_RightAngleBracket               = 318,
+    LongName_Perpendicular                   = 319,
+    LongName_LongLeftArrow                   = 320,
+    LongName_LongRightArrow                  = 321,
+    LongName_LongLeftRightArrow              = 322,
+    LongName_DoubleLongLeftArrow             = 323,
+    LongName_DoubleLongRightArrow            = 324,
+    LongName_DoubleLongLeftRightArrow        = 325,
+    LongName_UpArrowBar                      = 326,
+    LongName_DownArrowBar                    = 327,
+    LongName_LeftRightVector                 = 328,
+    LongName_RightUpDownVector               = 329,
+    LongName_DownLeftRightVector             = 330,
+    LongName_LeftUpDownVector                = 331,
+    LongName_LeftVectorBar                   = 332,
+    LongName_RightVectorBar                  = 333,
+    LongName_RightUpVectorBar                = 334,
+    LongName_RightDownVectorBar              = 335,
+    LongName_DownLeftVectorBar               = 336,
+    LongName_DownRightVectorBar              = 337,
+    LongName_LeftUpVectorBar                 = 338,
+    LongName_LeftDownVectorBar               = 339,
+    LongName_LeftTeeVector                   = 340,
+    LongName_RightTeeVector                  = 341,
+    LongName_RightUpTeeVector                = 342,
+    LongName_RightDownTeeVector              = 343,
+    LongName_DownLeftTeeVector               = 344,
+    LongName_DownRightTeeVector              = 345,
+    LongName_LeftUpTeeVector                 = 346,
+    LongName_LeftDownTeeVector               = 347,
+    LongName_UpEquilibrium                   = 348,
+    LongName_ReverseUpEquilibrium            = 349,
+    LongName_RoundImplies                    = 350,
+    LongName_LeftTriangleBar                 = 351,
+    LongName_RightTriangleBar                = 352,
+    LongName_Equivalent                      = 353,
+    LongName_LessSlantEqual                  = 354,
+    LongName_GreaterSlantEqual               = 355,
+    LongName_NestedLessLess                  = 356,
+    LongName_NestedGreaterGreater            = 357,
+    LongName_PrecedesEqual                   = 358,
+    LongName_SucceedsEqual                   = 359,
+    LongName_DoubleLeftTee                   = 360,
+    LongName_LeftDoubleBracket               = 361,
+    LongName_RightDoubleBracket              = 362,
+    LongName_LeftAssociation                 = 363,
+    LongName_RightAssociation                = 364,
+    LongName_TwoWayRule                      = 365,
+    LongName_Piecewise                       = 366,
+    LongName_ImplicitPlus                    = 367,
+    LongName_AutoLeftMatch                   = 368,
+    LongName_AutoRightMatch                  = 369,
+    LongName_InvisiblePrefixScriptBase       = 370,
+    LongName_InvisiblePostfixScriptBase      = 371,
+    LongName_Transpose                       = 372,
+    LongName_Conjugate                       = 373,
+    LongName_ConjugateTranspose              = 374,
+    LongName_HermitianConjugate              = 375,
+    LongName_VerticalBar                     = 376,
+    LongName_NotVerticalBar                  = 377,
+    LongName_Distributed                     = 378,
+    LongName_Conditioned                     = 379,
+    LongName_UndirectedEdge                  = 380,
+    LongName_DirectedEdge                    = 381,
+    LongName_ContinuedFractionK              = 382,
+    LongName_TensorProduct                   = 383,
+    LongName_TensorWedge                     = 384,
+    LongName_ProbabilityPr                   = 385,
+    LongName_ExpectationE                    = 386,
+    LongName_PermutationProduct              = 387,
+    LongName_NotEqualTilde                   = 388,
+    LongName_NotHumpEqual                    = 389,
+    LongName_NotHumpDownHump                 = 390,
+    LongName_NotLeftTriangleBar              = 391,
+    LongName_NotRightTriangleBar             = 392,
+    LongName_NotLessLess                     = 393,
+    LongName_NotNestedLessLess               = 394,
+    LongName_NotLessSlantEqual               = 395,
+    LongName_NotGreaterGreater               = 396,
+    LongName_NotNestedGreaterGreater         = 397,
+    LongName_NotGreaterSlantEqual            = 398,
+    LongName_NotPrecedesEqual                = 399,
+    LongName_NotSucceedsEqual                = 400,
+    LongName_NotSquareSubset                 = 401,
+    LongName_NotSquareSuperset               = 402,
+    LongName_Equal                           = 403,
+    LongName_VerticalSeparator               = 404,
+    LongName_VectorGreater                   = 405,
+    LongName_VectorGreaterEqual              = 406,
+    LongName_VectorLess                      = 407,
+    LongName_VectorLessEqual                 = 408,
+    LongName_Limit                           = 409,
+    LongName_MaxLimit                        = 410,
+    LongName_MinLimit                        = 411,
+    LongName_Cross                           = 412,
+    LongName_Function                        = 413,
+    LongName_Xnor                            = 414,
+    LongName_DiscreteShift                   = 415,
+    LongName_DifferenceDelta                 = 416,
+    LongName_DiscreteRatio                   = 417,
+    LongName_RuleDelayed                     = 418,
+    LongName_Square                          = 419,
+    LongName_Rule                            = 420,
+    LongName_Implies                         = 421,
+    LongName_ShortRightArrow                 = 422,
+    LongName_ShortLeftArrow                  = 423,
+    LongName_ShortUpArrow                    = 424,
+    LongName_ShortDownArrow                  = 425,
+    LongName_Application                     = 426,
+    LongName_LeftBracketingBar               = 427,
+    LongName_RightBracketingBar              = 428,
+    LongName_LeftDoubleBracketingBar         = 429,
+    LongName_RightDoubleBracketingBar        = 430,
+    LongName_CapitalDifferentialD            = 431,
+    LongName_DifferentialD                   = 432,
+    LongName_InvisibleComma                  = 433,
+    LongName_InvisibleApplication            = 434,
+    LongName_LongEqual                       = 435,
 }
 
 impl TokenKind {
-	pub const COUNT: usize = 436;
+    pub const COUNT: usize = 436;
 }
+
+impl TokenKind {
+    pub const fn bits(self) -> u16 {
+        let bits: u16 = self as u16;
+        return bits;
+    }
+
+    // TODO: This is only used with TOKEN_COUNT -- remove this?
+    pub(crate) const fn id(self) -> u16 {
+        let value: u16 = self as u16;
+        return value & 0x1ff;
+    }
+
+    /// Returns either [`TokenKind::ToplevelNewline`] or [`TokenKind::InternalNewline`]
+    pub(crate) fn newline_with_policy(policy: NextPolicy) -> Self {
+        if policy.contains(RETURN_TOPLEVELNEWLINE) {
+            return TokenKind::ToplevelNewline;
+        } else {
+            TokenKind::InternalNewline
+        }
+    }
+
+    //
+    // All trivia matches: 0b0_0000_1xxx (x is unknown)
+    //
+    //         Mask off 0b1_1111_1000 (0x1f8)
+    // And test against 0b0_0000_1000 (0x08)
+    //
+    pub const fn isTrivia(self) -> bool {
+        return (self.bits() & 0x1f8) == 0x08;
+    }
+
+    //
+    // All trivia but ToplevelNewline matches: 0b0_0000_10xx (x is unknown)
+    //
+    //         Mask off 0b1_1111_1100 (0x1fc)
+    // And test against 0b0_0000_1000 (0x08)
+    //
+    pub const fn isTriviaButNotToplevelNewline(self) -> bool {
+        return (self.bits() & 0x1fc) == 0x08;
+    }
+
+    pub const fn isPossibleBeginning(self) -> bool {
+        return self.bits() & Group1::MASK == Group1::PossibleBeginning as u16;
+    }
+
+    pub const fn isCloser(self) -> bool {
+        return self.bits() & Group1::MASK == Group1::Closer as u16;
+    }
+
+    pub const fn isError(self) -> bool {
+        return self.bits() & Group1::MASK == Group1::Error as u16;
+    }
+
+    pub const fn isUnterminated(self) -> bool {
+        return self.bits() & Group2::MASK == Group2::Unterminated as u16;
+    }
+
+    pub const fn isEmpty(self) -> bool {
+        return self.bits() & Group2::MASK == Group2::Empty as u16;
+    }
+}
+
+
 
 //
 // AUTO GENERATED FILE
@@ -529,19 +883,42 @@ use crate::symbols as st;
 //
 // TokenKind::Integer must be 0x4 to allow setting the 0b1 bit to convert to TokenKind::REAL, and 0b10 bit to convert to TokenKind::Rational
 //
-const _: () = assert!(TokenKind::Integer.id() == 0x4, "Check your assumptions");
-const _: () = assert!(TokenKind::Real.id() == 0x5, "Check your assumptions");
-const _: () = assert!(TokenKind::Rational.id() == 0x6, "Check your assumptions");
+const _: () = assert!(TokenKind::Integer.id() == 0x4);
+const _: () = assert!(TokenKind::Real.id() == 0x5);
+const _: () = assert!(TokenKind::Rational.id() == 0x6);
 
 //
 // TokenKind::InternalNewline must be 0x8 to allow setting the 0b100 bit to convert to TokenKind::ToplevelNewline
 //
-const _: () = assert!(TokenKind::InternalNewline.id() == 0b1000, "Check your assumptions");
-const _: () = assert!(TokenKind::ToplevelNewline.id() == 0b1100, "Check your assumptions");
+const _: () = assert!(TokenKind::InternalNewline.id() == 0b1000,);
+const _: () = assert!(TokenKind::ToplevelNewline.id() == 0b1100,);
 //const _: () = assert!(TokenKind::Error_First.id() == 0x10, "Check your assumptions");
+
+/// All group closers
+#[allow(non_camel_case_types)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Closer {
+    BarGreater,
+    CloseCurly,
+    CloseParen,
+    CloseSquare,
+    LongName_CloseCurlyDoubleQuote,
+    LongName_CloseCurlyQuote,
+    LongName_RightAngleBracket,
+    LongName_RightAssociation,
+    LongName_RightBracketingBar,
+    LongName_RightCeiling,
+    LongName_RightDoubleBracket,
+    LongName_RightDoubleBracketingBar,
+    LongName_RightFloor,
+    // UNUSED
+    AssertFalse,
+}
 
 
 #[allow(dead_code)]
+#[rustfmt::skip]
 pub fn TokenToSymbol(token: TokenKind) -> Symbol {
     use TokenKind::*;
     match token {
@@ -984,6 +1361,8 @@ pub fn TokenToSymbol(token: TokenKind) -> Symbol {
     }
 }
 
+#[rustfmt::skip]
+#[allow(dead_code)]
 pub fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {
     use TokenKind::*;
     let token = match symbol {
@@ -1430,6 +1809,7 @@ pub fn SymbolToToken(symbol: SymbolRef) -> Option<TokenKind> {
 }
 
 impl TokenKind {
+    #[rustfmt::skip]
     pub(crate) const VARIANTS: [TokenKind; TokenKind::COUNT] = [
         TokenKind::Unknown,                                  // 0
         TokenKind::EndOfFile,                                // 1
@@ -1868,4 +2248,63 @@ impl TokenKind {
         TokenKind::LongName_InvisibleApplication,            // 434
         TokenKind::LongName_LongEqual,                       // 435
     ];
+}
+
+//======================================
+// Verify some TokenKind properties
+//======================================
+
+const _: () = assert!(TokenKind::EndOfFile.isEmpty());
+
+#[test]
+fn test_newline_policy() {
+    assert_eq!(
+        TokenKind::newline_with_policy(RETURN_TOPLEVELNEWLINE),
+        TokenKind::ToplevelNewline
+    );
+}
+
+//======================================
+// Closers
+//======================================
+
+#[rustfmt::skip]
+pub(crate) const fn GroupOpenerToCloser(token: TokenKind) -> Closer {
+    match token {
+        TokenKind::ColonColonOpenSquare => Closer::CloseSquare,
+        TokenKind::LongName_LeftAngleBracket => Closer::LongName_RightAngleBracket,
+        TokenKind::LongName_LeftAssociation => Closer::LongName_RightAssociation,
+        TokenKind::LongName_LeftBracketingBar => Closer::LongName_RightBracketingBar,
+        TokenKind::LongName_LeftCeiling => Closer::LongName_RightCeiling,
+        TokenKind::LongName_LeftDoubleBracket => Closer::LongName_RightDoubleBracket,
+        TokenKind::LongName_LeftDoubleBracketingBar => Closer::LongName_RightDoubleBracketingBar,
+        TokenKind::LongName_LeftFloor => Closer::LongName_RightFloor,
+        TokenKind::LessBar => Closer::BarGreater,
+        TokenKind::OpenCurly => Closer::CloseCurly,
+        TokenKind::LongName_OpenCurlyDoubleQuote => Closer::LongName_CloseCurlyDoubleQuote,
+        TokenKind::LongName_OpenCurlyQuote => Closer::LongName_CloseCurlyQuote,
+        TokenKind::OpenParen => Closer::CloseParen,
+        TokenKind::OpenSquare => Closer::CloseSquare,
+        _ => panic!("Unhandled token"),
+    }
+}
+
+#[rustfmt::skip]
+pub(crate) fn TokenToCloser(token: TokenKind) -> Closer {
+    match token {
+        TokenKind::BarGreater => Closer::BarGreater,
+        TokenKind::CloseCurly => Closer::CloseCurly,
+        TokenKind::LongName_CloseCurlyDoubleQuote => Closer::LongName_CloseCurlyDoubleQuote,
+        TokenKind::LongName_CloseCurlyQuote => Closer::LongName_CloseCurlyQuote,
+        TokenKind::CloseParen => Closer::CloseParen,
+        TokenKind::CloseSquare => Closer::CloseSquare,
+        TokenKind::LongName_RightAngleBracket => Closer::LongName_RightAngleBracket,
+        TokenKind::LongName_RightAssociation => Closer::LongName_RightAssociation,
+        TokenKind::LongName_RightBracketingBar => Closer::LongName_RightBracketingBar,
+        TokenKind::LongName_RightCeiling => Closer::LongName_RightCeiling,
+        TokenKind::LongName_RightDoubleBracket => Closer::LongName_RightDoubleBracket,
+        TokenKind::LongName_RightDoubleBracketingBar => Closer::LongName_RightDoubleBracketingBar,
+        TokenKind::LongName_RightFloor => Closer::LongName_RightFloor,
+        _ => Closer::AssertFalse,
+    }
 }
