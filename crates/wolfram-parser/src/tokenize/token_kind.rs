@@ -168,7 +168,6 @@ const CLOSERS: &[&str] = &[
 ];
 
 const ERROR: &[&str] = &[
-    "Error_Unknown",
     "Error_ExpectedEqual",
     "Error_Number",
     "Error_UnhandledCharacter",
@@ -188,6 +187,27 @@ const ERROR: &[&str] = &[
     "Error_UnsafeCharacterEncoding",
     "Error_UnexpectedCommentCloser",
 ];
+
+#[test]
+fn test_token_kind_property_arrays() {
+    let mut named_variants =
+        [POSSIBLE_BEGINNING, EMPTY, UNTERMINATED, CLOSERS, ERROR]
+            .iter()
+            .map(|slice| slice.iter())
+            .flatten();
+
+    if let Some(unknown) = named_variants.find(|v| !is_token_kind_variant(v)) {
+        panic!("unknown variant: {unknown}")
+    }
+}
+
+#[cfg(test)]
+fn is_token_kind_variant(name: &str) -> bool {
+    TokenKind::VARIANTS
+        .iter()
+        .find(|v| format!("{v:?}") == name)
+        .is_some()
+}
 
 const fn is_possible_beginning(variant: &str) -> bool {
     contains(POSSIBLE_BEGINNING, variant)
