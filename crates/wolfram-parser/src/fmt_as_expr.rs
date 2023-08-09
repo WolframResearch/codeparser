@@ -14,7 +14,7 @@ use crate::{
     source::{LineColumn, LineColumnSpan, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbols as sym,
-    tokenize::{token_kind::TokenToSymbol, Token, TokenInput, TokenSource},
+    tokenize::{Token, TokenInput, TokenSource},
     NodeSeq, Tokens,
 };
 
@@ -92,7 +92,7 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&Token<I, S>> {
             sym::CodeParser_LeafNode
         };
 
-        write!(f, "{}[{}, ", head.as_str(), TokenToSymbol(*tok).as_str())?;
+        write!(f, "{}[{}, ", head.as_str(), tok.to_symbol().as_str())?;
 
 
 

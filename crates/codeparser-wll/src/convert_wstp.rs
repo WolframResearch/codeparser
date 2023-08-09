@@ -17,10 +17,7 @@ use wolfram_parser::{
     source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbols as sym,
-    tokenize::{
-        token_kind::TokenToSymbol, BorrowedTokenInput, Token, TokenInput,
-        TokenKind,
-    },
+    tokenize::{BorrowedTokenInput, Token, TokenInput, TokenKind},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult,
     Tokens, UnsafeCharacterEncoding,
 };
@@ -518,7 +515,7 @@ impl WstpPut for AbstractSyntaxError {
 
 impl WstpPut for TokenKind {
     fn put(&self, link: &mut wstp::Link) {
-        let sym = TokenToSymbol(*self);
+        let sym = self.to_symbol();
 
         Symbol_put(sym, link);
     }

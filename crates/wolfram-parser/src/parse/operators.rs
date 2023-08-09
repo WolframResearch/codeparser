@@ -1141,7 +1141,7 @@ impl Operator for GroupOperator {
     #[allow(dead_code)]
     fn to_symbol(&self) -> Symbol {
         match self {
-            GroupOperator::Token_Comment => sym::Token_Comment,
+            GroupOperator::Token_Comment => sym::Token::Comment,
             GroupOperator::CodeParser_GroupParen => sym::CodeParser_GroupParen,
             GroupOperator::CodeParser_GroupSquare => sym::CodeParser_GroupSquare,
             GroupOperator::List => sym::List,
@@ -1160,7 +1160,7 @@ impl Operator for GroupOperator {
 
     fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
-            sym::Token_Comment => GroupOperator::Token_Comment,
+            sym::Token::Comment => GroupOperator::Token_Comment,
             sym::CodeParser_GroupParen => GroupOperator::CodeParser_GroupParen,
             sym::CodeParser_GroupSquare => GroupOperator::CodeParser_GroupSquare,
             sym::List => GroupOperator::List,

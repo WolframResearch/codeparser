@@ -1,5 +1,5 @@
 mod token;
-pub mod token_kind;
+pub(crate) mod token_kind;
 pub(crate) mod tokenizer;
 
 pub use self::{
