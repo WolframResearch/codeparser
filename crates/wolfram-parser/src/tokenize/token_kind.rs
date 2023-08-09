@@ -201,6 +201,19 @@ fn test_token_kind_property_arrays() {
     }
 }
 
+// Ensure that every TokenKind variant has a unique `id` value. I.e. that there
+// aren't two variants with the same `id` that differ only by one of their bit
+// flags.
+#[test]
+fn test_token_kinds_are_sorted() {
+    for window in TokenKind::VARIANTS.windows(2) {
+        let [a, b]: [_; 2] = window.try_into().unwrap();
+        if b.id() != a.id() + 1 {
+            panic!("TokenKind variant ids are not in order: {a:?}, {b:?}");
+        }
+    }
+}
+
 #[cfg(test)]
 fn is_token_kind_variant(name: &str) -> bool {
     TokenKind::VARIANTS
