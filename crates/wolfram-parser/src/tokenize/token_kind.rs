@@ -229,6 +229,11 @@ const fn is_error(variant: &str) -> bool {
     contains(ERROR, variant)
 }
 
+/// Compute numeric value assigned to each [`TokenKind`] variant.
+///
+/// [`TokenKind`] values are specially computed instead of assigned
+/// automatically by the compiler so that they can encode bit flag properties
+/// that can be accessed efficiently.
 #[rustfmt::skip]
 const fn variant(id: u16, name: &str) -> u16 {
     let group1 = if is_possible_beginning(name) {
@@ -286,7 +291,7 @@ macro_rules! token_kind {
         }
 
         impl TokenKind {
-            pub const VARIANTS: &[TokenKind] = &[
+            pub(crate) const VARIANTS: &[TokenKind] = &[
                 $( TokenKind::$variant, )*
             ];
 
@@ -339,9 +344,9 @@ macro_rules! token_to_symbol {
     };
 }
 
-//
+//======================================
 // All token enum variants
-//
+//======================================
 
 token_kind! {
     Unknown                                  = 0,
