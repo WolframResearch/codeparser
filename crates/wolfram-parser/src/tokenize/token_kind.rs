@@ -1016,6 +1016,17 @@ fn test_newline_policy() {
     );
 }
 
+#[test]
+fn test_token_newline() {
+    // TODO: Should this be InternalNewline, or ToplevelNewline?
+    //       See also: token_to_symbol! comment about returning Token`Newline
+    //       for both of these variants.
+    assert_eq!(
+        TokenKind::from_symbol(st::Token::Newline),
+        Some(TokenKind::InternalNewline)
+    );
+}
+
 //======================================
 // Closers
 //======================================
