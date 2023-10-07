@@ -113,8 +113,8 @@ pub mod macros;
 use wolfram_expr::{Expr, Number};
 
 use crate::{
-    ast::AstNode,
-    cst::CstNode,
+    ast::Ast,
+    cst::Cst,
     issue::{CodeAction, Issue},
     parse::ParserSession,
     source::{Source, SourceConvention, Span, DEFAULT_TAB_WIDTH},
@@ -368,7 +368,7 @@ pub fn tokenize_bytes<'i>(
 pub fn parse_to_cst<'i>(
     input: &'i str,
     opts: &ParseOptions,
-) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+) -> ParseResult<Cst<BorrowedTokenInput<'i>>> {
     parse_bytes_to_cst(input.as_bytes(), opts)
 }
 
@@ -376,7 +376,7 @@ pub fn parse_to_cst<'i>(
 pub fn parse_bytes_to_cst<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
-) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+) -> ParseResult<Cst<BorrowedTokenInput<'i>>> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.concrete_parse_expressions()
@@ -390,7 +390,7 @@ pub fn parse_bytes_to_cst<'i>(
 pub fn parse_to_ast<'i>(
     input: &'i str,
     opts: &ParseOptions,
-) -> ParseResult<AstNode> {
+) -> ParseResult<Ast> {
     parse_bytes_to_ast(input.as_bytes(), opts)
 }
 
@@ -398,7 +398,7 @@ pub fn parse_to_ast<'i>(
 pub fn parse_bytes_to_ast<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
-) -> ParseResult<AstNode> {
+) -> ParseResult<Ast> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.abstract_parse_expressions()

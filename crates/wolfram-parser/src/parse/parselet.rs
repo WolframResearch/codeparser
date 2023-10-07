@@ -1369,7 +1369,7 @@ impl CallParselet {
         let body = session.pop_node();
 
         let body: CallBody<_> = match body {
-            crate::cst::CstNode::Group(group) => {
+            crate::cst::Cst::Group(group) => {
                 let GroupNode(OperatorNode { op, children, src}) = group;
 
                 let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");
@@ -1380,7 +1380,7 @@ impl CallParselet {
 
                 CallBody::Group(group)
             },
-            crate::cst::CstNode::GroupMissingCloser(group) => {
+            crate::cst::Cst::GroupMissingCloser(group) => {
                 let GroupMissingCloserNode(OperatorNode { op, children, src}) = group;
 
                 let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");

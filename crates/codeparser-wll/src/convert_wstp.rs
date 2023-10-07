@@ -3,11 +3,11 @@ use std::collections::HashSet;
 use wolfram_library_link::{expr::Expr, wstp};
 
 use wolfram_parser::{
-    ast::{AbstractSyntaxError, AstMetadata, AstNode},
+    ast::{AbstractSyntaxError, Ast, AstMetadata},
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
-        CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator,
-        CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator, Cst,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
         GroupOperator, InfixNode, InfixOperator, Operator, OperatorNode,
         PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
         PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
@@ -235,13 +235,13 @@ impl WstpPut for AstMetadata {
 }
 
 //======================================
-// AstNode types
+// Ast types
 //======================================
 
-impl WstpPut for AstNode {
+impl WstpPut for Ast {
     fn put(&self, link: &mut wstp::Link) {
         match self {
-            AstNode::Leaf { kind, input, data } => {
+            Ast::Leaf { kind, input, data } => {
                 link.put_function(sym::CodeParser_LeafNode.as_str(), 3)
                     .unwrap();
 
@@ -254,7 +254,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::Error { kind, input, data } => {
+            Ast::Error { kind, input, data } => {
                 link.put_function(sym::CodeParser_ErrorNode.as_str(), 3)
                     .unwrap();
 
@@ -267,7 +267,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::Call { head, args, data } => {
+            Ast::Call { head, args, data } => {
                 link.put_function(sym::CodeParser_CallNode.as_str(), 3)
                     .unwrap();
 
@@ -281,7 +281,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::CallMissingCloser { head, args, data } => {
+            Ast::CallMissingCloser { head, args, data } => {
                 link.put_function(
                     sym::CodeParser_CallMissingCloserNode.as_str(),
                     3,
@@ -298,7 +298,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::UnterminatedCall { head, args, data } => {
+            Ast::UnterminatedCall { head, args, data } => {
                 link.put_function(
                     sym::CodeParser_UnterminatedCallNode.as_str(),
                     3,
@@ -315,7 +315,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::SyntaxError {
+            Ast::SyntaxError {
                 kind,
                 children,
                 data,
@@ -334,7 +334,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::AbstractSyntaxError { kind, args, data } => {
+            Ast::AbstractSyntaxError { kind, args, data } => {
                 link.put_function(
                     sym::CodeParser_AbstractSyntaxErrorNode.as_str(),
                     3,
@@ -351,7 +351,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::Box { kind, args, data } => {
+            Ast::Box { kind, args, data } => {
                 link.put_function(sym::CodeParser_BoxNode.as_str(), 3)
                     .unwrap();
 
@@ -365,7 +365,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::Group {
+            Ast::Group {
                 kind,
                 children,
                 data,
@@ -386,7 +386,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::GroupMissingCloser {
+            Ast::GroupMissingCloser {
                 kind,
                 children,
                 data,
@@ -408,7 +408,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::GroupMissingOpener {
+            Ast::GroupMissingOpener {
                 kind,
                 children,
                 data,
@@ -430,7 +430,7 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::Code {
+            Ast::Code {
                 first,
                 second,
                 data,
@@ -442,7 +442,7 @@ impl WstpPut for AstNode {
                 link.put_expr(second).unwrap();
                 data.put(link);
             },
-            AstNode::TagBox_GroupParen {
+            Ast::TagBox_GroupParen {
                 group,
                 tag,
                 data: data1,
@@ -482,7 +482,7 @@ impl WstpPut for AstNode {
 
                 data1.put(link);
             },
-            AstNode::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
+            Ast::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
                 link.put_function(sym::CodeParser_PrefixNode.as_str(), 3)
                     .unwrap();
 
@@ -557,44 +557,44 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
 // Node types
 //======================================
 
-impl<I: TokenInput, S: WstpPut> WstpPut for CstNode<I, S> {
+impl<I: TokenInput, S: WstpPut> WstpPut for Cst<I, S> {
     fn put(&self, link: &mut wstp::Link) {
         match self {
-            CstNode::Token(token) => token.put(link),
-            CstNode::Call(node) => node.put(link),
-            CstNode::SyntaxError(node) => node.put(link),
-            CstNode::Infix(InfixNode(op)) => {
+            Cst::Token(token) => token.put(link),
+            Cst::Call(node) => node.put(link),
+            Cst::SyntaxError(node) => node.put(link),
+            Cst::Infix(InfixNode(op)) => {
                 put_op(link, op, sym::CodeParser_InfixNode)
             },
-            CstNode::Prefix(PrefixNode(op)) => {
+            Cst::Prefix(PrefixNode(op)) => {
                 put_op(link, op, sym::CodeParser_PrefixNode)
             },
-            CstNode::Postfix(PostfixNode(op)) => {
+            Cst::Postfix(PostfixNode(op)) => {
                 put_op(link, op, sym::CodeParser_PostfixNode)
             },
-            CstNode::Binary(BinaryNode(op)) => {
+            Cst::Binary(BinaryNode(op)) => {
                 put_op(link, op, sym::CodeParser_BinaryNode)
             },
-            CstNode::Ternary(TernaryNode(op)) => {
+            Cst::Ternary(TernaryNode(op)) => {
                 put_op(link, op, sym::CodeParser_TernaryNode)
             },
-            CstNode::PrefixBinary(PrefixBinaryNode(op)) => {
+            Cst::PrefixBinary(PrefixBinaryNode(op)) => {
                 put_op(link, op, sym::CodeParser_PrefixBinaryNode)
             },
-            CstNode::Compound(CompoundNode(op)) => {
+            Cst::Compound(CompoundNode(op)) => {
                 put_op(link, op, sym::CodeParser_CompoundNode)
             },
-            CstNode::Group(GroupNode(op)) => {
+            Cst::Group(GroupNode(op)) => {
                 put_op(link, op, sym::CodeParser_GroupNode)
             },
-            CstNode::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+            Cst::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 put_op(link, op, sym::CodeParser_GroupMissingCloserNode)
             },
-            CstNode::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+            Cst::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
                 put_op(link, op, sym::CodeParser_GroupMissingOpenerNode)
             },
-            CstNode::Box(box_node) => box_node.put(link),
-            CstNode::Code(node) => node.put(link),
+            Cst::Box(box_node) => box_node.put(link),
+            Cst::Code(node) => node.put(link),
         }
     }
 }

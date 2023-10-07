@@ -7,8 +7,9 @@ use crate::{
     tokenize::{OwnedTokenInput, TokenKind, TokenSource},
 };
 
+/// An abstract syntax tree (AST) node.
 #[derive(Debug, Clone, PartialEq)]
-pub enum AstNode {
+pub enum Ast {
     /// `LeafNode[...]`
     Leaf {
         kind: TokenKind,
@@ -23,37 +24,37 @@ pub enum AstNode {
     },
     /// `CallNode[...]`
     Call {
-        head: Box<AstNode>,
-        args: Vec<AstNode>,
+        head: Box<Ast>,
+        args: Vec<Ast>,
         data: AstMetadata,
     },
     /// `CallMissingCloserNode[...]`
     CallMissingCloser {
-        head: Box<AstNode>,
-        args: Vec<AstNode>,
+        head: Box<Ast>,
+        args: Vec<Ast>,
         data: AstMetadata,
     },
     /// `UnterminatedCallNode[...]`
     UnterminatedCall {
-        head: Box<AstNode>,
-        args: Vec<AstNode>,
+        head: Box<Ast>,
+        args: Vec<Ast>,
         data: AstMetadata,
     },
     /// `SyntaxErrorNode[...]`
     SyntaxError {
         kind: SyntaxErrorKind,
-        children: Vec<AstNode>,
+        children: Vec<Ast>,
         data: AstMetadata,
     },
     /// `AbstractSyntaxErrorNode[..]`
     AbstractSyntaxError {
         kind: AbstractSyntaxError,
-        args: Vec<AstNode>,
+        args: Vec<Ast>,
         data: AstMetadata,
     },
     Box {
         kind: BoxKind,
-        args: Vec<AstNode>,
+        args: Vec<Ast>,
         data: AstMetadata,
     },
     /// `CodeNode[_, _, _]`
@@ -67,33 +68,33 @@ pub enum AstNode {
     Group {
         kind: GroupOperator,
         children: Box<(
-            AstNode, // Opener
-            AstNode, // Body
-            AstNode, // Closer
+            Ast, // Opener
+            Ast, // Body
+            Ast, // Closer
         )>,
         data: AstMetadata,
     },
     GroupMissingCloser {
         kind: GroupOperator,
-        children: Vec<AstNode>,
+        children: Vec<Ast>,
         data: AstMetadata,
     },
     GroupMissingOpener {
         kind: GroupOperator,
-        children: Vec<AstNode>,
+        children: Vec<Ast>,
         data: AstMetadata,
     },
     // TODO: Store these in abstracted form?
     #[allow(non_camel_case_types)]
     TagBox_GroupParen {
-        group: Box<(AstNode, AstNode, AstNode, Source)>,
+        group: Box<(Ast, Ast, Ast, Source)>,
         tag: CodeNode<Source>,
         data: AstMetadata,
     },
     // FIXME: Handle linear syntax
     /// `PrefixNode[PrefixLinearSyntaxBang, {operator_, operand_}, data_]`
     #[allow(non_camel_case_types)]
-    PrefixNode_PrefixLinearSyntaxBang(Box<[AstNode; 2]>, AstMetadata),
+    PrefixNode_PrefixLinearSyntaxBang(Box<[Ast; 2]>, AstMetadata),
 }
 
 // TODO(cleanup): Combine this with `Metadata`?
@@ -120,8 +121,8 @@ pub enum AbstractSyntaxError {
 //======================================
 
 pub(crate) struct AstCall {
-    pub head: Box<AstNode>,
-    pub args: Vec<AstNode>,
+    pub head: Box<Ast>,
+    pub args: Vec<Ast>,
     pub data: Source,
 }
 
@@ -129,48 +130,48 @@ pub(crate) struct AstCall {
 // Impls
 //======================================
 
-impl AstNode {
-    pub(crate) fn into_children_and_source(self) -> (Vec<AstNode>, Source) {
+impl Ast {
+    pub(crate) fn into_children_and_source(self) -> (Vec<Ast>, Source) {
         match self {
-            AstNode::Leaf { .. } | AstNode::Error { .. } => panic!(
-                "AstNode::into_children_and_source(): AstNode variant has no children: {self:?}"
+            Ast::Leaf { .. } | Ast::Error { .. } => panic!(
+                "Ast::into_children_and_source(): Ast variant has no children: {self:?}"
             ),
-            AstNode::Call {
+            Ast::Call {
                 head: _,
                 args,
                 data,
             } => (args, data.source),
-            AstNode::CallMissingCloser {
+            Ast::CallMissingCloser {
                 head: _,
                 args,
                 data,
             } => (args, data.source),
-            AstNode::UnterminatedCall {
+            Ast::UnterminatedCall {
                 head: _,
                 args,
                 data,
             } => (args, data.source),
-            AstNode::SyntaxError {
+            Ast::SyntaxError {
                 kind: _,
                 children,
                 data,
             } => (children, data.source),
-            AstNode::AbstractSyntaxError {
+            Ast::AbstractSyntaxError {
                 kind: _,
                 args,
                 data,
             } => (args, data.source),
-            AstNode::Box {
+            Ast::Box {
                 kind: _,
                 args,
                 data,
             } => (args, data.source),
-            AstNode::Code { .. } => todo!(),
-            AstNode::Group { .. } => todo!(),
-            AstNode::GroupMissingCloser { .. } => todo!(),
-            AstNode::GroupMissingOpener { .. } => todo!(),
-            AstNode::TagBox_GroupParen { .. } => todo!(),
-            AstNode::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
+            Ast::Code { .. } => todo!(),
+            Ast::Group { .. } => todo!(),
+            Ast::GroupMissingCloser { .. } => todo!(),
+            Ast::GroupMissingOpener { .. } => todo!(),
+            Ast::TagBox_GroupParen { .. } => todo!(),
+            Ast::PrefixNode_PrefixLinearSyntaxBang(children, data) => {
                 (Vec::from(*children), data.source)
             },
         }
@@ -190,19 +191,19 @@ impl AstNode {
 
     pub(crate) fn metadata(&self) -> &AstMetadata {
         match self {
-            AstNode::Leaf { data, .. } | AstNode::Error { data, .. } => data,
-            AstNode::Call { data, .. } => data,
-            AstNode::CallMissingCloser { data, .. } => data,
-            AstNode::UnterminatedCall { data, .. } => data,
-            AstNode::SyntaxError { data, .. } => data,
-            AstNode::AbstractSyntaxError { data, .. } => data,
-            AstNode::Box { data, .. } => data,
-            AstNode::Code { data, .. } => data,
-            AstNode::Group { data, .. } => data,
-            AstNode::GroupMissingCloser { data, .. } => data,
-            AstNode::GroupMissingOpener { data, .. } => data,
-            AstNode::TagBox_GroupParen { data, .. } => data,
-            AstNode::PrefixNode_PrefixLinearSyntaxBang(_, data) => data,
+            Ast::Leaf { data, .. } | Ast::Error { data, .. } => data,
+            Ast::Call { data, .. } => data,
+            Ast::CallMissingCloser { data, .. } => data,
+            Ast::UnterminatedCall { data, .. } => data,
+            Ast::SyntaxError { data, .. } => data,
+            Ast::AbstractSyntaxError { data, .. } => data,
+            Ast::Box { data, .. } => data,
+            Ast::Code { data, .. } => data,
+            Ast::Group { data, .. } => data,
+            Ast::GroupMissingCloser { data, .. } => data,
+            Ast::GroupMissingOpener { data, .. } => data,
+            Ast::TagBox_GroupParen { data, .. } => data,
+            Ast::PrefixNode_PrefixLinearSyntaxBang(_, data) => data,
         }
     }
 }
@@ -230,11 +231,11 @@ impl AstMetadata {
 // Conversion Impls
 //======================================
 
-impl From<AstCall> for AstNode {
+impl From<AstCall> for Ast {
     fn from(call: AstCall) -> Self {
         let AstCall { head, args, data } = call;
 
-        AstNode::Call {
+        Ast::Call {
             head,
             args,
             data: AstMetadata::from_src(data),
@@ -274,7 +275,7 @@ impl AbstractSyntaxError {
 //======================================
 
 /// Transforms Wolfram Language syntax for representing nodes into Rust code to
-/// construct the equivalent [`AstNode`].
+/// construct the equivalent [`Ast`].
 macro_rules! WL {
     //========================
     // ToNode[..]
@@ -293,7 +294,7 @@ macro_rules! WL {
     (LeafNode[$token_kind:ident, $input:expr, <||>]) => {{
         let input: String = String::from($input);
 
-        let node = $crate::ast::AstNode::Leaf {
+        let node = $crate::ast::Ast::Leaf {
             kind: $crate::tokenize::TokenKind::$token_kind,
             input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
@@ -308,7 +309,7 @@ macro_rules! WL {
         let input: String = String::from($input);
         let src: $crate::source::Source = $data.into_general();
 
-        let node = $crate::ast::AstNode::Leaf {
+        let node = $crate::ast::Ast::Leaf {
             kind: $crate::tokenize::TokenKind::$token_kind,
             input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
@@ -327,7 +328,7 @@ macro_rules! WL {
         WL!( CallNode[ToNode[$token_kind], { $($args),* }, S::unknown()])
     };
     (CallNode[ToNode[$token_kind:ident], { $($args:expr),* }, $data:expr]) => {{
-        $crate::ast::AstNode::Call {
+        $crate::ast::Ast::Call {
             head: Box::new($crate::ast::WL!(ToNode[$token_kind])),
             args: vec![$($args),*],
             data: $crate::ast::AstMetadata::from($data),
@@ -335,14 +336,14 @@ macro_rules! WL {
     }};
 
     (CallNode[ToNode[$token_kind:ident], $args:expr, <||>]) => {{
-        $crate::ast::AstNode::Call {
+        $crate::ast::Ast::Call {
             head: Box::new($crate::ast::WL!(ToNode[$token_kind])),
             args: $args,
             data: $crate::ast::AstMetadata::empty(),
         }
     }};
     (CallNode[ToNode[$token_kind:ident], $args:expr, $data:expr]) => {{
-        $crate::ast::AstNode::Call {
+        $crate::ast::Ast::Call {
             head: Box::new($crate::ast::WL!(ToNode[$token_kind])),
             args: $args,
             data: $crate::ast::AstMetadata::from($data),
@@ -353,14 +354,14 @@ macro_rules! WL {
         WL!( CallNode[$head, { $($args),* }, S::unknown()] )
     }};
     (CallNode[$head:expr, { $($args:expr),* }, $data:expr]) => {{
-        $crate::ast::AstNode::Call {
+        $crate::ast::Ast::Call {
             head: Box::new($head),
             args: vec![$($args),*],
             data: $crate::ast::AstMetadata::from($data),
         }
     }};
     (CallNode[$head:expr, $args:expr, $data:expr]) => {{
-        $crate::ast::AstNode::Call {
+        $crate::ast::Ast::Call {
             head: Box::new($head),
             args: $args,
             data: $crate::ast::AstMetadata::from($data),
@@ -372,7 +373,7 @@ macro_rules! WL {
     //========================
 
     (CallMissingCloserNode[$head:expr, $args:expr, $data:expr]) => {{
-        $crate::ast::AstNode::CallMissingCloser {
+        $crate::ast::Ast::CallMissingCloser {
             head: Box::new($head),
             args: $args,
             data: $crate::ast::AstMetadata::from($data),
@@ -384,7 +385,7 @@ macro_rules! WL {
     //========================
 
     (UnterminatedCallNode[$head:expr, $args:expr, $data:expr]) => {{
-        $crate::ast::AstNode::UnterminatedCall {
+        $crate::ast::Ast::UnterminatedCall {
             head: Box::new($head),
             args: $args,
             data: $crate::ast::AstMetadata::from($data),
@@ -396,7 +397,7 @@ macro_rules! WL {
     //========================
 
     (SyntaxErrorNode[$err_kind:ident, { $($args:expr),* }, $data:expr]) => {
-        $crate::ast::AstNode::SyntaxError {
+        $crate::ast::Ast::SyntaxError {
             kind: $crate::cst::SyntaxErrorKind::$err_kind,
             children: vec![$($args),*],
             data: $crate::ast::AstMetadata::from_src($data),
@@ -411,7 +412,7 @@ macro_rules! WL {
         WL!( AbstractSyntaxErrorNode[$err_kind, vec![$($args),*], $data] )
     };
     (AbstractSyntaxErrorNode[$err_kind:ident, $args:expr, $data:expr]) => {
-        $crate::ast::AstNode::AbstractSyntaxError {
+        $crate::ast::Ast::AbstractSyntaxError {
             kind: $crate::ast::AbstractSyntaxError::$err_kind,
             args: $args,
             data: $crate::ast::AstMetadata::from_src($data),
@@ -423,21 +424,21 @@ macro_rules! WL {
     //========================
 
     // (BoxNode[TagBox, {$content:expr, $tag:expr}, $data:expr]) => {
-    //     $crate::ast::AstNode::TagBox {
+    //     $crate::ast::Ast::TagBox {
     //         content: $content,
     //         tag: $tag,
     //         data: $crate::ast::AstMetadata::from_src($data),
     //     }
     // };
     (BoxNode[$kind:ident, $children:expr, $data:expr]) => {
-        $crate::ast::AstNode::Box {
+        $crate::ast::Ast::Box {
             kind: BoxKind::$kind,
             args: $children,
             data: $crate::ast::AstMetadata::from_src($data),
         }
     };
     (BoxNode[$kind:expr, $children:expr, $data:expr]) => {
-        $crate::ast::AstNode::Box {
+        $crate::ast::Ast::Box {
             kind: $kind,
             args: $children,
             data: $crate::ast::AstMetadata::from_src($data),

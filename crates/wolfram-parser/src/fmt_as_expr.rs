@@ -5,11 +5,11 @@ use std::fmt::Display;
 use crate::{
     cst::{
         BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CompoundNode,
-        CompoundOperator, CstNode, GroupMissingCloserNode,
-        GroupMissingOpenerNode, GroupNode, InfixNode, InfixOperator, Operator,
-        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
-        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorNode,
-        TernaryNode, TernaryOperator,
+        CompoundOperator, Cst, GroupMissingCloserNode, GroupMissingOpenerNode,
+        GroupNode, InfixNode, InfixOperator, Operator, OperatorNode,
+        PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
+        PrefixNode, PrefixOperator, SyntaxErrorNode, TernaryNode,
+        TernaryOperator,
     },
     source::{LineColumn, LineColumnSpan, Location, Source, Span, SpanKind},
     symbol::Symbol,
@@ -24,9 +24,7 @@ pub struct FmtAsExpr<T>(pub T);
 // Impls
 //==========================================================
 
-impl<I: TokenInput, S: TokenSource> Display
-    for FmtAsExpr<&NodeSeq<CstNode<I, S>>>
-{
+impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&NodeSeq<Cst<I, S>>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(NodeSeq(nodes)) = self;
 
@@ -109,38 +107,28 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&Token<I, S>> {
 }
 
 
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CstNode<I, S>> {
+impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&Cst<I, S>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(node) = self;
 
         match node {
-            CstNode::Token(token) => write!(f, "{}", FmtAsExpr(token))?,
-            CstNode::Call(node) => write!(f, "{}", FmtAsExpr(node))?,
-            CstNode::SyntaxError(node) => write!(f, "{}", FmtAsExpr(node))?,
-            CstNode::Prefix(PrefixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
-            CstNode::Infix(InfixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
-            CstNode::Postfix(PostfixNode(op)) => {
+            Cst::Token(token) => write!(f, "{}", FmtAsExpr(token))?,
+            Cst::Call(node) => write!(f, "{}", FmtAsExpr(node))?,
+            Cst::SyntaxError(node) => write!(f, "{}", FmtAsExpr(node))?,
+            Cst::Prefix(PrefixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            Cst::Infix(InfixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            Cst::Postfix(PostfixNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            Cst::Binary(BinaryNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            Cst::Ternary(TernaryNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            Cst::PrefixBinary(PrefixBinaryNode(op)) => {
                 write!(f, "{}", FmtAsExpr(op))?
             },
-            CstNode::Binary(BinaryNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
-            CstNode::Ternary(TernaryNode(op)) => {
-                write!(f, "{}", FmtAsExpr(op))?
-            },
-            CstNode::PrefixBinary(PrefixBinaryNode(op)) => {
-                write!(f, "{}", FmtAsExpr(op))?
-            },
-            CstNode::Compound(CompoundNode(op)) => {
-                write!(f, "{}", FmtAsExpr(op))?
-            },
-            CstNode::Group(node) => write!(f, "{}", FmtAsExpr(node))?,
-            CstNode::GroupMissingCloser(node) => {
-                write!(f, "{}", FmtAsExpr(node))?
-            },
-            CstNode::GroupMissingOpener(node) => {
-                write!(f, "{}", FmtAsExpr(node))?
-            },
-            CstNode::Box(_) => todo!(),
-            CstNode::Code(_) => todo!(),
+            Cst::Compound(CompoundNode(op)) => write!(f, "{}", FmtAsExpr(op))?,
+            Cst::Group(node) => write!(f, "{}", FmtAsExpr(node))?,
+            Cst::GroupMissingCloser(node) => write!(f, "{}", FmtAsExpr(node))?,
+            Cst::GroupMissingOpener(node) => write!(f, "{}", FmtAsExpr(node))?,
+            Cst::Box(_) => todo!(),
+            Cst::Code(_) => todo!(),
         }
 
         Ok(())

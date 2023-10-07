@@ -13,11 +13,11 @@ mod test_wl_character;
 use pretty_assertions::assert_eq;
 
 use crate::{
-    ast::{AstMetadata, AstNode},
+    ast::{Ast, AstMetadata},
     cst::{
-        CallBody, CallHead, CallNode, CallOperator, CstNode,
-        CstNode::Token as NVToken, GroupMissingCloserNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, Node, OperatorNode,
+        CallBody, CallHead, CallNode, CallOperator, Cst, Cst::Token as NVToken,
+        GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode,
+        InfixOperator, OperatorNode,
     },
     macros::{src, token},
     parse::ParserSession,
@@ -30,7 +30,7 @@ use crate::{
     FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
 };
 
-pub(crate) fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
+pub(crate) fn nodes(input: &str) -> Vec<Cst<BorrowedTokenInput>> {
     let mut session =
         ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
@@ -50,7 +50,7 @@ pub(crate) fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
 fn concrete_exprs(
     input: &str,
     opts: ParseOptions,
-) -> Vec<Node<BorrowedTokenInput>> {
+) -> Vec<Cst<BorrowedTokenInput>> {
     let mut session = ParserSession::new(input.as_bytes(), &opts);
 
     let ParseResult { nodes, .. } = session.concrete_parse_expressions();
@@ -60,9 +60,7 @@ fn concrete_exprs(
     nodes
 }
 
-fn concrete_exprs_character_index(
-    input: &str,
-) -> Vec<Node<BorrowedTokenInput>> {
+fn concrete_exprs_character_index(input: &str) -> Vec<Cst<BorrowedTokenInput>> {
     let mut session = ParserSession::new(
         input.as_bytes(),
         &ParseOptions::default()
@@ -127,7 +125,7 @@ fn test_something() {
 
     assert_eq!(
         nodes("2 + 2"),
-        vec![Node::Infix(InfixNode(OperatorNode {
+        vec![Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
                 NVToken(token![Integer, "2", src!(1:1-1:2)]),
@@ -142,8 +140,8 @@ fn test_something() {
 
     assert_eq!(
         nodes("f[x]"),
-        vec![Node::Call(CallNode {
-            head: CallHead::Concrete(NodeSeq(vec![Node::Token(token![
+        vec![Cst::Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Cst::Token(token![
                 Symbol,
                 "f",
                 src!(1:1-1:2)
@@ -190,7 +188,7 @@ pub fn test_tokenize_is_not_idempotent() {
 fn test_character_index_source() {
     assert_eq!(
         concrete_exprs_character_index("2+2"),
-        &[Node::Infix(InfixNode(OperatorNode {
+        &[Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
                 NVToken(token![Integer, "2", src!(1..2)]),
@@ -206,10 +204,10 @@ fn test_character_index_source() {
 fn test_unterminated_group_reparse() {
     assert_eq!(
         concrete_exprs("{", ParseOptions::default()),
-        &[Node::GroupMissingCloser(GroupMissingCloserNode(
+        &[Cst::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
                 op: GroupOperator::List,
-                children: NodeSeq(vec![Node::Token(token![
+                children: NodeSeq(vec![Cst::Token(token![
                     OpenCurly,
                     [123],
                     src!(1:1-1:2)
@@ -223,7 +221,7 @@ fn test_unterminated_group_reparse() {
 
     assert_eq!(
         concrete_exprs("\"\n", ParseOptions::default()),
-        &[Node::Token(token![
+        &[Cst::Token(token![
             Error_UnterminatedString,
             "\"",
             src!(1:1-1:2)
@@ -245,7 +243,7 @@ fn test_unterminated_group_reparse() {
         // 123456
         //   ^ \t
         concrete_exprs("<|\t?", ParseOptions::default().tab_width(1)),
-        &[Node::GroupMissingCloser(GroupMissingCloserNode(
+        &[Cst::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
                 op: GroupOperator::Association,
                 children: NodeSeq(vec![
@@ -266,7 +264,7 @@ fn test_unterminated_group_reparse() {
         // 123456
         //   ^^ \t
         concrete_exprs("<|\t?", ParseOptions::default()),
-        &[Node::GroupMissingCloser(GroupMissingCloserNode(
+        &[Cst::GroupMissingCloser(GroupMissingCloserNode(
             OperatorNode {
                 op: GroupOperator::Association,
                 children: NodeSeq(vec![
@@ -295,10 +293,10 @@ fn test_invalid_utf8_in_middle_of_parse() {
 
     assert_eq!(
         result.nodes.0,
-        &[CstNode::Infix(InfixNode(OperatorNode {
+        &[Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
-                CstNode::Infix(InfixNode(OperatorNode {
+                Cst::Infix(InfixNode(OperatorNode {
                     op: InfixOperator::Plus,
                     children: NodeSeq(vec![
                         NVToken(token![Integer, "1", src!(1:1-1:2)]),
@@ -361,14 +359,14 @@ fn test_abstract_parse() {
 
     assert_eq!(
         result.nodes(),
-        &[AstNode::Call {
-            head: Box::new(AstNode::Leaf {
+        &[Ast::Call {
+            head: Box::new(Ast::Leaf {
                 kind: TK::Symbol,
                 input: OwnedTokenInput::fake("Plus"),
                 data: AstMetadata::empty()
             }),
             args: vec![
-                AstNode::Leaf {
+                Ast::Leaf {
                     kind: TK::Integer,
                     input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {
@@ -376,7 +374,7 @@ fn test_abstract_parse() {
                         issues: vec![],
                     },
                 },
-                AstNode::Leaf {
+                Ast::Leaf {
                     kind: TK::Integer,
                     input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {

@@ -5,7 +5,7 @@ use wolfram_library_link::expr::{
 use wolfram_parser::{
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
-        CallNode, CallOperator, CodeNode, CompoundNode, CstNode,
+        CallNode, CallOperator, CodeNode, CompoundNode, Cst,
         GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
         GroupOperator, InfixNode, InfixOperator, LeafNode, Operator,
         OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
@@ -30,7 +30,7 @@ pub(crate) trait FromExpr: Sized {
 // FromExpr impls
 //==========================================================
 
-impl FromExpr for Container<CstNode<OwnedTokenInput, Source>> {
+impl FromExpr for Container<Cst<OwnedTokenInput, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(
             expr,
@@ -78,7 +78,7 @@ impl FromExpr for ContainerKind {
     }
 }
 
-impl FromExpr for ContainerBody<CstNode<OwnedTokenInput, Source>> {
+impl FromExpr for ContainerBody<Cst<OwnedTokenInput, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(elements) = try_normal_with_head(expr, sym::List) {
             if elements.len() == 1 {
@@ -109,7 +109,7 @@ impl<N: FromExpr> FromExpr for NodeSeq<N> {
     }
 }
 
-impl FromExpr for CstNode<OwnedTokenInput, Source> {
+impl FromExpr for Cst<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(LeafNode { kind, input, src }) = LeafNode::from_expr(expr) {
             let token = Token {
@@ -119,7 +119,7 @@ impl FromExpr for CstNode<OwnedTokenInput, Source> {
                     buf: input.into_bytes(),
                 },
             };
-            return Ok(CstNode::Token(token));
+            return Ok(Cst::Token(token));
         }
 
 
@@ -177,7 +177,7 @@ impl FromExpr for CstNode<OwnedTokenInput, Source> {
 
         if let Ok(node) = CodeNode::from_expr(expr) {
             // return Ok(Self::from(node));
-            return Ok(CstNode::Code(node));
+            return Ok(Cst::Code(node));
         }
 
         // todo!("expr: {expr}")
@@ -235,7 +235,7 @@ impl FromExpr for CallNode<OwnedTokenInput, Source> {
             CallHead::Concrete(NodeSeq(head))
         } else {
             // TODO(cleanup): Is this branch used?
-            CallHead::aggregate(CstNode::from_expr(&elements[0])?)
+            CallHead::aggregate(Cst::from_expr(&elements[0])?)
         };
 
         let body = if let Ok(group) = GroupNode::from_expr(&elements[1]) {

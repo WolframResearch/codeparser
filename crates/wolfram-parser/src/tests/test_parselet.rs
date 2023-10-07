@@ -1,4 +1,4 @@
-use crate::{cst::CstNode, ParseOptions, ParserSession};
+use crate::{cst::Cst, ParseOptions, ParserSession};
 
 
 #[test]
@@ -12,9 +12,9 @@ fn ParseletTest_Bug1() {
 
     session.parse_prefix(tok);
 
-    let P: &mut CstNode<_> = session.top_node();
+    let P: &mut Cst<_> = session.top_node();
 
-    assert!(matches!(P, CstNode::Ternary(_)));
+    assert!(matches!(P, Cst::Ternary(_)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

@@ -1,6 +1,6 @@
-use crate::{cst::Node, source::Span, tokenize::OwnedTokenInput, NodeSeq};
+use crate::{cst::Cst, source::Span, tokenize::OwnedTokenInput, NodeSeq};
 
-pub type AggNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Node<I, S>>;
+pub type AggNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Cst<I, S>>;
 
 //==========================================================
 // Macros
@@ -32,14 +32,12 @@ macro_rules! WL {
     }};
 
     (ToNode[-1]) => {
-        $crate::cst::Node::Token($crate::tokenize::Token {
+        $crate::cst::Cst::Token($crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::Integer,
             input: I::fake("-1"),
             src: S::unknown(),
         })
-    };
-    (ToNode[1]) => {
-        $crate::cst::Node::Token($crate::tokenize::Token {
+    }; (ToNode[1]) => { $crate::cst::Cst::Token($crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::Integer,
             input: I::fake("1"),
             src: S::unknown(),
@@ -53,7 +51,7 @@ macro_rules! WL {
     (LeafNode[$token_kind:ident, $input:literal, <||>]) => {{
         let input: &'static str = $input;
 
-        $crate::cst::Node::Token($crate::tokenize::Token {
+        $crate::cst::Cst::Token($crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$token_kind,
             input: I::fake(input),
             src: S::unknown(),
@@ -61,7 +59,7 @@ macro_rules! WL {
     }};
     (LeafNode[$token_kind:ident, $input:expr, <||>]) => {{
         let input: &'static str = $input;
-        $crate::cst::Node::Token($crate::tokenize::Token {
+        $crate::cst::Cst::Token($crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$token_kind,
             input: I::fake(input),
             src: S::unknown(),
@@ -69,7 +67,7 @@ macro_rules! WL {
     }};
     (LeafNode[$token_kind:ident, $input:literal, $data:expr]) => {{
         let input: &str = $input;
-        $crate::cst::Node::Token(Token {
+        $crate::cst::Cst::Token(Token {
             tok: $crate::tokenize::TokenKind::$token_kind,
             input: I::fake(input),
             src: $data,
@@ -79,7 +77,7 @@ macro_rules! WL {
     (LeafNode[$token_kind:ident, $input:expr, $data:expr]) => {{
         let input: String = String::from($input);
 
-        $crate::cst::Node::Token(Token {
+        $crate::cst::Cst::Token(Token {
             tok: $crate::tokenize::TokenKind::$token_kind,
             input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
@@ -93,7 +91,7 @@ macro_rules! WL {
     //========================
 
     (InfixNode[$op:ident, { $($args:expr),*}, <||>]) => {
-        $crate::cst::Node::Infix(
+        $crate::cst::Cst::Infix(
             $crate::cst::InfixNode(
                 $crate::cst::OperatorNode {
                     op: $crate::cst::InfixOperator::$op,
@@ -113,7 +111,7 @@ macro_rules! WL {
 //       made part of Node. And updating it to use $crate for types.
 macro_rules! LHS {
     (LeafNode[$($head_kind:ident)|*, _, _]) => {
-        Node::Token(Token {
+        $crate::cst::Cst::Token(Token {
             tok: $(TK::$head_kind)|*,
             ..
         })
@@ -167,7 +165,7 @@ macro_rules! LHS {
         }
     };
     (CallNode[_, _, _]) => {
-        Node::Call(_)
+        Cst::Call(_)
     };
 
     //==================================
@@ -175,34 +173,34 @@ macro_rules! LHS {
     //==================================
 
     (CompoundNode[$($op_kind:ident)|*, _, _]) => {
-        Node::Compound(CompoundNode(OperatorNode {
+        Cst::Compound(CompoundNode(OperatorNode {
             op: $(crate::cst::CompoundOperator::$op_kind)|*,
             ..
         }))
     };
 
     (BinaryNode[$($op_kind:ident)|*, _, _]) => {
-        Node::Binary(BinaryNode(OperatorNode {
+        Cst::Binary(BinaryNode(OperatorNode {
             op: $($crate::cst::BinaryOperator::$op_kind)|*,
             ..
         }))
     };
 
     (InfixNode[$($op_kind:ident)|*, _, _]) => {
-        Node::Infix(InfixNode(OperatorNode {
+        Cst::Infix(InfixNode(OperatorNode {
             op: $($crate::cst::InfixOperator::$op_kind)|*,
             ..
         }))
     };
     (PrefixNode[$($op_kind:ident)|*, _, _]) => {
-        Node::Prefix(PrefixNode(OperatorNode {
+        Cst::Prefix(PrefixNode(OperatorNode {
             op: $($crate::cst::PrefixOperator::$op_kind)|*,
             ..
         }))
     };
 
     (PostfixNode[$($op_kind:ident)|*, _, _]) => {
-        Node::Postfix(PostfixNode(OperatorNode {
+        Cst::Postfix(PostfixNode(OperatorNode {
             op: $(crate::cst::PostfixOperator::$op_kind)|*,
             ..
         }))
@@ -213,7 +211,7 @@ macro_rules! LHS {
     //==================================
 
     (GroupNode[$($op_kind:ident)|*, $children:ident:_, $data:ident:_]) => {
-        Node::Group(GroupNode(OperatorNode {
+        $crate::cst::Cst::Group(GroupNode(OperatorNode {
             op: $(GroupOperator::$op_kind)|*,
             children: $children,
             src: $data,
@@ -221,7 +219,7 @@ macro_rules! LHS {
     };
 
     (GroupNode[$($op_kind:ident)|*, _, _]) => {
-        Node::Group(GroupNode(OperatorNode {
+        Cst::Group(GroupNode(OperatorNode {
             op: $(GroupOperator::$op_kind)|*,
             ..
         }))
@@ -235,7 +233,7 @@ macro_rules! LHS {
     };
 
     (GroupNode[_, _, _]) => {
-        Node::Group(GroupNode(OperatorNode {
+        Cst::Group(GroupNode(OperatorNode {
             op: _,
             ..
         }))
@@ -257,27 +255,27 @@ macro_rules! LHS {
     //==================================
 
     (BoxNode[$box_kind:ident:_, _, _]) => {
-        Node::Box(BoxNode {
+        Cst::Box(BoxNode {
             kind: $box_kind,
             ..
         })
     };
     (BoxNode[$box_kind:ident:_, $children:ident:_, $data:ident:_]) => {
-        Node::Box(BoxNode {
+        Cst::Box(BoxNode {
             kind: $box_kind,
             children: $children,
             src: $data,
         })
     };
     (BoxNode[$box_kind:ident, $children:ident:_, $data:ident:_]) => {
-        Node::Box(BoxNode {
+        $crate::cst::Cst::Box(BoxNode {
             kind: BoxKind::$box_kind,
             children: $children,
             src: $data,
         })
     };
     (BoxNode[_, _, _]) => {
-        Node::Box(_)
+        Cst::Box(_)
     };
 }
 

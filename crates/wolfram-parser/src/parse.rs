@@ -42,8 +42,8 @@ use std::fmt::Debug;
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, CstNode,
-        CstNodeSeq, Node, TernaryNode, TernaryOperator,
+        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, Cst,
+        CstNodeSeq, TernaryNode, TernaryOperator,
     },
     feature,
     panic_if_aborted,
@@ -301,7 +301,7 @@ impl<'i> ParserSession<'i> {
     /// call [`ParserSession::parse_climb()`].
     pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)
     where
-        N: Into<CstNode<BorrowedTokenInput<'i>>>,
+        N: Into<Cst<BorrowedTokenInput<'i>>>,
         F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
     {
         self.reduce(func);
@@ -313,7 +313,7 @@ impl<'i> ParserSession<'i> {
     /// Pop the top context and push a new node constructed by `func`.
     pub(crate) fn reduce<N, F>(&mut self, func: F)
     where
-        N: Into<CstNode<BorrowedTokenInput<'i>>>,
+        N: Into<Cst<BorrowedTokenInput<'i>>>,
         F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
     {
         // Remove the top context
@@ -499,7 +499,7 @@ impl<'i> ParserSession<'i> {
 
     fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
-            self.NodeStack.push(Node::Token(token.clone()));
+            self.NodeStack.push(Cst::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
@@ -509,7 +509,7 @@ impl<'i> ParserSession<'i> {
 
     fn eat_trivia_stringify_as_file(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
-            self.NodeStack.push(Node::Token(token.clone()));
+            self.NodeStack.push(Cst::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
@@ -523,7 +523,7 @@ impl<'i> ParserSession<'i> {
         token: &mut TokenRef<'i>,
     ) {
         while token.tok.isTriviaButNotToplevelNewline() {
-            self.NodeStack.push(Node::Token(token.clone()));
+            self.NodeStack.push(Cst::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
@@ -584,11 +584,11 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) {
-        self.NodeStack.push(Node::Token(token));
+        self.NodeStack.push(Cst::Token(token));
     }
 
     pub(crate) fn push_leaf_and_next(&mut self, token: TokenRef<'i>) {
-        self.NodeStack.push(Node::Token(token));
+        self.NodeStack.push(Cst::Token(token));
 
         token.skip(&mut self.tokenizer);
     }
@@ -599,18 +599,18 @@ impl<'i> ParserSession<'i> {
         //
         let TriviaSeq { vec } = seq;
 
-        self.NodeStack.extend(vec.into_iter().map(Node::Token));
+        self.NodeStack.extend(vec.into_iter().map(Cst::Token));
     }
 
     pub(crate) fn push_node<N>(&mut self, node: N)
     where
-        N: Into<Node<BorrowedTokenInput<'i>>>,
+        N: Into<Cst<BorrowedTokenInput<'i>>>,
     {
         let node = node.into();
         self.NodeStack.push(node);
     }
 
-    pub(crate) fn pop_node(&mut self) -> Node<BorrowedTokenInput<'i>> {
+    pub(crate) fn pop_node(&mut self) -> Cst<BorrowedTokenInput<'i>> {
         assert!(!self.NodeStack.is_empty());
 
         let top = self.NodeStack.pop().unwrap();
@@ -621,7 +621,7 @@ impl<'i> ParserSession<'i> {
     #[cfg(test)]
     pub(crate) fn top_node<'s>(
         &'s mut self,
-    ) -> &'s mut Node<BorrowedTokenInput<'i>> {
+    ) -> &'s mut Cst<BorrowedTokenInput<'i>> {
         assert!(!self.NodeStack.is_empty());
 
         return self.NodeStack.last_mut().unwrap();
@@ -692,11 +692,15 @@ impl<'i> ParserSession<'i> {
         let top_non_trivia_in_context = (&self.NodeStack[ctxt.index..])
             .iter()
             .rev()
-            .find(|cst| !matches!(cst, CstNode::Token(token) if token.tok.isTrivia()))
-            .expect("unable to check colon LHS: no non-trivia token in top context");
+            .find(
+                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
+            )
+            .expect(
+                "unable to check colon LHS: no non-trivia token in top context",
+            );
 
         match top_non_trivia_in_context {
-            Node::Binary(BinaryNode(op)) => {
+            Cst::Binary(BinaryNode(op)) => {
                 //
                 // Something like  a:b:c
                 //                  ^ Pattern
@@ -710,7 +714,7 @@ impl<'i> ParserSession<'i> {
                 return ColonLHS::Error;
             },
 
-            Node::Compound(CompoundNode(op)) => {
+            Cst::Compound(CompoundNode(op)) => {
                 //
                 // Something like  a_:b
                 //                   ^ Optional
@@ -729,7 +733,7 @@ impl<'i> ParserSession<'i> {
                 }
             },
 
-            Node::Token(tok) => {
+            Cst::Token(tok) => {
                 match tok.tok {
                     TokenKind::Symbol => {
                         //
@@ -788,10 +792,14 @@ impl<'i> ParserSession<'i> {
             .rev()
             // Skip past top
             .skip(1)
-            .find(|cst| !matches!(cst, CstNode::Token(token) if token.tok.isTrivia()))
-            .expect("unable to check tilde: no non-trivia token in top context");
+            .find(
+                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
+            )
+            .expect(
+                "unable to check tilde: no non-trivia token in top context",
+            );
 
-        if let Node::Token(tok) = top_non_trivia_in_context {
+        if let Cst::Token(tok) = top_non_trivia_in_context {
             if tok.tok == TokenKind::Tilde {
                 return true;
             }
@@ -803,24 +811,24 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn top_node_is_span(&self) -> bool {
         assert!(!self.NodeStack.is_empty());
 
-        let top_node: &CstNode<_> = self.NodeStack.last().unwrap();
+        let top_node: &Cst<_> = self.NodeStack.last().unwrap();
 
         // Note: This method should only be called in process_implicit_times(),
         //       which itself should only be called after non-newline trivia has
         //       been eaten.
         debug_assert!(
-            !matches!(top_node, CstNode::Token(tok) if tok.tok.isTriviaButNotToplevelNewline())
+            !matches!(top_node, Cst::Token(tok) if tok.tok.isTriviaButNotToplevelNewline())
         );
 
         match top_node {
             // This is a BinaryNode of Span
-            CstNode::Binary(BinaryNode(node))
+            Cst::Binary(BinaryNode(node))
                 if node.op == BinaryOperator::Span =>
             {
                 true
             },
             // This is a TernaryNode of Span
-            CstNode::Ternary(TernaryNode(node))
+            Cst::Ternary(TernaryNode(node))
                 if node.op == TernaryOperator::Span =>
             {
                 true

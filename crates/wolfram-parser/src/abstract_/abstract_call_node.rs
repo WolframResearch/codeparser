@@ -3,11 +3,11 @@ use std::fmt::Debug;
 use crate::{
     agg::LHS,
     ast::WL,
-    ast::{AstMetadata, AstNode},
+    ast::{Ast, AstMetadata},
     cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode,
-        CallOperator, CompoundNode, CstNode, GroupNode, GroupOperator,
-        InfixNode, Node, OperatorNode, PostfixNode, PrefixNode,
+        CallOperator, CompoundNode, Cst, GroupNode, GroupOperator, InfixNode,
+        OperatorNode, PostfixNode, PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
     symbol as sym,
@@ -44,7 +44,7 @@ pub(super) fn abstract_call_node<
     S: TokenSource + Debug,
 >(
     call: CallNode<I, S>,
-) -> AstNode {
+) -> Ast {
     match AggCallNode::from_cst(call) {
         //==============================
         // handle CallNode before possible GroupNode errors
@@ -88,7 +88,7 @@ pub(super) fn abstract_call_node<
             src: data,
         } if matches!(
             children.0[1], // inner
-            Node::Group(GroupNode(OperatorNode {
+            Cst::Group(GroupNode(OperatorNode {
                 op: GroupOperator::CodeParser_GroupSquare,
                 ..
             }))
@@ -98,7 +98,7 @@ pub(super) fn abstract_call_node<
             let [first, inner, last] = expect_children(children);
 
             let part = match inner {
-                Node::Group(group) => group,
+                Cst::Group(group) => group,
                 _ => unreachable!(),
             };
 
@@ -348,7 +348,7 @@ pub(super) fn abstract_call_node<
                 ];
             */
 
-            AstNode::Call {
+            Ast::Call {
                 head: Box::new(head),
                 args,
                 data: AstMetadata::from_src(data),
@@ -477,11 +477,11 @@ pub(super) fn abstract_call_node<
         // ]) if OK_CALL_BOX_KINDS.contains(&box_kind)
         // TODO(test): Add test case for this branch.
         AggCallNode {
-            head: Node::Box(head @ BoxNode { kind: box_kind, .. }),
+            head: Cst::Box(head @ BoxNode { kind: box_kind, .. }),
             body: LHS!(part:GroupNode[CodeParser_GroupSquare, _, _]),
             src: data,
         } if OK_CALL_BOX_KINDS.contains(&box_kind) => {
-            let head = abstract_(Node::from(head));
+            let head = abstract_(Cst::from(head));
             let part = abstractGroupNode(part);
 
             WL!(CallNode[head, part.args, data])
@@ -493,7 +493,7 @@ pub(super) fn abstract_call_node<
         // ])
         // TODO(test): Add test case that covers this branch.
         AggCallNode {
-            head: Node::Box(head @ BoxNode { kind: tag, .. }),
+            head: Cst::Box(head @ BoxNode { kind: tag, .. }),
             body: LHS!(part:GroupNode[CodeParser_GroupSquare, _, _]),
             src: data,
         } => {
@@ -513,7 +513,7 @@ pub(super) fn abstract_call_node<
                 .with_additional_sources(vec![last.source().into_general()]),
             );
 
-            let head = abstract_(Node::from(head));
+            let head = abstract_(Cst::from(head));
             let part = abstractGroupNode(part);
 
             WL!(CallNode[head, part.args, data])
@@ -889,7 +889,7 @@ pub(super) fn abstract_call_node<
 
 #[derive(Debug, Clone)]
 struct AggCallNode<I, S> {
-    head: Node<I, S>,
+    head: Cst<I, S>,
     body: CallBody<I, S>,
     src: S,
 }
@@ -898,7 +898,7 @@ impl<I: Debug, S: Debug> AggCallNode<I, S> {
     fn from_cst(call: CallNode<I, S>) -> Self {
         let CallNode { head, body, src } = call;
 
-        let head: CstNode<I, S> = match head {
+        let head: Cst<I, S> = match head {
             CallHead::Concrete(_) => panic!(
                 "AggCallNode::from_cst(): CallNode.head was not CallHead::Aggregate(_): {head:?}"
             ),

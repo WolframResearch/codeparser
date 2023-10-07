@@ -3,7 +3,7 @@ use std::{num::NonZeroU32, ops::Range};
 use crate::{
     agg::AggNodeSeq,
     cst::{
-        GroupMissingCloserNode, Node, OperatorNode,
+        Cst, GroupMissingCloserNode, OperatorNode,
         UnterminatedGroupNeedsReparseNode,
     },
     source::{
@@ -82,13 +82,13 @@ pub(crate) fn reparse_unterminated<'i>(
     tab_width: usize,
 ) -> AggNodeSeq<BorrowedTokenInput<'i>> {
     nodes.map_visit(&mut |node| match node {
-        Node::Token(token)
+        Cst::Token(token)
             if token.tok.isError() && token.tok.isUnterminated() =>
         {
             let token =
                 reparse_unterminated_token_error_node(token, input, tab_width);
 
-            Node::Token(token)
+            Cst::Token(token)
         },
         other => other,
     })
@@ -154,10 +154,10 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
             //       Infinity
             //   ];
 
-            let mut better_leaves: Vec<Node<_>> = Vec::new();
+            let mut better_leaves: Vec<Cst<_>> = Vec::new();
 
-            children.visit(&mut |node: &Node<_>| match node {
-                Node::Token(Token {
+            children.visit(&mut |node: &Cst<_>| match node {
+                Cst::Token(Token {
                     tok: _,
                     input: _,
                     src: node_src,
@@ -174,10 +174,10 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
         SpanKind::CharacterSpan(better_src) => {
             // Flatten out children, because there may be parsing errors from missing bracket, and
             // we do not want to propagate
-            let mut better_leaves: Vec<Node<_>> = Vec::new();
+            let mut better_leaves: Vec<Cst<_>> = Vec::new();
 
-            children.visit(&mut |node: &Node<_>| match node {
-                Node::Token(Token {
+            children.visit(&mut |node: &Cst<_>| match node {
+                Cst::Token(Token {
                     tok: _,
                     input: _,
                     src: node_src,
