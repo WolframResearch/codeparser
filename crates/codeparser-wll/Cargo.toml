@@ -15,8 +15,6 @@ default = ["USE_MATHLINK"]
 USE_MATHLINK = []
 
 [dependencies]
-ordered-float = "3.0"
-
 wolfram-library-link = { version = "0.2.10", default-features = false }
 wolfram-parser = { path = "../wolfram-parser", features = ["CHECK_ABORT"] }
 

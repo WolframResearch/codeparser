@@ -1,4 +1,3 @@
-use ordered_float::NotNan;
 use wolfram_library_link::expr::{
     symbol::SymbolRef, Expr, ExprKind, Normal, Number, Symbol,
 };
@@ -961,9 +960,9 @@ impl FromExpr for Issue {
         let tag = IssueTag::from_str(tag).expect("PRE_COMMIT");
         let sev = Severity::from_str(sev).expect("PRE_COMMIT");
 
-        let val: NotNan<f64> = match confidence_level {
-            Some(Number::Integer(int)) => NotNan::new(int as f64).unwrap(),
-            Some(Number::Real(real)) => NotNan::new(*real).unwrap(),
+        let val: f64 = match confidence_level {
+            Some(Number::Integer(int)) => int as f64,
+            Some(Number::Real(real)) => *real,
             None => todo!(),
         };
 

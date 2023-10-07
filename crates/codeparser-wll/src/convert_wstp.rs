@@ -861,7 +861,7 @@ impl WstpPut for Issue {
 
                 Symbol_put(sym::ConfidenceLevel, callLink);
 
-                callLink.put_f64(**val).unwrap();
+                callLink.put_f64(*val).unwrap();
             }
 
             if !actions.is_empty() {

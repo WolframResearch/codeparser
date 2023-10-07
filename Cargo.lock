@@ -73,7 +73,6 @@ dependencies = [
 name = "codeparser-wll"
 version = "0.1.0"
 dependencies = [
- "ordered-float",
  "wolfram-library-link",
  "wolfram-parser",
 ]
@@ -974,7 +973,6 @@ dependencies = [
  "edit-distance",
  "memchr",
  "once_cell",
- "ordered-float",
  "pretty_assertions",
  "regex",
  "wolfram-expr",
