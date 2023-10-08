@@ -138,7 +138,8 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
         src,
     }) = group;
 
-    let (_, _, better_src) = process_lines(str, tab_width, src);
+    let (_, _, better_src) =
+        first_chunk_and_last_good_line(str, tab_width, src);
 
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
@@ -225,7 +226,7 @@ fn reparse_unterminated_token_error_node<'i>(
     let Token { tok, input: _, src } = error;
 
     let (first_chunk, last_good_line_index, better_src) =
-        process_lines(str, tab_width, src);
+        first_chunk_and_last_good_line(str, tab_width, src);
 
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
@@ -294,47 +295,13 @@ fn make_better_input<'i>(better: &'i str) -> TokenStr<'i> {
 // Helpers
 //==========================================================
 
-fn process_lines(
+fn first_chunk_and_last_good_line(
     input: &str,
     tab_width: usize,
     src: Span,
 ) -> (Vec<Line>, usize, Span) {
     let lines = to_lines_and_expand_tabs(input, tab_width);
 
-    first_chunk_and_last_good_line(lines, tab_width, src)
-}
-
-fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
-    //------------------------------------------------------------
-    // Split `input` into lines and expand \t characters to spaces
-    //------------------------------------------------------------
-
-    Line::split(input)
-
-    // FIXME: Expand tabs? Needed to make the CharacterIndex Source positions
-    //        work with StringTake[..] in WL.
-    //
-    //        Though, this is the only place (at least in compiled code I've
-    //        looked carefully at) where the original input string is modified.
-    //        So it is a little strange that only error tokens get \t expanded
-    //        into spaces.
-    //
-    //        The original intent of this tab expansion may have been simply to
-    //        make the counting of columns easier, which we now accomplish with
-    //        Line::column_width().
-    //
-    // let lines: Vec<String> = lines
-    //     .into_iter()
-    //     // FIXME: "\n" here should be the separator we split on.
-    //     .map(|line| replace_tabs(line, 1, "\n", tab_width))
-    //     .collect();
-}
-
-fn first_chunk_and_last_good_line(
-    lines: Vec<Line>,
-    tab_width: usize,
-    src: Span,
-) -> (Vec<Line>, usize, Span) {
     //------------------------------------------------------
     // Filter `lines` into the lines that overlap with `src`
     //------------------------------------------------------
@@ -481,6 +448,32 @@ fn first_chunk_and_last_good_line(
 
     // TODO(optimization): Refactor to avoid this to_vec() call.
     (first_chunk.to_vec(), last_good_line_index, better_src)
+}
+
+fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
+    //------------------------------------------------------------
+    // Split `input` into lines and expand \t characters to spaces
+    //------------------------------------------------------------
+
+    Line::split(input)
+
+    // FIXME: Expand tabs? Needed to make the CharacterIndex Source positions
+    //        work with StringTake[..] in WL.
+    //
+    //        Though, this is the only place (at least in compiled code I've
+    //        looked carefully at) where the original input string is modified.
+    //        So it is a little strange that only error tokens get \t expanded
+    //        into spaces.
+    //
+    //        The original intent of this tab expansion may have been simply to
+    //        make the counting of columns easier, which we now accomplish with
+    //        Line::column_width().
+    //
+    // let lines: Vec<String> = lines
+    //     .into_iter()
+    //     // FIXME: "\n" here should be the separator we split on.
+    //     .map(|line| replace_tabs(line, 1, "\n", tab_width))
+    //     .collect();
 }
 
 fn StringLength(s: &str) -> usize {
