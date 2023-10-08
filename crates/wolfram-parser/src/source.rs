@@ -494,14 +494,30 @@ impl Display for Span {
             SpanKind::CharacterSpan(CharacterSpan(start, end)) => {
                 write!(f, "{}..{}", start, end)
             },
-            SpanKind::LineColumnSpan(LineColumnSpan { start, end }) => {
-                write!(f, "{start:?}-{end:?}")
+            SpanKind::LineColumnSpan(span) => {
+                write!(f, "{span}")
             },
             SpanKind::Unknown => {
                 // TODO: Better formatting for this? "?"
                 write!(f, "Span unknown")
             },
         }
+    }
+}
+
+impl Display for LineColumnSpan {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let LineColumnSpan { start, end } = self;
+
+        write!(f, "{start}-{end}")
+    }
+}
+
+impl Display for LineColumn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let LineColumn(line, column) = self;
+
+        write!(f, "{line}:{column}")
     }
 }
 

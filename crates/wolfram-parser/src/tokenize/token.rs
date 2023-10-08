@@ -7,7 +7,7 @@ use crate::{
 
 pub(crate) type TokenRef<'i> = Token<TokenStr<'i>>;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Token<I = TokenString, S = Span> {
     pub tok: TokenKind,
 
@@ -136,7 +136,7 @@ impl TokenString {
 /// **Naming:** The data contained in a [`TokenStr`] is in almost all cases
 /// valid UTF-8. However, if the input contains a
 /// [`TokenKind::Error_UnsafeCharacterEncoding`] token, then this may be invalid.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct TokenStr<'i> {
     pub(crate) buf: BufferAndLength<'i>,
 }
@@ -413,6 +413,45 @@ impl PartialEq<Token> for Token<TokenStr<'_>> {
 //======================================
 // Format Impls
 //======================================
+
+impl<I: Debug, S: Debug> Debug for Token<I, S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Token { tok, input, src } = self;
+
+        // If this is a test run, format this Token as the token! macro
+        // invocation that would construct an equivalent Token instance. This
+        // makes it very easy to copy and paste printed tokens from failed tests
+        // back into the testing code itself, speeding up the writing of tests
+        // by reducing the labor involved in manually writing Token { ... }
+        //  struct instances.
+        if cfg!(test) {
+            write!(f, "token!({:?}, {:#?}, src!({:#?}))", tok, input, src)
+        } else {
+            f.debug_struct("Token")
+                .field("tok", tok)
+                .field("input", input)
+                .field("src", src)
+                .finish()
+        }
+    }
+}
+
+impl<'i> Debug for TokenStr<'i> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let TokenStr { buf } = self;
+
+        match std::str::from_utf8(&buf.buf) {
+            Ok(str) => {
+                if f.alternate() {
+                    write!(f, "{:?}", str)
+                } else {
+                    write!(f, "TokenStr({})", str)
+                }
+            },
+            Err(_) => write!(f, "TokenStr({:?})", buf.buf),
+        }
+    }
+}
 
 impl Debug for TokenString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
