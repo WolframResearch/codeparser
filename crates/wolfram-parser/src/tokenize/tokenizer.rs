@@ -221,7 +221,7 @@ impl<'i> Tokenizer<'i> {
         let buf = self.get_token_buffer_and_length(at.buf);
 
         debug_assert!(tok.isError());
-        debug_assert_eq!(buf.buf.slice.len(), 0);
+        debug_assert_eq!(buf.buf.len(), 0);
 
         let span = Span::from_location(at.loc);
 
@@ -1398,7 +1398,7 @@ fn Tokenizer_handleString<'i>(
         // Bad WLCharacters will not be detected. This means that badly escaped characters will not be reported.
         //
 
-        let quot_relative_offset = memchr::memchr(b'"', session.buffer().slice);
+        let quot_relative_offset = memchr::memchr(b'"', session.buffer());
 
         quot_offset = quot_relative_offset
             .map(|buffer_offset| session.offset + buffer_offset);
@@ -1943,7 +1943,6 @@ fn Tokenizer_handleNumber<'i>(
                     caret1Buf.unwrap(),
                 )
                 .buf
-                .slice
                 .len();
 
                 //

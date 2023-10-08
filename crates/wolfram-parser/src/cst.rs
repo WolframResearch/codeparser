@@ -27,7 +27,7 @@ pub type CstNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Cst<I, S>>;
 /// nodes), a single [`Cst`] represents a Wolfram Language expression.
 ///
 /// A typical [`Cst`] is made up of further child syntax trees. A [`Cst`] tree
-/// terminates at "leaf" variants such as [`Cst::Token(..)`].
+/// terminates at "leaf" variants such as [`Cst::Token`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum Cst<I = OwnedTokenInput, S = Span> {
     Token(Token<I, S>),

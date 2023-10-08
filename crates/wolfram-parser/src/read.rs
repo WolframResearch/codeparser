@@ -83,9 +83,7 @@ impl<'i> Reader<'i> {
             // (see BufferAndLength::between()), so to refer to a range that
             // includes the last byte in the input, it must be possible to
             // construct a buffer that points past the last byte.
-            return Buffer {
-                slice: &self.input[self.input.len()..],
-            };
+            return &self.input[self.input.len()..];
         } else if offset >= self.input.len() {
             panic!(
                 "offset ({}) is greater than length of input ({})",
@@ -96,12 +94,12 @@ impl<'i> Reader<'i> {
 
         let (_, rest) = self.input.split_at(offset);
 
-        Buffer { slice: rest }
+        rest
     }
 
     pub(crate) fn offset_of(&self, buffer: Buffer<'i>) -> usize {
         let input_addr = self.input.as_ptr() as usize;
-        let buffer_addr = buffer.slice.as_ptr() as usize;
+        let buffer_addr = buffer.as_ptr() as usize;
 
         debug_assert!(input_addr <= buffer_addr);
 

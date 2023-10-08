@@ -349,7 +349,7 @@ fn ByteDecoderTest_Surrogate1() {
 
     assert_eq!(c, '1');
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[0..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[0..]);
 
     session.tokenizer.next_source_char(TOPLEVEL);
 
@@ -357,7 +357,7 @@ fn ByteDecoderTest_Surrogate1() {
 
     assert_eq!(c, '+');
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[1..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[1..]);
 
     session.tokenizer.next_source_char(TOPLEVEL);
 
@@ -366,7 +366,7 @@ fn ByteDecoderTest_Surrogate1() {
     // from 0xED byte
     assert_eq!(c, CodePoint::Unsafe3ByteUtf8Sequence);
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[2..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[2..]);
 
     session.tokenizer.next_source_char(TOPLEVEL);
 
@@ -375,7 +375,7 @@ fn ByteDecoderTest_Surrogate1() {
     // from 0xA0 byte
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[5..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[5..]);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     //
@@ -397,7 +397,7 @@ fn ByteDecoderTest_Surrogate2() {
 
     assert_eq!(c, '1');
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[0..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[0..]);
 
     session.tokenizer.next_source_char(TOPLEVEL);
 
@@ -405,7 +405,7 @@ fn ByteDecoderTest_Surrogate2() {
 
     assert_eq!(c, '+');
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[1..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[1..]);
 
     session.tokenizer.next_source_char(TOPLEVEL);
 
@@ -414,7 +414,7 @@ fn ByteDecoderTest_Surrogate2() {
     // from 0xED byte
     assert_eq!(c, CodePoint::Unsafe3ByteUtf8Sequence);
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[2..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[2..]);
 
     session.tokenizer.next_source_char(TOPLEVEL);
 
@@ -423,7 +423,7 @@ fn ByteDecoderTest_Surrogate2() {
     // from 0xB0 byte
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.tokenizer.buffer().slice, &arr[5..]);
+    assert_eq!(session.tokenizer.buffer(), &arr[5..]);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     //
