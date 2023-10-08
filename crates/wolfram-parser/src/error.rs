@@ -667,10 +667,52 @@ fn line_column_width(line: &str, tab_width: usize) -> usize {
     column - 1
 }
 
+//--------------------------------------
+// Line utility tests
+//--------------------------------------
+
+#[test]
+fn test_split_lines_keep_sep() {
+    assert_eq!(split_lines_keep_sep(""), vec![("", "")]);
+    assert_eq!(split_lines_keep_sep("\r"), vec![("", "\r")]);
+    assert_eq!(split_lines_keep_sep("\n"), vec![("", "\n")]);
+    assert_eq!(split_lines_keep_sep("\r\n"), vec![("", "\r\n")]);
+    assert_eq!(split_lines_keep_sep("\n\r"), vec![("", "\n"), ("", "\r")]);
+
+    assert_eq!(
+        split_lines_keep_sep("one\ntwo"),
+        vec![("one", "\n"), ("two", "")]
+    );
+    assert_eq!(
+        split_lines_keep_sep("one\ntwo\n"),
+        vec![("one", "\n"), ("two", "\n")]
+    );
+    assert_eq!(
+        split_lines_keep_sep("one\r\ntwo\n"),
+        vec![("one", "\r\n"), ("two", "\n")]
+    );
+    assert_eq!(
+        split_lines_keep_sep("one\rtwo\r"),
+        vec![("one", "\r"), ("two", "\r")]
+    );
+    assert_eq!(
+        split_lines_keep_sep("one\n\rthree\n"),
+        vec![("one", "\n"), ("", "\r"), ("three", "\n")]
+    );
+    assert_eq!(
+        split_lines_keep_sep("one\n\rthree\r\n"),
+        vec![("one", "\n"), ("", "\r"), ("three", "\r\n")]
+    );
+}
+
 #[test]
 fn test_line_column_width() {
     assert_eq!(line_column_width("", 4), 0);
     assert_eq!(line_column_width("abc", 4), 3);
+
+    assert_eq!(line_column_width("\t", 4), 4);
+    assert_eq!(line_column_width("abc\t", 4), 4);
+    assert_eq!(line_column_width("abc\t", 8), 8);
     assert_eq!(line_column_width("ab\tc", 4), 5);
     assert_eq!(line_column_width("ab\tc", 1), 4);
 }
