@@ -303,31 +303,25 @@ asciiReplacementsSource = {
   "//",
   "//",
   "//",
-  "pub static ASCII_REPLACEMENTS_MAP: Lazy<HashMap<char, &[&str]>> = Lazy::new(|| HashMap::from_iter(["} ~Join~
+  "pub static ASCII_REPLACEMENTS_MAP: &[(char, &[&str])] = &["} ~Join~
   (
-	Map[
-		Row[{#}]&,
-		StringSplit[
-			StringJoin[
-				insertNewlines[Flatten[
-					{
-						"(",
-						toGlobal["CodePoint`LongName`"<>#[[1]]],
-						", ",
-						(* escapeString[#[[2]]], *)
-						Replace[#[[2]], {
-							values:{___?StringQ} :> {"[", {escapeString[#], ", "}& /@ values, "].as_slice()"},
-							other_ :> Quit[3]
-						}],
-						")",
-						", "}& /@ SortBy[importedASCIIReplacements, longNameToCharacterCode[#[[1]]]&]
-				]]
-			],
-			"\n"
-		]
-	]
+	{StringJoin @ Map[
+		data |-> StringJoin @ {
+			"\t(",
+			toGlobal["CodePoint`LongName`"<>data[[1]]],
+			", ",
+			(* escapeString[#[[2]]], *)
+			Replace[data[[2]], {
+				values:{___?StringQ} :> {"[", {escapeString[#], ", "}& /@ values, "].as_slice()"},
+				other_ :> Quit[3]
+			}],
+			")",
+			",\n"
+		},
+		SortBy[importedASCIIReplacements, longNameToCharacterCode[#[[1]]]&]
+	]}
   ) ~Join~
-  {"]));",
+  {"];",
   ""}
 
 punctuationSource = {
@@ -422,10 +416,6 @@ longNamesRegistrationCPPSource = longNamesRegistrationCPPHeader ~Join~ {
 // AUTO GENERATED FILE
 // DO NOT MODIFY
 //
-
-use std::collections::HashMap;
-
-use once_cell::sync::Lazy;
 
 use crate::{
 	read::code_point::*,
