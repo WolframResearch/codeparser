@@ -328,6 +328,73 @@ nextStatement
             src: src!(2:1-3:4).into(),
         })),
     ]);
+
+    //==================================
+
+    let unterminated_paren: &str = r#"
+global = {(a
++ b
+
+
+}
+
+nextStatement
+
+"#;
+
+    // Test that *internal* missing closers are NOT reparsed.
+    #[rustfmt::skip]
+    assert_eq!(nodes(unterminated_paren), &[
+        Cst::Token(token!(ToplevelNewline, "\n", 1:1-2:1)),
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Set,
+            children: NodeSeq(vec![
+                Cst::Token(token!(Symbol, "global", 2:1-7)),
+                Cst::Token(token!(Whitespace, " ", 2:7-8)),
+                Cst::Token(token!(Equal, "=", 2:8-9),),
+                Cst::Token(token!(Whitespace, " ", 2:9-10),),
+                Cst::Group(GroupNode(
+                    OperatorNode {
+                        op: GroupOperator::List,
+                        children: NodeSeq(vec![
+                            Cst::Token(token![OpenCurly, "{", 2:10-11]),
+                            Cst::GroupMissingCloser(GroupMissingCloserNode(
+                                OperatorNode {
+                                    op: GroupOperator::CodeParser_GroupParen,
+                                    children: NodeSeq(vec![
+                                        Cst::Token(token!(OpenParen, "(", 2:11-12)),
+                                        Cst::Infix(InfixNode(OperatorNode {
+                                            op: InfixOperator::Plus,
+                                            children: NodeSeq(vec![
+                                                Cst::Token(token!(Symbol, "a", 2:12-13)),
+                                                Cst::Token(token!(InternalNewline, "\n", 2:13-3:1)),
+                                                Cst::Token(token!(Plus, "+", 3:1-2)),
+                                                Cst::Token(token!(Whitespace, " ", 3:2-3)),
+                                                Cst::Token(token!(Symbol, "b", 3:3-4)),
+                                            ]),
+                                            src: src!(2:12-3:4).into()
+                                        })),
+                                    ]),
+                                    src: src!(2:11-3:4).into(),
+                                },
+                            )),
+                            Cst::Token(token!(InternalNewline, "\n", 3:4-4:1)),
+                            Cst::Token(token!(InternalNewline, "\n", 4:1-5:1)),
+                            Cst::Token(token!(InternalNewline, "\n", 5:1-6:1)),
+                            Cst::Token(token![CloseCurly, "}", 6:1-2])
+                        ]),
+                        src: src!(2:10-6:2).into()
+                    }
+                )),
+            ]),
+            src: src!(2:1-6:2).into(),
+        })),
+        Cst::Token(token!(ToplevelNewline, "\n", 6:2-7:1)),
+        Cst::Token(token!(ToplevelNewline, "\n", 7:1-8:1)),
+        Cst::Token(token!(Symbol, "nextStatement", 8:1-14)),
+        Cst::Token(token!(ToplevelNewline, "\n", 8:14-9:1)),
+        Cst::Token(token!(ToplevelNewline, "\n", 9:1-10:1)),
+    ]);
 }
 
 #[test]
