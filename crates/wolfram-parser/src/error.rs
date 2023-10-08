@@ -369,9 +369,10 @@ fn first_chunk_and_last_good_line(
     // Find first "useful" chunk
     //--------------------------
 
-    let mut chunks = split_into_chunks(&lines);
+    let chunks = split_into_chunks(&lines);
 
     let first_chunk: &[Line] = chunks
+        .iter()
         .next()
         .expect("unexpected empty chunk in unterminated group");
 
@@ -444,10 +445,10 @@ fn first_chunk_and_last_good_line(
     (first_chunk.to_vec(), last_good_line_index, better_src)
 }
 
-fn split_into_chunks<'s, 'i>(
-    lines: &'s [Line<'i>],
-) -> impl Iterator<Item = &'s [Line<'i>]> {
-    lines.split_inclusive(|line: &Line| !CHUNK_PAT.is_match(line.content))
+fn split_into_chunks<'s, 'i>(lines: &'s [Line<'i>]) -> Vec<&'s [Line<'i>]> {
+    crate::utils::split_by_pairs(lines, |_, right| {
+        !CHUNK_PAT.is_match(right.content)
+    })
 }
 
 fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
@@ -589,7 +590,7 @@ fn test_intersection() {
 // Lines
 //--------------------------------------
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 struct Line<'i> {
     /// Line characters, not including terminating `\n`, `\r\n`, or `\r`
     /// characters.
@@ -607,8 +608,12 @@ impl<'i> Line<'i> {
     fn split(input: &str) -> Vec<Line> {
         split_lines_keep_sep(input)
             .into_iter()
-            .map(|(content, newline)| Line { content, newline })
+            .map(|(content, newline)| Line::new(content, newline))
             .collect()
+    }
+
+    fn new(content: &'i str, newline: &'i str) -> Self {
+        Line { content, newline }
     }
 
     fn column_width(&self, tab_width: usize) -> usize {
@@ -700,6 +705,111 @@ fn line_column_width(line: &str, tab_width: usize) -> usize {
 //--------------------------------------
 // Line utility tests
 //--------------------------------------
+
+#[cfg(test)]
+use pretty_assertions::assert_eq;
+
+#[test]
+fn test_unterminated_error_chunk_reparse() {
+    let input = r#"
+foo[
+    (* unterminated comment
+    x_Integer,
+    x_Real
+] := Module[{},
+    x + 1
+]
+
+bar = baz
+
+baaz[
+    x_
+] := x / 2
+
+Begin["`Private`"]
+"#;
+
+    let lines = split_lines_keep_sep(input);
+
+    assert_eq!(
+        lines,
+        &[
+            ("", "\n"),
+            ("foo[", "\n"),
+            ("    (* unterminated comment", "\n"),
+            ("    x_Integer,", "\n"),
+            ("    x_Real", "\n"),
+            ("] := Module[{},", "\n"),
+            ("    x + 1", "\n"),
+            ("]", "\n"),
+            ("", "\n"),
+            ("bar = baz", "\n"),
+            ("", "\n"),
+            ("baaz[", "\n"),
+            ("    x_", "\n"),
+            ("] := x / 2", "\n"),
+            ("", "\n"),
+            ("Begin[\"`Private`\"]", "\n"),
+        ]
+    );
+
+    let lines: Vec<Line> = lines
+        .into_iter()
+        .map(|(line, sep)| Line {
+            content: line,
+            newline: sep,
+        })
+        .collect();
+
+    let chunks: Vec<&[Line]> = split_into_chunks(&lines);
+
+    assert_eq!(
+        chunks,
+        vec![
+            [
+                Line::new("", "\n"),
+                Line::new("foo[", "\n"),
+                Line::new("    (* unterminated comment", "\n"),
+                Line::new("    x_Integer,", "\n"),
+                Line::new("    x_Real", "\n"),
+                Line::new("] := Module[{},", "\n"),
+                Line::new("    x + 1", "\n"),
+                Line::new("]", "\n"),
+                Line::new("", "\n"),
+            ]
+            .as_slice(),
+            [
+                Line::new("bar = baz", "\n"),
+                Line::new("", "\n"),
+                Line::new("baaz[", "\n"),
+                Line::new("    x_", "\n"),
+                Line::new("] := x / 2", "\n"),
+                Line::new("", "\n"),
+            ]
+            .as_slice(),
+            [Line::new("Begin[\"`Private`\"]", "\n"),].as_slice()
+        ]
+    )
+}
+
+#[test]
+fn test_chunk_pat() {
+    assert!(CHUNK_PAT.is_match("foo = bar"));
+    assert!(CHUNK_PAT.is_match("foo[x] = y"));
+    assert!(CHUNK_PAT.is_match("(* :Name: Foo *)"));
+    assert!(CHUNK_PAT.is_match("Needs[\"Foo`\"]"));
+
+    assert!(!CHUNK_PAT.is_match("Set[foo, bar]"));
+    assert!(CHUNK_PAT.is_match("SetDelayed[foo, bar]"));
+
+    assert!(!CHUNK_PAT.is_match("    5,"));
+    assert!(!CHUNK_PAT.is_match("foo"));
+    assert!(!CHUNK_PAT.is_match(""));
+    assert!(!CHUNK_PAT.is_match("(* Normal comment *)"));
+    assert!(!CHUNK_PAT.is_match("\n"));
+    assert!(!CHUNK_PAT.is_match("\n\n"));
+    assert!(!CHUNK_PAT.is_match("foo[\"Foo`\"]"));
+}
 
 #[test]
 fn test_split_lines_keep_sep() {
