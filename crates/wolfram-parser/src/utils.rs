@@ -468,3 +468,93 @@ const fn const_slice_equal(lhs: &[u8], rhs: &[u8]) -> bool {
 
     true
 }
+
+//=======================================
+// Splitting lists pair-wise
+//=======================================
+
+/// Split a slice by comparing pairs of elements.
+pub fn split_by_pairs<T: std::fmt::Debug, F>(
+    mut slice: &[T],
+    mut pred: F,
+) -> Vec<&[T]>
+where
+    F: FnMut(&T, &T) -> bool,
+{
+    if slice.is_empty() {
+        return Vec::new();
+    }
+    if slice.len() == 1 {
+        return vec![slice];
+    }
+
+    let mut chunks = Vec::new();
+    let mut right_index = 1;
+
+    while right_index < slice.len() {
+        let left = &slice[right_index - 1];
+        let right = &slice[right_index];
+
+        right_index += 1;
+
+        if pred(&left, &right) {
+            continue;
+        }
+
+        chunks.push(&slice[..right_index - 1]);
+
+        slice = &slice[right_index - 1..];
+        right_index = 1;
+    }
+
+    if !slice.is_empty() {
+        chunks.push(slice);
+    }
+
+    chunks
+}
+
+#[test]
+fn test_split_by_pairs() {
+    assert_eq!(
+        split_by_pairs(&Vec::<u32>::new(), u32::eq),
+        Vec::<&[u32]>::new()
+    );
+
+    assert_eq!(split_by_pairs(&[1], u32::eq), vec![&[1]]);
+
+    assert_eq!(split_by_pairs(&[1, 2], u32::eq), vec![&[1], &[2]]);
+
+    assert_eq!(
+        split_by_pairs(&[1, 1, 2, 2], u32::eq),
+        vec![&[1, 1], &[2, 2]]
+    );
+
+    assert_eq!(
+        split_by_pairs(&[1, 2, 3, 4], u32::eq),
+        vec![&[1], &[2], &[3], &[4]]
+    );
+
+    // Split when the odd/even-ness changes.
+    assert_eq!(
+        split_by_pairs(&[1, 3, 5, 4, 7, 9, 6, 2, 3], |left, right| left % 2
+            == right % 2),
+        vec![&[1, 3, 5], [4].as_slice(), &[7, 9], &[6, 2], &[3]]
+    );
+
+    // Split when the abs difference is not 1.
+    assert_eq!(
+        split_by_pairs(
+            &[1u32, 2, 4, 5, 4, 6, 7, 8, 11, 13, 15, 16],
+            |&left, &right| left.abs_diff(right) == 1
+        ),
+        vec![
+            &[1, 2],
+            [4, 5, 4].as_slice(),
+            &[6, 7, 8],
+            &[11],
+            &[13],
+            &[15, 16]
+        ]
+    );
+}
