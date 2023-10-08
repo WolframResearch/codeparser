@@ -188,40 +188,6 @@ const ERROR: &[&str] = &[
     "Error_UnexpectedCommentCloser",
 ];
 
-#[test]
-fn test_token_kind_property_arrays() {
-    let mut named_variants =
-        [POSSIBLE_BEGINNING, EMPTY, UNTERMINATED, CLOSERS, ERROR]
-            .iter()
-            .map(|slice| slice.iter())
-            .flatten();
-
-    if let Some(unknown) = named_variants.find(|v| !is_token_kind_variant(v)) {
-        panic!("unknown variant: {unknown}")
-    }
-}
-
-// Ensure that every TokenKind variant has a unique `id` value. I.e. that there
-// aren't two variants with the same `id` that differ only by one of their bit
-// flags.
-#[test]
-fn test_token_kinds_are_sorted() {
-    for window in TokenKind::VARIANTS.windows(2) {
-        let [a, b]: [_; 2] = window.try_into().unwrap();
-        if b.id() != a.id() + 1 {
-            panic!("TokenKind variant ids are not in order: {a:?}, {b:?}");
-        }
-    }
-}
-
-#[cfg(test)]
-fn is_token_kind_variant(name: &str) -> bool {
-    TokenKind::VARIANTS
-        .iter()
-        .find(|v| format!("{v:?}") == name)
-        .is_some()
-}
-
 const fn is_possible_beginning(variant: &str) -> bool {
     contains(POSSIBLE_BEGINNING, variant)
 }
@@ -1003,31 +969,6 @@ pub enum Closer {
 }
 
 //======================================
-// Verify some TokenKind properties
-//======================================
-
-const _: () = assert!(TokenKind::EndOfFile.isEmpty());
-
-#[test]
-fn test_newline_policy() {
-    assert_eq!(
-        TokenKind::newline_with_policy(RETURN_TOPLEVELNEWLINE),
-        TokenKind::ToplevelNewline
-    );
-}
-
-#[test]
-fn test_token_newline() {
-    // TODO: Should this be InternalNewline, or ToplevelNewline?
-    //       See also: token_to_symbol! comment about returning Token`Newline
-    //       for both of these variants.
-    assert_eq!(
-        TokenKind::from_symbol(st::Token::Newline),
-        Some(TokenKind::InternalNewline)
-    );
-}
-
-//======================================
 // Closers
 //======================================
 
@@ -1070,4 +1011,121 @@ pub(crate) fn TokenToCloser(token: TokenKind) -> Closer {
         TokenKind::LongName_RightFloor => Closer::LongName_RightFloor,
         _ => Closer::AssertFalse,
     }
+}
+
+//======================================
+// Verify some TokenKind properties
+//======================================
+
+const _: () = assert!(TokenKind::EndOfFile.isEmpty());
+
+#[test]
+fn test_newline_policy() {
+    assert_eq!(
+        TokenKind::newline_with_policy(RETURN_TOPLEVELNEWLINE),
+        TokenKind::ToplevelNewline
+    );
+}
+
+#[test]
+fn test_token_newline() {
+    // TODO: Should this be InternalNewline, or ToplevelNewline?
+    //       See also: token_to_symbol! comment about returning Token`Newline
+    //       for both of these variants.
+    assert_eq!(
+        TokenKind::from_symbol(st::Token::Newline),
+        Some(TokenKind::InternalNewline)
+    );
+}
+
+#[test]
+fn test_token_kind_property_arrays() {
+    let mut named_variants =
+        [POSSIBLE_BEGINNING, EMPTY, UNTERMINATED, CLOSERS, ERROR]
+            .iter()
+            .map(|slice| slice.iter())
+            .flatten();
+
+    if let Some(unknown) = named_variants.find(|v| !is_token_kind_variant(v)) {
+        panic!("unknown variant: {unknown}")
+    }
+}
+
+// Ensure that every TokenKind variant has a unique `id` value. I.e. that there
+// aren't two variants with the same `id` that differ only by one of their bit
+// flags.
+#[test]
+fn test_token_kinds_are_sorted() {
+    for window in TokenKind::VARIANTS.windows(2) {
+        let [a, b]: [_; 2] = window.try_into().unwrap();
+        if b.id() != a.id() + 1 {
+            panic!("TokenKind variant ids are not in order: {a:?}, {b:?}");
+        }
+    }
+}
+
+#[test]
+fn test_token_kind_is_trivia() {
+    for variant in TokenKind::VARIANTS {
+        let id = variant.id();
+
+        if variant.isTrivia() {
+            assert!(
+                id >= 8 && id <= 16,
+                "unexpected isTrivia() id: {id}, variant = {variant:?}"
+            );
+
+            match variant {
+                TokenKind::InternalNewline => (),
+                TokenKind::Comment => (),
+                TokenKind::Whitespace => (),
+                TokenKind::ToplevelNewline => (),
+                TokenKind::Buffer1
+                | TokenKind::Buffer2
+                | TokenKind::Buffer3
+                | TokenKind::Buffer4 => (),
+                _ => panic!(
+                    "unexpected TokenKind isTrivia() == true: {variant:?}"
+                ),
+            }
+        } else {
+            assert!(id < 8 || id >= 16, "id: {id}, variant = {variant:?}");
+        }
+
+        if variant.isTriviaButNotToplevelNewline() {
+            assert!(
+                id >= 8 && id <= 16,
+                "unexpected isTrivia() id: {id}, variant = {variant:?}"
+            );
+
+            match variant {
+                TokenKind::InternalNewline => (),
+                TokenKind::Comment => (),
+                TokenKind::Whitespace => (),
+                TokenKind::Buffer1
+                | TokenKind::Buffer2
+                | TokenKind::Buffer3
+                | TokenKind::Buffer4 => (),
+                _ => panic!(
+                    "unexpected TokenKind isTrivia() == true: {variant:?}"
+                ),
+            }
+        } else {
+            if *variant != TokenKind::ToplevelNewline
+                && *variant != TokenKind::Buffer2
+                && *variant != TokenKind::Buffer3
+                && *variant != TokenKind::Buffer4
+            {
+                assert!(id < 8 || id >= 16, "id: {id}, variant = {variant:?}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+fn is_token_kind_variant(name: &str) -> bool {
+    TokenKind::VARIANTS
+        .iter()
+        .find(|v| format!("{v:?}") == name)
+        .is_some()
 }
