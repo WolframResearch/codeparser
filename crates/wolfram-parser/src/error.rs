@@ -712,6 +712,8 @@ impl<'i> Line<'i> {
     }
 }
 
+/// Split `input` into lines. Unlike [`str::lines()`](str::lines), `\r` on its
+/// own is considered a valid line separator.
 fn split_lines_keep_sep<'i>(input: &'i str) -> Vec<(&'i str, &'i str)> {
     if input == "" {
         return vec![("", "")];
