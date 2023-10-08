@@ -14,8 +14,11 @@
 ///
 /// ```
 /// # use wolfram_parser::{macros::src, source::LineColumnSpan};
+/// // Line 1, column 3 through line 4, column 7
+/// let span: LineColumnSpan = src!(1:3-4:7);
+///
 /// // Line 1, column 3 through line 1, column 8
-/// let span: LineColumnSpan = src!(1:3-1:8);
+/// let span: LineColumnSpan = src!(1:3-8);
 /// ```
 ///
 /// Construct a [`CharacterSpan`][crate::source::CharacterSpan] span:
@@ -52,6 +55,22 @@ macro_rules! __src {
         }
     };
 
+    // a:b-c
+    ($line1:literal : $column1:literal  -  $column2:literal) => {
+        $crate::source::LineColumnSpan {
+            start: $crate::source::LineColumn(
+                std::num::NonZeroU32::new($line1)
+                    .expect("start line must not be zero"),
+                $column1,
+            ),
+            end: $crate::source::LineColumn(
+                std::num::NonZeroU32::new($line1)
+                    .expect("end line must not be zero"),
+                $column2,
+            ),
+        }
+    };
+
     // TODO: Pick only one of these syntaxes to use
     // a-b  OR  a..b
     ($start:literal - $end:literal) => {
@@ -68,13 +87,13 @@ macro_rules! __src {
 ///
 /// ```
 /// # use wolfram_parser::macros::{src, token};
-/// token!(Integer, "5", src!(1:1-1:2));
-/// //     ^^^^^^^  ...  *************
+/// token!(Integer, "5", 1:1-1:2);
+/// //     ^^^^^^^  ...  *******
 /// ```
 ///
 /// * `^^^` — [`TokenKind`][crate::tokenize::TokenKind] variant
 /// * `...` — input content
-/// * `***` — [`Source`][crate::source::Source] of the token
+/// * `***` — [`Source`][crate::source::Source] of the token; supports [`src!`] syntax
 ///
 /// # Example
 ///
@@ -90,14 +109,24 @@ macro_rules! __src {
 /// let Tokens(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).unwrap();
 ///
 /// assert_eq!(tokens, &[
-///     token!(Symbol, b"foo", src!(1:1-1:4)),
-///     token!(Plus, b"+", src!(1:4-1:5)),
-///     token!(Integer, b"1", src!(1:5-1:6)),
+///     token!(Symbol, b"foo", 1:1-1:4),
+///     token!(Plus, b"+", 1:4-1:5),
+///     token!(Integer, b"1", 1:5-1:6),
 /// ]);
 /// ```
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __token {
+    // token!(Kind, "...", 1:1-3:2)
+    ($kind:ident, $input:tt, $l1:literal : $c1:literal  -  $l2:literal : $c2:literal) => {
+        $crate::macros::token!($kind, $input, src!($l1:$c1-$l2:$c2))
+    };
+
+    // token!(Kind, "...", 1:1-2)
+    ($kind:ident, $input:tt, $l1:literal : $c1:literal  -  $c2:literal) => {
+        $crate::macros::token!($kind, $input, src!($l1:$c1-$c2))
+    };
+
     ($kind:ident, $input:tt, $src:expr) => {
         $crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$kind,
