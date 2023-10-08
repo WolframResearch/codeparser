@@ -9,10 +9,11 @@
 //!
 //! # API
 //!
-//! Input   | Tokenize             | Parse concrete syntax    | Parse abstract syntax
-//! --------|----------------------|--------------------------|--------------------
-//! `&str`  | [`tokenize()`]       | [`parse_to_cst()`]       | [`parse_to_ast()`]
-//! `&[u8]` | [`tokenize_bytes()`] | [`parse_bytes_to_cst()`] | [`parse_bytes_to_ast()`]
+//! Operation             | Result     | Input: `&str`   | Input: `&[u8]`
+//! ----------------------|------------|-----------------|----------------------
+//! Tokenization          | [`Tokens`] | [`tokenize()`]  | [`tokenize_bytes()`]
+//! Parse concrete syntax | [`Cst`]    | [`parse_cst()`] | [`parse_bytes_cst()`]
+//! Parse abstract syntax | [`Ast`]    | [`parse_ast()`] | [`parse_bytes_ast()`]
 //!
 
 //
@@ -61,10 +62,8 @@ mod utils;
 
 
 mod byte_encoder;
-#[doc(hidden)]
 pub mod issue;
 mod long_names;
-#[doc(hidden)]
 pub mod quirks;
 pub mod source;
 #[doc(hidden)]
@@ -89,8 +88,7 @@ mod feature;
 
 /// Contains modules whose source code is generated dynamically at project build
 /// time.
-#[doc(hidden)]
-pub mod generated {
+pub(crate) mod generated {
     pub(crate) mod long_names_registration;
     pub(crate) mod precedence_values;
 }
@@ -128,7 +126,6 @@ use crate::{
 
 pub use crate::{parse::ParseResult, quirks::QuirkSettings};
 
-#[doc(hidden)]
 pub use crate::tokenize::tokenizer::UnsafeCharacterEncoding;
 
 //======================================
@@ -317,17 +314,17 @@ impl ParseOptions {
 /// ```
 /// use wolfram_parser::{
 ///     tokenize, ParseOptions, Tokens,
-///     macros::{token, src}
+///     macros::token
 /// };
 ///
 /// let Tokens(tokens) = tokenize("2 + 2", &ParseOptions::default());
 ///
 /// assert_eq!(tokens, &[
-///     token![Integer, "2", src!(1:1-1:2)],
-///     token![Whitespace, " ", src!(1:2-1:3)],
-///     token![Plus, "+", src!(1:3-1:4)],
-///     token![Whitespace, " ", src!(1:4-1:5)],
-///     token![Integer, "2", src!(1:5-1:6)],
+///     token![Integer, "2", 1:1-1:2],
+///     token![Whitespace, " ", 1:2-1:3],
+///     token![Plus, "+", 1:3-1:4],
+///     token![Whitespace, " ", 1:4-1:5],
+///     token![Integer, "2", 1:5-1:6],
 /// ]);
 /// ```
 pub fn tokenize<'i>(
@@ -359,21 +356,38 @@ pub fn tokenize_bytes<'i>(
 /// Parse `2 + 2`:
 ///
 /// ```
-/// use wolfram_parser::{parse_to_cst, ParseOptions};
+/// # use pretty_assertions::assert_eq;
+/// use wolfram_parser::{
+///     parse_cst, ParseOptions, NodeSeq,
+///     cst::{Cst, InfixNode, InfixOperator, OperatorNode},
+///     macros::{token, src},
+/// };
 ///
-/// let result = parse_to_cst("2 + 2", &ParseOptions::default());
+/// let result = parse_cst("2 + 2", &ParseOptions::default());
 ///
-/// // TODO: assert_eq!(result.nodes(), &[]);
+/// assert_eq!(result.nodes(), &[
+///     Cst::Infix(InfixNode(OperatorNode {
+///         op: InfixOperator::Plus,
+///         children: NodeSeq(vec![
+///             Cst::Token(token!(Integer, "2", 1:1-2)),
+///             Cst::Token(token!(Whitespace, " ", 1:2-3)),
+///             Cst::Token(token!(Plus, "+", 1:3-4)),
+///             Cst::Token(token!(Whitespace, " ", 1:4-5)),
+///             Cst::Token(token!(Integer, "2", 1:5-6))
+///         ]),
+///         src: src!(1:1-6).into()
+///     }))
+/// ]);
 /// ```
-pub fn parse_to_cst<'i>(
+pub fn parse_cst<'i>(
     input: &'i str,
     opts: &ParseOptions,
 ) -> ParseResult<Cst<TokenStr<'i>>> {
-    parse_bytes_to_cst(input.as_bytes(), opts)
+    parse_bytes_cst(input.as_bytes(), opts)
 }
 
 /// Parse bytes containing Wolfram Language input into a concrete syntax tree.
-pub fn parse_bytes_to_cst<'i>(
+pub fn parse_bytes_cst<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<Cst<TokenStr<'i>>> {
@@ -387,15 +401,52 @@ pub fn parse_bytes_to_cst<'i>(
 //======================================
 
 /// Parse a string containing Wolfram Language input into an abstract syntax tree.
-pub fn parse_to_ast<'i>(
-    input: &'i str,
-    opts: &ParseOptions,
-) -> ParseResult<Ast> {
-    parse_bytes_to_ast(input.as_bytes(), opts)
+///
+/// # Examples
+///
+/// Parse `2 + 2`:
+///
+/// ```
+/// # use pretty_assertions::assert_eq;
+/// use wolfram_parser::{
+///     parse_ast, ParseOptions,
+///     tokenize::{TokenKind, TokenString},
+///     source::Span,
+///     ast::{Ast, AstMetadata},
+///     macros::src,
+/// };
+///
+/// let result = parse_ast("2 + 2", &ParseOptions::default());
+///
+/// assert_eq!(result.nodes(), &[
+///     Ast::Call {
+///         head: Box::new(Ast::Leaf {
+///             kind: TokenKind::Symbol,
+///             input: TokenString::new("Plus"),
+///             data: AstMetadata::from_src(Span::unknown()),
+///         }),
+///         args: vec![
+///             Ast::Leaf {
+///                 kind: TokenKind::Integer,
+///                 input: TokenString::new("2"),
+///                 data: AstMetadata::from_src(Span::from(src!(1:1-2))),
+///             },
+///             Ast::Leaf {
+///                 kind: TokenKind::Integer,
+///                 input: TokenString::new("2"),
+///                 data: AstMetadata::from_src(Span::from(src!(1:5-6))),
+///             },
+///         ],
+///         data: AstMetadata::from_src(Span::from(src!(1:1-6))),
+///     },
+/// ]);
+/// ```
+pub fn parse_ast<'i>(input: &'i str, opts: &ParseOptions) -> ParseResult<Ast> {
+    parse_bytes_ast(input.as_bytes(), opts)
 }
 
 /// Parse bytes containing Wolfram Language input into an abstract syntax tree.
-pub fn parse_bytes_to_ast<'i>(
+pub fn parse_bytes_ast<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<Ast> {

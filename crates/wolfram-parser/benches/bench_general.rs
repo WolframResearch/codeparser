@@ -13,11 +13,11 @@ fn tokenize_bytes(input: &[u8]) {
 }
 
 fn parse(input: &str) {
-    wolfram_parser::parse_to_cst(input, &ParseOptions::default());
+    wolfram_parser::parse_cst(input, &ParseOptions::default());
 }
 
 fn parse_bytes(input: &[u8]) {
-    wolfram_parser::parse_bytes_to_cst(input, &ParseOptions::default());
+    wolfram_parser::parse_bytes_cst(input, &ParseOptions::default());
 }
 
 fn benchmark(c: &mut Criterion) {

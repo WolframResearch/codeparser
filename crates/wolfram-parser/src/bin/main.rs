@@ -117,7 +117,7 @@ fn handle(input: &[u8], mode: ApiMode, output_mode: OutputMode) {
             output(output_mode, result);
         },
         ApiMode::Expression => {
-            let result = wolfram_parser::parse_bytes_to_cst(
+            let result = wolfram_parser::parse_bytes_cst(
                 input,
                 &ParseOptions::default(),
             );

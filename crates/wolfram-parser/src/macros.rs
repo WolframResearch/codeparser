@@ -119,12 +119,12 @@ macro_rules! __src {
 macro_rules! __token {
     // token!(Kind, "...", 1:1-3:2)
     ($kind:ident, $input:tt, $l1:literal : $c1:literal  -  $l2:literal : $c2:literal) => {
-        $crate::macros::token!($kind, $input, src!($l1:$c1-$l2:$c2))
+        $crate::macros::token!($kind, $input, $crate::macros::src!($l1:$c1-$l2:$c2))
     };
 
     // token!(Kind, "...", 1:1-2)
     ($kind:ident, $input:tt, $l1:literal : $c1:literal  -  $c2:literal) => {
-        $crate::macros::token!($kind, $input, src!($l1:$c1-$c2))
+        $crate::macros::token!($kind, $input, $crate::macros::src!($l1:$c1-$c2))
     };
 
     ($kind:ident, $input:tt, $src:expr) => {

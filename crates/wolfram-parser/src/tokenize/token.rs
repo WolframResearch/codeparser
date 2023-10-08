@@ -146,6 +146,10 @@ impl TokenInput for TokenString {
 }
 
 impl TokenString {
+    pub fn new(s: &'static str) -> Self {
+        Self::fake(s)
+    }
+
     pub fn to_str(&self) -> &str {
         std::str::from_utf8(self.as_bytes())
             .expect("TokenString::to_str(): token source is not valid UTF-8")

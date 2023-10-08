@@ -21,7 +21,7 @@ use crate::{
     },
     macros::{src, token},
     parse::ParserSession,
-    parse_bytes_to_cst,
+    parse_bytes_cst,
     source::{Source, SourceConvention},
     tokenize,
     tokenize::{Token, TokenInput, TokenKind as TK, TokenStr, TokenString},
@@ -452,7 +452,7 @@ fn test_invalid_utf8_in_middle_of_parse() {
     // in the input followed by valid UTF-8 bytes.
     //
     // The presence of invalid UTF-8 shouldn't halt the parsing process.
-    let result = parse_bytes_to_cst(
+    let result = parse_bytes_cst(
         &[b'1', b'+', 0xE2, 0x9A, b'1'],
         &ParseOptions::default(),
     );
@@ -521,7 +521,7 @@ fn test_first_line_behavior() {
 
 #[test]
 fn test_abstract_parse() {
-    let result = crate::parse_to_ast("2 + 2", &ParseOptions::default());
+    let result = crate::parse_ast("2 + 2", &ParseOptions::default());
 
     assert_eq!(
         result.nodes(),

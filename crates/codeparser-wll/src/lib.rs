@@ -487,7 +487,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
 
     link.new_packet().unwrap();
 
-    wolfram_parser::parse_bytes_to_cst(&buffer, &opts).put(link);
+    wolfram_parser::parse_bytes_cst(&buffer, &opts).put(link);
 }
 
 //======================================
@@ -580,7 +580,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
         Err(err) => todo!("FIXME: {err:?}"),
     };
 
-    wolfram_parser::parse_bytes_to_cst(bytes.as_slice(), &opts).put(link);
+    wolfram_parser::parse_bytes_cst(bytes.as_slice(), &opts).put(link);
 }
 
 //==========================================================
