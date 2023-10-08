@@ -15,9 +15,9 @@ use pretty_assertions::assert_eq;
 use crate::{
     ast::{Ast, AstMetadata},
     cst::{
-        CallBody, CallHead, CallNode, CallOperator, Cst, Cst::Token as NVToken,
-        GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode,
-        InfixOperator, OperatorNode,
+        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CallOperator,
+        Cst, Cst::Token as NVToken, GroupMissingCloserNode, GroupNode,
+        GroupOperator, InfixNode, InfixOperator, OperatorNode,
     },
     macros::{src, token},
     parse::ParserSession,
@@ -270,6 +270,67 @@ fn test_unterminated_group_reparse() {
             }
         ))]
     );
+
+    //==================================
+
+    #[rustfmt::skip]
+    assert_eq!(nodes("(a  "), &[
+        Cst::GroupMissingCloser(GroupMissingCloserNode(OperatorNode {
+            op: GroupOperator::CodeParser_GroupParen,
+            children: NodeSeq(vec![
+                Cst::Token(token!(OpenParen, "(", src!(1:1-1:2))),
+                Cst::Token(token!(Symbol, "a", src!(1:2-1:3))),
+            ],),
+            src: src!(1:1-1:5).into(),
+        },),),
+        Cst::Token(token!(Whitespace, " ", src!(1:3-1:4))),
+        Cst::Token(token!(Whitespace, " ", src!(1:4-1:5))),
+    ]);
+
+    //==================================
+
+    let unterminated_paren: &str = r#"
+global = (a
++ b
+
+nextStatement
+
+"#;
+
+    // Test that any tokens associated with `nextStatement` are not
+    // present.
+    #[rustfmt::skip]
+    assert_eq!(nodes(unterminated_paren), &[
+        Cst::Token(token!(ToplevelNewline, "\n", src!(1:1-2:1))),
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Set,
+            children: NodeSeq(vec![
+                Cst::Token(token!(Symbol, "global", src!(2:1-2:7))),
+                Cst::Token(token!(Whitespace, " ", src!(2:7-2:8))),
+                Cst::Token(token!(Equal, "=", src!(2:8-2:9)),),
+                Cst::Token(token!(Whitespace, " ", src!(2:9-2:10)),),
+                Cst::GroupMissingCloser(GroupMissingCloserNode(
+                    OperatorNode {
+                        op: GroupOperator::CodeParser_GroupParen,
+                        children: NodeSeq(vec![
+                            Cst::Token(token!(OpenParen, "(", src!(2:10-2:11))),
+                            Cst::Token(token!(Symbol, "a", src!(2:11-2:12))),
+                            Cst::Token(token!(InternalNewline, "\n", src!(2:12-3:1))),
+                            Cst::Token(token!(Plus, "+", src!(3:1-3:2))),
+                            Cst::Token(token!(Whitespace, " ", src!(3:2-3:3))),
+                            Cst::Token(token!(Symbol, "b", src!(3:3-3:4))),
+                            Cst::Token(token!(InternalNewline, "\n", src!(3:4-4:1))),
+                        ]),
+                        src: src!(2:10-3:4).into(),
+                    },
+                )),
+            ]),
+            src: src!(2:1-3:4).into(),
+        })),
+        // NOTE: Token for the non-trivial `nextStatement` does NOT appear here(?)
+        Cst::Token(token!(ToplevelNewline, "\n", src!(5:14-6:1))),
+        Cst::Token(token!(ToplevelNewline, "\n", src!(6:1-7:1))),
+    ]);
 }
 
 #[test]
