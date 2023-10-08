@@ -1,6 +1,6 @@
-use crate::{cst::Cst, source::Span, tokenize::OwnedTokenInput, NodeSeq};
+use crate::{cst::Cst, source::Span, tokenize::TokenString, NodeSeq};
 
-pub type AggNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Cst<I, S>>;
+pub type AggNodeSeq<I = TokenString, S = Span> = NodeSeq<Cst<I, S>>;
 
 //==========================================================
 // Macros
@@ -79,7 +79,7 @@ macro_rules! WL {
 
         $crate::cst::Cst::Token(Token {
             tok: $crate::tokenize::TokenKind::$token_kind,
-            input: $crate::tokenize::OwnedTokenInput {
+            input: $crate::tokenize::TokenString {
                 buf: input.into_bytes(),
             },
             src: $data,

@@ -102,7 +102,7 @@ macro_rules! __token {
         $crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$kind,
             src: $crate::source::Span::from($src),
-            input: $crate::tokenize::BorrowedTokenInput::new($input.as_ref()),
+            input: $crate::tokenize::TokenStr::new($input.as_ref()),
         }
     };
 }

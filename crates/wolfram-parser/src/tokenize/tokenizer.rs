@@ -2223,7 +2223,6 @@ fn Tokenizer_handleNumber<'i>(
         let mut sign = false;
         let mut precOrAccSupplied = false;
 
-        let signBuf: BufferAndLength;
         let mut sign_mark: Option<InputMark> = None;
 
         if c.to_point() == '`' {
@@ -2241,7 +2240,7 @@ fn Tokenizer_handleNumber<'i>(
                 //
 
                 // Take one character so we can display this
-                signBuf =
+                let signBuf =
                     BufferAndLength::from_buffer_with_len(session.buffer(), 1);
 
                 sign_mark = Some(session.mark());

@@ -17,7 +17,7 @@ use wolfram_parser::{
     source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbols as sym,
-    tokenize::{BorrowedTokenInput, Token, TokenInput, TokenKind},
+    tokenize::{Token, TokenInput, TokenKind, TokenStr},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult,
     Tokens, UnsafeCharacterEncoding,
 };
@@ -618,7 +618,7 @@ impl<N: WstpPut> WstpPut for NodeSeq<N> {
     }
 }
 
-impl<'i> WstpPut for Tokens<BorrowedTokenInput<'i>> {
+impl<'i> WstpPut for Tokens<TokenStr<'i>> {
     fn put(&self, link: &mut wstp::Link) {
         let Tokens(tokens) = self;
 

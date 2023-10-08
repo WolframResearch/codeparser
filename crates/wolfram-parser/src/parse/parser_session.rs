@@ -25,7 +25,7 @@ use crate::{
             Tokenizer_nextToken_stringifyAsTag, TrackedSourceLocations,
             UnsafeCharacterEncoding,
         },
-        BorrowedTokenInput, Token, TokenKind, TokenRef,
+        Token, TokenKind, TokenRef, TokenStr,
     },
     EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, StringifyMode,
     Tokens,
@@ -43,14 +43,14 @@ pub(crate) struct ParserSession<'i> {
     pub(crate) quirk_settings: QuirkSettings,
 }
 
-pub(crate) type NodeStack<'i> = Vec<Cst<BorrowedTokenInput<'i>>>;
+pub(crate) type NodeStack<'i> = Vec<Cst<TokenStr<'i>>>;
 
 //
 // Used mainly for collecting trivia that has been eaten
 //
 #[derive(Debug)]
 pub(crate) struct TriviaSeq<'i> {
-    pub(crate) vec: Vec<Token<BorrowedTokenInput<'i>>>,
+    pub(crate) vec: Vec<Token<TokenStr<'i>>>,
 }
 
 pub struct ParseResult<N> {
@@ -172,7 +172,7 @@ impl<'i> ParserSession<'i> {
 
     pub fn concrete_parse_expressions(
         &mut self,
-    ) -> ParseResult<Cst<BorrowedTokenInput<'i>>> {
+    ) -> ParseResult<Cst<TokenStr<'i>>> {
         quirks::set_quirks(self.quirk_settings);
 
         #[cfg(feature = "DIAGNOSTICS")]
@@ -185,7 +185,7 @@ impl<'i> ParserSession<'i> {
         // Collect all expressions
         //
 
-        let mut exprs: CstNodeSeq<BorrowedTokenInput<'i>> = NodeSeq::new();
+        let mut exprs: CstNodeSeq<TokenStr<'i>> = NodeSeq::new();
 
         loop {
             if feature::CHECK_ABORT && crate::abortQ() {
@@ -239,7 +239,7 @@ impl<'i> ParserSession<'i> {
 
     pub fn tokenize(
         &mut self,
-    ) -> Result<Tokens<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
+    ) -> Result<Tokens<TokenStr<'i>>, UnsafeCharacterEncoding> {
         let mut tokens = Vec::new();
 
         loop {
@@ -270,7 +270,7 @@ impl<'i> ParserSession<'i> {
     fn concreteParseLeaf0(
         &mut self,
         mode: StringifyMode,
-    ) -> Token<BorrowedTokenInput<'i>> {
+    ) -> Token<TokenStr<'i>> {
         let token = match mode {
             StringifyMode::Normal => self.tokenizer.next_token(),
             StringifyMode::Tag => {
@@ -287,7 +287,7 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn concreteParseLeaf(
         &mut self,
         mode: StringifyMode,
-    ) -> ParseResult<Token<BorrowedTokenInput<'i>>> {
+    ) -> ParseResult<Token<TokenStr<'i>>> {
         //
         // Collect all expressions
         //
@@ -336,8 +336,8 @@ impl<'i> ParserSession<'i> {
 
     fn reparse_unterminated(
         &self,
-        mut nodes: CstNodeSeq<BorrowedTokenInput<'i>>,
-    ) -> CstNodeSeq<BorrowedTokenInput<'i>> {
+        mut nodes: CstNodeSeq<TokenStr<'i>>,
+    ) -> CstNodeSeq<TokenStr<'i>> {
         if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
             nodes = crate::error::reparse_unterminated(
                 nodes,
@@ -351,8 +351,8 @@ impl<'i> ParserSession<'i> {
 
     fn reparse_unterminated_tokens(
         &self,
-        mut tokens: Tokens<BorrowedTokenInput<'i>>,
-    ) -> Tokens<BorrowedTokenInput<'i>> {
+        mut tokens: Tokens<TokenStr<'i>>,
+    ) -> Tokens<TokenStr<'i>> {
         if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
             tokens = crate::error::reparse_unterminated_tokens(
                 tokens,

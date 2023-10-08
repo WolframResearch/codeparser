@@ -6,7 +6,7 @@ use wolfram_expr::Expr;
 
 use crate::{
     source::{Source, Span},
-    tokenize::{OwnedTokenInput, Token, TokenInput, TokenKind, TokenSource},
+    tokenize::{Token, TokenInput, TokenKind, TokenSource, TokenString},
     NodeSeq,
 };
 
@@ -19,7 +19,7 @@ use crate::{
 /// So pass around a structure that contains all of the nodes from the left,
 /// including comments and whitespace.
 // TODO(cleanup): CstSeq?
-pub type CstNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Cst<I, S>>;
+pub type CstNodeSeq<I = TokenString, S = Span> = NodeSeq<Cst<I, S>>;
 
 /// A concrete syntax tree (CST) node.
 ///
@@ -29,7 +29,7 @@ pub type CstNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Cst<I, S>>;
 /// A typical [`Cst`] is made up of further child syntax trees. A [`Cst`] tree
 /// terminates at "leaf" variants such as [`Cst::Token`].
 #[derive(Debug, Clone, PartialEq)]
-pub enum Cst<I = OwnedTokenInput, S = Span> {
+pub enum Cst<I = TokenString, S = Span> {
     Token(Token<I, S>),
     Call(CallNode<I, S>),
     SyntaxError(SyntaxErrorNode<I, S>),
@@ -58,7 +58,7 @@ pub struct CodeNode<S = Span> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct BoxNode<I = OwnedTokenInput, S = Span> {
+pub struct BoxNode<I = TokenString, S = Span> {
     pub kind: BoxKind,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
@@ -81,7 +81,7 @@ pub enum BoxKind {
 
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
-pub struct OperatorNode<I = OwnedTokenInput, S = Span, O = InfixOperator> {
+pub struct OperatorNode<I = TokenString, S = Span, O = InfixOperator> {
     pub op: O,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
@@ -89,41 +89,41 @@ pub struct OperatorNode<I = OwnedTokenInput, S = Span, O = InfixOperator> {
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixNode<I = OwnedTokenInput, S = Span>(
+pub struct PrefixNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, PrefixOperator>,
 );
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryNode<I = OwnedTokenInput, S = Span>(
+pub struct BinaryNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, BinaryOperator>,
 );
 
 /// `a + b + c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct InfixNode<I = OwnedTokenInput, S = Span>(pub OperatorNode<I, S>);
+pub struct InfixNode<I = TokenString, S = Span>(pub OperatorNode<I, S>);
 
 /// `a /: b = c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct TernaryNode<I = OwnedTokenInput, S = Span>(
+pub struct TernaryNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, TernaryOperator>,
 );
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PostfixNode<I = OwnedTokenInput, S = Span>(
+pub struct PostfixNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, PostfixOperator>,
 );
 
 /// `\[Integral] f \[DifferentialD] x`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixBinaryNode<I = OwnedTokenInput, S = Span>(
+pub struct PrefixBinaryNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, PrefixBinaryOperator>,
 );
 
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CallNode<I = OwnedTokenInput, S = Span> {
+pub struct CallNode<I = TokenString, S = Span> {
     pub head: CallHead<I, S>,
     pub body: CallBody<I, S>,
     pub src: S,
@@ -145,14 +145,14 @@ pub enum CallHead<I, S> {
 
 /// Subset of [`Cst`] variants that are allowed as the body of a [`CallNode`].
 #[derive(Debug, Clone, PartialEq)]
-pub enum CallBody<I = OwnedTokenInput, S = Span> {
+pub enum CallBody<I = TokenString, S = Span> {
     Group(GroupNode<I, S, CallOperator>),
     GroupMissingCloser(GroupMissingCloserNode<I, S, CallOperator>),
 }
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(
+pub struct GroupNode<I = TokenString, S = Span, O = GroupOperator>(
     pub OperatorNode<I, S, O>,
 );
 
@@ -166,13 +166,13 @@ pub struct GroupNode<I = OwnedTokenInput, S = Span, O = GroupOperator>(
 /// * `##2`
 /// * `%2`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompoundNode<I = OwnedTokenInput, S = Span>(
+pub struct CompoundNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, CompoundOperator>,
 );
 
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
-pub struct SyntaxErrorNode<I = OwnedTokenInput, S = Span> {
+pub struct SyntaxErrorNode<I = TokenString, S = Span> {
     pub err: SyntaxErrorKind,
     pub children: CstNodeSeq<I, S>,
     pub src: S,
@@ -187,24 +187,21 @@ pub enum SyntaxErrorKind {
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode<
-    I = OwnedTokenInput,
-    S = Span,
-    O = GroupOperator,
->(pub OperatorNode<I, S, O>);
+pub struct GroupMissingCloserNode<I = TokenString, S = Span, O = GroupOperator>(
+    pub OperatorNode<I, S, O>,
+);
 
 /// Only possible with boxes
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingOpenerNode<I = OwnedTokenInput, S = Span>(
+pub struct GroupMissingOpenerNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, GroupOperator>,
 );
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct UnterminatedGroupNeedsReparseNode<
-    I = OwnedTokenInput,
-    S = Span,
->(pub OperatorNode<I, S, GroupOperator>);
+pub(crate) struct UnterminatedGroupNeedsReparseNode<I = TokenString, S = Span>(
+    pub OperatorNode<I, S, GroupOperator>,
+);
 
 /// Node representation of a token.
 ///
@@ -361,7 +358,7 @@ impl<I, S> CstNodeSeq<I, S> {
 }
 
 impl<I: TokenInput, S> CstNodeSeq<I, S> {
-    pub(crate) fn into_owned_input(self) -> CstNodeSeq<OwnedTokenInput, S> {
+    pub(crate) fn into_owned_input(self) -> CstNodeSeq<TokenString, S> {
         let NodeSeq(nodes) = self;
 
         let nodes = nodes.into_iter().map(Cst::into_owned_input).collect();
@@ -502,7 +499,7 @@ impl<I, S> Cst<I, S> {
 }
 
 impl<I: TokenInput, S> Cst<I, S> {
-    pub fn into_owned_input(self) -> Cst<OwnedTokenInput, S> {
+    pub fn into_owned_input(self) -> Cst<TokenString, S> {
         match self {
             Cst::Token(token) => Cst::Token(token.into_owned_input()),
             Cst::Call(CallNode { head, body, src }) => Cst::Call(CallNode {
@@ -677,7 +674,7 @@ impl<I, S: TokenSource, O: Copy> OperatorNode<I, S, O> {
 }
 
 impl<I: TokenInput, S, O> OperatorNode<I, S, O> {
-    fn into_owned_input(self) -> OperatorNode<OwnedTokenInput, S, O> {
+    fn into_owned_input(self) -> OperatorNode<TokenString, S, O> {
         let OperatorNode { op, children, src } = self;
 
         OperatorNode {

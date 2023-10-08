@@ -117,7 +117,7 @@ use crate::{
     issue::{CodeAction, Issue},
     parse::ParserSession,
     source::{Source, SourceConvention, Span, DEFAULT_TAB_WIDTH},
-    tokenize::{BorrowedTokenInput, OwnedTokenInput, Token},
+    tokenize::{Token, TokenStr, TokenString},
 };
 
 
@@ -235,7 +235,7 @@ pub enum StringifyMode {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Tokens<I = OwnedTokenInput, S = Span>(pub Vec<Token<I, S>>);
+pub struct Tokens<I = TokenString, S = Span>(pub Vec<Token<I, S>>);
 
 //-------------
 // ParseOptions
@@ -332,7 +332,7 @@ impl ParseOptions {
 pub fn tokenize<'i>(
     input: &'i str,
     opts: &ParseOptions,
-) -> Tokens<BorrowedTokenInput<'i>> {
+) -> Tokens<TokenStr<'i>> {
     tokenize_bytes(input.as_bytes(), opts)
         .expect("unexpected character encoding error tokenizing &str")
 }
@@ -341,7 +341,7 @@ pub fn tokenize<'i>(
 pub fn tokenize_bytes<'i>(
     input: &'i [u8],
     opts: &ParseOptions,
-) -> Result<Tokens<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
+) -> Result<Tokens<TokenStr<'i>>, UnsafeCharacterEncoding> {
     let mut session = ParserSession::new(input, opts);
 
     session.tokenize()
@@ -367,7 +367,7 @@ pub fn tokenize_bytes<'i>(
 pub fn parse_to_cst<'i>(
     input: &'i str,
     opts: &ParseOptions,
-) -> ParseResult<Cst<BorrowedTokenInput<'i>>> {
+) -> ParseResult<Cst<TokenStr<'i>>> {
     parse_bytes_to_cst(input.as_bytes(), opts)
 }
 
@@ -375,7 +375,7 @@ pub fn parse_to_cst<'i>(
 pub fn parse_bytes_to_cst<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
-) -> ParseResult<Cst<BorrowedTokenInput<'i>>> {
+) -> ParseResult<Cst<TokenStr<'i>>> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.concrete_parse_expressions()
@@ -412,7 +412,7 @@ pub fn parse_to_token<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
     stringify_mode: StringifyMode,
-) -> ParseResult<Token<BorrowedTokenInput<'i>>> {
+) -> ParseResult<Token<TokenStr<'i>>> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.concreteParseLeaf(stringify_mode)

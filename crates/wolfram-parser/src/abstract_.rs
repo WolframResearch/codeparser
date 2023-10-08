@@ -20,9 +20,9 @@ use crate::{
     source::{Source, Span},
     symbol::{self as sym, Symbol},
     tokenize::{
-        OwnedTokenInput, Token, TokenInput,
+        Token, TokenInput,
         TokenKind::{self, self as TK},
-        TokenSource,
+        TokenSource, TokenString,
     },
     NodeSeq,
 };
@@ -1592,7 +1592,7 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
 fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
     node: Cst<I, S>,
     data: S,
-) -> Cst<OwnedTokenInput, S> {
+) -> Cst<TokenString, S> {
     match node {
         Cst::Token(Token {
             tok: TokenKind::Integer,
@@ -1767,7 +1767,7 @@ fn derivativeOrderAndAbstractedBody<
 
 fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
     pair: [Cst<I, S>; 2],
-) -> Cst<OwnedTokenInput, S> {
+) -> Cst<TokenString, S> {
     match pair {
         // {LeafNode[Token`Plus | Token`LongName`ImplicitPlus, _, _], rand_}
         [Cst::Token(Token {
@@ -1898,7 +1898,7 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
     nodes: Vec<Cst<I, S>>,
     data: S,
-) -> Vec<Cst<OwnedTokenInput, S>> {
+) -> Vec<Cst<TokenString, S>> {
     let flattenTimesQuirk = quirks::is_quirk_enabled(Quirk::FlattenTimes);
 
     nodes
@@ -1935,9 +1935,13 @@ fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 // it is possible to have nested prefix Minus, e.g., - - a
                                 // so must call recursively into flattenTimes
                                 // *)
-                                let mut vec: Vec<Cst<OwnedTokenInput, S>> =
-                                    vec![agg::WL!(ToNode[-1]).into_owned_input()];
-                                vec.extend_from_slice(&flattenTimes(vec![operand], data.clone()));
+                                let mut vec: Vec<Cst<TokenString, S>> = vec![
+                                    agg::WL!(ToNode[-1]).into_owned_input(),
+                                ];
+                                vec.extend_from_slice(&flattenTimes(
+                                    vec![operand],
+                                    data.clone(),
+                                ));
                                 vec
                             } else {
                                 vec![node.into_owned_input()]
@@ -1950,7 +1954,8 @@ fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
                     children: NodeSeq(children),
                     src: _,
                 })) => {
-                    let children = part_span_even_children(children, Some(TK::Plus));
+                    let children =
+                        part_span_even_children(children, Some(TK::Plus));
 
                     flattenTimes(children, data.clone())
                 },
@@ -1964,9 +1969,13 @@ fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
                     src: _,
                 })) => {
                     if flattenTimesQuirk {
-                        let [left, _, right] = expect_children(children.clone());
+                        let [left, _, right] =
+                            expect_children(children.clone());
 
-                        flattenTimes(vec![left, reciprocate(right, data.clone())], data.clone())
+                        flattenTimes(
+                            vec![left, reciprocate(right, data.clone())],
+                            data.clone(),
+                        )
                     } else {
                         vec![node.into_owned_input()]
                     }
@@ -1991,7 +2000,7 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
 
     let flattened = flattenTimes(children, data.clone());
 
-    let processed: Vec<Cst<OwnedTokenInput, S>> = flattened
+    let processed: Vec<Cst<TokenString, S>> = flattened
         .into_iter()
         .map(|node| processInfixBinaryAtQuirk(node, "Times"))
         .collect();
