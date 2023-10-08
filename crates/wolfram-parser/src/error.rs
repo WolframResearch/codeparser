@@ -9,68 +9,9 @@ use crate::{
     source::{
         BufferAndLength, CharacterSpan, LineColumn, Location, Span, SpanKind,
     },
-    tokenize::{Token, TokenStr},
+    tokenize::{Token, TokenKind, TokenStr},
     NodeSeq, Tokens,
 };
-
-use once_cell::sync::Lazy;
-use regex::Regex;
-
-const CHUNK_PAT: Lazy<Regex> = Lazy::new(|| {
-    /*
-        Annotation Comments
-
-        ::Package::
-        etc.
-
-        https://mathematica.stackexchange.com/questions/76192/annotation-specifier-like-author-and-sectioning-like-section-in-package-co
-    */
-    let annotation_pat = "^\\(\\* *:.*$";
-
-    /*
-    Common functions like:
-
-    Begin["`Foo`"]
-
-    */
-    let directive_pat = "^(\
-BeginPackage|\
-Begin|\
-Needs|\
-End|\
-EndPackage|\
-Clear|\
-ClearAll|\
-SetOptions|\
-SetAttributes|\
-System`Private`NewContextPath|\
-System`Private`RestoreContextPath|\
-Protect|\
-Unprotect|\
-Package|\
-PackageImport|\
-PackageScope|\
-PackageExport|\
-Get|\
-SetDelayed|\
-UpSetDelayed|\
-TagSetDelayed\
-)\\[.*$";
-
-    /*
-    Assignments like:
-
-    x = 1
-
-    */
-    let assignment_pat = "^[a-zA-Z$].*(:?=).*$";
-
-    // chunkPat = RegularExpression["(?m)("<>annotationPat<>")|("<>directivePat<>")|("<>assignmentPat<>")"]
-    Regex::new(&format!(
-        "(?m)({annotation_pat})|({directive_pat})|({assignment_pat})"
-    ))
-    .unwrap()
-});
 
 pub(crate) fn reparse_unterminated<'i>(
     nodes: AggNodeSeq<TokenStr<'i>>,
@@ -454,7 +395,134 @@ fn split_into_chunks<'s, 'i>(lines: &'s [Line<'i>]) -> Vec<&'s [Line<'i>]> {
 /// Returns `true` if `line` looks like it might be a new top-level statement
 /// in a Wolfram Language program.
 fn is_new_statement_line(line: &str) -> bool {
-    CHUNK_PAT.is_match(line)
+    debug_assert!(!line.contains(&['\r', '\n']));
+
+    let crate::Tokens(tokens) = crate::tokenize(line, &Default::default());
+
+    let tokens: Vec<_> = tokens
+        .into_iter()
+        .filter(|tok| {
+            if tok.tok == TokenKind::Comment {
+                return true;
+            }
+
+            // Remove whitespace that isn't at the very start of the line.
+            if tok.tok.isTrivia() {
+                match tok.src.start {
+                    Location::LineColumn(LineColumn(_, 1))
+                    | Location::CharacterIndex(0) => return true,
+                    _ => return false,
+                }
+            }
+
+            true
+        })
+        .collect();
+
+    match tokens.as_slice() {
+        // <symbol>[..
+        [Token {
+            tok: TokenKind::Symbol,
+            input: tok_input,
+            src: _,
+        }, Token {
+            tok: TokenKind::OpenSquare,
+            ..
+        }, rest @ ..] => {
+            if is_top_level_directive(tok_input.buf.as_str()) {
+                /*
+                Common functions like:
+
+                Begin["`Foo`"]
+
+                */
+                // BeginPackage[..
+                // Needs[..
+                // etc.
+                true
+            } else {
+                // foo[.. = ..
+                // foo[.. := ..
+                rest.iter()
+                    .find(|tok| {
+                        matches!(
+                            tok.tok,
+                            TokenKind::Equal | TokenKind::ColonEqual
+                        )
+                    })
+                    .is_some()
+            }
+        },
+
+        /*
+        Assignments like:
+
+        x = 1
+
+        */
+        // foo = ..
+        // foo :=
+        [Token {
+            tok: TokenKind::Symbol,
+            ..
+        }, Token {
+            tok: TokenKind::Equal | TokenKind::ColonEqual,
+            ..
+        }, ..] => true,
+
+        // (* .. *)
+        [Token {
+            tok: TokenKind::Comment,
+            input: tok_input,
+            ..
+        }, ..] => {
+            let comment = tok_input.buf.as_str().trim_start_matches("(*");
+            let comment = comment.trim_start();
+
+            if comment.starts_with(':') {
+                /*
+                    Annotation Comments
+
+                    ::Package::
+                    etc.
+
+                    https://mathematica.stackexchange.com/questions/76192/annotation-specifier-like-author-and-sectioning-like-section-in-package-co
+                */
+                true
+            } else {
+                false
+            }
+        },
+
+        _ => false,
+    }
+}
+
+fn is_top_level_directive(symbol: &str) -> bool {
+    [
+        "BeginPackage",
+        "Begin",
+        "Needs",
+        "End",
+        "EndPackage",
+        "Clear",
+        "ClearAll",
+        "SetOptions",
+        "SetAttributes",
+        "System`Private`NewContextPath",
+        "System`Private`RestoreContextPath",
+        "Protect",
+        "Unprotect",
+        "Package",
+        "PackageImport",
+        "PackageScope",
+        "PackageExport",
+        "Get",
+        "SetDelayed",
+        "UpSetDelayed",
+        "TagSetDelayed",
+    ]
+    .contains(&symbol)
 }
 
 fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
@@ -801,8 +869,12 @@ Begin["`Private`"]
 #[test]
 fn test_is_new_statement_line() {
     assert!(is_new_statement_line("foo = bar"));
+    assert!(is_new_statement_line("foo := bar"));
+    assert!(is_new_statement_line("foo=bar"));
+    assert!(is_new_statement_line("foo   =   bar"));
     assert!(is_new_statement_line("foo[x] = y"));
     assert!(is_new_statement_line("(* :Name: Foo *)"));
+    assert!(is_new_statement_line("(*     :Name: Foo     *)"));
     assert!(is_new_statement_line("(* ::Package:: *)"));
     assert!(is_new_statement_line("(* ::Package::Bar:: *)"));
     assert!(is_new_statement_line("(* ::Package:: hmmm *)"));
@@ -814,10 +886,11 @@ fn test_is_new_statement_line() {
 
     assert!(!is_new_statement_line("    5,"));
     assert!(!is_new_statement_line("foo"));
+    assert!(!is_new_statement_line(" foo = bar"));
     assert!(!is_new_statement_line(""));
     assert!(!is_new_statement_line("(* Normal comment *)"));
-    assert!(!is_new_statement_line("\n"));
-    assert!(!is_new_statement_line("\n\n"));
+    // assert!(!is_new_statement_line("\n"));
+    // assert!(!is_new_statement_line("\n\n"));
     assert!(!is_new_statement_line("foo[\"Foo`\"]"));
 }
 

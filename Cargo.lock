@@ -933,7 +933,6 @@ dependencies = [
  "memchr",
  "once_cell",
  "pretty_assertions",
- "regex",
  "wolfram-expr",
  "wolfram-library-link",
 ]
