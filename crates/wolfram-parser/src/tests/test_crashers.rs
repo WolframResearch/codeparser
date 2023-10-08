@@ -8,7 +8,7 @@ use pretty_assertions::assert_eq;
 
 #[test]
 fn CrashTest_Crash0_tokens() {
-    let bufAndLen: &[u8] = &[b'1', b'\\', b'\n'];
+    let bufAndLen: &[u8] = b"1\\\n";
 
     let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
 
@@ -28,7 +28,7 @@ fn CrashTest_Crash0_tokens() {
 
 #[test]
 fn CrashTest_Crash1() {
-    let bufAndLen = &[b'1', b':', b':', b'*', b'\\', b'\r', b'\n'];
+    let bufAndLen = b"1::*\\\r\n";
 
     let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
 
@@ -66,9 +66,7 @@ fn CrashTest_StackOverflow1() {
 
 #[test]
 fn CrashTest_Crash2() {
-    let arr: &[u8] = &[b'\\', b':', b'f', b'e', b'f', b'f'];
-
-    let bufAndLen = arr;
+    let bufAndLen = b"\\:feff";
 
     let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
 
@@ -80,9 +78,7 @@ fn CrashTest_Crash2() {
 
 #[test]
 fn CrashTest_Crash3() {
-    let arr: &[u8] = &[b'a', b':', b'b', b'~', b'1', b':', b'2'];
-
-    let bufAndLen = arr;
+    let bufAndLen = b"a:b~1:2";
 
     let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
 
@@ -111,9 +107,7 @@ fn CrashTest_Crash4() {
 
 #[test]
 fn CrashTest_Crash5() {
-    let arr: &[u8] = &[b'{', b'\t', b'1', b'\\', b'\n', b'^'];
-
-    let bufAndLen = arr;
+    let bufAndLen = b"{\t1\\\n^";
 
     let mut session = ParserSession::new(
         bufAndLen,

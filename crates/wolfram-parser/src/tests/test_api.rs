@@ -156,9 +156,7 @@ fn APITest_Crash7() {
 //
 #[test]
 fn APITest_Crash8() {
-    const ARR: &[u8] = &[b'(', b'*', b'\r', b'\n', b'*', b')'];
-
-    let bufAndLen = ARR;
+    let bufAndLen = b"(*\r\n*)";
 
     let mut session = ParserSession::new(
         bufAndLen,

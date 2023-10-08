@@ -224,7 +224,7 @@ fn TokenizerTest_Basic4() {
 
 #[test]
 fn TokenizerTest_Crash1() {
-    let arr = &[b'6', b'`', b'5', b'.', b'.'];
+    let arr = b"6`5..";
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
