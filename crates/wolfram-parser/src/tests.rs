@@ -280,11 +280,11 @@ fn test_unterminated_group_reparse() {
             children: NodeSeq(vec![
                 Cst::Token(token!(OpenParen, "(", src!(1:1-1:2))),
                 Cst::Token(token!(Symbol, "a", src!(1:2-1:3))),
+                Cst::Token(token!(Whitespace, " ", src!(1:3-1:4))),
+                Cst::Token(token!(Whitespace, " ", src!(1:4-1:5))),
             ],),
             src: src!(1:1-1:5).into(),
         },),),
-        Cst::Token(token!(Whitespace, " ", src!(1:3-1:4))),
-        Cst::Token(token!(Whitespace, " ", src!(1:4-1:5))),
     ]);
 
     //==================================
@@ -327,9 +327,6 @@ nextStatement
             ]),
             src: src!(2:1-3:4).into(),
         })),
-        // NOTE: Token for the non-trivial `nextStatement` does NOT appear here(?)
-        Cst::Token(token!(ToplevelNewline, "\n", src!(5:14-6:1))),
-        Cst::Token(token!(ToplevelNewline, "\n", src!(6:1-7:1))),
     ]);
 }
 
