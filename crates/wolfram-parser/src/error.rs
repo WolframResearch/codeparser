@@ -447,8 +447,14 @@ fn first_chunk_and_last_good_line(
 
 fn split_into_chunks<'s, 'i>(lines: &'s [Line<'i>]) -> Vec<&'s [Line<'i>]> {
     crate::utils::split_by_pairs(lines, |_, right| {
-        !CHUNK_PAT.is_match(right.content)
+        !is_new_statement_line(right.content)
     })
+}
+
+/// Returns `true` if `line` looks like it might be a new top-level statement
+/// in a Wolfram Language program.
+fn is_new_statement_line(line: &str) -> bool {
+    CHUNK_PAT.is_match(line)
 }
 
 fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
@@ -793,22 +799,26 @@ Begin["`Private`"]
 }
 
 #[test]
-fn test_chunk_pat() {
-    assert!(CHUNK_PAT.is_match("foo = bar"));
-    assert!(CHUNK_PAT.is_match("foo[x] = y"));
-    assert!(CHUNK_PAT.is_match("(* :Name: Foo *)"));
-    assert!(CHUNK_PAT.is_match("Needs[\"Foo`\"]"));
+fn test_is_new_statement_line() {
+    assert!(is_new_statement_line("foo = bar"));
+    assert!(is_new_statement_line("foo[x] = y"));
+    assert!(is_new_statement_line("(* :Name: Foo *)"));
+    assert!(is_new_statement_line("(* ::Package:: *)"));
+    assert!(is_new_statement_line("(* ::Package::Bar:: *)"));
+    assert!(is_new_statement_line("(* ::Package:: hmmm *)"));
+    assert!(is_new_statement_line("Needs[\"Foo`\"]"));
 
-    assert!(!CHUNK_PAT.is_match("Set[foo, bar]"));
-    assert!(CHUNK_PAT.is_match("SetDelayed[foo, bar]"));
+    assert!(!is_new_statement_line("Set[foo, bar]"));
+    assert!(is_new_statement_line("SetDelayed[foo, bar]"));
+    assert!(is_new_statement_line("SetDelayed["));
 
-    assert!(!CHUNK_PAT.is_match("    5,"));
-    assert!(!CHUNK_PAT.is_match("foo"));
-    assert!(!CHUNK_PAT.is_match(""));
-    assert!(!CHUNK_PAT.is_match("(* Normal comment *)"));
-    assert!(!CHUNK_PAT.is_match("\n"));
-    assert!(!CHUNK_PAT.is_match("\n\n"));
-    assert!(!CHUNK_PAT.is_match("foo[\"Foo`\"]"));
+    assert!(!is_new_statement_line("    5,"));
+    assert!(!is_new_statement_line("foo"));
+    assert!(!is_new_statement_line(""));
+    assert!(!is_new_statement_line("(* Normal comment *)"));
+    assert!(!is_new_statement_line("\n"));
+    assert!(!is_new_statement_line("\n\n"));
+    assert!(!is_new_statement_line("foo[\"Foo`\"]"));
 }
 
 #[test]
