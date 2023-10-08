@@ -470,6 +470,18 @@ fn is_new_statement_line(line: &str) -> bool {
             ..
         }, ..] => true,
 
+        // foo[
+        //     arg1_,
+        //     arg2_,
+        // ] := ..       <= this line
+        [Token {
+            tok: TokenKind::CloseSquare,
+            ..
+        }, Token {
+            tok: TokenKind::Equal | TokenKind::ColonEqual,
+            ..
+        }, ..] => true,
+
         // (* .. *)
         [Token {
             tok: TokenKind::Comment,
@@ -837,6 +849,7 @@ Begin["`Private`"]
 
     let chunks: Vec<&[Line]> = split_into_chunks(&lines);
 
+    #[rustfmt::skip]
     assert_eq!(
         chunks,
         vec![
@@ -846,6 +859,8 @@ Begin["`Private`"]
                 Line::new("    (* unterminated comment", "\n"),
                 Line::new("    x_Integer,", "\n"),
                 Line::new("    x_Real", "\n"),
+            ].as_slice(),
+            [
                 Line::new("] := Module[{},", "\n"),
                 Line::new("    x + 1", "\n"),
                 Line::new("]", "\n"),
@@ -857,13 +872,17 @@ Begin["`Private`"]
                 Line::new("", "\n"),
                 Line::new("baaz[", "\n"),
                 Line::new("    x_", "\n"),
+            ].as_slice(),
+            [
                 Line::new("] := x / 2", "\n"),
                 Line::new("", "\n"),
             ]
             .as_slice(),
-            [Line::new("Begin[\"`Private`\"]", "\n"),].as_slice()
+            [
+                Line::new("Begin[\"`Private`\"]", "\n"),
+            ].as_slice()
         ]
-    )
+    );
 }
 
 #[test]
@@ -879,6 +898,9 @@ fn test_is_new_statement_line() {
     assert!(is_new_statement_line("(* ::Package::Bar:: *)"));
     assert!(is_new_statement_line("(* ::Package:: hmmm *)"));
     assert!(is_new_statement_line("Needs[\"Foo`\"]"));
+    // Not technically the first line in a new statement, but this kind of thing
+    // commonly appears in downvalue defs with lots of arguments.
+    assert!(is_new_statement_line("] := "));
 
     assert!(!is_new_statement_line("Set[foo, bar]"));
     assert!(is_new_statement_line("SetDelayed[foo, bar]"));
