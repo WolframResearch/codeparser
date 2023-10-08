@@ -619,31 +619,58 @@ impl<'i> Line<'i> {
 }
 
 fn split_lines_keep_sep<'i>(input: &'i str) -> Vec<(&'i str, &'i str)> {
+    if input == "" {
+        return vec![("", "")];
+    }
+
     //   lines = StringCases[
     //       str,
     //       Shortest[line:___ ~~ newline:("\r\n" | "\n" | "\r" | EndOfString)]
     //           :> {line, newline}
     //   ];
-    const SPLIT_LINES_REGEX: Lazy<Regex> =
-        Lazy::new(|| Regex::new("\r\n|\n|\r|$").unwrap());
 
-    let mut result = Vec::new();
-    let mut last = 0;
+    let mut lines = Vec::new();
+    let mut start = 0;
 
-    for match_ in SPLIT_LINES_REGEX.find_iter(input) {
-        let index = match_.start();
-        let terminator = match_.as_str();
+    let mut char_indices = input.char_indices();
 
-        result.push((&input[last..index], terminator));
+    while let Some((index, char)) = char_indices.next() {
+        match char {
+            '\n' => {
+                let line = &input[start..index];
+                let terminator = &input[index..index + 1];
+                lines.push((line, terminator));
 
-        last = index + terminator.len();
+                start = index + 1;
+            },
+            '\r' => match char_indices.next() {
+                Some((next_index, '\n')) => {
+                    let line = &input[start..index];
+                    let sep = &input[index..=next_index];
+                    lines.push((line, sep));
+
+                    start = next_index + 1;
+                },
+                // This \r is not followd by \n, which is still a valid line
+                // separator in WL.
+                _ => {
+                    let line = &input[start..index];
+                    let sep = &input[index..index + 1];
+                    lines.push((line, sep));
+
+                    start = index + 1;
+                },
+            },
+
+            _ => continue,
+        }
     }
 
-    if last < input.len() {
-        result.push((&input[last..], ""));
+    if start < input.len() {
+        lines.push((&input[start..], ""));
     }
 
-    result
+    lines
 }
 
 /// Get the rendered width of a line of tex
