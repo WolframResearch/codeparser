@@ -153,6 +153,29 @@ fn test_something() {
             src: src!(1:1-1:5).into(),
         })]
     );
+
+    // Test parsing call node where the head is a sequence with more than one
+    // Cst element.
+    assert_eq!(
+        nodes("f (* hello *)[x]"),
+        vec![Cst::Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![
+                Cst::Token(token!(Symbol, "f", 1:1-2)),
+                Cst::Token(token!(Whitespace, " ", 1:2-3)),
+                Cst::Token(token!(Comment, "(* hello *)", 1:3-14)),
+            ])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupSquare,
+                children: NodeSeq(vec![
+                    Cst::Token(token![OpenSquare, "[", src!(1:14-15)]),
+                    Cst::Token(token![Symbol, "x", src!(1:15-16)]),
+                    Cst::Token(token![CloseSquare, "]", src!(1:16-17)]),
+                ]),
+                src: src!(1:14-17).into(),
+            })),
+            src: src!(1:1-17).into(),
+        })]
+    );
 }
 
 #[test]
