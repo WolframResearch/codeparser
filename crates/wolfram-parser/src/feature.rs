@@ -28,7 +28,7 @@
 //!
 //! More generally, using a constant instead of a parse-time `#[cfg(..)]` to
 //! disable sections of code has the advantage that the code inside the
-//! condition is still validated and type checked, which doesn't have if
+//! condition is still validated and type checked, which doesn't happen if
 //! `#[cfg(..)]` is used.
 //!
 //! This makes code controlled by feature flags easier to keep up-to-date as
