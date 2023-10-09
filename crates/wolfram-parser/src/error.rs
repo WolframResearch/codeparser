@@ -16,26 +16,25 @@ use crate::{
 };
 
 pub(crate) fn reparse_unterminated<'i>(
-    nodes: AggNodeSeq<TokenStr<'i>>,
+    mut nodes: AggNodeSeq<TokenStr<'i>>,
     input: &'i str,
     tab_width: usize,
 ) -> AggNodeSeq<TokenStr<'i>> {
     // TODO(cleanup): Change function parameter to take tab width as u32.
     let tab_width = u32::try_from(tab_width).unwrap();
 
-    nodes.map_visit(&mut |node| match node {
-        Cst::Token(token)
-            if token.tok.isError() && token.tok.isUnterminated() =>
-        {
-            let token =
-                reparse_unterminated_token_error_node(token, input, tab_width);
+    nodes.visit_mut(&mut |node| {
+        let Cst::Token(token) = node else { return };
 
-            Cst::Token(token)
-        },
-        other => other,
-    })
+        if token.tok.isError() && token.tok.isUnterminated() {
+            reparse_unterminated_token_error_node(token, input, tab_width);
+        }
+    });
+
+    nodes
 }
 
+// TODO(test): Add test cases that cover this code path.
 pub(crate) fn reparse_unterminated_tokens<'i>(
     tokens: Tokens<TokenStr<'i>>,
     input: &'i str,
@@ -44,22 +43,13 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
     // TODO(cleanup): Change function parameter to take tab width as u32.
     let tab_width = u32::try_from(tab_width).unwrap();
 
-    let Tokens(tokens) = tokens;
+    let Tokens(mut tokens) = tokens;
 
-    let tokens = tokens
-        .into_iter()
-        .map(&mut |token: Token<_>| {
-            if token.tok.isError() && token.tok.isUnterminated() {
-                let token = reparse_unterminated_token_error_node(
-                    token, input, tab_width,
-                );
-
-                token
-            } else {
-                token
-            }
-        })
-        .collect();
+    for token in &mut tokens {
+        if token.tok.isError() && token.tok.isUnterminated() {
+            reparse_unterminated_token_error_node(token, input, tab_width);
+        }
+    }
 
     Tokens(tokens)
 }
@@ -165,17 +155,21 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
 //
 // Do not return the previous children, because they are useless any way.
 fn reparse_unterminated_token_error_node<'i>(
-    error: Token<TokenStr<'i>>,
+    error: &mut Token<TokenStr<'i>>,
     str: &'i str,
     tab_width: u32,
-) -> Token<TokenStr<'i>> {
+) {
     debug_assert!(error.tok.isError() && error.tok.isUnterminated());
 
     // TODO: Use `input` here to optimize the process_lines() calculation?
-    let Token { tok, input: _, src } = error;
+    let Token {
+        tok: _,
+        input: _,
+        src,
+    } = error;
 
     let (first_chunk, last_good_line_index, better_src) =
-        first_chunk_and_last_good_line(str, tab_width, src);
+        first_chunk_and_last_good_line(str, tab_width, src.clone());
 
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
@@ -224,11 +218,8 @@ fn reparse_unterminated_token_error_node<'i>(
         SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
-    Token {
-        tok,
-        input: better_str,
-        src: better_src,
-    }
+    error.input = better_str;
+    error.src = better_src;
 }
 
 fn make_better_input<'i>(better: &'i str) -> TokenStr<'i> {

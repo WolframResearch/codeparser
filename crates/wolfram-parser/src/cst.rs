@@ -287,6 +287,14 @@ impl<I, S> CstSeq<I, S> {
         }
     }
 
+    pub fn visit_mut(&mut self, visit: &mut dyn FnMut(&mut Cst<I, S>)) {
+        let NodeSeq(elements) = self;
+
+        for elem in elements {
+            elem.visit_mut(visit);
+        }
+    }
+
     pub fn map_visit(
         self,
         visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
@@ -415,6 +423,65 @@ impl<I, S> Cst<I, S> {
             }) => {
                 children.visit(visit);
             },
+            // These node types have no child nodes.
+            Cst::Code(_) => (),
+        }
+    }
+
+    /// Mutably visit this node and every child node, recursively.
+    pub fn visit_mut(&mut self, visit: &mut dyn FnMut(&mut Cst<I, S>)) {
+        // Visit the current node.
+        visit(self);
+
+        // Visit child nodes.
+        match self {
+            Cst::Token(_) => (),
+            Cst::Call(CallNode { head, body, src: _ }) => {
+                head.visit_mut(visit);
+
+                body.as_op_mut().visit_children_mut(visit);
+            },
+            Cst::SyntaxError(SyntaxErrorNode {
+                err: _,
+                children,
+                src: _,
+            }) => children.visit_mut(visit),
+
+            Cst::Infix(InfixNode(op)) => {
+                op.visit_children_mut(visit);
+            },
+            Cst::Prefix(PrefixNode(op)) => {
+                op.visit_children_mut(visit);
+            },
+            Cst::Postfix(PostfixNode(op)) => {
+                op.visit_children_mut(visit);
+            },
+            Cst::Binary(BinaryNode(op)) => {
+                op.visit_children_mut(visit);
+            },
+            Cst::Ternary(TernaryNode(op)) => {
+                op.visit_children_mut(visit);
+            },
+            Cst::PrefixBinary(PrefixBinaryNode(op)) => {
+                op.visit_children_mut(visit)
+            },
+            Cst::Compound(CompoundNode(op)) => op.visit_children_mut(visit),
+            Cst::Group(GroupNode(op)) => op.visit_children_mut(visit),
+            Cst::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                op.visit_children_mut(visit)
+            },
+            Cst::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                op.visit_children_mut(visit)
+            },
+
+            Cst::Box(BoxNode {
+                kind: _,
+                children,
+                src: _,
+            }) => {
+                children.visit_mut(visit);
+            },
+
             // These node types have no child nodes.
             Cst::Code(_) => (),
         }
@@ -702,6 +769,17 @@ impl<I, S, O> OperatorNode<I, S, O> {
         children.visit(visit);
     }
 
+    /// Mutably visit this node and every child node, recursively.
+    fn visit_children_mut(&mut self, visit: &mut dyn FnMut(&mut Cst<I, S>)) {
+        let OperatorNode {
+            op: _,
+            children,
+            src: _,
+        } = self;
+
+        children.visit_mut(visit);
+    }
+
     pub fn map_visit(
         self,
         visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
@@ -875,6 +953,14 @@ impl<I, S> CallHead<I, S> {
         }
     }
 
+    /// Mutably visit this node and every child node, recursively.
+    pub fn visit_mut(&mut self, visit: &mut dyn FnMut(&mut Cst<I, S>)) {
+        match self {
+            CallHead::Concrete(head) => head.visit_mut(visit),
+            CallHead::Aggregate(head) => head.visit_mut(visit),
+        }
+    }
+
     pub fn map_visit(
         self,
         visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
@@ -900,6 +986,13 @@ impl<I, S> CallHead<I, S> {
 
 impl<I, S> CallBody<I, S> {
     pub fn as_op(&self) -> &OperatorNode<I, S, CallOperator> {
+        match self {
+            CallBody::Group(GroupNode(op)) => op,
+            CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => op,
+        }
+    }
+
+    pub fn as_op_mut(&mut self) -> &mut OperatorNode<I, S, CallOperator> {
         match self {
             CallBody::Group(GroupNode(op)) => op,
             CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => op,
