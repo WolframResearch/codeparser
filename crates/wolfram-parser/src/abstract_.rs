@@ -23,24 +23,24 @@ use crate::{
         TokenKind::{self, self as TK},
         TokenSource, TokenString,
     },
-    NodeSeq,
+    NodeSeq, QuirkSettings,
 };
 
 //==========================================================
 // Aggregate
 //==========================================================
 
-pub fn Aggregate<I: Debug, S: Debug>(agg: CstSeq<I, S>) -> AggNodeSeq<I, S> {
+pub fn aggregate_cst_seq<I: Debug, S: Debug>(
+    agg: CstSeq<I, S>,
+) -> AggNodeSeq<I, S> {
     let NodeSeq(agg) = agg;
 
-    let agg_children = agg.into_iter().flat_map(aggregate_replace).collect();
+    let agg_children = agg.into_iter().flat_map(aggregate_cst).collect();
 
     NodeSeq(agg_children)
 }
 
-pub fn aggregate_replace<I: Debug, S: Debug>(
-    node: Cst<I, S>,
-) -> Option<Cst<I, S>> {
+pub fn aggregate_cst<I: Debug, S: Debug>(node: Cst<I, S>) -> Option<Cst<I, S>> {
     let node: Cst<_, _> = match node {
         // Remove comments, whitespace, and newlines
         Cst::Token(Token {
@@ -66,7 +66,7 @@ pub fn aggregate_replace<I: Debug, S: Debug>(
             src,
         })) => {
             let aggregated_children: Vec<_> =
-                children.into_iter().flat_map(aggregate_replace).collect();
+                children.into_iter().flat_map(aggregate_cst).collect();
 
             // FIXME: Translate this line
             //aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
@@ -81,7 +81,7 @@ pub fn aggregate_replace<I: Debug, S: Debug>(
         Cst::Call(CallNode { head, body, src }) => {
             let head = match head {
                 CallHead::Concrete(head) => {
-                    let NodeSeq(head) = Aggregate(head);
+                    let NodeSeq(head) = aggregate_cst_seq(head);
 
                     // Aggregating the head of a call should reduce to a seqeuence with
                     // just one node.
@@ -116,7 +116,7 @@ pub fn aggregate_replace<I: Debug, S: Debug>(
         Cst::SyntaxError(SyntaxErrorNode { err, children }) => {
             Cst::SyntaxError(SyntaxErrorNode {
                 err,
-                children: Aggregate(children),
+                children: aggregate_cst_seq(children),
             })
         },
         Cst::Group(GroupNode(op)) => Cst::Group(GroupNode(aggregate_op(op))),
@@ -132,7 +132,7 @@ pub fn aggregate_replace<I: Debug, S: Debug>(
             src,
         }) => Cst::Box(BoxNode {
             kind,
-            children: Aggregate(children),
+            children: aggregate_cst_seq(children),
             src,
         }),
 
@@ -193,7 +193,7 @@ fn aggregate_op<I: Debug, S: Debug, O>(
 
     OperatorNode {
         op,
-        children: Aggregate(children),
+        children: aggregate_cst_seq(children),
         src,
     }
 }
@@ -292,7 +292,19 @@ macro_rules! expect_children {
 // Functions
 //--------------------------------------
 
-pub(crate) fn Abstract<I: TokenInput + Debug, S: TokenSource + Debug>(
+pub fn abstract_cst<I: TokenInput + Debug, S: TokenSource + Debug>(
+    cst: Cst<I, S>,
+    quirks: QuirkSettings,
+) -> Ast {
+    // FIXME: Just pass this as a normal argument through the abstraction
+    //        logic.
+    crate::quirks::set_quirks(quirks);
+
+    abstract_(cst)
+}
+
+// TODO(cleanup): Should also take quirks if made public.
+fn abstract_cst_seq<I: TokenInput + Debug, S: TokenSource + Debug>(
     agg: AggNodeSeq<I, S>,
 ) -> Vec<Ast> {
     let NodeSeq(agg) = agg;
@@ -304,7 +316,7 @@ pub(crate) fn Abstract<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 // TODO(cleanup): Make this private again. Abstract(..) is the crate-public
 //                interface.
-pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
+fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
     node: Cst<I, S>,
 ) -> Ast {
     match node {
@@ -950,7 +962,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             let comma_children =
                                 part_span_even_children(comma_children, None);
                             let comma_children =
-                                Abstract(NodeSeq(comma_children));
+                                abstract_cst_seq(NodeSeq(comma_children));
 
                             WL!( AbstractSyntaxErrorNode[OpenParen, comma_children, data] )
                         },
@@ -963,7 +975,8 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             // children[[2 ;; -2]]
                             let children =
                                 part_span_drop_first_and_last(children);
-                            let children = Abstract(NodeSeq(children));
+
+                            let children = abstract_cst_seq(NodeSeq(children));
 
                             WL!( AbstractSyntaxErrorNode[OpenParen, children, data] )
                         },
@@ -992,7 +1005,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 None,
                             );
                             let comma_children =
-                                Abstract(NodeSeq(comma_children));
+                                abstract_cst_seq(NodeSeq(comma_children));
 
                             WL!( AbstractSyntaxErrorNode[OpenSquare, comma_children, data] )
                         },
@@ -1022,7 +1035,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 None,
                             );
                             let comma_children =
-                                Abstract(NodeSeq(comma_children));
+                                abstract_cst_seq(NodeSeq(comma_children));
 
                             WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, comma_children, data] )
                         },
@@ -1052,7 +1065,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 None,
                             );
                             let comma_children =
-                                Abstract(NodeSeq(comma_children));
+                                abstract_cst_seq(NodeSeq(comma_children));
 
                             WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, comma_children, data] )
                         },

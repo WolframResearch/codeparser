@@ -7,7 +7,7 @@ use wolfram_library_link::sys::WolframLibraryData;
 use Diagnostics::*;
 
 use crate::{
-    abstract_::{Abstract, Aggregate},
+    abstract_::{abstract_cst, aggregate_cst_seq},
     ast::Ast,
     cst::{Cst, CstSeq},
     feature,
@@ -148,8 +148,6 @@ impl<'i> ParserSession<'i> {
     }
 
     pub fn abstract_parse_expressions(&mut self) -> ParseResult<Ast> {
-        quirks::set_quirks(self.quirk_settings);
-
         let ParseResult {
             nodes,
             unsafe_character_encoding,
@@ -158,8 +156,12 @@ impl<'i> ParserSession<'i> {
             tracked,
         } = self.concrete_parse_expressions();
 
-        let nodes = Aggregate(nodes);
-        let nodes = Abstract(nodes);
+        let NodeSeq(nodes) = aggregate_cst_seq(nodes);
+
+        let nodes = nodes
+            .into_iter()
+            .map(|cst| abstract_cst(cst, self.quirk_settings))
+            .collect();
 
         ParseResult {
             nodes: NodeSeq(nodes),

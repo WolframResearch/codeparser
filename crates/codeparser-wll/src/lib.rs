@@ -23,7 +23,7 @@ use wolfram_library_link::{
 };
 
 use wolfram_parser::{
-    abstract_::{abstract_, aggregate_replace, Aggregate},
+    abstract_::{abstract_cst, aggregate_cst, aggregate_cst_seq},
     cst::Cst,
     quirks::QuirkSettings,
     source::SourceConvention,
@@ -319,7 +319,7 @@ pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
         }) => {
             let body = match body {
                 ContainerBody::Nodes(nodes) => {
-                    ContainerBody::Nodes(Aggregate(nodes))
+                    ContainerBody::Nodes(aggregate_cst_seq(nodes))
                 },
                 ContainerBody::Missing(_) => body,
             };
@@ -342,7 +342,7 @@ pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
             panic!("Error parsing ContainerNode: {err}")
         },
         Err(_) => match Cst::from_expr(&arg) {
-            Ok(cst) => match aggregate_replace(cst) {
+            Ok(cst) => match aggregate_cst(cst) {
                 Some(agg) => agg.put(link),
                 None => link.put_symbol(sym::Nothing.as_str()).unwrap(),
             },
@@ -368,8 +368,12 @@ pub fn Abstract_LibraryLink(link: &mut wstp::Link) {
 
     let arg = args.remove(0);
 
+    // FIXME: These should be passed in as an argument, not just always the
+    //        default.
+    let quirk_settings = QuirkSettings::default();
+
     let node = match Cst::from_expr(&arg) {
-        Ok(node) => abstract_(node),
+        Ok(node) => abstract_cst(node, quirk_settings),
         Err(err) => panic!("Error parsing arg: {err}: (expr: {arg})"),
     };
 
