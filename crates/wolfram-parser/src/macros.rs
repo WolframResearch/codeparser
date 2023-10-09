@@ -28,6 +28,16 @@
 /// // Characters 1 through 4
 /// let span: CharacterSpan = src!(1-4);
 /// ```
+///
+/// ## Boxes
+///
+/// Construct a [`Source::BoxPosition`][crate::source::Source::BoxPosition]:
+///
+/// ```
+/// # use wolfram_parser::{macros::src, source::Source};
+/// let pos: Source = src!({1, 2, 3});
+/// ```
+///
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __src {
@@ -69,6 +79,14 @@ macro_rules! __src {
     };
     ($start:literal .. $end:literal) => {
         $crate::source::CharacterSpan($start, $end)
+    };
+
+    //==================================
+    // Boxes
+    //==================================
+
+    ({$($value:literal),*}) => {
+        $crate::source::Source::BoxPosition(vec![$($value),*])
     };
 }
 
@@ -116,6 +134,15 @@ macro_rules! __token {
     // token!(Kind, "...", 1:1-2)
     ($kind:ident, $input:tt, $l1:literal : $c1:literal  -  $c2:literal) => {
         $crate::macros::token!($kind, $input, $crate::macros::src!($l1:$c1-$c2))
+    };
+
+    // token!(Kind, "...", {1, 2, 3})
+    ($kind:ident, $input:tt, {$($value:literal),*}) => {
+        $crate::tokenize::Token {
+            tok: $crate::tokenize::TokenKind::$kind,
+            src: $crate::macros::src!({$($value),*}),
+            input: $crate::tokenize::TokenStr::new($input.as_ref()),
+        }
     };
 
     ($kind:ident, $input:tt, $src:expr) => {

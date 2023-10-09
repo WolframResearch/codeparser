@@ -245,6 +245,37 @@ fn test_call_head_seq() {
 }
 
 #[test]
+fn test_ast_src() {
+    let ast = crate::parse_ast("a/", &Default::default());
+    let [ast]: &[_; 1] = ast.nodes().try_into().unwrap();
+
+    assert_eq!(ast.span(), src!(1:1-3).into());
+}
+
+#[test]
+fn test_box_source_recovery() {
+    // Copied from from TestID -> "Abstract-20210504-G2K4C0" concrete parse.
+    let cst: CallNode<_, Source> = CallNode {
+        head: CallHead::Concrete(NodeSeq(vec![Cst::Token(
+            token![Symbol, "Begin", {1, 1, 1}],
+        )])),
+        body: CallBody::Group(GroupNode(OperatorNode {
+            op: CallOperator::CodeParser_GroupSquare,
+            children: NodeSeq(vec![
+                Cst::Token(token![OpenSquare, "[", {1, 1, 2}]),
+                Cst::Token(token![String, "\"FindMinimumTrek`\"", {1, 1, 3}]),
+                Cst::Token(token![CloseSquare, "]", {1, 1, 4}]),
+            ]),
+            src: Source::unknown(),
+        })),
+        src: src!({ 1 }), // <|Source -> {1} |>
+    };
+
+    assert_eq!(cst.src, Source::BoxPosition(vec![1]))
+}
+
+
+#[test]
 pub fn test_tokenize_is_not_idempotent() {
     let mut session = ParserSession::new(
         "2+2".as_bytes(),
