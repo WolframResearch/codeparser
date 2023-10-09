@@ -1,6 +1,6 @@
 use crate::{
     macros::{src, token},
-    source::{Location, NextPolicyBits::RETURN_TOPLEVELNEWLINE, TOPLEVEL},
+    source::{NextPolicyBits::RETURN_TOPLEVELNEWLINE, TOPLEVEL},
     tests::tokens,
     tokenize_bytes, ParseOptions, ParserSession, Tokens,
 };

@@ -730,7 +730,10 @@ impl FromExpr for Source {
 
 fn location_new(first: u32, second: u32) -> Location {
     if let Some(line) = NonZeroU32::new(first) {
-        Location::LineColumn(LineColumn(line, second))
+        let Some(column) = NonZeroU32::new(second) else {
+            todo!("Source location column must not be zero")
+        };
+        Location::LineColumn(LineColumn(line, column))
     } else {
         debug_assert!(first == 0);
 

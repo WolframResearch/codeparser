@@ -35,7 +35,7 @@ macro_rules! __src {
     ($line:literal : $column:literal) => {
         $crate::source::LineColumn(
             std::num::NonZeroU32::new($line).expect("line must not be zero"),
-            $column,
+            std::num::NonZeroU32::new($column).expect("column must not be zero"),
         )
     };
 
@@ -45,30 +45,21 @@ macro_rules! __src {
             start: $crate::source::LineColumn(
                 std::num::NonZeroU32::new($line1)
                     .expect("start line must not be zero"),
-                $column1,
+                std::num::NonZeroU32::new($column1)
+                    .expect("start column must not be zero"),
             ),
             end: $crate::source::LineColumn(
                 std::num::NonZeroU32::new($line2)
                     .expect("end line must not be zero"),
-                $column2,
+                std::num::NonZeroU32::new($column2)
+                    .expect("end column must not be zero"),
             ),
         }
     };
 
     // a:b-c
     ($line1:literal : $column1:literal  -  $column2:literal) => {
-        $crate::source::LineColumnSpan {
-            start: $crate::source::LineColumn(
-                std::num::NonZeroU32::new($line1)
-                    .expect("start line must not be zero"),
-                $column1,
-            ),
-            end: $crate::source::LineColumn(
-                std::num::NonZeroU32::new($line1)
-                    .expect("end line must not be zero"),
-                $column2,
-            ),
-        }
+        $crate::macros::src!($line1 : $column1 - $line1 : $column2)
     };
 
     // TODO: Pick only one of these syntaxes to use

@@ -993,7 +993,7 @@ impl WstpPut for Location {
     fn put(&self, callLink: &mut wstp::Link) {
         let (first, second) = match self {
             Location::LineColumn(LineColumn(line, column)) => {
-                (line.get(), *column)
+                (line.get(), column.get())
             },
             Location::CharacterIndex(index) => (0, *index),
         };

@@ -41,7 +41,8 @@ use crate::{
         SourceConvention, Span,
     },
     tokenize::tokenizer::UnsafeCharacterEncoding,
-    utils, EncodingMode,
+    utils::{self, non_zero_u32_incr},
+    EncodingMode,
 };
 
 //
@@ -1136,9 +1137,10 @@ fn ByteDecoder_bom(
 impl SourceConvention {
     pub fn newSourceLocation(&self) -> Location {
         match self {
-            SourceConvention::LineColumn => {
-                Location::LineColumn(LineColumn(NonZeroU32::MIN, 1))
-            },
+            SourceConvention::LineColumn => Location::LineColumn(LineColumn(
+                NonZeroU32::MIN,
+                NonZeroU32::MIN,
+            )),
             SourceConvention::CharacterIndex => Location::CharacterIndex(1),
         }
     }
@@ -1150,7 +1152,7 @@ impl<'t> SourceManager<'t> {
         match self.loc {
             Location::LineColumn(LineColumn(line, column)) => {
                 *line = line.checked_add(1).expect("line overflows u32");
-                *column = 1;
+                *column = NonZeroU32::MIN;
             },
             Location::CharacterIndex(index) => {
                 *index += 1;
@@ -1162,7 +1164,7 @@ impl<'t> SourceManager<'t> {
         match self.loc {
             Location::LineColumn(LineColumn(line, column)) => {
                 *line = line.checked_add(1).expect("line overflows u32");
-                *column = 1;
+                *column = NonZeroU32::MIN;
             },
             Location::CharacterIndex(index) => {
                 *index += 2;
@@ -1174,9 +1176,10 @@ impl<'t> SourceManager<'t> {
         match self.loc {
             Location::LineColumn(LineColumn(_, column)) => {
                 let currentTabStop =
-                    self.tab_width * ((*column - 1) / self.tab_width) + 1;
+                    self.tab_width * ((column.get() - 1) / self.tab_width) + 1;
 
-                *column = currentTabStop + self.tab_width;
+                *column =
+                    NonZeroU32::new(currentTabStop + self.tab_width).unwrap();
             },
             Location::CharacterIndex(index) => {
                 *index += 1;
@@ -1186,7 +1189,9 @@ impl<'t> SourceManager<'t> {
 
     fn increment(&mut self) {
         match self.loc {
-            Location::LineColumn(LineColumn(_, column)) => *column += 1,
+            Location::LineColumn(LineColumn(_, column)) => {
+                *column = non_zero_u32_incr(*column)
+            },
             Location::CharacterIndex(index) => *index += 1,
         }
     }

@@ -17,6 +17,7 @@ use crate::{
         wl_character::{Escape, WLCharacter},
     },
     tokenize::tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
+    utils::non_zero_u32_incr,
 };
 
 use wolfram_expr::Expr;
@@ -455,7 +456,7 @@ pub struct LineColumn(
     /// The line.
     pub NonZeroU32,
     /// The column.
-    pub u32,
+    pub NonZeroU32,
 );
 
 /// A span of input by line-column start and end point.
@@ -542,7 +543,11 @@ impl Location {
         if feature::COMPUTE_SOURCE {
             match self {
                 Location::LineColumn(LineColumn(line, column)) => {
-                    Location::LineColumn(LineColumn(line, column + 1))
+                    Location::LineColumn(LineColumn(
+                        line,
+                        // column + 1
+                        non_zero_u32_incr(column),
+                    ))
                 },
                 Location::CharacterIndex(index) => {
                     Location::CharacterIndex(index + 1)
@@ -559,9 +564,10 @@ impl Location {
             //       even validly be equal to zero?
             match self {
                 Location::LineColumn(LineColumn(line, column)) => {
-                    debug_assert!(column >= 1);
-
-                    Location::LineColumn(LineColumn(line, column - 1))
+                    let previous = column.get() - 1;
+                    let previous = NonZeroU32::new(previous)
+                        .expect("previous column is 0");
+                    Location::LineColumn(LineColumn(line, previous))
                 },
                 Location::CharacterIndex(index) => {
                     debug_assert!(index >= 1);
@@ -650,7 +656,10 @@ impl Span {
         // Use incompatible values for `first`.
         Span {
             start: Location::CharacterIndex(0),
-            end: Location::LineColumn(LineColumn(NonZeroU32::MIN, 0)),
+            end: Location::LineColumn(LineColumn(
+                NonZeroU32::MIN,
+                NonZeroU32::MIN,
+            )),
         }
     }
 
@@ -720,7 +729,7 @@ impl LineColumn {
         line
     }
 
-    pub fn column(self) -> u32 {
+    pub fn column(self) -> NonZeroU32 {
         let LineColumn(_, column) = self;
 
         column
@@ -734,13 +743,13 @@ impl LineColumnSpan {
     /// ```
     /// use wolfram_parser::{source::LineColumn, macros::src};
     ///
-    /// assert!(src!(1:3-2:0).contains(src!(1:4)));
+    /// assert!(src!(1:3-2:1).contains(src!(1:4)));
     ///
-    /// assert!(!src!(1:3-2:0).contains(src!(2:4)));
+    /// assert!(!src!(1:3-2:1).contains(src!(2:4)));
     ///
-    /// assert!(src!(1:3-2:0).contains(src!(1:4)));
+    /// assert!(src!(1:3-2:1).contains(src!(1:4)));
     ///
-    /// assert!(!src!(1:3-2:0).contains(src!(2:4)));
+    /// assert!(!src!(1:3-2:1).contains(src!(2:4)));
     /// ```
     pub fn contains(self, cursor: LineColumn) -> bool {
         let LineColumnSpan {
@@ -808,7 +817,7 @@ impl LineColumnSpan {
             "SpanKind::column_width(): source locations are on different lines"
         );
 
-        return end.column() as usize - start.column() as usize;
+        return end.column().get() as usize - start.column().get() as usize;
     }
 }
 

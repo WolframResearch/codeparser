@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use crate::{
     generated::long_names_registration::*,
     issue::CodeAction,
@@ -557,4 +559,28 @@ fn test_split_by_pairs() {
             &[15, 16]
         ]
     );
+}
+
+//=======================================
+// Mutating NonZeruU32 values
+//=======================================
+
+#[inline]
+pub(crate) fn non_zero_u32_incr(value: NonZeroU32) -> NonZeroU32 {
+    debug_assert!(
+        value.checked_add(1).is_some(),
+        "NonZeroU32 increment overflows u32"
+    );
+
+    value.saturating_add(1)
+}
+
+#[inline]
+pub(crate) fn non_zero_u32_add(value: NonZeroU32, add: u32) -> NonZeroU32 {
+    debug_assert!(
+        value.checked_add(add).is_some(),
+        "NonZeroU32 add overflows u32"
+    );
+
+    value.saturating_add(add)
 }
