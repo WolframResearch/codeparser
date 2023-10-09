@@ -9,7 +9,7 @@ use Diagnostics::*;
 use crate::{
     abstract_::{Abstract, Aggregate},
     ast::Ast,
-    cst::{Cst, CstNodeSeq},
+    cst::{Cst, CstSeq},
     feature,
     issue::Issue,
     parse::{
@@ -185,7 +185,7 @@ impl<'i> ParserSession<'i> {
         // Collect all expressions
         //
 
-        let mut exprs: CstNodeSeq<TokenStr<'i>> = NodeSeq::new();
+        let mut exprs: CstSeq<TokenStr<'i>> = NodeSeq::new();
 
         loop {
             if feature::CHECK_ABORT && crate::abortQ() {
@@ -336,8 +336,8 @@ impl<'i> ParserSession<'i> {
 
     fn reparse_unterminated(
         &self,
-        mut nodes: CstNodeSeq<TokenStr<'i>>,
-    ) -> CstNodeSeq<TokenStr<'i>> {
+        mut nodes: CstSeq<TokenStr<'i>>,
+    ) -> CstSeq<TokenStr<'i>> {
         if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
             nodes = crate::error::reparse_unterminated(
                 nodes,

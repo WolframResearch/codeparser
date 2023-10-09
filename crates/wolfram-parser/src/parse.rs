@@ -43,7 +43,7 @@ use std::fmt::Debug;
 use crate::{
     cst::{
         BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, Cst,
-        CstNodeSeq, TernaryNode, TernaryOperator,
+        CstSeq, TernaryNode, TernaryOperator,
     },
     feature,
     panic_if_aborted,
@@ -302,7 +302,7 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)
     where
         N: Into<Cst<TokenStr<'i>>>,
-        F: FnOnce(CstNodeSeq<TokenStr<'i>>) -> N,
+        F: FnOnce(CstSeq<TokenStr<'i>>) -> N,
     {
         self.reduce(func);
 
@@ -314,7 +314,7 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn reduce<N, F>(&mut self, func: F)
     where
         N: Into<Cst<TokenStr<'i>>>,
-        F: FnOnce(CstNodeSeq<TokenStr<'i>>) -> N,
+        F: FnOnce(CstSeq<TokenStr<'i>>) -> N,
     {
         // Remove the top context
         let ctxt = self

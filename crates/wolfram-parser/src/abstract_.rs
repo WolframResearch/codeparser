@@ -8,7 +8,7 @@ use crate::{
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
         CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator, Cst,
-        CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        CstSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
         GroupOperator, InfixNode,
         InfixOperator::{self, self as Op},
         Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
@@ -30,9 +30,7 @@ use crate::{
 // Aggregate
 //==========================================================
 
-pub fn Aggregate<I: Debug, S: Debug>(
-    agg: CstNodeSeq<I, S>,
-) -> AggNodeSeq<I, S> {
+pub fn Aggregate<I: Debug, S: Debug>(agg: CstSeq<I, S>) -> AggNodeSeq<I, S> {
     let NodeSeq(agg) = agg;
 
     let agg_children = agg.into_iter().flat_map(aggregate_replace).collect();

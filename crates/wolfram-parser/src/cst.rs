@@ -18,8 +18,7 @@ use crate::{
 ///
 /// So pass around a structure that contains all of the nodes from the left,
 /// including comments and whitespace.
-// TODO(cleanup): CstSeq?
-pub type CstNodeSeq<I = TokenString, S = Span> = NodeSeq<Cst<I, S>>;
+pub type CstSeq<I = TokenString, S = Span> = NodeSeq<Cst<I, S>>;
 
 /// A concrete syntax tree (CST) node.
 ///
@@ -60,7 +59,7 @@ pub struct CodeNode<S = Span> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoxNode<I = TokenString, S = Span> {
     pub kind: BoxKind,
-    pub children: CstNodeSeq<I, S>,
+    pub children: CstSeq<I, S>,
     pub src: S,
 }
 
@@ -89,7 +88,7 @@ pub enum BoxKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OperatorNode<I = TokenString, S = Span, O = InfixOperator> {
     pub op: O,
-    pub children: CstNodeSeq<I, S>,
+    pub children: CstSeq<I, S>,
     pub src: S,
 }
 
@@ -142,7 +141,7 @@ pub enum CallHead<I, S> {
     ///
     /// Happens for e.g. `f [ x ]`, where the whitespace after `f` is a token
     /// associated with the head.
-    Concrete(CstNodeSeq<I, S>),
+    Concrete(CstSeq<I, S>),
 
     /// Aggregate and abstract Call nodes must have exactly one element in `head`,
     /// and serialize as `CallNode[node_, ..]`.
@@ -180,7 +179,7 @@ pub struct CompoundNode<I = TokenString, S = Span>(
 #[derive(Debug, Clone, PartialEq)]
 pub struct SyntaxErrorNode<I = TokenString, S = Span> {
     pub err: SyntaxErrorKind,
-    pub children: CstNodeSeq<I, S>,
+    pub children: CstSeq<I, S>,
     pub src: S,
 }
 
@@ -279,7 +278,7 @@ impl<I, S> From<CodeNode<S>> for Cst<I, S> {
 // NodeSeq
 //======================================
 
-impl<I, S> CstNodeSeq<I, S> {
+impl<I, S> CstSeq<I, S> {
     pub fn visit(&self, visit: &mut dyn FnMut(&Cst<I, S>)) {
         let NodeSeq(elements) = self;
 
@@ -349,7 +348,7 @@ impl<N> NodeSeq<N> {
     }
 }
 
-impl<I, S> CstNodeSeq<I, S> {
+impl<I, S> CstSeq<I, S> {
     pub(crate) fn check(&self) -> bool {
         let NodeSeq(vec) = self;
 
@@ -363,8 +362,8 @@ impl<I, S> CstNodeSeq<I, S> {
     }
 }
 
-impl<I: TokenInput, S> CstNodeSeq<I, S> {
-    pub(crate) fn into_owned_input(self) -> CstNodeSeq<TokenString, S> {
+impl<I: TokenInput, S> CstSeq<I, S> {
+    pub(crate) fn into_owned_input(self) -> CstSeq<TokenString, S> {
         let NodeSeq(nodes) = self;
 
         let nodes = nodes.into_iter().map(Cst::into_owned_input).collect();
@@ -651,7 +650,7 @@ impl LeafNode {
 //======================================
 
 impl<I, O> OperatorNode<I, Span, O> {
-    pub(crate) fn new(op: O, children: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: O, children: CstSeq<I>) -> Self {
         assert!(!children.is_empty());
 
         let src = Span::new_from_source(
@@ -736,7 +735,7 @@ impl<I, S> GroupMissingOpenerNode<I, S> {
 //======================================
 
 impl<I> PrefixNode<I> {
-    pub(crate) fn new(op: PrefixOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: PrefixOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixNodeCount);
 
         PrefixNode(OperatorNode::new(op, args))
@@ -744,7 +743,7 @@ impl<I> PrefixNode<I> {
 }
 
 impl<I> BinaryNode<I> {
-    pub(crate) fn new(op: BinaryOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: BinaryOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
 
         BinaryNode(OperatorNode::new(op, args))
@@ -752,7 +751,7 @@ impl<I> BinaryNode<I> {
 }
 
 impl<I> InfixNode<I> {
-    pub(crate) fn new(op: InfixOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: InfixOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
 
         InfixNode(OperatorNode::new(op, args))
@@ -760,7 +759,7 @@ impl<I> InfixNode<I> {
 }
 
 impl<I> TernaryNode<I> {
-    pub(crate) fn new(op: TernaryOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: TernaryOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_TernaryNodeCount);
 
         TernaryNode(OperatorNode::new(op, args))
@@ -768,7 +767,7 @@ impl<I> TernaryNode<I> {
 }
 
 impl<I> PostfixNode<I> {
-    pub(crate) fn new(op: PostfixOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: PostfixOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
 
         PostfixNode(OperatorNode::new(op, args))
@@ -776,7 +775,7 @@ impl<I> PostfixNode<I> {
 }
 
 impl<I> PrefixBinaryNode<I> {
-    pub(crate) fn new(op: PrefixBinaryOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: PrefixBinaryOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_PrefixBinaryNodeCount);
 
         PrefixBinaryNode(OperatorNode::new(op, args))
@@ -788,7 +787,7 @@ impl<I> PrefixBinaryNode<I> {
 //======================================
 
 impl<I> GroupNode<I> {
-    pub(crate) fn new(op: GroupOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupNodeCount);
 
         GroupNode(OperatorNode::new(op, args))
@@ -796,7 +795,7 @@ impl<I> GroupNode<I> {
 }
 
 impl<I> CompoundNode<I> {
-    pub(crate) fn new(op: CompoundOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: CompoundOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_CompoundNodeCount);
 
         CompoundNode(OperatorNode::new(op, args))
@@ -804,7 +803,7 @@ impl<I> CompoundNode<I> {
 }
 
 impl<I> GroupMissingCloserNode<I> {
-    pub(crate) fn new(op: GroupOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
         GroupMissingCloserNode(OperatorNode::new(op, args))
@@ -812,7 +811,7 @@ impl<I> GroupMissingCloserNode<I> {
 }
 
 impl<I> UnterminatedGroupNeedsReparseNode<I> {
-    pub(crate) fn new(op: GroupOperator, args: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
 
         UnterminatedGroupNeedsReparseNode(OperatorNode::new(op, args))
@@ -824,7 +823,7 @@ impl<I> UnterminatedGroupNeedsReparseNode<I> {
 //======================================
 
 impl<I> CallNode<I> {
-    pub(crate) fn concrete(head: CstNodeSeq<I>, body: CallBody<I>) -> Self {
+    pub(crate) fn concrete(head: CstSeq<I>, body: CallBody<I>) -> Self {
         debug_assert!(!head.is_empty());
 
         incr_diagnostic!(Node_CallNodeCount);
@@ -929,7 +928,7 @@ impl<I, S> CallBody<I, S> {
 //======================================
 
 impl<I> SyntaxErrorNode<I> {
-    pub(crate) fn new(err: SyntaxErrorKind, children: CstNodeSeq<I>) -> Self {
+    pub(crate) fn new(err: SyntaxErrorKind, children: CstSeq<I>) -> Self {
         assert!(!children.is_empty());
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);
