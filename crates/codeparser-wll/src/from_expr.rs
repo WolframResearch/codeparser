@@ -17,7 +17,7 @@ use wolfram_parser::{
     cst::{CompoundOperator, CstSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
-    source::{LineColumn, Location, Source, Span},
+    source::{LineColumn, Source, Span},
     symbols as sym,
     tokenize::{Token, TokenKind, TokenString},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq,
@@ -721,24 +721,51 @@ impl FromExpr for Source {
         let end_first = get_source_pos(&end[0])?;
         let end_second = get_source_pos(&end[1])?;
 
-        Ok(Source::Span(Span::new(
-            location_new(start_first, start_second),
-            location_new(end_first, end_second),
-        )))
+        let span = span_from_raw_values(
+            start_first,
+            start_second,
+            end_first,
+            end_second,
+        )?;
+
+        Ok(Source::Span(span))
     }
 }
 
-fn location_new(first: u32, second: u32) -> Location {
-    if let Some(line) = NonZeroU32::new(first) {
-        let Some(column) = NonZeroU32::new(second) else {
-            todo!("Source location column must not be zero")
-        };
-        Location::LineColumn(LineColumn(line, column))
-    } else {
-        debug_assert!(first == 0);
+fn span_from_raw_values(
+    start_first: u32,
+    start_second: u32,
+    end_first: u32,
+    end_second: u32,
+) -> Result<Span, String> {
+    let span = match [start_first, start_second, end_first, end_second]
+        .map(NonZeroU32::new)
+    {
+        [
+            Some(start_line), Some(start_column),
+            Some(end_line), Some(end_column)
+        ] => {
+            Span::line_column(
+                LineColumn(start_line, start_column),
+                LineColumn(end_line, end_column),
+            )
+        },
+        [
+            None, Some(start_char),
+            None, Some(end_char)
+        ] => {
+            Span::from_character_span(start_char.get(), end_char.get())
+        },
+        // FIXME: Construct Span::Unknown here instead, to avoid the hard error?
+        //        Ideally print a message as well, to distinguish this from a
+        //        truly just plain absent Source.
+        values => return Err(format!(
+            "Invalid source specification. Not recognizable as either line:column span or character span. Values: {:?}",
+            values
+        ))
+    };
 
-        Location::CharacterIndex(second)
-    }
+    Ok(span)
 }
 
 impl FromExpr for Span {

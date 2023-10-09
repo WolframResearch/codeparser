@@ -451,6 +451,20 @@ pub struct CharacterSpan(pub u32, pub u32);
 /// A position in the input specified by it's line and column.
 ///
 /// `LineColumn(line, column)`
+///
+/// # Ordering
+///
+/// Ordering of [`LineColumn`] positions is based on their logical position in
+/// the input:
+///
+/// ```
+/// use wolfram_parser::macros::src;
+///
+/// assert!(src!(1:1) < src!(1:2));
+/// assert!(src!(1:1) < src!(2:1));
+///
+/// assert!(src!(2:1) > src!(1:7));
+/// ```
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct LineColumn(
     /// The line.
@@ -621,7 +635,21 @@ impl CharacterSpan {
 }
 
 impl Span {
-    pub fn new(start: Location, end: Location) -> Self {
+    /// Construct a new span between locations given by their line and column
+    /// number.
+    pub fn line_column(start: LineColumn, end: LineColumn) -> Self {
+        assert!(
+            start <= end,
+            "Span::line_column: start ({start}) must come before end ({end})"
+        );
+
+        Span {
+            start: Location::LineColumn(start),
+            end: Location::LineColumn(end),
+        }
+    }
+
+    pub(crate) fn new(start: Location, end: Location) -> Self {
         assert!(start <= end);
 
         Span { start, end }
@@ -896,6 +924,15 @@ impl PartialOrd for Location {
             (Location::LineColumn { .. }, Location::CharacterIndex(_)) => None,
             (Location::CharacterIndex(_), Location::LineColumn { .. }) => None,
         }
+    }
+}
+
+impl PartialOrd for LineColumn {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let LineColumn(a_line, a_column) = self;
+        let LineColumn(b_line, b_column) = other;
+
+        (a_line, a_column).partial_cmp(&(b_line, b_column))
     }
 }
 
