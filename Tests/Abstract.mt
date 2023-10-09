@@ -40,7 +40,56 @@ Bug 409472
 *)
 cst = CodeConcreteParseBox[{RowBox[{"Begin", "[", "\"\<FindMinimumTrek`\>\"", "]"}], "\n", RowBox[{"End", "[", "]"}]}]
 
+Test[
+	cst,
+	ContainerNode[Box, {
+		CallNode[
+			{
+				LeafNode[Symbol, "Begin", <| Source -> {1, 1, 1} |>]
+			},
+			GroupNode[GroupSquare, {
+				LeafNode[Token`OpenSquare, "[", <| Source -> {1, 1, 2} |>],
+				LeafNode[String, "\"FindMinimumTrek`\"", <| Source -> {1, 1, 3}|>],
+				LeafNode[Token`CloseSquare, "]", <| Source -> {1, 1, 4} |>]
+			}, <||>],
+			<|Source -> {1} |>
+		],
+		LeafNode[Token`Newline, "\n", <| Source -> {2} |>],
+		CallNode[
+			{LeafNode[Symbol, "End", <| Source -> {3, 1, 1} |>]},
+			GroupNode[GroupSquare, {
+				LeafNode[Token`OpenSquare, "[", <| Source -> {3, 1, 2} |>],
+				LeafNode[Token`CloseSquare,	"]", <| Source -> {3, 1, 3} |>]
+			}, <||>],
+			<| Source -> {3} |>
+		]
+	}, <||>]
+]
+
 agg = CodeParser`Abstract`Aggregate[cst]
+
+Test[
+	agg,
+	ContainerNode[Box, {
+		CallNode[
+			LeafNode[Symbol, "Begin", <| Source -> {1, 1, 1} |>],
+			GroupNode[GroupSquare, {
+				LeafNode[Token`OpenSquare, "[", <| Source -> {1, 1, 2} |>],
+				LeafNode[String, "\"FindMinimumTrek`\"", <| Source -> {1, 1, 3}|>],
+				LeafNode[Token`CloseSquare, "]", <| Source -> {1, 1, 4} |>]
+			}, <||>],
+			<|Source -> {1} |>
+		],
+		CallNode[
+			LeafNode[Symbol, "End", <| Source -> {3, 1, 1} |>],
+			GroupNode[GroupSquare, {
+				LeafNode[Token`OpenSquare, "[", <| Source -> {3, 1, 2} |>],
+				LeafNode[Token`CloseSquare,	"]", <| Source -> {3, 1, 3} |>]
+			}, <||>],
+			<| Source -> {3} |>
+		]
+	}, <||>]
+]
 
 Test[
 	CodeParser`Abstract`Abstract[agg]
