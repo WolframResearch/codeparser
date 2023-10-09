@@ -23,6 +23,8 @@
 //   U+FEFF                  EF      BB          BF
 //
 
+use std::num::NonZeroU32;
+
 use crate::{
     feature,
     issue::{CodeAction, EncodingIssue, IssueTag, Severity},
@@ -1134,8 +1136,10 @@ fn ByteDecoder_bom(
 impl SourceConvention {
     pub fn newSourceLocation(&self) -> Location {
         match self {
-            SourceConvention::LineColumn => Location::new(1, 1),
-            SourceConvention::CharacterIndex => Location::new(0, 1),
+            SourceConvention::LineColumn => {
+                Location::LineColumn(LineColumn(NonZeroU32::MIN, 1))
+            },
+            SourceConvention::CharacterIndex => Location::CharacterIndex(1),
         }
     }
 }

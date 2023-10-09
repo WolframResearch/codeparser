@@ -538,17 +538,6 @@ impl Debug for Span {
 //======================================
 
 impl Location {
-    #[doc(hidden)]
-    pub fn new(first: u32, second: u32) -> Self {
-        if let Some(line) = NonZeroU32::new(first) {
-            Location::LineColumn(LineColumn(line, second))
-        } else {
-            debug_assert!(first == 0);
-
-            Location::CharacterIndex(second)
-        }
-    }
-
     pub(crate) fn next(self) -> Self {
         if feature::COMPUTE_SOURCE {
             match self {
@@ -560,7 +549,7 @@ impl Location {
                 },
             }
         } else {
-            Location::new(0, 0)
+            Location::CharacterIndex(0)
         }
     }
 
@@ -581,7 +570,7 @@ impl Location {
                 },
             }
         } else {
-            Location::new(0, 0)
+            Location::CharacterIndex(0)
         }
     }
 }

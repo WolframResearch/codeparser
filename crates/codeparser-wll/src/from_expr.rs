@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use wolfram_library_link::expr::{
     symbol::SymbolRef, Expr, ExprKind, Normal, Number, Symbol,
 };
@@ -15,7 +17,7 @@ use wolfram_parser::{
     cst::{CompoundOperator, CstNodeSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
-    source::{Location, Source, Span},
+    source::{LineColumn, Location, Source, Span},
     symbols as sym,
     tokenize::{Token, TokenKind, TokenString},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq,
@@ -720,9 +722,19 @@ impl FromExpr for Source {
         let end_second = get_source_pos(&end[1])?;
 
         Ok(Source::Span(Span::new(
-            Location::new(start_first, start_second),
-            Location::new(end_first, end_second),
+            location_new(start_first, start_second),
+            location_new(end_first, end_second),
         )))
+    }
+}
+
+fn location_new(first: u32, second: u32) -> Location {
+    if let Some(line) = NonZeroU32::new(first) {
+        Location::LineColumn(LineColumn(line, second))
+    } else {
+        debug_assert!(first == 0);
+
+        Location::CharacterIndex(second)
     }
 }
 

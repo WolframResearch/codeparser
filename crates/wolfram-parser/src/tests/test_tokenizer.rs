@@ -191,7 +191,7 @@ fn TokenizerTest_Basic4() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    assert_eq!(session.tokenizer.SrcLoc, Location::new(1, 1));
+    assert_eq!(session.tokenizer.SrcLoc, src!(1:1).into());
 
     assert_eq!(session.tokenizer.wasEOF, false);
 
@@ -202,7 +202,7 @@ fn TokenizerTest_Basic4() {
         token!(Error_UnsafeCharacterEncoding, [0xff], src!(1:1-1:2))
     );
 
-    assert_eq!(session.tokenizer.SrcLoc, Location::new(1, 1));
+    assert_eq!(session.tokenizer.SrcLoc, src!(1:1).into());
 
     assert_eq!(session.tokenizer.wasEOF, false);
 
@@ -214,7 +214,7 @@ fn TokenizerTest_Basic4() {
 
     Tok.skip(&mut session.tokenizer);
 
-    assert_eq!(session.tokenizer.SrcLoc, Location::new(1, 2));
+    assert_eq!(session.tokenizer.SrcLoc, src!(1:2).into());
 
     assert_eq!(session.tokenizer.wasEOF, true);
 
