@@ -16,7 +16,7 @@ use crate::{
         SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{Issue, IssueTag, Severity},
-    quirks::{self, processInfixBinaryAtQuirk, Quirk},
+    quirks::{self, Quirk},
     symbol::{self as sym, Symbol},
     tokenize::{
         Token, TokenInput,
@@ -2009,6 +2009,64 @@ fn abstractTimes_BinaryNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     .collect();
 
     WL!( CallNode[ToNode[Times], children, data] )
+}
+
+//======================================
+
+pub(crate) fn processInfixBinaryAtQuirk<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
+    node: Cst<I, S>,
+    symName: &str,
+) -> Cst<I, S> {
+    match node {
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::CodeParser_BinaryAt,
+            ref children,
+            src: _,
+        })) if quirks::is_quirk_enabled(Quirk::InfixBinaryAt) => {
+            let [left, middle, rhs] = expect_children(children.clone());
+
+            if !matches!(
+                left,
+                Cst::Token(Token {
+                    tok: TK::Symbol,
+                    input,
+                    ..
+                }) if input.as_str() == symName
+            ) {
+                return node;
+            }
+
+            if !matches!(middle, Cst::Token(Token { tok: TK::At, .. })) {
+                todo!()
+            }
+
+            // let data = rhs.source();
+
+            /* FIXME: Port this issue handling logic.
+                issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+                synthesizedSource = {symData[[Key[Source], 1]], atData[[Key[Source], 2]]};
+
+                AppendTo[
+                    issues,
+                    SyntaxIssue[
+                        "InfixBinaryAtQuirk", "Unexpected parse.", "Remark",
+                        <| Source -> synthesizedSource, ConfidenceLevel -> 1.0 |>
+                    ]
+                ];
+
+                AssociateTo[data, AbstractSyntaxIssues -> issues];
+
+                rhs[[3]] = data;
+            */
+
+            rhs
+        },
+        _ => node,
+    }
 }
 
 //======================================

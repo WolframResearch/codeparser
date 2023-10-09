@@ -1,10 +1,5 @@
 use std::{fmt::Debug, sync::Mutex};
 
-use crate::{
-    abstract_::expect_children,
-    cst::{BinaryNode, BinaryOperator, Cst, OperatorNode},
-    tokenize::{Token, TokenInput, TokenKind as TK, TokenSource},
-};
 
 // TODO(cleanup): Don't store these settings using error-prone global state.
 static QUIRK_SETTINGS: Mutex<QuirkSettings> =
@@ -124,61 +119,5 @@ pub(crate) fn is_quirk_enabled(quirk: Quirk) -> bool {
         Quirk::InfixBinaryAt => settings.infix_binary_at,
         Quirk::FlattenTimes => settings.flatten_times,
         Quirk::OldAtAtAt => settings.old_at_at_at,
-    }
-}
-
-pub(crate) fn processInfixBinaryAtQuirk<
-    I: TokenInput + Debug,
-    S: TokenSource + Debug,
->(
-    node: Cst<I, S>,
-    symName: &str,
-) -> Cst<I, S> {
-    match node {
-        Cst::Binary(BinaryNode(OperatorNode {
-            op: BinaryOperator::CodeParser_BinaryAt,
-            ref children,
-            src: _,
-        })) if is_quirk_enabled(Quirk::InfixBinaryAt) => {
-            let [left, middle, rhs] = expect_children(children.clone());
-
-            if !matches!(
-                left,
-                Cst::Token(Token {
-                    tok: TK::Symbol,
-                    input,
-                    ..
-                }) if input.as_str() == symName
-            ) {
-                return node;
-            }
-
-            if !matches!(middle, Cst::Token(Token { tok: TK::At, .. })) {
-                todo!()
-            }
-
-            // let data = rhs.source();
-
-            /* FIXME: Port this issue handling logic.
-                issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-                synthesizedSource = {symData[[Key[Source], 1]], atData[[Key[Source], 2]]};
-
-                AppendTo[
-                    issues,
-                    SyntaxIssue[
-                        "InfixBinaryAtQuirk", "Unexpected parse.", "Remark",
-                        <| Source -> synthesizedSource, ConfidenceLevel -> 1.0 |>
-                    ]
-                ];
-
-                AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-                rhs[[3]] = data;
-            */
-
-            rhs
-        },
-        _ => node,
     }
 }
