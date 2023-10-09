@@ -34,8 +34,8 @@ fn NodeTest_Bug1() {
 
     let NSource = Cst::Compound(N).getSource();
 
-    assert_eq!(NSource.start, Location::new(1, 1));
-    assert_eq!(NSource.end, Location::new(1, 4));
+    assert_eq!(NSource.start(), Location::new(1, 1));
+    assert_eq!(NSource.end(), Location::new(1, 4));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

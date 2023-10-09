@@ -408,8 +408,8 @@ pub enum Source {
 /// stored in a [`Span`] instance.
 #[derive(Copy, Clone, PartialEq, Hash)]
 pub struct Span {
-    pub(crate) start: Location,
-    pub(crate) end: Location,
+    start: Location,
+    end: Location,
 }
 
 const _: () = assert!(std::mem::size_of::<Span>() == 16);
@@ -632,7 +632,8 @@ impl Span {
         Span { start, end }
     }
 
-    pub fn from_location(only: Location) -> Self {
+    // TODO(cleanup): What does this represent? Before or after this point?
+    pub fn at(only: Location) -> Self {
         Span {
             start: only,
             end: only,
@@ -662,6 +663,20 @@ impl Span {
             start: Location::CharacterIndex(0),
             end: Location::LineColumn(LineColumn(NonZeroU32::MIN, 0)),
         }
+    }
+
+    /// Get the start [`Location`] of this source span.
+    pub fn start(&self) -> Location {
+        let Span { start, end: _ } = *self;
+
+        start
+    }
+
+    /// Get the end [`Location`] of this source span.
+    pub fn end(&self) -> Location {
+        let Span { start: _, end } = *self;
+
+        end
     }
 
     /// Get the start and end [`Location`]s of this source span.

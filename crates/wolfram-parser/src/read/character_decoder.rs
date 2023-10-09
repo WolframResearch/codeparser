@@ -334,7 +334,7 @@ fn CharacterDecoder_handleLongName(
                 if found {
                     Actions.push(CodeAction::insert_text(
                         format!("Insert ``]`` to form ``\\[{suggestion}]``"),
-                        Span::from_location(currentWLCharacterEndLoc),
+                        Span::at(currentWLCharacterEndLoc),
                         "]".into(),
                     ));
                 }
@@ -1152,7 +1152,7 @@ fn CharacterDecoder_handleUnhandledEscape(
 
                 Actions.push(CodeAction::insert_text(
                     format!("Insert ``[`` to form ``\\[{alnumRun}]``"),
-                    Span::from_location(currentWLCharacterStartLoc.next()),
+                    Span::at(currentWLCharacterStartLoc.next()),
                     "[".into(),
                 ));
 

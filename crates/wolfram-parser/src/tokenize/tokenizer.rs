@@ -223,7 +223,7 @@ impl<'i> Tokenizer<'i> {
         debug_assert!(tok.isError());
         debug_assert_eq!(buf.buf.len(), 0);
 
-        let span = Span::from_location(at.loc);
+        let span = Span::at(at.loc);
 
         Token::new(tok, buf, span)
     }
@@ -1521,7 +1521,7 @@ fn Tokenizer_handleString_stringifyAsTag<'i>(
     return Token::new(
         TokenKind::Error_ExpectedTag,
         BufferAndLength::from_buffer_with_len(token_start.buf, 0),
-        Span::from_location(token_start.loc),
+        Span::at(token_start.loc),
     );
 }
 
@@ -1831,7 +1831,7 @@ fn Tokenizer_handleNumber<'i>(
 
                 Actions.push(CodeAction::insert_text(
                     "Insert space".to_owned(),
-                    Span::from_location(dotLoc),
+                    Span::at(dotLoc),
                     " ".to_owned(),
                 ));
 
@@ -2285,7 +2285,7 @@ fn Tokenizer_handleNumber<'i>(
                                         signBuf.as_str()
                                     ),
                                     Severity::Warning,
-                                    Span::from_location(sign_mark.unwrap().src_loc),
+                                    Span::at(sign_mark.unwrap().src_loc),
                                     0.95,
                                     vec![],
                                     vec!["This is usually unintentional.".into()],
@@ -2315,7 +2315,7 @@ fn Tokenizer_handleNumber<'i>(
                                         signBuf.as_str()
                                     ),
                                     Severity::Warning,
-                                    Span::from_location(sign_mark.unwrap().src_loc),
+                                    Span::at(sign_mark.unwrap().src_loc),
                                     0.95,
                                     vec![],
                                     vec!["This is usually unintentional.".into()],
@@ -2883,7 +2883,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
 
                 Actions.push(CodeAction::insert_text(
                     "Insert ``*``".into(),
-                    Span::from_location(dot_mark.src_loc),
+                    Span::at(dot_mark.src_loc),
                     "*".into(),
                 ));
 
@@ -2891,7 +2891,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
                     IssueTag::UnexpectedImplicitTimes,
                     format!("Suspicious syntax."),
                     Severity::Error,
-                    Span::from_location(dot_mark.src_loc),
+                    Span::at(dot_mark.src_loc),
                     0.99,
                     Actions,
                     vec![],
@@ -2913,7 +2913,7 @@ fn Tokenizer_backupAndWarn<'i>(session: &mut Tokenizer<'i>, reset: InputMark) {
 
         Actions.push(CodeAction::insert_text(
             "Insert space".into(),
-            Span::from_location(reset.src_loc),
+            Span::at(reset.src_loc),
             " ".into(),
         ));
 
@@ -2921,7 +2921,7 @@ fn Tokenizer_backupAndWarn<'i>(session: &mut Tokenizer<'i>, reset: InputMark) {
             IssueTag::Ambiguous,
             "Ambiguous syntax.".into(),
             Severity::Formatting,
-            Span::from_location(reset.src_loc),
+            Span::at(reset.src_loc),
             1.0,
             Actions,
             vec![],
@@ -3329,7 +3329,7 @@ fn Tokenizer_handleUnder<'i>(
 
                     Actions.push(CodeAction::insert_text(
                         "Insert space".into(),
-                        Span::from_location(dotLoc),
+                        Span::at(dotLoc),
                         " ".into(),
                     ));
 
@@ -3337,7 +3337,7 @@ fn Tokenizer_handleUnder<'i>(
                         IssueTag::UnexpectedDot,
                         "Suspicious syntax.".into(),
                         Severity::Error,
-                        Span::from_location(dotLoc),
+                        Span::at(dotLoc),
                         0.95,
                         Actions,
                         vec![],
@@ -3568,7 +3568,7 @@ fn Tokenizer_handleMinus<'i>(
 
                     Actions.push(CodeAction::insert_text(
                         "Insert space".into(),
-                        Span::from_location(greaterLoc),
+                        Span::at(greaterLoc),
                         " ".into(),
                     ));
 
@@ -3594,7 +3594,7 @@ fn Tokenizer_handleMinus<'i>(
 
                     Actions.push(CodeAction::insert_text(
                         "Insert space".into(),
-                        Span::from_location(equalLoc),
+                        Span::at(equalLoc),
                         " ".into(),
                     ));
 
@@ -3602,7 +3602,7 @@ fn Tokenizer_handleMinus<'i>(
                         IssueTag::Ambiguous,
                         "Put a space between ``--`` and ``=`` to reduce ambiguity".into(),
                         Severity::Formatting,
-                        Span::from_location(equalLoc),
+                        Span::at(equalLoc),
                         1.0,
                         Actions,
                         vec![],
@@ -3669,7 +3669,7 @@ fn Tokenizer_handleBar<'i>(
 
                     Actions.push(CodeAction::insert_text(
                         "Insert space".into(),
-                        Span::from_location(equalLoc),
+                        Span::at(equalLoc),
                         " ".into(),
                     ));
 
@@ -3677,7 +3677,7 @@ fn Tokenizer_handleBar<'i>(
                         IssueTag::Ambiguous,
                         "Put a space between ``|>`` and ``=`` to reduce ambiguity".into(),
                         Severity::Formatting,
-                        Span::from_location(equalLoc),
+                        Span::at(equalLoc),
                         1.0,
                         Actions,
                         vec![],
@@ -4118,7 +4118,7 @@ fn Tokenizer_handlePlus<'i>(
 
                     Actions.push(CodeAction::insert_text(
                         "Insert space".into(),
-                        Span::from_location(loc),
+                        Span::at(loc),
                         " ".into(),
                     ));
 
@@ -4126,7 +4126,7 @@ fn Tokenizer_handlePlus<'i>(
                         IssueTag::Ambiguous,
                         "Put a space between ``++`` and ``=`` to reduce ambiguity".into(),
                         Severity::Formatting,
-                        Span::from_location(loc),
+                        Span::at(loc),
                         1.0,
                         Actions,
                         vec![],

@@ -96,10 +96,7 @@ impl TokenSource for Span {
     }
 
     fn between(start: Span, end: Span) -> Self {
-        Span {
-            start: start.start,
-            end: end.end,
-        }
+        Span::new(start.start(), end.end())
     }
 }
 
@@ -306,7 +303,7 @@ impl<'i> TokenRef<'i> {
         mut token: TokenRef<'i>,
     ) -> TokenRef<'i> {
         // The error is at the start of this token.
-        token.src = Span::from_location(token.src.start);
+        token.src = Span::at(token.src.start());
 
         Token::at(error_tok, token)
     }
@@ -369,7 +366,7 @@ impl<'i> TokenRef<'i> {
         //
 
         session.offset = session.offset_of(self.input.buf.buf);
-        session.SrcLoc = self.src.start;
+        session.SrcLoc = self.src.start();
     }
 
     pub(crate) fn skip(&self, session: &mut Tokenizer) {
@@ -378,7 +375,7 @@ impl<'i> TokenRef<'i> {
 
         session.offset = end;
         session.wasEOF = self.tok == TokenKind::EndOfFile;
-        session.SrcLoc = self.src.end;
+        session.SrcLoc = self.src.end();
     }
 }
 

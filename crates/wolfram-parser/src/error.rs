@@ -7,7 +7,8 @@ use crate::{
         UnterminatedGroupNeedsReparseNode,
     },
     source::{
-        BufferAndLength, CharacterSpan, LineColumn, Location, Span, SpanKind,
+        BufferAndLength, CharacterSpan, LineColumn, LineColumnSpan, Location,
+        Span, SpanKind,
     },
     tokenize::{Token, TokenKind, TokenStr},
     NodeSeq, Tokens,
@@ -343,9 +344,9 @@ fn first_chunk_and_last_good_line(
         SpanKind::LineColumnSpan(src) => {
             // This will NOT include newline at the end
             // FIXME?
-            Span {
-                start: Location::from(src.start),
-                end: Location::LineColumn(LineColumn(
+            Span::from(LineColumnSpan {
+                start: src.start,
+                end: LineColumn(
                     src.start
                         .line()
                         .checked_add(
@@ -353,8 +354,8 @@ fn first_chunk_and_last_good_line(
                         )
                         .expect("source line overflow u32"),
                     last_good_line.column_width(tab_width) + 1,
-                )),
-            }
+                ),
+            })
         },
         SpanKind::CharacterSpan(src) => {
             // This WILL include newline at the end
@@ -415,7 +416,7 @@ fn is_new_statement_line(line: &str) -> bool {
 
             // Remove whitespace that isn't at the very start of the line.
             if tok.tok.isTrivia() {
-                match tok.src.start {
+                match tok.src.start() {
                     Location::LineColumn(LineColumn(_, 1))
                     | Location::CharacterIndex(0) => return true,
                     _ => return false,
