@@ -1151,7 +1151,7 @@ impl<'t> SourceManager<'t> {
     fn newline(&mut self) {
         match self.loc {
             Location::LineColumn(LineColumn(line, column)) => {
-                *line = line.checked_add(1).expect("line overflows u32");
+                *line = non_zero_u32_incr(*line);
                 *column = NonZeroU32::MIN;
             },
             Location::CharacterIndex(index) => {
@@ -1163,7 +1163,7 @@ impl<'t> SourceManager<'t> {
     fn windowsNewline(&mut self) {
         match self.loc {
             Location::LineColumn(LineColumn(line, column)) => {
-                *line = line.checked_add(1).expect("line overflows u32");
+                *line = non_zero_u32_incr(*line);
                 *column = NonZeroU32::MIN;
             },
             Location::CharacterIndex(index) => {
