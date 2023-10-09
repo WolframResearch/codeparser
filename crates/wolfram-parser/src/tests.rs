@@ -132,7 +132,10 @@ fn test_something() {
             src: src!(1:1-1:6).into(),
         }))]
     );
+}
 
+#[test]
+fn test_call_head_seq() {
     assert_eq!(
         nodes("f[x]"),
         vec![Cst::Call(CallNode {
@@ -174,6 +177,69 @@ fn test_something() {
                 src: src!(1:14-17).into(),
             })),
             src: src!(1:1-17).into(),
+        })]
+    );
+
+    // Sanity test what a top-level comment before a function head groups with.
+    assert_eq!(
+        nodes("(* hello *) f[x]"),
+        vec![
+            Cst::Token(token!(Comment, "(* hello *)", 1:1-12)),
+            Cst::Token(token!(Whitespace, " ", 1:12-13)),
+            Cst::Call(CallNode {
+                head: CallHead::Concrete(NodeSeq(vec![Cst::Token(
+                    token!(Symbol, "f", 1:13-14)
+                ),])),
+                body: CallBody::Group(GroupNode(OperatorNode {
+                    op: CallOperator::CodeParser_GroupSquare,
+                    children: NodeSeq(vec![
+                        Cst::Token(token![OpenSquare, "[", src!(1:14-15)]),
+                        Cst::Token(token![Symbol, "x", src!(1:15-16)]),
+                        Cst::Token(token![CloseSquare, "]", src!(1:16-17)]),
+                    ]),
+                    src: src!(1:14-17).into(),
+                })),
+                src: src!(1:13-17).into(),
+            })
+        ]
+    );
+
+    // Test what an interior comment before a function head groups with.
+    assert_eq!(
+        nodes("foo[(* hello *) bar[x]]"),
+        vec![Cst::Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Cst::Token(
+                token!(Symbol, "foo", 1:1-4)
+            ),])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupSquare,
+                children: NodeSeq(vec![
+                    Cst::Token(token![OpenSquare, "[", 1:4-5]),
+                    // NOTE: This comment groups with the *enclosing group*,
+                    //       NOT the head of the interior function.
+                    Cst::Token(token!(Comment, "(* hello *)", 1:5-16)),
+                    Cst::Token(token!(Whitespace, " ", 1:16-17)),
+                    Cst::Call(CallNode {
+                        head: CallHead::Concrete(NodeSeq(vec![Cst::Token(
+                            token!(Symbol, "bar", 1:17-20)
+                        )])),
+                        body: CallBody::Group(GroupNode(OperatorNode {
+                            op: CallOperator::CodeParser_GroupSquare,
+                            children: NodeSeq(vec![
+                                Cst::Token(token![OpenSquare, "[", 1:20-21]),
+                                Cst::Token(token![Symbol, "x", 1:21-22]),
+                                Cst::Token(token![CloseSquare, "]", 1:22-23]),
+                            ]),
+                            src: src!(1:20-23).into(),
+                        })),
+                        // NOTE: Call source span does NOT include the comment.
+                        src: src!(1:17-23).into()
+                    }),
+                    Cst::Token(token![CloseSquare, "]", 1:23-24]),
+                ]),
+                src: src!(1:4-24).into(),
+            })),
+            src: src!(1:1-24).into(),
         })]
     );
 }
