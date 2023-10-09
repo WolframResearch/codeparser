@@ -182,7 +182,6 @@ pub struct CompoundNode<I = TokenString, S = Span>(
 pub struct SyntaxErrorNode<I = TokenString, S = Span> {
     pub err: SyntaxErrorKind,
     pub children: CstSeq<I, S>,
-    pub src: S,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -370,11 +369,10 @@ impl<I: TokenInput, S> Cst<I, S> {
                 body: body.map_op(|body_op| body_op.into_owned_input()),
                 src,
             }),
-            Cst::SyntaxError(SyntaxErrorNode { err, children, src }) => {
+            Cst::SyntaxError(SyntaxErrorNode { err, children }) => {
                 Cst::SyntaxError(SyntaxErrorNode {
                     err,
                     children: children.into_owned_input(),
-                    src,
                 })
             },
             Cst::Prefix(PrefixNode(op)) => {
@@ -436,7 +434,7 @@ impl<I, S: TokenSource> Cst<I, S> {
         match self {
             Cst::Token(token) => token.src.clone(),
             Cst::Call(node) => node.getSource(),
-            Cst::SyntaxError(node) => node.getSource(),
+            Cst::SyntaxError(node) => node.get_source(),
             Cst::Prefix(PrefixNode(op)) => op.getSource(),
             Cst::Infix(InfixNode(op)) => op.getSource(),
             Cst::Postfix(PostfixNode(op)) => op.getSource(),
@@ -504,10 +502,8 @@ impl<I, O> OperatorNode<I, Span, O> {
     pub(crate) fn new(op: O, children: CstSeq<I>) -> Self {
         assert!(!children.is_empty());
 
-        let src = Span::enclosing(
-            children.first().source(),
-            children.last().source(),
-        );
+        let src =
+            Span::between(children.first().source(), children.last().source());
 
         OperatorNode {
             op,
@@ -656,7 +652,7 @@ impl<I> CallNode<I> {
         incr_diagnostic!(Node_CallNodeCount);
 
         let src =
-            Span::enclosing(head.first().source(), body.as_op().getSource());
+            Span::between(head.first().source(), body.as_op().getSource());
 
         CallNode {
             head: CallHead::Concrete(head),
@@ -742,12 +738,8 @@ impl<I> SyntaxErrorNode<I> {
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);
 
-        let src = Span::enclosing(
-            children.first().source(),
-            children.last().source(),
-        );
 
-        SyntaxErrorNode { err, children, src }
+        SyntaxErrorNode { err, children }
     }
 }
 
@@ -758,8 +750,17 @@ impl<I, S> SyntaxErrorNode<I, S> {
 }
 
 impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
-    fn getSource(&self) -> S {
-        return self.src.clone();
+    /// Compute the source span covered by this node.
+    pub fn get_source(&self) -> S {
+        let SyntaxErrorNode { err: _, children } = self;
+
+        // FIXME: This recursive source getting might be slower than necessary
+        //        because we get the full source for each child and then only
+        //        use the start half and end half respectively.
+        //        Enforce this by making Span::between() take Location instead
+        //        (and then remove it because its redundant with Span::new at
+        //        that point.)
+        S::between(children.first().source(), children.last().source())
     }
 }
 

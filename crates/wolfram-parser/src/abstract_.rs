@@ -113,11 +113,10 @@ pub fn aggregate_replace<I: Debug, S: Debug>(
         //  aggregate[node_[tag_, children_, data_]] :=
         //      node[tag, aggregate /@ children, data]
         //---------------------------------------------
-        Cst::SyntaxError(SyntaxErrorNode { err, children, src }) => {
+        Cst::SyntaxError(SyntaxErrorNode { err, children }) => {
             Cst::SyntaxError(SyntaxErrorNode {
                 err,
                 children: Aggregate(children),
-                src,
             })
         },
         Cst::Group(GroupNode(op)) => Cst::Group(GroupNode(aggregate_op(op))),
@@ -1174,36 +1173,41 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         //==============================
         // SyntaxErrorNode
         //==============================
-        Cst::SyntaxError(SyntaxErrorNode {
-            err,
-            children: NodeSeq(children),
-            src: data,
-        }) => match (err, children.as_slice()) {
-            (SyntaxErrorKind::ExpectedTilde, [left, _, middle]) => WL!(
-                SyntaxErrorNode[ExpectedTilde, {abstract_(left.clone()), abstract_(middle.clone())}, data]
-            ),
-            (SyntaxErrorKind::ExpectedSet, [left, _, middle]) => WL!(
-                SyntaxErrorNode[ExpectedSet, {abstract_(left.clone()), abstract_(middle.clone())}, data]
-            ),
-            /*
-            abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
-                SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
+        Cst::SyntaxError(syntax_error_node) => {
+            let data = syntax_error_node.get_source();
 
-            abstract[SyntaxErrorNode[SyntaxError`BuggyFESyntax, children_, data_]] :=
-                SyntaxErrorNode[SyntaxError`BuggyFESyntax, abstract /@ children, data]
+            let SyntaxErrorNode {
+                err,
+                children: NodeSeq(children),
+            } = syntax_error_node;
 
-            abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_}, data_]] :=
-                SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
+            match (err, children.as_slice()) {
+                (SyntaxErrorKind::ExpectedTilde, [left, _, middle]) => WL!(
+                    SyntaxErrorNode[ExpectedTilde, {abstract_(left.clone()), abstract_(middle.clone())}, data]
+                ),
+                (SyntaxErrorKind::ExpectedSet, [left, _, middle]) => WL!(
+                    SyntaxErrorNode[ExpectedSet, {abstract_(left.clone()), abstract_(middle.clone())}, data]
+                ),
+                /*
+                abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
+                    SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
 
-            abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
-                SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
-            */
-            (SyntaxErrorKind::ExpectedSymbol, [left, _, right]) => WL!(
-                SyntaxErrorNode[ExpectedSymbol, {abstract_(left.clone()), abstract_(right.clone())}, data]
-            ),
-            _ => todo!(
+                abstract[SyntaxErrorNode[SyntaxError`BuggyFESyntax, children_, data_]] :=
+                    SyntaxErrorNode[SyntaxError`BuggyFESyntax, abstract /@ children, data]
+
+                abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_}, data_]] :=
+                    SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
+
+                abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
+                    SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
+                */
+                (SyntaxErrorKind::ExpectedSymbol, [left, _, right]) => WL!(
+                    SyntaxErrorNode[ExpectedSymbol, {abstract_(left.clone()), abstract_(right.clone())}, data]
+                ),
+                _ => todo!(
                 "unhandled SyntaxErrorNode content: ({err:?}, {children:?})"
             ),
+            }
         },
     }
 }

@@ -507,7 +507,15 @@ impl FromExpr for SyntaxErrorNode<TokenString, Source> {
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(SyntaxErrorNode { err, children, src })
+        let node = SyntaxErrorNode { err, children };
+
+        // TODO: Make this a warning instead? We're effectively throwing away the
+        //       source the caller specified, so if it differs from the computed
+        //       source that may indicate a bug or something surprising to the
+        //       caller.
+        debug_assert!(node.get_source() == src);
+
+        Ok(node)
     }
 }
 

@@ -95,7 +95,11 @@ impl TokenSource for Span {
         Span::unknown()
     }
 
+    /// Construct a new [`Span`] that encloses everything between `start` and
+    /// `end`.
     fn between(start: Span, end: Span) -> Self {
+        assert!(start <= end);
+
         Span::new(start.start(), end.end())
     }
 }

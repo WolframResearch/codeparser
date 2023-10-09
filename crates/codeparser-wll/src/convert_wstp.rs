@@ -17,7 +17,7 @@ use wolfram_parser::{
     source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbols as sym,
-    tokenize::{Token, TokenInput, TokenKind, TokenStr},
+    tokenize::{Token, TokenInput, TokenKind, TokenSource, TokenStr},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult,
     Tokens, UnsafeCharacterEncoding,
 };
@@ -522,7 +522,7 @@ impl WstpPut for TokenKind {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
+impl<I: TokenInput, S: TokenSource + WstpPut> WstpPut for Token<I, S> {
     fn put(&self, callLink: &mut wstp::Link) {
         let Token { tok, src, input } = self;
 
@@ -558,7 +558,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
 // Node types
 //======================================
 
-impl<I: TokenInput, S: WstpPut> WstpPut for Cst<I, S> {
+impl<I: TokenInput, S: TokenSource + WstpPut> WstpPut for Cst<I, S> {
     fn put(&self, link: &mut wstp::Link) {
         match self {
             Cst::Token(token) => token.put(link),
@@ -636,7 +636,7 @@ impl<'i> WstpPut for Tokens<TokenStr<'i>> {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for BoxNode<I, S> {
+impl<I: TokenInput, S: TokenSource + WstpPut> WstpPut for BoxNode<I, S> {
     fn put(&self, link: &mut wstp::Link) {
         let BoxNode {
             kind,
@@ -675,7 +675,7 @@ impl<S: WstpPut> WstpPut for CodeNode<S> {
     }
 }
 
-fn put_op<I: TokenInput, S: WstpPut, O: WstpPut>(
+fn put_op<I: TokenInput, S: TokenSource + WstpPut, O: WstpPut>(
     link: &mut wstp::Link,
     node: &OperatorNode<I, S, O>,
     op_head: Symbol,
@@ -745,7 +745,7 @@ impl WstpPut for CompoundOperator {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
+impl<I: TokenInput, S: TokenSource + WstpPut> WstpPut for CallNode<I, S> {
     fn put(&self, callLink: &mut wstp::Link) {
         let CallNode { head, body, src } = self;
 
@@ -769,7 +769,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for CallBody<I, S> {
+impl<I: TokenInput, S: TokenSource + WstpPut> WstpPut for CallBody<I, S> {
     fn put(&self, link: &mut wstp::Link) {
         match self {
             CallBody::Group(GroupNode(op)) => {
@@ -782,10 +782,11 @@ impl<I: TokenInput, S: WstpPut> WstpPut for CallBody<I, S> {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for SyntaxErrorNode<I, S> {
+impl<I: TokenInput, S: TokenSource + WstpPut> WstpPut
+    for SyntaxErrorNode<I, S>
+{
     fn put(&self, callLink: &mut wstp::Link) {
-        let SyntaxErrorNode { err, children, src } = self;
-
+        let SyntaxErrorNode { err, children } = self;
 
         callLink
             .put_function(sym::CodeParser_SyntaxErrorNode.as_str(), 3)
@@ -795,7 +796,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for SyntaxErrorNode<I, S> {
 
         children.put(callLink);
 
-        src.put(callLink);
+        self.get_source().put(callLink);
     }
 }
 

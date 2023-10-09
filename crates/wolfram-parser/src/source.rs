@@ -671,17 +671,6 @@ impl Span {
         }
     }
 
-    /// Construct a new [`Span`] that encloses everything between `start` and
-    /// `end`.
-    pub(crate) fn enclosing(start: Span, end: Span) -> Self {
-        assert!(start <= end);
-
-        Span {
-            start: start.start,
-            end: end.end,
-        }
-    }
-
     pub fn unknown() -> Self {
         // Use incompatible values for `first`.
         Span {
