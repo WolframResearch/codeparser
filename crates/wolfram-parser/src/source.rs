@@ -643,7 +643,9 @@ impl Span {
         }
     }
 
-    pub(crate) fn new_from_source(start: Span, end: Span) -> Self {
+    /// Construct a new [`Span`] that encloses everything between `start` and
+    /// `end`.
+    pub(crate) fn enclosing(start: Span, end: Span) -> Self {
         assert!(start <= end);
 
         Span {

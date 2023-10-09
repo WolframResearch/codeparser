@@ -504,7 +504,7 @@ impl<I, O> OperatorNode<I, Span, O> {
     pub(crate) fn new(op: O, children: CstSeq<I>) -> Self {
         assert!(!children.is_empty());
 
-        let src = Span::new_from_source(
+        let src = Span::enclosing(
             children.first().source(),
             children.last().source(),
         );
@@ -655,10 +655,8 @@ impl<I> CallNode<I> {
 
         incr_diagnostic!(Node_CallNodeCount);
 
-        let src = Span::new_from_source(
-            head.first().source(),
-            body.as_op().getSource(),
-        );
+        let src =
+            Span::enclosing(head.first().source(), body.as_op().getSource());
 
         CallNode {
             head: CallHead::Concrete(head),
@@ -744,7 +742,7 @@ impl<I> SyntaxErrorNode<I> {
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);
 
-        let src = Span::new_from_source(
+        let src = Span::enclosing(
             children.first().source(),
             children.last().source(),
         );
