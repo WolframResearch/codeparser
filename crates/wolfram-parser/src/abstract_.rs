@@ -757,7 +757,6 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         })
                         // make sure to reverse children of Divisible
                         .rev()
-                        .map(abstract_)
                         .collect();
 
                     WL!( CallNode[ToNode[Divisible], processed, data] )
@@ -826,7 +825,6 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 op.to_symbol().symbol_name().as_str(),
                             )
                         })
-                        .map(abstract_)
                         .collect();
 
                     WL!( CallNode[ToNode(op), children, data] )
@@ -1844,10 +1842,9 @@ fn abstractPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
         children.into_iter().map(flattenPrefixPlus)
     };
 
-    let processed =
-        flattened.map(|node| processInfixBinaryAtQuirk(node, "Plus"));
-
-    let children = processed.map(abstract_).collect();
+    let children = flattened
+        .map(|node| processInfixBinaryAtQuirk(node, "Plus"))
+        .collect();
 
     WL!( CallNode[ToNode[Plus], children, data])
 }
@@ -1985,12 +1982,10 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
 
     let flattened = flattenTimes(children, data.clone());
 
-    let processed: Vec<Cst<TokenString, S>> = flattened
+    let children: Vec<Ast> = flattened
         .into_iter()
         .map(|node| processInfixBinaryAtQuirk(node, "Times"))
         .collect();
-
-    let children = processed.into_iter().map(abstract_).collect();
 
     WL!( CallNode[ToNode[Times], children, data] )
 }
@@ -2019,7 +2014,7 @@ pub(crate) fn processInfixBinaryAtQuirk<
 >(
     node: Cst<I, S>,
     symName: &str,
-) -> Cst<I, S> {
+) -> Ast {
     match node {
         Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::CodeParser_BinaryAt,
@@ -2036,7 +2031,7 @@ pub(crate) fn processInfixBinaryAtQuirk<
                     ..
                 }) if input.as_str() == symName
             ) {
-                return node;
+                return abstract_(node);
             }
 
             if !matches!(middle, Cst::Token(Token { tok: TK::At, .. })) {
@@ -2063,9 +2058,9 @@ pub(crate) fn processInfixBinaryAtQuirk<
                 rhs[[3]] = data;
             */
 
-            rhs
+            abstract_(rhs)
         },
-        _ => node,
+        _ => abstract_(node),
     }
 }
 
