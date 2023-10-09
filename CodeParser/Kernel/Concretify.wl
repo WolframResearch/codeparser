@@ -60,7 +60,12 @@ Module[{cst, agg, ast2, astToCompare, ast2ToCompare, str},
   ast2ToCompare = ast2 /. _Association -> <||>;
 
   If[astToCompare =!= ast2ToCompare,
-    Throw[Failure["ConcretifySanityCheckFailed", <||>]]
+    Throw[Failure["ConcretifySanityCheckFailed", <|
+		"Ast1Compare" -> astToCompare,
+		"Ast2Compare" -> ast2ToCompare,
+		"Ast1" -> ast,
+		"Ast2" -> ast2
+	|>]]
   ];
 
   str = ToSourceCharacterString[cst];
