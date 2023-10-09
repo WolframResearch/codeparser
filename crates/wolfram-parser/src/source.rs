@@ -722,23 +722,6 @@ impl Span {
             _ => SpanKind::Unknown,
         }
     }
-
-    #[allow(dead_code)]
-    pub(crate) fn column_width(&self) -> usize {
-        let (start_column, end_column) = match self.kind() {
-            SpanKind::LineColumnSpan(LineColumnSpan { start, end }) => {
-                debug_assert!(
-                    start.line() == end.line(),
-                    "SpanKind::column_width(): source locations are on different lines"
-                );
-
-                (start.column(), end.column())
-            },
-            other => panic!("SpanKind::column_width(): Span is not a line column span: {other:?}"),
-        };
-
-        return end_column as usize - start_column as usize;
-    }
 }
 
 impl LineColumn {
@@ -825,6 +808,18 @@ impl LineColumnSpan {
         let LineColumnSpan { start, end } = cursor;
 
         self.contains(start) || self.contains(end)
+    }
+
+    #[cfg_attr(not(debug_assertions), allow(dead_code))]
+    pub(crate) fn column_width(&self) -> usize {
+        let LineColumnSpan { start, end } = *self;
+
+        debug_assert!(
+            start.line() == end.line(),
+            "SpanKind::column_width(): source locations are on different lines"
+        );
+
+        return end.column() as usize - start.column() as usize;
     }
 }
 
