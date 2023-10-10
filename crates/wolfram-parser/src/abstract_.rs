@@ -1894,7 +1894,10 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 // Times handling
 //======================================
 
-/// abstract syntax of  -a * b / c d \[InvisibleTimes] e \[Times] f  is a single Times expression
+/// abstract syntax of  `-a * b / c d \[InvisibleTimes] e \[Times] f`  is a single Times expression
+///
+/// The sequence returned from this function will be the arguments
+/// to a `Times[...]` expression.
 fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
     nodes: Vec<Cst<I, S>>,
     data: S,
