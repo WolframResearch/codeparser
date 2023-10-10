@@ -1977,6 +1977,7 @@ where
             if flattenTimesQuirk {
                 let [left, _, right] = expect_children(children.clone());
 
+                // TID:231010/1
                 flattenTimes(
                     vec![left, reciprocate(right, data.clone())],
                     data.clone(),
