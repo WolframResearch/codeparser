@@ -100,6 +100,13 @@ impl QuirkSettings {
             old_at_at_at: false,
         }
     }
+
+    pub fn flatten_times(self) -> Self {
+        QuirkSettings {
+            flatten_times: true,
+            ..self
+        }
+    }
 }
 
 impl Default for QuirkSettings {

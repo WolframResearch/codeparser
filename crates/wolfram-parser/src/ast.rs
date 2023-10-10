@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use crate::{
     cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
-    source::{Source, Span},
+    source::{LineColumnSpan, Source, Span},
     tokenize::{TokenKind, TokenSource, TokenString},
 };
 
@@ -249,6 +249,15 @@ impl<S: TokenSource> From<S> for AstMetadata {
     fn from(source: S) -> Self {
         AstMetadata {
             source: source.into_general(),
+            issues: Vec::new(),
+        }
+    }
+}
+
+impl From<LineColumnSpan> for AstMetadata {
+    fn from(value: LineColumnSpan) -> Self {
+        AstMetadata {
+            source: Source::Span(Span::from(value)),
             issues: Vec::new(),
         }
     }
