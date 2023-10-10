@@ -542,6 +542,17 @@ impl Display for LineColumn {
     }
 }
 
+impl Display for Source {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Source::Span(span) => write!(f, "{span}"),
+            // TODO: Format as {...} list
+            Source::BoxPosition(box_pos) => write!(f, "{box_pos:?}"),
+            Source::After(after) => write!(f, "After[{after}]"),
+        }
+    }
+}
+
 impl Debug for Span {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self)

@@ -1,5 +1,7 @@
 //! Abstract syntax trees.
 
+use std::fmt::Debug;
+
 use crate::{
     cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
@@ -98,7 +100,7 @@ pub enum Ast {
 }
 
 // TODO(cleanup): Combine this with `Metadata`?
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct AstMetadata {
     pub source: Source,
     pub issues: Vec<Issue>,
@@ -448,3 +450,24 @@ macro_rules! WL {
 
 use wolfram_expr::Expr;
 pub(crate) use WL;
+
+//======================================
+// Format Impls
+//======================================
+
+impl Debug for AstMetadata {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if cfg!(test) {
+            let AstMetadata { source, issues } = self;
+
+            if issues.is_empty() {
+                return write!(f, "src!({}).into()", source);
+            }
+        }
+
+        f.debug_struct("AstMetadata")
+            .field("source", &self.source)
+            .field("issues", &self.issues)
+            .finish()
+    }
+}

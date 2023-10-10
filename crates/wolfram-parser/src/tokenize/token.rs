@@ -491,7 +491,11 @@ impl Debug for TokenString {
 
         match std::str::from_utf8(buf) {
             Ok(str) => {
-                f.debug_struct("TokenString").field("buf", &str).finish()
+                if cfg!(test) {
+                    write!(f, "TokenString::new({str:?})")
+                } else {
+                    f.debug_struct("TokenString").field("buf", &str).finish()
+                }
             },
             Err(_) => f.debug_struct("TokenString").field("buf", buf).finish(),
         }
