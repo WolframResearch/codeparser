@@ -1889,96 +1889,103 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
     }
 }
 
+//======================================
+// Times handling
+//======================================
+
 /// abstract syntax of  -a * b / c d \[InvisibleTimes] e \[Times] f  is a single Times expression
 fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
     nodes: Vec<Cst<I, S>>,
     data: S,
 ) -> Vec<Cst<TokenString, S>> {
-    let flattenTimesQuirk = quirks::is_quirk_enabled(Quirk::FlattenTimes);
-
     nodes
         .into_iter()
-        .flat_map(|node| {
-            match node {
-                // These rules for PrefixNode illustrate the difference between the FE and kernel
-                // Related bugs: 139531
-                //
-                // TODO: add to kernel quirks mode
-                // TODO: add to frontend quirks mode
-                Cst::Prefix(PrefixNode(OperatorNode {
-                    op: PrefixOperator::Minus,
-                    ref children,
-                    src: _,
-                })) => {
-                    let [_, operand] = expect_children(children.clone());
+        .flat_map(|node| flatten_times_cst(node, data.clone()))
+        .collect()
+}
 
-                    match operand {
-                        // PrefixNode[Minus, { _, LeafNode[Integer | Real, _, _] }, _]
-                        Cst::Token(Token {
-                            tok: TK::Integer | TK::Real,
-                            input: _,
-                            src: _,
-                        }) => vec![negate(operand, data.clone())],
-                        // PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _]
-                        _ if parenthesizedIntegerOrRealQ(&operand) => {
-                            vec![negate(operand, data.clone())]
-                        },
-                        // PrefixNode[Minus, {_, _}, _]
-                        _ => {
-                            if flattenTimesQuirk {
-                                // (*
-                                // it is possible to have nested prefix Minus, e.g., - - a
-                                // so must call recursively into flattenTimes
-                                // *)
-                                let mut vec: Vec<Cst<TokenString, S>> = vec![
-                                    agg::WL!(ToNode[-1]).into_owned_input(),
-                                ];
-                                vec.extend_from_slice(&flattenTimes(
-                                    vec![operand],
-                                    data.clone(),
-                                ));
-                                vec
-                            } else {
-                                vec![node.into_owned_input()]
-                            }
-                        },
-                    }
-                },
-                Cst::Infix(InfixNode(OperatorNode {
-                    op: Op::Times,
-                    children: NodeSeq(children),
-                    src: _,
-                })) => {
-                    let children =
-                        part_span_even_children(children, Some(TK::Plus));
+fn flatten_times_cst<I, S>(node: Cst<I, S>, data: S) -> Vec<Cst<TokenString, S>>
+where
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+{
+    let flattenTimesQuirk = quirks::is_quirk_enabled(Quirk::FlattenTimes);
 
-                    flattenTimes(children, data.clone())
-                },
-                // This rule for BinaryNode[Divide] illustrates the difference between the FE and kernel
-                //
-                // TODO: add to kernel quirks mode
-                // TODO: add to frontend quirks mode
-                Cst::Binary(BinaryNode(OperatorNode {
-                    op: BinaryOperator::Divide,
-                    ref children,
+    match node {
+        // These rules for PrefixNode illustrate the difference between the FE and kernel
+        // Related bugs: 139531
+        //
+        // TODO: add to kernel quirks mode
+        // TODO: add to frontend quirks mode
+        Cst::Prefix(PrefixNode(OperatorNode {
+            op: PrefixOperator::Minus,
+            ref children,
+            src: _,
+        })) => {
+            let [_, operand] = expect_children(children.clone());
+
+            match operand {
+                // PrefixNode[Minus, { _, LeafNode[Integer | Real, _, _] }, _]
+                Cst::Token(Token {
+                    tok: TK::Integer | TK::Real,
+                    input: _,
                     src: _,
-                })) => {
+                }) => vec![negate(operand, data.clone())],
+                // PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _]
+                _ if parenthesizedIntegerOrRealQ(&operand) => {
+                    vec![negate(operand, data.clone())]
+                },
+                // PrefixNode[Minus, {_, _}, _]
+                _ => {
                     if flattenTimesQuirk {
-                        let [left, _, right] =
-                            expect_children(children.clone());
-
-                        flattenTimes(
-                            vec![left, reciprocate(right, data.clone())],
+                        // (*
+                        // it is possible to have nested prefix Minus, e.g., - - a
+                        // so must call recursively into flattenTimes
+                        // *)
+                        let mut vec: Vec<Cst<TokenString, S>> =
+                            vec![agg::WL!(ToNode[-1]).into_owned_input()];
+                        vec.extend_from_slice(&flattenTimes(
+                            vec![operand],
                             data.clone(),
-                        )
+                        ));
+                        vec
                     } else {
                         vec![node.into_owned_input()]
                     }
                 },
-                _ => vec![node.into_owned_input()],
             }
-        })
-        .collect()
+        },
+        Cst::Infix(InfixNode(OperatorNode {
+            op: Op::Times,
+            children: NodeSeq(children),
+            src: _,
+        })) => {
+            let children = part_span_even_children(children, Some(TK::Plus));
+
+            flattenTimes(children, data.clone())
+        },
+        // This rule for BinaryNode[Divide] illustrates the difference between the FE and kernel
+        //
+        // TODO: add to kernel quirks mode
+        // TODO: add to frontend quirks mode
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Divide,
+            ref children,
+            src: _,
+        })) => {
+            if flattenTimesQuirk {
+                let [left, _, right] = expect_children(children.clone());
+
+                flattenTimes(
+                    vec![left, reciprocate(right, data.clone())],
+                    data.clone(),
+                )
+            } else {
+                vec![node.into_owned_input()]
+            }
+        },
+        _ => vec![node.into_owned_input()],
+    }
 }
 
 // InfixNode[Times, children_, data_]
