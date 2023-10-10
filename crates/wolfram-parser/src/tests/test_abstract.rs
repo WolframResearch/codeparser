@@ -210,6 +210,7 @@ fn test_abstract_flatten_times_quirk() {
     // constructing a Divide[..] whose numerator is a Times[..] expression
     // with higher precedence than `*`, so it is a separate Times from
     // Times[a, ..].
+    // TODO: Are the parens really necessary for what is being tested here?
     let cst = parse_cst("a*-(b)/c", &Default::default());
 
     let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
