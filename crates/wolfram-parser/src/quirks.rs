@@ -1,9 +1,11 @@
-use std::{fmt::Debug, sync::Mutex};
+use std::{cell::Cell, fmt::Debug};
 
+thread_local! {
+    // TODO(cleanup): Don't store these settings using error-prone global state.
+    static QUIRK_SETTINGS: Cell<QuirkSettings> =
+        Cell::new(QuirkSettings::const_default());
+}
 
-// TODO(cleanup): Don't store these settings using error-prone global state.
-static QUIRK_SETTINGS: Mutex<QuirkSettings> =
-    Mutex::new(QuirkSettings::const_default());
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct QuirkSettings {
@@ -123,11 +125,11 @@ impl Default for QuirkSettings {
 }
 
 pub fn set_quirks(quirks: QuirkSettings) {
-    *QUIRK_SETTINGS.lock().unwrap() = quirks;
+    QUIRK_SETTINGS.set(quirks);
 }
 
 pub(crate) fn is_quirk_enabled(quirk: Quirk) -> bool {
-    let settings = QUIRK_SETTINGS.lock().unwrap();
+    let settings = QUIRK_SETTINGS.get();
 
     match quirk {
         Quirk::InfixBinaryAt => settings.infix_binary_at,
