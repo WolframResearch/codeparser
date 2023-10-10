@@ -9,7 +9,8 @@ use wolfram_parser::{fmt_as_expr::FmtAsExpr, ParseOptions, StringifyMode};
 
 #[derive(Copy, Clone)]
 enum ApiMode {
-    Expression,
+    CstExpr,
+    Ast,
     Tokenize,
     Leaf,
     SafeString,
@@ -26,7 +27,7 @@ enum OutputMode {
 
 fn main() {
     let mut file_input = None;
-    let mut api_mode = ApiMode::Expression;
+    let mut api_mode = ApiMode::CstExpr;
     let mut output_mode = OutputMode::Print;
 
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -48,6 +49,8 @@ fn main() {
             api_mode = ApiMode::Leaf;
         } else if arg == "-safestring" {
             api_mode = ApiMode::SafeString;
+        } else if arg == "--ast" {
+            api_mode = ApiMode::Ast;
         } else if arg == "-n" {
             output_mode = OutputMode::None;
         } else if arg == "-check" || arg == "-syntaxq" || arg == "-syntaxQ" {
@@ -116,12 +119,19 @@ fn handle(input: &[u8], mode: ApiMode, output_mode: OutputMode) {
                     .unwrap();
             output(output_mode, result);
         },
-        ApiMode::Expression => {
+        ApiMode::CstExpr => {
             let result = wolfram_parser::parse_bytes_cst(
                 input,
                 &ParseOptions::default(),
             );
             output(output_mode, FmtAsExpr(result.node_seq()));
+        },
+        ApiMode::Ast => {
+            let result = wolfram_parser::parse_bytes_ast(
+                input,
+                &ParseOptions::default(),
+            );
+            output(output_mode, format!("{:#?}", result.node_seq()));
         },
     }
 }
