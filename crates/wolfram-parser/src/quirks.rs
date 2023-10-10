@@ -101,9 +101,16 @@ impl QuirkSettings {
         }
     }
 
-    pub fn flatten_times(self) -> Self {
+    pub fn flatten_times(self, value: bool) -> Self {
         QuirkSettings {
-            flatten_times: true,
+            flatten_times: value,
+            ..self
+        }
+    }
+
+    pub fn infix_binary_at(self, value: bool) -> Self {
+        QuirkSettings {
+            infix_binary_at: value,
             ..self
         }
     }

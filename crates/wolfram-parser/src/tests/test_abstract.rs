@@ -110,7 +110,7 @@ fn test_abstract_flatten_times_quirk() {
     //
 
     assert_eq!(
-        abstract_cst(agg, QuirkSettings::default().flatten_times()),
+        abstract_cst(agg, QuirkSettings::default().flatten_times(true)),
         Ast::Call {
             head: Box::new(leaf!(Symbol, "Times", <||>)),
             args: vec![
@@ -134,4 +134,143 @@ fn test_abstract_flatten_times_quirk() {
             data: src!(1:1-44).into()
         }
     )
+}
+
+#[test]
+fn test_abstract_infix_binary_at_quirk() {
+    //==================================
+    // With StringJoin
+    //==================================
+
+    let cst = parse_cst("a<>StringJoin@b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::StringJoin,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(LessGreater, "<>", 1:2-4),),
+                Cst::Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::CodeParser_BinaryAt,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "StringJoin", 1:4-14),),
+                        Token(token!(At, "@", 1:14-15),),
+                        Token(token!(Symbol, "b", 1:15-16),),
+                    ]),
+                    src: src!(1:4-16).into(),
+                })),
+            ]),
+            src: src!(1:1-16).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //
+    // Test abstract with the 'infix_binary_at' quirk ENABLED (the default)
+    //
+
+    #[rustfmt::skip]
+    assert_eq!(
+        abstract_cst(agg.clone(), Default::default()),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "StringJoin", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                leaf!(Symbol, "b", 1:15-16),
+            ],
+            data: src!(1:1-16).into(),
+        }
+    );
+
+    //
+    // Test the same input, but now with 'infix_binary_at' quirk DISABLED.
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().infix_binary_at(false)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "StringJoin", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "StringJoin", 1:4-14)),
+                    args: vec![leaf!(Symbol, "b", 1:15-16),],
+                    data: src!(1:4-16).into(),
+                },
+            ],
+            data: src!(1:1-16).into(),
+        }
+    );
+
+    //==================================
+    // With Plus
+    //==================================
+
+    let cst = parse_cst(r#"a + Plus @ b"#, &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Plus,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(Whitespace, " ", 1:2-3),),
+                Token(token!(Plus, "+", 1:3-4),),
+                Token(token!(Whitespace, " ", 1:4-5),),
+                Cst::Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::CodeParser_BinaryAt,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "Plus", 1:5-9),),
+                        Token(token!(Whitespace, " ", 1:9-10),),
+                        Token(token!(At, "@", 1:10-11),),
+                        Token(token!(Whitespace, " ", 1:11-12),),
+                        Token(token!(Symbol, "b", 1:12-13),),
+                    ]),
+                    src: src!(1:5-13).into(),
+                })),
+            ]),
+            src: src!(1:1-13).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    #[rustfmt::skip]
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().infix_binary_at(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Plus", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                leaf!(Symbol, "b", 1:12-13),
+            ],
+            data: src!(1:1-13).into(),
+        }
+    );
+
+    //
+    // Test the same input, but now with 'infix_binary_at' quirk DISABLED.
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().infix_binary_at(false)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Plus", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Plus", 1:5-9)),
+                    args: vec![leaf!(Symbol, "b", 1:12-13)],
+                    data: src!(1:5-13).into(),
+                },
+            ],
+            data: src!(1:1-13).into(),
+        }
+    );
 }
