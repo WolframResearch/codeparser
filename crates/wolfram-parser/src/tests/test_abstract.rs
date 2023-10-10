@@ -4,7 +4,8 @@ use crate::{
     cst::{
         BinaryNode, BinaryOperator,
         Cst::{self, Token},
-        InfixNode, InfixOperator, OperatorNode, PrefixNode, PrefixOperator,
+        GroupNode, GroupOperator, InfixNode, InfixOperator, OperatorNode,
+        PrefixNode, PrefixOperator,
     },
     macros::{leaf, src, token},
     parse_cst, NodeSeq, QuirkSettings,
@@ -132,6 +133,72 @@ fn test_abstract_flatten_times_quirk() {
                 leaf!(Symbol, "f", 1:43-44),
             ],
             data: src!(1:1-44).into()
+        }
+    );
+
+    //==================================
+
+    let cst = parse_cst("- - a", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Prefix(PrefixNode(OperatorNode {
+            op: PrefixOperator::Minus,
+            children: NodeSeq(vec![
+                Token(token!(Minus, "-", 1:1-2)),
+                Token(token!(Whitespace, " ", 1:2-3)),
+                Cst::Prefix(PrefixNode(OperatorNode {
+                    op: PrefixOperator::Minus,
+                    children: NodeSeq(vec![
+                        Token(token!(Minus, "-", 1:3-4)),
+                        Token(token!(Whitespace, " ", 1:4-5)),
+                        Token(token!(Symbol, "a", 1:5-6)),
+                    ]),
+                    src: src!(1:3-6).into(),
+                })),
+            ]),
+            src: src!(1:1-6).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    assert_eq!(
+        abstract_cst(agg.clone(), Default::default()),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Integer, "-1", <||>),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        leaf!(Symbol, "a", 1:5-6),
+                    ],
+                    data: src!(1:3-6).into(),
+                },
+            ],
+            data: src!(1:1-6).into()
+        }
+    );
+
+    //
+    // Test the same input, but this time with the 'flatten Times' parsing
+    // quirk enabled.
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().flatten_times(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Integer, "-1", <||>),
+                leaf!(Integer, "-1", <||>),
+                leaf!(Symbol, "a", 1:5-6),
+            ],
+            data: src!(1:1-6).into()
         }
     )
 }
