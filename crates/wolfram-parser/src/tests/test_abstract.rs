@@ -203,7 +203,7 @@ fn test_abstract_flatten_times_quirk() {
     );
 
     //==================================
-    // Test nested flatten times (TID:231010/1)
+    // Test nested flatten times through Binary Divide numerator (TID:231010/1)
     //==================================
 
     // The key point and what is uncommon about this case is that we're
@@ -306,6 +306,214 @@ fn test_abstract_flatten_times_quirk() {
                             ],
                             data: src!(1:3-9).into(),
                         },
+                    ],
+                    data: src!(1:3-9).into(),
+                },
+            ],
+            data: src!(1:1-9).into()
+        }
+    );
+
+    //=======================================================
+    // Test nested flatten times through Prefix Minus operand
+    //=======================================================
+
+    //
+    // These two variants test that the flatten_times quirks
+    // DOES NOT flatten through explicit parenthesis groups (...).
+    //
+
+    //----------------------------------------------
+    // Variant A: Nested prefix minus "-(-b)"
+    //----------------------------------------------
+
+    let cst = parse_cst("a*-(-b)", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Times,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2)),
+                Token(token!(Star, "*", 1:2-3)),
+                Cst::Prefix(PrefixNode(OperatorNode {
+                    op: PrefixOperator::Minus,
+                    children: NodeSeq(vec![
+                        Token(token!(Minus, "-", 1:3-4)),
+                        Cst::Group(GroupNode(OperatorNode {
+                            op: GroupOperator::CodeParser_GroupParen,
+                            children: NodeSeq(vec![
+                                Token(token!(OpenParen, "(", 1:4-5)),
+                                Cst::Prefix(PrefixNode(OperatorNode {
+                                    op: PrefixOperator::Minus,
+                                    children: NodeSeq(vec![
+                                        Token(token!(Minus, "-", 1:5-6)),
+                                        Token(token!(Symbol, "b", 1:6-7)),
+                                    ]),
+                                    src: src!(1:5-7).into(),
+                                })),
+                                Token(token!(CloseParen, ")", 1:7-8)),
+                            ]),
+                            src: src!(1:4-8).into(),
+                        }))
+                    ]),
+                    src: src!(1:3-8).into(),
+                })),
+            ]),
+            src: src!(1:1-8).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //
+    // flatten_times = true
+    //
+
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().flatten_times(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                leaf!(Integer, "-1", <||>),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        leaf!(Symbol, "b", 1:6-7),
+                    ],
+                    data: src!(1:5-7).into(),
+                },
+            ],
+            data: src!(1:1-8).into()
+        }
+    );
+
+    //
+    // flatten_times = false
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().flatten_times(false)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        Ast::Call {
+                            head: Box::new(leaf!(Symbol, "Times", <||>)),
+                            args: vec![
+                                leaf!(Integer, "-1", <||>),
+                                leaf!(Symbol, "b", 1:6-7),
+                            ],
+                            data: src!(1:5-7).into(),
+                        }
+                    ],
+                    data: src!(1:3-8).into(),
+                },
+            ],
+            data: src!(1:1-8).into()
+        }
+    );
+
+    //------------------------------------------------------------------
+    // Variant B: Prefix minus before normal paren Times -(b*c)
+    //------------------------------------------------------------------
+
+    let cst = parse_cst("a*-(b*c)", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Times,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2)),
+                Token(token!(Star, "*", 1:2-3)),
+                Cst::Prefix(PrefixNode(OperatorNode {
+                    op: PrefixOperator::Minus,
+                    children: NodeSeq(vec![
+                        Token(token!(Minus, "-", 1:3-4)),
+                        Cst::Group(GroupNode(OperatorNode {
+                            op: GroupOperator::CodeParser_GroupParen,
+                            children: NodeSeq(vec![
+                                Token(token!(OpenParen, "(", 1:4-5)),
+                                Cst::Infix(InfixNode(OperatorNode {
+                                    op: InfixOperator::Times,
+                                    children: NodeSeq(vec![
+                                        Token(token!(Symbol, "b", 1:5-6)),
+                                        Token(token!(Star, "*", 1:6-7)),
+                                        Token(token!(Symbol, "c", 1:7-8)),
+                                    ]),
+                                    src: src!(1:5-8).into(),
+                                })),
+                                Token(token!(CloseParen, ")", 1:8-9)),
+                            ]),
+                            src: src!(1:4-9).into(),
+                        }))
+                    ]),
+                    src: src!(1:3-9).into(),
+                })),
+            ]),
+            src: src!(1:1-9).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //
+    // flatten_times = true    --    Times[a, -1, Times[b, c]]
+    //
+
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().flatten_times(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                leaf!(Integer, "-1", <||>),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Symbol, "b", 1:5-6),
+                        leaf!(Symbol, "c", 1:7-8),
+                    ],
+                    data: src!(1:5-8).into(),
+                },
+            ],
+            data: src!(1:1-9).into()
+        }
+    );
+
+    //
+    // flatten_times = false    --    Times[a, Times[-1, Times[b, c]]]
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().flatten_times(false)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        Ast::Call {
+                            head: Box::new(leaf!(Symbol, "Times", <||>)),
+                            args: vec![
+                                leaf!(Symbol, "b", 1:5-6),
+                                leaf!(Symbol, "c", 1:7-8),
+                            ],
+                            data: src!(1:5-8).into(),
+                        }
                     ],
                     data: src!(1:3-9).into(),
                 },
