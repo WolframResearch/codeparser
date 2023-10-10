@@ -6,11 +6,8 @@ use crate::{
         Cst::{self, Token},
         InfixNode, InfixOperator, OperatorNode, PrefixNode, PrefixOperator,
     },
-    macros::{src, token},
-    parse_cst,
-    source::Span,
-    tokenize::{TokenKind as TK, TokenString},
-    NodeSeq, QuirkSettings,
+    macros::{leaf, src, token},
+    parse_cst, NodeSeq, QuirkSettings,
 };
 
 use pretty_assertions::assert_eq;
@@ -74,152 +71,65 @@ fn test_abstract_flatten_times_quirk() {
     assert_eq!(
         abstract_cst(agg.clone(), Default::default()),
         Ast::Call {
-            head: Box::new(Ast::Leaf {
-                kind: TK::Symbol,
-                input: TokenString::new("Times"),
-                data: Span::unknown().into(),
-            }),
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
             args: vec![
                 Ast::Call {
-                    head: Box::new(Ast::Leaf {
-                        kind: TK::Symbol,
-                        input: TokenString::new("Times"),
-                        data: Span::unknown().into(),
-                    }),
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
                     args: vec![
-                        Ast::Leaf {
-                            kind: TK::Integer,
-                            input: TokenString::new("-1"),
-                            data: Span::unknown().into(),
-                        },
-                        Ast::Leaf {
-                            kind: TK::Symbol,
-                            input: TokenString::new("a"),
-                            data: src!(1:2-3).into(),
-                        },
+                        leaf!(Integer, "-1", <||>),
+                        leaf!(Symbol, "a", 1:2-3),
                     ],
                     data: src!(1:1-3).into(),
                 },
                 Ast::Call {
-                    head: Box::new(Ast::Leaf {
-                        kind: TK::Symbol,
-                        input: TokenString::new("Times"),
-                        data: Span::unknown().into(),
-                    }),
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
                     args: vec![
-                        Ast::Leaf {
-                            kind: TK::Symbol,
-                            input: TokenString::new("b"),
-                            data: src!(1:6-7).into()
-                        },
+                        leaf!(Symbol, "b", 1:6-7),
                         Ast::Call {
-                            head: Box::new(Ast::Leaf {
-                                kind: TK::Symbol,
-                                input: TokenString::new("Power"),
-                                data: Span::unknown().into(),
-                            }),
+                            head: Box::new(leaf!(Symbol, "Power", <||>)),
                             args: vec![
-                                Ast::Leaf {
-                                    kind: TK::Symbol,
-                                    input: TokenString::new("c"),
-                                    data: src!(1:10-11).into()
-                                },
-                                Ast::Leaf {
-                                    kind: TK::Integer,
-                                    input: TokenString::new("-1"),
-                                    data: Span::unknown().into()
-                                },
+                                leaf!(Symbol, "c", 1:10-11),
+                                leaf!(Integer, "-1", <||>),
                             ],
                             data: src!(1:6-11).into(),
                         },
                     ],
                     data: src!(1:6-11).into(),
                 },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("d"),
-                    data: src!(1:12-13).into(),
-                },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("e"),
-                    data: src!(1:32-33).into(),
-                },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("f"),
-                    data: src!(1:43-44).into(),
-                },
+                leaf!(Symbol, "d", 1:12-13),
+                leaf!(Symbol, "e", 1:32-33),
+                leaf!(Symbol, "f", 1:43-44),
             ],
             data: src!(1:1-44).into()
         }
     );
 
-    //==================================
-
+    //
     // Test the same input, but this time with the 'flatten Times' parsing
     // quirk enabled.
+    //
+
     assert_eq!(
         abstract_cst(agg, QuirkSettings::default().flatten_times()),
         Ast::Call {
-            head: Box::new(Ast::Leaf {
-                kind: TK::Symbol,
-                input: TokenString::new("Times"),
-                data: Span::unknown().into(),
-            }),
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
             args: vec![
-                Ast::Leaf {
-                    kind: TK::Integer,
-                    input: TokenString::new("-1"),
-                    data: Span::unknown().into(),
-                },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("a"),
-                    data: src!(1:2-3).into(),
-                },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("b"),
-                    data: src!(1:6-7).into()
-                },
+                leaf!(Integer, "-1", <||>),
+                leaf!(Symbol, "a", 1:2-3),
+                leaf!(Symbol, "b", 1:6-7),
                 Ast::Call {
-                    head: Box::new(Ast::Leaf {
-                        kind: TK::Symbol,
-                        input: TokenString::new("Power"),
-                        data: Span::unknown().into(),
-                    }),
+                    head: Box::new(leaf!(Symbol, "Power", <||>)),
                     args: vec![
-                        Ast::Leaf {
-                            kind: TK::Symbol,
-                            input: TokenString::new("c"),
-                            data: src!(1:10-11).into()
-                        },
-                        Ast::Leaf {
-                            kind: TK::Integer,
-                            input: TokenString::new("-1"),
-                            data: Span::unknown().into()
-                        },
+                        leaf!(Symbol, "c", 1:10-11),
+                        leaf!(Integer, "-1", <||>),
                     ],
                     // TODO(polish): Any better source span than this pretty
                     //               broad one?
                     data: src!(1:1-44).into(),
                 },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("d"),
-                    data: src!(1:12-13).into(),
-                },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("e"),
-                    data: src!(1:32-33).into(),
-                },
-                Ast::Leaf {
-                    kind: TK::Symbol,
-                    input: TokenString::new("f"),
-                    data: src!(1:43-44).into(),
-                },
+                leaf!(Symbol, "d", 1:12-13),
+                leaf!(Symbol, "e", 1:32-33),
+                leaf!(Symbol, "f", 1:43-44),
             ],
             data: src!(1:1-44).into()
         }

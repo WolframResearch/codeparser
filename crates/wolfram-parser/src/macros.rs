@@ -154,10 +154,76 @@ macro_rules! __token {
     };
 }
 
+
+/// Convenience constructor for [`Ast::Leaf`][crate::ast::Ast::Leaf]s.
+///
+/// **Usage:**
+///
+/// ```
+/// # use wolfram_parser::{macros::{src, leaf}, ast::Ast};
+/// let ast: Ast = leaf!(Integer, "5", 1:1-1:2);
+/// //                   ^^^^^^^  ...  *******
+/// ```
+///
+/// * `^^^` — [`TokenKind`][crate::tokenize::TokenKind] variant
+/// * `...` — input content
+/// * `***` — [`Source`][crate::source::Source] of the token; supports [`src!`] syntax
+///
+/// # Example
+///
+/// Construct an `Ast::Leaf` with unknown or unspecified source location:
+///
+/// ```
+/// use wolfram_parser::{ast::Ast, macros::leaf};
+///
+/// let ast = leaf!(Integer, "5", <||>);
+/// ```
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __leaf {
+    // leaf!(Kind, "...", 1:1-3:2)
+    ($kind:ident, $input:tt, $l1:literal : $c1:literal  -  $l2:literal : $c2:literal) => {
+        $crate::macros::leaf!($kind, $input, $crate::macros::src!($l1:$c1-$l2:$c2))
+    };
+
+    // leaf!(Kind, "...", 1:1-2)
+    ($kind:ident, $input:tt, $l1:literal : $c1:literal  -  $c2:literal) => {
+        $crate::macros::leaf!($kind, $input, $crate::macros::src!($l1:$c1-$c2))
+    };
+
+    // leaf!(Kind, "...", {1, 2, 3})
+    ($kind:ident, $input:tt, {$($value:literal),*}) => {
+        $crate:::ast:Ast::Leaf {
+            kind: $crate::tokenize::TokenKind::$kind,
+            input: $crate::tokenize::TokenString::new($input.as_ref()),
+            data: $crate::ast::AstMetadata::from($crate::macros::src!({$($value),*})),
+        }
+    };
+
+    // leaf!(Kind, "...", <||>)
+    ($kind:ident, $input:tt, <||>) => {
+        $crate::ast::Ast::Leaf {
+            kind: $crate::tokenize::TokenKind::$kind,
+            input: $crate::tokenize::TokenString::new($input.as_ref()),
+            data: $crate::ast::AstMetadata::empty(),
+        }
+    };
+
+    ($kind:ident, $input:tt, $src:expr) => {
+        $crate::ast::Ast::Leaf {
+            kind: $crate::tokenize::TokenKind::$kind,
+            input: $crate::tokenize::TokenString::new($input.as_ref()),
+            data: $crate::ast::AstMetadata::from($src),
+        }
+    };
+}
+
+
+
 // Publicly export these macros from `wolfram_parser::macros` *without* also
 // publicly exporting them from the root `wolfram_parser` module.
 //
 // This uses the technique described here:
 //     <https://users.rust-lang.org/t/how-to-namespace-a-macro-rules-macro-within-a-module-or-macro-export-it-without-polluting-the-top-level-namespace/63779/5#answering-the-original-threads-title-xy-problem-_quid_-of-macro_exported-macros-1>
 #[doc(inline)]
-pub use {__src as src, __token as token};
+pub use {__leaf as leaf, __src as src, __token as token};
