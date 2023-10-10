@@ -584,3 +584,17 @@ pub(crate) fn non_zero_u32_add(value: NonZeroU32, add: u32) -> NonZeroU32 {
 
     value.saturating_add(add)
 }
+
+//=======================================
+// Functional list operations
+//=======================================
+
+pub(crate) fn append<T>(mut list: Vec<T>, elem: T) -> Vec<T> {
+    list.push(elem);
+    list
+}
+
+pub(crate) fn prepend<T>(mut list: Vec<T>, elem: T) -> Vec<T> {
+    list.insert(0, elem);
+    list
+}

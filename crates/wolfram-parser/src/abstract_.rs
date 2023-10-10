@@ -23,6 +23,7 @@ use crate::{
         TokenKind::{self, self as TK},
         TokenSource, TokenString,
     },
+    utils::prepend,
     NodeSeq, QuirkSettings,
 };
 
@@ -1942,13 +1943,10 @@ where
                         // it is possible to have nested prefix Minus, e.g., - - a
                         // so must call recursively into flattenTimes
                         // *)
-                        let mut vec: Vec<Cst<TokenString, S>> =
-                            vec![agg::WL!(ToNode[-1]).into_owned_input()];
-                        vec.extend_from_slice(&flattenTimes(
-                            vec![operand],
-                            data.clone(),
-                        ));
-                        vec
+                        prepend(
+                            flatten_times_cst(operand, data),
+                            agg::WL!(ToNode[-1]).into_owned_input(),
+                        )
                     } else {
                         vec![node.into_owned_input()]
                     }
