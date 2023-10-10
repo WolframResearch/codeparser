@@ -244,7 +244,7 @@ pub struct ParseOptions {
     src_convention: SourceConvention,
     encoding_mode: EncodingMode,
     tab_width: u32,
-    quirk_settings: QuirkSettings,
+    pub quirk_settings: QuirkSettings,
 }
 
 impl Default for ParseOptions {
