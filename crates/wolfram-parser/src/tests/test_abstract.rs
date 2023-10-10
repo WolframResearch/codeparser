@@ -273,4 +273,67 @@ fn test_abstract_infix_binary_at_quirk() {
             data: src!(1:1-13).into(),
         }
     );
+
+    //==================================
+    // With SameQ
+    //==================================
+
+    //
+    // NOTE: Unlike the previous cases covering <> and +, === DOES NOT
+    //       support this infix binary at quirky parsing behavior. That
+    //       may or may not be a bug, but it is the behavior of the
+    //       Kernel parser as of 13.3.
+    //
+
+    let cst = parse_cst("a === SameQ @ b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::SameQ,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(Whitespace, " ", 1:2-3),),
+                Token(token!(EqualEqualEqual, "===", 1:3-6),),
+                Token(token!(Whitespace, " ", 1:6-7),),
+                Cst::Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::CodeParser_BinaryAt,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "SameQ", 1:7-12),),
+                        Token(token!(Whitespace, " ", 1:12-13),),
+                        Token(token!(At, "@", 1:13-14),),
+                        Token(token!(Whitespace, " ", 1:14-15),),
+                        Token(token!(Symbol, "b", 1:15-16),),
+                    ]),
+                    src: src!(1:7-16).into(),
+                })),
+            ]),
+            src: src!(1:1-16).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    // Test that even with `infix_binary_at` quirk enabled, this DOES NOT
+    // parse as a flag `SameQ[a, b]` expression.
+    #[rustfmt::skip]
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().infix_binary_at(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "SameQ", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "SameQ", 1:7-12)),
+                    args: vec![
+                        leaf!(Symbol, "b", 1:15-16)
+                    ],
+                    data: src!(1:7-16).into()
+                }
+            ],
+            data: src!(1:1-16).into(),
+        }
+    );
 }
