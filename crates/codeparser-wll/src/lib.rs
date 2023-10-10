@@ -362,15 +362,15 @@ pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
 pub fn Abstract_LibraryLink(link: &mut wstp::Link) {
     let mut args: Vec<Expr> = parse_assuming_link_print_full_symbols(link);
 
-    if args.len() != 1 {
+    if args.len() != 2 {
         panic!("unexpected number of arguments passed to Abstract: {args:?}")
     }
 
     let arg = args.remove(0);
+    let quirks = args.remove(0);
 
-    // FIXME: These should be passed in as an argument, not just always the
-    //        default.
-    let quirk_settings = QuirkSettings::default();
+    let quirk_settings = QuirkSettings::from_expr(&quirks)
+        .expect("invalid quirk settings value for abstract");
 
     let node = match Cst::from_expr(&arg) {
         Ok(node) => abstract_cst(node, quirk_settings),
