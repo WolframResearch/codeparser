@@ -203,6 +203,90 @@ fn test_abstract_flatten_times_quirk() {
     );
 
     //==================================
+    // Test basic flatten times through Binary Divide numerator (TID:231010/4)
+    //==================================
+
+    let cst = parse_cst("-a/b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Divide,
+            children: NodeSeq(vec![
+                Cst::Prefix(PrefixNode(OperatorNode {
+                    op: PrefixOperator::Minus,
+                    children: NodeSeq(vec![
+                        Token(token!(Minus, "-", 1:1-2)),
+                        Token(token!(Symbol, "a", 1:2-3))
+                    ]),
+                    src: src!(1:1-3).into()
+                })),
+                Token(token!(Slash, "/", 1:3-4)),
+                Token(token!(Symbol, "b", 1:4-5)),
+            ]),
+            src: src!(1:1-5).into()
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //
+    // flatten_times = true
+    //
+
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().flatten_times(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Integer, "-1", <||>),
+                leaf!(Symbol, "a", 1:2-3),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Power", <||>)),
+                    args: vec![
+                        leaf!(Symbol, "b", 1:4-5),
+                        leaf!(Integer, "-1", <||>),
+                    ],
+                    data: src!(1:1-5).into(),
+                },
+            ],
+            data: src!(1:1-5).into()
+        }
+    );
+
+    //
+    // flatten_times = false
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().flatten_times(false)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        leaf!(Symbol, "a", 1:2-3),
+                    ],
+                    data: src!(1:1-3).into(),
+                },
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Power", <||>)),
+                    args: vec![
+                        leaf!(Symbol, "b", 1:4-5),
+                        leaf!(Integer, "-1", <||>),
+                    ],
+                    data: src!(1:1-5).into(),
+                },
+            ],
+            data: src!(1:1-5).into()
+        }
+    );
+
+    //==================================
     // Test nested flatten times through Binary Divide numerator (TID:231010/1)
     //==================================
 

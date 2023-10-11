@@ -2020,6 +2020,7 @@ fn abstractTimes_BinaryNode_Divide<
     [left, right]: [Cst<I, S>; 2],
     data: S,
 ) -> Ast {
+    // TID:231010/4 -- flatten times through Divide numerator
     let children = flattenTimes(
         vec![left, reciprocate(right, data.clone())],
         data.clone(),
