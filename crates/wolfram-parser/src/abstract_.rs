@@ -2037,53 +2037,58 @@ pub(crate) fn processInfixBinaryAtQuirk<
     node: Cst<I, S>,
     symName: &str,
 ) -> Ast {
-    match node {
-        Cst::Binary(BinaryNode(OperatorNode {
-            op: BinaryOperator::CodeParser_BinaryAt,
-            ref children,
-            src: _,
-        })) if quirks::is_quirk_enabled(Quirk::InfixBinaryAt) => {
-            let [left, middle, rhs] = expect_children(children.clone());
-
-            if !matches!(
-                left,
-                Cst::Token(Token {
-                    tok: TK::Symbol,
-                    input,
-                    ..
-                }) if input.as_str() == symName
-            ) {
-                return abstract_(node);
-            }
-
-            if !matches!(middle, Cst::Token(Token { tok: TK::At, .. })) {
-                todo!()
-            }
-
-            // let data = rhs.source();
-
-            /* FIXME: Port this issue handling logic.
-                issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-                synthesizedSource = {symData[[Key[Source], 1]], atData[[Key[Source], 2]]};
-
-                AppendTo[
-                    issues,
-                    SyntaxIssue[
-                        "InfixBinaryAtQuirk", "Unexpected parse.", "Remark",
-                        <| Source -> synthesizedSource, ConfidenceLevel -> 1.0 |>
-                    ]
-                ];
-
-                AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-                rhs[[3]] = data;
-            */
-
-            abstract_(rhs)
-        },
-        _ => abstract_(node),
+    if !quirks::is_quirk_enabled(Quirk::InfixBinaryAt) {
+        return abstract_(node);
     }
+
+    // Check if this is a `left @ right` node
+    let Cst::Binary(BinaryNode(OperatorNode {
+        op: BinaryOperator::CodeParser_BinaryAt,
+        ref children,
+        src: _,
+    })) = node
+    else {
+        return abstract_(node);
+    };
+
+    let [left, middle, rhs] = expect_children(children.clone());
+
+    if !matches!(
+        left,
+        Cst::Token(Token {
+            tok: TK::Symbol,
+            input,
+            ..
+        }) if input.as_str() == symName
+    ) {
+        return abstract_(node);
+    }
+
+    if !matches!(middle, Cst::Token(Token { tok: TK::At, .. })) {
+        todo!()
+    }
+
+    // let data = rhs.source();
+
+    /* FIXME: Port this issue handling logic.
+        issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+        synthesizedSource = {symData[[Key[Source], 1]], atData[[Key[Source], 2]]};
+
+        AppendTo[
+            issues,
+            SyntaxIssue[
+                "InfixBinaryAtQuirk", "Unexpected parse.", "Remark",
+                <| Source -> synthesizedSource, ConfidenceLevel -> 1.0 |>
+            ]
+        ];
+
+        AssociateTo[data, AbstractSyntaxIssues -> issues];
+
+        rhs[[3]] = data;
+    */
+
+    abstract_(rhs)
 }
 
 //======================================
