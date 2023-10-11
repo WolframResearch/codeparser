@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// An abstract syntax tree (AST) node.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Ast {
     /// `LeafNode[...]`
     Leaf {
@@ -464,19 +464,129 @@ pub(crate) use WL;
 // Format Impls
 //======================================
 
+impl Debug for Ast {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Leaf { kind, input, data } => {
+                // Format this as the `leaf!(..)` invocation to construct this Leaf.
+                write!(f, "leaf!({kind:?}, {input}, {data:?})")
+            },
+            Self::Error { kind, input, data } => f
+                .debug_struct("Error")
+                .field("kind", kind)
+                .field("input", input)
+                .field("data", data)
+                .finish(),
+            Self::Call { head, args, data } => f
+                .debug_struct("Call")
+                .field("head", head)
+                .field("args", args)
+                .field("data", data)
+                .finish(),
+            Self::CallMissingCloser { head, args, data } => f
+                .debug_struct("CallMissingCloser")
+                .field("head", head)
+                .field("args", args)
+                .field("data", data)
+                .finish(),
+            Self::UnterminatedCall { head, args, data } => f
+                .debug_struct("UnterminatedCall")
+                .field("head", head)
+                .field("args", args)
+                .field("data", data)
+                .finish(),
+            Self::SyntaxError {
+                kind,
+                children,
+                data,
+            } => f
+                .debug_struct("SyntaxError")
+                .field("kind", kind)
+                .field("children", children)
+                .field("data", data)
+                .finish(),
+            Self::AbstractSyntaxError { kind, args, data } => f
+                .debug_struct("AbstractSyntaxError")
+                .field("kind", kind)
+                .field("args", args)
+                .field("data", data)
+                .finish(),
+            Self::Box { kind, args, data } => f
+                .debug_struct("Box")
+                .field("kind", kind)
+                .field("args", args)
+                .field("data", data)
+                .finish(),
+            Self::Code {
+                first,
+                second,
+                data,
+            } => f
+                .debug_struct("Code")
+                .field("first", first)
+                .field("second", second)
+                .field("data", data)
+                .finish(),
+            Self::Group {
+                kind,
+                children,
+                data,
+            } => f
+                .debug_struct("Group")
+                .field("kind", kind)
+                .field("children", children)
+                .field("data", data)
+                .finish(),
+            Self::GroupMissingCloser {
+                kind,
+                children,
+                data,
+            } => f
+                .debug_struct("GroupMissingCloser")
+                .field("kind", kind)
+                .field("children", children)
+                .field("data", data)
+                .finish(),
+            Self::GroupMissingOpener {
+                kind,
+                children,
+                data,
+            } => f
+                .debug_struct("GroupMissingOpener")
+                .field("kind", kind)
+                .field("children", children)
+                .field("data", data)
+                .finish(),
+            Self::TagBox_GroupParen { group, tag, data } => f
+                .debug_struct("TagBox_GroupParen")
+                .field("group", group)
+                .field("tag", tag)
+                .field("data", data)
+                .finish(),
+            Self::PrefixNode_PrefixLinearSyntaxBang(arg0, arg1) => f
+                .debug_tuple("PrefixNode_PrefixLinearSyntaxBang")
+                .field(arg0)
+                .field(arg1)
+                .finish(),
+        }
+    }
+}
+
 impl Debug for AstMetadata {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if cfg!(test) {
-            let AstMetadata { source, issues } = self;
+        let AstMetadata { source, issues } = self;
 
-            if issues.is_empty() {
-                return write!(f, "src!({}).into()", source);
+        if issues.is_empty() {
+            if source.is_unknown() {
+                return write!(f, "<||>");
+            } else {
+                return write!(f, "{}", source);
             }
         }
 
         f.debug_struct("AstMetadata")
-            .field("source", &self.source)
-            .field("issues", &self.issues)
+            .field("source", source)
+            .field("issues", issues)
             .finish()
     }
 }

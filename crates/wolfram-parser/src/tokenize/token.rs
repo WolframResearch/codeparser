@@ -1,4 +1,4 @@
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Display};
 
 use crate::{
     source::{BufferAndLength, Source, Span},
@@ -492,10 +492,23 @@ impl Debug for TokenString {
         match std::str::from_utf8(buf) {
             Ok(str) => {
                 if cfg!(test) {
-                    write!(f, "TokenString::new({str:?})")
+                    write!(f, "{self}")
                 } else {
                     f.debug_struct("TokenString").field("buf", &str).finish()
                 }
+            },
+            Err(_) => f.debug_struct("TokenString").field("buf", buf).finish(),
+        }
+    }
+}
+
+impl Display for TokenString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let TokenString { buf } = self;
+
+        match std::str::from_utf8(buf) {
+            Ok(str) => {
+                write!(f, "{str:?}")
             },
             Err(_) => f.debug_struct("TokenString").field("buf", buf).finish(),
         }
