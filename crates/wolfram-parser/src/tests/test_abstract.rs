@@ -530,6 +530,7 @@ fn test_abstract_infix_binary_at_quirk() {
     // With StringJoin
     //==================================
 
+    // TID:231010/2
     let cst = parse_cst("a<>StringJoin@b", &Default::default());
 
     let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
@@ -663,7 +664,7 @@ fn test_abstract_infix_binary_at_quirk() {
     );
 
     //==================================
-    // With SameQ
+    // With SameQ (TID:231010/3)
     //==================================
 
     //
