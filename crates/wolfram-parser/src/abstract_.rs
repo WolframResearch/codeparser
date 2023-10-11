@@ -770,6 +770,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         })
                         // make sure to reverse children of Divisible
                         .rev()
+                        .map(abstract_)
                         .collect();
 
                     WL!( CallNode[ToNode[Divisible], processed, data] )
@@ -838,6 +839,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 op.to_symbol().symbol_name().as_str(),
                             )
                         })
+                        .map(abstract_)
                         .collect();
 
                     WL!( CallNode[ToNode(op), children, data] )
@@ -1858,6 +1860,7 @@ fn abstractPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 
     let children = flattened
         .map(|node| processInfixBinaryAtQuirk(node, "Plus"))
+        .map(abstract_)
         .collect();
 
     WL!( CallNode[ToNode[Plus], children, data])
@@ -2007,6 +2010,7 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     let children: Vec<Ast> = flattened
         .into_iter()
         .map(|node| processInfixBinaryAtQuirk(node, "Times"))
+        .map(abstract_)
         .collect();
 
     WL!( CallNode[ToNode[Times], children, data] )
@@ -2041,9 +2045,9 @@ pub(crate) fn processInfixBinaryAtQuirk<
 >(
     node: Cst<I, S>,
     symName: &str,
-) -> Ast {
+) -> Cst<I, S> {
     if !quirks::is_quirk_enabled(Quirk::InfixBinaryAt) {
-        return abstract_(node);
+        return node;
     }
 
     // Check if this is a `left @ right` node
@@ -2053,7 +2057,7 @@ pub(crate) fn processInfixBinaryAtQuirk<
         src: _,
     })) = node
     else {
-        return abstract_(node);
+        return node;
     };
 
     let [left, middle, rhs] = expect_children(children.clone());
@@ -2066,7 +2070,7 @@ pub(crate) fn processInfixBinaryAtQuirk<
             ..
         }) if input.as_str() == symName
     ) {
-        return abstract_(node);
+        return node;
     }
 
     // TODO: Make this a debug_assert!?
@@ -2093,7 +2097,7 @@ pub(crate) fn processInfixBinaryAtQuirk<
     */
 
     // TID:231010/2
-    abstract_(rhs)
+    rhs
 }
 
 //======================================
