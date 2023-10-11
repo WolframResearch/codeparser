@@ -725,3 +725,177 @@ fn test_abstract_infix_binary_at_quirk() {
         }
     );
 }
+
+#[test]
+fn test_abstract_flatten_times_combined_with_infix_binary_at_quirk() {
+    let cst = parse_cst("a * Times @ -b", &Default::default());
+
+    //
+    // Four different ways to abstract this:
+    //
+    //            | infix_binary_at | flatten_times | Unevaluated full form
+    // -----------|-----------------|---------------|----------------------
+    // Variant A: | true            | true          | Times[a, Times[-1, b]]
+    // Variant B: | true            | false         | Times[a, Times[-1, b]]
+    // Variant C: | false           | true          | Times[a, Times[Times[-1, b]]]
+    // Variant D: | false           | false         | Times[a, Times[Times[-1, b]]]
+    //
+    // TODO: Is there a short input string that makes the full form of all
+    //       four variants different?
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Times,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2)),
+                Token(token!(Whitespace, " ", 1:2-3)),
+                Token(token!(Star, "*", 1:3-4)),
+                Token(token!(Whitespace, " ", 1:4-5)),
+                Cst::Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::CodeParser_BinaryAt,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "Times", 1:5-10)),
+                        Token(token!(Whitespace, " ", 1:10-11)),
+                        Token(token!(At, "@", 1:11-12)),
+                        Token(token!(Whitespace, " ", 1:12-13)),
+                        Cst::Prefix(PrefixNode(OperatorNode {
+                            op: PrefixOperator::Minus,
+                            children: NodeSeq(vec![
+                                Token(token!(Minus, "-", 1:13-14),),
+                                Token(token!(Symbol, "b", 1:14-15),),
+                            ]),
+                            src: src!(1:13-15).into(),
+                        })),
+                    ]),
+                    src: src!(1:5-15).into(),
+                })),
+            ]),
+            src: src!(1:1-15).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //
+    // Variant A: true, true
+    //
+
+    assert_eq!(
+        abstract_cst(
+            agg.clone(),
+            QuirkSettings::default()
+                .infix_binary_at(true)
+                .flatten_times(true)
+        ),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        leaf!(Symbol, "b", 1:14-15),
+                    ],
+                    data: src!(1:13-15).into(),
+                }
+            ],
+            data: src!(1:1-15).into(),
+        }
+    );
+
+    //
+    // Variant B: true, false
+    //
+
+    assert_eq!(
+        abstract_cst(
+            agg.clone(),
+            QuirkSettings::default()
+                .infix_binary_at(true)
+                .flatten_times(false)
+        ),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        leaf!(Symbol, "b", 1:14-15),
+                    ],
+                    data: src!(1:13-15).into(),
+                }
+            ],
+            data: src!(1:1-15).into(),
+        }
+    );
+
+    //
+    // Variant C: false, true
+    //
+
+    assert_eq!(
+        abstract_cst(
+            agg.clone(),
+            QuirkSettings::default()
+                .infix_binary_at(false)
+                .flatten_times(true)
+        ),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", 1:5-10)),
+                    args: vec![Ast::Call {
+                        head: Box::new(leaf!(Symbol, "Times", <||>)),
+                        args: vec![
+                            leaf!(Integer, "-1", <||>),
+                            leaf!(Symbol, "b", 1:14-15),
+                        ],
+                        data: src!(1:13-15).into(),
+                    }],
+                    data: src!(1:5-15).into(),
+                }
+            ],
+            data: src!(1:1-15).into(),
+        }
+    );
+
+    //
+    // Variant D: false, false
+    //
+
+    assert_eq!(
+        abstract_cst(
+            agg.clone(),
+            QuirkSettings::default()
+                .infix_binary_at(false)
+                .flatten_times(false)
+        ),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", 1:5-10)),
+                    args: vec![Ast::Call {
+                        head: Box::new(leaf!(Symbol, "Times", <||>)),
+                        args: vec![
+                            leaf!(Integer, "-1", <||>),
+                            leaf!(Symbol, "b", 1:14-15),
+                        ],
+                        data: src!(1:13-15).into(),
+                    }],
+                    data: src!(1:5-15).into(),
+                }
+            ],
+            data: src!(1:1-15).into(),
+        }
+    );
+}
