@@ -140,7 +140,7 @@ macro_rules! __token {
     ($kind:ident, $input:tt, {$($value:literal),*}) => {
         $crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::$kind,
-            src: $crate::macros::src!({$($value),*}),
+            src: $crate::source::Source::from($crate::macros::src!({$($value),*})),
             input: $crate::tokenize::TokenStr::new($input.as_ref()),
         }
     };
