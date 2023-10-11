@@ -601,7 +601,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
 
             match op {
                 BinaryOperator::Divide => {
-                    abstractTimes_BinaryNode([left, right], data)
+                    abstractTimes_BinaryNode_Divide([left, right], data)
                 },
 
                 BinaryOperator::CodeParser_BinaryAt => WL!(
@@ -2013,7 +2013,10 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
 }
 
 // BinaryNode[Divide, {left_, right_}, data_]
-fn abstractTimes_BinaryNode<I: TokenInput + Debug, S: TokenSource + Debug>(
+fn abstractTimes_BinaryNode_Divide<
+    I: TokenInput + Debug,
+    S: TokenSource + Debug,
+>(
     [left, right]: [Cst<I, S>; 2],
     data: S,
 ) -> Ast {
