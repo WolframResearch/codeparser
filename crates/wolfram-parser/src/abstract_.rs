@@ -2026,6 +2026,7 @@ fn abstractTimes_BinaryNode_Divide<
         data.clone(),
     )
     .into_iter()
+    // TID:231010/5 -- do NOT do infix binary at quirk here
     .map(abstract_)
     .collect();
 

@@ -809,6 +809,133 @@ fn test_abstract_infix_binary_at_quirk() {
             data: src!(1:1-16).into(),
         }
     );
+
+    //==================================
+    // With Divide (aka Times) (TID:231010/5)
+    //==================================
+
+    //
+    // NOTE: Divide also DOES NOT support the infix binary at quirky parsing
+    //       behavior. Two cases are tested: "Times@a/b" and "Divide@a/b".
+    //
+
+    //
+    // Variant A: "Times@..."
+    //
+
+    let cst = parse_cst("Times@a/b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Divide,
+            children: NodeSeq(vec![
+                Cst::Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::CodeParser_BinaryAt,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "Times", 1:1-6),),
+                        Token(token!(At, "@", 1:6-7),),
+                        Token(token!(Symbol, "a", 1:7-8),),
+                    ]),
+                    src: src!(1:1-8).into(),
+                })),
+                Token(token!(Slash, "/", 1:8-9),),
+                Token(token!(Symbol, "b", 1:9-10),),
+            ],),
+            src: src!(1:1-10).into(),
+        })),
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    // Test that even with `infix_binary_at` quirk enabled, this DOES NOT
+    // parse as a flag `SameQ[a, b]` expression.
+    #[rustfmt::skip]
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().infix_binary_at(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", 1:1-6)),
+                    args: vec![
+                        leaf!(Symbol, "a", 1:7-8),
+                    ],
+                    data: src!(1:1-8).into(),
+                },
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Power", <||>)),
+                    args: vec![
+                        leaf!(Symbol, "b", 1:9-10),
+                        leaf!(Integer, "-1", <||>),
+                    ],
+                    data: src!(1:1-10).into(),
+                },
+            ],
+            data: src!(1:1-10).into(),
+        }
+    );
+
+    //
+    // Variant B: "Divide@..."
+    //
+
+    let cst = parse_cst("Divide@a/b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::Divide,
+            children: NodeSeq(vec![
+                Cst::Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::CodeParser_BinaryAt,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "Divide", 1:1-7),),
+                        Token(token!(At, "@", 1:7-8),),
+                        Token(token!(Symbol, "a", 1:8-9),),
+                    ]),
+                    src: src!(1:1-9).into(),
+                })),
+                Token(token!(Slash, "/", 1:9-10),),
+                Token(token!(Symbol, "b", 1:10-11),),
+            ],),
+            src: src!(1:1-11).into(),
+        })),
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    // Test that even with `infix_binary_at` quirk enabled, this DOES NOT
+    // parse as a flag `SameQ[a, b]` expression.
+    #[rustfmt::skip]
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().infix_binary_at(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Divide", 1:1-7)),
+                    args: vec![
+                        leaf!(Symbol, "a", 1:8-9),
+                    ],
+                    data: src!(1:1-9).into(),
+                },
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Power", <||>)),
+                    args: vec![
+                        leaf!(Symbol, "b", 1:10-11),
+                        leaf!(Integer, "-1", <||>),
+                    ],
+                    data: src!(1:1-11).into(),
+                },
+            ],
+            data: src!(1:1-11).into(),
+        }
+    );
 }
 
 #[test]
