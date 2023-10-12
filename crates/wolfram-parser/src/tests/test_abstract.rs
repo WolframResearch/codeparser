@@ -13,6 +13,83 @@ use crate::{
 
 use pretty_assertions::assert_eq;
 
+
+#[test]
+fn test_negate_infix_times() {
+    //
+    // TID:231012/1
+    //
+
+    let cst = parse_cst("a-b*c", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Plus,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(Minus, "-", 1:2-3),),
+                Cst::Infix(InfixNode(OperatorNode {
+                    op: InfixOperator::Times,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "b", 1:3-4),),
+                        Token(token!(Star, "*", 1:4-5),),
+                        Token(token!(Symbol, "c", 1:5-6),),
+                    ],),
+                    src: src!(1:3-6).into(),
+                },),),
+            ]),
+            src: src!(1:1-6).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    let common_expected_ast = Ast::Call {
+        head: Box::new(leaf!(Symbol, "Plus", <||>)),
+        args: vec![
+            leaf!(Symbol, "a", 1:1-2),
+            Ast::Call {
+                head: Box::new(leaf!(Symbol, "Times", <||>)),
+                args: vec![
+                    leaf!(Integer, "-1", <||>),
+                    leaf!(Symbol, "b", 1:3-4),
+                    leaf!(Symbol, "c", 1:5-6),
+                ],
+                data: src!(1:2-6).into(),
+            },
+        ],
+        data: src!(1:1-6).into(),
+    };
+
+    //
+    // flatten_times = false
+    //
+
+    assert_eq!(
+        abstract_cst(
+            agg.clone(),
+            QuirkSettings::default().flatten_times(false)
+        ),
+        common_expected_ast
+    );
+
+    //
+    // flatten_times = true
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().flatten_times(true)),
+        common_expected_ast
+    );
+}
+
+//==========================================================
+// Quirks
+//==========================================================
+
 #[test]
 fn test_abstract_flatten_times_quirk() {
     let cst = parse_cst(

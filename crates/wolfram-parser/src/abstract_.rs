@@ -1679,6 +1679,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
 
         // negate[InfixNode[Times, children_, _], data_] :=
         //   InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>] } ~Join~ children, data]
+        // TID:231012/1 -- negating an Infix Times node
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(mut children),
