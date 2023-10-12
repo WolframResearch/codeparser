@@ -589,12 +589,28 @@ pub(crate) fn non_zero_u32_add(value: NonZeroU32, add: u32) -> NonZeroU32 {
 // Functional list operations
 //=======================================
 
+/// Join an array and a vector.
+pub(crate) fn join<T, const N: usize>(
+    array: [T; N],
+    mut vec: Vec<T>,
+) -> Vec<T> {
+    vec.splice(0..0, array);
+    vec
+}
+
+#[allow(dead_code)]
 pub(crate) fn append<T>(mut list: Vec<T>, elem: T) -> Vec<T> {
     list.push(elem);
     list
 }
 
+#[allow(dead_code)]
 pub(crate) fn prepend<T>(mut list: Vec<T>, elem: T) -> Vec<T> {
     list.insert(0, elem);
     list
+}
+
+#[test]
+fn test_join() {
+    assert_eq!(join([1, 2, 3], vec![4, 5, 6]), vec![1, 2, 3, 4, 5, 6])
 }

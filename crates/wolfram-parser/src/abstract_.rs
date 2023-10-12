@@ -23,7 +23,7 @@ use crate::{
         TokenKind::{self, self as TK},
         TokenSource, TokenString,
     },
-    utils::prepend,
+    utils::join,
     NodeSeq, QuirkSettings,
 };
 
@@ -1682,11 +1682,13 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
         // TID:231012/1 -- negating an Infix Times node
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
-            children: NodeSeq(mut children),
+            children: NodeSeq(children),
             src: _,
         })) => {
-            children.insert(0, agg::WL!(LeafNode[Star, "*", <||>]));
-            children.insert(0, agg::WL!(ToNode[-1]));
+            let children = join(
+                [agg::WL!(ToNode[-1]), agg::WL!(LeafNode[Star, "*", <||>])],
+                children,
+            );
 
             let infix = InfixNode(OperatorNode {
                 op: InfixOperator::Times,
@@ -1950,9 +1952,9 @@ where
                         // it is possible to have nested prefix Minus, e.g., - - a
                         // so must call recursively into flattenTimes
                         // *)
-                        prepend(
+                        join(
+                            [agg::WL!(ToNode[-1]).into_owned_input()],
                             flatten_times_cst(operand, data),
-                            agg::WL!(ToNode[-1]).into_owned_input(),
                         )
                     } else {
                         vec![node.into_owned_input()]
