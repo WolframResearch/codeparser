@@ -1676,10 +1676,8 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
         //
         // This allows these nodes to be merged later e.g., 1-a/b
         //
-
-        // negate[InfixNode[Times, children_, _], data_] :=
-        //   InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>] } ~Join~ children, data]
         // TID:231012/1 -- negating an Infix Times node
+        // TID:231012/2 -- negating an Infix Times node that is later flattened (quirk)
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(children),

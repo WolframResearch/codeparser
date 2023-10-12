@@ -84,6 +84,110 @@ fn test_negate_infix_times() {
         abstract_cst(agg, QuirkSettings::default().flatten_times(true)),
         common_expected_ast
     );
+
+    //==================================
+    // Flatten times after negate TID:231012/2
+    //==================================
+
+    let cst = parse_cst("a-b/c", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Plus,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(Minus, "-", 1:2-3),),
+                Cst::Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::Divide,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "b", 1:3-4)),
+                        Token(token!(Slash, "/", 1:4-5)),
+                        Token(token!(Symbol, "c", 1:5-6)),
+                    ]),
+                    src: src!(1:3-6).into(),
+                })),
+            ]),
+            src: src!(1:1-6).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //
+    // flatten_times = false
+    //
+
+    assert_eq!(
+        abstract_cst(
+            agg.clone(),
+            QuirkSettings::default().flatten_times(false)
+        ),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Plus", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        Ast::Call {
+                            head: Box::new(leaf!(Symbol, "Times", <||>)),
+                            args: vec![
+                                leaf!(Symbol, "b", 1:3-4),
+                                Ast::Call {
+                                    head: Box::new(
+                                        leaf!(Symbol, "Power", <||>)
+                                    ),
+                                    args: vec![
+                                        leaf!(Symbol, "c", 1:5-6),
+                                        leaf!(Integer, "-1", <||>),
+                                    ],
+                                    data: src!(1:3-6).into(),
+                                },
+                            ],
+                            data: src!(1:3-6).into(),
+                        },
+                    ],
+                    data: src!(1:2-6).into(),
+                },
+            ],
+            data: src!(1:1-6).into(),
+        }
+    );
+
+    //
+    // flatten_times = true
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().flatten_times(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Plus", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        leaf!(Symbol, "b", 1:3-4),
+                        Ast::Call {
+                            head: Box::new(leaf!(Symbol, "Power", <||>)),
+                            args: vec![
+                                leaf!(Symbol, "c", 1:5-6),
+                                leaf!(Integer, "-1", <||>),
+                            ],
+                            data: src!(1:2-6).into(),
+                        },
+                    ],
+                    data: src!(1:2-6).into(),
+                },
+            ],
+            data: src!(1:1-6).into(),
+        }
+    );
 }
 
 //==========================================================
