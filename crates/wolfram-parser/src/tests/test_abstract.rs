@@ -318,6 +318,8 @@ fn test_abstract_flatten_times_quirk() {
     );
 
     //==================================
+    // Nested prefix minus *without* enclosing Times (TID:231012/3)
+    //==================================
 
     let cst = parse_cst("- - a", &Default::default());
 
@@ -380,6 +382,98 @@ fn test_abstract_flatten_times_quirk() {
                 leaf!(Symbol, "a", 1:5-6),
             ],
             data: src!(1:1-6).into()
+        }
+    );
+
+    //==================================
+    // Nested prefix minus *with* enclosing Times (TID:231012/4)
+    //==================================
+
+    let cst = parse_cst("- - a * b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
+    assert_eq!(
+        *cst,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Times,
+            children: NodeSeq(vec![
+                Cst::Prefix(PrefixNode(OperatorNode {
+                    op: PrefixOperator::Minus,
+                    children: NodeSeq(vec![
+                        Token(token!(Minus, "-", 1:1-2)),
+                        Token(token!(Whitespace, " ", 1:2-3)),
+                        Cst::Prefix(PrefixNode(OperatorNode {
+                            op: PrefixOperator::Minus,
+                            children: NodeSeq(vec![
+                                Token(token!(Minus, "-", 1:3-4)),
+                                Token(token!(Whitespace, " ", 1:4-5)),
+                                Token(token!(Symbol, "a", 1:5-6)),
+                            ],),
+                            src: src!(1:3-6).into(),
+                        })),
+                    ]),
+                    src: src!(1:1-6).into(),
+                })),
+                Token(token!(Whitespace, " ", 1:6-7)),
+                Token(token!(Star, "*", 1:7-8)),
+                Token(token!(Whitespace, " ", 1:8-9)),
+                Token(token!(Symbol, "b", 1:9-10)),
+            ]),
+            src: src!(1:1-10).into(),
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //
+    // flatten_times = false
+    //
+
+    assert_eq!(
+        abstract_cst(
+            agg.clone(),
+            QuirkSettings::default().flatten_times(false)
+        ),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        Ast::Call {
+                            head: Box::new(leaf!(Symbol, "Times", <||>)),
+                            args: vec![
+                                leaf!(Integer, "-1", <||>),
+                                leaf!(Symbol, "a", 1:5-6),
+                            ],
+                            data: src!(1:3-6).into(),
+                        },
+                    ],
+                    data: src!(1:1-6).into(),
+                },
+                leaf!(Symbol, "b", 1:9-10),
+            ],
+            data: src!(1:1-10).into(),
+        }
+    );
+
+    //
+    // flatten_times = true
+    //
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default().flatten_times(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Times", <||>)),
+            args: vec![
+                leaf!(Integer, "-1", <||>),
+                leaf!(Integer, "-1", <||>),
+                leaf!(Symbol, "a", 1:5-6),
+                leaf!(Symbol, "b", 1:9-10),
+            ],
+            data: src!(1:1-10).into(),
         }
     );
 

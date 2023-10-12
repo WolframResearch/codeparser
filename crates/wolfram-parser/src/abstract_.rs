@@ -1949,6 +1949,12 @@ where
                         // (*
                         // it is possible to have nested prefix Minus, e.g., - - a
                         // so must call recursively into flattenTimes
+                        //
+                        // TID:231012/3 -- "- - a"
+                        // TID:231012/4 -- "- - a * b"
+                        //     Nested prefix minus with enclosing Times. Only
+                        //     testing "- - a" doesn't actually test that we
+                        //     recursed here.
                         // *)
                         join(
                             [agg::WL!(ToNode[-1]).into_owned_input()],
