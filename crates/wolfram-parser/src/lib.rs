@@ -9,11 +9,13 @@
 //!
 //! # API
 //!
-//! Operation             | Result     | Input: `&str`   | Input: `&[u8]`
-//! ----------------------|------------|-----------------|----------------------
-//! Tokenization          | [`Tokens`] | [`tokenize()`]  | [`tokenize_bytes()`]
-//! Parse concrete syntax | [`Cst`]    | [`parse_cst()`] | [`parse_bytes_cst()`]
-//! Parse abstract syntax | [`Ast`]    | [`parse_ast()`] | [`parse_bytes_ast()`]
+//! Operation                   | Result           | Input: `&str`       | Input: `&[u8]`
+//! ----------------------------|------------------|---------------------|----------------------
+//! Tokenization                | [`Tokens`]       | [`tokenize()`]      | [`tokenize_bytes()`]
+//! Parse concrete syntax       | [`Cst`]          | [`parse_cst()`]     | [`parse_bytes_cst()`]
+//! Parse abstract syntax       | [`Ast`]          | [`parse_ast()`]     | [`parse_bytes_ast()`]
+//! Sequence of concrete syntax | [`NodeSeq<Cst>`] | [`parse_cst_seq()`] | [`parse_bytes_cst_seq()`]
+//! Sequence of abstract syntax | [`NodeSeq<Ast>`] | [`parse_ast_seq()`] | [`parse_bytes_ast_seq()`]
 //!
 
 //
@@ -107,6 +109,7 @@ pub mod macros;
 // API
 //==========================================================
 
+use cst::CstSeq;
 use wolfram_expr::{Expr, Number};
 
 use crate::{
@@ -349,6 +352,10 @@ pub fn tokenize_bytes<'i>(
 // Parse CST
 //======================================
 
+//--------------------------------------
+// Scalar Cst
+//--------------------------------------
+
 /// Parse a string containing Wolfram Language input into a concrete syntax tree.
 ///
 /// # Examples
@@ -365,7 +372,8 @@ pub fn tokenize_bytes<'i>(
 ///
 /// let result = parse_cst("2 + 2", &ParseOptions::default());
 ///
-/// assert_eq!(result.nodes(), &[
+/// assert_eq!(
+///     result.syntax,
 ///     Cst::Infix(InfixNode(OperatorNode {
 ///         op: InfixOperator::Plus,
 ///         children: NodeSeq(vec![
@@ -377,20 +385,42 @@ pub fn tokenize_bytes<'i>(
 ///         ]),
 ///         src: src!(1:1-6).into()
 ///     }))
-/// ]);
+/// );
 /// ```
 pub fn parse_cst<'i>(
     input: &'i str,
     opts: &ParseOptions,
 ) -> ParseResult<Cst<TokenStr<'i>>> {
-    parse_bytes_cst(input.as_bytes(), opts)
+    let result = parse_cst_seq(input, opts);
+
+    expect_single_item(result, "parse_cst", "Cst")
 }
 
 /// Parse bytes containing Wolfram Language input into a concrete syntax tree.
 pub fn parse_bytes_cst<'i>(
-    bytes: &'i [u8],
+    input: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<Cst<TokenStr<'i>>> {
+    let result = parse_bytes_cst_seq(input, opts);
+
+    expect_single_item(result, "parse_bytes_cst", "Cst")
+}
+
+//--------------------------------------
+// Sequence of Cst
+//--------------------------------------
+
+pub fn parse_cst_seq<'i>(
+    input: &'i str,
+    opts: &ParseOptions,
+) -> ParseResult<CstSeq<TokenStr<'i>>> {
+    parse_bytes_cst_seq(input.as_bytes(), opts)
+}
+
+pub fn parse_bytes_cst_seq<'i>(
+    bytes: &'i [u8],
+    opts: &ParseOptions,
+) -> ParseResult<CstSeq<TokenStr<'i>>> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.concrete_parse_expressions()
@@ -399,6 +429,10 @@ pub fn parse_bytes_cst<'i>(
 //======================================
 // Parse AST
 //======================================
+
+//--------------------------------------
+// Scalar Ast
+//--------------------------------------
 
 /// Parse a string containing Wolfram Language input into an abstract syntax tree.
 ///
@@ -418,7 +452,8 @@ pub fn parse_bytes_cst<'i>(
 ///
 /// let result = parse_ast("2 + 2", &ParseOptions::default());
 ///
-/// assert_eq!(result.nodes(), &[
+/// assert_eq!(
+///     result.syntax,
 ///     Ast::Call {
 ///         head: Box::new(Ast::Leaf {
 ///             kind: TokenKind::Symbol,
@@ -439,10 +474,14 @@ pub fn parse_bytes_cst<'i>(
 ///         ],
 ///         data: AstMetadata::from_src(Span::from(src!(1:1-6))),
 ///     },
-/// ]);
+/// );
 /// ```
 pub fn parse_ast<'i>(input: &'i str, opts: &ParseOptions) -> ParseResult<Ast> {
-    parse_bytes_ast(input.as_bytes(), opts)
+    expect_single_item(
+        parse_bytes_ast_seq(input.as_bytes(), opts),
+        "parse_ast",
+        "Ast",
+    )
 }
 
 /// Parse bytes containing Wolfram Language input into an abstract syntax tree.
@@ -450,6 +489,30 @@ pub fn parse_bytes_ast<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<Ast> {
+    let mut session = ParserSession::new(bytes, opts);
+
+    expect_single_item(
+        session.abstract_parse_expressions(),
+        "parse_bytes_ast",
+        "Ast",
+    )
+}
+
+//--------------------------------------
+// Sequence of Ast
+//--------------------------------------
+
+pub fn parse_ast_seq<'i>(
+    input: &'i str,
+    opts: &ParseOptions,
+) -> ParseResult<NodeSeq<Ast>> {
+    parse_bytes_ast_seq(input.as_bytes(), opts)
+}
+
+pub fn parse_bytes_ast_seq<'i>(
+    bytes: &'i [u8],
+    opts: &ParseOptions,
+) -> ParseResult<NodeSeq<Ast>> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.abstract_parse_expressions()
@@ -464,7 +527,7 @@ pub fn parse_to_token<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
     stringify_mode: StringifyMode,
-) -> ParseResult<Token<TokenStr<'i>>> {
+) -> ParseResult<NodeSeq<Token<TokenStr<'i>>>> {
     let mut session = ParserSession::new(bytes, opts);
 
     session.concreteParseLeaf(stringify_mode)
@@ -569,3 +632,33 @@ macro_rules! panic_if_aborted {
 }
 
 pub(crate) use panic_if_aborted;
+
+fn expect_single_item<N>(
+    result: ParseResult<NodeSeq<N>>,
+    func: &'static str,
+    ty: &'static str,
+) -> ParseResult<N> {
+    let ParseResult {
+        syntax: NodeSeq(syntax),
+        unsafe_character_encoding,
+        fatal_issues,
+        non_fatal_issues,
+        tracked,
+    } = result;
+
+    // FIXME: Make the "error" case hold a type for resuming parsing where this
+    //        one left off. ParseResult is a bad name anyway because it sounds
+    //        like a type alias for Result<T, ParseError> or something similar.
+    //        Maybe ParseData and ResumableParseData? Or ParseData<I, Resume = ()>?
+    let [item]: [_; 1] = syntax
+        .try_into()
+        .unwrap_or_else(|_| panic!("{func}: more than one {ty} in input"));
+
+    ParseResult {
+        syntax: item,
+        unsafe_character_encoding,
+        fatal_issues,
+        non_fatal_issues,
+        tracked,
+    }
+}

@@ -1102,7 +1102,7 @@ fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<Location>) {
 impl<'i, N: WstpPut> WstpPut for ParseResult<N> {
     fn put(&self, link: &mut wstp::Link) {
         let ParseResult {
-            nodes: outer_exprs,
+            syntax: outer_exprs,
             unsafe_character_encoding,
             fatal_issues,
             non_fatal_issues,

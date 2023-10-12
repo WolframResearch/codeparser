@@ -53,10 +53,9 @@ pub(crate) struct TriviaSeq<'i> {
     pub(crate) vec: Vec<Token<TokenStr<'i>>>,
 }
 
-pub struct ParseResult<N> {
-    /// Tokens or expressions.
-    #[doc(hidden)]
-    pub nodes: NodeSeq<N>,
+pub struct ParseResult<T> {
+    /// Tokens, concrete syntax, or abstract syntax.
+    pub syntax: T,
 
     #[doc(hidden)]
     pub unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
@@ -147,9 +146,9 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.input
     }
 
-    pub fn abstract_parse_expressions(&mut self) -> ParseResult<Ast> {
+    pub fn abstract_parse_expressions(&mut self) -> ParseResult<NodeSeq<Ast>> {
         let ParseResult {
-            nodes,
+            syntax: nodes,
             unsafe_character_encoding,
             fatal_issues,
             non_fatal_issues,
@@ -164,7 +163,7 @@ impl<'i> ParserSession<'i> {
             .collect();
 
         ParseResult {
-            nodes: NodeSeq(nodes),
+            syntax: NodeSeq(nodes),
             unsafe_character_encoding,
             fatal_issues,
             non_fatal_issues,
@@ -174,7 +173,7 @@ impl<'i> ParserSession<'i> {
 
     pub fn concrete_parse_expressions(
         &mut self,
-    ) -> ParseResult<Cst<TokenStr<'i>>> {
+    ) -> ParseResult<CstSeq<TokenStr<'i>>> {
         quirks::set_quirks(self.quirk_settings);
 
         #[cfg(feature = "DIAGNOSTICS")]
@@ -289,7 +288,7 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn concreteParseLeaf(
         &mut self,
         mode: StringifyMode,
-    ) -> ParseResult<Token<TokenStr<'i>>> {
+    ) -> ParseResult<NodeSeq<Token<TokenStr<'i>>>> {
         //
         // Collect all expressions
         //
@@ -366,9 +365,12 @@ impl<'i> ParserSession<'i> {
         tokens
     }
 
-    fn create_parse_result<N>(&self, nodes: NodeSeq<N>) -> ParseResult<N> {
+    fn create_parse_result<N>(
+        &self,
+        nodes: NodeSeq<N>,
+    ) -> ParseResult<NodeSeq<N>> {
         let result = ParseResult {
-            nodes,
+            syntax: nodes,
             unsafe_character_encoding: self
                 .tokenizer
                 .unsafe_character_encoding_flag,
@@ -423,13 +425,13 @@ impl<'i> TriviaSeq<'i> {
 // ParseResult
 //======================================
 
-impl<N> ParseResult<N> {
+impl<N> ParseResult<NodeSeq<N>> {
     pub fn nodes(&self) -> &[N] {
-        let NodeSeq(vec) = &self.nodes;
+        let NodeSeq(vec) = &self.syntax;
         vec.as_slice()
     }
 
     pub fn node_seq(&self) -> &NodeSeq<N> {
-        &self.nodes
+        &self.syntax
     }
 }

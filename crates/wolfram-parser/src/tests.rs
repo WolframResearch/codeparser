@@ -26,16 +26,12 @@ use crate::{
     source::{Source, SourceConvention},
     tokenize,
     tokenize::{Token, TokenInput, TokenKind as TK, TokenStr, TokenString},
-    FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
+    FirstLineBehavior, NodeSeq, ParseOptions, Tokens,
 };
 
 pub(crate) fn nodes(input: &str) -> Vec<Cst<TokenStr>> {
-    let mut session =
-        ParserSession::new(input.as_bytes(), &ParseOptions::default());
-
-    let result = session.concrete_parse_expressions();
-
-    let NodeSeq(nodes) = NodeSeq(result.nodes().to_vec());
+    let NodeSeq(nodes) =
+        crate::parse_cst_seq(input, &ParseOptions::default()).syntax;
 
     nodes
 }
@@ -47,25 +43,18 @@ pub(crate) fn tokens(input: &str) -> Vec<Token<TokenStr>> {
 }
 
 fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Cst<TokenStr>> {
-    let mut session = ParserSession::new(input.as_bytes(), &opts);
-
-    let ParseResult { nodes, .. } = session.concrete_parse_expressions();
-
-    let NodeSeq(nodes) = nodes;
+    let NodeSeq(nodes) = crate::parse_cst_seq(input, &opts).syntax;
 
     nodes
 }
 
 fn concrete_exprs_character_index(input: &str) -> Vec<Cst<TokenStr>> {
-    let mut session = ParserSession::new(
-        input.as_bytes(),
+    let NodeSeq(nodes) = crate::parse_cst_seq(
+        input,
         &ParseOptions::default()
             .source_convention(SourceConvention::CharacterIndex),
-    );
-
-    let ParseResult { nodes, .. } = session.concrete_parse_expressions();
-
-    let NodeSeq(nodes) = nodes;
+    )
+    .syntax;
 
     nodes
 }
@@ -247,7 +236,7 @@ fn test_call_head_seq() {
 
 #[test]
 fn test_ast_src() {
-    let ast = crate::parse_ast("a/", &Default::default());
+    let ast = crate::parse_ast_seq("a/", &Default::default());
     let [ast]: &[_; 1] = ast.nodes().try_into().unwrap();
 
     assert_eq!(ast.span(), src!(1:1-3).into());
@@ -579,8 +568,8 @@ fn test_invalid_utf8_in_middle_of_parse() {
     );
 
     assert_eq!(
-        result.nodes.0,
-        &[Cst::Infix(InfixNode(OperatorNode {
+        result.syntax,
+        Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
                 Cst::Infix(InfixNode(OperatorNode {
@@ -600,7 +589,7 @@ fn test_invalid_utf8_in_middle_of_parse() {
                 NVToken(token!(Integer, "1", src!(1:4-1:5)))
             ]),
             src: src!(1:1-1:5).into()
-        }))]
+        }))
     );
 }
 
@@ -642,7 +631,7 @@ fn test_first_line_behavior() {
 
 #[test]
 fn test_abstract_parse() {
-    let result = crate::parse_ast("2 + 2", &ParseOptions::default());
+    let result = crate::parse_ast_seq("2 + 2", &ParseOptions::default());
 
     assert_eq!(
         result.nodes(),

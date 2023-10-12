@@ -134,11 +134,11 @@ fn handle(
             output(output_mode, result);
         },
         ApiMode::CstExpr => {
-            let result = wolfram_parser::parse_bytes_cst(input, &opts);
+            let result = wolfram_parser::parse_bytes_cst_seq(input, &opts);
             output(output_mode, FmtAsExpr(result.node_seq()));
         },
         ApiMode::Ast => {
-            let result = wolfram_parser::parse_bytes_ast(input, &opts);
+            let result = wolfram_parser::parse_bytes_ast_seq(input, &opts);
             output(output_mode, format!("{:#?}", result.node_seq()));
         },
     }
