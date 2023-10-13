@@ -325,20 +325,6 @@ impl<N> NodeSeq<N> {
     }
 }
 
-impl<I, S> CstSeq<I, S> {
-    pub(crate) fn check(&self) -> bool {
-        let NodeSeq(vec) = self;
-
-        for elem in vec {
-            if !elem.check() {
-                return false;
-            }
-        }
-
-        return true;
-    }
-}
-
 impl<I: TokenInput, S> CstSeq<I, S> {
     pub(crate) fn into_owned_input(self) -> CstSeq<TokenString, S> {
         let NodeSeq(nodes) = self;
@@ -455,32 +441,6 @@ impl<I, S: TokenSource> Cst<I, S> {
     }
 }
 
-impl<I, S> Cst<I, S> {
-    // TODO(cleanup): Are these check() methods used anywhere? What do they even do?
-    #[allow(dead_code)]
-    fn check(&self) -> bool {
-        match self {
-            Cst::Token(token) => token.check(),
-            Cst::Call(node) => node.check(),
-            Cst::Prefix(PrefixNode(op)) => op.check(),
-            Cst::Binary(BinaryNode(op)) => op.check(),
-            Cst::Infix(InfixNode(op)) => op.check(),
-            Cst::Ternary(TernaryNode(op)) => op.check(),
-            Cst::Postfix(PostfixNode(op)) => op.check(),
-            Cst::PrefixBinary(PrefixBinaryNode(op)) => op.check(),
-            Cst::Compound(CompoundNode(op)) => op.check(),
-            Cst::Group(GroupNode(op)) => op.check(),
-            // FIXME: Is this `false` by default, since it's unterminated and
-            //        therefore invalid syntax?
-            Cst::GroupMissingCloser(node) => node.check(),
-            Cst::GroupMissingOpener(node) => node.check(),
-            Cst::SyntaxError(node) => node.check(),
-            Cst::Box(BoxNode { children, .. }) => children.check(),
-            Cst::Code(_) => panic!("unexpected CodeNode in Cst::check()"),
-        }
-    }
-}
-
 //======================================
 // LeafNode
 //======================================
@@ -513,12 +473,6 @@ impl<I, O> OperatorNode<I, Span, O> {
     }
 }
 
-impl<I, S, O: Copy> OperatorNode<I, S, O> {
-    pub(crate) fn check(&self) -> bool {
-        return self.children.check();
-    }
-}
-
 impl<I, S: TokenSource, O: Copy> OperatorNode<I, S, O> {
     pub fn getSource(&self) -> S {
         return self.src.clone();
@@ -534,22 +488,6 @@ impl<I: TokenInput, S, O> OperatorNode<I, S, O> {
             children: children.into_owned_input(),
             src,
         }
-    }
-}
-
-//======================================
-// Missing closer nodes
-//======================================
-
-impl<I, S> GroupMissingCloserNode<I, S> {
-    pub(crate) fn check(&self) -> bool {
-        return false;
-    }
-}
-
-impl<I, S> GroupMissingOpenerNode<I, S> {
-    pub(crate) fn check(&self) -> bool {
-        return false;
     }
 }
 
@@ -672,27 +610,9 @@ impl<I, S: TokenSource> CallNode<I, S> {
     }
 }
 
-impl<I, S> CallNode<I, S> {
-    pub(crate) fn check(&self) -> bool {
-        let CallNode { head, body, src: _ } = self;
-
-        // Sanity check that check() isn't used on aggregate / abstract nodes.
-        debug_assert!(matches!(head, CallHead::Concrete(_)));
-
-        return head.check() && body.as_op().check();
-    }
-}
-
 impl<I, S> CallHead<I, S> {
     pub fn aggregate(node: Cst<I, S>) -> Self {
         CallHead::Aggregate(Box::new(node))
-    }
-
-    pub(crate) fn check(&self) -> bool {
-        match self {
-            CallHead::Concrete(head) => head.check(),
-            CallHead::Aggregate(head) => head.check(),
-        }
     }
 }
 
@@ -740,12 +660,6 @@ impl<I> SyntaxErrorNode<I> {
 
 
         SyntaxErrorNode { err, children }
-    }
-}
-
-impl<I, S> SyntaxErrorNode<I, S> {
-    pub(crate) fn check(&self) -> bool {
-        return false;
     }
 }
 
