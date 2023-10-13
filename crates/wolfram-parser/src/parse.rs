@@ -597,7 +597,7 @@ impl<'i> ParserSession<'i> {
         //
         // Move all trivia from Seq to back of ArgsStack
         //
-        let TriviaSeq { vec } = seq;
+        let TriviaSeq(vec) = seq;
 
         self.NodeStack.extend(vec.into_iter().map(Cst::Token));
     }

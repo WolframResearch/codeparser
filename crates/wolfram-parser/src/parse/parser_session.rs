@@ -49,9 +49,7 @@ pub(crate) type NodeStack<'i> = Vec<Cst<TokenStr<'i>>>;
 // Used mainly for collecting trivia that has been eaten
 //
 #[derive(Debug)]
-pub(crate) struct TriviaSeq<'i> {
-    pub(crate) vec: Vec<Token<TokenStr<'i>>>,
-}
+pub(crate) struct TriviaSeq<'i>(pub(crate) Vec<Token<TokenStr<'i>>>);
 
 pub struct ParseResult<T> {
     /// Tokens, concrete syntax, or abstract syntax.
@@ -397,11 +395,11 @@ impl<'i> ParserSession<'i> {
 
 impl<'i> TriviaSeq<'i> {
     pub(crate) fn new() -> Self {
-        TriviaSeq { vec: Vec::new() }
+        TriviaSeq(Vec::new())
     }
 
     pub fn reset(self, session: &mut Tokenizer) {
-        let TriviaSeq { vec } = self;
+        let TriviaSeq(vec) = self;
 
         //
         // Just need to reset the global buffer to the buffer of the first token in the sequence
@@ -417,7 +415,8 @@ impl<'i> TriviaSeq<'i> {
     }
 
     pub fn push(&mut self, token: TokenRef<'i>) {
-        self.vec.push(token);
+        let TriviaSeq(vec) = self;
+        vec.push(token);
     }
 }
 
