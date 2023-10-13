@@ -445,7 +445,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             PrefixOperator::Minus => {
                 expect_children!(children, {_, rand:_});
 
-                abstract_(negate(rand, data))
+                abstract_(negate(rand).into_cst(data))
             },
 
             // PrefixNode[Plus, {_, rand_}, _], data_
@@ -1599,6 +1599,43 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
     }
 }
 
+#[must_use]
+enum Negated<I, S> {
+    Integer0,
+    IntegerNegated(I),
+    RealNegated(I),
+    InfixTimesSeq(NodeSeq<Cst<I, S>>),
+}
+
+impl<I: TokenInput, S> Negated<I, S> {
+    fn into_cst(self, data: S) -> Cst<TokenString, S> {
+        match self {
+            Negated::Integer0 => {
+                agg::WL!(LeafNode[Integer, "0", data]).into_owned_input()
+            },
+            Negated::IntegerNegated(input) => {
+                let str = input.as_str();
+                agg::WL!(LeafNode[Integer, format!("-{str}"), data])
+            },
+            Negated::RealNegated(input) => {
+                let str = input.as_str();
+
+
+                agg::WL!( LeafNode[Real, format!("-{str}"), data] )
+            },
+            Negated::InfixTimesSeq(children) => {
+                let infix = InfixNode(OperatorNode {
+                    op: InfixOperator::Times,
+                    children: children.into_owned_input(),
+                    src: data,
+                });
+
+                Cst::Infix(infix)
+            },
+        }
+    }
+}
+
 // concrete syntax does not have negated numbers
 // abstract syntax is allowed to have negated numbers
 //
@@ -1608,112 +1645,100 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
 //   node
 fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
     node: Cst<I, S>,
-    data: S,
-) -> Cst<TokenString, S> {
-    match node {
-        Cst::Token(Token {
-            tok: TokenKind::Integer,
-            input,
-            src: _,
-        }) => {
-            let str = input.as_str();
+) -> Negated<I, S> {
+    if let Cst::Token(Token {
+        tok: TokenKind::Integer,
+        input,
+        src: _,
+    }) = node
+    {
+        let str = input.as_str();
 
-            if str == "0" {
-                // negate[LeafNode[Integer, "0", _], data_] :=
-                agg::WL!(LeafNode[Integer, "0", data]).into_owned_input()
-            } else {
-                // negate[LeafNode[Integer, str_, _], data_] :=
-                agg::WL!(LeafNode[Integer, format!("-{str}"), data])
-            }
-        },
-        Cst::Token(Token {
-            tok: TokenKind::Real,
-            input,
-            src: _,
-        }) => {
-            let str = input.as_str();
+        if str == "0" {
+            return Negated::Integer0;
+        } else {
+            return Negated::IntegerNegated(input);
+        }
+    };
 
-            // negate[LeafNode[Real, str_, _], data_] :=
-            agg::WL!( LeafNode[Real, format!("-{str}"), data] )
-        },
-        // dig down into parens
-        //
-        // something like  -(1.2)  is still parsed as  -1.2
-        //
-        // TODO: maybe this is a kernel quirk?
-        //
-        // negate[GroupNode[GroupParen, {_, child_?possiblyNegatedZeroQ, _}, _], data_] :=
-        //   negate[child, data]
-        Cst::Group(GroupNode(OperatorNode {
-            op: GroupOperator::CodeParser_GroupParen,
-            children: NodeSeq(mut children),
-            src: _,
-            // TODO(optimization): Avoid this clone().
-        })) if possiblyNegatedZeroQ(children[1].clone()) => {
-            negate(children.remove(1), data)
-        },
-        // negate[PrefixNode[Minus, {_, child_?possiblyNegatedZeroQ}, _], data_] :=
-        //   negate[child, data]
-        Cst::Prefix(PrefixNode(OperatorNode {
-            op: PrefixOperator::Minus,
-            children: NodeSeq(mut children),
-            src: _,
-            // TODO(optimization): Avoid this clone().
-        })) if possiblyNegatedZeroQ(children[1].clone()) => {
-            negate(children.remove(1), data)
-        },
-        // negate[node_?parenthesizedIntegerOrRealQ, data_] :=
-        //   negate[node[[2, 2]], data]
-        node if parenthesizedIntegerOrRealQ(&node) => {
-            let child = extractParenthesizedIntegerOrRealQ(node);
-            negate(child, data)
-        },
-
-        //
-        // NOT ABSTRACTED YET!
-        //
-        // Important to use InfixNode[Times and not just CallNode[Times,
-        //
-        // This allows these nodes to be merged later e.g., 1-a/b
-        //
-        // TID:231012/1 -- negating an Infix Times node
-        // TID:231012/2 -- negating an Infix Times node that is later flattened (quirk)
-        Cst::Infix(InfixNode(OperatorNode {
-            op: InfixOperator::Times,
-            children: NodeSeq(children),
-            src: _,
-        })) => {
-            let children = join(
-                [agg::WL!(ToNode[-1]), agg::WL!(LeafNode[Star, "*", <||>])],
-                children,
-            );
-
-            let infix = InfixNode(OperatorNode {
-                op: InfixOperator::Times,
-                children: NodeSeq(children).into_owned_input(),
-                src: data,
-            });
-
-            Cst::Infix(infix)
-        },
-        // negate[node_, data_] :=
-        //   InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>], node }, data]
-        node => {
-            let children = NodeSeq(vec![
-                agg::WL!(ToNode[-1]),
-                agg::WL!(LeafNode[Star, "*", <||>]),
-                node,
-            ]);
-
-            let infix = InfixNode(OperatorNode {
-                op: InfixOperator::Times,
-                children: children.into_owned_input(),
-                src: data,
-            });
-
-            Cst::Infix(infix)
-        },
+    if let Cst::Token(Token {
+        tok: TokenKind::Real,
+        input,
+        src: _,
+    }) = node
+    {
+        return Negated::RealNegated(input);
     }
+
+    // dig down into parens
+    //
+    // something like  -(1.2)  is still parsed as  -1.2
+    //
+    // TODO: maybe this is a kernel quirk?
+    if let Cst::Group(GroupNode(OperatorNode {
+        op: GroupOperator::CodeParser_GroupParen,
+        children: NodeSeq(mut children),
+        src: _,
+    })) = node.clone()
+    {
+        // TODO(optimization): Avoid this clone().
+        if possiblyNegatedZeroQ(children[1].clone()) {
+            return negate(children.remove(1));
+        }
+    }
+
+    if let Cst::Prefix(PrefixNode(OperatorNode {
+        op: PrefixOperator::Minus,
+        children: NodeSeq(mut children),
+        src: _,
+        // TODO(optimization): Avoid this clone()
+    })) = node.clone()
+    {
+        // TODO(optimization): Avoid this clone().
+        if possiblyNegatedZeroQ(children[1].clone()) {
+            return negate(children.remove(1));
+        }
+    }
+
+    if parenthesizedIntegerOrRealQ(&node) {
+        let child = extractParenthesizedIntegerOrRealQ(node);
+        return negate(child);
+    }
+
+    //
+    // NOT ABSTRACTED YET!
+    //
+    // Important to use InfixNode[Times and not just CallNode[Times,
+    //
+    // This allows these nodes to be merged later e.g., 1-a/b
+    //
+    // TID:231012/1 -- negating an Infix Times node
+    // TID:231012/2 -- negating an Infix Times node that is later flattened (quirk)
+    if let Cst::Infix(InfixNode(OperatorNode {
+        op: InfixOperator::Times,
+        children: NodeSeq(children),
+        src: _,
+    })) = node.clone()
+    {
+        let children = join(
+            [agg::WL!(ToNode[-1]), agg::WL!(LeafNode[Star, "*", <||>])],
+            children,
+        );
+
+        return Negated::InfixTimesSeq(NodeSeq(children));
+    }
+
+    //------------------------------------------------
+    // Otherwise, returns a Times[-1, node] expression
+    //------------------------------------------------
+
+    let children = NodeSeq(vec![
+        agg::WL!(ToNode[-1]),
+        agg::WL!(LeafNode[Star, "*", <||>]),
+        node,
+    ]);
+
+    Negated::InfixTimesSeq(children)
 }
 
 //======================================
@@ -1806,7 +1831,7 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
 
             let source: S = S::between(opData, rand.source());
 
-            negate(rand, source)
+            negate(rand).into_cst(source)
         },
         _ => unhandled(),
     }
@@ -1938,10 +1963,10 @@ where
                     tok: TK::Integer | TK::Real,
                     input: _,
                     src: _,
-                }) => vec![negate(operand, data.clone())],
+                }) => vec![negate(operand).into_cst(data.clone())],
                 // PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _]
                 _ if parenthesizedIntegerOrRealQ(&operand) => {
-                    vec![negate(operand, data.clone())]
+                    vec![negate(operand).into_cst(data.clone())]
                 },
                 // PrefixNode[Minus, {_, _}, _]
                 _ => {
