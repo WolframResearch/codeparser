@@ -25,7 +25,7 @@ impl InfixParselet for TimesParselet {
 
         // #if !USE_MUSTTAIL
         let ctxt = session.top_context();
-        ctxt.init_callback(Parser_identity, None);
+        ctxt.init_identity();
 
         session.parse_prefix(tok2);
 

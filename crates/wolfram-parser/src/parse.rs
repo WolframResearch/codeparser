@@ -110,6 +110,10 @@ impl Context {
         self.p = parselet;
     }
 
+    pub(crate) fn init_identity(&mut self) {
+        self.init_callback(Parser_identity, None);
+    }
+
     pub(crate) fn set_callback(&mut self, func: ParseFunction) {
         assert!(self.f.is_some());
         self.f = Some(func);
@@ -138,7 +142,7 @@ impl Context {
 }
 
 
-pub(crate) fn Parser_identity<'i>(_: &mut ParserSession<'i>, _: ParseletPtr) {
+fn Parser_identity<'i>(_: &mut ParserSession<'i>, _: ParseletPtr) {
     return;
 }
 
