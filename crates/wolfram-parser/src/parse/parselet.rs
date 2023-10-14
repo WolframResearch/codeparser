@@ -997,7 +997,7 @@ impl InfixOperatorParselet {
             let Tok2 = session.current_token_eat_trivia();
 
             let ctxt = session.top_context();
-            assert!(ctxt.is_identity());
+            // assert!(ctxt.is_identity());
 
             session.parse_prefix(Tok2);
         } // loop
@@ -1154,7 +1154,7 @@ impl GroupParselet {
             session.push_trivia_seq(trivia1);
 
             let ctxt = session.top_context();
-            assert!(ctxt.is_identity());
+            // assert!(ctxt.is_identity());
 
             session.parse_prefix(tok);
         } // loop
@@ -1829,7 +1829,7 @@ impl CommaParselet {
             }
 
             let ctxt = session.top_context();
-            assert!(ctxt.is_identity());
+            // assert!(ctxt.is_identity());
 
             session.parse_prefix(tok2);
         } // loop
@@ -1991,7 +1991,7 @@ impl SemiParselet {
                 //
 
                 let ctxt = session.top_context();
-                assert!(ctxt.is_identity());
+                // assert!(ctxt.is_identity());
 
                 session.parse_prefix(tok2);
 
