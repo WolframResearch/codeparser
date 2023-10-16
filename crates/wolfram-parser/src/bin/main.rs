@@ -12,6 +12,7 @@ use wolfram_parser::{
 #[derive(Copy, Clone)]
 enum ApiMode {
     CstExpr,
+    Cst,
     Ast,
     Tokenize,
     Leaf,
@@ -51,6 +52,7 @@ fn main() {
             "-tokenize" => api_mode = ApiMode::Tokenize,
             "-leaf" => api_mode = ApiMode::Leaf,
             "-safestring" => api_mode = ApiMode::SafeString,
+            "--cst" => api_mode = ApiMode::Cst,
             "--ast" => api_mode = ApiMode::Ast,
             "-n" => output_mode = OutputMode::None,
             "-check" | "-syntaxq" | "-syntaxQ" => {
@@ -137,9 +139,13 @@ fn handle(
             let result = wolfram_parser::parse_bytes_cst_seq(input, &opts);
             output(output_mode, FmtAsExpr(result.node_seq()));
         },
+        ApiMode::Cst => {
+            let result = wolfram_parser::parse_bytes_cst_seq(input, &opts);
+            output(output_mode, format!("{:#?}", result.syntax));
+        },
         ApiMode::Ast => {
             let result = wolfram_parser::parse_bytes_ast_seq(input, &opts);
-            output(output_mode, format!("{:#?}", result.node_seq()));
+            output(output_mode, format!("{:#?}", result.syntax));
         },
     }
 }
