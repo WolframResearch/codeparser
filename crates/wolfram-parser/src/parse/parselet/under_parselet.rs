@@ -51,9 +51,7 @@ impl PrefixParselet for UnderParselet {
 
             SymbolParselet::parse_infix_context_sensitive(session, tok);
 
-            // MUSTTAIL
-            return session
-                .reduce_and_climb(|ctx| CompoundNode::new(self.getBOp(), ctx));
+            session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
         }
 
         if tok.tok == TokenKind::Error_ExpectedLetterlike {
@@ -67,9 +65,7 @@ impl PrefixParselet for UnderParselet {
 
             session.push_leaf_and_next(tok);
 
-            // MUSTTAIL
-            return session
-                .reduce_and_climb(|ctx| CompoundNode::new(self.getBOp(), ctx));
+            session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
         }
 
         // MUSTTAIL
