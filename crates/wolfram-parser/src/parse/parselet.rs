@@ -1408,7 +1408,9 @@ impl TildeParselet {
             trivia1.reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return TildeParselet::reduce_error(session);
+            return session.reduce_and_climb(|ctx| {
+                SyntaxErrorNode::new(SyntaxErrorKind::ExpectedTilde, ctx)
+            });
         }
 
         session.push_trivia_seq(trivia1);
@@ -1433,12 +1435,6 @@ impl TildeParselet {
     fn reduce_tilde(session: &mut ParserSession) {
         session.reduce_and_climb(|ctx| {
             TernaryNode::new(TernaryOperator::CodeParser_TernaryTilde, ctx)
-        })
-    }
-
-    fn reduce_error(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
-            SyntaxErrorNode::new(SyntaxErrorKind::ExpectedTilde, ctx)
         })
     }
 }
@@ -1490,7 +1486,17 @@ impl InfixParselet for ColonParselet {
             },
             ColonLHS::Error => {
                 let ctxt = session.top_context();
-                ctxt.init_callback(|s, _| ColonParselet::reduce_error(s), None);
+                ctxt.init_callback(
+                    |session, _| {
+                        session.reduce_and_climb(|ctx| {
+                            SyntaxErrorNode::new(
+                                SyntaxErrorKind::ExpectedSymbol,
+                                ctx,
+                            )
+                        })
+                    },
+                    None,
+                );
                 ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
 
                 // MUSTTAIl
@@ -1512,12 +1518,6 @@ impl ColonParselet {
     fn reduce_pattern(session: &mut ParserSession) {
         session.reduce_and_climb(|ctx| {
             BinaryNode::new(BinaryOperator::Pattern, ctx)
-        })
-    }
-
-    fn reduce_error(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
-            SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSymbol, ctx)
         })
     }
 
@@ -1610,13 +1610,9 @@ impl SlashColonParselet {
         //
 
         // MUSTTAIL
-        return SlashColonParselet::reduce_error(session);
-    }
-
-    fn reduce_error(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
+        return session.reduce_and_climb(|ctx| {
             SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSet, ctx)
-        })
+        });
     }
 }
 
