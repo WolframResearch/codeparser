@@ -210,17 +210,17 @@ impl<'i> Tokenizer<'i> {
 
     /// Construct a new token whose source buffer and location are exactly the
     /// character located at `at`.
-    // TODO(cleanup): Rename to error_token_at()?
-    fn token_at<T: Into<TokenKind>>(
+    fn error_token_at<T: Into<TokenKind>>(
         &self,
         tok: T,
         at: &TokenStart<'i>,
     ) -> TokenRef<'i> {
         let tok = tok.into();
 
-        let buf = self.get_token_buffer_and_length(at.buf);
-
         debug_assert!(tok.isError());
+
+        let buf = BufferAndLength::between(at.buf, at.buf);
+
         debug_assert_eq!(buf.buf.len(), 0);
 
         let span = Span::at(at.loc);
@@ -657,14 +657,16 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(
             // EndOfFile is special, so invent source
             //
 
-            return session.token_at(TokenKind::Error_ExpectedTag, token_start);
+            return session
+                .error_token_at(TokenKind::Error_ExpectedTag, token_start);
         },
         Char('\n' | '\r') | CRLF => {
             //
             // Newline is special, so invent source
             //
 
-            return session.token_at(TokenKind::Error_ExpectedTag, token_start);
+            return session
+                .error_token_at(TokenKind::Error_ExpectedTag, token_start);
         },
         Char('"') => {
             return Tokenizer_handleString(session, token_start, c, policy);
@@ -701,7 +703,7 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(
     match c {
         EndOfFile => {
             return session
-                .token_at(TokenKind::Error_ExpectedFile, token_start);
+                .error_token_at(TokenKind::Error_ExpectedFile, token_start);
         },
         Char('\n' | '\r') | CRLF => {
             //
@@ -1583,7 +1585,7 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
             //
 
             return session
-                .token_at(TokenKind::Error_ExpectedFile, token_start);
+                .error_token_at(TokenKind::Error_ExpectedFile, token_start);
         },
     }
 
