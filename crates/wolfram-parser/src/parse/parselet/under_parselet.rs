@@ -2,7 +2,6 @@ use crate::{
     cst::{CompoundNode, CompoundOperator},
     panic_if_aborted,
     parse::{parselet::*, ParserSession},
-    precedence::Precedence,
     tokenize::{TokenKind, TokenRef},
 };
 
@@ -56,8 +55,7 @@ impl UnderParselet {
     ) {
         panic_if_aborted!();
 
-
-        session.push_leaf_and_next(tok_in);
+        tok_in.skip(&mut session.tokenizer);
 
         let tok = session.tokenizer.peek_token();
 
@@ -69,8 +67,6 @@ impl UnderParselet {
                 //      infix:  a_b
                 //
 
-                session.push_context(Precedence::HIGHEST);
-
                 // Context-sensitive infix parse of Symbol token
                 //
                 // Something like  _b
@@ -79,9 +75,9 @@ impl UnderParselet {
                 //
                 // Just push this symbol
                 //
-                session.push_leaf_and_next(tok);
+                tok.skip(&mut session.tokenizer);
 
-                session.reduce(|ctx| CompoundNode::new(self.BOp, ctx));
+                session.push_node(CompoundNode::new2(self.BOp, tok_in, tok));
             },
 
             TokenKind::Error_ExpectedLetterlike => {
@@ -93,14 +89,14 @@ impl UnderParselet {
                 // It's nice to include the error inside of the blank
                 //
 
-                session.push_context(Precedence::HIGHEST);
+                tok.skip(&mut session.tokenizer);
 
-                session.push_leaf_and_next(tok);
-
-                session.reduce(|ctx| CompoundNode::new(self.BOp, ctx));
+                session.push_node(CompoundNode::new2(self.BOp, tok_in, tok));
             },
 
-            _ => (),
+            _ => {
+                session.push_leaf(tok_in);
+            },
         }
     }
 }
