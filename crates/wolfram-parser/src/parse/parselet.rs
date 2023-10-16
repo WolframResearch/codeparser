@@ -1466,7 +1466,11 @@ impl InfixParselet for ColonParselet {
             ColonLHS::Pattern => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(
-                    |s, _| ColonParselet::reduce_pattern(s),
+                    |session, _| {
+                        session.reduce_and_climb(|ctx| {
+                            BinaryNode::new(BinaryOperator::Pattern, ctx)
+                        })
+                    },
                     None,
                 );
                 ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
@@ -1476,7 +1480,11 @@ impl InfixParselet for ColonParselet {
             ColonLHS::Optional => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(
-                    |s, _| ColonParselet::reduce_optional(s),
+                    |session, _| {
+                        session.reduce_and_climb(|ctx| {
+                            BinaryNode::new(BinaryOperator::Optional, ctx)
+                        })
+                    },
                     None,
                 );
                 ctxt.set_precedence(Precedence::FAKE_OPTIONALCOLON);
@@ -1511,20 +1519,6 @@ impl InfixParselet for ColonParselet {
         }
 
         return Some(Precedence::HIGHEST);
-    }
-}
-
-impl ColonParselet {
-    fn reduce_pattern(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
-            BinaryNode::new(BinaryOperator::Pattern, ctx)
-        })
-    }
-
-    fn reduce_optional(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
-            BinaryNode::new(BinaryOperator::Optional, ctx)
-        })
     }
 }
 
