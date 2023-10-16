@@ -1,8 +1,8 @@
 use crate::{
-    cst::{CompoundNode, CompoundOperator},
+    cst::{CompoundNode, CompoundOperator, Cst},
     panic_if_aborted,
     parse::{parselet::*, ParserSession},
-    tokenize::{TokenKind, TokenRef},
+    tokenize::{TokenKind, TokenRef, TokenStr},
 };
 
 impl UnderParselet {
@@ -26,7 +26,9 @@ impl PrefixParselet for UnderParselet {
         // Something like  _  or  _a
         //
 
-        self.parse_under_context_sensitive(session, tok_in);
+        let node = self.get_parse_under_context_sensitive(session, tok_in);
+
+        session.push_node(node);
 
         // MUSTTAIL
         return session.parse_climb();
@@ -34,25 +36,25 @@ impl PrefixParselet for UnderParselet {
 }
 
 impl UnderParselet {
-    pub(crate) fn parse_infix_context_sensitive<'i>(
+    pub(crate) fn get_parse_infix_context_sensitive<'i>(
         &self,
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
-    ) {
+    ) -> Cst<TokenStr<'i>> {
         //
         // infix
         //
         // Something like  a_b
         //
 
-        self.parse_under_context_sensitive(session, tok_in);
+        self.get_parse_under_context_sensitive(session, tok_in)
     }
 
-    fn parse_under_context_sensitive<'i>(
+    fn get_parse_under_context_sensitive<'i>(
         &self,
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
-    ) {
+    ) -> Cst<TokenStr<'i>> {
         panic_if_aborted!();
 
         tok_in.skip(&mut session.tokenizer);
@@ -77,7 +79,7 @@ impl UnderParselet {
                 //
                 tok.skip(&mut session.tokenizer);
 
-                session.push_node(CompoundNode::new2(self.BOp, tok_in, tok));
+                Cst::Compound(CompoundNode::new2(self.BOp, tok_in, tok))
             },
 
             TokenKind::Error_ExpectedLetterlike => {
@@ -91,12 +93,10 @@ impl UnderParselet {
 
                 tok.skip(&mut session.tokenizer);
 
-                session.push_node(CompoundNode::new2(self.BOp, tok_in, tok));
+                Cst::Compound(CompoundNode::new2(self.BOp, tok_in, tok))
             },
 
-            _ => {
-                session.push_leaf(tok_in);
-            },
+            _ => Cst::Token(tok_in),
         }
     }
 }

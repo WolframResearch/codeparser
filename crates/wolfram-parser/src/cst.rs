@@ -596,12 +596,6 @@ impl<I> GroupNode<I> {
 }
 
 impl<I> CompoundNode<I> {
-    pub(crate) fn new(op: CompoundOperator, args: CstSeq<I>) -> Self {
-        incr_diagnostic!(Node_CompoundNodeCount);
-
-        CompoundNode(OperatorNode::new(op, args))
-    }
-
     pub(crate) fn new2(
         op: CompoundOperator,
         tok1: Token<I>,
@@ -610,6 +604,17 @@ impl<I> CompoundNode<I> {
         CompoundNode(OperatorNode::new(
             op,
             NodeSeq(vec![Cst::Token(tok1), Cst::Token(tok2)]),
+        ))
+    }
+
+    pub(crate) fn new3(
+        op: CompoundOperator,
+        arg1: Token<I>,
+        arg2: Cst<I>,
+    ) -> Self {
+        CompoundNode(OperatorNode::new(
+            op,
+            NodeSeq(vec![Cst::Token(arg1), arg2]),
         ))
     }
 }

@@ -656,7 +656,7 @@ impl PrefixParselet for SymbolParselet {
         panic_if_aborted!();
 
 
-        session.push_leaf_and_next(tok_in);
+        tok_in.skip(&mut session.tokenizer);
 
         let tok = session.tokenizer.peek_token();
 
@@ -670,90 +670,70 @@ impl PrefixParselet for SymbolParselet {
                 // Something like  a_
                 //
 
-                session.push_context(Precedence::HIGHEST);
-
-                //
-                // Context-sensitive and OK to build stack
-                //
-
-                under1Parselet.parse_infix_context_sensitive(session, tok);
+                let under = under1Parselet
+                    .get_parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
-                return session.reduce_and_climb(|ctx| {
-                    CompoundNode::new(under1Parselet.PBOp, ctx)
-                });
+                return session.push_and_climb(CompoundNode::new3(
+                    under1Parselet.PBOp,
+                    tok_in,
+                    under,
+                ));
             },
             TokenKind::UnderUnder => {
                 //
                 // Something like  a__
                 //
 
-                session.push_context(Precedence::HIGHEST);
-
-                //
-                // Context-sensitive and OK to build stack
-                //
-
-                under2Parselet.parse_infix_context_sensitive(session, tok);
+                let under = under2Parselet
+                    .get_parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
-                return session.reduce_and_climb(|ctx| {
-                    CompoundNode::new(under2Parselet.PBOp, ctx)
-                });
+                return session.push_and_climb(CompoundNode::new3(
+                    under2Parselet.PBOp,
+                    tok_in,
+                    under,
+                ));
             },
             TokenKind::UnderUnderUnder => {
                 //
                 // Something like  a___
                 //
 
-                session.push_context(Precedence::HIGHEST);
-
-                //
-                // Context-sensitive and OK to build stack
-                //
-
-                under3Parselet.parse_infix_context_sensitive(session, tok);
+                let under = under3Parselet
+                    .get_parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
-                return session.reduce_and_climb(|ctx| {
-                    CompoundNode::new(under3Parselet.PBOp, ctx)
-                });
+                return session.push_and_climb(CompoundNode::new3(
+                    under3Parselet.PBOp,
+                    tok_in,
+                    under,
+                ));
             },
             TokenKind::UnderDot => {
-                //
-                // Something like  a_.
-                //
-
-                session.push_context(Precedence::HIGHEST);
-
-                //
-                // Context-sensitive and OK to build stack
-                //
-
                 //
                 // infix
                 //
                 // Something like  a_.
 
-                session.push_leaf_and_next(tok);
+                tok.skip(&mut session.tokenizer);
 
                 // MUSTTAIl
-                return session.reduce_and_climb(|ctx| {
-                    CompoundNode::new(
-                        CompoundOperator::CodeParser_PatternOptionalDefault,
-                        ctx,
-                    )
-                });
+                return session.push_and_climb(CompoundNode::new2(
+                    CompoundOperator::CodeParser_PatternOptionalDefault,
+                    tok_in,
+                    tok,
+                ));
             },
             _ => (),
-        } // switch
+        }
 
         //
         // Something like  a
         //
 
         // MUSTTAIL
-        return session.parse_climb();
+        return session.push_and_climb(tok_in);
     }
 }
 

@@ -13,22 +13,18 @@ use pretty_assertions::assert_eq;
 
 #[test]
 fn NodeTest_Bug1() {
-    let mut Args: NodeSeq<_> = NodeSeq::new();
-
     let input = "a_.";
 
     let session =
         ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
     let T1 = token!(Symbol, "a", src!(1:1-1:2));
-    Args.push(Cst::Token(T1));
-
     let T2 = token!(UnderDot, "_.", src!(1:2-1:4));
-    Args.push(Cst::Token(T2));
 
-    let N = CompoundNode::new(
+    let N = CompoundNode::new2(
         CompoundOperator::CodeParser_PatternOptionalDefault,
-        Args,
+        T1,
+        T2,
     );
 
     let NSource = Cst::Compound(N).getSource();
