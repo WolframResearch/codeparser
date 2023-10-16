@@ -756,30 +756,6 @@ impl PrefixParselet for SymbolParselet {
 }
 
 impl SymbolParselet {
-    pub(crate) fn parse_infix_context_sensitive<'i>(
-        session: &mut ParserSession<'i>,
-        tok_in: TokenRef<'i>,
-    ) {
-        //
-        // Something like  _b
-        //                  ^
-        //
-
-        panic_if_aborted!();
-
-
-        //
-        // We know we are already in the middle of parsing _
-        //
-        // Just push this symbol
-        //
-
-        session.push_leaf_and_next(tok_in);
-
-        // no call needed here
-        return;
-    }
-
     fn reducePatternBlank(session: &mut ParserSession, P: &UnderParselet) {
         session.reduce_and_climb(|ctx| CompoundNode::new(P.PBOp, ctx))
     }
