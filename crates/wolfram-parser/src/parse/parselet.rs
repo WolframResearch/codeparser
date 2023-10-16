@@ -537,13 +537,12 @@ impl PrefixParselet for PrefixCommaParselet {
         tok_in: TokenRef<'i>,
     ) {
         //
-        // if the input is  f[a@,2]  then we want to return TokenKind::ERROR_EXPECTEDOPERAND
+        // if the input is  f[a@,2]  then return ERROR_EXPECTEDOPERAND (TID:231016/3)
         //
-        // if the input is  f[,2]  then we want to return TokenKind::ERROR_PREFIXIMPLICITNULL
+        // if the input is  f[,2]  then ERROR_PREFIXIMPLICITNULL (TID:231016/4)
         //
 
         panic_if_aborted!();
-
 
         let kind = if session.top_precedence() == None {
             TokenKind::Error_PrefixImplicitNull

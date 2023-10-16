@@ -2,9 +2,11 @@ use pretty_assertions::assert_eq;
 
 use crate::{
     cst::{
+        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CallOperator,
         CompoundNode, CompoundOperator,
         Cst::{self, Token},
-        InfixNode, InfixOperator, OperatorNode, PrefixNode, PrefixOperator,
+        GroupNode, InfixNode, InfixOperator, OperatorNode, PrefixNode,
+        PrefixOperator,
     },
     macros::{src, token},
     parse_cst, NodeSeq,
@@ -110,5 +112,74 @@ fn test_expected_letterlike_after_blank() {
             ]),
             src: src!(1:1-5).into(),
         }))
+    );
+}
+
+#[test]
+fn test_prefix_comma_errors() {
+    // TID:231016/3
+    assert_eq!(
+        parse_cst("f[a@,2]", &Default::default()).syntax,
+        Cst::Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Token(
+                token!(Symbol, "f", 1:1-2),
+            )])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupSquare,
+                children: NodeSeq(vec![
+                    Token(token!(OpenSquare, "[", 1:2-3),),
+                    Cst::Infix(InfixNode(OperatorNode {
+                        op: InfixOperator::CodeParser_Comma,
+                        children: NodeSeq(vec![
+                            Cst::Binary(BinaryNode(OperatorNode {
+                                op: BinaryOperator::CodeParser_BinaryAt,
+                                children: NodeSeq(vec![
+                                    Token(token!(Symbol, "a", 1:3-4)),
+                                    Token(token!(At, "@", 1:4-5)),
+                                    Token(
+                                        token!(Error_ExpectedOperand, "", 1:5-5)
+                                    ),
+                                ]),
+                                src: src!(1:3-5).into(),
+                            })),
+                            Token(token!(Comma, ",", 1:5-6)),
+                            Token(token!(Integer, "2", 1:6-7)),
+                        ]),
+                        src: src!(1:3-7).into(),
+                    })),
+                    Token(token!(CloseSquare, "]", 1:7-8)),
+                ]),
+                src: src!(1:2-8).into(),
+            })),
+            src: src!(1:1-8).into(),
+        })
+    );
+
+    // TID:231016/4
+    assert_eq!(
+        parse_cst("f[,2]", &Default::default()).syntax,
+        Cst::Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Token(
+                token!(Symbol, "f", 1:1-2),
+            )])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupSquare,
+                children: NodeSeq(vec![
+                    Token(token!(OpenSquare, "[", 1:2-3),),
+                    Cst::Infix(InfixNode(OperatorNode {
+                        op: InfixOperator::CodeParser_Comma,
+                        children: NodeSeq(vec![
+                            Token(token!(Error_PrefixImplicitNull, "", 1:3-3)),
+                            Token(token!(Comma, ",", 1:3-4)),
+                            Token(token!(Integer, "2", 1:4-5)),
+                        ]),
+                        src: src!(1:3-5).into(),
+                    })),
+                    Token(token!(CloseSquare, "]", 1:5-6)),
+                ]),
+                src: src!(1:2-6).into(),
+            })),
+            src: src!(1:1-6).into(),
+        })
     );
 }
