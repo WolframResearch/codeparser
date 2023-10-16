@@ -679,10 +679,9 @@ impl PrefixParselet for SymbolParselet {
                 under1Parselet.parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
-                return SymbolParselet::reducePatternBlank(
-                    session,
-                    &under1Parselet,
-                );
+                return session.reduce_and_climb(|ctx| {
+                    CompoundNode::new(under1Parselet.PBOp, ctx)
+                });
             },
             TokenKind::UnderUnder => {
                 //
@@ -698,10 +697,9 @@ impl PrefixParselet for SymbolParselet {
                 under2Parselet.parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
-                return SymbolParselet::reducePatternBlank(
-                    session,
-                    &under2Parselet,
-                );
+                return session.reduce_and_climb(|ctx| {
+                    CompoundNode::new(under2Parselet.PBOp, ctx)
+                });
             },
             TokenKind::UnderUnderUnder => {
                 //
@@ -717,10 +715,9 @@ impl PrefixParselet for SymbolParselet {
                 under3Parselet.parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
-                return SymbolParselet::reducePatternBlank(
-                    session,
-                    &under3Parselet,
-                );
+                return session.reduce_and_climb(|ctx| {
+                    CompoundNode::new(under3Parselet.PBOp, ctx)
+                });
             },
             TokenKind::UnderDot => {
                 //
@@ -741,7 +738,12 @@ impl PrefixParselet for SymbolParselet {
                 session.push_leaf_and_next(tok);
 
                 // MUSTTAIl
-                return SymbolParselet::reducePatternOptionalDefault(session);
+                return session.reduce_and_climb(|ctx| {
+                    CompoundNode::new(
+                        CompoundOperator::CodeParser_PatternOptionalDefault,
+                        ctx,
+                    )
+                });
             },
             _ => (),
         } // switch
@@ -752,21 +754,6 @@ impl PrefixParselet for SymbolParselet {
 
         // MUSTTAIL
         return session.parse_climb();
-    }
-}
-
-impl SymbolParselet {
-    fn reducePatternBlank(session: &mut ParserSession, P: &UnderParselet) {
-        session.reduce_and_climb(|ctx| CompoundNode::new(P.PBOp, ctx))
-    }
-
-    fn reducePatternOptionalDefault(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
-            CompoundNode::new(
-                CompoundOperator::CodeParser_PatternOptionalDefault,
-                ctx,
-            )
-        })
     }
 }
 
