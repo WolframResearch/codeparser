@@ -31,42 +31,7 @@ impl PrefixParselet for UnderParselet {
         // Something like  _  or  _a
         //
 
-        panic_if_aborted!();
-
-
-        session.push_leaf_and_next(tok_in);
-
-        let tok = session.tokenizer.peek_token();
-
-        if tok.tok == TokenKind::Symbol {
-            //
-            // Something like  _b
-            //
-
-            session.push_context(Precedence::HIGHEST);
-
-            //
-            // Context-sensitive and OK to build stack
-            //
-
-            SymbolParselet::parse_infix_context_sensitive(session, tok);
-
-            session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
-        }
-
-        if tok.tok == TokenKind::Error_ExpectedLetterlike {
-            //
-            // Something like  _a`  (TID:231016/1)
-            //
-            // It's nice to include the error inside of the blank
-            //
-
-            session.push_context(Precedence::HIGHEST);
-
-            session.push_leaf_and_next(tok);
-
-            session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
-        }
+        self.parse_under_context_sensitive(session, tok_in);
 
         // MUSTTAIL
         return session.parse_climb();
@@ -85,8 +50,14 @@ impl UnderParselet {
         // Something like  a_b
         //
 
-        // assert!(P);
+        self.parse_under_context_sensitive(session, tok_in);
+    }
 
+    fn parse_under_context_sensitive<'i>(
+        &self,
+        session: &mut ParserSession<'i>,
+        tok_in: TokenRef<'i>,
+    ) {
         panic_if_aborted!();
 
 
@@ -96,7 +67,9 @@ impl UnderParselet {
 
         if tok.tok == TokenKind::Symbol {
             //
-            // Something like  a_b
+            // Something like
+            //     prefix:  _b
+            //      infix:  a_b
             //
 
             session.push_context(Precedence::HIGHEST);
@@ -112,7 +85,9 @@ impl UnderParselet {
 
         if tok.tok == TokenKind::Error_ExpectedLetterlike {
             //
-            // Something like  a_b`  (TID:231016/2)
+            // Something like:
+            //     prefix:  _a`   (TID:231016/1)
+            //      infix:  a_b`  (TID:231016/2)
             //
             // It's nice to include the error inside of the blank
             //
@@ -123,9 +98,6 @@ impl UnderParselet {
 
             session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
         }
-
-        // no call needed here
-        return;
     }
 }
 
