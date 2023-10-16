@@ -133,21 +133,14 @@ impl UnderParselet {
     }
 
     fn reduce_Blank(&self, session: &mut ParserSession) {
-        let BOp = self.getBOp();
-
-        session.reduce_and_climb(|ctx| CompoundNode::new(BOp, ctx))
+        session.reduce_and_climb(|ctx| CompoundNode::new(self.getBOp(), ctx))
     }
 
     //
     // Called from other parselets
     //
     fn reduce_Blank_context_sensitive(&self, session: &mut ParserSession) {
-        let BOp = self.getBOp();
-
-        session.reduce(|ctx| CompoundNode::new(BOp, ctx));
-
-        // no call needed here
-        return;
+        session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
     }
 }
 
