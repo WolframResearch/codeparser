@@ -30,7 +30,7 @@ impl PrefixParselet for IntegralParselet {
         session.push_leaf_and_next(tok_in);
 
         let ctxt = session.push_context(Precedence::CLASS_INTEGRATIONOPERATORS);
-        ctxt.init_callback(IntegralParselet::parse1, Some(self));
+        ctxt.init_callback_with_parselet(IntegralParselet::parse1, self);
 
         let Tok = session.current_token_eat_trivia();
 
