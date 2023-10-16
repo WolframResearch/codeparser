@@ -22,6 +22,10 @@ use crate::{
 /// including comments and whitespace.
 pub type CstSeq<I = TokenString, S = Span> = NodeSeq<Cst<I, S>>;
 
+
+#[derive(Debug)]
+pub struct TriviaSeq<I>(pub Vec<Token<I>>);
+
 /// A concrete syntax tree (CST) node.
 ///
 /// If this was parsed from well-formed input (i.e. has no internal syntax error
@@ -271,6 +275,12 @@ impl<I, S> From<CodeNode<S>> for Cst<I, S> {
     }
 }
 
+impl<I, S> From<Token<I, S>> for Cst<I, S> {
+    fn from(token: Token<I, S>) -> Self {
+        Cst::Token(token)
+    }
+}
+
 //==========================================================
 // Impls
 //==========================================================
@@ -501,6 +511,20 @@ impl<I> PrefixNode<I> {
 
         PrefixNode(OperatorNode::new(op, args))
     }
+
+    pub(crate) fn new2(
+        op: PrefixOperator,
+        tok1: Token<I>,
+        TriviaSeq(trivia): TriviaSeq<I>,
+        tok2: Token<I>,
+    ) -> Self {
+        let mut args: Vec<Cst<I>> = Vec::with_capacity(trivia.len() + 2);
+        args.push(Cst::Token(tok1));
+        args.extend(trivia.into_iter().map(Cst::Token));
+        args.push(Cst::Token(tok2));
+
+        PrefixNode(OperatorNode::new(op, NodeSeq(args)))
+    }
 }
 
 impl<I> BinaryNode<I> {
@@ -508,6 +532,22 @@ impl<I> BinaryNode<I> {
         incr_diagnostic!(Node_BinaryNodeCount);
 
         BinaryNode(OperatorNode::new(op, args))
+    }
+
+    pub(crate) fn new2(
+        op: BinaryOperator,
+        // Operator
+        op_token: Token<I>,
+        TriviaSeq(trivia): TriviaSeq<I>,
+        // Operand
+        rand_token: Token<I>,
+    ) -> Self {
+        let mut args = Vec::with_capacity(trivia.len() + 2);
+        args.push(Cst::Token(op_token));
+        args.extend(trivia.into_iter().map(Cst::Token));
+        args.push(Cst::Token(rand_token));
+
+        BinaryNode(OperatorNode::new(op, NodeSeq(args)))
     }
 }
 
@@ -560,6 +600,17 @@ impl<I> CompoundNode<I> {
         incr_diagnostic!(Node_CompoundNodeCount);
 
         CompoundNode(OperatorNode::new(op, args))
+    }
+
+    pub(crate) fn new2(
+        op: CompoundOperator,
+        tok1: Token<I>,
+        tok2: Token<I>,
+    ) -> Self {
+        CompoundNode(OperatorNode::new(
+            op,
+            NodeSeq(vec![Cst::Token(tok1), Cst::Token(tok2)]),
+        ))
     }
 }
 

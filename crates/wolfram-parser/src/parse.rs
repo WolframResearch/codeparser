@@ -43,7 +43,7 @@ use std::fmt::Debug;
 use crate::{
     cst::{
         BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, Cst,
-        CstSeq, TernaryNode, TernaryOperator,
+        CstSeq, TernaryNode, TernaryOperator, TriviaSeq,
     },
     feature,
     panic_if_aborted,
@@ -61,7 +61,7 @@ use crate::{
 
 use self::{
     parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
-    parser_session::TriviaSeq,
+    parser_session::TriviaSeqRef,
     token_parselets::{INFIX_PARSELETS, PREFIX_PARSELETS},
 };
 
@@ -338,6 +338,14 @@ impl<'i> ParserSession<'i> {
         self.push_node(node);
     }
 
+    pub(crate) fn push_and_climb<T: Into<Cst<TokenStr<'i>>>>(
+        &mut self,
+        node: T,
+    ) {
+        self.NodeStack.push(node.into());
+        self.parse_climb();
+    }
+
     /// A complete expression was just finished being parsed, so "climb" up by
     /// parsing the next "infix" token in the input.
     pub(crate) fn parse_climb(&mut self) {
@@ -432,8 +440,8 @@ impl<'i> ParserSession<'i> {
     /// ([`TokenKind::isTrivia()`] is false).
     pub(crate) fn current_token_eat_trivia_into(
         &mut self,
-    ) -> (TriviaSeq<'i>, TokenRef<'i>) {
-        let mut trivia = TriviaSeq::new();
+    ) -> (TriviaSeqRef<'i>, TokenRef<'i>) {
+        let mut trivia = TriviaSeqRef::new();
         let mut tok = self.tokenizer.peek_token();
 
         while tok.tok.isTrivia() {
@@ -447,6 +455,27 @@ impl<'i> ParserSession<'i> {
         debug_assert!(!tok.tok.isTrivia());
 
         (trivia, tok)
+    }
+
+    pub(crate) fn current_syntax_token_stringify_as_file(
+        &mut self,
+    ) -> (TriviaSeqRef<'i>, TokenRef<'i>) {
+        let mut token =
+            Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
+
+        let mut trivia = Vec::new();
+
+        while token.tok.isTrivia() {
+            trivia.push(token);
+
+            token.skip(&mut self.tokenizer);
+
+            token = Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
+        }
+
+        debug_assert!(!token.tok.isTrivia());
+
+        (TriviaSeq(trivia), token)
     }
 
     pub(crate) fn current_token_stringify_as_file_eat_trivia(
@@ -477,7 +506,7 @@ impl<'i> ParserSession<'i> {
 
     pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines_into(
         &mut self,
-    ) -> (TriviaSeq<'i>, TokenRef<'i>) {
+    ) -> (TriviaSeqRef<'i>, TokenRef<'i>) {
         let mut tok = self.tokenizer.peek_token();
 
         //
@@ -539,6 +568,10 @@ impl<'i> ParserSession<'i> {
     // Context management
     //==================================
 
+    /// Push a new context with associated precedence value.
+    ///
+    /// The top node in the [`NodeStack`][ParserSession::NodeStack] is included
+    /// in the new context.
     pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
         &'s mut self,
         prec: P,
@@ -597,7 +630,7 @@ impl<'i> ParserSession<'i> {
         token.skip(&mut self.tokenizer);
     }
 
-    pub(crate) fn push_trivia_seq(&mut self, seq: TriviaSeq<'i>) {
+    pub(crate) fn push_trivia_seq(&mut self, seq: TriviaSeqRef<'i>) {
         //
         // Move all trivia from Seq to back of ArgsStack
         //
