@@ -176,26 +176,3 @@ impl PrefixParselet for UnderDotParselet {
         return session.parse_climb();
     }
 }
-
-impl UnderDotParselet {
-    //
-    // Called from other parselets
-    //
-    pub(crate) fn parse_infix_context_sensitive<'i>(
-        session: &mut ParserSession<'i>,
-        tok_in: TokenRef<'i>,
-    ) {
-        //
-        // infix
-        //
-        // Something like  a_.
-
-        panic_if_aborted!();
-
-
-        session.push_leaf_and_next(tok_in);
-
-        // no call needed here
-        return;
-    }
-}
