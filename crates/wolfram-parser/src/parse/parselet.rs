@@ -27,11 +27,6 @@ use crate::{
     },
 };
 
-pub(crate) type ParseletPtr = &'static dyn Parselet;
-
-pub(crate) type ParseFunction =
-    for<'i> fn(session: &mut ParserSession<'i>, parselet: ParseletPtr);
-
 //
 /// Classes that derive from Parselet are responsible for parsing specific kinds of syntax
 //
@@ -765,17 +760,9 @@ impl PrefixParselet for PrefixOperatorParselet {
 
         let ctxt = session.push_context(self.getPrecedence());
 
-        ctxt.init_callback_with_parselet(
-            |session: &mut ParserSession, P: ParseletPtr| {
-                let P = P
-                    .as_any()
-                    .downcast_ref::<PrefixOperatorParselet>()
-                    .expect("unable to downcast to PrefixOperatorParselet");
-
-                session.reduce_and_climb(|ctx| PrefixNode::new(P.Op, ctx))
-            },
-            self,
-        );
+        ctxt.init_callback_with_state(|session: &mut ParserSession| {
+            session.reduce_and_climb(|ctx| PrefixNode::new(self.Op, ctx))
+        });
 
         let tok = session.current_token_eat_trivia();
 
@@ -882,17 +869,9 @@ impl InfixParselet for BinaryOperatorParselet {
 
         let ctxt = session.top_context();
 
-        ctxt.init_callback_with_parselet(
-            |session, P| {
-                let P = P
-                    .as_any()
-                    .downcast_ref::<BinaryOperatorParselet>()
-                    .expect("unable to downcast to BinaryOperatorParselet");
-
-                session.reduce_and_climb(|ctx| BinaryNode::new(P.Op, ctx))
-            },
-            self,
-        );
+        ctxt.init_callback_with_state(|session| {
+            session.reduce_and_climb(|ctx| BinaryNode::new(self.Op, ctx))
+        });
 
         // MUSTTAIL
         return session.parse_prefix(tok);
