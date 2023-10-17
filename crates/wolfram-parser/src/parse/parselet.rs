@@ -1234,7 +1234,7 @@ impl InfixParselet for CallParselet {
         //
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| CallParselet::reduce_call(s));
+        ctxt.init_callback(CallParselet::reduce_call);
         ctxt.set_precedence(Precedence::HIGHEST);
 
         let GP = self.getGP();
@@ -1312,7 +1312,7 @@ impl InfixParselet for TildeParselet {
         let first_tok = session.current_token_eat_trivia();
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| TildeParselet::parse1(s));
+        ctxt.init_callback(|s| TildeParselet::parse1(s));
         ctxt.set_precedence(None);
 
         return session.parse_prefix(first_tok);
@@ -1362,7 +1362,7 @@ impl TildeParselet {
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.
         // assert!(Ctxt.f.unwrap() as usize == TildeParselet_parse1 as usize);
-        ctxt.set_callback(|s, _| TildeParselet::reduce_tilde(s));
+        ctxt.set_callback(|s| TildeParselet::reduce_tilde(s));
         ctxt.set_precedence(Precedence::TILDE);
 
         return session.parse_prefix(tok2);
@@ -1401,7 +1401,7 @@ impl InfixParselet for ColonParselet {
         match colonLHS {
             ColonLHS::Pattern => {
                 let ctxt = session.top_context();
-                ctxt.init_callback(|session, _| {
+                ctxt.init_callback(|session| {
                     session.reduce_and_climb(|ctx| {
                         BinaryNode::new(BinaryOperator::Pattern, ctx)
                     })
@@ -1412,7 +1412,7 @@ impl InfixParselet for ColonParselet {
             },
             ColonLHS::Optional => {
                 let ctxt = session.top_context();
-                ctxt.init_callback(|session, _| {
+                ctxt.init_callback(|session| {
                     session.reduce_and_climb(|ctx| {
                         BinaryNode::new(BinaryOperator::Optional, ctx)
                     })
@@ -1424,7 +1424,7 @@ impl InfixParselet for ColonParselet {
             },
             ColonLHS::Error => {
                 let ctxt = session.top_context();
-                ctxt.init_callback(|session, _| {
+                ctxt.init_callback(|session| {
                     session.reduce_and_climb(|ctx| {
                         SyntaxErrorNode::new(
                             SyntaxErrorKind::ExpectedSymbol,
@@ -1483,7 +1483,7 @@ impl InfixParselet for SlashColonParselet {
         let tok = session.current_token_eat_trivia();
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| SlashColonParselet::parse1(s));
+        ctxt.init_callback(|s| SlashColonParselet::parse1(s));
 
         // MUSTTAIL
         return session.parse_prefix(tok);
@@ -1580,7 +1580,7 @@ impl InfixParselet for EqualParselet {
         }
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| EqualParselet::reduce_Set(s));
+        ctxt.init_callback(|s| EqualParselet::reduce_Set(s));
 
         // MUSTTAIL
         return session.parse_prefix(tok);
@@ -1624,7 +1624,7 @@ impl EqualParselet {
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.
         // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
-        ctxt.set_callback(|s, _| EqualParselet::reduce_TagSet(s));
+        ctxt.set_callback(|s| EqualParselet::reduce_TagSet(s));
 
         // MUSTTAIL
         return session.parse_prefix(tok);
@@ -1682,7 +1682,7 @@ impl InfixParselet for ColonEqualParselet {
         let tok = session.current_token_eat_trivia();
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| ColonEqualParselet::reduce_SetDelayed(s));
+        ctxt.init_callback(|s| ColonEqualParselet::reduce_SetDelayed(s));
 
         // MUSTTAIL
         return session.parse_prefix(tok);
@@ -1709,7 +1709,7 @@ impl ColonEqualParselet {
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.
         // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
-        ctxt.set_callback(|s, _| ColonEqualParselet::reduce_TagSetDelayed(s));
+        ctxt.set_callback(|s| ColonEqualParselet::reduce_TagSetDelayed(s));
 
         // MUSTTAIL
         return session.parse_prefix(tok);

@@ -111,7 +111,7 @@ impl SemiSemiParselet {
             //
 
             let ctxt = session.top_context();
-            ctxt.init_callback(|s, _| SemiSemiParselet::parse2(s));
+            ctxt.init_callback(|s| SemiSemiParselet::parse2(s));
 
             // MUSTTAIL
             return session.parse_prefix(SecondTok);
@@ -167,7 +167,7 @@ impl SemiSemiParselet {
         session.push_trivia_seq(trivia1);
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| SemiSemiParselet::reduce_ternary(s));
+        ctxt.init_callback(|s| SemiSemiParselet::reduce_ternary(s));
 
         // MUSTTAIL
         return session.parse_prefix(ThirdTok);
@@ -254,7 +254,7 @@ impl SemiSemiParselet {
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.
         // assert!(Ctxt.f.unwrap() as usize == SemiSemiParselet_parse2 as usize);
-        ctxt.set_callback(|s, _| SemiSemiParselet::reduce_ternary(s));
+        ctxt.set_callback(|s| SemiSemiParselet::reduce_ternary(s));
 
         // MUSTTAIL
         return session.parse_prefix(FourthTok);
