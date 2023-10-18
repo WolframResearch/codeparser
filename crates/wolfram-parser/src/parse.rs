@@ -70,7 +70,7 @@ pub(crate) struct Context {
     f: Option<ParseFunction>,
     p: Option<ParseletPtr>,
 
-    /// The position in [`ParserSession.NodeStack`][ParserSession::NodeStack]
+    /// The position in [`ParserSession.node_stack`][ParserSession::node_stack]
     /// that marks the first node associated with this [`Context`].
     index: usize,
 
@@ -212,14 +212,14 @@ impl<'i> ParserSession<'i> {
     {
         // Remove the top context
         let ctxt = self
-            .ContextStack
+            .context_stack
             .pop()
             .expect("context stack was unexpectedly empty");
 
-        // Remove nodes associated with `ctxt` from back of NodeStack
-        let nodes = Vec::from_iter(self.NodeStack.drain(ctxt.index..));
+        // Remove nodes associated with `ctxt` from back of node_stack
+        let nodes = Vec::from_iter(self.node_stack.drain(ctxt.index..));
 
-        debug_assert_eq!(self.NodeStack.len(), ctxt.index);
+        debug_assert_eq!(self.node_stack.len(), ctxt.index);
 
         // "Reduce" the nodes associated with the popped context using
         // the provided callback.
@@ -232,7 +232,7 @@ impl<'i> ParserSession<'i> {
         &mut self,
         node: T,
     ) {
-        self.NodeStack.push(node.into());
+        self.node_stack.push(node.into());
         self.parse_climb();
     }
 
@@ -279,7 +279,7 @@ impl<'i> ParserSession<'i> {
     /// Apply the continuation function from the top context to
     /// attempt to continue parsing.
     pub(crate) fn try_continue(&mut self) {
-        if self.ContextStack.is_empty() {
+        if self.context_stack.is_empty() {
             // no call needed here
             return;
         }
@@ -304,7 +304,7 @@ impl<'i> ParserSession<'i> {
     /// If the current token is already a non-trivia token, it will be returned.
     ///
     /// Otherwise, repeatedly eat the current token and append it to
-    /// [`ParserSession::NodeStack`] until the current token is no longer a
+    /// [`ParserSession::node_stack`] until the current token is no longer a
     /// trivia token.
     ///
     /// This function always returns a non-trivia token
@@ -422,7 +422,7 @@ impl<'i> ParserSession<'i> {
 
     fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
-            self.NodeStack.push(Cst::Token(token.clone()));
+            self.node_stack.push(Cst::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
@@ -432,7 +432,7 @@ impl<'i> ParserSession<'i> {
 
     fn eat_trivia_stringify_as_file(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
-            self.NodeStack.push(Cst::Token(token.clone()));
+            self.node_stack.push(Cst::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
@@ -446,7 +446,7 @@ impl<'i> ParserSession<'i> {
         token: &mut TokenRef<'i>,
     ) {
         while token.tok.isTriviaButNotToplevelNewline() {
-            self.NodeStack.push(Cst::Token(token.clone()));
+            self.node_stack.push(Cst::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
@@ -460,7 +460,7 @@ impl<'i> ParserSession<'i> {
 
     /// Push a new context with associated precedence value.
     ///
-    /// The top node in the [`NodeStack`][ParserSession::NodeStack] is included
+    /// The top node in the [`node_stack`][ParserSession::node_stack] is included
     /// in the new context.
     pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
         &'s mut self,
@@ -468,18 +468,18 @@ impl<'i> ParserSession<'i> {
     ) -> &'s mut Context {
         let prec = prec.into();
 
-        assert!(!self.NodeStack.is_empty());
+        assert!(!self.node_stack.is_empty());
 
-        self.ContextStack
-            .push(Context::new(self.NodeStack.len() - 1, prec));
+        self.context_stack
+            .push(Context::new(self.node_stack.len() - 1, prec));
 
-        return self.ContextStack.last_mut().unwrap();
+        return self.context_stack.last_mut().unwrap();
     }
 
     pub(crate) fn top_context<'s>(&'s mut self) -> &'s mut Context {
-        assert!(!self.ContextStack.is_empty());
+        assert!(!self.context_stack.is_empty());
 
-        return self.ContextStack.last_mut().unwrap();
+        return self.context_stack.last_mut().unwrap();
     }
 
     //==================================
@@ -487,7 +487,7 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     pub(crate) fn top_precedence(&mut self) -> Option<Precedence> {
-        match self.ContextStack.last() {
+        match self.context_stack.last() {
             Some(ctxt) => ctxt.prec,
             None => None,
         }
@@ -499,9 +499,9 @@ impl<'i> ParserSession<'i> {
     ) {
         let prec = prec.into();
 
-        assert!(!self.ContextStack.is_empty());
+        assert!(!self.context_stack.is_empty());
 
-        let ctxt: &mut _ = self.ContextStack.last_mut().unwrap();
+        let ctxt: &mut _ = self.context_stack.last_mut().unwrap();
 
         ctxt.prec = prec;
     }
@@ -511,11 +511,11 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) {
-        self.NodeStack.push(Cst::Token(token));
+        self.node_stack.push(Cst::Token(token));
     }
 
     pub(crate) fn push_leaf_and_next(&mut self, token: TokenRef<'i>) {
-        self.NodeStack.push(Cst::Token(token));
+        self.node_stack.push(Cst::Token(token));
 
         token.skip(&mut self.tokenizer);
     }
@@ -526,7 +526,7 @@ impl<'i> ParserSession<'i> {
         //
         let TriviaSeq(vec) = seq;
 
-        self.NodeStack.extend(vec.into_iter().map(Cst::Token));
+        self.node_stack.extend(vec.into_iter().map(Cst::Token));
     }
 
     pub(crate) fn push_node<N>(&mut self, node: N)
@@ -534,22 +534,22 @@ impl<'i> ParserSession<'i> {
         N: Into<Cst<TokenStr<'i>>>,
     {
         let node = node.into();
-        self.NodeStack.push(node);
+        self.node_stack.push(node);
     }
 
     pub(crate) fn pop_node(&mut self) -> Cst<TokenStr<'i>> {
-        assert!(!self.NodeStack.is_empty());
+        debug_assert!(!self.node_stack.is_empty());
 
-        let top = self.NodeStack.pop().unwrap();
+        let top = self.node_stack.pop().unwrap();
 
         return top;
     }
 
     #[cfg(test)]
     pub(crate) fn top_node<'s>(&'s mut self) -> &'s mut Cst<TokenStr<'i>> {
-        assert!(!self.NodeStack.is_empty());
+        assert!(!self.node_stack.is_empty());
 
-        return self.NodeStack.last_mut().unwrap();
+        return self.node_stack.last_mut().unwrap();
     }
 
     //==================================
@@ -581,7 +581,7 @@ impl<'i> ParserSession<'i> {
     //===================================
 
     pub(crate) fn check_pattern_precedence(&self) -> bool {
-        for ctxt in self.ContextStack.iter().rev() {
+        for ctxt in self.context_stack.iter().rev() {
             let Some(prec) = ctxt.prec else {
                 // Equivalent to a precedence of zero.
                 return false;
@@ -610,11 +610,11 @@ impl<'i> ParserSession<'i> {
         // skip any trivia
         //
 
-        let ctxt = self.ContextStack.last().unwrap();
+        let ctxt = self.context_stack.last().unwrap();
 
         // Of the nodes owned by `ctxt`, get the top (last) one that
         // is not trivia.
-        let top_non_trivia_in_context = (&self.NodeStack[ctxt.index..])
+        let top_non_trivia_in_context = (&self.node_stack[ctxt.index..])
             .iter()
             .rev()
             .find(
@@ -704,15 +704,15 @@ impl<'i> ParserSession<'i> {
         // work backwards, looking for ~
         //
 
-        if self.ContextStack.is_empty() {
+        if self.context_stack.is_empty() {
             return false;
         }
 
-        let ctxt = self.ContextStack.last().unwrap();
+        let ctxt = self.context_stack.last().unwrap();
 
         // Of the nodes owned by `ctxt`, get the top (last) one that
         // is not trivia.
-        let top_non_trivia_in_context = (&self.NodeStack[ctxt.index..])
+        let top_non_trivia_in_context = (&self.node_stack[ctxt.index..])
             .iter()
             .rev()
             // Skip past top
@@ -734,9 +734,9 @@ impl<'i> ParserSession<'i> {
     }
 
     pub(crate) fn top_node_is_span(&self) -> bool {
-        assert!(!self.NodeStack.is_empty());
+        assert!(!self.node_stack.is_empty());
 
-        let top_node: &Cst<_> = self.NodeStack.last().unwrap();
+        let top_node: &Cst<_> = self.node_stack.last().unwrap();
 
         // Note: This method should only be called in process_implicit_times(),
         //       which itself should only be called after non-newline trivia has
@@ -763,8 +763,8 @@ impl<'i> ParserSession<'i> {
     }
 
     pub fn is_quiescent(&mut self) -> bool {
-        assert!(self.NodeStack.is_empty());
-        assert!(self.ContextStack.is_empty());
+        assert!(self.node_stack.is_empty());
+        assert!(self.context_stack.is_empty());
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;

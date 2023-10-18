@@ -23,13 +23,11 @@ use crate::{
 pub(crate) struct ParserSession<'i> {
     pub(crate) tokenizer: Tokenizer<'i>,
 
-    pub(super) NodeStack: NodeStack<'i>,
-    pub(super) ContextStack: Vec<Context>,
+    pub(super) node_stack: Vec<Cst<TokenStr<'i>>>,
+    pub(super) context_stack: Vec<Context>,
 
     pub(crate) quirk_settings: QuirkSettings,
 }
-
-pub(crate) type NodeStack<'i> = Vec<Cst<TokenStr<'i>>>;
 
 //
 // Used mainly for collecting trivia that has been eaten
@@ -53,8 +51,8 @@ impl<'i> ParserSession<'i> {
         ParserSession {
             tokenizer: Tokenizer::new(input, opts),
 
-            NodeStack: Vec::new(),
-            ContextStack: Vec::new(),
+            node_stack: Vec::new(),
+            context_stack: Vec::new(),
 
             quirk_settings,
         }
