@@ -24,7 +24,7 @@ pub(crate) struct ParserSession<'i> {
     pub(crate) tokenizer: Tokenizer<'i>,
 
     pub(super) node_stack: Vec<Cst<TokenStr<'i>>>,
-    pub(super) context_stack: Vec<Context>,
+    pub(super) context_stack: Vec<Context<'i>>,
 
     pub(crate) quirk_settings: QuirkSettings,
 }

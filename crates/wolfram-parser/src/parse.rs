@@ -64,8 +64,8 @@ use self::{
 
 pub(crate) use self::parser_session::ParserSession;
 
-pub(crate) struct Context {
-    continue_parse: Option<Box<dyn FnMut(&mut ParserSession)>>,
+pub(crate) struct Context<'i> {
+    continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i>) + 'i>>,
 
     /// The position in [`ParserSession.node_stack`][ParserSession::node_stack]
     /// that marks the first node associated with this [`Context`].
@@ -80,7 +80,7 @@ pub(crate) enum ColonLHS {
     Error,
 }
 
-impl Context {
+impl<'i> Context<'i> {
     pub fn new(index: usize, prec: Option<Precedence>) -> Self {
         Context {
             continue_parse: None,
@@ -96,7 +96,7 @@ impl Context {
     }
 
     pub(crate) fn init_callback_with_state<
-        F: Fn(&mut ParserSession) + 'static,
+        F: FnOnce(&mut ParserSession<'i>) + 'i,
     >(
         &mut self,
         func: F,
@@ -117,7 +117,7 @@ impl Context {
     }
 
     pub(crate) fn set_callback_with_state<
-        F: Fn(&mut ParserSession) + 'static,
+        F: FnOnce(&mut ParserSession<'i>) + 'i,
     >(
         &mut self,
         func: F,
@@ -275,7 +275,7 @@ impl<'i> ParserSession<'i> {
 
         let ctxt: &mut Context = self.top_context();
 
-        let Some(mut continue_parse) =
+        let Some(continue_parse) =
             std::mem::replace(&mut ctxt.continue_parse, None)
         else {
             return;
@@ -454,7 +454,7 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
         &'s mut self,
         prec: P,
-    ) -> &'s mut Context {
+    ) -> &'s mut Context<'i> {
         let prec = prec.into();
 
         assert!(!self.node_stack.is_empty());
@@ -465,7 +465,7 @@ impl<'i> ParserSession<'i> {
         return self.context_stack.last_mut().unwrap();
     }
 
-    pub(crate) fn top_context<'s>(&'s mut self) -> &'s mut Context {
+    pub(crate) fn top_context<'s>(&'s mut self) -> &'s mut Context<'i> {
         assert!(!self.context_stack.is_empty());
 
         return self.context_stack.last_mut().unwrap();
@@ -764,7 +764,7 @@ impl<'i> ParserSession<'i> {
 // Format Impls
 //======================================
 
-impl Debug for Context {
+impl<'i> Debug for Context<'i> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Context")
             .field("continue_parse", &"<continuation function>")
