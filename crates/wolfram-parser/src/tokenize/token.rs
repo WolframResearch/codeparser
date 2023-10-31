@@ -47,7 +47,7 @@ pub trait TokenSource: Clone {
     #[doc(hidden)]
     fn unknown() -> Self;
 
-    fn from_span(source: Span) -> Self;
+    fn between(start: Self, end: Self) -> Self;
 }
 
 impl TokenSource for Source {
@@ -59,8 +59,30 @@ impl TokenSource for Source {
         Source::unknown()
     }
 
-    fn from_span(source: Span) -> Self {
-        Source::Span(source)
+    fn between(start: Source, end: Source) -> Self {
+        match (&start, &end) {
+            (a, b) if a.is_unknown() || b.is_unknown() => Source::unknown(),
+            (Source::Span(start), Source::Span(end)) => {
+                Source::Span(Span::between(*start, *end))
+            },
+            (Source::BoxPosition(start), Source::BoxPosition(end)) => {
+                // FIXME: This cannot, in general, be the right way to compute
+                //        a span that covers both start and end. But it happens
+                //        to work for the one case I know of where a synthetic
+                //        source is needed (processPlusPair). Some thought
+                //        should be put into how to represent box position spans
+                //        and then this should be fixed up and get some
+                //        additional tests.
+                // TID:20231031/1: Synthetic box source for process plus pair
+                Source::BoxPosition(vec![start[0], end[1]])
+            },
+            (Source::After(_), Source::After(_)) => {
+                todo!("synthetic source of After: start = {start:?}, end = {end:?}")
+            },
+            (start, end) => {
+                panic!("Unexpected combination of Source variants: start = {start:?}, end = {end:?}")
+            },
+        }
     }
 }
 
@@ -73,8 +95,11 @@ impl TokenSource for Span {
         Span::unknown()
     }
 
-    fn from_span(source: Span) -> Self {
-        source
+    fn between(start: Span, end: Span) -> Self {
+        Span {
+            start: start.start,
+            end: end.end,
+        }
     }
 }
 

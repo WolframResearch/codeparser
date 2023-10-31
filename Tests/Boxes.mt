@@ -1531,7 +1531,66 @@ Test[
 
 
 
+Module[{
+	cst,
+	agg,
+	ast
+},
+	cst = CodeConcreteParseBox[
+		RowBox[{"{", RowBox[{"E", "-", "1"}], "}"}]
+	];
 
+	Test[
+		cst,
+		ContainerNode[Box, {
+			GroupNode[
+				List,
+				{
+					LeafNode[Token`OpenCurly, "{", <|Source -> {1, 1}|>],
+					InfixNode[
+						Plus,
+						{
+							LeafNode[Symbol, "E", <|Source -> {1, 2, 1, 1}|>],
+							LeafNode[Token`Minus, "-", <|Source -> {1, 2, 1, 2}|>],
+							LeafNode[Integer, "1", <|Source -> {1, 2, 1, 3}|>]
+						},
+						<|Source -> {1, 2}|>
+					],
+					LeafNode[Token`CloseCurly, "}", <|Source -> {1, 3}|>]
+				},
+				<|Source -> {}|>
+			]
+		}, <||>]
+	];
+
+	agg = CodeParser`Abstract`Aggregate[cst];
+
+	Test[agg, cst];
+
+	ast = CodeParser`Abstract`Abstract[cst];
+
+	(* TID:20231031/1: Synthetic box source for process plus pair *)
+	Test[
+		ast,
+		ContainerNode[Box, {
+			CallNode[
+				LeafNode[Symbol, "List", <||>],
+				{
+					CallNode[
+						LeafNode[Symbol, "Plus", <||>],
+						{
+							LeafNode[Symbol, "E", <|Source -> {1, 2, 1, 1}|>],
+							LeafNode[Integer, "-1", <|Source -> {1, 2}|>]
+						},
+						<|Source -> {1, 2}|>
+					]
+				},
+				<|Source -> {}|>
+			]
+		}, <||>],
+		TestID -> "Boxes-20231031-1"
+	]
+]
 
 
 
