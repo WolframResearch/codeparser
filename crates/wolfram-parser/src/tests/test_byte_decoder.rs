@@ -1,46 +1,45 @@
 use pretty_assertions::assert_eq;
 
 use crate::{
-    read::code_point::CodePoint, source::TOPLEVEL, ParseOptions, ParserSession,
+    read::code_point::CodePoint, read::Reader, source::TOPLEVEL, ParseOptions,
 };
 
 #[test]
 fn ByteDecoderTest_Empty() {
     let strIn = "";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut reader = Reader::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    reader.next_source_char(TOPLEVEL);
+
+    c = reader.peek_source_char(TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    reader.next_source_char(TOPLEVEL);
+
+    c = reader.peek_source_char(TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.fatalIssues.len(), 0);
 }
 
 
@@ -48,39 +47,38 @@ fn ByteDecoderTest_Empty() {
 fn ByteDecoderTest_Basic1() {
     let strIn = "1+2";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut reader = Reader::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '2');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    reader.next_source_char(TOPLEVEL);
+
+    c = reader.peek_source_char(TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.fatalIssues.len(), 0);
 }
 
 //
@@ -90,41 +88,41 @@ fn ByteDecoderTest_Basic1() {
 fn ByteDecoderTest_Basic2() {
     let arr = &[b'1', b'+', 206, 177];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c: CodePoint = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c: CodePoint = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c.as_i32(), 0x03b1);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
     //
     // Issue: Non-ASCII character: ``"α" (\[Alpha])``
     //
-    assert_eq!(session.nonFatalIssues().len(), 1);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(reader.nonFatalIssues.len(), 1);
+    assert_eq!(reader.fatalIssues.len(), 0);
 }
 
 //
@@ -134,79 +132,79 @@ fn ByteDecoderTest_Basic2() {
 fn ByteDecoderTest_Basic3() {
     let arr = &[b'1', b'+', 0xE2, 0x9A, 0xA1];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c.as_i32(), 0x26A1);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
     //
     // Issue: Non-ASCII character: ``"⚡" (\:26a1)``
     //
-    assert_eq!(session.nonFatalIssues().len(), 1);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(reader.nonFatalIssues.len(), 1);
+    assert_eq!(reader.fatalIssues.len(), 0);
 }
 
 #[test]
 fn ByteDecoderTest_Invalid1() {
     let arr = &[b'1', b'+', 0xf8];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::Unsafe1ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 1);
+    reader.next_source_char(TOPLEVEL);
+
+    c = reader.peek_source_char(TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.fatalIssues.len(), 1);
 }
 
 //
@@ -218,38 +216,38 @@ fn ByteDecoderTest_Invalid1() {
 fn ByteDecoderTest_Invalid2() {
     let arr = &[b'1', b'+', 206];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::Unsafe1ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 1);
+    reader.next_source_char(TOPLEVEL);
+
+    c = reader.peek_source_char(TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.fatalIssues.len(), 1);
 }
 
 //
@@ -259,39 +257,39 @@ fn ByteDecoderTest_Invalid2() {
 fn ByteDecoderTest_Invalid3() {
     let arr = &[b'1', b'+', 0xE2];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     // from 0xE2 byte
     assert_eq!(c, CodePoint::Unsafe1ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 1);
+    reader.next_source_char(TOPLEVEL);
+
+    c = reader.peek_source_char(TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.fatalIssues.len(), 1);
 }
 
 //
@@ -301,39 +299,39 @@ fn ByteDecoderTest_Invalid3() {
 fn ByteDecoderTest_Invalid4() {
     let arr = &[b'1', b'+', 0xE2, 0x9A];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     // from 0xE2 byte
     assert_eq!(c, CodePoint::Unsafe2ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 1);
+    reader.next_source_char(TOPLEVEL);
+
+    c = reader.peek_source_char(TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.fatalIssues.len(), 1);
 }
 
 //
@@ -343,45 +341,45 @@ fn ByteDecoderTest_Invalid4() {
 fn ByteDecoderTest_Surrogate1() {
     let arr = &[b'1', b'+', 0xed, 0xa0, 0x80];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    assert_eq!(session.tokenizer.buffer(), &arr[0..]);
+    assert_eq!(reader.buffer(), &arr[0..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    assert_eq!(session.tokenizer.buffer(), &arr[1..]);
+    assert_eq!(reader.buffer(), &arr[1..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     // from 0xED byte
     assert_eq!(c, CodePoint::Unsafe3ByteUtf8Sequence);
 
-    assert_eq!(session.tokenizer.buffer(), &arr[2..]);
+    assert_eq!(reader.buffer(), &arr[2..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     // from 0xA0 byte
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.tokenizer.buffer(), &arr[5..]);
+    assert_eq!(reader.buffer(), &arr[5..]);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
+    assert_eq!(reader.nonFatalIssues.len(), 0);
     //
     // Issue: Invalid UTF-8 sequence: Stray surrogate
     //
-    assert_eq!(session.fatalIssues().len(), 1);
+    assert_eq!(reader.fatalIssues.len(), 1);
 }
 
 //
@@ -391,43 +389,43 @@ fn ByteDecoderTest_Surrogate1() {
 fn ByteDecoderTest_Surrogate2() {
     let arr = &[b'1', b'+', 0xed, 0xb0, 0x80];
 
-    let mut session = ParserSession::new(arr, &ParseOptions::default());
+    let mut reader = Reader::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    assert_eq!(session.tokenizer.buffer(), &arr[0..]);
+    assert_eq!(reader.buffer(), &arr[0..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    assert_eq!(session.tokenizer.buffer(), &arr[1..]);
+    assert_eq!(reader.buffer(), &arr[1..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     // from 0xED byte
     assert_eq!(c, CodePoint::Unsafe3ByteUtf8Sequence);
 
-    assert_eq!(session.tokenizer.buffer(), &arr[2..]);
+    assert_eq!(reader.buffer(), &arr[2..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    reader.next_source_char(TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = reader.peek_source_char(TOPLEVEL);
 
     // from 0xB0 byte
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(session.tokenizer.buffer(), &arr[5..]);
+    assert_eq!(reader.buffer(), &arr[5..]);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
+    assert_eq!(reader.nonFatalIssues.len(), 0);
     //
     // Issue: Invalid UTF-8 sequence: Stray surrogate
     //
-    assert_eq!(session.fatalIssues().len(), 1);
+    assert_eq!(reader.fatalIssues.len(), 1);
 }
