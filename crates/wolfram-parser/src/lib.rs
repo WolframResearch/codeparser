@@ -111,6 +111,7 @@ pub mod macros;
 
 use abstract_::{abstract_cst, aggregate_cst_seq};
 use cst::CstSeq;
+use source::TOPLEVEL;
 use tokenize::{
     tokenizer::{
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
@@ -607,14 +608,44 @@ pub fn parse_to_token<'i>(
     return create_parse_result(&tokenizer, exprs);
 }
 
+// TODO(cleanup): What is this used for? Perhaps ultimately this is just
+//                std::str::from_utf8()?
 #[doc(hidden)]
 pub fn safe_string<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> Result<&'i str, UnsafeCharacterEncoding> {
-    let mut session = ParserSession::new(bytes, opts);
+    let mut tokenizer = Tokenizer::new(bytes, opts);
 
-    session.safe_string()
+    //
+    // read all characters, just to set unsafeCharacterEncoding flag if necessary
+    //
+    loop {
+        let char = tokenizer.next_source_char(TOPLEVEL);
+
+        if char.isEndOfFile() {
+            break;
+        }
+    } // while (true)
+
+    match tokenizer.unsafe_character_encoding_flag {
+        None => {
+            // let N = SafeStringNode::new(BufferAndLength::new(self.start, self.end - self.start));
+            let str = std::str::from_utf8(tokenizer.input).expect(
+                "safeString: unable to convert source input into safe string",
+            );
+
+            Ok(str)
+        },
+        Some(flag) => {
+            debug_assert!(
+                std::str::from_utf8(tokenizer.input).is_err()
+                    || flag == UnsafeCharacterEncoding::BOM
+            );
+
+            Err(flag)
+        },
+    }
 }
 
 // TODO(cleanup): This doesn't need to be a method on ParserSession.
