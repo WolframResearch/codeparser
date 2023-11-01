@@ -279,6 +279,13 @@ macro_rules! token_kind {
             pub fn from_symbol(symbol: SymbolRef) -> Option<Self> {
                 match symbol {
                     $(
+                        // TODO(cleanup):
+                        //     This allow is needed because Token`Newline is the
+                        //     symbol for two different TokenKind variants,
+                        //     InternalNewline and ToplevelNewline. A match arm
+                        //     is generated for both token variants, but they
+                        //     have the same LHS, so one is unreachable.
+                        #[allow(unreachable_patterns)]
                         token_to_symbol!($variant) => Some(TokenKind::$variant),
                     )*
                     _ => None
