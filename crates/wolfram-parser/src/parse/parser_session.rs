@@ -10,7 +10,7 @@ use crate::{
     issue::Issue,
     parse::{
         parselet::{PrefixParselet, PrefixToplevelCloserParselet},
-        Context, Parser_handleFirstLine,
+        Context,
     },
     quirks::{self, QuirkSettings},
     source::TOPLEVEL,
@@ -22,7 +22,7 @@ use crate::{
         },
         Token, TokenKind, TokenRef, TokenStr,
     },
-    NodeSeq, ParseOptions, StringifyMode, Tokens,
+    NodeSeq, ParseOptions, StringifyMode,
 };
 
 
@@ -74,18 +74,14 @@ impl<'i> ParserSession<'i> {
             quirk_settings,
         } = *opts;
 
-        let mut session = ParserSession {
+        ParserSession {
             tokenizer: Tokenizer::new(input, opts),
 
             NodeStack: Vec::new(),
             ContextStack: Vec::new(),
 
             quirk_settings,
-        };
-
-        Parser_handleFirstLine(&mut session.tokenizer);
-
-        return session;
+        }
     }
 
     /// Returns the complete input [`Buffer`][crate::source::Buffer].
@@ -158,36 +154,6 @@ impl<'i> ParserSession<'i> {
         let exprs = self.reparse_unterminated(exprs);
 
         return self.create_parse_result(exprs);
-    }
-
-    pub fn tokenize(
-        &mut self,
-    ) -> Result<Tokens<TokenStr<'i>>, UnsafeCharacterEncoding> {
-        let mut tokens = Vec::new();
-
-        loop {
-            if feature::CHECK_ABORT && crate::abortQ() {
-                break;
-            }
-
-            let tok = self.tokenizer.peek_token();
-
-            if tok.tok == TokenKind::EndOfFile {
-                break;
-            }
-
-            tokens.push(tok);
-
-            tok.skip(&mut self.tokenizer);
-        } // while (true)
-
-        if let Some(flag) = self.tokenizer.unsafe_character_encoding_flag {
-            return Err(flag);
-        }
-
-        let tokens = self.reparse_unterminated_tokens(Tokens(tokens));
-
-        return Ok(tokens);
     }
 
     fn concreteParseLeaf0(
@@ -270,21 +236,6 @@ impl<'i> ParserSession<'i> {
         }
 
         nodes
-    }
-
-    fn reparse_unterminated_tokens(
-        &self,
-        mut tokens: Tokens<TokenStr<'i>>,
-    ) -> Tokens<TokenStr<'i>> {
-        if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
-            tokens = crate::error::reparse_unterminated_tokens(
-                tokens,
-                input,
-                usize::try_from(self.tokenizer.tab_width).unwrap(),
-            );
-        }
-
-        tokens
     }
 
     fn create_parse_result<N>(

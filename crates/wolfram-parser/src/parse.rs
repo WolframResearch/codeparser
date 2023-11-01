@@ -45,17 +45,14 @@ use crate::{
         BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, Cst,
         CstSeq, TernaryNode, TernaryOperator, TriviaSeq,
     },
-    feature,
     panic_if_aborted,
     // parselet::Parselet,
     precedence::Precedence,
 
     tokenize::{
-        token_kind::Closer,
-        tokenizer::{Tokenizer, Tokenizer_currentToken_stringifyAsFile},
+        token_kind::Closer, tokenizer::Tokenizer_currentToken_stringifyAsFile,
         TokenKind, TokenRef, TokenStr,
     },
-    FirstLineBehavior,
     NodeSeq,
 };
 
@@ -152,117 +149,6 @@ impl Context {
 
 fn Parser_identity<'i>(_: &mut ParserSession<'i>, _: ParseletPtr) {
     return;
-}
-
-pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
-    match session.first_line_behavior {
-        FirstLineBehavior::NotScript => {
-            return;
-        },
-        FirstLineBehavior::Check => {
-            //
-            // Handle the optional #! shebang
-            //
-
-            let mut peek = session.peek_token();
-
-            if peek.tok != TokenKind::Hash {
-                // not #!
-
-                return;
-            }
-
-            peek.skip(session);
-
-            peek = session.peek_token();
-
-            if peek.tok != TokenKind::Bang {
-                // not #!
-
-                return;
-            }
-
-            //
-            // Definitely a shebang
-            //
-
-            peek.skip(session);
-
-            loop {
-                if feature::CHECK_ABORT && crate::abortQ() {
-                    break;
-                }
-
-                let peek = session.peek_token();
-
-                if peek.tok == TokenKind::EndOfFile {
-                    break;
-                }
-
-                if peek.tok == TokenKind::ToplevelNewline {
-                    peek.skip(session);
-
-                    break;
-                }
-
-                peek.skip(session);
-            } // while (true)
-
-            //
-            // TODO: if anyone ever asks, then consider providing the shebang as a token
-            // but only after BIGCODEMERGE!!
-            //
-        },
-        FirstLineBehavior::Script => {
-            //
-            // Handle the #! shebang
-            //
-
-            let mut peek = session.peek_token();
-
-            if peek.tok != TokenKind::Hash {
-                //
-                // TODO: add to Issues
-                //
-
-                return;
-            }
-
-            peek.skip(session);
-
-            peek = session.peek_token();
-
-            if peek.tok != TokenKind::Bang {
-                //
-                // TODO: add to Issues
-                //
-
-                return;
-            }
-
-            peek.skip(session);
-
-            loop {
-                if feature::CHECK_ABORT && crate::abortQ() {
-                    break;
-                }
-
-                let peek = session.peek_token();
-
-                if peek.tok == TokenKind::EndOfFile {
-                    break;
-                }
-
-                if peek.tok == TokenKind::ToplevelNewline {
-                    peek.skip(session);
-
-                    break;
-                }
-
-                peek.skip(session);
-            } // while (true)
-        },
-    }
 }
 
 impl TokenKind {

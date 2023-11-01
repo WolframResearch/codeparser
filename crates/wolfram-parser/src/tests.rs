@@ -22,7 +22,6 @@ use crate::{
         GroupOperator, InfixNode, InfixOperator, OperatorNode,
     },
     macros::{src, token},
-    parse::ParserSession,
     parse_bytes_cst,
     source::{Source, SourceConvention},
     tokenize,
@@ -263,28 +262,6 @@ fn test_box_source_recovery() {
     };
 
     assert_eq!(cst.src, Source::BoxPosition(vec![1]))
-}
-
-
-#[test]
-pub fn test_tokenize_is_not_idempotent() {
-    let mut session = ParserSession::new(
-        "2+2".as_bytes(),
-        &ParseOptions::default()
-            .source_convention(SourceConvention::CharacterIndex),
-    );
-
-    assert_eq!(
-        session.tokenize().unwrap().0,
-        vec![
-            token![Integer, "2", src!(1 - 2)],
-            token![Plus, "+", src!(2 - 3)],
-            token![Integer, "2", src!(3 - 4)]
-        ]
-    );
-
-    // Test that ParserSession::tokenize() is NOT idempotent.
-    assert_eq!(session.tokenize().unwrap().0, Vec::<Token<TokenStr>>::new())
 }
 
 #[test]

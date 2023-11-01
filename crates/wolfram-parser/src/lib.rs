@@ -111,6 +111,7 @@ pub mod macros;
 
 use abstract_::{abstract_cst, aggregate_cst_seq};
 use cst::CstSeq;
+use tokenize::{TokenKind, Tokenizer};
 use wolfram_expr::{Expr, Number};
 
 use crate::{
@@ -344,9 +345,39 @@ pub fn tokenize_bytes<'i>(
     input: &'i [u8],
     opts: &ParseOptions,
 ) -> Result<Tokens<TokenStr<'i>>, UnsafeCharacterEncoding> {
-    let mut session = ParserSession::new(input, opts);
+    let mut tokenizer = Tokenizer::new(input, opts);
 
-    session.tokenize()
+    let mut tokens = Vec::new();
+
+    loop {
+        if feature::CHECK_ABORT && crate::abortQ() {
+            break;
+        }
+
+        let tok = tokenizer.peek_token();
+
+        if tok.tok == TokenKind::EndOfFile {
+            break;
+        }
+
+        tokens.push(tok);
+
+        tok.skip(&mut tokenizer);
+    } // while (true)
+
+    if let Some(flag) = tokenizer.unsafe_character_encoding_flag {
+        return Err(flag);
+    }
+
+    if let Ok(input) = std::str::from_utf8(tokenizer.input) {
+        Tokens(tokens) = crate::error::reparse_unterminated_tokens(
+            Tokens(tokens),
+            input,
+            usize::try_from(tokenizer.tab_width).unwrap(),
+        );
+    }
+
+    return Ok(Tokens(tokens));
 }
 
 //======================================
