@@ -155,9 +155,7 @@ fn Parser_identity<'i>(_: &mut ParserSession<'i>, _: ParseletPtr) {
 }
 
 pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
-    let firstLineBehavior = session.firstLineBehavior;
-
-    match firstLineBehavior {
+    match session.first_line_behavior {
         FirstLineBehavior::NotScript => {
             return;
         },

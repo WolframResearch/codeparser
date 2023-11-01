@@ -969,7 +969,7 @@ fn ByteDecoder_validMB(
                 currentSourceCharacterStartLoc,
                 policy,
             );
-        } else if session.encodingMode == EncodingMode::Normal {
+        } else if session.encoding_mode == EncodingMode::Normal {
             ByteDecoder_nonASCIIWarning(
                 session,
                 decoded,

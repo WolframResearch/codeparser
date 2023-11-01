@@ -29,7 +29,7 @@ use crate::source::NextPolicyBits::*;
 pub(crate) struct Tokenizer<'i> {
     pub(crate) reader: Reader<'i>,
 
-    pub(crate) firstLineBehavior: FirstLineBehavior,
+    pub(crate) first_line_behavior: FirstLineBehavior,
 
     pub GroupStack: Vec<Closer>,
 

@@ -1244,7 +1244,7 @@ impl GroupParselet {
             "cannot reparse unterminated group node: input is not valid UTF-8",
         );
 
-        let tab_width = session.tokenizer.tabWidth as usize;
+        let tab_width = session.tokenizer.tab_width as usize;
 
         session.pop_group();
 

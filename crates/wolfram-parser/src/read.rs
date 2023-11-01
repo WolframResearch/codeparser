@@ -36,9 +36,9 @@ pub(crate) struct Reader<'i> {
     pub(crate) wasEOF: bool,
 
     pub(crate) SrcLoc: Location,
-    pub(crate) tabWidth: u32,
+    pub(crate) tab_width: u32,
 
-    pub(crate) encodingMode: EncodingMode,
+    pub(crate) encoding_mode: EncodingMode,
 
     pub(crate) fatalIssues: Vec<Issue>,
     pub(crate) nonFatalIssues: Vec<Issue>,
@@ -164,7 +164,7 @@ impl<'i> Reader<'i> {
     /// Access a set of fields related to updating the current source location.
     pub(crate) fn src(&mut self) -> SourceManager {
         SourceManager {
-            tab_width: self.tabWidth,
+            tab_width: self.tab_width,
             loc: &mut self.SrcLoc,
         }
     }
