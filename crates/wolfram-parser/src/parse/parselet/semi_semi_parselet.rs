@@ -1,5 +1,4 @@
 use crate::{
-    cst::{BinaryNode, TernaryNode},
     panic_if_aborted,
     parse::{parselet::*, ParserSession},
     precedence::Precedence,
@@ -39,7 +38,7 @@ impl InfixParselet for SemiSemiParselet {
         // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
         //
 
-        if session.top_node_is_span() {
+        if session.builder.top_node_is_span() {
             return Token::at_start(TokenKind::Fake_ImplicitTimes, tok_in);
         }
 
@@ -261,13 +260,14 @@ impl SemiSemiParselet {
     }
 
     fn reduce_binary(session: &mut ParserSession) {
-        session
-            .reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Span, ctx))
+        session.builder.reduce_binary(BinaryOperator::Span);
+
+        session.parse_climb();
     }
 
     fn reduce_ternary(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
-            TernaryNode::new(TernaryOperator::Span, ctx)
-        })
+        session.builder.reduce_ternary(TernaryOperator::Span);
+
+        session.parse_climb();
     }
 }

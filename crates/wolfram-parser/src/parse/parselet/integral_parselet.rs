@@ -1,5 +1,4 @@
 use crate::{
-    cst::{PrefixBinaryNode, PrefixNode},
     panic_if_aborted,
     parse::{parselet::*, ParserSession},
     precedence::Precedence,
@@ -82,11 +81,15 @@ impl IntegralParselet {
     }
 
     fn reduceIntegrate(&self, session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| PrefixBinaryNode::new(self.Op1, ctx))
+        session.builder.reduce_prefix_binary(self.Op1);
+
+        session.parse_climb();
     }
 
     fn reduceIntegral(&self, session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| PrefixNode::new(self.Op2, ctx))
+        session.builder.reduce_prefix(self.Op2);
+
+        session.parse_climb();
     }
 }
 

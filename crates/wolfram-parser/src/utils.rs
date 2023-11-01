@@ -640,6 +640,18 @@ fn test_most_slice() {
 }
 
 //======================================
+// debug_assert_matches!
+//======================================
+
+macro_rules! debug_assert_matches {
+    ($left:expr, $right:pat) => {
+        debug_assert!(matches!($left, $right))
+    };
+}
+
+pub(crate) use debug_assert_matches;
+
+//======================================
 // CommaSeparated and CommaTerminated display forms
 //======================================
 

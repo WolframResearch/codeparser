@@ -1,5 +1,4 @@
 use crate::{
-    cst::InfixNode,
     panic_if_aborted,
     parse::{parselet::*, ParserSession},
     precedence::Precedence,
@@ -80,10 +79,10 @@ impl TimesParselet {
 
                 trivia1.reset(&mut session.tokenizer);
 
+                session.builder.reduce_infix(InfixOperator::Times);
+
                 // MUSTTAIL
-                return session.reduce_and_climb(|ctx| {
-                    InfixNode::new(InfixOperator::Times, ctx)
-                });
+                return session.parse_climb();
             }
 
             session.push_trivia_seq(trivia1);

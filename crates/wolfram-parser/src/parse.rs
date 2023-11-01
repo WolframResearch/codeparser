@@ -25,9 +25,9 @@
 //!
 //! 1. Call [`parse_prefix()`][ParserSession::parse_prefix] on the next token in the input
 //! 2. Call [`parse_infix()`][ParserSession::parse_infix] on the next token in the input
-//! 3. Call [`reduce_and_climb()`][ParserSession::reduce_and_climb] to push a
-//!    completed parsed expression onto the node stack and parse the next token
-//!    using `parse_infix()`.
+//! 3. Call a `reduce_XXX()` method to push a completed parsed subexpression
+//!    onto the node stack followed by [`parse_climb()`][ParserSession::parse_climb]
+//!    to parse the next token using `parse_infix()`.
 //! 4. Call [`try_continue()`][ParserSession::try_continue] to invoke the
 //!    continuation function from the top context on the context stack.
 
@@ -42,8 +42,8 @@ use std::fmt::Debug;
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, Cst,
-        CstSeq, TernaryNode, TernaryOperator, TriviaSeq,
+        BinaryOperator, CompoundOperator, SyntaxErrorKind, TernaryOperator,
+        TriviaSeq,
     },
     panic_if_aborted,
     // parselet::Parselet,
@@ -51,27 +51,189 @@ use crate::{
 
     tokenize::{
         token_kind::Closer, tokenizer::Tokenizer_currentToken_stringifyAsFile,
-        TokenKind, TokenRef, TokenStr,
+        TokenKind, TokenRef,
     },
-    NodeSeq,
 };
 
 use self::{
+    operators::{
+        GroupOperator, InfixOperator, PostfixOperator, PrefixBinaryOperator,
+        PrefixOperator,
+    },
     parselet::{InfixParselet, PrefixParselet},
-    parser_session::TriviaSeqRef,
     token_parselets::{INFIX_PARSELETS, PREFIX_PARSELETS},
 };
 
-pub(crate) use self::parser_session::ParserSession;
+pub(crate) use self::parser_session::{ParserSession, TriviaSeqRef};
 
 pub(crate) struct Context<'i> {
     continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i>) + 'i>>,
 
     /// The position in [`ParserSession.node_stack`][ParserSession::node_stack]
     /// that marks the first node associated with this [`Context`].
-    index: usize,
+    pub(crate) index: usize,
 
-    prec: Option<Precedence>,
+    pub(crate) prec: Option<Precedence>,
+}
+
+/// Handler for parse events to build up a representation of the parsed input.
+///
+/// Types that implement this trait receive parsing "events" in the form of
+/// calls to the methods defined by this trait, and use those events to build up
+/// some representation of the parsed input, typically a [`Cst`] or Wolfram
+/// Language expression.
+///
+/// Prior to the introduction of this trait, the parser could only produce
+/// [`Cst`] values as output. However, that limited the utility of this parser
+/// for the performant construction of Wolfram Language expressions, because
+/// the required pipeline was `Input &str => Cst => Expr` — the intermediate
+/// `Cst` and all its allocations and overhead was superfluous to the ultimate
+/// goal of creating an `Expr`.
+///
+/// This abstraction allows `Input &str => Expr` with no intermediate stage,
+/// while also preserving the ability to do `Input &str => Cst`, or any other
+/// type buildable from parsing.
+pub(crate) trait ParseBuilder<'i>: Debug {
+    type Output;
+
+    //==================================
+    // Context management
+    //==================================
+
+    fn push_context(
+        &mut self,
+        precedence: Option<Precedence>,
+    ) -> &mut Context<'i>;
+
+    fn top_context(&mut self) -> Option<&mut Context<'i>>;
+
+    fn is_quiescent(&self) -> bool;
+
+    //==================================
+    // Push
+    //==================================
+
+    fn push_leaf(&mut self, token: TokenRef<'i>);
+
+    fn push_trivia(&mut self, trivia: TokenRef<'i>);
+
+    fn push_trivia_seq(&mut self, seq: TriviaSeqRef<'i>);
+
+    /// `name_` or `name_head`
+    fn push_compound_pattern_blank(
+        &mut self,
+        op: CompoundOperator,
+        symbol: TokenRef<'i>,
+        under: UnderParseData<'i>,
+    );
+
+    /// `_` or `_head`
+    fn push_compound_blank(&mut self, under: UnderParseData<'i>);
+
+    fn push_compound_pattern_optional(
+        &mut self,
+        // TODO(cleanup): Can this only ever have one value?
+        op: CompoundOperator,
+        symbol: TokenRef<'i>,
+        under_dot: TokenRef<'i>,
+    );
+
+    // TODO(cleanup): Same signature as push_compound_pattern_optional?
+    fn push_compound_slot(
+        &mut self,
+        // TODO(cleanup): Can this only ever have one value?
+        op: CompoundOperator,
+        hash: TokenRef<'i>,
+        arg: TokenRef<'i>,
+    );
+
+    // TODO(cleanup): Same signature as push_compound_pattern_optional and push_compound_slot?
+    fn push_compound_out(
+        &mut self,
+        // TODO(cleanup): Can this only ever have one value?
+        op: CompoundOperator,
+        percent: TokenRef<'i>,
+        integer: TokenRef<'i>,
+    );
+
+    // TODO(cleanup): Better name
+    fn push_prefix_get(
+        &mut self,
+        // TODO(cleanup): Can this only ever have one value?
+        op: PrefixOperator,
+        op_token: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+        stringify_token: TokenRef<'i>,
+    );
+
+    //==================================
+    // Reduce
+    //==================================
+
+    //----------------------------------
+    // Reduce normal
+    //----------------------------------
+
+    fn reduce_prefix(&mut self, op: PrefixOperator);
+
+    fn reduce_infix(&mut self, op: InfixOperator);
+
+    fn reduce_postfix(&mut self, op: PostfixOperator);
+
+    fn reduce_binary(&mut self, op: BinaryOperator);
+
+    fn reduce_ternary(&mut self, op: TernaryOperator);
+
+    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator);
+
+    fn reduce_group(&mut self, op: GroupOperator);
+
+    fn reduce_call(&mut self);
+
+    //----------------------------------
+    // Reduce errors
+    //----------------------------------
+
+    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind);
+
+    fn reduce_unterminated_group(
+        &mut self,
+        op: GroupOperator,
+        input: &'i str,
+        tab_width: usize,
+    );
+
+    fn reduce_group_missing_closer(&mut self, op: GroupOperator);
+
+    //==================================
+    // Pop
+    //==================================
+
+    fn pop_finished_expr(&mut self) -> Self::Output;
+
+    //==================================
+    // Properties
+    //==================================
+    // TODO(cleanup): Find a way to store enough in ParserSession so that
+    //                ParseBuilder impls don't need to provide these
+    //                specialized methods.
+
+    fn check_pattern_precedence(&self) -> bool;
+
+    fn check_colon_lhs(&self) -> ColonLHS;
+
+    fn top_non_trivia_node_is_tilde(&self) -> bool;
+
+    fn top_node_is_span(&self) -> bool;
+}
+
+pub(crate) enum UnderParseData<'i> {
+    Under(TokenRef<'i>),
+    UnderSymbol {
+        op: CompoundOperator,
+        under: TokenRef<'i>,
+        symbol: TokenRef<'i>,
+    },
 }
 
 pub(crate) enum ColonLHS {
@@ -180,48 +342,8 @@ impl<'i> ParserSession<'i> {
             .process_implicit_times(self, token)
     }
 
-    /// Pop the top context and push a new node constructed by `func`, then
-    /// call [`ParserSession::parse_climb()`].
-    pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)
-    where
-        N: Into<Cst<TokenStr<'i>>>,
-        F: FnOnce(CstSeq<TokenStr<'i>>) -> N,
-    {
-        self.reduce(func);
-
-        // MUSTTAIL
-        return self.parse_climb();
-    }
-
-    /// Pop the top context and push a new node constructed by `func`.
-    pub(crate) fn reduce<N, F>(&mut self, func: F)
-    where
-        N: Into<Cst<TokenStr<'i>>>,
-        F: FnOnce(CstSeq<TokenStr<'i>>) -> N,
-    {
-        // Remove the top context
-        let ctxt = self
-            .context_stack
-            .pop()
-            .expect("context stack was unexpectedly empty");
-
-        // Remove nodes associated with `ctxt` from back of node_stack
-        let nodes = Vec::from_iter(self.node_stack.drain(ctxt.index..));
-
-        debug_assert_eq!(self.node_stack.len(), ctxt.index);
-
-        // "Reduce" the nodes associated with the popped context using
-        // the provided callback.
-        let node = func(NodeSeq(nodes));
-
-        self.push_node(node);
-    }
-
-    pub(crate) fn push_and_climb<T: Into<Cst<TokenStr<'i>>>>(
-        &mut self,
-        node: T,
-    ) {
-        self.node_stack.push(node.into());
+    pub(crate) fn push_and_climb(&mut self, leaf: TokenRef<'i>) {
+        self.builder.push_leaf(leaf);
         self.parse_climb();
     }
 
@@ -268,7 +390,7 @@ impl<'i> ParserSession<'i> {
     /// Apply the continuation function from the top context to
     /// attempt to continue parsing.
     pub(crate) fn try_continue(&mut self) {
-        if self.context_stack.is_empty() {
+        if self.builder.top_context().is_none() {
             // no call needed here
             return;
         }
@@ -411,7 +533,7 @@ impl<'i> ParserSession<'i> {
 
     fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
-            self.node_stack.push(Cst::Token(token.clone()));
+            self.builder.push_trivia(*token);
 
             token.skip(&mut self.tokenizer);
 
@@ -421,7 +543,7 @@ impl<'i> ParserSession<'i> {
 
     fn eat_trivia_stringify_as_file(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
-            self.node_stack.push(Cst::Token(token.clone()));
+            self.builder.push_trivia(*token);
 
             token.skip(&mut self.tokenizer);
 
@@ -435,7 +557,7 @@ impl<'i> ParserSession<'i> {
         token: &mut TokenRef<'i>,
     ) {
         while token.tok.isTriviaButNotToplevelNewline() {
-            self.node_stack.push(Cst::Token(token.clone()));
+            self.builder.push_trivia(*token);
 
             token.skip(&mut self.tokenizer);
 
@@ -457,18 +579,14 @@ impl<'i> ParserSession<'i> {
     ) -> &'s mut Context<'i> {
         let prec = prec.into();
 
-        assert!(!self.node_stack.is_empty());
-
-        self.context_stack
-            .push(Context::new(self.node_stack.len() - 1, prec));
-
-        return self.context_stack.last_mut().unwrap();
+        return self.builder.push_context(prec);
     }
 
     pub(crate) fn top_context<'s>(&'s mut self) -> &'s mut Context<'i> {
-        assert!(!self.context_stack.is_empty());
-
-        return self.context_stack.last_mut().unwrap();
+        return self
+            .builder
+            .top_context()
+            .expect("top_context: no contexts set");
     }
 
     //==================================
@@ -476,7 +594,7 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     pub(crate) fn top_precedence(&mut self) -> Option<Precedence> {
-        match self.context_stack.last() {
+        match self.builder.top_context() {
             Some(ctxt) => ctxt.prec,
             None => None,
         }
@@ -488,11 +606,10 @@ impl<'i> ParserSession<'i> {
     ) {
         let prec = prec.into();
 
-        assert!(!self.context_stack.is_empty());
-
-        let ctxt: &mut _ = self.context_stack.last_mut().unwrap();
-
-        ctxt.prec = prec;
+        self.builder
+            .top_context()
+            .expect("set_precedence: no contexts set")
+            .prec = prec;
     }
 
     //==================================
@@ -500,45 +617,17 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) {
-        self.node_stack.push(Cst::Token(token));
+        self.builder.push_leaf(token);
     }
 
     pub(crate) fn push_leaf_and_next(&mut self, token: TokenRef<'i>) {
-        self.node_stack.push(Cst::Token(token));
+        self.builder.push_leaf(token);
 
         token.skip(&mut self.tokenizer);
     }
 
     pub(crate) fn push_trivia_seq(&mut self, seq: TriviaSeqRef<'i>) {
-        //
-        // Move all trivia from Seq to back of ArgsStack
-        //
-        let TriviaSeq(vec) = seq;
-
-        self.node_stack.extend(vec.into_iter().map(Cst::Token));
-    }
-
-    pub(crate) fn push_node<N>(&mut self, node: N)
-    where
-        N: Into<Cst<TokenStr<'i>>>,
-    {
-        let node = node.into();
-        self.node_stack.push(node);
-    }
-
-    pub(crate) fn pop_node(&mut self) -> Cst<TokenStr<'i>> {
-        debug_assert!(!self.node_stack.is_empty());
-
-        let top = self.node_stack.pop().unwrap();
-
-        return top;
-    }
-
-    #[cfg(test)]
-    pub(crate) fn top_node<'s>(&'s mut self) -> &'s mut Cst<TokenStr<'i>> {
-        assert!(!self.node_stack.is_empty());
-
-        return self.node_stack.last_mut().unwrap();
+        self.builder.push_trivia_seq(seq);
     }
 
     //==================================
@@ -569,197 +658,8 @@ impl<'i> ParserSession<'i> {
     // Assorted parselet helper functions
     //===================================
 
-    pub(crate) fn check_pattern_precedence(&self) -> bool {
-        for ctxt in self.context_stack.iter().rev() {
-            let Some(prec) = ctxt.prec else {
-                // Equivalent to a precedence of zero.
-                return false;
-            };
-
-            if prec > Precedence::FAKE_PATTERNCOLON {
-                continue;
-            }
-
-            if prec < Precedence::FAKE_PATTERNCOLON {
-                return false;
-            }
-
-            assert!(prec == Precedence::FAKE_PATTERNCOLON);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    pub(crate) fn check_colon_lhs(&self) -> ColonLHS {
-        //
-        // work backwards, looking for a symbol or something that is a pattern
-        //
-        // skip any trivia
-        //
-
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        let top_non_trivia_in_context = self
-            .top_context_nodes()
-            .find(
-                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
-            )
-            .expect(
-                "unable to check colon LHS: no non-trivia token in top context",
-            );
-
-        match top_non_trivia_in_context {
-            Cst::Binary(BinaryNode(op)) => {
-                //
-                // Something like  a:b:c
-                //                  ^ Pattern
-                //                    ^ Optional
-                //
-
-                if op.op == BinaryOperator::Pattern {
-                    return ColonLHS::Optional;
-                }
-
-                return ColonLHS::Error;
-            },
-
-            Cst::Compound(CompoundNode(op)) => {
-                //
-                // Something like  a_:b
-                //                   ^ Optional
-                //
-
-                match op.op {
-                    CompoundOperator::CodeParser_PatternBlank
-                    | CompoundOperator::CodeParser_PatternBlankSequence
-                    | CompoundOperator::CodeParser_PatternBlankNullSequence
-                    | CompoundOperator::Blank
-                    | CompoundOperator::BlankSequence
-                    | CompoundOperator::BlankNullSequence => {
-                        return ColonLHS::Optional;
-                    },
-                    _ => return ColonLHS::Error,
-                }
-            },
-
-            Cst::Token(tok) => {
-                match tok.tok {
-                    TokenKind::Symbol => {
-                        //
-                        // Something like  a:b
-                        //                  ^ Pattern
-                        //
-
-                        return ColonLHS::Pattern;
-                    },
-                    TokenKind::Under
-                    | TokenKind::UnderUnder
-                    | TokenKind::UnderUnderUnder => {
-                        //
-                        // Something like  _:b
-                        //                  ^ Optional
-                        //
-
-                        return ColonLHS::Optional;
-                    },
-                    TokenKind::Colon => {
-                        panic!("Fix at call site")
-                    },
-                    _ => (),
-                }
-
-                if tok.tok.isError() {
-                    //
-                    // allow errors to be on LHS of :
-                    //
-                    // This is a bit confusing. The thinking is that since there is already an error, then we do not need to introduce another error.
-                    //
-                    return ColonLHS::Pattern;
-                }
-
-                return ColonLHS::Error;
-            },
-            _ => return ColonLHS::Error,
-        }
-    }
-
-    pub(crate) fn top_non_trivia_node_is_tilde(&self) -> bool {
-        //
-        // work backwards, looking for ~
-        //
-
-        if self.context_stack.is_empty() {
-            return false;
-        }
-
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        let top_non_trivia_in_context = self
-            .top_context_nodes()
-            // Skip past top
-            .skip(1)
-            .find(
-                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
-            )
-            .expect(
-                "unable to check tilde: no non-trivia token in top context",
-            );
-
-        if let Cst::Token(tok) = top_non_trivia_in_context {
-            if tok.tok == TokenKind::Tilde {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    pub(crate) fn top_node_is_span(&self) -> bool {
-        assert!(!self.node_stack.is_empty());
-
-        let top_node: &Cst<_> = self.node_stack.last().unwrap();
-
-        // Note: This method should only be called in process_implicit_times(),
-        //       which itself should only be called after non-newline trivia has
-        //       been eaten.
-        debug_assert!(
-            !matches!(top_node, Cst::Token(tok) if tok.tok.isTriviaButNotToplevelNewline())
-        );
-
-        match top_node {
-            // This is a BinaryNode of Span
-            Cst::Binary(BinaryNode(node))
-                if node.op == BinaryOperator::Span =>
-            {
-                true
-            },
-            // This is a TernaryNode of Span
-            Cst::Ternary(TernaryNode(node))
-                if node.op == TernaryOperator::Span =>
-            {
-                true
-            },
-            _ => false,
-        }
-    }
-
-    /// Returns a last-in first-out iterator over nodes in the top
-    /// context.
-    fn top_context_nodes(&self) -> impl Iterator<Item = &Cst<TokenStr<'i>>> {
-        let ctxt = self.context_stack.last().unwrap();
-
-        let index = ctxt.index;
-
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        (&self.node_stack[index..]).iter().rev()
-    }
-
     pub fn is_quiescent(&mut self) -> bool {
-        assert!(self.node_stack.is_empty());
-        assert!(self.context_stack.is_empty());
+        assert!(self.builder.is_quiescent());
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;

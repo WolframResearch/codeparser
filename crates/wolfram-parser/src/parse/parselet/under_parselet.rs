@@ -1,8 +1,8 @@
 use crate::{
-    cst::{CompoundNode, CompoundOperator, Cst},
+    cst::CompoundOperator,
     panic_if_aborted,
-    parse::{parselet::*, ParserSession},
-    tokenize::{TokenKind, TokenRef, TokenStr},
+    parse::{parselet::*, ParserSession, UnderParseData},
+    tokenize::{TokenKind, TokenRef},
 };
 
 impl UnderParselet {
@@ -28,7 +28,7 @@ impl PrefixParselet for UnderParselet {
 
         let node = self.get_parse_under_context_sensitive(session, tok_in);
 
-        session.push_node(node);
+        session.builder.push_compound_blank(node);
 
         // MUSTTAIL
         return session.parse_climb();
@@ -40,7 +40,7 @@ impl UnderParselet {
         &self,
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
-    ) -> Cst<TokenStr<'i>> {
+    ) -> UnderParseData<'i> {
         //
         // infix
         //
@@ -54,7 +54,7 @@ impl UnderParselet {
         &self,
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
-    ) -> Cst<TokenStr<'i>> {
+    ) -> UnderParseData<'i> {
         panic_if_aborted!();
 
         tok_in.skip(&mut session.tokenizer);
@@ -79,7 +79,11 @@ impl UnderParselet {
                 //
                 tok.skip(&mut session.tokenizer);
 
-                Cst::Compound(CompoundNode::new2(self.BOp, tok_in, tok))
+                UnderParseData::UnderSymbol {
+                    op: self.BOp,
+                    under: tok_in,
+                    symbol: tok,
+                }
             },
 
             TokenKind::Error_ExpectedLetterlike => {
@@ -93,10 +97,14 @@ impl UnderParselet {
 
                 tok.skip(&mut session.tokenizer);
 
-                Cst::Compound(CompoundNode::new2(self.BOp, tok_in, tok))
+                UnderParseData::UnderSymbol {
+                    op: self.BOp,
+                    under: tok_in,
+                    symbol: tok,
+                }
             },
 
-            _ => Cst::Token(tok_in),
+            _ => UnderParseData::Under(tok_in),
         }
     }
 }

@@ -12,7 +12,7 @@ fn ParseletTest_Bug1() {
 
     session.parse_prefix(tok);
 
-    let P: &mut Cst<_> = session.top_node();
+    let P: &mut Cst<_> = session.builder.top_node();
 
     assert!(matches!(P, Cst::Ternary(_)));
 
