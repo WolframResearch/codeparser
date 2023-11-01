@@ -20,18 +20,20 @@ use crate::{
     },
     tokenize::{token_kind::Closer, Token, TokenKind, TokenRef},
     utils::{self, from_fn},
-    FirstLineBehavior,
+    FirstLineBehavior, ParseOptions,
 };
 
 use crate::source::NextPolicyBits::*;
 
 #[derive(Debug)]
 pub(crate) struct Tokenizer<'i> {
-    pub(crate) reader: Reader<'i>,
+    reader: Reader<'i>,
 
+    // TODO(cleanup): Move first line behavior handling out of parse.rs and into
+    //                tokenizer.rs, and then make this field private.
     pub(crate) first_line_behavior: FirstLineBehavior,
 
-    pub GroupStack: Vec<Closer>,
+    pub(crate) GroupStack: Vec<Closer>,
 
     pub(crate) tracked: TrackedSourceLocations,
 }
@@ -116,6 +118,44 @@ impl<'i> std::ops::DerefMut for Tokenizer<'i> {
 }
 
 impl<'i> Tokenizer<'i> {
+    pub(crate) fn new(input: &'i [u8], opts: &ParseOptions) -> Self {
+        let ParseOptions {
+            first_line_behavior,
+            src_convention,
+            encoding_mode,
+            tab_width,
+            quirk_settings: _,
+        } = *opts;
+
+        Tokenizer {
+            reader: Reader {
+                input,
+                offset: 0,
+                wasEOF: false,
+                SrcLoc: src_convention.newSourceLocation(),
+                tab_width,
+
+                encoding_mode,
+
+                fatalIssues: Vec::new(),
+                nonFatalIssues: Vec::new(),
+
+                unsafe_character_encoding_flag: None,
+            },
+
+            first_line_behavior,
+
+            GroupStack: Vec::new(),
+
+            tracked: TrackedSourceLocations {
+                simple_line_continuations: HashSet::new(),
+                complex_line_continuations: HashSet::new(),
+                embedded_newlines: HashSet::new(),
+                embedded_tabs: HashSet::new(),
+            },
+        }
+    }
+
     //==================================
     // Read tokens
     //==================================
