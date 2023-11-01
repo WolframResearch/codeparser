@@ -111,7 +111,12 @@ pub mod macros;
 
 use abstract_::{abstract_cst, aggregate_cst_seq};
 use cst::CstSeq;
-use tokenize::{TokenKind, Tokenizer};
+use tokenize::{
+    tokenizer::{
+        Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
+    },
+    TokenKind, Tokenizer,
+};
 use wolfram_expr::{Expr, Number};
 
 use crate::{
@@ -577,11 +582,29 @@ pub fn parse_bytes_ast_seq<'i>(
 pub fn parse_to_token<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
-    stringify_mode: StringifyMode,
+    mode: StringifyMode,
 ) -> ParseResult<NodeSeq<Token<TokenStr<'i>>>> {
-    let mut session = ParserSession::new(bytes, opts);
+    let mut tokenizer = Tokenizer::new(bytes, opts);
 
-    session.concreteParseLeaf(stringify_mode)
+    //
+    // Collect all expressions
+    //
+
+    let mut exprs: NodeSeq<Token<_>> = NodeSeq::new();
+
+    let token = match mode {
+        StringifyMode::Normal => tokenizer.next_token(),
+        StringifyMode::Tag => {
+            Tokenizer_nextToken_stringifyAsTag(&mut tokenizer)
+        },
+        StringifyMode::File => {
+            Tokenizer_nextToken_stringifyAsFile(&mut tokenizer)
+        },
+    };
+
+    exprs.push(token);
+
+    return create_parse_result(&tokenizer, exprs);
 }
 
 #[doc(hidden)]
@@ -670,9 +693,9 @@ impl TryFrom<i32> for SourceConvention {
     }
 }
 
-//--------------------------------------
-// Macros
-//--------------------------------------
+//======================================
+// Macros and helpers
+//======================================
 
 macro_rules! panic_if_aborted {
     () => {
@@ -712,4 +735,19 @@ fn expect_single_item<N>(
         non_fatal_issues,
         tracked,
     }
+}
+
+fn create_parse_result<N>(
+    tokenizer: &Tokenizer,
+    nodes: NodeSeq<N>,
+) -> ParseResult<NodeSeq<N>> {
+    let result = ParseResult {
+        syntax: nodes,
+        unsafe_character_encoding: tokenizer.unsafe_character_encoding_flag,
+        fatal_issues: tokenizer.fatalIssues.clone(),
+        non_fatal_issues: tokenizer.nonFatalIssues.clone(),
+        tracked: tokenizer.tracked.clone(),
+    };
+
+    result
 }

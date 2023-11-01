@@ -5,6 +5,7 @@ use wolfram_library_link::sys::WolframLibraryData;
 use Diagnostics::*;
 
 use crate::{
+    create_parse_result,
     cst::{Cst, CstSeq, TriviaSeq},
     feature,
     issue::Issue,
@@ -16,13 +17,11 @@ use crate::{
     source::TOPLEVEL,
     tokenize::{
         tokenizer::{
-            Tokenizer, Tokenizer_nextToken_stringifyAsFile,
-            Tokenizer_nextToken_stringifyAsTag, TrackedSourceLocations,
-            UnsafeCharacterEncoding,
+            Tokenizer, TrackedSourceLocations, UnsafeCharacterEncoding,
         },
-        Token, TokenKind, TokenRef, TokenStr,
+        TokenKind, TokenRef, TokenStr,
     },
-    NodeSeq, ParseOptions, StringifyMode,
+    NodeSeq, ParseOptions,
 };
 
 
@@ -153,39 +152,7 @@ impl<'i> ParserSession<'i> {
 
         let exprs = self.reparse_unterminated(exprs);
 
-        return self.create_parse_result(exprs);
-    }
-
-    fn concreteParseLeaf0(
-        &mut self,
-        mode: StringifyMode,
-    ) -> Token<TokenStr<'i>> {
-        let token = match mode {
-            StringifyMode::Normal => self.tokenizer.next_token(),
-            StringifyMode::Tag => {
-                Tokenizer_nextToken_stringifyAsTag(&mut self.tokenizer)
-            },
-            StringifyMode::File => {
-                Tokenizer_nextToken_stringifyAsFile(&mut self.tokenizer)
-            },
-        };
-
-        token
-    }
-
-    pub(crate) fn concreteParseLeaf(
-        &mut self,
-        mode: StringifyMode,
-    ) -> ParseResult<NodeSeq<Token<TokenStr<'i>>>> {
-        //
-        // Collect all expressions
-        //
-
-        let mut exprs: NodeSeq<Token<_>> = NodeSeq::new();
-
-        exprs.push(self.concreteParseLeaf0(mode));
-
-        return self.create_parse_result(exprs);
+        return create_parse_result(&self.tokenizer, exprs);
     }
 
     // TODO(cleanup): What is this used for? Perhaps ultimately this is just
@@ -238,27 +205,12 @@ impl<'i> ParserSession<'i> {
         nodes
     }
 
-    fn create_parse_result<N>(
-        &self,
-        nodes: NodeSeq<N>,
-    ) -> ParseResult<NodeSeq<N>> {
-        let result = ParseResult {
-            syntax: nodes,
-            unsafe_character_encoding: self
-                .tokenizer
-                .unsafe_character_encoding_flag,
-            fatal_issues: self.fatalIssues().clone(),
-            non_fatal_issues: self.nonFatalIssues().clone(),
-            tracked: self.tokenizer.tracked.clone(),
-        };
-
-        result
-    }
-
+    #[cfg(test)]
     pub(crate) fn fatalIssues(&self) -> &Vec<Issue> {
         &self.tokenizer.fatalIssues
     }
 
+    #[cfg(test)]
     pub(crate) fn nonFatalIssues(&self) -> &Vec<Issue> {
         &self.tokenizer.nonFatalIssues
     }
