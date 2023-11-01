@@ -228,7 +228,9 @@ pub(crate) trait ParseBuilder<'i>: Debug {
 }
 
 pub(crate) enum UnderParseData<'i> {
+    /// `_`, `__`, or `___`.
     Under(TokenRef<'i>),
+    /// `_head`, `__head`, or `___head`.
     UnderSymbol {
         op: CompoundOperator,
         under: TokenRef<'i>,
