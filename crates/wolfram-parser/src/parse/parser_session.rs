@@ -128,24 +128,15 @@ impl<'i> ParserSession<'i> {
             DiagnosticsLogTime();
         }
 
-        let exprs = self.reparse_unterminated(exprs);
-
-        return create_parse_result(&self.tokenizer, exprs);
-    }
-
-    fn reparse_unterminated(
-        &self,
-        mut nodes: CstSeq<TokenStr<'i>>,
-    ) -> CstSeq<TokenStr<'i>> {
         if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
-            nodes = crate::error::reparse_unterminated(
-                nodes,
+            exprs = crate::error::reparse_unterminated(
+                exprs,
                 input,
                 usize::try_from(self.tokenizer.tab_width).unwrap(),
             );
         }
 
-        nodes
+        return create_parse_result(&self.tokenizer, exprs);
     }
 
     #[cfg(test)]
