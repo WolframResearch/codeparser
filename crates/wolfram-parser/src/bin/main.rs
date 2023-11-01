@@ -129,7 +129,7 @@ fn handle(
                 &opts,
                 StringifyMode::Normal,
             );
-            output(output_mode, FmtAsExpr(result.node_seq()));
+            output(output_mode, FmtAsExpr(&result.syntax));
         },
         ApiMode::SafeString => {
             let result = wolfram_parser::safe_string(input, &opts).unwrap();
@@ -137,7 +137,7 @@ fn handle(
         },
         ApiMode::CstExpr => {
             let result = wolfram_parser::parse_bytes_cst_seq(input, &opts);
-            output(output_mode, FmtAsExpr(result.node_seq()));
+            output(output_mode, FmtAsExpr(&result.syntax));
         },
         ApiMode::Cst => {
             let result = wolfram_parser::parse_bytes_cst_seq(input, &opts);

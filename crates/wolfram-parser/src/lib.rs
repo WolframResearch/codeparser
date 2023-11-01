@@ -114,7 +114,8 @@ use cst::CstSeq;
 use source::TOPLEVEL;
 use tokenize::{
     tokenizer::{
-        Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
+        Tokenizer_nextToken_stringifyAsFile,
+        Tokenizer_nextToken_stringifyAsTag, TrackedSourceLocations,
     },
     TokenKind, Tokenizer,
 };
@@ -135,7 +136,7 @@ use crate::{
 // Re-exports
 //-----------
 
-pub use crate::{parse::ParseResult, quirks::QuirkSettings};
+pub use crate::quirks::QuirkSettings;
 
 pub use crate::tokenize::tokenizer::UnsafeCharacterEncoding;
 
@@ -245,6 +246,26 @@ pub enum StringifyMode {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tokens<I = TokenString, S = Span>(pub Vec<Token<I, S>>);
+
+//--------------------------------------
+// ParseResult
+//--------------------------------------
+
+pub struct ParseResult<T> {
+    /// Tokens, concrete syntax, or abstract syntax.
+    pub syntax: T,
+
+    #[doc(hidden)]
+    pub unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
+
+    #[doc(hidden)]
+    pub fatal_issues: Vec<Issue>,
+    #[doc(hidden)]
+    pub non_fatal_issues: Vec<Issue>,
+
+    #[doc(hidden)]
+    pub tracked: TrackedSourceLocations,
+}
 
 //-------------
 // ParseOptions

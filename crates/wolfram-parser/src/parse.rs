@@ -62,8 +62,6 @@ use self::{
     token_parselets::{INFIX_PARSELETS, PREFIX_PARSELETS},
 };
 
-pub use self::parser_session::ParseResult;
-
 pub(crate) use self::parser_session::ParserSession;
 
 

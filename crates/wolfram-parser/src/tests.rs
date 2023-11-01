@@ -236,8 +236,8 @@ fn test_call_head_seq() {
 
 #[test]
 fn test_ast_src() {
-    let ast = crate::parse_ast_seq("a/", &Default::default());
-    let [ast]: &[_; 1] = ast.nodes().try_into().unwrap();
+    let ast = crate::parse_ast("a/", &Default::default());
+    let ast = ast.syntax;
 
     assert_eq!(ast.span(), src!(1:1-3).into());
 }
@@ -609,11 +609,11 @@ fn test_first_line_behavior() {
 
 #[test]
 fn test_abstract_parse() {
-    let result = crate::parse_ast_seq("2 + 2", &ParseOptions::default());
+    let result = crate::parse_ast("2 + 2", &ParseOptions::default());
 
     assert_eq!(
-        result.nodes(),
-        &[Ast::Call {
+        result.syntax,
+        Ast::Call {
             head: Box::new(Ast::Leaf {
                 kind: TK::Symbol,
                 input: TokenString::fake("Plus"),
@@ -641,6 +641,6 @@ fn test_abstract_parse() {
                 source: Source::Span(src!(1:1-1:6).into()),
                 issues: vec![],
             },
-        },]
+        }
     )
 }

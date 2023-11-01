@@ -8,19 +8,13 @@ use crate::{
     create_parse_result,
     cst::{Cst, CstSeq, TriviaSeq},
     feature,
-    issue::Issue,
     parse::{
         parselet::{PrefixParselet, PrefixToplevelCloserParselet},
         Context,
     },
     quirks::{self, QuirkSettings},
-    tokenize::{
-        tokenizer::{
-            Tokenizer, TrackedSourceLocations, UnsafeCharacterEncoding,
-        },
-        TokenKind, TokenRef, TokenStr,
-    },
-    NodeSeq, ParseOptions,
+    tokenize::{tokenizer::Tokenizer, TokenKind, TokenRef, TokenStr},
+    NodeSeq, ParseOptions, ParseResult,
 };
 
 
@@ -41,22 +35,6 @@ pub(crate) type NodeStack<'i> = Vec<Cst<TokenStr<'i>>>;
 // Used mainly for collecting trivia that has been eaten
 //
 pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
-
-pub struct ParseResult<T> {
-    /// Tokens, concrete syntax, or abstract syntax.
-    pub syntax: T,
-
-    #[doc(hidden)]
-    pub unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
-
-    #[doc(hidden)]
-    pub fatal_issues: Vec<Issue>,
-    #[doc(hidden)]
-    pub non_fatal_issues: Vec<Issue>,
-
-    #[doc(hidden)]
-    pub tracked: TrackedSourceLocations,
-}
 
 //======================================
 // Impls
@@ -170,12 +148,12 @@ impl<'i> ParserSession<'i> {
     }
 
     #[cfg(test)]
-    pub(crate) fn fatalIssues(&self) -> &Vec<Issue> {
+    pub(crate) fn fatalIssues(&self) -> &Vec<crate::issue::Issue> {
         &self.tokenizer.fatalIssues
     }
 
     #[cfg(test)]
-    pub(crate) fn nonFatalIssues(&self) -> &Vec<Issue> {
+    pub(crate) fn nonFatalIssues(&self) -> &Vec<crate::issue::Issue> {
         &self.tokenizer.nonFatalIssues
     }
 }
@@ -208,20 +186,5 @@ impl<'i> TriviaSeq<TokenStr<'i>> {
     pub(crate) fn push(&mut self, token: TokenRef<'i>) {
         let TriviaSeq(vec) = self;
         vec.push(token);
-    }
-}
-
-//======================================
-// ParseResult
-//======================================
-
-impl<N> ParseResult<NodeSeq<N>> {
-    pub fn nodes(&self) -> &[N] {
-        let NodeSeq(vec) = &self.syntax;
-        vec.as_slice()
-    }
-
-    pub fn node_seq(&self) -> &NodeSeq<N> {
-        &self.syntax
     }
 }
