@@ -7,8 +7,6 @@ use wolfram_library_link::sys::WolframLibraryData;
 use Diagnostics::*;
 
 use crate::{
-    abstract_::{abstract_cst, aggregate_cst_seq},
-    ast::Ast,
     cst::{Cst, CstSeq, TriviaSeq},
     feature,
     issue::Issue,
@@ -141,31 +139,6 @@ impl<'i> ParserSession<'i> {
     /// Returns the complete input [`Buffer`][crate::source::Buffer].
     pub fn input(&self) -> &'i [u8] {
         self.tokenizer.input
-    }
-
-    pub fn abstract_parse_expressions(&mut self) -> ParseResult<NodeSeq<Ast>> {
-        let ParseResult {
-            syntax: nodes,
-            unsafe_character_encoding,
-            fatal_issues,
-            non_fatal_issues,
-            tracked,
-        } = self.concrete_parse_expressions();
-
-        let NodeSeq(nodes) = aggregate_cst_seq(nodes);
-
-        let nodes = nodes
-            .into_iter()
-            .map(|cst| abstract_cst(cst, self.quirk_settings))
-            .collect();
-
-        ParseResult {
-            syntax: NodeSeq(nodes),
-            unsafe_character_encoding,
-            fatal_issues,
-            non_fatal_issues,
-            tracked,
-        }
     }
 
     pub fn concrete_parse_expressions(
