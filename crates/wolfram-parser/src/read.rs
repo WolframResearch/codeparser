@@ -11,7 +11,7 @@ pub(crate) mod wl_character;
 use crate::{
     issue::{Issue, Severity},
     source::{Buffer, Location, NextPolicy, SourceCharacter},
-    EncodingMode, UnsafeCharacterEncoding,
+    EncodingMode, ParseOptions, UnsafeCharacterEncoding,
 };
 
 use self::{
@@ -38,7 +38,7 @@ pub(crate) struct Reader<'i> {
     pub(crate) SrcLoc: Location,
     pub(crate) tab_width: u32,
 
-    pub(crate) encoding_mode: EncodingMode,
+    encoding_mode: EncodingMode,
 
     pub(crate) fatalIssues: Vec<Issue>,
     pub(crate) nonFatalIssues: Vec<Issue>,
@@ -69,6 +69,31 @@ pub(crate) struct SourceManager<'t> {
 //==========================================================
 
 impl<'i> Reader<'i> {
+    pub(crate) fn new(input: &'i [u8], opts: &ParseOptions) -> Self {
+        let ParseOptions {
+            first_line_behavior: _,
+            src_convention,
+            encoding_mode,
+            tab_width,
+            quirk_settings: _,
+        } = *opts;
+
+        Reader {
+            input,
+            offset: 0,
+            wasEOF: false,
+            SrcLoc: src_convention.newSourceLocation(),
+            tab_width,
+
+            encoding_mode,
+
+            fatalIssues: Vec::new(),
+            nonFatalIssues: Vec::new(),
+
+            unsafe_character_encoding_flag: None,
+        }
+    }
+
     /// Return a slice of the remaining input to be parsed.
     pub(crate) fn buffer(&self) -> Buffer<'i> {
         self.buffer_at(self.offset)
