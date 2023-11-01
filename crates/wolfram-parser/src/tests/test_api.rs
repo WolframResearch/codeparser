@@ -1,4 +1,12 @@
-use crate::{ParseOptions, ParserSession, SourceConvention, StringifyMode};
+use crate::{
+    issue::{CodeAction, Issue, IssueTag, Severity},
+    macros::src,
+    parse_cst,
+    source::{Source, Span},
+    symbols as sym, ParseOptions, SourceConvention, StringifyMode,
+};
+
+use pretty_assertions::assert_eq;
 
 
 //
@@ -23,13 +31,10 @@ fn APITest_Bug1() {
 fn APITest_Hang1() {
     let strIn = "<<rr[R";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let result = parse_cst(strIn, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 //
@@ -39,13 +44,10 @@ fn APITest_Hang1() {
 fn APITest_Crash1() {
     let strIn = "0^^";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let result = parse_cst(strIn, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 //
@@ -55,13 +57,10 @@ fn APITest_Crash1() {
 fn APITest_Crash2() {
     let strIn = ".2^^0";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let result = parse_cst(strIn, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 //
@@ -71,13 +70,10 @@ fn APITest_Crash2() {
 fn APITest_Crash3() {
     let strIn = "12^^a.a";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let result = parse_cst(strIn, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 //
@@ -87,13 +83,27 @@ fn APITest_Crash3() {
 fn APITest_Crash4() {
     let strIn = "12..";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let result = parse_cst(strIn, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 1);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(
+        result.non_fatal_issues,
+        vec![Issue {
+            make_sym: sym::CodeParser_FormatIssue,
+            tag: IssueTag::Ambiguous,
+            msg: "Ambiguous syntax.".to_owned(),
+            sev: Severity::Formatting,
+            src: Source::Span(Span::from(src!(1:3-3))),
+            val: 1.0,
+            actions: vec![CodeAction::insert_text(
+                "Insert space".into(),
+                Span::from(src!(1:3-3)),
+                " ".into(),
+            )],
+            additional_descriptions: vec![],
+            additional_sources: vec![],
+        }]
+    );
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 //
@@ -103,13 +113,10 @@ fn APITest_Crash4() {
 fn APITest_Crash5() {
     let strIn = "123\\\n.45";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let result = parse_cst(strIn, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 //
@@ -119,13 +126,10 @@ fn APITest_Crash5() {
 fn APITest_Crash6() {
     let strIn = "\\0560";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let result = parse_cst(strIn, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 //
@@ -155,16 +159,14 @@ fn APITest_Crash7() {
 //
 #[test]
 fn APITest_Crash8() {
-    let bufAndLen = b"(*\r\n*)";
+    let bufAndLen = "(*\r\n*)";
 
-    let mut session = ParserSession::new(
+    let result = parse_cst(
         bufAndLen,
         &ParseOptions::default()
             .source_convention(SourceConvention::CharacterIndex),
     );
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }

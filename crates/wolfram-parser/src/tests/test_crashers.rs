@@ -1,6 +1,9 @@
 use crate::{
+    issue::{Issue, IssueTag, Severity},
     macros::{src, token},
-    ParseOptions, ParserSession, SourceConvention,
+    parse_bytes_cst, parse_cst,
+    source::{Source, Span},
+    symbols as sym, ParseOptions, ParserSession, SourceConvention,
 };
 
 use pretty_assertions::assert_eq;
@@ -28,14 +31,10 @@ fn CrashTest_Crash0_tokens() {
 
 #[test]
 fn CrashTest_Crash1() {
-    let bufAndLen = b"1::*\\\r\n";
+    let result = parse_cst("1::*\\\r\n", &ParseOptions::default());
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
-
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 /*
@@ -66,57 +65,60 @@ fn CrashTest_StackOverflow1() {
 
 #[test]
 fn CrashTest_Crash2() {
-    let bufAndLen = b"\\:feff";
+    let bufAndLen = "\\:feff";
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let result = parse_cst(bufAndLen, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 1);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(
+        result.non_fatal_issues,
+        vec![Issue {
+            make_sym: sym::CodeParser_SyntaxIssue,
+            tag: IssueTag::UnexpectedLetterlikeCharacter,
+            msg: "Unexpected letterlike character: ``\\:feff``.".to_owned(),
+            sev: Severity::Warning,
+            src: Source::Span(Span::from(src!(1:1-7))),
+            val: 0.8,
+            actions: vec![],
+            additional_descriptions: vec![],
+            additional_sources: vec![],
+        }]
+    );
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 #[test]
 fn CrashTest_Crash3() {
-    let bufAndLen = b"a:b~1:2";
+    let bufAndLen = "a:b~1:2";
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let result = parse_cst(bufAndLen, &ParseOptions::default());
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 #[test]
 fn CrashTest_Crash4() {
-    let arr: &[u8] = &[
+    let bufAndLen: &[u8] = &[
         b'\\', b'[', b'I', b'n', b't', b'e', b'g', b'r', b'a', b'l', b']',
         b'\\', b'[', b'S', b'u', b'm', b']',
     ];
 
-    let bufAndLen = arr;
+    let result = parse_bytes_cst(bufAndLen, &ParseOptions::default());
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
-
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
 
 #[test]
 fn CrashTest_Crash5() {
     let bufAndLen = b"{\t1\\\n^";
 
-    let mut session = ParserSession::new(
+    let result = parse_bytes_cst(
         bufAndLen,
         &ParseOptions::default()
             .source_convention(SourceConvention::CharacterIndex),
     );
 
-    let _ = session.concrete_parse_expressions();
-
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(result.non_fatal_issues, Vec::new());
+    assert_eq!(result.fatal_issues, Vec::new());
 }
