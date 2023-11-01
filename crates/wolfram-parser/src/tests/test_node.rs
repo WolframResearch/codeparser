@@ -7,7 +7,7 @@ use crate::{
     parse_cst,
     source::Span,
     tests::assert_src,
-    NodeSeq, ParseOptions, ParserSession,
+    NodeSeq, ParseOptions,
 };
 
 use pretty_assertions::assert_eq;
@@ -17,11 +17,17 @@ use pretty_assertions::assert_eq;
 fn NodeTest_Bug1() {
     let input = "a_.";
 
-    let session =
-        ParserSession::new(input.as_bytes(), &ParseOptions::default());
+    let NodeSeq(tokens) = crate::tokenize(input, &ParseOptions::default());
 
-    let T1 = token!(Symbol, "a", src!(1:1-1:2));
-    let T2 = token!(UnderDot, "_.", src!(1:2-1:4));
+    assert_eq!(
+        tokens,
+        vec![
+            token!(Symbol, "a", src!(1:1-1:2)),
+            token!(UnderDot, "_.", src!(1:2-1:4))
+        ]
+    );
+
+    let [T1, T2] = tokens.try_into().unwrap();
 
     let N = CompoundNode::new2(
         CompoundOperator::CodeParser_PatternOptionalDefault,
@@ -34,8 +40,10 @@ fn NodeTest_Bug1() {
     assert_eq!(NSource.start(), src!(1:1).into());
     assert_eq!(NSource.end(), src!(1:4).into());
 
-    assert_eq!(session.non_fatal_issues().len(), 0);
-    assert_eq!(session.fatal_issues().len(), 0);
+    // FIXME: Check that no issues were generated; make tokenize() return a
+    //        ParseResult
+    // assert_eq!(session.non_fatal_issues().len(), 0);
+    // assert_eq!(session.fatal_issues().len(), 0);
 }
 
 #[test]

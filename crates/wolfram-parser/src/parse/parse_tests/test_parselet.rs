@@ -1,4 +1,4 @@
-use crate::{cst::Cst, ParseOptions, ParserSession};
+use crate::{cst::Cst, parse::ParserSession, ParseOptions};
 
 
 #[test]

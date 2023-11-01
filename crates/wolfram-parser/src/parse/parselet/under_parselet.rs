@@ -36,7 +36,7 @@ impl PrefixParselet for UnderParselet {
 }
 
 impl UnderParselet {
-    pub(crate) fn get_parse_infix_context_sensitive<'i>(
+    pub(in crate::parse) fn get_parse_infix_context_sensitive<'i>(
         &self,
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,

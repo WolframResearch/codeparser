@@ -35,7 +35,7 @@ pub(crate) trait Parselet: Any + std::fmt::Debug {
 // Parselet categories
 //======================================
 
-pub(crate) trait PrefixParselet: Parselet {
+pub(in crate::parse) trait PrefixParselet: Parselet {
     fn parse_prefix<'i>(
         &'static self,
         session: &mut ParserSession<'i>,
@@ -44,7 +44,7 @@ pub(crate) trait PrefixParselet: Parselet {
 }
 
 
-pub(crate) trait InfixParselet: Parselet {
+pub(in crate::parse) trait InfixParselet: Parselet {
     fn parse_infix<'i>(
         &'static self,
         session: &mut ParserSession<'i>,

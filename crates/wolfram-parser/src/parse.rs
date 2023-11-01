@@ -36,6 +36,11 @@ pub(crate) mod parselet;
 pub(crate) mod operators;
 mod token_parselets;
 
+#[cfg(test)]
+mod parse_tests {
+    mod test_parselet;
+}
+
 
 use std::fmt::Debug;
 
@@ -67,21 +72,98 @@ use self::{
 };
 
 //======================================
+// API
+//======================================
+
+pub(crate) fn parse_concrete<'i>(
+    input: &'i [u8],
+    opts: &ParseOptions,
+) -> ParseResult<CstSeq<TokenStr<'i>>> {
+    let mut session = ParserSession::new(input, opts);
+
+    quirks::set_quirks(session.quirk_settings);
+
+    #[cfg(feature = "DIAGNOSTICS")]
+    {
+        DiagnosticsLog("enter parseExpressions");
+        DiagnosticsMarkTime();
+    }
+
+    //
+    // Collect all expressions
+    //
+
+    let mut exprs: CstSeq<TokenStr<'i>> = NodeSeq::new();
+
+    loop {
+        if feature::CHECK_ABORT && crate::abortQ() {
+            break;
+        }
+
+        let peek: TokenRef = session.tokenizer.peek_token();
+
+        if peek.tok == TokenKind::EndOfFile {
+            break;
+        }
+
+        if peek.tok.isTrivia() {
+            exprs.push(Cst::Token(peek));
+
+            peek.skip(&mut session.tokenizer);
+
+            continue;
+        }
+
+        //
+        // special top-level handling of stray closers
+        //
+        if peek.tok.isCloser() {
+            (PrefixToplevelCloserParselet {}).parse_prefix(&mut session, peek);
+
+            exprs.push(session.builder.pop_finished_expr());
+
+            assert!(session.is_quiescent());
+
+            continue;
+        }
+
+        session.parse_prefix(peek);
+
+        exprs.push(session.builder.pop_finished_expr());
+
+        assert!(session.is_quiescent());
+    } // while (true)
+
+    #[cfg(feature = "DIAGNOSTICS")]
+    {
+        DiagnosticsLog("exit parseExpressions");
+        DiagnosticsLogTime();
+    }
+
+    if let Ok(input) = std::str::from_utf8(session.tokenizer.input) {
+        exprs = crate::error::reparse_unterminated(
+            exprs,
+            input,
+            usize::try_from(session.tokenizer.tab_width).unwrap(),
+        );
+    }
+
+    return create_parse_result(&session.tokenizer, exprs);
+}
+
+
+//======================================
 // Types
 //======================================
 
 /// A parser session
 #[derive(Debug)]
-pub(crate) struct ParserSession<'i, B: ParseBuilder<'i> = ParseCst<'i>> {
-    pub(crate) tokenizer: Tokenizer<'i>,
+struct ParserSession<'i, B: ParseBuilder<'i> = ParseCst<'i>> {
+    tokenizer: Tokenizer<'i>,
 
-    #[cfg(not(test))]
-    pub(super) builder: B,
+    builder: B,
 
-    #[cfg(test)]
-    pub(crate) builder: B,
-
-    pub(crate) quirk_settings: QuirkSettings,
+    quirk_settings: QuirkSettings,
 }
 
 pub(crate) struct Context<'i> {
@@ -276,15 +358,13 @@ impl<'i> Context<'i> {
         }
     }
 
-    pub(crate) fn init_callback(&mut self, func: fn(&mut ParserSession)) {
+    fn init_callback(&mut self, func: fn(&mut ParserSession)) {
         debug_assert!(matches!(self.continue_parse, None));
 
         self.continue_parse = Some(Box::new(func));
     }
 
-    pub(crate) fn init_callback_with_state<
-        F: FnOnce(&mut ParserSession<'i>) + 'i,
-    >(
+    fn init_callback_with_state<F: FnOnce(&mut ParserSession<'i>) + 'i>(
         &mut self,
         func: F,
     ) {
@@ -299,13 +379,11 @@ impl<'i> Context<'i> {
         self.continue_parse = None;
     }
 
-    pub(crate) fn set_callback(&mut self, func: fn(&mut ParserSession)) {
+    fn set_callback(&mut self, func: fn(&mut ParserSession)) {
         self.continue_parse = Some(Box::new(func));
     }
 
-    pub(crate) fn set_callback_with_state<
-        F: FnOnce(&mut ParserSession<'i>) + 'i,
-    >(
+    fn set_callback_with_state<F: FnOnce(&mut ParserSession<'i>) + 'i>(
         &mut self,
         func: F,
     ) {
@@ -363,79 +441,6 @@ impl<'i> ParserSession<'i> {
     /// Returns the complete input [`Buffer`][crate::source::Buffer].
     pub fn input(&self) -> &'i [u8] {
         self.tokenizer.input
-    }
-
-    pub fn concrete_parse_expressions(
-        &mut self,
-    ) -> ParseResult<CstSeq<TokenStr<'i>>> {
-        quirks::set_quirks(self.quirk_settings);
-
-        #[cfg(feature = "DIAGNOSTICS")]
-        {
-            DiagnosticsLog("enter parseExpressions");
-            DiagnosticsMarkTime();
-        }
-
-        //
-        // Collect all expressions
-        //
-
-        let mut exprs: CstSeq<TokenStr<'i>> = NodeSeq::new();
-
-        loop {
-            if feature::CHECK_ABORT && crate::abortQ() {
-                break;
-            }
-
-            let peek: TokenRef = self.tokenizer.peek_token();
-
-            if peek.tok == TokenKind::EndOfFile {
-                break;
-            }
-
-            if peek.tok.isTrivia() {
-                exprs.push(Cst::Token(peek));
-
-                peek.skip(&mut self.tokenizer);
-
-                continue;
-            }
-
-            //
-            // special top-level handling of stray closers
-            //
-            if peek.tok.isCloser() {
-                (PrefixToplevelCloserParselet {}).parse_prefix(self, peek);
-
-                exprs.push(self.builder.pop_finished_expr());
-
-                assert!(self.is_quiescent());
-
-                continue;
-            }
-
-            self.parse_prefix(peek);
-
-            exprs.push(self.builder.pop_finished_expr());
-
-            assert!(self.is_quiescent());
-        } // while (true)
-
-        #[cfg(feature = "DIAGNOSTICS")]
-        {
-            DiagnosticsLog("exit parseExpressions");
-            DiagnosticsLogTime();
-        }
-
-        if let Ok(input) = std::str::from_utf8(self.tokenizer.input) {
-            exprs = crate::error::reparse_unterminated(
-                exprs,
-                input,
-                usize::try_from(self.tokenizer.tab_width).unwrap(),
-            );
-        }
-
-        return create_parse_result(&self.tokenizer, exprs);
     }
 
     /// Lookup and apply the [`PrefixParselet`] implementation associated
@@ -784,16 +789,6 @@ impl<'i> ParserSession<'i> {
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;
-    }
-
-    #[cfg(test)]
-    pub(crate) fn fatal_issues(&self) -> &Vec<crate::issue::Issue> {
-        &self.tokenizer.fatal_issues
-    }
-
-    #[cfg(test)]
-    pub(crate) fn non_fatal_issues(&self) -> &Vec<crate::issue::Issue> {
-        &self.tokenizer.non_fatal_issues
     }
 }
 

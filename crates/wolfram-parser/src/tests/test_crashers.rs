@@ -3,7 +3,9 @@ use crate::{
     macros::{src, token},
     parse_bytes_cst, parse_cst,
     source::{Source, Span},
-    symbols as sym, ParseOptions, ParserSession, SourceConvention,
+    symbols as sym,
+    tokenize::Tokenizer,
+    ParseOptions, SourceConvention,
 };
 
 use pretty_assertions::assert_eq;
@@ -13,20 +15,20 @@ use pretty_assertions::assert_eq;
 fn CrashTest_Crash0_tokens() {
     let bufAndLen: &[u8] = b"1\\\n";
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let mut tokenizer = Tokenizer::new(bufAndLen, &ParseOptions::default());
 
-    let mut tok = session.tokenizer.peek_token();
+    let mut tok = tokenizer.peek_token();
 
     assert_eq!(tok, token!(Integer, "1", src!(1:1-1:2)));
 
-    let _ = session.tokenizer.next_token();
+    let _ = tokenizer.next_token();
 
-    tok = session.tokenizer.peek_token();
+    tok = tokenizer.peek_token();
 
     assert_eq!(tok, token!(EndOfFile, "\\\n", src!(1:2-2:1)));
 
-    assert_eq!(session.non_fatal_issues().len(), 0);
-    assert_eq!(session.fatal_issues().len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
