@@ -23,23 +23,12 @@ impl InfixParselet for TimesParselet {
 
         let tok2 = session.current_token_eat_trivia();
 
-        // #if !USE_MUSTTAIL
         let ctxt = session.top_context();
         ctxt.init_identity();
 
         session.parse_prefix(tok2);
 
         return TimesParselet::parse_loop(session);
-        // #else
-        //     auto& Ctxt = session.top_context();
-        //     assert!(!Ctxt.F);
-        //     Ctxt.F = TimesParselet_parseLoop;
-
-        //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-        //     // MUSTTAIL
-        //     return P2.parse_prefix(session, Tok2);
-        // #endif // !USE_MUSTTAIL
     }
 
     fn getOp(&self) -> InfixParseletOperator {
@@ -53,10 +42,7 @@ impl InfixParselet for TimesParselet {
 
 impl TimesParselet {
     fn parse_loop(session: &mut ParserSession) {
-        // #if !USE_MUSTTAIL
         loop {
-            // #endif // !USE_MUSTTAIL
-
             panic_if_aborted!();
 
 
@@ -106,20 +92,10 @@ impl TimesParselet {
 
             let Tok2 = session.current_token_eat_trivia();
 
-            // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
             assert!(ctxt.is_identity());
 
             session.parse_prefix(Tok2);
-        } // while (true)
-          // #else
-          //     auto& Ctxt = session.top_context(;
-          //     assert!(Ctxt.F == TimesParselet_parseLoop);
-
-        //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-        //     // MUSTTAIL
-        //     return P2.parse_prefix(session, Tok2);
-        // #endif // !USE_MUSTTAIL
+        } // loop
     }
 }

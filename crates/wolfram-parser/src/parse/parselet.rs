@@ -937,25 +937,12 @@ impl InfixParselet for InfixOperatorParselet {
 
         let tok2 = session.current_token_eat_trivia();
 
-        // #if !USE_MUSTTAIL
         let ctxt = session.top_context();
         ctxt.init_identity();
 
         session.parse_prefix(tok2);
 
         return self.parse_loop(session);
-        // #else
-        //     let ref mut Ctxt = session.top_context();
-        //     assert!(Ctxt.f.is_none());
-        //     assert!(Ctxt.p.is_none());
-        //     Ctxt.f = Some(InfixOperatorParselet_parseLoop);
-        //     Ctxt.p = P;
-
-        //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-        //     // MUSTTAIL
-        //     return P2.parse_prefix(session, Tok2);
-        // #endif // !USE_MUSTTAIL
     }
 
     fn getPrecedence(
@@ -972,10 +959,7 @@ impl InfixParselet for InfixOperatorParselet {
 
 impl InfixOperatorParselet {
     fn parse_loop(&self, session: &mut ParserSession) {
-        // #if !USE_MUSTTAIL
         loop {
-            // #endif // !USE_MUSTTAIL
-
             panic_if_aborted!();
 
 
@@ -1012,22 +996,11 @@ impl InfixOperatorParselet {
 
             let Tok2 = session.current_token_eat_trivia();
 
-            // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
             assert!(ctxt.is_identity());
 
             session.parse_prefix(Tok2);
         } // loop
-          // #else
-          //     let ref mut Ctxt = session.top_context();
-          //     assert!(Ctxt.f == InfixOperatorParselet_parseLoop);
-          //     assert!(Ctxt.p == P);
-
-        //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-        //     // MUSTTAIL
-        //     return P2.parse_prefix(session, Tok2);
-        // #endif // !USE_MUSTTAIL
     }
 }
 
@@ -1097,27 +1070,13 @@ impl PrefixParselet for GroupParselet {
         let ctxt = session.push_context(None);
         ctxt.init_identity();
 
-        // #if !USE_MUSTTAIL
-
         return self.parse_loop(session);
-        // #else
-        //     assert!(Ctxt.f.is_none());
-        //     assert!(Ctxt.p.is_none());
-        //     Ctxt.f = Some(GroupParselet_parseLoop);
-        //     Ctxt.p = P;
-
-        //     // MUSTTAIL
-        //     return GroupParselet_parseLoop(session, P, tok_in/*ignored*/);
-        // #endif // !USE_MUSTTAIL
     }
 }
 
 impl GroupParselet {
     fn parse_loop(&self, session: &mut ParserSession) {
-        // #if !USE_MUSTTAIL
         loop {
-            // #endif // !USE_MUSTTAIL
-
             panic_if_aborted!();
 
 
@@ -1172,14 +1131,9 @@ impl GroupParselet {
 
                 session.push_trivia_seq(trivia1);
 
-                // #if !USE_MUSTTAIL
                 (PrefixToplevelCloserParselet {}).parse_prefix(session, tok);
 
                 continue;
-                // #else
-                //         // MUSTTAIL
-                //         return PrefixToplevelCloserParselet_parsePrefix(session, prefixToplevelCloserParselet, Tok);
-                // #endif
             }
 
             if tok.tok == TokenKind::EndOfFile {
@@ -1199,20 +1153,11 @@ impl GroupParselet {
 
             session.push_trivia_seq(trivia1);
 
-            // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
             assert!(ctxt.is_identity());
 
             session.parse_prefix(tok);
         } // loop
-          // #else
-          //     let ref mut Ctxt = session.top_context();
-          //     assert!(Ctxt.f == GroupParselet_parseLoop);
-          //     assert!(Ctxt.p == P);
-
-        //     // MUSTTAIL
-        //     return session.parse_prefix(Tok);
-        // #endif // !USE_MUSTTAIL
     }
 
     fn reduce_group(&self, session: &mut ParserSession) {
@@ -1817,38 +1762,18 @@ impl InfixParselet for CommaParselet {
                 tok2,
             ));
 
-            // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
             ctxt.init_identity();
 
             return CommaParselet::parse_loop(session);
-            // #else
-            //         let ref mut Ctxt = session.top_context();
-            //         assert!(Ctxt.f.is_none());
-            //         Ctxt.f = Some(CommaParselet_parseLoop);
-
-            //         // MUSTTAIL
-            //         return CommaParselet_parseLoop(session, ignored, tok_in/*ignored*/);
-            // #endif // !USE_MUSTTAIL
         }
 
-        // #if !USE_MUSTTAIL
         let ctxt = session.top_context();
         ctxt.init_identity();
 
         session.parse_prefix(tok2);
 
         return CommaParselet::parse_loop(session);
-        // #else
-        //     let ref mut Ctxt = session.top_context();
-        //     assert!(Ctxt.f.is_none());
-        //     Ctxt.f = Some(CommaParselet_parseLoop);
-
-        //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-        //     // MUSTTAIL
-        //     return P2.parse_prefix(session, Tok2);
-        // #endif // !USE_MUSTTAIL
     }
 
     fn getPrecedence(
@@ -1861,10 +1786,7 @@ impl InfixParselet for CommaParselet {
 
 impl CommaParselet {
     fn parse_loop(session: &mut ParserSession) {
-        // #if !USE_MUSTTAIL
         loop {
-            // #endif // !USE_MUSTTAIL
-
             panic_if_aborted!();
 
 
@@ -1903,29 +1825,14 @@ impl CommaParselet {
                     tok2,
                 ));
 
-                // #if !USE_MUSTTAIL
                 continue;
-                // #else
-                //         // MUSTTAIL
-                //         return CommaParselet_parseLoop(session, ignored, ignored2);
-                // #endif // !USE_MUSTTAIL
             }
 
-            // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
             assert!(ctxt.is_identity());
 
             session.parse_prefix(tok2);
         } // loop
-          // #else
-          //     let ref mut Ctxt = session.top_context();
-          //     assert!(Ctxt.f == CommaParselet_parseLoop);
-
-        //     let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-        //     // MUSTTAIL
-        //     return P2.parse_prefix(session, Tok2);
-        // #endif // !USE_MUSTTAIL
     }
 
     fn reduce_comma(session: &mut ParserSession) {
@@ -1985,19 +1892,10 @@ impl InfixParselet for SemiParselet {
             // nextToken() is not needed after an implicit token
             //
 
-            // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
             ctxt.init_identity();
 
             return SemiParselet::parse_loop(session);
-            // #else
-            //         let ref mut Ctxt = session.top_context();
-            //         assert!(Ctxt.f.is_none());
-            //         Ctxt.f = Some(SemiParselet_parseLoop);
-
-            //         // MUSTTAIL
-            //         return SemiParselet_parseLoop(session, ignored, tok_in/*ignored*/);
-            // #endif // !USE_MUSTTAIL
         }
 
         if tok2.tok.isPossibleBeginning() {
@@ -2005,23 +1903,12 @@ impl InfixParselet for SemiParselet {
             // Something like  a;+2
             //
 
-            // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
             ctxt.init_identity();
 
             session.parse_prefix(tok2);
 
             return SemiParselet::parse_loop(session);
-            // #else
-            //         let ref mut Ctxt = session.top_context();
-            //         assert!(Ctxt.f.is_none());
-            //         Ctxt.f = Some(SemiParselet_parseLoop);
-
-            //         let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-            //         // MUSTTAIL
-            //         return P2.parse_prefix(session, Tok2);
-            // #endif // !USE_MUSTTAIL
         }
 
         //
@@ -2050,10 +1937,7 @@ impl InfixParselet for SemiParselet {
 
 impl SemiParselet {
     fn parse_loop(session: &mut ParserSession) {
-        // #if !USE_MUSTTAIL
         loop {
-            // #endif // !USE_MUSTTAIL
-
             panic_if_aborted!();
 
 
@@ -2098,12 +1982,7 @@ impl SemiParselet {
                 // nextToken() is not needed after an implicit token
                 //
 
-                // #if !USE_MUSTTAIL
                 continue;
-                // #else
-                //         // MUSTTAIL
-                //         return SemiParselet_parseLoop(session, ignored, ignored2);
-                // #endif // !USE_MUSTTAIL
             }
 
             if tok2.tok.isPossibleBeginning() {
@@ -2111,22 +1990,12 @@ impl SemiParselet {
                 // Something like  a;b;+2
                 //
 
-                // #if !USE_MUSTTAIL
                 let ctxt = session.top_context();
                 assert!(ctxt.is_identity());
 
                 session.parse_prefix(tok2);
 
                 continue;
-                // #else
-                //         let ref mut Ctxt = session.top_context();
-                //         assert!(Ctxt.f == SemiParselet_parseLoop);
-
-                //         let P2 = PREFIX_PARSELETS[Tok2.tok.value()];
-
-                //         // MUSTTAIL
-                //         return P2.parse_prefix(session, Tok2);
-                // #endif // !USE_MUSTTAIL
             }
 
             //
@@ -2144,10 +2013,7 @@ impl SemiParselet {
 
             // MUSTTAIL
             return SemiParselet::reduce_CompoundExpression(session);
-
-            // #if !USE_MUSTTAIL
         } // loop
-          // #endif // !USE_MUSTTAIL
     }
 
     fn reduce_CompoundExpression(session: &mut ParserSession) {
@@ -2202,10 +2068,7 @@ impl InfixParselet for ColonColonParselet {
 
 impl ColonColonParselet {
     fn parse_loop(session: &mut ParserSession) {
-        // #if !USE_MUSTTAIL
         loop {
-            // #endif // !USE_MUSTTAIL
-
             panic_if_aborted!();
 
 
@@ -2232,13 +2095,7 @@ impl ColonColonParselet {
                 Tokenizer_currentToken_stringifyAsTag(&mut session.tokenizer);
 
             session.push_leaf_and_next(Tok2);
-
-            // #if !USE_MUSTTAIL
         } // loop
-          // #else
-          //     // MUSTTAIL
-          //     return ColonColonParselet_parseLoop(session, ignored, ignored2);
-          // #endif // !USE_MUSTTAIL
     }
 }
 
