@@ -381,9 +381,9 @@ impl<'i> Context<'i> {
         self.continue_parse = Some(Box::new(func));
     }
 
-    // pub(crate) fn is_identity(&self) -> bool {
-    //     self.f == Some(Parser_identity)
-    // }
+    pub(crate) fn is_identity(&self) -> bool {
+        self.continue_parse.is_none()
+    }
 
     pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(
         &mut self,

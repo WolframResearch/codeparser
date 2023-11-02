@@ -92,7 +92,7 @@ impl TimesParselet {
             let Tok2 = session.current_token_eat_trivia();
 
             let ctxt = session.top_context();
-            // assert!(ctxt.is_identity());
+            assert!(ctxt.is_identity());
 
             session.parse_prefix(Tok2);
         } // loop
