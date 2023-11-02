@@ -42,7 +42,7 @@ mod parse_tests {
 }
 
 
-use std::{any::Any, fmt::Debug};
+use std::fmt::Debug;
 
 use crate::{
     create_parse_result,
@@ -171,8 +171,6 @@ struct ParserSession<'i, B: ParseBuilder<'i> = ParseCst<'i>> {
 struct Context<'i> {
     continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i>) + 'i>>,
 
-    data: Box<dyn Any>,
-
     pub(crate) prec: Option<Precedence>,
 }
 
@@ -205,7 +203,7 @@ pub(crate) trait ParseBuilder<'i>: Debug {
     // Context management
     //==================================
 
-    fn begin_context(&mut self) -> Box<dyn Any>;
+    fn begin_context(&mut self);
 
     //==================================
     // Push
@@ -272,49 +270,36 @@ pub(crate) trait ParseBuilder<'i>: Debug {
     // Reduce normal
     //----------------------------------
 
-    fn reduce_prefix(&mut self, ctxt: Box<dyn Any>, op: PrefixOperator);
+    fn reduce_prefix(&mut self, op: PrefixOperator);
 
-    fn reduce_infix(&mut self, ctxt: Box<dyn Any>, op: InfixOperator);
+    fn reduce_infix(&mut self, op: InfixOperator);
 
-    fn reduce_postfix(&mut self, ctxt: Box<dyn Any>, op: PostfixOperator);
+    fn reduce_postfix(&mut self, op: PostfixOperator);
 
-    fn reduce_binary(&mut self, ctxt: Box<dyn Any>, op: BinaryOperator);
+    fn reduce_binary(&mut self, op: BinaryOperator);
 
-    fn reduce_ternary(&mut self, ctxt: Box<dyn Any>, op: TernaryOperator);
+    fn reduce_ternary(&mut self, op: TernaryOperator);
 
-    fn reduce_prefix_binary(
-        &mut self,
-        ctxt: Box<dyn Any>,
-        op: PrefixBinaryOperator,
-    );
+    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator);
 
-    fn reduce_group(&mut self, ctxt: Box<dyn Any>, op: GroupOperator);
+    fn reduce_group(&mut self, op: GroupOperator);
 
-    fn reduce_call(&mut self, ctxt: Box<dyn Any>);
+    fn reduce_call(&mut self);
 
     //----------------------------------
     // Reduce errors
     //----------------------------------
 
-    fn reduce_syntax_error(
-        &mut self,
-        ctxt: Box<dyn Any>,
-        kind: SyntaxErrorKind,
-    );
+    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind);
 
     fn reduce_unterminated_group(
         &mut self,
-        ctxt: Box<dyn Any>,
         op: GroupOperator,
         input: &'i str,
         tab_width: usize,
     );
 
-    fn reduce_group_missing_closer(
-        &mut self,
-        ctxt: Box<dyn Any>,
-        op: GroupOperator,
-    );
+    fn reduce_group_missing_closer(&mut self, op: GroupOperator);
 
     //==================================
     // Pop
@@ -331,9 +316,9 @@ pub(crate) trait ParseBuilder<'i>: Debug {
 
     fn is_quiescent(&self) -> bool;
 
-    fn check_colon_lhs(&self, ctxt: &dyn Any) -> ColonLHS;
+    fn check_colon_lhs(&self) -> ColonLHS;
 
-    fn top_non_trivia_node_is_tilde(&self, ctxt: Option<&dyn Any>) -> bool;
+    fn top_non_trivia_node_is_tilde(&self) -> bool;
 
     fn top_node_is_span(&self) -> bool;
 }
@@ -356,10 +341,9 @@ pub(crate) enum ColonLHS {
 }
 
 impl<'i> Context<'i> {
-    pub fn new(data: Box<dyn Any>, prec: Option<Precedence>) -> Self {
+    pub fn new(prec: Option<Precedence>) -> Self {
         Context {
             continue_parse: None,
-            data,
             prec,
         }
     }
@@ -703,43 +687,51 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     fn reduce_prefix(&mut self, op: PrefixOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_prefix(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_prefix(op);
     }
 
     fn reduce_infix(&mut self, op: InfixOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_infix(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_infix(op);
     }
 
     fn reduce_postfix(&mut self, op: PostfixOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_postfix(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_postfix(op);
     }
 
     fn reduce_binary(&mut self, op: BinaryOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_binary(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_binary(op);
     }
 
     fn reduce_ternary(&mut self, op: TernaryOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_ternary(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_ternary(op);
     }
 
     fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_prefix_binary(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_prefix_binary(op);
     }
 
     fn reduce_group(&mut self, op: GroupOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_group(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_group(op);
     }
 
     fn reduce_call(&mut self) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_call(ctxt.data);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_call();
     }
 
     //----------------------------------
@@ -747,8 +739,9 @@ impl<'i> ParserSession<'i> {
     //----------------------------------
 
     fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_syntax_error(ctxt.data, kind);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_syntax_error(kind);
     }
 
     fn reduce_unterminated_group(
@@ -757,14 +750,15 @@ impl<'i> ParserSession<'i> {
         input: &'i str,
         tab_width: usize,
     ) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder
-            .reduce_unterminated_group(ctxt.data, op, input, tab_width);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_unterminated_group(op, input, tab_width);
     }
 
     fn reduce_group_missing_closer(&mut self, op: GroupOperator) {
-        let ctxt = self.context_stack.pop().unwrap();
-        self.builder.reduce_group_missing_closer(ctxt.data, op);
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_group_missing_closer(op);
     }
 
     //----------------------------------
@@ -772,15 +766,11 @@ impl<'i> ParserSession<'i> {
     //----------------------------------
 
     fn check_colon_lhs(&self) -> ColonLHS {
-        let ctxt = self.context_stack.last().unwrap();
-        let data: &dyn Any = ctxt.data.as_ref();
-        self.builder.check_colon_lhs(data)
+        self.builder.check_colon_lhs()
     }
 
     fn top_non_trivia_node_is_tilde(&self) -> bool {
-        let ctxt = self.context_stack.last();
-        let data: Option<&dyn Any> = ctxt.map(|ctxt| ctxt.data.as_ref());
-        self.builder.top_non_trivia_node_is_tilde(data)
+        self.builder.top_non_trivia_node_is_tilde()
     }
 
     //==================================
@@ -797,9 +787,9 @@ impl<'i> ParserSession<'i> {
     ) -> &'s mut Context<'i> {
         let prec = prec.into();
 
-        let data = self.builder.begin_context();
+        let () = self.builder.begin_context();
 
-        self.context_stack.push(Context::new(data, prec));
+        self.context_stack.push(Context::new(prec));
 
         return self.context_stack.last_mut().unwrap();
     }
