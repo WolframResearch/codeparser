@@ -42,7 +42,7 @@ mod parse_tests {
 }
 
 
-use std::fmt::Debug;
+use std::{any::Any, fmt::Debug};
 
 use crate::{
     create_parse_result,
@@ -163,15 +163,15 @@ struct ParserSession<'i, B: ParseBuilder<'i> = ParseCst<'i>> {
 
     builder: B,
 
+    context_stack: Vec<Context<'i>>,
+
     quirk_settings: QuirkSettings,
 }
 
-pub(crate) struct Context<'i> {
+struct Context<'i> {
     continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i>) + 'i>>,
 
-    /// The position in [`ParserSession.node_stack`][ParserSession::node_stack]
-    /// that marks the first node associated with this [`Context`].
-    pub(crate) index: usize,
+    data: Box<dyn Any>,
 
     pub(crate) prec: Option<Precedence>,
 }
@@ -205,14 +205,7 @@ pub(crate) trait ParseBuilder<'i>: Debug {
     // Context management
     //==================================
 
-    fn push_context(
-        &mut self,
-        precedence: Option<Precedence>,
-    ) -> &mut Context<'i>;
-
-    fn top_context(&mut self) -> Option<&mut Context<'i>>;
-
-    fn is_quiescent(&self) -> bool;
+    fn begin_context(&mut self) -> Box<dyn Any>;
 
     //==================================
     // Push
@@ -279,36 +272,49 @@ pub(crate) trait ParseBuilder<'i>: Debug {
     // Reduce normal
     //----------------------------------
 
-    fn reduce_prefix(&mut self, op: PrefixOperator);
+    fn reduce_prefix(&mut self, ctxt: Box<dyn Any>, op: PrefixOperator);
 
-    fn reduce_infix(&mut self, op: InfixOperator);
+    fn reduce_infix(&mut self, ctxt: Box<dyn Any>, op: InfixOperator);
 
-    fn reduce_postfix(&mut self, op: PostfixOperator);
+    fn reduce_postfix(&mut self, ctxt: Box<dyn Any>, op: PostfixOperator);
 
-    fn reduce_binary(&mut self, op: BinaryOperator);
+    fn reduce_binary(&mut self, ctxt: Box<dyn Any>, op: BinaryOperator);
 
-    fn reduce_ternary(&mut self, op: TernaryOperator);
+    fn reduce_ternary(&mut self, ctxt: Box<dyn Any>, op: TernaryOperator);
 
-    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator);
+    fn reduce_prefix_binary(
+        &mut self,
+        ctxt: Box<dyn Any>,
+        op: PrefixBinaryOperator,
+    );
 
-    fn reduce_group(&mut self, op: GroupOperator);
+    fn reduce_group(&mut self, ctxt: Box<dyn Any>, op: GroupOperator);
 
-    fn reduce_call(&mut self);
+    fn reduce_call(&mut self, ctxt: Box<dyn Any>);
 
     //----------------------------------
     // Reduce errors
     //----------------------------------
 
-    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind);
+    fn reduce_syntax_error(
+        &mut self,
+        ctxt: Box<dyn Any>,
+        kind: SyntaxErrorKind,
+    );
 
     fn reduce_unterminated_group(
         &mut self,
+        ctxt: Box<dyn Any>,
         op: GroupOperator,
         input: &'i str,
         tab_width: usize,
     );
 
-    fn reduce_group_missing_closer(&mut self, op: GroupOperator);
+    fn reduce_group_missing_closer(
+        &mut self,
+        ctxt: Box<dyn Any>,
+        op: GroupOperator,
+    );
 
     //==================================
     // Pop
@@ -323,11 +329,11 @@ pub(crate) trait ParseBuilder<'i>: Debug {
     //                ParseBuilder impls don't need to provide these
     //                specialized methods.
 
-    fn check_pattern_precedence(&self) -> bool;
+    fn is_quiescent(&self) -> bool;
 
-    fn check_colon_lhs(&self) -> ColonLHS;
+    fn check_colon_lhs(&self, ctxt: &dyn Any) -> ColonLHS;
 
-    fn top_non_trivia_node_is_tilde(&self) -> bool;
+    fn top_non_trivia_node_is_tilde(&self, ctxt: Option<&dyn Any>) -> bool;
 
     fn top_node_is_span(&self) -> bool;
 }
@@ -350,10 +356,10 @@ pub(crate) enum ColonLHS {
 }
 
 impl<'i> Context<'i> {
-    pub fn new(index: usize, prec: Option<Precedence>) -> Self {
+    pub fn new(data: Box<dyn Any>, prec: Option<Precedence>) -> Self {
         Context {
             continue_parse: None,
-            index,
+            data,
             prec,
         }
     }
@@ -434,6 +440,7 @@ impl<'i> ParserSession<'i> {
         ParserSession {
             tokenizer: Tokenizer::new(input, opts),
             builder: ParseCst::new(),
+            context_stack: Vec::new(),
             quirk_settings,
         }
     }
@@ -516,7 +523,7 @@ impl<'i> ParserSession<'i> {
     /// Apply the continuation function from the top context to
     /// attempt to continue parsing.
     pub(crate) fn try_continue(&mut self) {
-        if self.builder.top_context().is_none() {
+        if self.context_stack.is_empty() {
             // no call needed here
             return;
         }
@@ -692,6 +699,91 @@ impl<'i> ParserSession<'i> {
     }
 
     //==================================
+    // ParseBuilder method wrappers
+    //==================================
+
+    fn reduce_prefix(&mut self, op: PrefixOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_prefix(ctxt.data, op);
+    }
+
+    fn reduce_infix(&mut self, op: InfixOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_infix(ctxt.data, op);
+    }
+
+    fn reduce_postfix(&mut self, op: PostfixOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_postfix(ctxt.data, op);
+    }
+
+    fn reduce_binary(&mut self, op: BinaryOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_binary(ctxt.data, op);
+    }
+
+    fn reduce_ternary(&mut self, op: TernaryOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_ternary(ctxt.data, op);
+    }
+
+    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_prefix_binary(ctxt.data, op);
+    }
+
+    fn reduce_group(&mut self, op: GroupOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_group(ctxt.data, op);
+    }
+
+    fn reduce_call(&mut self) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_call(ctxt.data);
+    }
+
+    //----------------------------------
+    // Reduce errors
+    //----------------------------------
+
+    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_syntax_error(ctxt.data, kind);
+    }
+
+    fn reduce_unterminated_group(
+        &mut self,
+        op: GroupOperator,
+        input: &'i str,
+        tab_width: usize,
+    ) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder
+            .reduce_unterminated_group(ctxt.data, op, input, tab_width);
+    }
+
+    fn reduce_group_missing_closer(&mut self, op: GroupOperator) {
+        let ctxt = self.context_stack.pop().unwrap();
+        self.builder.reduce_group_missing_closer(ctxt.data, op);
+    }
+
+    //----------------------------------
+    // Properties
+    //----------------------------------
+
+    fn check_colon_lhs(&self) -> ColonLHS {
+        let ctxt = self.context_stack.last().unwrap();
+        let data: &dyn Any = ctxt.data.as_ref();
+        self.builder.check_colon_lhs(data)
+    }
+
+    fn top_non_trivia_node_is_tilde(&self) -> bool {
+        let ctxt = self.context_stack.last();
+        let data: Option<&dyn Any> = ctxt.map(|ctxt| ctxt.data.as_ref());
+        self.builder.top_non_trivia_node_is_tilde(data)
+    }
+
+    //==================================
     // Context management
     //==================================
 
@@ -705,13 +797,17 @@ impl<'i> ParserSession<'i> {
     ) -> &'s mut Context<'i> {
         let prec = prec.into();
 
-        return self.builder.push_context(prec);
+        let data = self.builder.begin_context();
+
+        self.context_stack.push(Context::new(data, prec));
+
+        return self.context_stack.last_mut().unwrap();
     }
 
-    pub(crate) fn top_context<'s>(&'s mut self) -> &'s mut Context<'i> {
+    fn top_context<'s>(&'s mut self) -> &'s mut Context<'i> {
         return self
-            .builder
-            .top_context()
+            .context_stack
+            .last_mut()
             .expect("top_context: no contexts set");
     }
 
@@ -720,7 +816,7 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     pub(crate) fn top_precedence(&mut self) -> Option<Precedence> {
-        match self.builder.top_context() {
+        match self.context_stack.last() {
             Some(ctxt) => ctxt.prec,
             None => None,
         }
@@ -732,10 +828,7 @@ impl<'i> ParserSession<'i> {
     ) {
         let prec = prec.into();
 
-        self.builder
-            .top_context()
-            .expect("set_precedence: no contexts set")
-            .prec = prec;
+        self.top_context().prec = prec;
     }
 
     //==================================
@@ -784,8 +877,32 @@ impl<'i> ParserSession<'i> {
     // Assorted parselet helper functions
     //===================================
 
+    fn check_pattern_precedence(&self) -> bool {
+        for ctxt in self.context_stack.iter().rev() {
+            let Some(prec) = ctxt.prec else {
+                // Equivalent to a precedence of zero.
+                return false;
+            };
+
+            if prec > Precedence::FAKE_PATTERNCOLON {
+                continue;
+            }
+
+            if prec < Precedence::FAKE_PATTERNCOLON {
+                return false;
+            }
+
+            assert!(prec == Precedence::FAKE_PATTERNCOLON);
+
+            return true;
+        }
+
+        return false;
+    }
+
     pub fn is_quiescent(&mut self) -> bool {
         assert!(self.builder.is_quiescent());
+        assert!(self.context_stack.is_empty());
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;
@@ -831,7 +948,6 @@ impl<'i> Debug for Context<'i> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Context")
             .field("continue_parse", &"<continuation function>")
-            .field("index", &self.index)
             .field("prec", &self.prec)
             .finish()
     }

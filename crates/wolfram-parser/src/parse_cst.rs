@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use crate::{
     cst::{
         BinaryNode, BinaryOperator, CallBody, CallNode, CompoundNode,
@@ -7,8 +9,7 @@ use crate::{
         PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         TernaryOperator, TriviaSeq, UnterminatedGroupNeedsReparseNode,
     },
-    parse::{ColonLHS, Context, ParseBuilder, TriviaSeqRef, UnderParseData},
-    precedence::Precedence,
+    parse::{ColonLHS, ParseBuilder, TriviaSeqRef, UnderParseData},
     tokenize::{TokenKind, TokenRef, TokenStr},
     utils::debug_assert_matches,
     NodeSeq,
@@ -17,28 +18,31 @@ use crate::{
 #[derive(Debug)]
 pub(crate) struct ParseCst<'i> {
     node_stack: Vec<Cst<TokenStr<'i>>>,
-    context_stack: Vec<Context<'i>>,
+}
+
+#[derive(Debug)]
+struct ParseCstContext {
+    /// The position in [`ParseCst.node_stack`][ParseCst::node_stack]
+    /// that marks the first node associated with this context.
+    index: usize,
 }
 
 impl<'i> ParseCst<'i> {
     pub(crate) fn new() -> Self {
         ParseCst {
             node_stack: Vec::new(),
-            context_stack: Vec::new(),
         }
     }
 
     /// Pop the top context and push a new node constructed by `func`.
-    fn reduce<N, F>(&mut self, func: F)
+    fn reduce<N, F>(&mut self, ctxt: Box<dyn Any>, func: F)
     where
         N: Into<Cst<TokenStr<'i>>>,
         F: FnOnce(CstSeq<TokenStr<'i>>) -> N,
     {
-        // Remove the top context
-        let ctxt = self
-            .context_stack
-            .pop()
-            .expect("context stack was unexpectedly empty");
+        let ctxt = ctxt
+            .downcast::<ParseCstContext>()
+            .expect("Unexpected context type");
 
         // Remove nodes associated with `ctxt` from back of node_stack
         let nodes = Vec::from_iter(self.node_stack.drain(ctxt.index..));
@@ -79,8 +83,11 @@ impl<'i> ParseCst<'i> {
 
     /// Returns a last-in first-out iterator over nodes in the top
     /// context.
-    fn top_context_nodes(&self) -> impl Iterator<Item = &Cst<TokenStr<'i>>> {
-        let ctxt = self.context_stack.last().unwrap();
+    fn top_context_nodes(
+        &self,
+        ctxt: &dyn Any,
+    ) -> impl Iterator<Item = &Cst<TokenStr<'i>>> {
+        let ctxt = ctxt.downcast_ref::<ParseCstContext>().unwrap();
 
         let index = ctxt.index;
 
@@ -101,26 +108,18 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     ///
     /// The top node in the [`node_stack`][ParserSession::node_stack] is included
     /// in the new context.
-    fn push_context<'s>(
-        &'s mut self,
-        prec: Option<Precedence>,
-    ) -> &'s mut Context<'i> {
-        let prec = prec.into();
-
+    fn begin_context<'s>(&'s mut self) -> Box<dyn Any> {
         assert!(!self.node_stack.is_empty());
 
-        self.context_stack
-            .push(Context::new(self.node_stack.len() - 1, prec));
+        let data = ParseCstContext {
+            index: self.node_stack.len() - 1,
+        };
 
-        return self.context_stack.last_mut().unwrap();
-    }
-
-    fn top_context(&mut self) -> Option<&mut Context<'i>> {
-        return self.context_stack.last_mut();
+        Box::new(data)
     }
 
     fn is_quiescent(&self) -> bool {
-        self.node_stack.is_empty() && self.context_stack.is_empty()
+        self.node_stack.is_empty()
     }
 
     //==================================
@@ -235,35 +234,39 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     // Reduce
     //==================================
 
-    fn reduce_prefix(&mut self, op: PrefixOperator) {
-        self.reduce(|ctx| PrefixNode::new(op, ctx))
+    fn reduce_prefix(&mut self, ctxt: Box<dyn Any>, op: PrefixOperator) {
+        self.reduce(ctxt, |ctx| PrefixNode::new(op, ctx))
     }
 
-    fn reduce_infix(&mut self, op: InfixOperator) {
-        self.reduce(|ctx| InfixNode::new(op, ctx));
+    fn reduce_infix(&mut self, ctxt: Box<dyn Any>, op: InfixOperator) {
+        self.reduce(ctxt, |ctx| InfixNode::new(op, ctx));
     }
 
-    fn reduce_postfix(&mut self, op: PostfixOperator) {
-        self.reduce(|ctx| PostfixNode::new(op, ctx));
+    fn reduce_postfix(&mut self, ctxt: Box<dyn Any>, op: PostfixOperator) {
+        self.reduce(ctxt, |ctx| PostfixNode::new(op, ctx));
     }
 
-    fn reduce_binary(&mut self, op: BinaryOperator) {
-        self.reduce(|ctx| BinaryNode::new(op, ctx))
+    fn reduce_binary(&mut self, ctxt: Box<dyn Any>, op: BinaryOperator) {
+        self.reduce(ctxt, |ctx| BinaryNode::new(op, ctx))
     }
 
-    fn reduce_ternary(&mut self, op: TernaryOperator) {
-        self.reduce(|ctx| TernaryNode::new(op, ctx))
+    fn reduce_ternary(&mut self, ctxt: Box<dyn Any>, op: TernaryOperator) {
+        self.reduce(ctxt, |ctx| TernaryNode::new(op, ctx))
     }
 
-    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator) {
-        self.reduce(|ctx| PrefixBinaryNode::new(op, ctx))
+    fn reduce_prefix_binary(
+        &mut self,
+        ctxt: Box<dyn Any>,
+        op: PrefixBinaryOperator,
+    ) {
+        self.reduce(ctxt, |ctx| PrefixBinaryNode::new(op, ctx))
     }
 
-    fn reduce_group(&mut self, op: GroupOperator) {
-        self.reduce(|ctx| GroupNode::new(op, ctx))
+    fn reduce_group(&mut self, ctxt: Box<dyn Any>, op: GroupOperator) {
+        self.reduce(ctxt, |ctx| GroupNode::new(op, ctx))
     }
 
-    fn reduce_call(&mut self) {
+    fn reduce_call(&mut self, ctxt: Box<dyn Any>) {
         let body = self.pop_node();
 
         let body: CallBody<_> = match body {
@@ -295,24 +298,29 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             ),
         };
 
-        self.reduce(|ctx| CallNode::concrete(ctx, body))
+        self.reduce(ctxt, |ctx| CallNode::concrete(ctx, body))
     }
 
     //----------------------------------
     // Reduce errors
     //----------------------------------
 
-    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind) {
-        self.reduce(|ctx| SyntaxErrorNode::new(kind, ctx));
+    fn reduce_syntax_error(
+        &mut self,
+        ctxt: Box<dyn Any>,
+        kind: SyntaxErrorKind,
+    ) {
+        self.reduce(ctxt, |ctx| SyntaxErrorNode::new(kind, ctx));
     }
 
     fn reduce_unterminated_group(
         &mut self,
+        ctxt: Box<dyn Any>,
         op: GroupOperator,
         input: &'i str,
         tab_width: usize,
     ) {
-        self.reduce(|ctx| {
+        self.reduce(ctxt, |ctx| {
             let node = UnterminatedGroupNeedsReparseNode::new(op, ctx);
 
             crate::error::reparse_unterminated_group_node(
@@ -321,8 +329,12 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         });
     }
 
-    fn reduce_group_missing_closer(&mut self, op: GroupOperator) {
-        self.reduce(|ctx| GroupMissingCloserNode::new(op, ctx));
+    fn reduce_group_missing_closer(
+        &mut self,
+        ctxt: Box<dyn Any>,
+        op: GroupOperator,
+    ) {
+        self.reduce(ctxt, |ctx| GroupMissingCloserNode::new(op, ctx));
     }
 
     //==================================
@@ -341,30 +353,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     // Properties
     //==================================
 
-    fn check_pattern_precedence(&self) -> bool {
-        for ctxt in self.context_stack.iter().rev() {
-            let Some(prec) = ctxt.prec else {
-                // Equivalent to a precedence of zero.
-                return false;
-            };
-
-            if prec > Precedence::FAKE_PATTERNCOLON {
-                continue;
-            }
-
-            if prec < Precedence::FAKE_PATTERNCOLON {
-                return false;
-            }
-
-            assert!(prec == Precedence::FAKE_PATTERNCOLON);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    fn check_colon_lhs(&self) -> ColonLHS {
+    fn check_colon_lhs(&self, ctxt: &dyn Any) -> ColonLHS {
         //
         // work backwards, looking for a symbol or something that is a pattern
         //
@@ -374,7 +363,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         // Of the nodes owned by `ctxt`, get the top (last) one that
         // is not trivia.
         let top_non_trivia_in_context = self
-            .top_context_nodes()
+            .top_context_nodes(ctxt)
             .find(
                 |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
             )
@@ -457,19 +446,19 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         }
     }
 
-    fn top_non_trivia_node_is_tilde(&self) -> bool {
+    fn top_non_trivia_node_is_tilde(&self, ctxt: Option<&dyn Any>) -> bool {
         //
         // work backwards, looking for ~
         //
 
-        if self.context_stack.is_empty() {
+        let Some(ctxt) = ctxt else {
             return false;
-        }
+        };
 
         // Of the nodes owned by `ctxt`, get the top (last) one that
         // is not trivia.
         let top_non_trivia_in_context = self
-            .top_context_nodes()
+            .top_context_nodes(ctxt)
             // Skip past top
             .skip(1)
             .find(

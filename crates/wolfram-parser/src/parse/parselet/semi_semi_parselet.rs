@@ -260,13 +260,13 @@ impl SemiSemiParselet {
     }
 
     fn reduce_binary(session: &mut ParserSession) {
-        session.builder.reduce_binary(BinaryOperator::Span);
+        session.reduce_binary(BinaryOperator::Span);
 
         session.parse_climb();
     }
 
     fn reduce_ternary(session: &mut ParserSession) {
-        session.builder.reduce_ternary(TernaryOperator::Span);
+        session.reduce_ternary(TernaryOperator::Span);
 
         session.parse_climb();
     }
