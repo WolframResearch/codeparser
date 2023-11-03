@@ -47,19 +47,18 @@ use std::fmt::Debug;
 use crate::{
     create_parse_result,
     cst::{
-        BinaryOperator, CompoundOperator, Cst, CstSeq, SyntaxErrorKind,
-        TernaryOperator, TriviaSeq,
+        BinaryOperator, CompoundOperator, SyntaxErrorKind, TernaryOperator,
+        TriviaSeq,
     },
     feature, panic_if_aborted,
     parse::parselet::PrefixToplevelCloserParselet,
-    parse_cst::ParseCst,
     precedence::Precedence,
     quirks,
     tokenize::{
         token_kind::Closer, tokenizer::Tokenizer_currentToken_stringifyAsFile,
         TokenKind, TokenRef, TokenStr, Tokenizer,
     },
-    NodeSeq, ParseOptions, ParseResult, QuirkSettings,
+    ParseOptions, ParseResult, QuirkSettings,
 };
 
 use self::{
@@ -75,11 +74,32 @@ use self::{
 // API
 //======================================
 
-pub(crate) fn parse_concrete<'i>(
+/// Parse Wolfram Language input using the specified [`ParseBuilder`].
+pub(crate) fn parse<'i, B: ParseBuilder<'i>>(
     input: &'i [u8],
     opts: &ParseOptions,
-) -> ParseResult<CstSeq<TokenStr<'i>>> {
-    let mut session = ParserSession::new(input, opts);
+) -> ParseResult<B::Output> {
+    let mut builder: B = B::new_builder();
+
+    let result: ParseResult<()> = do_parse(input, &mut builder, opts);
+
+    let exprs = builder.finish(input, opts);
+
+    ParseResult {
+        syntax: exprs,
+        unsafe_character_encoding: result.unsafe_character_encoding,
+        fatal_issues: result.fatal_issues,
+        non_fatal_issues: result.non_fatal_issues,
+        tracked: result.tracked,
+    }
+}
+
+fn do_parse<'i: 'b, 'b>(
+    input: &'i [u8],
+    builder: &'b mut dyn DynParseBuilder<'i>,
+    opts: &ParseOptions,
+) -> ParseResult<()> {
+    let mut session = ParserSession::new(&*input, builder, opts);
 
     quirks::set_quirks(session.quirk_settings);
 
@@ -93,8 +113,6 @@ pub(crate) fn parse_concrete<'i>(
     // Collect all expressions
     //
 
-    let mut exprs: CstSeq<TokenStr<'i>> = NodeSeq::new();
-
     loop {
         if feature::CHECK_ABORT && crate::abortQ() {
             break;
@@ -107,7 +125,9 @@ pub(crate) fn parse_concrete<'i>(
         }
 
         if peek.tok.isTrivia() {
-            exprs.push(Cst::Token(peek));
+            session.builder.push_trivia(peek);
+
+            session.builder.finish_top_level_expr();
 
             peek.skip(&mut session.tokenizer);
 
@@ -120,7 +140,7 @@ pub(crate) fn parse_concrete<'i>(
         if peek.tok.isCloser() {
             (PrefixToplevelCloserParselet {}).parse_prefix(&mut session, peek);
 
-            exprs.push(session.builder.pop_finished_expr());
+            session.builder.finish_top_level_expr();
 
             assert!(session.is_quiescent());
 
@@ -129,7 +149,7 @@ pub(crate) fn parse_concrete<'i>(
 
         session.parse_prefix(peek);
 
-        exprs.push(session.builder.pop_finished_expr());
+        session.builder.finish_top_level_expr();
 
         assert!(session.is_quiescent());
     } // while (true)
@@ -140,15 +160,7 @@ pub(crate) fn parse_concrete<'i>(
         DiagnosticsLogTime();
     }
 
-    if let Ok(input) = std::str::from_utf8(session.tokenizer.input) {
-        exprs = crate::error::reparse_unterminated(
-            exprs,
-            input,
-            usize::try_from(session.tokenizer.tab_width).unwrap(),
-        );
-    }
-
-    return create_parse_result(&session.tokenizer, exprs);
+    return create_parse_result(&session.tokenizer, ());
 }
 
 
@@ -158,18 +170,18 @@ pub(crate) fn parse_concrete<'i>(
 
 /// A parser session
 #[derive(Debug)]
-struct ParserSession<'i, B: ParseBuilder<'i> = ParseCst<'i>> {
+struct ParserSession<'i, 'b> {
     tokenizer: Tokenizer<'i>,
 
-    builder: B,
+    builder: &'b mut dyn DynParseBuilder<'i>,
 
-    context_stack: Vec<Context<'i>>,
+    context_stack: Vec<Context<'i, 'b>>,
 
     quirk_settings: QuirkSettings,
 }
 
-struct Context<'i> {
-    continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i>) + 'i>>,
+struct Context<'i, 'b> {
+    continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i, 'b>) + 'i>>,
 
     pub(crate) prec: Option<Precedence>,
 }
@@ -178,6 +190,15 @@ struct Context<'i> {
 // Used mainly for collecting trivia that has been eaten
 //
 pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
+
+pub(crate) trait ParseBuilder<'i>: DynParseBuilder<'i> + Debug {
+    type Output;
+
+    fn new_builder() -> Self;
+
+    /// Complete the parse and return the parsed output.
+    fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output;
+}
 
 /// Handler for parse events to build up a representation of the parsed input.
 ///
@@ -196,9 +217,7 @@ pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 /// This abstraction allows `Input &str => Expr` with no intermediate stage,
 /// while also preserving the ability to do `Input &str => Cst`, or any other
 /// type buildable from parsing.
-pub(crate) trait ParseBuilder<'i>: Debug {
-    type Output;
-
+pub(crate) trait DynParseBuilder<'i>: Debug {
     //==================================
     // Context management
     //==================================
@@ -305,7 +324,7 @@ pub(crate) trait ParseBuilder<'i>: Debug {
     // Pop
     //==================================
 
-    fn pop_finished_expr(&mut self) -> Self::Output;
+    fn finish_top_level_expr(&mut self);
 
     //==================================
     // Properties
@@ -340,7 +359,7 @@ pub(crate) enum ColonLHS {
     Error,
 }
 
-impl<'i> Context<'i> {
+impl<'i, 'b> Context<'i, 'b> {
     pub fn new(prec: Option<Precedence>) -> Self {
         Context {
             continue_parse: None,
@@ -354,7 +373,7 @@ impl<'i> Context<'i> {
         self.continue_parse = Some(Box::new(func));
     }
 
-    fn init_callback_with_state<F: FnOnce(&mut ParserSession<'i>) + 'i>(
+    fn init_callback_with_state<F: FnOnce(&mut ParserSession<'i, 'b>) + 'i>(
         &mut self,
         func: F,
     ) {
@@ -373,7 +392,7 @@ impl<'i> Context<'i> {
         self.continue_parse = Some(Box::new(func));
     }
 
-    fn set_callback_with_state<F: FnOnce(&mut ParserSession<'i>) + 'i>(
+    fn set_callback_with_state<F: FnOnce(&mut ParserSession<'i, 'b>) + 'i>(
         &mut self,
         func: F,
     ) {
@@ -409,8 +428,12 @@ impl TokenKind {
     }
 }
 
-impl<'i> ParserSession<'i> {
-    pub fn new(input: &'i [u8], opts: &ParseOptions) -> ParserSession<'i> {
+impl<'i, 'b> ParserSession<'i, 'b> {
+    pub fn new(
+        input: &'i [u8],
+        builder: &'b mut dyn DynParseBuilder<'i>,
+        opts: &ParseOptions,
+    ) -> ParserSession<'i, 'b> {
         let ParseOptions {
             first_line_behavior: _,
             src_convention: _,
@@ -423,7 +446,7 @@ impl<'i> ParserSession<'i> {
 
         ParserSession {
             tokenizer: Tokenizer::new(input, opts),
-            builder: ParseCst::new(),
+            builder,
             context_stack: Vec::new(),
             quirk_settings,
         }
@@ -784,7 +807,7 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
         &'s mut self,
         prec: P,
-    ) -> &'s mut Context<'i> {
+    ) -> &'s mut Context<'i, 'b> {
         let prec = prec.into();
 
         let () = self.builder.begin_context();
@@ -794,7 +817,7 @@ impl<'i> ParserSession<'i> {
         return self.context_stack.last_mut().unwrap();
     }
 
-    fn top_context<'s>(&'s mut self) -> &'s mut Context<'i> {
+    fn top_context<'s>(&'s mut self) -> &'s mut Context<'i, 'b> {
         return self
             .context_stack
             .last_mut()
@@ -934,7 +957,7 @@ impl<'i> TriviaSeq<TokenStr<'i>> {
 // Format Impls
 //======================================
 
-impl<'i> Debug for Context<'i> {
+impl<'i, 'b> Debug for Context<'i, 'b> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Context")
             .field("continue_parse", &"<continuation function>")

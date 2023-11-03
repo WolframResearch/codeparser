@@ -15,9 +15,9 @@ impl IntegralParselet {
 }
 
 impl PrefixParselet for IntegralParselet {
-    fn parse_prefix<'i>(
+    fn parse_prefix<'i, 'b>(
         &'static self,
-        session: &mut ParserSession<'i>,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -114,9 +114,9 @@ impl InfixParselet for InfixDifferentialDParselet {
         return Some(Precedence::FAKE_IMPLICITTIMES);
     }
 
-    fn process_implicit_times<'i>(
+    fn process_implicit_times<'i, 'b>(
         &self,
-        session: &mut ParserSession<'i>,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         if session.top_precedence() == Precedence::CLASS_INTEGRATIONOPERATORS {

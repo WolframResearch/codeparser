@@ -117,6 +117,7 @@ use std::fmt::Debug;
 
 use abstract_cst::{abstract_cst, aggregate_cst_seq};
 use cst::CstSeq;
+use parse_cst::ParseCst;
 use source::TOPLEVEL;
 use tokenize::{
     tokenizer::{
@@ -494,7 +495,7 @@ pub fn parse_bytes_cst_seq<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<CstSeq<TokenStr<'i>>> {
-    parse::parse_concrete(bytes, opts)
+    parse::parse::<ParseCst>(bytes, opts)
 }
 
 //======================================
@@ -582,7 +583,7 @@ pub fn parse_bytes_ast_seq<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<NodeSeq<Ast>> {
-    let result = parse::parse_concrete(bytes, opts);
+    let result = parse::parse::<ParseCst>(bytes, opts);
 
     let ParseResult {
         syntax: nodes,
@@ -801,10 +802,7 @@ fn expect_single_item<N>(
     }
 }
 
-fn create_parse_result<N>(
-    tokenizer: &Tokenizer,
-    nodes: NodeSeq<N>,
-) -> ParseResult<NodeSeq<N>> {
+fn create_parse_result<N>(tokenizer: &Tokenizer, nodes: N) -> ParseResult<N> {
     let result = ParseResult {
         syntax: nodes,
         unsafe_character_encoding: tokenizer.unsafe_character_encoding_flag,
