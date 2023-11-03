@@ -38,8 +38,8 @@ fn ByteDecoderTest_Empty() {
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 
@@ -77,8 +77,8 @@ fn ByteDecoderTest_Basic1() {
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 //
@@ -121,8 +121,8 @@ fn ByteDecoderTest_Basic2() {
     //
     // Issue: Non-ASCII character: ``"α" (\[Alpha])``
     //
-    assert_eq!(reader.nonFatalIssues.len(), 1);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 1);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 //
@@ -165,8 +165,8 @@ fn ByteDecoderTest_Basic3() {
     //
     // Issue: Non-ASCII character: ``"⚡" (\:26a1)``
     //
-    assert_eq!(reader.nonFatalIssues.len(), 1);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 1);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -203,8 +203,8 @@ fn ByteDecoderTest_Invalid1() {
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 //
@@ -246,8 +246,8 @@ fn ByteDecoderTest_Invalid2() {
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 //
@@ -288,8 +288,8 @@ fn ByteDecoderTest_Invalid3() {
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 //
@@ -330,8 +330,8 @@ fn ByteDecoderTest_Invalid4() {
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 //
@@ -375,11 +375,11 @@ fn ByteDecoderTest_Surrogate1() {
 
     assert_eq!(reader.buffer(), &arr[5..]);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
     //
     // Issue: Invalid UTF-8 sequence: Stray surrogate
     //
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 //
@@ -423,9 +423,9 @@ fn ByteDecoderTest_Surrogate2() {
 
     assert_eq!(reader.buffer(), &arr[5..]);
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
     //
     // Issue: Invalid UTF-8 sequence: Stray surrogate
     //
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }

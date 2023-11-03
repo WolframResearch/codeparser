@@ -34,8 +34,8 @@ fn CharacterDecoderTest_Basic1() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -72,8 +72,8 @@ fn CharacterDecoderTest_LongName() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -110,8 +110,8 @@ fn CharacterDecoderTest_4Hex() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -142,8 +142,8 @@ fn CharacterDecoderTest_2Hex() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -174,8 +174,8 @@ fn CharacterDecoderTest_Octal() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -206,8 +206,8 @@ fn CharacterDecoderTest_6Hex() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -238,8 +238,8 @@ fn CharacterDecoderTest_Raw() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -318,8 +318,8 @@ fn CharacterDecoderTest_LongNameError1() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 #[test]
@@ -398,8 +398,8 @@ fn CharacterDecoderTest_LongNameError2() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 #[test]
@@ -466,8 +466,8 @@ fn CharacterDecoderTest_4HexError1() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.nonFatalIssues.len(), 0);
-    assert_eq!(reader.fatalIssues.len(), 1);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 1);
 }
 
 //
@@ -507,6 +507,6 @@ fn CharacterDecoderTest_UnexpectedEscapeSequence() {
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
-    assert_eq!(reader.fatalIssues.len(), 0);
-    assert_eq!(reader.nonFatalIssues.len(), 0);
+    assert_eq!(reader.fatal_issues.len(), 0);
+    assert_eq!(reader.non_fatal_issues.len(), 0);
 }

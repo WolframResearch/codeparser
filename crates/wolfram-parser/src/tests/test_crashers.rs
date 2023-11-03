@@ -22,8 +22,8 @@ fn CrashTest_Crash0_tokens() {
 
     assert_eq!(tok, token!(EndOfFile, "\\\n", src!(1:2-2:1)));
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(session.non_fatal_issues().len(), 0);
+    assert_eq!(session.fatal_issues().len(), 0);
 }
 
 #[test]
@@ -56,8 +56,8 @@ fn CrashTest_StackOverflow1() {
 
     TheParserSession->releaseNode(N);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(session.non_fatal_issues().len(), 0);
+    assert_eq!(session.fatal_issues().len(), 0);
 
     TheParserSession->deinit();
 }

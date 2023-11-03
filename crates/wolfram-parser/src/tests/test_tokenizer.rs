@@ -18,8 +18,8 @@ fn TokenizerTest_Bug1() {
 
     let session = Tokenizer::new(strIn.as_bytes(), &ParseOptions::default());
 
-    assert_eq!(session.nonFatalIssues.len(), 0);
-    assert_eq!(session.fatalIssues.len(), 0);
+    assert_eq!(session.non_fatal_issues.len(), 0);
+    assert_eq!(session.fatal_issues.len(), 0);
 }
 
 //
@@ -36,8 +36,8 @@ fn TokenizerTest_Bug2() {
 
     Tok.skip(&mut tokenizer);
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 //
@@ -49,8 +49,8 @@ fn TokenizerTest_Bug3() {
 
     let tokenizer = Tokenizer::new(strIn.as_bytes(), &ParseOptions::default());
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -59,8 +59,8 @@ fn TokenizerTest_Bug4() {
 
     let session = Tokenizer::new(strIn.as_bytes(), &ParseOptions::default());
 
-    assert_eq!(session.nonFatalIssues.len(), 0);
-    assert_eq!(session.fatalIssues.len(), 0);
+    assert_eq!(session.non_fatal_issues.len(), 0);
+    assert_eq!(session.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -69,8 +69,8 @@ fn TokenizerTest_Bug5() {
 
     let session = Tokenizer::new(strIn.as_bytes(), &ParseOptions::default());
 
-    assert_eq!(session.nonFatalIssues.len(), 0);
-    assert_eq!(session.fatalIssues.len(), 0);
+    assert_eq!(session.non_fatal_issues.len(), 0);
+    assert_eq!(session.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -96,8 +96,8 @@ fn TokenizerTest_IntegerRealMixup() {
 
     assert_eq!(Tok3, token!(EndOfFile, "", src!(1:4-1:4)));
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 1);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 1);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -129,8 +129,8 @@ fn TokenizerTest_Basic2() {
 
     assert_eq!(Tok4, token!(EndOfFile, "", src!(1:13-1:13)));
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -144,8 +144,8 @@ fn TokenizerTest_OldAssert1() {
 
     assert_eq!(Tok, token!(Integer, "8", src!(1:1-1:2)));
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -176,8 +176,8 @@ fn TokenizerTest_Basic3() {
 
     Tok.skip(&mut tokenizer);
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -213,8 +213,8 @@ fn TokenizerTest_Basic4() {
 
     assert_eq!(tokenizer.wasEOF, true);
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 1);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 1);
 }
 
 #[test]
@@ -225,8 +225,8 @@ fn TokenizerTest_Crash1() {
 
     let _ = tokenizer.peek_token();
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 1);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 1);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -246,8 +246,8 @@ fn TokenizerTest_LineContinuation1() {
 
     assert_eq!(Tok, token!(EndOfFile, "", src!(2:3-2:3)));
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -267,8 +267,8 @@ fn TokenizerTest_LineContinuation2() {
 
     assert_eq!(Tok, token!(EndOfFile, "", src!(2:3-2:3)));
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -288,8 +288,8 @@ fn TokenizerTest_LineContinuation3() {
 
     assert_eq!(Tok, token!(EndOfFile, "", src!(2:3-2:3)));
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 1);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 1);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]
@@ -309,8 +309,8 @@ fn TokenizerTest_LineContinuation4() {
 
     assert_eq!(Tok, token!(EndOfFile, "\\\n", src!(1:2-2:1)));
 
-    assert_eq!(tokenizer.nonFatalIssues.len(), 0);
-    assert_eq!(tokenizer.fatalIssues.len(), 0);
+    assert_eq!(tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(tokenizer.fatal_issues.len(), 0);
 }
 
 #[test]

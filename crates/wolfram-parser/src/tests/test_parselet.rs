@@ -16,8 +16,8 @@ fn ParseletTest_Bug1() {
 
     assert!(matches!(P, Cst::Ternary(_)));
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(session.tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(session.tokenizer.fatal_issues.len(), 0);
 }
 
 //
@@ -35,8 +35,8 @@ fn ParseletTest_Bug2() {
 
     session.parse_prefix(tok);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(session.tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(session.tokenizer.fatal_issues.len(), 0);
 }
 
 //
@@ -53,8 +53,8 @@ fn ParseletTest_Bug3() {
 
     session.parse_prefix(tok);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(session.tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(session.tokenizer.fatal_issues.len(), 0);
 }
 
 //
@@ -71,6 +71,6 @@ fn ParseletTest_Bug4() {
 
     session.parse_prefix(tok);
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(session.tokenizer.non_fatal_issues.len(), 0);
+    assert_eq!(session.tokenizer.fatal_issues.len(), 0);
 }

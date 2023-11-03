@@ -41,8 +41,8 @@ pub(crate) struct Reader<'i> {
 
     encoding_mode: EncodingMode,
 
-    pub(crate) fatalIssues: Vec<Issue>,
-    pub(crate) nonFatalIssues: Vec<Issue>,
+    pub(crate) fatal_issues: Vec<Issue>,
+    pub(crate) non_fatal_issues: Vec<Issue>,
 
     pub(crate) unsafe_character_encoding_flag: Option<UnsafeCharacterEncoding>,
 }
@@ -88,8 +88,8 @@ impl<'i> Reader<'i> {
 
             encoding_mode,
 
-            fatalIssues: Vec::new(),
-            nonFatalIssues: Vec::new(),
+            fatal_issues: Vec::new(),
+            non_fatal_issues: Vec::new(),
 
             unsafe_character_encoding_flag: None,
         }
@@ -246,26 +246,26 @@ impl<'i> Reader<'i> {
             // If there are, say, 10 fatal errors, then assume that the 11th is not going to give any new information,
             // and ignore.
             //
-            if self.fatalIssues.len() >= 10 {
+            if self.fatal_issues.len() >= 10 {
                 return;
             }
 
-            if !self.fatalIssues.contains(&issue) {
+            if !self.fatal_issues.contains(&issue) {
                 //
                 // Only insert if not already found in vector
                 //
                 // This preserves set-like behavior while also retaining insert-order
                 //
-                self.fatalIssues.push(issue);
+                self.fatal_issues.push(issue);
             }
         } else {
-            if !self.nonFatalIssues.contains(&issue) {
+            if !self.non_fatal_issues.contains(&issue) {
                 //
                 // Only insert if not already found in vector
                 //
                 // This preserves set-like behavior while also retaining insert-order
                 //
-                self.nonFatalIssues.push(issue);
+                self.non_fatal_issues.push(issue);
             }
         }
     }

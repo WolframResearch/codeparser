@@ -32,8 +32,8 @@ fn NodeTest_Bug1() {
     assert_eq!(NSource.start(), src!(1:1).into());
     assert_eq!(NSource.end(), src!(1:4).into());
 
-    assert_eq!(session.nonFatalIssues().len(), 0);
-    assert_eq!(session.fatalIssues().len(), 0);
+    assert_eq!(session.non_fatal_issues().len(), 0);
+    assert_eq!(session.fatal_issues().len(), 0);
 }
 
 #[test]

@@ -798,8 +798,8 @@ fn create_parse_result<N>(
     let result = ParseResult {
         syntax: nodes,
         unsafe_character_encoding: tokenizer.unsafe_character_encoding_flag,
-        fatal_issues: tokenizer.fatalIssues.clone(),
-        non_fatal_issues: tokenizer.nonFatalIssues.clone(),
+        fatal_issues: tokenizer.fatal_issues.clone(),
+        non_fatal_issues: tokenizer.non_fatal_issues.clone(),
         tracked: tokenizer.tracked.clone(),
     };
 
