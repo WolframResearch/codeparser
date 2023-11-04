@@ -1,9 +1,6 @@
 use crate::{
     read::Reader,
-    read::{
-        code_point::CodePoint,
-        wl_character::{Escape, WLCharacter},
-    },
+    read::{code_point::CodePoint, Escape, WLCharacter},
     source::TOPLEVEL,
     ParseOptions,
 };

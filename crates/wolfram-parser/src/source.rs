@@ -14,7 +14,7 @@ use crate::{
             CodePoint::{self, Char, *},
             CODEPOINT_DEL, CODEPOINT_ESC, *,
         },
-        wl_character::{Escape, WLCharacter},
+        Escape, WLCharacter,
     },
     tokenize::tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
     utils::non_zero_u32_incr,

@@ -13,29 +13,33 @@ use crate::{
 
 /// The 8 styles of character escapes
 ///
-/// * None: just regular characters: a, b, c, etc.
-/// * Raw: Using the `\[Raw]` style: `\[RawWedge]`, `\[RawAt]`, etc.
-/// * Single: A single backslash: `\n`, `\t`, `\r`, etc.
-/// * Hex2: `\.xx` style
-/// * Hex4: `\:xxxx` style
-/// * Hex6: `\|xxxxxx` style
-/// * Octal: `\xxx` style
-/// * LongName: Using `\[XX]` style: `\[Alpha]`, `\[Beta]`, etc.
+/// * [`None`][Escape::None]: just regular characters: a, b, c, etc.
+/// * [`Raw`][Escape::Raw]: Using the `\[Raw]` style: `\[RawWedge]`, `\[RawAt]`, etc.
+/// * [`Single`][Escape::Single]: A single backslash: `\n`, `\t`, `\r`, etc.
+/// * [`Hex2`][Escape::Hex2]: `\.xx` style
+/// * [`Hex4`][Escape::Hex4]: `\:xxxx` style
+/// * [`Hex6`][Escape::Hex6]: `\|xxxxxx` style
+/// * [`Octal`][Escape::Octal]: `\xxx` style
+/// * [`LongName`][Escape::LongName]: Using `\[XX]` style: `\[Alpha]`, `\[Beta]`, etc.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub(crate) enum Escape {
+pub enum Escape {
     None,
     Raw,
+    /// Allowed only for characters inside strings or linear syntax.
     Single,
     Hex2,
     Hex4,
     Hex6,
     Octal,
+    /// Named character.
+    ///
+    /// See also: [Listing of Named Characters](https://reference.wolfram.com/language/guide/ListingOfNamedCharacters.html)
     LongName,
 }
 
 /// A single WL character
 ///
-/// The text `\[Alpha]` would be 1 `WLCharacter`
+/// The text `\[Alpha]` would be 1 `WLCharacter`, with [`Escape::LongName`]
 #[derive(Copy, Clone, PartialEq)]
 pub struct WLCharacter {
     pub(crate) point: CodePoint,
@@ -72,10 +76,38 @@ impl Debug for WLCharacter {
 }
 
 impl WLCharacter {
-    pub(crate) fn new<T: Into<CodePoint>>(val: T) -> Self {
+    pub fn new<T: Into<CodePoint>>(val: T) -> Self {
         WLCharacter::new_with_escape(val.into(), Escape::None)
     }
 
+    /// Construct a [`WLCharacter`] that was escaped in the input.
+    ///
+    /// # Example
+    ///
+    /// Show different ways of escaping the same character for input:
+    ///
+    /// ```
+    /// use wolfram_parser::read::{WLCharacter, Escape};
+    ///
+    /// assert_eq!(WLCharacter::new('π').to_string(), "π");
+    /// assert_eq!(WLCharacter::escaped('π', Escape::LongName).to_string(), "\\[Pi]");
+    /// assert_eq!(WLCharacter::escaped('π', Escape::Hex4).to_string(), "\\:03c0");
+    ///
+    /// assert_eq!(WLCharacter::new('\t').to_string(), "	");
+    /// // ASCII 0x09
+    /// assert_eq!(WLCharacter::escaped('\t', Escape::Hex2).to_string(), "\\.09");
+    /// assert_eq!(WLCharacter::escaped('\t', Escape::Raw).to_string(), "\t");
+    /// assert_eq!(WLCharacter::escaped('\t', Escape::LongName).to_string(), "\\[RawTab]");
+    /// ```
+    pub fn escaped<C: Into<CodePoint>>(point: C, escape: Escape) -> Self {
+        Self {
+            point: point.into(),
+            escape,
+        }
+    }
+
+    // TODO(cleanup): Remove this method in favor of using `escaped()`
+    //                everywhere.
     pub(crate) fn new_with_escape<T: Into<CodePoint>>(
         val: T,
         escape: Escape,
@@ -188,7 +220,7 @@ impl Display for WLCharacter {
                     Char(CODEPOINT_LINEARSYNTAX_UNDER) => '_',
                     Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => '`',
                     CodePoint::LinearSyntax_Space => ' ',
-                    _ => todo!(),
+                    _ => panic!("Unable to format code point as Escape::Single: `{i:?}`"),
                 };
 
                 let source_char = SourceCharacter::from(source_char);

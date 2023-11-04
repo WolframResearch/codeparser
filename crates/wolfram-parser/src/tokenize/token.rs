@@ -7,6 +7,21 @@ use crate::{
 
 pub(crate) type TokenRef<'i> = Token<TokenStr<'i>>;
 
+/// Minimal syntactically-meaningful piece of Wolfram Language input.
+///
+/// Examples of common and not-so-common portions of input that constitute a
+/// single token include:
+///
+/// Input        | [`TokenKind`] Variant                       | Notes
+/// -------------|---------------------------------------------|--------
+/// `abc`        | [`Symbol`][TokenKind::Symbol]               | Wolfram Language symbol
+/// `123`        | [`Integer`][TokenKind::Integer]             |
+/// `1.2`        | [`Integer`][TokenKind::Real]                |
+/// `[`          | [`OpenSquare`][TokenKind::OpenSquare]       | Function call opener
+/// `_`          | [`Under`][TokenKind::Under]                 |
+/// `/@`         | [`SlashAt`][TokenKind::SlashAt]             |
+/// `\[Alpha]bc` | [`Symbol`][TokenKind::Symbol]               | Letterlike named character
+/// `\[Rule]`    | [`LongName_Rule`][TokenKind::LongName_Rule] | Operator named character
 #[derive(Copy, Clone, PartialEq)]
 pub struct Token<I = TokenString, S = Span> {
     pub tok: TokenKind,
@@ -216,7 +231,42 @@ fn test_token_size() {
 }
 
 impl<'i> TokenRef<'i> {
-    pub(crate) fn new(
+    /// Construct a new [`Token`] with borrowed input string.
+    ///
+    /// # Example
+    ///
+    /// Construct the token representing the input `123`:
+    ///
+    /// ```
+    /// use wolfram_parser::{tokenize::{Token, TokenKind}, source::Span};
+    ///
+    /// let token = Token::new(TokenKind::Integer, "123", Span::unknown());
+    /// ```
+    ///
+    /// Alternatively, the [`token!()`][crate::macros::token] macro can
+    /// be used as a convenient way to construct tokens:
+    ///
+    /// ```
+    /// use wolfram_parser::macros::token;
+    ///
+    /// let token = token!(Integer, "123", 1:1-4);
+    /// ```
+    pub fn new<S>(kind: TokenKind, input: &'i str, src: S) -> Self
+    where
+        S: Into<Span>,
+    {
+        Token {
+            tok: kind,
+            input: TokenStr {
+                buf: BufferAndLength {
+                    buf: input.as_bytes(),
+                },
+            },
+            src: src.into(),
+        }
+    }
+
+    pub(crate) fn new2(
         tok: TokenKind,
         buf: BufferAndLength<'i>,
         src: Span,

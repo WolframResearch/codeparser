@@ -5,7 +5,7 @@ use crate::{
     issue::CodeAction,
     read::{
         code_point::{CodePoint::Char, *},
-        wl_character::{Escape, WLCharacter},
+        Escape, WLCharacter,
     },
     source::Span,
 };

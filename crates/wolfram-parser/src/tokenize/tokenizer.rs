@@ -10,8 +10,7 @@ use crate::{
             CodePoint::{Char, *},
             *,
         },
-        wl_character::{Escape, WLCharacter},
-        InputMark, Reader,
+        Escape, InputMark, Reader, WLCharacter,
     },
     source::{
         Buffer, BufferAndLength, Location, NextPolicy, SourceCharacter, Span,
@@ -345,7 +344,7 @@ impl<'i> Tokenizer<'i> {
 
         let span = self.get_token_span(start.loc);
 
-        Token::new(tok, buf, span)
+        Token::new2(tok, buf, span)
     }
 
     /// Construct a new token whose source buffer and location are exactly the
@@ -365,7 +364,7 @@ impl<'i> Tokenizer<'i> {
 
         let span = Span::at(at.loc);
 
-        Token::new(tok, buf, span)
+        Token::new2(tok, buf, span)
     }
 
     fn get_token_span(&self, tok_start_loc: Location) -> Span {
@@ -1660,7 +1659,7 @@ fn Tokenizer_handleString_stringifyAsTag<'i>(
     // Something like  a::5
     //
 
-    return Token::new(
+    return Token::new2(
         TokenKind::Error_ExpectedTag,
         BufferAndLength::from_buffer_with_len(token_start.buf, 0),
         Span::at(token_start.loc),
