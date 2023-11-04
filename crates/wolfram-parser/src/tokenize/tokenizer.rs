@@ -121,6 +121,7 @@ impl<'i> Tokenizer<'i> {
             src_convention: _,
             encoding_mode: _,
             tab_width: _,
+            check_issues: _,
             quirk_settings: _,
         } = *opts;
 
@@ -1093,7 +1094,7 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
 ) -> TokenRef<'i> {
     assert!(c.isStrangeWhitespace());
 
-    if feature::CHECK_ISSUES {
+    if session.check_issues {
         add_unexpected_char_issue(
             session,
             c,
@@ -1267,7 +1268,7 @@ fn Tokenizer_handleSymbol<'i>(
             break;
         }
 
-        if feature::CHECK_ISSUES && policy.contains(INSIDE_SLOT) {
+        if session.check_issues && policy.contains(INSIDE_SLOT) {
             //
             // Something like  #`a
             //
@@ -1339,59 +1340,61 @@ fn Tokenizer_handleSymbolSegment<'i>(
 ) -> WLCharacter {
     assert!(c.isLetterlike() || c.isMBLetterlike());
 
-    #[cfg(feature = "CHECK_ISSUES")]
-    if c.to_point() == '$' {
-        if policy.contains(INSIDE_SLOT) {
-            //
-            // Something like  #$a
-            //
+    if session.check_issues {
+        if c.to_point() == '$' {
+            if policy.contains(INSIDE_SLOT) {
+                //
+                // Something like  #$a
+                //
 
-            let I = SyntaxIssue(
-                IssueTag::UndocumentedSlotSyntax,
-                "The name following ``#`` is not documented to allow the ``$`` character."
-                    .to_owned(),
-                Severity::Warning,
-                session.get_token_span(charLoc),
-                0.33,
-                vec![],
-                vec![],
-            );
+                let I = SyntaxIssue(
+                    IssueTag::UndocumentedSlotSyntax,
+                    "The name following ``#`` is not documented to allow the ``$`` character."
+                        .to_owned(),
+                    Severity::Warning,
+                    session.get_token_span(charLoc),
+                    0.33,
+                    vec![],
+                    vec![],
+                );
 
-            session.addIssue(I);
-        }
-    } else if c.isStrangeLetterlike() {
-        add_unexpected_char_issue(
-            session,
-            c,
-            charLoc,
-            IssueTag::UnexpectedLetterlikeCharacter,
-            0.85,
-        )
-    } else if c.isMBStrangeLetterlike() {
-        add_unexpected_char_issue(
-            session,
-            c,
-            charLoc,
-            IssueTag::UnexpectedLetterlikeCharacter,
-            0.80,
-        )
-    } else if !c.isAlpha() {
-        if policy.contains(INSIDE_STRINGIFY_AS_TAG) {
-            //
-            // Something like  a::\[Beta]
-            //
-
-            let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
-                "The tag has non-alphanumeric source characters.".to_owned(),
-                Severity::Warning,
-                Span::new(charLoc, session.SrcLoc),
+                session.addIssue(I);
+            }
+        } else if c.isStrangeLetterlike() {
+            add_unexpected_char_issue(
+                session,
+                c,
+                charLoc,
+                IssueTag::UnexpectedLetterlikeCharacter,
                 0.85,
-                vec![],
-                vec![],
-            );
+            )
+        } else if c.isMBStrangeLetterlike() {
+            add_unexpected_char_issue(
+                session,
+                c,
+                charLoc,
+                IssueTag::UnexpectedLetterlikeCharacter,
+                0.80,
+            )
+        } else if !c.isAlpha() {
+            if policy.contains(INSIDE_STRINGIFY_AS_TAG) {
+                //
+                // Something like  a::\[Beta]
+                //
 
-            session.addIssue(I);
+                let I = SyntaxIssue(
+                    IssueTag::UnexpectedCharacter,
+                    "The tag has non-alphanumeric source characters."
+                        .to_owned(),
+                    Severity::Warning,
+                    Span::new(charLoc, session.SrcLoc),
+                    0.85,
+                    vec![],
+                    vec![],
+                );
+
+                session.addIssue(I);
+            }
         }
     }
 
@@ -1409,59 +1412,60 @@ fn Tokenizer_handleSymbolSegment<'i>(
         } else if c.isLetterlike() || c.isMBLetterlike() {
             Tokenizer_nextWLCharacter(session, token_start, policy);
 
-            #[cfg(feature = "CHECK_ISSUES")]
-            if c.to_point() == '$' {
-                if policy.contains(INSIDE_SLOT) {
-                    //
-                    // Something like  #$a
-                    //
+            if session.check_issues {
+                if c.to_point() == '$' {
+                    if policy.contains(INSIDE_SLOT) {
+                        //
+                        // Something like  #$a
+                        //
 
-                    let I = SyntaxIssue(
-                        IssueTag::UndocumentedSlotSyntax,
-                        format!("The name following ``#`` is not documented to allow the ``$`` character."),
-                        Severity::Warning,
-                        session.get_token_span( charLoc),
-                        0.33,
-                        vec![],
-                        vec![],
-                    );
+                        let I = SyntaxIssue(
+                            IssueTag::UndocumentedSlotSyntax,
+                            format!("The name following ``#`` is not documented to allow the ``$`` character."),
+                            Severity::Warning,
+                            session.get_token_span( charLoc),
+                            0.33,
+                            vec![],
+                            vec![],
+                        );
 
-                    session.addIssue(I);
-                }
-            } else if c.isStrangeLetterlike() {
-                add_unexpected_char_issue(
-                    session,
-                    c,
-                    charLoc,
-                    IssueTag::UnexpectedLetterlikeCharacter,
-                    0.85,
-                )
-            } else if c.isMBStrangeLetterlike() {
-                add_unexpected_char_issue(
-                    session,
-                    c,
-                    charLoc,
-                    IssueTag::UnexpectedLetterlikeCharacter,
-                    0.80,
-                )
-            } else if !c.isAlphaOrDigit() {
-                if policy.contains(INSIDE_STRINGIFY_AS_TAG) {
-                    //
-                    // Something like  a::b\[Beta]
-                    //
-
-                    let I = SyntaxIssue(
-                        IssueTag::UnexpectedCharacter,
-                        "The tag has non-alphanumeric source characters."
-                            .to_owned(),
-                        Severity::Warning,
-                        Span::new(charLoc, session.SrcLoc),
+                        session.addIssue(I);
+                    }
+                } else if c.isStrangeLetterlike() {
+                    add_unexpected_char_issue(
+                        session,
+                        c,
+                        charLoc,
+                        IssueTag::UnexpectedLetterlikeCharacter,
                         0.85,
-                        vec![],
-                        vec![],
-                    );
+                    )
+                } else if c.isMBStrangeLetterlike() {
+                    add_unexpected_char_issue(
+                        session,
+                        c,
+                        charLoc,
+                        IssueTag::UnexpectedLetterlikeCharacter,
+                        0.80,
+                    )
+                } else if !c.isAlphaOrDigit() {
+                    if policy.contains(INSIDE_STRINGIFY_AS_TAG) {
+                        //
+                        // Something like  a::b\[Beta]
+                        //
 
-                    session.addIssue(I);
+                        let I = SyntaxIssue(
+                            IssueTag::UnexpectedCharacter,
+                            "The tag has non-alphanumeric source characters."
+                                .to_owned(),
+                            Severity::Warning,
+                            Span::new(charLoc, session.SrcLoc),
+                            0.85,
+                            vec![],
+                            vec![],
+                        );
+
+                        session.addIssue(I);
+                    }
                 }
             }
 
@@ -1492,7 +1496,7 @@ fn Tokenizer_handleString<'i>(
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '"');
 
-    if feature::CHECK_ISSUES && policy.contains(INSIDE_SLOT) {
+    if session.check_issues && policy.contains(INSIDE_SLOT) {
         //
         // Something like  #"a"
         //
@@ -1516,7 +1520,7 @@ fn Tokenizer_handleString<'i>(
 
     if feature::FAST_STRING_SCAN
         && !feature::COMPUTE_OOB
-        && !feature::CHECK_ISSUES
+        && !session.check_issues
         && !feature::COMPUTE_SOURCE
     {
         //
@@ -1960,8 +1964,7 @@ fn Tokenizer_handleNumber<'i>(
         }
 
         if policy.contains(INTEGER_SHORT_CIRCUIT) {
-            #[cfg(feature = "CHECK_ISSUES")]
-            if c.to_point() == '.' {
+            if session.check_issues && c.to_point() == '.' {
                 //
                 // Something like  #2.a
                 //
@@ -2413,7 +2416,7 @@ fn Tokenizer_handleNumber<'i>(
 
                         sign = true;
 
-                        if feature::CHECK_ISSUES {
+                        if session.check_issues {
                             if accuracy {
                                 //
                                 // do not warn about 1.2``+3 for now
@@ -2443,7 +2446,7 @@ fn Tokenizer_handleNumber<'i>(
 
                         sign = true;
 
-                        if feature::CHECK_ISSUES {
+                        if session.check_issues {
                             if accuracy {
                                 //
                                 // do not warn about 1.2``+.3 for now
@@ -3014,8 +3017,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
         );
 
         if handled > 0 {
-            #[cfg(feature = "CHECK_ISSUES")]
-            if c.to_point() == '.' {
+            if session.check_issues && c.to_point() == '.' {
                 //
                 // Something like  1.2.3
                 //
@@ -3049,7 +3051,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
 }
 
 fn Tokenizer_backupAndWarn<'i>(session: &mut Tokenizer<'i>, reset: InputMark) {
-    if feature::CHECK_ISSUES {
+    if session.check_issues {
         let mut Actions: Vec<CodeAction> = Vec::new();
 
         Actions.push(CodeAction::insert_text(
@@ -3448,7 +3450,7 @@ fn Tokenizer_handleUnder<'i>(
 
             Tokenizer_nextWLCharacter(session, token_start, policy);
 
-            if feature::CHECK_ISSUES {
+            if session.check_issues {
                 let afterLoc = session.SrcLoc;
 
                 c = Tokenizer_currentWLCharacter(session, token_start, policy);
@@ -3674,7 +3676,7 @@ fn Tokenizer_handleMinus<'i>(
 
             Tokenizer_nextWLCharacter(session, token_start, policy);
 
-            if feature::CHECK_ISSUES {
+            if session.check_issues {
                 let afterLoc = session.SrcLoc;
 
                 c = Tokenizer_currentWLCharacter(session, token_start, policy);
@@ -3794,7 +3796,7 @@ fn Tokenizer_handleBar<'i>(
 
             Tokenizer_nextWLCharacter(session, token_start, policy);
 
-            if feature::CHECK_ISSUES {
+            if session.check_issues {
                 let afterLoc = session.SrcLoc;
 
                 c = Tokenizer_currentWLCharacter(session, token_start, policy);
@@ -4245,7 +4247,7 @@ fn Tokenizer_handlePlus<'i>(
 
             Tokenizer_nextWLCharacter(session, token_start, policy);
 
-            if feature::CHECK_ISSUES {
+            if session.check_issues {
                 c = Tokenizer_currentWLCharacter(session, token_start, policy);
 
                 if c.to_point() == '=' {
@@ -4646,7 +4648,7 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
 ) -> TokenRef<'i> {
     assert!(c.isMBStrangeNewline());
 
-    if feature::CHECK_ISSUES {
+    if session.check_issues {
         add_unexpected_char_issue(
             session,
             c,
@@ -4670,7 +4672,7 @@ fn Tokenizer_handleMBStrangeWhitespace<'i>(
 ) -> TokenRef<'i> {
     assert!(c.isMBStrangeWhitespace());
 
-    if feature::CHECK_ISSUES {
+    if session.check_issues {
         add_unexpected_char_issue(
             session,
             c,

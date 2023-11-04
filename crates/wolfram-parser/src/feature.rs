@@ -38,8 +38,6 @@ pub(crate) const COMPUTE_OOB: bool = cfg!(feature = "COMPUTE_OOB");
 
 pub(crate) const COMPUTE_SOURCE: bool = cfg!(feature = "COMPUTE_SOURCE");
 
-pub(crate) const CHECK_ISSUES: bool = cfg!(feature = "CHECK_ISSUES");
-
 pub(crate) const CHECK_ABORT: bool = cfg!(feature = "CHECK_ABORT");
 
 pub(crate) const FAST_STRING_SCAN: bool = cfg!(feature = "FAST_STRING_SCAN");

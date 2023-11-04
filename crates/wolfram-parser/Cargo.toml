@@ -15,14 +15,13 @@ bench = false
 
 [features]
 COMPUTE_SOURCE = []
-CHECK_ISSUES = []
 COMPUTE_OOB = []
 FAST_STRING_SCAN = []
 
 # Features used when building the LibraryLink dynamic library.
 CHECK_ABORT = ["wolfram-library-link"]
 
-default = ["COMPUTE_SOURCE", "CHECK_ISSUES", "COMPUTE_OOB"]
+default = ["COMPUTE_SOURCE", "COMPUTE_OOB"]
 
 
 [dependencies]

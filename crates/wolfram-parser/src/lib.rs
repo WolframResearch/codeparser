@@ -275,6 +275,7 @@ pub struct ParseOptions {
     src_convention: SourceConvention,
     encoding_mode: EncodingMode,
     tab_width: u32,
+    check_issues: bool,
     pub quirk_settings: QuirkSettings,
 }
 
@@ -285,6 +286,7 @@ impl Default for ParseOptions {
             src_convention: SourceConvention::LineColumn,
             encoding_mode: EncodingMode::Normal,
             tab_width: DEFAULT_TAB_WIDTH,
+            check_issues: true,
             quirk_settings: QuirkSettings::default(),
         }
     }
@@ -305,6 +307,7 @@ impl ParseOptions {
             src_convention,
             encoding_mode,
             tab_width,
+            check_issues: true,
             quirk_settings,
         }
     }
