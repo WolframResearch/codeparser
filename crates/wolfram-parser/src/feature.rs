@@ -3,7 +3,7 @@
 //! The constants in this module are intended to be used as:
 //!
 //! ```ignore
-//! if feature::COMPUTE_OOB {
+//! if feature::CHECK_ABORT {
 //!     // ...
 //! }
 //! ```
@@ -11,14 +11,14 @@
 //! Using these constants is preferred over the standard alternatives of:
 //!
 //! ```ignore
-//! #[cfg(feature = "COMPUTE_OOB")]
+//! #[cfg(feature = "CHECK_ABORT")]
 //! // ...
 //! ```
 //!
 //! or:
 //!
 //! ```ignore
-//! if cfg!(feature = "COMPUTE_OOB") {
+//! if cfg!(feature = "CHECK_ABORT") {
 //!     // ...
 //! }
 //! ```
@@ -33,8 +33,6 @@
 //!
 //! This makes code controlled by feature flags easier to keep up-to-date as
 //! refactoring occurs.
-
-pub(crate) const COMPUTE_OOB: bool = cfg!(feature = "COMPUTE_OOB");
 
 pub(crate) const COMPUTE_SOURCE: bool = cfg!(feature = "COMPUTE_SOURCE");
 

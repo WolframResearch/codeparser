@@ -40,6 +40,7 @@ pub(crate) struct Reader<'i> {
 
     pub(crate) tab_width: u32,
     pub(crate) check_issues: bool,
+    pub(crate) compute_oob: bool,
 
     encoding_mode: EncodingMode,
 
@@ -79,6 +80,7 @@ impl<'i> Reader<'i> {
             encoding_mode,
             tab_width,
             check_issues,
+            compute_oob,
             quirk_settings: _,
         } = *opts;
 
@@ -90,6 +92,7 @@ impl<'i> Reader<'i> {
 
             tab_width,
             check_issues,
+            compute_oob,
             encoding_mode,
 
             fatal_issues: Vec::new(),
