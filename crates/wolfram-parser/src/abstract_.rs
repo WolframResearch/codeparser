@@ -611,22 +611,14 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 BinaryOperator::MapApply => {
                     // TID:231104/1: OldAtAtAt quirk cases
                     if quirks::is_quirk_enabled(Quirk::OldAtAtAt) {
-                        let group = GroupNode(OperatorNode {
-                            op: GroupOperator::List,
-                            children: NodeSeq(vec![
-                                agg::WL!(LeafNode[OpenCurly, "{", <||>]),
-                                agg::WL!(ToNode[1]),
-                                agg::WL!(LeafNode[CloseCurly, "}", <||>]),
-                            ]),
-                            src: S::unknown(),
-                        });
+                        let level = WL!( CallNode[ToNode[List], { ToNode_Integer(1) }, <||>]);
 
                         WL!(CallNode[
                             ToNode[Apply],
                             {
                                 abstract_(left),
                                 abstract_(right),
-                                abstract_(Cst::Group(group))
+                                level
                             },
                             data
                         ])
