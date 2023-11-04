@@ -1600,7 +1600,7 @@ enum Negated<I, S> {
     InfixTimesSeq(NodeSeq<Cst<I, S>>),
 }
 
-impl<I: TokenInput, S> Negated<I, S> {
+impl<I: TokenInput, S: TokenSource> Negated<I, S> {
     fn into_cst(self, data: S) -> Cst<TokenString, S> {
         match self {
             Negated::Integer0 => {
@@ -1615,10 +1615,15 @@ impl<I: TokenInput, S> Negated<I, S> {
 
                 agg::WL!( LeafNode[Real, format!("-{str}"), data] )
             },
-            Negated::InfixTimesSeq(children) => {
+            Negated::InfixTimesSeq(NodeSeq(children)) => {
+                let children = join(
+                    [agg::WL!(ToNode[-1]), agg::WL!(LeafNode[Star, "*", <||>])],
+                    children,
+                );
+
                 let infix = InfixNode(OperatorNode {
                     op: InfixOperator::Times,
-                    children: children.into_owned_input(),
+                    children: NodeSeq(children).into_owned_input(),
                     src: data,
                 });
 
@@ -1712,11 +1717,6 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
         src: _,
     })) = node.clone()
     {
-        let children = join(
-            [agg::WL!(ToNode[-1]), agg::WL!(LeafNode[Star, "*", <||>])],
-            children,
-        );
-
         return Negated::InfixTimesSeq(NodeSeq(children));
     }
 
@@ -1724,11 +1724,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
     // Otherwise, returns a Times[-1, node] expression
     //------------------------------------------------
 
-    let children = NodeSeq(vec![
-        agg::WL!(ToNode[-1]),
-        agg::WL!(LeafNode[Star, "*", <||>]),
-        node,
-    ]);
+    let children = NodeSeq(vec![node]);
 
     Negated::InfixTimesSeq(children)
 }
