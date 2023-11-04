@@ -26,7 +26,7 @@ use crate::{
     source::{Source, SourceConvention},
     tokenize,
     tokenize::{Token, TokenKind as TK, TokenStr, TokenString},
-    FirstLineBehavior, NodeSeq, ParseOptions, Tokens,
+    FirstLineBehavior, NodeSeq, ParseOptions,
 };
 
 pub(crate) fn nodes(input: &str) -> Vec<Cst<TokenStr>> {
@@ -37,7 +37,7 @@ pub(crate) fn nodes(input: &str) -> Vec<Cst<TokenStr>> {
 }
 
 pub(crate) fn tokens(input: &str) -> Vec<Token<TokenStr>> {
-    let Tokens(tokens) = tokenize(input, &ParseOptions::default());
+    let NodeSeq(tokens) = tokenize(input, &ParseOptions::default());
 
     tokens
 }
@@ -580,7 +580,7 @@ fn test_first_line_behavior() {
             &ParseOptions::default()
                 .first_line_behavior(FirstLineBehavior::Check)
         ),
-        Tokens(vec![
+        NodeSeq(vec![
             token![Integer, "1", src!(1:1-1:2)],
             token![Plus, "+", src!(1:2-1:3)],
             token![Integer, "2", src!(1:3-1:4)],
@@ -595,7 +595,7 @@ fn test_first_line_behavior() {
             &ParseOptions::default()
                 .first_line_behavior(FirstLineBehavior::Check)
         ),
-        Tokens(vec![
+        NodeSeq(vec![
             token![Integer, "1", src!(2:1-2:2)],
             token![Plus, "+", src!(2:2-2:3)],
             token![Integer, "2", src!(2:3-2:4)],

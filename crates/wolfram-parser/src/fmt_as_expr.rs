@@ -15,7 +15,7 @@ use crate::{
     symbol::Symbol,
     symbols as sym,
     tokenize::{Token, TokenInput, TokenSource},
-    NodeSeq, Tokens,
+    NodeSeq,
 };
 
 pub struct FmtAsExpr<T>(pub T);
@@ -47,24 +47,6 @@ impl<I: TokenInput, S: TokenSource> Display
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let FmtAsExpr(NodeSeq(tokens)) = self;
-
-        write!(f, "{}", sym::List.as_str())?;
-        write!(f, "[")?;
-
-        for token in tokens {
-            write!(f, "{}", FmtAsExpr(token))?;
-            write!(f, ", ")?;
-        }
-
-        write!(f, "]")?;
-
-        Ok(())
-    }
-}
-
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&Tokens<I, S>> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let FmtAsExpr(Tokens(tokens)) = self;
 
         write!(f, "{}", sym::List.as_str())?;
         write!(f, "[")?;

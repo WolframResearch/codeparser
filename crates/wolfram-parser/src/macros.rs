@@ -111,11 +111,11 @@ macro_rules! __src {
 /// use wolfram_parser::{
 ///     tokenize_bytes,
 ///     ParseOptions,
-///     Tokens,
+///     NodeSeq,
 ///     macros::{src, token}
 /// };
 ///
-/// let Tokens(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).unwrap();
+/// let NodeSeq(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).unwrap();
 ///
 /// assert_eq!(tokens, &[
 ///     token!(Symbol, b"foo", 1:1-1:4),

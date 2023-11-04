@@ -17,9 +17,9 @@ use wolfram_parser::{
     source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbols as sym,
-    tokenize::{Token, TokenInput, TokenKind, TokenSource, TokenStr},
+    tokenize::{Token, TokenInput, TokenKind, TokenSource},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult,
-    Tokens, UnsafeCharacterEncoding,
+    UnsafeCharacterEncoding,
 };
 
 use crate::from_expr::List;
@@ -615,23 +615,6 @@ impl<N: WstpPut> WstpPut for NodeSeq<N> {
             }
 
             C.put(callLink)
-        }
-    }
-}
-
-impl<'i> WstpPut for Tokens<TokenStr<'i>> {
-    fn put(&self, link: &mut wstp::Link) {
-        let Tokens(tokens) = self;
-
-        link.put_function(sym::List.as_str(), tokens.len()).unwrap();
-
-        for token in tokens {
-            if crate::feature::CHECK_ABORT && crate::abortQ() {
-                Symbol_put(sym::_Aborted, link);
-                continue;
-            }
-
-            token.put(link);
         }
     }
 }

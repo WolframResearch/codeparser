@@ -12,7 +12,7 @@ use crate::{
     },
     tokenize::{Token, TokenKind, TokenStr},
     utils::{non_zero_u32_add, non_zero_u32_incr},
-    NodeSeq, Tokens,
+    NodeSeq,
 };
 
 pub(crate) fn reparse_unterminated<'i>(
@@ -36,14 +36,14 @@ pub(crate) fn reparse_unterminated<'i>(
 
 // TODO(test): Add test cases that cover this code path.
 pub(crate) fn reparse_unterminated_tokens<'i>(
-    tokens: Tokens<TokenStr<'i>>,
+    tokens: NodeSeq<Token<TokenStr<'i>>>,
     input: &'i str,
     tab_width: usize,
-) -> Tokens<TokenStr<'i>> {
+) -> NodeSeq<Token<TokenStr<'i>>> {
     // TODO(cleanup): Change function parameter to take tab width as u32.
     let tab_width = u32::try_from(tab_width).unwrap();
 
-    let Tokens(mut tokens) = tokens;
+    let NodeSeq(mut tokens) = tokens;
 
     for token in &mut tokens {
         if token.tok.isError() && token.tok.isUnterminated() {
@@ -51,7 +51,7 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
         }
     }
 
-    Tokens(tokens)
+    NodeSeq(tokens)
 }
 
 //==========================================================
@@ -394,7 +394,7 @@ fn split_into_chunks<'s, 'i>(lines: &'s [Line<'i>]) -> Vec<&'s [Line<'i>]> {
 fn is_new_statement_line(line: &str) -> bool {
     debug_assert!(!line.contains(&['\r', '\n']));
 
-    let crate::Tokens(tokens) = crate::tokenize(line, &Default::default());
+    let crate::NodeSeq(tokens) = crate::tokenize(line, &Default::default());
 
     let tokens: Vec<_> = tokens
         .into_iter()

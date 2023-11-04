@@ -9,13 +9,13 @@
 //!
 //! # API
 //!
-//! Operation                   | Result           | Input: `&str`       | Input: `&[u8]`
-//! ----------------------------|------------------|---------------------|----------------------
-//! Tokenization                | [`Tokens`]       | [`tokenize()`]      | [`tokenize_bytes()`]
-//! Parse concrete syntax       | [`Cst`]          | [`parse_cst()`]     | [`parse_bytes_cst()`]
-//! Parse abstract syntax       | [`Ast`]          | [`parse_ast()`]     | [`parse_bytes_ast()`]
-//! Sequence of concrete syntax | [`NodeSeq<Cst>`] | [`parse_cst_seq()`] | [`parse_bytes_cst_seq()`]
-//! Sequence of abstract syntax | [`NodeSeq<Ast>`] | [`parse_ast_seq()`] | [`parse_bytes_ast_seq()`]
+//! Operation                   | Result             | Input: `&str`       | Input: `&[u8]`
+//! ----------------------------|--------------------|---------------------|----------------------
+//! Tokenization                | [`NodeSeq<Token>`] | [`tokenize()`]      | [`tokenize_bytes()`]
+//! Parse concrete syntax       | [`Cst`]            | [`parse_cst()`]     | [`parse_bytes_cst()`]
+//! Parse abstract syntax       | [`Ast`]            | [`parse_ast()`]     | [`parse_bytes_ast()`]
+//! Sequence of concrete syntax | [`NodeSeq<Cst>`]   | [`parse_cst_seq()`] | [`parse_bytes_cst_seq()`]
+//! Sequence of abstract syntax | [`NodeSeq<Ast>`]   | [`parse_ast_seq()`] | [`parse_bytes_ast_seq()`]
 //!
 
 //
@@ -128,8 +128,8 @@ use crate::{
     cst::Cst,
     issue::{CodeAction, Issue},
     parse::ParserSession,
-    source::{Source, SourceConvention, Span, DEFAULT_TAB_WIDTH},
-    tokenize::{Token, TokenStr, TokenString},
+    source::{Source, SourceConvention, DEFAULT_TAB_WIDTH},
+    tokenize::{Token, TokenStr},
 };
 
 
@@ -246,9 +246,6 @@ pub enum StringifyMode {
     File = 2,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Tokens<I = TokenString, S = Span>(pub Vec<Token<I, S>>);
-
 //--------------------------------------
 // ParseResult
 //--------------------------------------
@@ -347,11 +344,11 @@ impl ParseOptions {
 ///
 /// ```
 /// use wolfram_parser::{
-///     tokenize, ParseOptions, Tokens,
+///     tokenize, ParseOptions, NodeSeq,
 ///     macros::token
 /// };
 ///
-/// let Tokens(tokens) = tokenize("2 + 2", &ParseOptions::default());
+/// let NodeSeq(tokens) = tokenize("2 + 2", &ParseOptions::default());
 ///
 /// assert_eq!(tokens, &[
 ///     token![Integer, "2", 1:1-1:2],
@@ -364,7 +361,7 @@ impl ParseOptions {
 pub fn tokenize<'i>(
     input: &'i str,
     opts: &ParseOptions,
-) -> Tokens<TokenStr<'i>> {
+) -> NodeSeq<Token<TokenStr<'i>>> {
     tokenize_bytes(input.as_bytes(), opts)
         .expect("unexpected character encoding error tokenizing &str")
 }
@@ -373,7 +370,7 @@ pub fn tokenize<'i>(
 pub fn tokenize_bytes<'i>(
     input: &'i [u8],
     opts: &ParseOptions,
-) -> Result<Tokens<TokenStr<'i>>, UnsafeCharacterEncoding> {
+) -> Result<NodeSeq<Token<TokenStr<'i>>>, UnsafeCharacterEncoding> {
     let mut tokenizer = Tokenizer::new(input, opts);
 
     let mut tokens = Vec::new();
@@ -399,14 +396,14 @@ pub fn tokenize_bytes<'i>(
     }
 
     if let Ok(input) = std::str::from_utf8(tokenizer.input) {
-        Tokens(tokens) = crate::error::reparse_unterminated_tokens(
-            Tokens(tokens),
+        NodeSeq(tokens) = crate::error::reparse_unterminated_tokens(
+            NodeSeq(tokens),
             input,
             usize::try_from(tokenizer.tab_width).unwrap(),
         );
     }
 
-    return Ok(Tokens(tokens));
+    return Ok(NodeSeq(tokens));
 }
 
 //======================================
