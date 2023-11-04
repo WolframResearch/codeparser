@@ -1,6 +1,6 @@
 use crate::{
     abstract_::{abstract_cst, aggregate_cst},
-    ast::Ast,
+    ast::{Ast, AstMetadata},
     cst::{
         BinaryNode, BinaryOperator,
         Cst::{self, Token},
@@ -1354,6 +1354,63 @@ fn test_abstract_flatten_times_combined_with_infix_binary_at_quirk() {
                 }
             ],
             data: src!(1:1-15).into(),
+        }
+    );
+}
+
+/// TID:231104/1: OldAtAtAt quirk cases
+#[test]
+fn test_abstract_old_at_at_at_quirk() {
+    let cst = parse_cst("a @@@ b", &Default::default()).syntax;
+
+    assert_eq!(
+        cst,
+        Cst::Binary(BinaryNode(OperatorNode {
+            op: BinaryOperator::MapApply,
+            children: NodeSeq(vec![
+                Cst::Token(token!(Symbol, "a", 1:1-2)),
+                Cst::Token(token!(Whitespace, " ", 1:2-3)),
+                Cst::Token(token!(AtAtAt, "@@@", 1:3-6)),
+                Cst::Token(token!(Whitespace, " ", 1:6-7)),
+                Cst::Token(token!(Symbol, "b", 1:7-8)),
+            ]),
+            src: src!(1:1-8).into()
+        }))
+    );
+
+    let agg = aggregate_cst(cst.clone()).unwrap();
+
+    //----------------------------------
+    // OldAtAtAt Quirk: Disabled
+    //----------------------------------
+
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().old_at_at_at(false)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "MapApply", <||>)),
+            args: vec![leaf!(Symbol, "a", 1:1-2), leaf!(Symbol, "b", 1:7-8),],
+            data: src!(1:1-8).into(),
+        }
+    );
+
+    //----------------------------------
+    // OldAtAtAt Quirk: Enabled
+    //----------------------------------
+
+    assert_eq!(
+        abstract_cst(agg.clone(), QuirkSettings::default().old_at_at_at(true)),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Apply", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                leaf!(Symbol, "b", 1:7-8),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "List", <||>)),
+                    args: vec![leaf!(Integer, "1", <||>)],
+                    data: AstMetadata::empty()
+                }
+            ],
+            data: src!(1:1-8).into(),
         }
     );
 }

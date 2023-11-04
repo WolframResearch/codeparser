@@ -116,6 +116,13 @@ impl QuirkSettings {
             ..self
         }
     }
+
+    pub fn old_at_at_at(self, value: bool) -> Self {
+        QuirkSettings {
+            old_at_at_at: value,
+            ..self
+        }
+    }
 }
 
 impl Default for QuirkSettings {
