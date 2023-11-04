@@ -37,7 +37,9 @@ macro_rules! WL {
             input: I::fake("-1"),
             src: S::unknown(),
         })
-    }; (ToNode[1]) => { $crate::cst::Cst::Token($crate::tokenize::Token {
+    };
+    (ToNode[1]) => {
+        $crate::cst::Cst::Token($crate::tokenize::Token {
             tok: $crate::tokenize::TokenKind::Integer,
             input: I::fake("1"),
             src: S::unknown(),
