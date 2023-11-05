@@ -115,26 +115,24 @@ mod parse_cst;
 
 use std::fmt::Debug;
 
-use abstract_cst::{abstract_cst, aggregate_cst_seq};
-use cst::CstSeq;
-use parse_cst::ParseCst;
-use source::TOPLEVEL;
-use tokenize::{
-    tokenizer::{
-        Tokenizer_nextToken_stringifyAsFile,
-        Tokenizer_nextToken_stringifyAsTag, TrackedSourceLocations,
-    },
-    TokenKind, Tokenizer,
-};
-
 use wolfram_expr::{Expr, Number};
 
 use crate::{
+    abstract_cst::{abstract_cst, aggregate_cst_seq},
     ast::Ast,
     cst::Cst,
+    cst::CstSeq,
     issue::{CodeAction, Issue},
+    parse_cst::ParseCst,
+    source::TOPLEVEL,
     source::{Source, SourceConvention, DEFAULT_TAB_WIDTH},
-    tokenize::{Token, TokenStr},
+    tokenize::{
+        tokenizer::{
+            Tokenizer_nextToken_stringifyAsFile,
+            Tokenizer_nextToken_stringifyAsTag, TrackedSourceLocations,
+        },
+        Token, TokenKind, TokenStr, Tokenizer,
+    },
 };
 
 
