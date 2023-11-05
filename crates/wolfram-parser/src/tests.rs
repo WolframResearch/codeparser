@@ -25,7 +25,7 @@ use crate::{
     parse_bytes_cst,
     source::{Source, SourceConvention},
     tokenize,
-    tokenize::{Token, TokenInput, TokenKind as TK, TokenStr, TokenString},
+    tokenize::{Token, TokenKind as TK, TokenStr, TokenString},
     FirstLineBehavior, NodeSeq, ParseOptions, Tokens,
 };
 
@@ -616,13 +616,13 @@ fn test_abstract_parse() {
         Ast::Call {
             head: Box::new(Ast::Leaf {
                 kind: TK::Symbol,
-                input: TokenString::fake("Plus"),
+                input: TokenString::new("Plus"),
                 data: AstMetadata::empty()
             }),
             args: vec![
                 Ast::Leaf {
                     kind: TK::Integer,
-                    input: TokenString::fake("2"),
+                    input: TokenString::new("2"),
                     data: AstMetadata {
                         source: Source::Span(src!(1:1-1:2).into()),
                         issues: vec![],
@@ -630,7 +630,7 @@ fn test_abstract_parse() {
                 },
                 Ast::Leaf {
                     kind: TK::Integer,
-                    input: TokenString::fake("2"),
+                    input: TokenString::new("2"),
                     data: AstMetadata {
                         source: Source::Span(src!(1:5-1:6).into()),
                         issues: vec![],
