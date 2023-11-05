@@ -31,7 +31,6 @@ use crate::{
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum InfixOperator {
     Times,
-    Span,
     CompoundExpression,
     MessageName,
     CodeParser_InternalInvalid,
@@ -406,7 +405,6 @@ impl Operator for InfixOperator {
     fn to_symbol(&self) -> Symbol {
         match self {
             InfixOperator::Times => sym::Times,
-            InfixOperator::Span => sym::Span,
             InfixOperator::CompoundExpression => sym::CompoundExpression,
             InfixOperator::MessageName => sym::MessageName,
             InfixOperator::CodeParser_InternalInvalid => sym::CodeParser_InternalInvalid,
@@ -607,7 +605,6 @@ impl Operator for InfixOperator {
     fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Times => InfixOperator::Times,
-            sym::Span => InfixOperator::Span,
             sym::CompoundExpression => InfixOperator::CompoundExpression,
             sym::MessageName => InfixOperator::MessageName,
             sym::CodeParser_InternalInvalid => InfixOperator::CodeParser_InternalInvalid,
