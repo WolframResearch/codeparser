@@ -7,88 +7,6 @@ pub type AggNodeSeq<I = TokenString, S = Span> = NodeSeq<Cst<I, S>>;
 //==========================================================
 
 //======================================
-// WL!
-//======================================
-
-macro_rules! WL {
-    //========================
-    // ToNode[..]
-    //========================
-
-    (ToNode[$sym:ident]) => {{
-        // Sanity check that `$sym` is a System` symbol.
-        {
-            let _: $crate::symbol::Symbol = $crate::symbols::$sym;
-        }
-
-        let sym: &'static str = stringify!($sym);
-        // FIXME(optimization): make debug only
-        assert!(
-            sym.chars().next().unwrap().is_ascii_uppercase(),
-            "suspicious ToNode[{sym}] will create symbol with source {sym:?}. "
-        );
-
-        $crate::agg::WL!( LeafNode[Symbol, sym, <||>] )
-    }};
-
-    (ToNode[-1]) => {
-        $crate::cst::Cst::Token($crate::tokenize::Token {
-            tok: $crate::tokenize::TokenKind::Integer,
-            input: I::fake("-1"),
-            src: S::unknown(),
-        })
-    };
-    (ToNode[1]) => {
-        $crate::cst::Cst::Token($crate::tokenize::Token {
-            tok: $crate::tokenize::TokenKind::Integer,
-            input: I::fake("1"),
-            src: S::unknown(),
-        })
-    };
-
-    //========================
-    // LeafNode
-    //========================
-
-    (LeafNode[$token_kind:ident, $input:literal, $data:expr]) => {{
-        let input: &str = $input;
-        $crate::cst::Cst::Token(Token {
-            tok: $crate::tokenize::TokenKind::$token_kind,
-            input: I::fake(input),
-            src: $data,
-        })
-    }};
-
-    (LeafNode[$token_kind:ident, $input:expr, $data:expr]) => {{
-        let input: String = String::from($input);
-
-        $crate::cst::Cst::Token(Token {
-            tok: $crate::tokenize::TokenKind::$token_kind,
-            input: $crate::tokenize::TokenString {
-                buf: input.into_bytes(),
-            },
-            src: $data,
-        })
-    }};
-
-    //========================
-    // InfixNode
-    //========================
-
-    (InfixNode[$op:ident, { $($args:expr),*}, <||>]) => {
-        $crate::cst::Cst::Infix(
-            $crate::cst::InfixNode(
-                $crate::cst::OperatorNode {
-                    op: $crate::cst::InfixOperator::$op,
-                    children: $crate::NodeSeq(vec![$($args),*]),
-                    src: S::unknown()
-                }
-            )
-        )
-    };
-}
-
-//======================================
 // LHS!
 //======================================
 
@@ -265,4 +183,4 @@ macro_rules! LHS {
 }
 
 
-pub(crate) use {LHS, WL};
+pub(crate) use LHS;

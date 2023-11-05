@@ -336,7 +336,7 @@ macro_rules! WL {
     //========================
 
     (CallNode[ToNode[$token_kind:ident], { $($args:expr),* }, <||>]) => {
-        WL!( CallNode[ToNode[$token_kind], { $($args),* }, S::unknown()])
+        WL!( CallNode[ToNode[$token_kind], { $($args),* }, $crate::ast::AstMetadata::empty() ])
     };
     (CallNode[ToNode[$token_kind:ident], { $($args:expr),* }, $data:expr]) => {{
         $crate::ast::Ast::Call {
@@ -362,7 +362,7 @@ macro_rules! WL {
     }};
 
     (CallNode[$head:expr, { $($args:expr),* }, <||>]) => {{
-        WL!( CallNode[$head, { $($args),* }, S::unknown()] )
+        WL!( CallNode[$head, { $($args),* }, $crate::ast::AstMetadata::empty()] )
     }};
     (CallNode[$head:expr, { $($args:expr),* }, $data:expr]) => {{
         $crate::ast::Ast::Call {

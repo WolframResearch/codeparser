@@ -59,19 +59,12 @@ pub trait TokenSource: Clone {
     /// Typically this means converting a [`Span`] into a [`Source`].
     fn into_general(self) -> Source;
 
-    #[doc(hidden)]
-    fn unknown() -> Self;
-
     fn between(start: Self, end: Self) -> Self;
 }
 
 impl TokenSource for Source {
     fn into_general(self) -> Source {
         self
-    }
-
-    fn unknown() -> Self {
-        Source::unknown()
     }
 
     fn between(start: Source, end: Source) -> Self {
@@ -104,10 +97,6 @@ impl TokenSource for Source {
 impl TokenSource for Span {
     fn into_general(self) -> Source {
         Source::Span(self)
-    }
-
-    fn unknown() -> Self {
-        Span::unknown()
     }
 
     /// Construct a new [`Span`] that encloses everything between `start` and
