@@ -212,6 +212,30 @@ impl Ast {
             data: data.into(),
         }
     }
+
+    pub(crate) fn syntax_error(
+        kind: SyntaxErrorKind,
+        args: Vec<Ast>,
+        data: impl Into<AstMetadata>,
+    ) -> Self {
+        Ast::SyntaxError {
+            kind,
+            children: args,
+            data: data.into(),
+        }
+    }
+
+    pub(crate) fn abstract_syntax_error(
+        kind: AbstractSyntaxError,
+        args: Vec<Ast>,
+        data: impl Into<AstMetadata>,
+    ) -> Self {
+        Ast::AbstractSyntaxError {
+            kind,
+            args,
+            data: data.into(),
+        }
+    }
 }
 
 impl AstMetadata {
@@ -382,33 +406,6 @@ macro_rules! WL {
             data: $crate::ast::AstMetadata::from($data),
         }
     }};
-
-    //========================
-    // SyntaxErrorNode
-    //========================
-
-    (SyntaxErrorNode[$err_kind:ident, { $($args:expr),* }, $data:expr]) => {
-        $crate::ast::Ast::SyntaxError {
-            kind: $crate::cst::SyntaxErrorKind::$err_kind,
-            children: vec![$($args),*],
-            data: $crate::ast::AstMetadata::from_src($data),
-        }
-    };
-
-    //========================
-    // AbstractSyntaxErrorNode
-    //========================
-
-    (AbstractSyntaxErrorNode[$err_kind:ident, { $($args:expr),* }, $data:expr]) => {
-        WL!( AbstractSyntaxErrorNode[$err_kind, vec![$($args),*], $data] )
-    };
-    (AbstractSyntaxErrorNode[$err_kind:ident, $args:expr, $data:expr]) => {
-        $crate::ast::Ast::AbstractSyntaxError {
-            kind: $crate::ast::AbstractSyntaxError::$err_kind,
-            args: $args,
-            data: $crate::ast::AstMetadata::from_src($data),
-        }
-    };
 
     //========================
     // BoxNode

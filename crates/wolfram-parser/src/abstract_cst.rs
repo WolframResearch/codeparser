@@ -481,9 +481,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         )
                     },
                     // PrefixNode[PrefixLinearSyntaxBang, {_, rand_}, data_]
-                    [_, rand] => {
-                        WL!( AbstractSyntaxErrorNode[LinearSyntaxBang, { abstract_(rand.clone()) }, data])
-                    },
+                    [_, rand] => Ast::abstract_syntax_error(
+                        AbstractSyntaxError::LinearSyntaxBang,
+                        vec![abstract_(rand.clone())],
+                        data,
+                    ),
                     _ => unhandled(),
                 }
             },
@@ -690,12 +692,10 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         }))
                     ) =>
                 {
-                    WL!(
-                        AbstractSyntaxErrorNode[
-                            NonAssociativePatternTest,
-                            {abstract_(left), abstract_(right)},
-                            data
-                        ]
+                    Ast::abstract_syntax_error(
+                        AbstractSyntaxError::NonAssociativePatternTest,
+                        vec![abstract_(left), abstract_(right)],
+                        data,
                     )
                 },
 
@@ -874,11 +874,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
 
                         WL!(
                             CallNode[
-                                WL!(AbstractSyntaxErrorNode[
-                                    CommaTopLevel,
+                                Ast::abstract_syntax_error(
+                                    AbstractSyntaxError::CommaTopLevel,
                                     abstractedMiddle_2,
                                     abstractedMiddle_3
-                                ]),
+                                ),
                                 { abstract_(left), abstract_(right)},
                                 data
                             ]
@@ -960,7 +960,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             let comma_children =
                                 abstract_cst_seq(NodeSeq(comma_children));
 
-                            WL!( AbstractSyntaxErrorNode[OpenParen, comma_children, data] )
+                            Ast::abstract_syntax_error(
+                                AbstractSyntaxError::OpenParen,
+                                comma_children,
+                                data,
+                            )
                         },
 
                         // GroupNode[GroupParen, { _, child_, _}, data_]
@@ -974,7 +978,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
 
                             let children = abstract_cst_seq(NodeSeq(children));
 
-                            WL!( AbstractSyntaxErrorNode[OpenParen, children, data] )
+                            Ast::abstract_syntax_error(
+                                AbstractSyntaxError::OpenParen,
+                                children,
+                                data,
+                            )
                         },
                     }
                 },
@@ -1003,16 +1011,24 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             let comma_children =
                                 abstract_cst_seq(NodeSeq(comma_children));
 
-                            WL!( AbstractSyntaxErrorNode[OpenSquare, comma_children, data] )
+                            Ast::abstract_syntax_error(
+                                AbstractSyntaxError::OpenSquare,
+                                comma_children,
+                                data,
+                            )
                         },
                         // GroupNode[GroupSquare, {_, child_, _}, data_]
-                        [_, child, _] => {
-                            WL!( AbstractSyntaxErrorNode[OpenSquare, { abstract_(child.clone()) }, data] )
-                        },
+                        [_, child, _] => Ast::abstract_syntax_error(
+                            AbstractSyntaxError::OpenSquare,
+                            vec![abstract_(child.clone())],
+                            data,
+                        ),
                         // GroupNode[GroupSquare, {_, _}, data_]
-                        [_, _] => {
-                            WL!( AbstractSyntaxErrorNode[OpenSquare, {}, data] )
-                        },
+                        [_, _] => Ast::abstract_syntax_error(
+                            AbstractSyntaxError::OpenSquare,
+                            vec![],
+                            data,
+                        ),
                         _ => unhandled(),
                     }
                 },
@@ -1033,16 +1049,24 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             let comma_children =
                                 abstract_cst_seq(NodeSeq(comma_children));
 
-                            WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, comma_children, data] )
+                            Ast::abstract_syntax_error(
+                                AbstractSyntaxError::ColonColonOpenSquare,
+                                comma_children,
+                                data,
+                            )
                         },
                         // GroupNode[GroupTypeSpecifier, {_, child_, _}, data_]
-                        [_, child, _] => {
-                            WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, { abstract_(child.clone()) }, data] )
-                        },
+                        [_, child, _] => Ast::abstract_syntax_error(
+                            AbstractSyntaxError::ColonColonOpenSquare,
+                            vec![abstract_(child.clone())],
+                            data,
+                        ),
                         // GroupNode[GroupTypeSpecifier, {_, _}, data_]
-                        [_, _] => {
-                            WL!( AbstractSyntaxErrorNode[ColonColonOpenSquare, {}, data] )
-                        },
+                        [_, _] => Ast::abstract_syntax_error(
+                            AbstractSyntaxError::ColonColonOpenSquare,
+                            vec![],
+                            data,
+                        ),
                         _ => unhandled(),
                     }
                 },
@@ -1063,16 +1087,24 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             let comma_children =
                                 abstract_cst_seq(NodeSeq(comma_children));
 
-                            WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, comma_children, data] )
+                            Ast::abstract_syntax_error(
+                                AbstractSyntaxError::LeftDoubleBracket,
+                                comma_children,
+                                data,
+                            )
                         },
                         // GroupNode[GroupDoubleBracket, {_, child_, _}, data_]
-                        [_, child, _] => {
-                            WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, { abstract_(child.clone()) }, data] )
-                        },
+                        [_, child, _] => Ast::abstract_syntax_error(
+                            AbstractSyntaxError::LeftDoubleBracket,
+                            vec![abstract_(child.clone())],
+                            data,
+                        ),
                         // GroupNode[GroupDoubleBracket, {_, _}, data_]
-                        [_, _] => {
-                            WL!( AbstractSyntaxErrorNode[LeftDoubleBracket, {}, data] )
-                        },
+                        [_, _] => Ast::abstract_syntax_error(
+                            AbstractSyntaxError::LeftDoubleBracket,
+                            vec![],
+                            data,
+                        ),
                         _ => unhandled(),
                     }
                 },
@@ -1189,12 +1221,26 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             } = syntax_error_node;
 
             match (err, children.as_slice()) {
-                (SyntaxErrorKind::ExpectedTilde, [left, _, middle]) => WL!(
-                    SyntaxErrorNode[ExpectedTilde, {abstract_(left.clone()), abstract_(middle.clone())}, data]
-                ),
-                (SyntaxErrorKind::ExpectedSet, [left, _, middle]) => WL!(
-                    SyntaxErrorNode[ExpectedSet, {abstract_(left.clone()), abstract_(middle.clone())}, data]
-                ),
+                (SyntaxErrorKind::ExpectedTilde, [left, _, middle]) => {
+                    Ast::syntax_error(
+                        SyntaxErrorKind::ExpectedTilde,
+                        vec![
+                            abstract_(left.clone()),
+                            abstract_(middle.clone()),
+                        ],
+                        data,
+                    )
+                },
+                (SyntaxErrorKind::ExpectedSet, [left, _, middle]) => {
+                    Ast::syntax_error(
+                        SyntaxErrorKind::ExpectedSet,
+                        vec![
+                            abstract_(left.clone()),
+                            abstract_(middle.clone()),
+                        ],
+                        data,
+                    )
+                },
                 /*
                 abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
                     SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
@@ -1208,9 +1254,13 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
                     SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
                 */
-                (SyntaxErrorKind::ExpectedSymbol, [left, _, right]) => WL!(
-                    SyntaxErrorNode[ExpectedSymbol, {abstract_(left.clone()), abstract_(right.clone())}, data]
-                ),
+                (SyntaxErrorKind::ExpectedSymbol, [left, _, right]) => {
+                    Ast::syntax_error(
+                        SyntaxErrorKind::ExpectedSymbol,
+                        vec![abstract_(left.clone()), abstract_(right.clone())],
+                        data,
+                    )
+                },
                 _ => todo!(
                 "unhandled SyntaxErrorNode content: ({err:?}, {children:?})"
             ),
