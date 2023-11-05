@@ -295,7 +295,7 @@ macro_rules! WL {
     (ToNode[$sym:ident]) => {{
         let sym: $crate::symbol::Symbol = $crate::symbols::$sym;
 
-        $crate::abstract_::ToNode_Symbol(sym)
+        $crate::abstract_cst::ToNode_Symbol(sym)
     }};
 
     //========================

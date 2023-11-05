@@ -83,7 +83,7 @@ mod agg;
 pub mod ast;
 pub mod cst;
 
-pub mod abstract_;
+pub mod abstract_cst;
 
 #[doc(hidden)]
 pub mod fmt_as_expr;
@@ -111,7 +111,7 @@ pub mod macros;
 // API
 //==========================================================
 
-use abstract_::{abstract_cst, aggregate_cst_seq};
+use abstract_cst::{abstract_cst, aggregate_cst_seq};
 use cst::CstSeq;
 use source::TOPLEVEL;
 use tokenize::{

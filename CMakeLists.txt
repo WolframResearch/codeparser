@@ -459,7 +459,7 @@ add_custom_command(
 	${PROJECT_SOURCE_DIR}/crates/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/*
-	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/abstract_/*
+	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/abstract_cst/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/read/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/bin/*
 	${PROJECT_SOURCE_DIR}/crates/wolfram-parser/src/tests/*

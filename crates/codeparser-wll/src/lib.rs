@@ -23,7 +23,7 @@ use wolfram_library_link::{
 };
 
 use wolfram_parser::{
-    abstract_::{abstract_cst, aggregate_cst, aggregate_cst_seq},
+    abstract_cst::{abstract_cst, aggregate_cst, aggregate_cst_seq},
     cst::Cst,
     quirks::QuirkSettings,
     source::SourceConvention,

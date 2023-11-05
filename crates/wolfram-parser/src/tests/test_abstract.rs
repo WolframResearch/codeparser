@@ -1,5 +1,5 @@
 use crate::{
-    abstract_::{abstract_cst, aggregate_cst},
+    abstract_cst::{abstract_cst, aggregate_cst},
     ast::{Ast, AstMetadata},
     cst::{
         BinaryNode, BinaryOperator,
