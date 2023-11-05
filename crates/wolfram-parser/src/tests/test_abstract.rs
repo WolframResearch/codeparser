@@ -1414,3 +1414,73 @@ fn test_abstract_old_at_at_at_quirk() {
         }
     );
 }
+
+#[test]
+fn test_abstract_plus() {
+    // TID:231104/2: "+a + b - c \[ImplicitPlus] d" is a single Plus expression (?)
+    let cst =
+        parse_cst("+a + b - c \\[ImplicitPlus] d", &Default::default()).syntax;
+
+    let agg = aggregate_cst(cst).unwrap();
+
+    assert_eq!(
+        agg,
+        Cst::Infix(InfixNode(OperatorNode {
+            op: InfixOperator::Plus,
+            children: NodeSeq(vec![
+                Cst::Prefix(PrefixNode(OperatorNode {
+                    op: PrefixOperator::Plus,
+                    children: NodeSeq(vec![
+                        Token(token!(Plus, "+", 1:1-2)),
+                        Token(token!(Symbol, "a", 1:2-3)),
+                    ]),
+                    src: src!(1:1-3).into(),
+                })),
+                Cst::Token(token!(Plus, "+", 1:4-5)),
+                Cst::Token(token!(Symbol, "b", 1:6-7)),
+                Cst::Token(token!(Minus, "-", 1:8-9)),
+                Cst::Infix(InfixNode(OperatorNode {
+                    op: InfixOperator::Plus,
+                    children: NodeSeq(vec![
+                        Cst::Token(token!(Symbol, "c", 1:10-11)),
+                        Cst::Token(
+                            token!(LongName_ImplicitPlus, "\\[ImplicitPlus]", 1:12-27),
+                        ),
+                        Cst::Token(token!(Symbol, "d", 1:28-29)),
+                    ]),
+                    src: src!(1:10-29).into(),
+                })),
+            ]),
+            src: src!(1:1-29).into()
+        }))
+    );
+
+    let ast = abstract_cst(agg, QuirkSettings::default());
+
+    assert_eq!(
+        ast,
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Plus", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:2-3),
+                leaf!(Symbol, "b", 1:6-7),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Times", <||>)),
+                    args: vec![
+                        leaf!(Integer, "-1", <||>),
+                        Ast::Call {
+                            head: Box::new(leaf!(Symbol, "Plus", <||>)),
+                            args: vec![
+                                leaf!(Symbol, "c", 1:10-11),
+                                leaf!(Symbol, "d", 1:28-29),
+                            ],
+                            data: src!(1:10-29).into(),
+                        },
+                    ],
+                    data: src!(1:8-29).into(),
+                },
+            ],
+            data: src!(1:1-29).into(),
+        }
+    );
+}
