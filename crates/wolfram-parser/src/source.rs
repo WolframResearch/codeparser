@@ -393,6 +393,9 @@ pub enum Source {
     /// the source.
     // TODO: Parse this into a strongly typed value
     After(Expr),
+
+    /// `<||>`
+    Unknown,
 }
 
 /// Specifies a region ("span") of source code between a start and end location.
@@ -436,8 +439,6 @@ const _: () = assert!(std::mem::size_of::<Location>() == 8);
 pub enum SpanKind {
     LineColumnSpan(LineColumnSpan),
     CharacterSpan(CharacterSpan),
-    /// `<||>`
-    Unknown,
 }
 
 /// A span of input by character start and end point.
@@ -512,10 +513,6 @@ impl Display for Span {
             SpanKind::LineColumnSpan(span) => {
                 write!(f, "{span}")
             },
-            SpanKind::Unknown => {
-                // TODO: Better formatting for this? "?"
-                write!(f, "Span unknown")
-            },
         }
     }
 }
@@ -545,6 +542,7 @@ impl Display for LineColumn {
 impl Display for Source {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Source::Unknown => write!(f, "<unknown>"),
             Source::Span(span) => write!(f, "{span}"),
             // TODO: Format as {...} list
             Source::BoxPosition(box_pos) => write!(f, "{box_pos:?}"),
@@ -682,17 +680,6 @@ impl Span {
         }
     }
 
-    pub fn unknown() -> Self {
-        // Use incompatible values for `first`.
-        Span {
-            start: Location::CharacterIndex(0),
-            end: Location::LineColumn(LineColumn(
-                NonZeroU32::MIN,
-                NonZeroU32::MIN,
-            )),
-        }
-    }
-
     /// Get the start [`Location`] of this source span.
     pub fn start(&self) -> Location {
         let Span { start, end: _ } = *self;
@@ -747,7 +734,7 @@ impl Span {
                 start: LineColumn(start_line, start_column),
                 end: LineColumn(end_line, end_column),
             }),
-            _ => SpanKind::Unknown,
+            (start, end) => panic!("invalid Location combination in Span: start = {start}, end = {end}"),
         }
     }
 }
@@ -853,17 +840,15 @@ impl LineColumnSpan {
 
 impl Source {
     pub fn unknown() -> Self {
-        Source::Span(Span::unknown())
+        Source::Unknown
     }
 
     pub fn is_unknown(&self) -> bool {
         match self {
-            Source::Span(span) => match span.kind() {
-                SpanKind::Unknown => true,
-                _ => false,
+            Source::Unknown => true,
+            Source::Span(_) | Source::BoxPosition(_) | Source::After(_) => {
+                false
             },
-            Source::BoxPosition(_) => false,
-            Source::After(_) => false,
         }
     }
 }

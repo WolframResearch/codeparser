@@ -780,6 +780,7 @@ impl FromExpr for Span {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         match Source::from_expr(expr)? {
             Source::Span(span) => Ok(span),
+            Source::Unknown => todo!("Source from Source::Unknown"),
             Source::BoxPosition(_) => todo!("Source from Source::BoxPosition"),
             Source::After(_) => todo!("Source from Source::After"),
         }
@@ -1069,7 +1070,7 @@ impl FromExpr for CodeAction {
 
         let src = match src {
             Source::Span(src) => src,
-            Source::BoxPosition(_) | Source::After(_) => {
+            Source::BoxPosition(_) | Source::After(_) | Source::Unknown => {
                 todo!("unexpected source for CodeAction: {src:?}")
             },
         };

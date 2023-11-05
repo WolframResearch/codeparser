@@ -1012,6 +1012,18 @@ fn put_source_rhs(link: &mut wstp::Link, source: &Source) {
         Source::Span(span) => put_span_rhs(link, *span),
         Source::BoxPosition(other) => put_box_position(link, other),
         Source::After(expr) => link.put_expr(expr).unwrap(),
+        // `{}`
+        // TODO: What representation should `<| Source -> <unknown> |>`
+        //       have?
+        //  * Source -> {}
+        //  * Source -> None
+        //  * Source -> Missing["Unknown"]
+        //  * Panic here? (The caller should construct <||>, NOT
+        //    <| Source -> <unknown> |>)
+        Source::Unknown => {
+            // link.put_function(sym::List.as_str(), 0).unwrap();
+            panic!("unable to serialize Source::Unknown")
+        },
     }
 }
 
@@ -1031,18 +1043,6 @@ fn put_span_rhs(link: &mut wstp::Link, source: Span) {
             link.put_i64(start.into()).unwrap();
 
             link.put_i64((end - 1).into()).unwrap();
-        },
-        // `{}`
-        // TODO: What representation should `<| Source -> <unknown> |>`
-        //       have?
-        //  * Source -> {}
-        //  * Source -> None
-        //  * Source -> Missing["Unknown"]
-        //  * Panic here? (The caller should construct <||>, NOT
-        //    <| Source -> <unknown> |>)
-        SpanKind::Unknown => {
-            // link.put_function(sym::List.as_str(), 0).unwrap();
-            panic!("unable to serialize SpanKind::Unknown")
         },
     }
 }
