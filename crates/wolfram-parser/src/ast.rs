@@ -397,38 +397,7 @@ impl AbstractSyntaxError {
 // Macros
 //======================================
 
-/// Transforms Wolfram Language syntax for representing nodes into Rust code to
-/// construct the equivalent [`Ast`].
-macro_rules! WL {
-    //========================
-    // BoxNode
-    //========================
-
-    // (BoxNode[TagBox, {$content:expr, $tag:expr}, $data:expr]) => {
-    //     $crate::ast::Ast::TagBox {
-    //         content: $content,
-    //         tag: $tag,
-    //         data: $crate::ast::AstMetadata::from_src($data),
-    //     }
-    // };
-    (BoxNode[$kind:ident, $children:expr, $data:expr]) => {
-        $crate::ast::Ast::Box {
-            kind: BoxKind::$kind,
-            args: $children,
-            data: $crate::ast::AstMetadata::from_src($data),
-        }
-    };
-    (BoxNode[$kind:expr, $children:expr, $data:expr]) => {
-        $crate::ast::Ast::Box {
-            kind: $kind,
-            args: $children,
-            data: $crate::ast::AstMetadata::from_src($data),
-        }
-    };
-}
-
 use wolfram_expr::{symbol::SymbolRef, Expr};
-pub(crate) use WL;
 
 //======================================
 // Format Impls

@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 use crate::{
     agg::{AggNodeSeq, LHS},
-    ast::{AbstractSyntaxError, Ast, AstCall, AstMetadata, WL},
+    ast::{AbstractSyntaxError, Ast, AstCall, AstMetadata},
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallHead, CallNode,
         CodeNode, CompoundNode, CompoundOperator, Cst, CstSeq,
@@ -2969,7 +2969,11 @@ fn abstract_box_node<I: TokenInput + Debug, S: TokenSource + Debug>(
 
     let children = children.into_iter().map(abstract_).collect();
 
-    WL!(BoxNode[(kind), children, data])
+    Ast::Box {
+        kind,
+        args: children,
+        data: data.into(),
+    }
 }
 
 /// Handle special form of `[[x]]` in subscript
@@ -3061,9 +3065,9 @@ fn try_subscript_box_part_special_cases<
                     let (o1, o2) = (abstract_(o1), abstract_(o2));
                     let (c1, c2) = (abstract_(c1), abstract_(c2));
 
-                    let ast = WL!(BoxNode[
-                        SubscriptBox,
-                        vec![
+                    let ast = Ast::Box {
+                        kind: BoxKind::SubscriptBox,
+                        args: vec![
                             abstract_(a),
                             Ast::Group {
                                 kind: GroupOperator::CodeParser_GroupSquare,
@@ -3083,8 +3087,8 @@ fn try_subscript_box_part_special_cases<
                                 data: AstMetadata::from_src(data1)
                             }
                         ],
-                        data
-                    ]);
+                        data: data.into()
+                    };
 
                     return Ok(ast);
                 },
@@ -3109,22 +3113,22 @@ fn try_subscript_box_part_special_cases<
             }
 
             // BoxNode[SubscriptBox, {abstract[a], GroupNode[GroupDoubleBracket, {o, abstract[b], c}, data1]}, data]
-            let ast = WL!(BoxNode[
-                SubscriptBox,
-                vec![
+            let ast = Ast::Box {
+                kind: BoxKind::SubscriptBox,
+                args: vec![
                     abstract_(a),
                     Ast::Group {
                         kind: GroupOperator::CodeParser_GroupDoubleBracket,
                         children: Box::new((
                             abstract_(o),
                             abstract_(b),
-                            abstract_(c)
+                            abstract_(c),
                         )),
-                        data: AstMetadata::from_src(data1)
-                    }
+                        data: AstMetadata::from_src(data1),
+                    },
                 ],
-                data
-            ]);
+                data: data.into(),
+            };
 
             return Ok(ast);
         },
@@ -3252,9 +3256,9 @@ fn try_superscript_box_derivative_special_case<
                 }
             };
 
-            let ast = WL!(BoxNode[
-                SuperscriptBox,
-                vec! {
+            let ast = Ast::Box {
+                kind: BoxKind::SuperscriptBox,
+                args: vec![
                     abstract_(a),
                     // GroupNode[
                     //     CodeParser_GroupParen,
@@ -3265,10 +3269,10 @@ fn try_superscript_box_derivative_special_case<
                         group: Box::new((o, b, c, data2.into_general())),
                         tag: t,
                         data: AstMetadata::from_src(data1),
-                    }
-                },
-                data
-            ]);
+                    },
+                ],
+                data: data.into(),
+            };
 
             Ok(ast)
         },
