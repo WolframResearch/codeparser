@@ -1011,9 +1011,9 @@ impl InfixParselet for PostfixOperatorParselet {
         session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) {
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        session.reduce_postfix(self.Op);
+        session.reduce_postfix(self.Op, tok_in);
 
         // MUSTTAIL
         return session.parse_climb();

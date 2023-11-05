@@ -273,8 +273,8 @@ impl<'i> DynParseBuilder<'i> for ParseCst<'i> {
         self.reduce(|ctx| InfixNode::new(op, ctx));
     }
 
-    fn reduce_postfix(&mut self, op: PostfixOperator) {
-        self.reduce(|ctx| PostfixNode::new(op, ctx));
+    fn reduce_postfix(&mut self, op: PostfixOperator, op_tok: TokenRef<'i>) {
+        self.reduce(|ctx| PostfixNode::new(op, ctx, op_tok));
     }
 
     fn reduce_binary(&mut self, op: BinaryOperator) {
