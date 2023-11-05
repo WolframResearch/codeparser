@@ -202,6 +202,13 @@ impl Ast {
     //==================================
 
     pub(crate) fn symbol(sym: SymbolRef) -> Self {
+        Ast::symbol_with_data(sym, AstMetadata::empty())
+    }
+
+    pub(crate) fn symbol_with_data(
+        sym: SymbolRef,
+        data: impl Into<AstMetadata>,
+    ) -> Self {
         // TODO(optimization): We only have to convert this to an allocated Symbol
         //                     because SymbolRef doesn't currently have context()
         //                     and symbol_name() methods. Add those methods to
@@ -209,11 +216,48 @@ impl Ast {
         //                     to avoid the allocation.
         let sym: wolfram_expr::Symbol = sym.to_symbol();
 
-        if sym.context().as_str() == "System`" {
-            WL!( LeafNode[Symbol, sym.symbol_name().as_str(), <||>] )
+        let input = if sym.context().as_str() == "System`" {
+            sym.symbol_name().as_str()
         } else {
             // Play it safe for now and fully qualify any non-System` symbol
-            WL!( LeafNode[Symbol, sym.as_str(), <||>])
+            sym.as_str()
+        };
+
+        Ast::Leaf {
+            kind: TokenKind::Symbol,
+            input: TokenString::from_string(input.to_owned()),
+            data: data.into(),
+        }
+    }
+
+    pub(crate) fn i64(int: i64) -> Self {
+        Ast::i64_with_data(int, AstMetadata::empty())
+    }
+
+    pub(crate) fn i64_with_data(
+        int: i64,
+        data: impl Into<AstMetadata>,
+    ) -> Self {
+        Ast::Leaf {
+            kind: TokenKind::Integer,
+            input: TokenString::from_string(int.to_string()),
+            data: data.into(),
+        }
+    }
+
+    pub(crate) fn usize(int: usize) -> Self {
+        Ast::Leaf {
+            kind: TokenKind::Integer,
+            input: TokenString::from_string(int.to_string()),
+            data: AstMetadata::empty(),
+        }
+    }
+
+    pub(crate) fn string(string: String, data: impl Into<AstMetadata>) -> Self {
+        Ast::Leaf {
+            kind: TokenKind::String,
+            input: TokenString::from_string(string),
+            data: data.into(),
         }
     }
 
@@ -356,38 +400,6 @@ impl AbstractSyntaxError {
 /// Transforms Wolfram Language syntax for representing nodes into Rust code to
 /// construct the equivalent [`Ast`].
 macro_rules! WL {
-    //========================
-    // LeafNode
-    //========================
-    (LeafNode[$token_kind:ident, $input:expr, <||>]) => {{
-        let input: String = String::from($input);
-
-        let node = $crate::ast::Ast::Leaf {
-            kind: $crate::tokenize::TokenKind::$token_kind,
-            input: $crate::tokenize::TokenString {
-                buf: input.into_bytes(),
-            },
-            data: AstMetadata::empty(),
-        };
-
-        node
-    }};
-
-    (LeafNode[$token_kind:ident, $input:expr, $data:expr]) => {{
-        let input: String = String::from($input);
-        let src: $crate::source::Source = $data.into_general();
-
-        let node = $crate::ast::Ast::Leaf {
-            kind: $crate::tokenize::TokenKind::$token_kind,
-            input: $crate::tokenize::TokenString {
-                buf: input.into_bytes(),
-            },
-            data: AstMetadata::from_src(src),
-        };
-
-        node
-    }};
-
     //========================
     // BoxNode
     //========================
