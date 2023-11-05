@@ -3135,100 +3135,94 @@ fn try_superscript_box_derivative_special_case<
             }, data1]
         }, data]
     */
-    match Cst::from(box_node.clone()) {
-        LHS!(BoxNode[
-            SuperscriptBox,
-            children:_
-            ,
-            data:_
-        ]) => {
-            let (a, middle) = match children.0.as_slice() {
-                [a, middle, ..] => (a.clone(), middle.clone()),
-                _ => todo!("Error?"),
+    let LHS!(BoxNode[
+        SuperscriptBox,
+        children:_
+        ,
+        data:_
+    ]) = Cst::from(box_node.clone())
+    else {
+        return Err(box_node);
+    };
+
+    let (a, middle) = match children.0.as_slice() {
+        [a, middle, ..] => (a.clone(), middle.clone()),
+        _ => todo!("Error?"),
+    };
+
+    let LHS!(BoxNode[
+        TagBox,
+        children1:_,
+        data1:_
+    ]) = middle
+    else {
+        return Err(box_node);
+    };
+
+    let [left, t] = expect_children(children1);
+
+    let LHS!(GroupNode[
+        CodeParser_GroupParen,
+        children2:_,
+        data2:_
+    ]) = left
+    else {
+        return Err(box_node);
+    };
+
+    match t {
+        // CodeNode[Null, Derivative, _]
+        Cst::Code(
+            ref t @ CodeNode {
+                ref first,
+                ref second,
+                src: _,
+            },
+        ) if first.try_as_symbol().map(wolfram_expr::Symbol::as_str)
+            == Some("System`Evaluated")
+            && second.try_as_symbol().map(wolfram_expr::Symbol::as_str)
+                == Some("System`Derivative") =>
+        {
+            let [o, b, c] = expect_children(children2);
+
+            let [o @ LHS!(LeafNode[OpenParen, _, _]), b @ _, c @ LHS!(LeafNode[CloseParen, _, _])] =
+                [o, b, c]
+            else {
+                return Err(box_node);
             };
 
-            if let LHS!(BoxNode[
-                TagBox,
-                children1:_,
-                data1:_
-            ]) = middle
-            {
-                let [left, t] = expect_children(children1);
+            let o = abstract_(o);
+            let b = abstract_(b);
+            let c = abstract_(c);
 
-                if let LHS!(GroupNode[
-                    CodeParser_GroupParen,
-                    children2:_,
-                    data2:_
-                ]) = left
-                {
-                    match t {
-                        // CodeNode[Null, Derivative, _]
-                        Cst::Code(
-                            ref t @ CodeNode {
-                                ref first,
-                                ref second,
-                                src: _,
-                            },
-                        ) if first
-                            .try_as_symbol()
-                            .map(wolfram_expr::Symbol::as_str)
-                            == Some("System`Evaluated")
-                            && second
-                                .try_as_symbol()
-                                .map(wolfram_expr::Symbol::as_str)
-                                == Some("System`Derivative") =>
-                        {
-                            let [o, b, c] = expect_children(children2);
-
-
-                            if let [o @ LHS!(LeafNode[OpenParen, _, _]), b @ _, c @ LHS!(LeafNode[CloseParen, _, _])] =
-                                [o, b, c]
-                            {
-                                let o = abstract_(o);
-                                let b = abstract_(b);
-                                let c = abstract_(c);
-
-                                let t = {
-                                    let CodeNode { first, second, src } =
-                                        t.clone();
-                                    CodeNode {
-                                        first,
-                                        second,
-                                        src: src.into_general(),
-                                    }
-                                };
-
-                                let ast = WL!(BoxNode[
-                                    SuperscriptBox,
-                                    vec! {
-                                        abstract_(a),
-                                        // GroupNode[
-                                        //     CodeParser_GroupParen,
-                                        //     NodeSeq(vec![o, abstract_(b), c]),
-                                        //     data2
-                                        // ]
-                                        Ast::TagBox_GroupParen {
-                                            group: Box::new((o, b, c, data2.into_general())),
-                                            tag: t,
-                                            data: AstMetadata::from_src(data1),
-                                        }
-                                    },
-                                    data
-                                ]);
-
-                                Ok(ast)
-                            } else {
-                                Err(box_node)
-                            }
-                        },
-                        _ => Err(box_node),
-                    }
-                } else {
-                    Err(box_node)
+            let t = {
+                let CodeNode { first, second, src } = t.clone();
+                CodeNode {
+                    first,
+                    second,
+                    src: src.into_general(),
                 }
-            } else {
-                Err(box_node)
-            }
+            };
+
+            let ast = WL!(BoxNode[
+                SuperscriptBox,
+                vec! {
+                    abstract_(a),
+                    // GroupNode[
+                    //     CodeParser_GroupParen,
+                    //     NodeSeq(vec![o, abstract_(b), c]),
+                    //     data2
+                    // ]
+                    Ast::TagBox_GroupParen {
+                        group: Box::new((o, b, c, data2.into_general())),
+                        tag: t,
+                        data: AstMetadata::from_src(data1),
+                    }
+                },
+                data
+            ]);
+
+            Ok(ast)
         },
         _ => Err(box_node),
     }
