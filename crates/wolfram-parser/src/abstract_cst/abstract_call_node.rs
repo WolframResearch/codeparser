@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use crate::{
     agg::LHS,
-    ast::WL,
     ast::{Ast, AstMetadata},
     cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode,
@@ -10,7 +9,7 @@ use crate::{
         OperatorNode, PostfixNode, PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
-    symbol as sym,
+    symbols as st,
     tokenize::{
         Token, TokenInput,
         TokenKind::{self as TK},
@@ -20,7 +19,7 @@ use crate::{
 
 use super::{
     abstractGroupNode, abstractGroupNode_GroupMissingCloserNode, abstract_,
-    expect_children, AstCall, ToNode_Symbol,
+    expect_children, AstCall,
 };
 
 /// These boxes are ok to have as head of calls
@@ -286,7 +285,7 @@ pub(super) fn abstract_call_node<
                 args
             };
 
-            WL!(CallNode[ToNode[Part], args, data])
+            Ast::call(st::Part, args, data)
         },
         //
         // Concrete parse of a[2] returns CallNode[a, GroupNode[Square, {2}]]
@@ -321,7 +320,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         LHS!(CallNode[
             head:(
@@ -377,7 +376,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         LHS!(CallNode[
             head:BinaryNode[PatternTest, _, _],
@@ -387,7 +386,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         LHS!(CallNode[
             head:InfixNode[CompoundExpression, _, _],
@@ -413,7 +412,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         // these are fine
         // List is allowed because this is popular to do:
@@ -426,7 +425,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         LHS!(CallNode[
             head:GroupNode[_, _, _],
@@ -452,7 +451,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         //
         // these are fine
@@ -465,7 +464,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         //
         // this is fine
@@ -484,7 +483,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(Cst::from(head));
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         // LHS!(CallNode[
         //     head:BoxNode[tag:_, _, _],
@@ -516,7 +515,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(Cst::from(head));
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         //
         // warn about anything else
@@ -544,7 +543,7 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[head, part.args, data])
+            Ast::call2(head, part.args, data)
         },
         //-------------------
         // GroupTypeSpecifier
@@ -560,11 +559,11 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[
-                WL!(CallNode[ToNode[TypeSpecifier], {head}, <||>]),
+            Ast::call2(
+                Ast::call(st::TypeSpecifier, vec![head], AstMetadata::empty()),
                 part.args,
-                data
-            ])
+                data,
+            )
         },
         //
         // warn about anything else
@@ -590,11 +589,11 @@ pub(super) fn abstract_call_node<
             let head = abstract_(head);
             let part = abstractGroupNode(part);
 
-            WL!(CallNode[
-                WL!(CallNode[ToNode[TypeSpecifier], {head}, <||>]),
+            Ast::call2(
+                Ast::call(st::TypeSpecifier, vec![head], AstMetadata::empty()),
                 part.args,
-                data
-            ])
+                data,
+            )
         },
         //--------------------
         // Concrete parse of a\[LeftDoubleBracket]2\[RightDoubleBracket] returns CallNode[a, GroupNode[DoubleBracket, {2}]]
@@ -785,7 +784,7 @@ pub(super) fn abstract_call_node<
                 args
             };
 
-            WL!(CallNode[ToNode[Part], args, data])
+            Ast::call(st::Part, args, data)
         },
         //
         // We need special node CallMissingCloserNode because it used to be the
@@ -838,7 +837,7 @@ pub(super) fn abstract_call_node<
             */
 
             Ast::call_missing_closer(
-                WL!( CallNode[ToNode_Symbol(sym::TypeSpecifier), {head}, <||>] ),
+                Ast::call(st::TypeSpecifier, vec![head], AstMetadata::empty()),
                 children,
                 data,
             )
@@ -868,7 +867,7 @@ pub(super) fn abstract_call_node<
             // {head} ~Join~ part[[2]]
             children.insert(0, head);
 
-            Ast::call_missing_closer(ToNode_Symbol(sym::Part), children, data)
+            Ast::call_missing_closer(Ast::symbol(st::Part), children, data)
         },
     }
 }

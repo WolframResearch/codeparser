@@ -18,7 +18,8 @@ use crate::{
     issue::{Issue, IssueTag, Severity},
     macros::leaf,
     quirks::{self, Quirk},
-    symbol::{self as sym, Symbol},
+    symbol::Symbol,
+    symbols as st,
     tokenize::{
         Token, TokenInput,
         TokenKind::{self, self as TK},
@@ -210,23 +211,7 @@ fn aggregate_op<I: Debug, S: Debug, O>(
 /// Returns a `LeafNode[Symbol, ..]`
 fn ToNode<O: Operator>(op: O) -> Ast {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
-    ToNode_Symbol(s)
-}
-
-fn ToNode_Symbol(s: Symbol) -> Ast {
-    // TODO(optimization): We only have to convert this to an allocated Symbol
-    //                     because SymbolRef doesn't currently have context()
-    //                     and symbol_name() methods. Add those methods to
-    //                     SymbolRef in the wolfram-expr crate, and update this
-    //                     to avoid the allocation.
-    let s: wolfram_expr::Symbol = s.to_symbol();
-
-    if s.context().as_str() == "System`" {
-        WL!( LeafNode[Symbol, s.symbol_name().as_str(), <||>] )
-    } else {
-        // Play it safe for now and fully qualify any non-System` symbol
-        WL!( LeafNode[Symbol, s.as_str(), <||>])
-    }
+    Ast::symbol(s)
 }
 
 /// Returns a `LeafNode[String, ..]`
@@ -330,50 +315,61 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             // CompoundNode[Blank, {_, sym2_}, data_]
             CompoundOperator::Blank => {
                 expect_children!(children, {_, sym2:_});
-                WL!( CallNode[ToNode[Blank], {abstract_(sym2)}, data] )
+                Ast::call(st::Blank, vec![abstract_(sym2)], data)
             },
             // CompoundNode[BlankSequence, {_, sym2_}, data_]
             CompoundOperator::BlankSequence => {
                 expect_children!(children, {_, sym2:_});
-                WL!( CallNode[ToNode[BlankSequence], {abstract_(sym2)}, data] )
+                Ast::call(st::BlankSequence, vec![abstract_(sym2)], data)
             },
             // CompoundNode[BlankNullSequence, {_, sym2_}, data_]
             CompoundOperator::BlankNullSequence => {
                 expect_children!(children, {_, sym2:_});
-                WL!( CallNode[ToNode[BlankNullSequence], {abstract_(sym2)}, data] )
+                Ast::call(st::BlankNullSequence, vec![abstract_(sym2)], data)
             },
 
             // CompoundNode[PatternBlank, {sym1_, blank_}, data_]
             CompoundOperator::CodeParser_PatternBlank => {
                 expect_children!(children, {sym1:_, blank:_});
-                WL!( CallNode[ToNode[Pattern], {abstract_(sym1), abstract_(blank)}, data] )
+                Ast::call(
+                    st::Pattern,
+                    vec![abstract_(sym1), abstract_(blank)],
+                    data,
+                )
             },
             // CompoundNode[PatternBlankSequence,     {sym1_, blankSeq_}, data_]
             CompoundOperator::CodeParser_PatternBlankSequence => {
                 expect_children!(children, {sym1:_, blankSeq:_});
-                WL!( CallNode[ToNode[Pattern], {abstract_(sym1), abstract_(blankSeq)}, data] )
+                Ast::call(
+                    st::Pattern,
+                    vec![abstract_(sym1), abstract_(blankSeq)],
+                    data,
+                )
             },
             // CompoundNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]
             CompoundOperator::CodeParser_PatternBlankNullSequence => {
                 expect_children!(children, {sym1:_, blankNullSeq:_});
-                WL!( CallNode[ToNode[Pattern], {abstract_(sym1), abstract_(blankNullSeq)}, data] )
+                Ast::call(
+                    st::Pattern,
+                    vec![abstract_(sym1), abstract_(blankNullSeq)],
+                    data,
+                )
             },
             // CompoundNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]
             CompoundOperator::CodeParser_PatternOptionalDefault => {
                 expect_children!(children, {sym1:_, LeafNode[UnderDot, _, optionalDefaultData:_]});
 
-                WL!(
-                    CallNode[
-                        ToNode[Optional],
-                        {
-                            WL!(CallNode[
-                                ToNode[Pattern],
-                                {abstract_(sym1), WL!(CallNode[ToNode[Blank], {}, optionalDefaultData])},
-                                data.clone()
-                            ])
-                        },
-                        data
-                    ]
+                Ast::call(
+                    st::Optional,
+                    vec![Ast::call(
+                        st::Pattern,
+                        vec![
+                            abstract_(sym1),
+                            Ast::call(st::Blank, vec![], optionalDefaultData),
+                        ],
+                        data.clone(),
+                    )],
+                    data,
                 )
             },
 
@@ -385,20 +381,24 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
 
                 match arg {
                     Cst::Token(arg) => match arg.tok {
-                        TokenKind::Integer => {
-                            WL!( CallNode[ToNode[Slot], {abstract_(Cst::Token(arg))}, data] )
-                        },
+                        TokenKind::Integer => Ast::call(
+                            st::Slot,
+                            vec![abstract_(Cst::Token(arg))],
+                            data,
+                        ),
                         TokenKind::Symbol => {
                             let Token {
                                 tok: _,
                                 input: s,
                                 src: data1,
                             } = arg;
-                            WL!(CallNode[
-                                ToNode[Slot],
-                                {WL!( LeafNode[String, escapeString_of_abstractSymbolString(s.as_str()), data1])},
-                                data
-                            ])
+                            Ast::call(
+                                st::Slot,
+                                vec![
+                                    WL!( LeafNode[String, escapeString_of_abstractSymbolString(s.as_str()), data1]),
+                                ],
+                                data,
+                            )
                         },
                         TokenKind::String => {
                             let Token {
@@ -406,11 +406,13 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 input: s,
                                 src: data1,
                             } = arg;
-                            WL!(CallNode[
-                                ToNode[Slot],
-                                {WL!( LeafNode[String, escapeString_of_abstractSymbolString(s.as_str()), data1] )},
-                                data
-                            ])
+                            Ast::call(
+                                st::Slot,
+                                vec![
+                                    WL!( LeafNode[String, escapeString_of_abstractSymbolString(s.as_str()), data1] ),
+                                ],
+                                data,
+                            )
                         },
                         _ => unhandled(),
                     },
@@ -422,14 +424,14 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             CompoundOperator::SlotSequence => {
                 expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
 
-                WL!( CallNode[ToNode[SlotSequence], {abstract_(arg)}, data] )
+                Ast::call(st::SlotSequence, vec![abstract_(arg)], data)
             },
 
             // CompoundNode[Out, {_, arg:LeafNode[Integer, _, _]}, data_]
             CompoundOperator::Out => {
                 expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
 
-                WL!( CallNode[ToNode[Out], {abstract_(arg)}, data])
+                Ast::call(st::Out, vec![abstract_(arg)], data)
             },
         },
 
@@ -509,13 +511,13 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         tok: TK::String,
                         input: str,
                         src: data1,
-                    }) => {
-                        WL!(CallNode[
-                            ToNode[Get],
-                            {WL!(LeafNode[String, escapeString_of_abstractFileString(str.as_str()), data1])},
-                            data
-                        ])
-                    },
+                    }) => Ast::call(
+                        st::Get,
+                        vec![
+                            WL!(LeafNode[String, escapeString_of_abstractFileString(str.as_str()), data1]),
+                        ],
+                        data,
+                    ),
                     _ => unhandled(),
                 }
             },
@@ -524,7 +526,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             op => {
                 let [_, operand] = expect_children(children);
 
-                WL!( CallNode[ToNode(op), {abstract_(operand)}, data])
+                Ast::call(op.to_symbol(), vec![abstract_(operand)], data)
             },
         },
 
@@ -543,8 +545,10 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             match op {
                 // PostfixNode[System`HermitianConjugate, {rand_, _}, data_]
                 // TODO(test): Add test case for this case.
-                PostfixOperator::HermitianConjugate => WL!(
-                    CallNode[ToNode[ConjugateTranspose], {abstract_(operand)}, data]
+                PostfixOperator::HermitianConjugate => Ast::call(
+                    st::ConjugateTranspose,
+                    vec![abstract_(operand)],
+                    data,
                 ),
                 PostfixOperator::Derivative => {
                     match rator {
@@ -556,15 +560,17 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             let (order, abstractedBody) =
                                 derivativeOrderAndAbstractedBody(operand);
 
-                            WL!(CallNode[
-                                WL!(CallNode[
-                                    ToNode[Derivative],
-                                    {WL!(LeafNode[Integer, (order + 1).to_string(), <||>])},
-                                    <||>
-                                ]),
-                                { abstractedBody },
-                                <||>
-                            ])
+                            Ast::call2(
+                                Ast::call(
+                                    st::Derivative,
+                                    vec![
+                                        WL!(LeafNode[Integer, (order + 1).to_string(), <||>]),
+                                    ],
+                                    AstMetadata::empty(),
+                                ),
+                                vec![abstractedBody],
+                                AstMetadata::empty(),
+                            )
                         },
                         // PostfixNode[Derivative, {rand_, LeafNode[Token`Boxes`MultiSingleQuote, quoteStr_, _]}, data_]
                         Cst::Token(Token {
@@ -574,18 +580,20 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         }) => {
                             let order = quoteStr.as_str().len();
 
-                            WL!(CallNode[
-                                WL!( CallNode[ToNode[Derivative], {ToNode_Integer_usize(order)}, <||>] ),
-                                {abstract_(operand)},
-                                <||>
-                            ])
+                            Ast::call2(
+                                Ast::call(
+                                    st::Derivative,
+                                    vec![ToNode_Integer_usize(order)],
+                                    AstMetadata::empty(),
+                                ),
+                                vec![abstract_(operand)],
+                                AstMetadata::empty(),
+                            )
                         },
                         _ => unhandled(),
                     }
                 },
-                op => WL!(
-                    CallNode[ToNode(op), {abstract_(operand)}, data]
-                ),
+                op => Ast::call(op.to_symbol(), vec![abstract_(operand)], data),
             }
         },
 
@@ -606,32 +614,38 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     abstractTimes_BinaryNode_Divide([left, right], data)
                 },
 
-                BinaryOperator::CodeParser_BinaryAt => WL!(
-                    CallNode[abstract_(left), {abstract_(right)}, data]
-                ),
+                BinaryOperator::CodeParser_BinaryAt => {
+                    Ast::call2(abstract_(left), vec![abstract_(right)], data)
+                },
 
                 BinaryOperator::MapApply => {
                     // TID:231104/1: OldAtAtAt quirk cases
                     if quirks::is_quirk_enabled(Quirk::OldAtAtAt) {
-                        let level = WL!( CallNode[ToNode[List], { ToNode_Integer(1) }, <||>]);
+                        let level = Ast::call(
+                            st::List,
+                            vec![ToNode_Integer(1)],
+                            AstMetadata::empty(),
+                        );
 
-                        WL!(CallNode[
-                            ToNode[Apply],
-                            {
-                                abstract_(left),
-                                abstract_(right),
-                                level
-                            },
-                            data
-                        ])
+                        Ast::call(
+                            st::Apply,
+                            vec![abstract_(left), abstract_(right), level],
+                            data,
+                        )
                     } else {
-                        WL!( CallNode[ToNode[MapApply], {abstract_(left), abstract_(right)}, data] )
+                        Ast::call(
+                            st::MapApply,
+                            vec![abstract_(left), abstract_(right)],
+                            data,
+                        )
                     }
                 },
 
-                BinaryOperator::CodeParser_BinarySlashSlash => WL!(
+                BinaryOperator::CodeParser_BinarySlashSlash => Ast::call2(
                     // Make sure to reverse the arguments
-                    CallNode[abstract_(right), {abstract_(left)}, data]
+                    abstract_(right),
+                    vec![abstract_(left)],
+                    data,
                 ),
                 BinaryOperator::Put | BinaryOperator::PutAppend => {
                     let (str, data1) = match right {
@@ -644,21 +658,21 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         _ => unhandled(),
                     };
 
-
-                    WL!(
-                        CallNode[
-                            ToNode(op),
-                            {
-                                abstract_(left),
-                                WL!( LeafNode[String, escapeString_of_abstractFileString(str), data1] )
-                            },
-                        data]
+                    Ast::call(
+                        op.to_symbol(),
+                        vec![
+                            abstract_(left),
+                            WL!( LeafNode[String, escapeString_of_abstractFileString(str), data1] ),
+                        ],
+                        data,
                     )
                 },
 
-                BinaryOperator::Pattern => {
-                    WL!( CallNode[ToNode[Pattern], {abstract_(left), abstract_(right)}, data])
-                },
+                BinaryOperator::Pattern => Ast::call(
+                    st::Pattern,
+                    vec![abstract_(left), abstract_(right)],
+                    data,
+                ),
 
                 // BinaryNode[Unset, {left_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]
                 BinaryOperator::Unset => {
@@ -674,7 +688,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         unhandled()
                     }
 
-                    WL!( CallNode[ToNode[Unset], {abstract_(left)}, data] )
+                    Ast::call(st::Unset, vec![abstract_(left)], data)
                 },
 
                 // Abstract NonAssociative errors
@@ -699,8 +713,10 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     )
                 },
 
-                op => WL!(
-                    CallNode[ToNode(op), {abstract_(left), abstract_(right)}, data]
+                op => Ast::call(
+                    op.to_symbol(),
+                    vec![abstract_(left), abstract_(right)],
+                    data,
                 ),
             }
         },
@@ -729,7 +745,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     let children =
                         children.into_iter().map(abstract_).collect();
 
-                    WL!( CallNode[ToNode(op), children, data] )
+                    Ast::call(op.to_symbol(), children, data)
                 },
 
                 // InfixNode[Plus, children_, data_]
@@ -766,7 +782,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         .map(abstract_)
                         .collect();
 
-                    WL!( CallNode[ToNode[Divisible], processed, data] )
+                    Ast::call(st::Divisible, processed, data)
                 },
 
                 // InfixNode[CompoundExpression, children_, data_]
@@ -791,7 +807,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         })
                         .collect();
 
-                    WL!( CallNode[ToNode[CompoundExpression], children, data] )
+                    Ast::call(st::CompoundExpression, children, data)
                 },
 
                 // InfixNode[MessageName, children_, data_]
@@ -835,7 +851,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         .map(abstract_)
                         .collect();
 
-                    WL!( CallNode[ToNode(op), children, data] )
+                    Ast::call(op.to_symbol(), children, data)
                 },
             }
         },
@@ -872,30 +888,36 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         let (abstractedMiddle_2, abstractedMiddle_3) =
                             abstractedMiddle.into_children_and_source();
 
-                        WL!(
-                            CallNode[
-                                Ast::abstract_syntax_error(
-                                    AbstractSyntaxError::CommaTopLevel,
-                                    abstractedMiddle_2,
-                                    abstractedMiddle_3
-                                ),
-                                { abstract_(left), abstract_(right)},
-                                data
-                            ]
+                        Ast::call2(
+                            Ast::abstract_syntax_error(
+                                AbstractSyntaxError::CommaTopLevel,
+                                abstractedMiddle_2,
+                                abstractedMiddle_3,
+                            ),
+                            vec![abstract_(left), abstract_(right)],
+                            data,
                         )
                     } else {
                         // TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]
-                        WL!( CallNode[abstract_(middle), {abstract_(left), abstract_(right)}, data] )
+                        Ast::call2(
+                            abstract_(middle),
+                            vec![abstract_(left), abstract_(right)],
+                            data,
+                        )
                     }
                 },
                 // Allow non-Symbols for left; not a syntax error
-                TernaryOperator::TagSet => {
-                    WL!( CallNode[ToNode[TagSet], {abstract_(left), abstract_(middle), abstract_(right)}, data] )
-                },
+                TernaryOperator::TagSet => Ast::call(
+                    st::TagSet,
+                    vec![abstract_(left), abstract_(middle), abstract_(right)],
+                    data,
+                ),
                 // Allow non-Symbols for left; not a syntax error
-                TernaryOperator::TagSetDelayed => {
-                    WL!( CallNode[ToNode[TagSetDelayed], {abstract_(left), abstract_(middle), abstract_(right)}, data])
-                },
+                TernaryOperator::TagSetDelayed => Ast::call(
+                    st::TagSetDelayed,
+                    vec![abstract_(left), abstract_(middle), abstract_(right)],
+                    data,
+                ),
                 // Allow non-Symbols for left; not a syntax error
                 // TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]
                 TernaryOperator::TagUnset => {
@@ -911,22 +933,32 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         unhandled()
                     }
 
-                    WL!( CallNode[ToNode[TagUnset], {abstract_(left), abstract_(middle)}, data])
+                    Ast::call(
+                        st::TagUnset,
+                        vec![abstract_(left), abstract_(middle)],
+                        data,
+                    )
                 },
-                TernaryOperator::Span => WL!(
-                    CallNode[ToNode[Span], {abstract_(left), abstract_(middle), abstract_(right)}, data]
+                TernaryOperator::Span => Ast::call(
+                    st::Span,
+                    vec![abstract_(left), abstract_(middle), abstract_(right)],
+                    data,
                 ),
                 // TernaryOptionalPattern comes from boxes
-                TernaryOperator::CodeParser_TernaryOptionalPattern => WL!(
-                    CallNode[
-                        ToNode[Optional],
-                        {
-                            WL!( CallNode[ToNode[Pattern], {abstract_(left), abstract_(middle)}, <||>] ),
-                            abstract_(right)
-                        },
-                        data
-                    ]
-                ),
+                TernaryOperator::CodeParser_TernaryOptionalPattern => {
+                    Ast::call(
+                        st::Optional,
+                        vec![
+                            Ast::call(
+                                st::Pattern,
+                                vec![abstract_(left), abstract_(middle)],
+                                AstMetadata::empty(),
+                            ),
+                            abstract_(right),
+                        ],
+                        data,
+                    )
+                },
             }
         },
 
@@ -1172,24 +1204,22 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 ) => {
                     let [_, var] = expect_children(children);
 
-                    WL!(CallNode[
-                        ToNode(op),
-                        {abstract_(operand1), abstract_(var)},
-                        data
-                    ])
+                    Ast::call(
+                        op.to_symbol(),
+                        vec![abstract_(operand1), abstract_(var)],
+                        data,
+                    )
                 },
                 // TODO: Is this case reachable? Are there any legal
                 //       PrefixBinaryNode's other than the Op::*Integral
                 //       variants listed above?
                 //
                 // PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]
-                (_, operand2) => {
-                    WL!(CallNode[
-                        ToNode(op),
-                        {abstract_(operand1), abstract_(operand2)},
-                        data
-                    ])
-                },
+                (_, operand2) => Ast::call(
+                    op.to_symbol(),
+                    vec![abstract_(operand1), abstract_(operand2)],
+                    data,
+                ),
             }
         },
 
@@ -1294,29 +1324,27 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(
             let count =
                 i64::try_from(count).expect("Out[..] %-sequence overflows i64");
 
-            WL!(CallNode[
-                ToNode(CompoundOperator::Out),
+            Ast::call(
+                CompoundOperator::Out.to_symbol(),
                 vec![ToNode_Integer(-count)],
-                data
-            ])
+                data,
+            )
         },
-        TokenKind::Under => WL!( CallNode[ToNode[Blank], {}, data] ),
-        TokenKind::UnderUnder => {
-            WL!( CallNode[ToNode[BlankSequence], {}, data] )
-        },
+        TokenKind::Under => Ast::call(st::Blank, vec![], data),
+        TokenKind::UnderUnder => Ast::call(st::BlankSequence, vec![], data),
         TokenKind::UnderUnderUnder => {
-            WL!( CallNode[ToNode[BlankNullSequence], {}, data] )
+            Ast::call(st::BlankNullSequence, vec![], data)
         },
-        TokenKind::UnderDot => {
-            WL!( CallNode[ToNode[Optional], { WL!(CallNode[ToNode[Blank], {}, data.clone()]) }, data] )
-        },
-        TokenKind::Hash => {
-            WL!( CallNode[ToNode[Slot], { ToNode_Integer(1) }, data] )
-        },
+        TokenKind::UnderDot => Ast::call(
+            st::Optional,
+            vec![Ast::call(st::Blank, vec![], data.clone())],
+            data,
+        ),
+        TokenKind::Hash => Ast::call(st::Slot, vec![ToNode_Integer(1)], data),
         TokenKind::HashHash => {
-            WL!( CallNode[ToNode[SlotSequence], { ToNode_Integer(1) }, data] )
+            Ast::call(st::SlotSequence, vec![ToNode_Integer(1)], data)
         },
-        TokenKind::Percent => WL!( CallNode[ToNode[Out], {}, data] ),
+        TokenKind::Percent => Ast::call(st::Out, vec![], data),
 
         TokenKind::Fake_ImplicitOne => WL!( LeafNode[Integer, "1", data] ),
         // FIXME: This should be "System`All", so that "All" doesn't resolve
@@ -1823,7 +1851,7 @@ impl<I: TokenInput + Debug, S: TokenSource + Debug> Reciprocate<I, S> {
 
         // Power[node, -1]
         Ast::Call {
-            head: Box::new(ToNode_Symbol(crate::symbols::Power)),
+            head: Box::new(Ast::symbol(crate::symbols::Power)),
             args: vec![abstract_(node), ToNode_Integer(-1)],
             data: AstMetadata::from_src(data),
         }
@@ -1945,7 +1973,7 @@ fn abstractPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
             })
             .collect();
 
-    WL!( CallNode[ToNode[Plus], children, data])
+    Ast::call(st::Plus, children, data)
 }
 
 /// + +a  parses the same as  +a
@@ -1971,7 +1999,7 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
             abstractPrefixPlus(rand, data)
         },
         // rand_, data_
-        _ => WL!( CallNode[ToNode[Plus], {abstract_(rand)}, data] ),
+        _ => Ast::call(st::Plus, vec![abstract_(rand)], data),
     }
 }
 
@@ -2119,7 +2147,7 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
         })
         .collect();
 
-    WL!( CallNode[ToNode[Times], children, data] )
+    Ast::call(st::Times, children, data)
 }
 
 // BinaryNode[Divide, {left_, right_}, data_]
@@ -2145,7 +2173,7 @@ fn abstractTimes_BinaryNode_Divide<
         Reciprocate(right, data.clone()).into_ast(),
     );
 
-    WL!( CallNode[ToNode[Times], children, data] )
+    Ast::call(st::Times, children, data)
 }
 
 //======================================
@@ -2272,7 +2300,7 @@ fn abstractMessageName<I: TokenInput + Debug, S: TokenSource + Debug>(
         child => abstract_(child),
     }));
 
-    WL!( CallNode[ToNode[MessageName], children, data] )
+    Ast::call(st::MessageName, children, data)
 }
 
 
@@ -2379,129 +2407,123 @@ fn simplifyInfixInequality<S: TokenSource>(
     // Try simple cases of all the same operator first
     //
     match rators {
-        _ if all_rators(sym::Equal) => {
-            WL!(CallNode[ToNode_Symbol(sym::Equal), rands, data])
+        _ if all_rators(st::Equal) => Ast::call(st::Equal, rands, data),
+        _ if all_rators(st::Unequal) => Ast::call(st::Unequal, rands, data),
+        _ if all_rators(st::Greater) => Ast::call(st::Greater, rands, data),
+        _ if all_rators(st::Less) => Ast::call(st::Less, rands, data),
+        _ if all_rators(st::GreaterEqual) => {
+            Ast::call(st::GreaterEqual, rands, data)
         },
-        _ if all_rators(sym::Unequal) => {
-            WL!(CallNode[ToNode_Symbol(sym::Unequal), rands, data])
+        _ if all_rators(st::GreaterEqualLess) => {
+            Ast::call(st::GreaterEqualLess, rands, data)
         },
-        _ if all_rators(sym::Greater) => {
-            WL!(CallNode[ToNode_Symbol(sym::Greater), rands, data])
+        _ if all_rators(st::GreaterFullEqual) => {
+            Ast::call(st::GreaterFullEqual, rands, data)
         },
-        _ if all_rators(sym::Less) => {
-            WL!(CallNode[ToNode_Symbol(sym::Less), rands, data])
+        _ if all_rators(st::GreaterGreater) => {
+            Ast::call(st::GreaterGreater, rands, data)
         },
-        _ if all_rators(sym::GreaterEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::GreaterEqual), rands, data])
+        _ if all_rators(st::GreaterLess) => {
+            Ast::call(st::GreaterLess, rands, data)
         },
-        _ if all_rators(sym::GreaterEqualLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::GreaterEqualLess), rands, data])
+        _ if all_rators(st::GreaterTilde) => {
+            Ast::call(st::GreaterTilde, rands, data)
         },
-        _ if all_rators(sym::GreaterFullEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::GreaterFullEqual), rands, data])
+        _ if all_rators(st::LessEqual) => Ast::call(st::LessEqual, rands, data),
+        _ if all_rators(st::LessEqualGreater) => {
+            Ast::call(st::LessEqualGreater, rands, data)
         },
-        _ if all_rators(sym::GreaterGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::GreaterGreater), rands, data])
+        _ if all_rators(st::LessFullEqual) => {
+            Ast::call(st::LessFullEqual, rands, data)
         },
-        _ if all_rators(sym::GreaterLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::GreaterLess), rands, data])
+        _ if all_rators(st::LessGreater) => {
+            Ast::call(st::LessGreater, rands, data)
         },
-        _ if all_rators(sym::GreaterTilde) => {
-            WL!(CallNode[ToNode_Symbol(sym::GreaterTilde), rands, data])
+        _ if all_rators(st::LessLess) => Ast::call(st::LessLess, rands, data),
+        _ if all_rators(st::LessTilde) => Ast::call(st::LessTilde, rands, data),
+        _ if all_rators(st::NestedGreaterGreater) => {
+            Ast::call(st::NestedGreaterGreater, rands, data)
         },
-        _ if all_rators(sym::LessEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::LessEqual), rands, data])
+        _ if all_rators(st::NestedLessLess) => {
+            Ast::call(st::NestedLessLess, rands, data)
         },
-        _ if all_rators(sym::LessEqualGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::LessEqualGreater), rands, data])
+        _ if all_rators(st::NotGreater) => {
+            Ast::call(st::NotGreater, rands, data)
         },
-        _ if all_rators(sym::LessFullEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::LessFullEqual), rands, data])
+        _ if all_rators(st::NotGreaterEqual) => {
+            Ast::call(st::NotGreaterEqual, rands, data)
         },
-        _ if all_rators(sym::LessGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::LessGreater), rands, data])
+        _ if all_rators(st::NotGreaterFullEqual) => {
+            Ast::call(st::NotGreaterFullEqual, rands, data)
         },
-        _ if all_rators(sym::LessLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::LessLess), rands, data])
+        _ if all_rators(st::NotGreaterGreater) => {
+            Ast::call(st::NotGreaterGreater, rands, data)
         },
-        _ if all_rators(sym::LessTilde) => {
-            WL!(CallNode[ToNode_Symbol(sym::LessTilde), rands, data])
+        _ if all_rators(st::NotGreaterLess) => {
+            Ast::call(st::NotGreaterLess, rands, data)
         },
-        _ if all_rators(sym::NestedGreaterGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::NestedGreaterGreater), rands, data])
+        _ if all_rators(st::NotGreaterSlantEqual) => {
+            Ast::call(st::NotGreaterSlantEqual, rands, data)
         },
-        _ if all_rators(sym::NestedLessLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::NestedLessLess), rands, data])
+        _ if all_rators(st::NotGreaterTilde) => {
+            Ast::call(st::NotGreaterTilde, rands, data)
         },
-        _ if all_rators(sym::NotGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotGreater), rands, data])
+        _ if all_rators(st::NotLess) => Ast::call(st::NotLess, rands, data),
+        _ if all_rators(st::NotLessEqual) => {
+            Ast::call(st::NotLessEqual, rands, data)
         },
-        _ if all_rators(sym::NotGreaterEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotGreaterEqual), rands, data])
+        _ if all_rators(st::NotLessFullEqual) => {
+            Ast::call(st::NotLessFullEqual, rands, data)
         },
-        _ if all_rators(sym::NotGreaterFullEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotGreaterFullEqual), rands, data])
+        _ if all_rators(st::NotLessGreater) => {
+            Ast::call(st::NotLessGreater, rands, data)
         },
-        _ if all_rators(sym::NotGreaterGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotGreaterGreater), rands, data])
+        _ if all_rators(st::NotLessLess) => {
+            Ast::call(st::NotLessLess, rands, data)
         },
-        _ if all_rators(sym::NotGreaterLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotGreaterLess), rands, data])
+        _ if all_rators(st::NotLessSlantEqual) => {
+            Ast::call(st::NotLessSlantEqual, rands, data)
         },
-        _ if all_rators(sym::NotGreaterSlantEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotGreaterSlantEqual), rands, data])
+        _ if all_rators(st::NotLessTilde) => {
+            Ast::call(st::NotLessTilde, rands, data)
         },
-        _ if all_rators(sym::NotGreaterTilde) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotGreaterTilde), rands, data])
+        _ if all_rators(st::NotNestedGreaterGreater) => {
+            Ast::call(st::NotNestedGreaterGreater, rands, data)
         },
-        _ if all_rators(sym::NotLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotLess), rands, data])
+        _ if all_rators(st::NotNestedLessLess) => {
+            Ast::call(st::NotNestedLessLess, rands, data)
         },
-        _ if all_rators(sym::NotLessEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotLessEqual), rands, data])
-        },
-        _ if all_rators(sym::NotLessFullEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotLessFullEqual), rands, data])
-        },
-        _ if all_rators(sym::NotLessGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotLessGreater), rands, data])
-        },
-        _ if all_rators(sym::NotLessLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotLessLess), rands, data])
-        },
-        _ if all_rators(sym::NotLessSlantEqual) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotLessSlantEqual), rands, data])
-        },
-        _ if all_rators(sym::NotLessTilde) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotLessTilde), rands, data])
-        },
-        _ if all_rators(sym::NotNestedGreaterGreater) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotNestedGreaterGreater), rands, data])
-        },
-        _ if all_rators(sym::NotNestedLessLess) => {
-            WL!(CallNode[ToNode_Symbol(sym::NotNestedLessLess), rands, data])
-        },
-        _ if all_rators(sym::VectorLess) => {
+        _ if all_rators(st::VectorLess) => {
             //
             // Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
             //
-            WL!(CallNode[ToNode[VectorLess], { WL!(CallNode[ToNode[List], rands, <||>]) }, data])
+            Ast::call(
+                st::VectorLess,
+                vec![Ast::call(st::List, rands, AstMetadata::empty())],
+                data,
+            )
         },
-        _ if all_rators(sym::VectorGreater) => {
-            WL!(CallNode[ToNode[VectorGreater], { WL!(CallNode[ToNode[List], rands, <||>]) }, data])
-        },
-        _ if all_rators(sym::VectorLessEqual) => {
-            WL!(CallNode[ToNode[VectorLessEqual], { WL!(CallNode[ToNode[List], rands, <||>]) }, data])
-        },
-        _ if all_rators(sym::VectorGreaterEqual) => {
-            WL!(CallNode[ToNode[VectorGreaterEqual], { WL!(CallNode[ToNode[List], rands, <||>]) }, data])
-        },
+        _ if all_rators(st::VectorGreater) => Ast::call(
+            st::VectorGreater,
+            vec![Ast::call(st::List, rands, AstMetadata::empty())],
+            data,
+        ),
+        _ if all_rators(st::VectorLessEqual) => Ast::call(
+            st::VectorLessEqual,
+            vec![Ast::call(st::List, rands, AstMetadata::empty())],
+            data,
+        ),
+        _ if all_rators(st::VectorGreaterEqual) => Ast::call(
+            st::VectorGreaterEqual,
+            vec![Ast::call(st::List, rands, AstMetadata::empty())],
+            data,
+        ),
         _ => {
             let children = {
                 let mut children = vec![processed.0];
 
                 for (rator, rand) in processed.1 {
-                    children.push(ToNode_Symbol(rator));
+                    children.push(Ast::symbol(rator));
                     children.push(rand);
                 }
 
@@ -2514,20 +2536,18 @@ fn simplifyInfixInequality<S: TokenSource>(
                     // Anything containing a combination inequality and Vector inequality operators is abstracted to VectorInequality
                     // Related bugs: 385771
                     //
-                    WL!(CallNode[ToNode_Symbol(sym::Developer::VectorInequality), children, data])
+                    Ast::call(st::Developer::VectorInequality, children, data)
                 },
-                Some(false) => {
-                    WL!(CallNode[ToNode_Symbol(sym::Inequality), children, data])
-                },
-                None => {
-                    WL!(CallNode[ToNode_Symbol(sym::Inequality), children, data])
-                },
+                Some(false) => Ast::call(st::Inequality, children, data),
+                None => Ast::call(st::Inequality, children, data),
             }
         },
     }
 }
 
 fn inequalityOperatorToSymbol(tok: TokenKind) -> Symbol {
+    use crate::symbols as sym;
+
     match tok {
         TK::EqualEqual | TK::LongName_Equal | TK::LongName_LongEqual => sym::Equal,
         TK::BangEqual | TK::LongName_NotEqual => sym::Unequal,
@@ -2587,6 +2607,8 @@ fn inequalityOperatorToSymbol(tok: TokenKind) -> Symbol {
 
 
 fn vectorInequalityAffinity(op: Symbol) -> Option<bool> {
+    use crate::symbols as sym;
+
     let boole = match op {
         //
         // Just these operators do not have an affinity, neither True nor False
@@ -2723,7 +2745,7 @@ fn abstractInfixTildeLeftAlreadyAbstracted<
         [_, _] => {
             let [middle, right] = expect_children(NodeSeq(rest));
 
-            WL!(CallNode[abstract_(middle), {left, abstract_(right)}, data])
+            Ast::call2(abstract_(middle), vec![left, abstract_(right)], data)
         },
         [middle, right, rest @ ..] => {
             let middle = middle.clone();
@@ -2909,17 +2931,15 @@ fn abstractNot2<I: TokenInput + Debug, S: TokenSource + Debug>(
         issues,
     };
 
-    WL!(CallNode[
-        WL!(LeafNode[Symbol, "Not", <||>]),
-        {
-            WL!(CallNode[
-                WL!(LeafNode[Symbol, "Not", <||>]),
-                { abstract_(rand) },
-                <||>
-            ])
-        },
-        data
-    ])
+    Ast::call(
+        st::Not,
+        vec![Ast::call(
+            st::Not,
+            vec![abstract_(rand)],
+            AstMetadata::empty(),
+        )],
+        data,
+    )
 }
 
 //======================================

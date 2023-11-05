@@ -19,6 +19,61 @@ use crate::symbol::Symbol;
 // Symbols
 //======================================
 
+crate::symbol::symbol! {
+    Inequality;
+
+    Equal;
+    Unequal;
+    Less;
+    Greater;
+    LessEqual;
+    GreaterEqual;
+    GreaterEqualLess;
+    GreaterFullEqual;
+    GreaterGreater;
+    GreaterLess;
+    GreaterSlantEqual;
+    LessSlantEqual;
+    //
+    // GreaterSlantEqual parses to GreaterEqual
+    // Related bugs: 78439
+    //
+    GreaterTilde;
+    LessEqualGreater;
+    LessFullEqual;
+    LessGreater;
+    LessLess;
+    //
+    // LessSlantEqual parses to LessEqual
+    // Related bugs: 78439
+    //
+    LessTilde;
+    NestedGreaterGreater;
+    NestedLessLess;
+    NotGreater;
+    NotGreaterEqual;
+    NotGreaterFullEqual;
+    NotGreaterGreater;
+    NotGreaterLess;
+    NotGreaterSlantEqual;
+    NotGreaterTilde;
+    NotLess;
+    NotLessEqual;
+    NotLessFullEqual;
+    NotLessGreater;
+    NotLessLess;
+    NotLessSlantEqual;
+    NotLessTilde;
+    NotNestedGreaterGreater;
+    NotNestedLessLess;
+}
+
+crate::symbol::nested_symbol! {
+    Developer::{
+        VectorInequality
+    }
+}
+
 pub const CodeParser_AbstractSyntaxErrorNode: Symbol = unsafe { Symbol::unchecked_new("CodeParser`AbstractSyntaxErrorNode") };
 pub const CodeParser_BinaryAt: Symbol = unsafe { Symbol::unchecked_new("CodeParser`BinaryAt") };
 pub const CodeParser_BinaryNode: Symbol = unsafe { Symbol::unchecked_new("CodeParser`BinaryNode") };

@@ -201,6 +201,46 @@ impl Ast {
     // Convenience constructor methods
     //==================================
 
+    pub(crate) fn symbol(sym: SymbolRef) -> Self {
+        // TODO(optimization): We only have to convert this to an allocated Symbol
+        //                     because SymbolRef doesn't currently have context()
+        //                     and symbol_name() methods. Add those methods to
+        //                     SymbolRef in the wolfram-expr crate, and update this
+        //                     to avoid the allocation.
+        let sym: wolfram_expr::Symbol = sym.to_symbol();
+
+        if sym.context().as_str() == "System`" {
+            WL!( LeafNode[Symbol, sym.symbol_name().as_str(), <||>] )
+        } else {
+            // Play it safe for now and fully qualify any non-System` symbol
+            WL!( LeafNode[Symbol, sym.as_str(), <||>])
+        }
+    }
+
+    pub(crate) fn call(
+        head: SymbolRef,
+        args: Vec<Ast>,
+        data: impl Into<AstMetadata>,
+    ) -> Self {
+        Ast::Call {
+            head: Box::new(Ast::symbol(head)),
+            args,
+            data: data.into(),
+        }
+    }
+
+    pub(crate) fn call2(
+        head: Ast,
+        args: Vec<Ast>,
+        data: impl Into<AstMetadata>,
+    ) -> Self {
+        Ast::Call {
+            head: Box::new(head),
+            args,
+            data: data.into(),
+        }
+    }
+
     pub(crate) fn call_missing_closer(
         head: Ast,
         args: Vec<Ast>,
@@ -317,19 +357,8 @@ impl AbstractSyntaxError {
 /// construct the equivalent [`Ast`].
 macro_rules! WL {
     //========================
-    // ToNode[..]
-    //========================
-
-    (ToNode[$sym:ident]) => {{
-        let sym: $crate::symbol::Symbol = $crate::symbols::$sym;
-
-        $crate::abstract_cst::ToNode_Symbol(sym)
-    }};
-
-    //========================
     // LeafNode
     //========================
-
     (LeafNode[$token_kind:ident, $input:expr, <||>]) => {{
         let input: String = String::from($input);
 
@@ -360,54 +389,6 @@ macro_rules! WL {
     }};
 
     //========================
-    // CallNode
-    //========================
-
-    (CallNode[ToNode[$token_kind:ident], { $($args:expr),* }, <||>]) => {
-        WL!( CallNode[ToNode[$token_kind], { $($args),* }, $crate::ast::AstMetadata::empty() ])
-    };
-    (CallNode[ToNode[$token_kind:ident], { $($args:expr),* }, $data:expr]) => {{
-        $crate::ast::Ast::Call {
-            head: Box::new($crate::ast::WL!(ToNode[$token_kind])),
-            args: vec![$($args),*],
-            data: $crate::ast::AstMetadata::from($data),
-        }
-    }};
-
-    (CallNode[ToNode[$token_kind:ident], $args:expr, <||>]) => {{
-        $crate::ast::Ast::Call {
-            head: Box::new($crate::ast::WL!(ToNode[$token_kind])),
-            args: $args,
-            data: $crate::ast::AstMetadata::empty(),
-        }
-    }};
-    (CallNode[ToNode[$token_kind:ident], $args:expr, $data:expr]) => {{
-        $crate::ast::Ast::Call {
-            head: Box::new($crate::ast::WL!(ToNode[$token_kind])),
-            args: $args,
-            data: $crate::ast::AstMetadata::from($data),
-        }
-    }};
-
-    (CallNode[$head:expr, { $($args:expr),* }, <||>]) => {{
-        WL!( CallNode[$head, { $($args),* }, $crate::ast::AstMetadata::empty()] )
-    }};
-    (CallNode[$head:expr, { $($args:expr),* }, $data:expr]) => {{
-        $crate::ast::Ast::Call {
-            head: Box::new($head),
-            args: vec![$($args),*],
-            data: $crate::ast::AstMetadata::from($data),
-        }
-    }};
-    (CallNode[$head:expr, $args:expr, $data:expr]) => {{
-        $crate::ast::Ast::Call {
-            head: Box::new($head),
-            args: $args,
-            data: $crate::ast::AstMetadata::from($data),
-        }
-    }};
-
-    //========================
     // BoxNode
     //========================
 
@@ -434,7 +415,7 @@ macro_rules! WL {
     };
 }
 
-use wolfram_expr::Expr;
+use wolfram_expr::{symbol::SymbolRef, Expr};
 pub(crate) use WL;
 
 //======================================
