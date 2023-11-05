@@ -50,23 +50,6 @@ macro_rules! WL {
     // LeafNode
     //========================
 
-    (LeafNode[$token_kind:ident, $input:literal, <||>]) => {{
-        let input: &'static str = $input;
-
-        $crate::cst::Cst::Token($crate::tokenize::Token {
-            tok: $crate::tokenize::TokenKind::$token_kind,
-            input: I::fake(input),
-            src: S::unknown(),
-        })
-    }};
-    (LeafNode[$token_kind:ident, $input:expr, <||>]) => {{
-        let input: &'static str = $input;
-        $crate::cst::Cst::Token($crate::tokenize::Token {
-            tok: $crate::tokenize::TokenKind::$token_kind,
-            input: I::fake(input),
-            src: S::unknown(),
-        })
-    }};
     (LeafNode[$token_kind:ident, $input:literal, $data:expr]) => {{
         let input: &str = $input;
         $crate::cst::Cst::Token(Token {

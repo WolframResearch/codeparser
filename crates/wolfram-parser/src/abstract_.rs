@@ -445,7 +445,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             PrefixOperator::Minus => {
                 expect_children!(children, {_, rand:_});
 
-                abstract_(negate(rand).into_cst(data))
+                negate(rand).into_ast(data)
             },
 
             // PrefixNode[Plus, {_, rand_}, _], data_
@@ -1592,6 +1592,15 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
     }
 }
 
+/// Form that behaves specially when being abstracted due to special processing
+/// for things like the infix binary at quirk, Times flattening, prefix plus
+/// flattening, etc.
+enum Operand<I, S> {
+    Cst(Cst<I, S>),
+    Reciprocate(Reciprocate<I, S>),
+    Negated(Negated<I, S>, S),
+}
+
 #[must_use]
 enum Negated<I, S> {
     Integer0,
@@ -1600,26 +1609,33 @@ enum Negated<I, S> {
     InfixTimesSeq(NodeSeq<Cst<I, S>>),
 }
 
-impl<I: TokenInput, S: TokenSource> Negated<I, S> {
-    fn into_cst(self, data: S) -> Cst<TokenString, S> {
+impl<I: TokenInput + Debug, S: TokenSource + Debug> Negated<I, S> {
+    fn into_ast(self, data: S) -> Ast {
         match self {
             Negated::Integer0 => {
-                agg::WL!(LeafNode[Integer, "0", data]).into_owned_input()
+                crate::macros::leaf!(Integer, "0", data)
             },
             Negated::IntegerNegated(input) => {
                 let str = input.as_str();
-                agg::WL!(LeafNode[Integer, format!("-{str}"), data])
+
+                Ast::Leaf {
+                    kind: TokenKind::Integer,
+                    input: TokenString::from_string(format!("-{str}")),
+                    data: AstMetadata::from_src(data),
+                }
             },
             Negated::RealNegated(input) => {
                 let str = input.as_str();
 
-                agg::WL!( LeafNode[Real, format!("-{str}"), data] )
+                Ast::Leaf {
+                    kind: TokenKind::Real,
+                    input: TokenString::from_string(format!("-{str}")),
+                    data: AstMetadata::from_src(data),
+                }
             },
             Negated::InfixTimesSeq(NodeSeq(children)) => {
-                let children = join(
-                    [agg::WL!(ToNode[-1]), agg::WL!(LeafNode[Star, "*", <||>])],
-                    children,
-                );
+                let children =
+                    part_span_even_children(children, Some(TK::Star));
 
                 let infix = InfixNode(OperatorNode {
                     op: InfixOperator::Times,
@@ -1627,7 +1643,18 @@ impl<I: TokenInput, S: TokenSource> Negated<I, S> {
                     src: data,
                 });
 
-                Cst::Infix(infix)
+                let Ast::Call {
+                    head,
+                    mut args,
+                    data,
+                } = abstractTimes_InfixNode(infix)
+                else {
+                    panic!("expected InfixNode after abstract Times")
+                };
+
+                args = join([crate::macros::leaf!(Integer, "-1", <||>)], args);
+
+                Ast::Call { head, args, data }
             },
         }
     }
@@ -1731,11 +1758,6 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 //======================================
 
-enum CstOrReciprocate<I, S> {
-    Cst(Cst<I, S>),
-    Reciprocate(Reciprocate<I, S>),
-}
-
 /// Represents a [`Cst`] value that should be reciprocated once it is
 /// abstracted.
 ///
@@ -1786,14 +1808,14 @@ fn derivativeOrderAndAbstractedBody<
 
 fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
     pair: [Cst<I, S>; 2],
-) -> Cst<TokenString, S> {
+) -> Operand<TokenString, S> {
     match pair {
         // {LeafNode[Token`Plus | Token`LongName`ImplicitPlus, _, _], rand_}
         [Cst::Token(Token {
             tok: TK::Plus | TK::LongName_ImplicitPlus,
             input: _,
             src: _,
-        }), rand] => rand.into_owned_input(),
+        }), rand] => Operand::Cst(rand.into_owned_input()),
         // {LeafNode[Token`Minus | Token`LongName`Minus, _, opData_], rand_}
         [Cst::Token(Token {
             tok: TK::Minus | TK::LongName_Minus,
@@ -1807,7 +1829,7 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
 
             let source: S = S::between(opData, rand.source());
 
-            negate(rand).into_cst(source)
+            Operand::Negated(negate(rand.into_owned_input()), source)
         },
         _ => unhandled(),
     }
@@ -1856,16 +1878,20 @@ fn abstractPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 
     let processedPairs = pairs.into_iter().map(processPlusPair);
 
-    let flattened = {
-        let mut children = vec![children[0].clone().into_owned_input()];
-        children.extend(processedPairs);
-        children.into_iter().map(flattenPrefixPlus)
-    };
-
-    let children = flattened
-        .map(|node| processInfixBinaryAtQuirk(node, "Plus"))
-        .map(abstract_)
-        .collect();
+    let children =
+        std::iter::once(Operand::Cst(children[0].clone().into_owned_input()))
+            .chain(processedPairs)
+            .map(|node| match node {
+                Operand::Cst(node) => abstract_(flattenPrefixPlus(
+                    processInfixBinaryAtQuirk(node, "Plus"),
+                )),
+                // NOTE: These cases wouldn't be effected by the flatten prefix
+                //       plus or process infix binary at quirk because their
+                //       heads are never Plus.
+                Operand::Reciprocate(reciprocated) => reciprocated.into_ast(),
+                Operand::Negated(negated, data) => negated.into_ast(data),
+            })
+            .collect();
 
     WL!( CallNode[ToNode[Plus], children, data])
 }
@@ -1908,7 +1934,7 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
     nodes: Vec<Cst<I, S>>,
     data: S,
-) -> Vec<CstOrReciprocate<TokenString, S>> {
+) -> Vec<Operand<TokenString, S>> {
     nodes
         .into_iter()
         .flat_map(|node| flatten_times_cst(node, data.clone()))
@@ -1918,7 +1944,7 @@ fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
 fn flatten_times_cst<I, S>(
     node: Cst<I, S>,
     data: S,
-) -> Vec<CstOrReciprocate<TokenString, S>>
+) -> Vec<Operand<TokenString, S>>
 where
     I: TokenInput + Debug,
     S: TokenSource + Debug,
@@ -1944,13 +1970,15 @@ where
                     tok: TK::Integer | TK::Real,
                     input: _,
                     src: _,
-                }) => vec![CstOrReciprocate::Cst(
-                    negate(operand).into_cst(data.clone()),
+                }) => vec![Operand::Negated(
+                    negate(operand.into_owned_input()),
+                    data.clone(),
                 )],
                 // PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _]
                 _ if parenthesizedIntegerOrRealQ(&operand) => {
-                    vec![CstOrReciprocate::Cst(
-                        negate(operand).into_cst(data.clone()),
+                    vec![Operand::Negated(
+                        negate(operand.into_owned_input()),
+                        data.clone(),
                     )]
                 },
                 // PrefixNode[Minus, {_, _}, _]
@@ -1967,13 +1995,13 @@ where
                         //     recursed here.
                         // *)
                         join(
-                            [CstOrReciprocate::Cst(
+                            [Operand::Cst(
                                 agg::WL!(ToNode[-1]).into_owned_input(),
                             )],
                             flatten_times_cst(operand, data),
                         )
                     } else {
-                        vec![CstOrReciprocate::Cst(node.into_owned_input())]
+                        vec![Operand::Cst(node.into_owned_input())]
                     }
                 },
             }
@@ -2002,16 +2030,16 @@ where
                 // TID:231010/1
                 append(
                     flatten_times_cst(left, data.clone()),
-                    CstOrReciprocate::Reciprocate(Reciprocate(
+                    Operand::Reciprocate(Reciprocate(
                         right.into_owned_input(),
                         data.clone(),
                     )),
                 )
             } else {
-                vec![CstOrReciprocate::Cst(node.into_owned_input())]
+                vec![Operand::Cst(node.into_owned_input())]
             }
         },
-        _ => vec![CstOrReciprocate::Cst(node.into_owned_input())],
+        _ => vec![Operand::Cst(node.into_owned_input())],
     }
 }
 
@@ -2032,12 +2060,11 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     let children: Vec<Ast> = flattened
         .into_iter()
         .map(|node| match node {
-            CstOrReciprocate::Cst(node) => {
+            Operand::Cst(node) => {
                 abstract_(processInfixBinaryAtQuirk(node, "Times"))
             },
-            CstOrReciprocate::Reciprocate(reciprocate) => {
-                reciprocate.into_ast()
-            },
+            Operand::Negated(negated, data) => negated.into_ast(data),
+            Operand::Reciprocate(reciprocate) => reciprocate.into_ast(),
         })
         .collect();
 
@@ -2058,10 +2085,9 @@ fn abstractTimes_BinaryNode_Divide<
         flatten_times_cst(left, data.clone())
             .into_iter()
             .map(|node| match node {
-                CstOrReciprocate::Cst(node) => abstract_(node),
-                CstOrReciprocate::Reciprocate(reciprocate) => {
-                    reciprocate.into_ast()
-                },
+                Operand::Cst(node) => abstract_(node),
+                Operand::Negated(negated, data) => negated.into_ast(data),
+                Operand::Reciprocate(reciprocate) => reciprocate.into_ast(),
             })
             .collect(),
         Reciprocate(right, data.clone()).into_ast(),
