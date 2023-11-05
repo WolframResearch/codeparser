@@ -299,23 +299,6 @@ impl WstpPut for Ast {
 
                 data.put(link);
             },
-            Ast::UnterminatedCall { head, args, data } => {
-                link.put_function(
-                    sym::CodeParser_UnterminatedCallNode.as_str(),
-                    3,
-                )
-                .unwrap();
-
-                head.put(link);
-
-                link.put_function(sym::List.as_str(), args.len()).unwrap();
-
-                for arg in args {
-                    arg.put(link);
-                }
-
-                data.put(link);
-            },
             Ast::SyntaxError {
                 kind,
                 children,

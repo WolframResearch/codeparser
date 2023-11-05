@@ -813,7 +813,7 @@ pub(super) fn abstract_call_node<
             let (_, children, _) =
                 abstractGroupNode_GroupMissingCloserNode(part);
 
-            WL!(CallMissingCloserNode[head, children, data])
+            Ast::call_missing_closer(head, children, data)
         },
         LHS!(CallNode[
             head:_,
@@ -837,12 +837,10 @@ pub(super) fn abstract_call_node<
                 ];
             */
 
-            WL!(
-                CallMissingCloserNode[
-                    WL!( CallNode[ToNode_Symbol(sym::TypeSpecifier), {head}, <||>] ),
-                    children,
-                    data
-                ]
+            Ast::call_missing_closer(
+                WL!( CallNode[ToNode_Symbol(sym::TypeSpecifier), {head}, <||>] ),
+                children,
+                data,
             )
         },
         LHS!(CallNode[
@@ -870,13 +868,7 @@ pub(super) fn abstract_call_node<
             // {head} ~Join~ part[[2]]
             children.insert(0, head);
 
-            WL!(
-                CallMissingCloserNode[
-                    ToNode_Symbol(sym::Part),
-                    children,
-                    data
-                ]
-            )
+            Ast::call_missing_closer(ToNode_Symbol(sym::Part), children, data)
         },
     }
 }

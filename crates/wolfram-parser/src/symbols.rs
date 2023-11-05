@@ -67,7 +67,6 @@ pub const CodeParser_SyntaxIssue: Symbol = unsafe { Symbol::unchecked_new("CodeP
 pub const CodeParser_TernaryNode: Symbol = unsafe { Symbol::unchecked_new("CodeParser`TernaryNode") };
 pub const CodeParser_TernaryOptionalPattern: Symbol = unsafe { Symbol::unchecked_new("CodeParser`TernaryOptionalPattern") };
 pub const CodeParser_TernaryTilde: Symbol = unsafe { Symbol::unchecked_new("CodeParser`TernaryTilde") };
-pub const CodeParser_UnterminatedCallNode: Symbol = unsafe { Symbol::unchecked_new("CodeParser`UnterminatedCallNode") };
 pub const CodeParser_UnterminatedTokenErrorNeedsReparseNode: Symbol = unsafe { Symbol::unchecked_new("CodeParser`UnterminatedTokenErrorNeedsReparseNode") };
 pub const SyntaxError_ExpectedSet: Symbol = unsafe { Symbol::unchecked_new("SyntaxError`ExpectedSet") };
 pub const SyntaxError_ExpectedSymbol: Symbol = unsafe { Symbol::unchecked_new("SyntaxError`ExpectedSymbol") };

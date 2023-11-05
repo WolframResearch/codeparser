@@ -36,12 +36,6 @@ pub enum Ast {
         args: Vec<Ast>,
         data: AstMetadata,
     },
-    /// `UnterminatedCallNode[...]`
-    UnterminatedCall {
-        head: Box<Ast>,
-        args: Vec<Ast>,
-        data: AstMetadata,
-    },
     /// `SyntaxErrorNode[...]`
     SyntaxError {
         kind: SyntaxErrorKind,
@@ -148,11 +142,6 @@ impl Ast {
                 args,
                 data,
             } => (args, data.source),
-            Ast::UnterminatedCall {
-                head: _,
-                args,
-                data,
-            } => (args, data.source),
             Ast::SyntaxError {
                 kind: _,
                 children,
@@ -196,7 +185,6 @@ impl Ast {
             Ast::Leaf { data, .. } | Ast::Error { data, .. } => data,
             Ast::Call { data, .. } => data,
             Ast::CallMissingCloser { data, .. } => data,
-            Ast::UnterminatedCall { data, .. } => data,
             Ast::SyntaxError { data, .. } => data,
             Ast::AbstractSyntaxError { data, .. } => data,
             Ast::Box { data, .. } => data,
@@ -206,6 +194,22 @@ impl Ast {
             Ast::GroupMissingOpener { data, .. } => data,
             Ast::TagBox_GroupParen { data, .. } => data,
             Ast::PrefixNode_PrefixLinearSyntaxBang(_, data) => data,
+        }
+    }
+
+    //==================================
+    // Convenience constructor methods
+    //==================================
+
+    pub(crate) fn call_missing_closer(
+        head: Ast,
+        args: Vec<Ast>,
+        data: impl Into<AstMetadata>,
+    ) -> Self {
+        Ast::CallMissingCloser {
+            head: Box::new(head),
+            args,
+            data: data.into(),
         }
     }
 }
@@ -380,30 +384,6 @@ macro_rules! WL {
     }};
 
     //========================
-    // CallMissingCloserNode
-    //========================
-
-    (CallMissingCloserNode[$head:expr, $args:expr, $data:expr]) => {{
-        $crate::ast::Ast::CallMissingCloser {
-            head: Box::new($head),
-            args: $args,
-            data: $crate::ast::AstMetadata::from($data),
-        }
-    }};
-
-    //========================
-    // UnterminatedCallNode
-    //========================
-
-    (UnterminatedCallNode[$head:expr, $args:expr, $data:expr]) => {{
-        $crate::ast::Ast::UnterminatedCall {
-            head: Box::new($head),
-            args: $args,
-            data: $crate::ast::AstMetadata::from($data),
-        }
-    }};
-
-    //========================
     // SyntaxErrorNode
     //========================
 
@@ -485,12 +465,6 @@ impl Debug for Ast {
                 .finish(),
             Self::CallMissingCloser { head, args, data } => f
                 .debug_struct("CallMissingCloser")
-                .field("head", head)
-                .field("args", args)
-                .field("data", data)
-                .finish(),
-            Self::UnterminatedCall { head, args, data } => f
-                .debug_struct("UnterminatedCall")
                 .field("head", head)
                 .field("args", args)
                 .field("data", data)
