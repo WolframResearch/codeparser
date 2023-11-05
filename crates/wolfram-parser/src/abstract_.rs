@@ -99,7 +99,6 @@ pub fn aggregate_cst<I: Debug, S: Debug>(node: Cst<I, S>) -> Option<Cst<I, S>> {
 
             let body = body.map_op(aggregate_op);
 
-
             Cst::Call(CallNode {
                 head: CallHead::Aggregate(Box::new(head)),
                 body,
