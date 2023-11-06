@@ -150,7 +150,7 @@ impl_Parselet!(
 
 #[derive(Debug)]
 pub(crate) struct CallParselet /*: public InfixParselet*/ {
-    GP: &'static GroupParselet,
+    GP: GroupParselet,
 }
 
 #[derive(Debug)]
@@ -1197,12 +1197,8 @@ impl GroupParselet {
 //======================================
 
 impl CallParselet {
-    pub(crate) const fn new(GP: &'static GroupParselet) -> Self {
+    pub(crate) const fn new(GP: GroupParselet) -> Self {
         Self { GP }
-    }
-
-    fn getGP(&self) -> &'static GroupParselet {
-        return self.GP;
     }
 }
 
@@ -1223,10 +1219,8 @@ impl InfixParselet for CallParselet {
         ctxt.init_callback(CallParselet::reduce_call);
         ctxt.set_precedence(Precedence::HIGHEST);
 
-        let GP = self.getGP();
-
         // MUSTTAIL
-        return GP.parse_prefix(session, tok_in);
+        return self.GP.parse_prefix(session, tok_in);
     }
 
     fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {

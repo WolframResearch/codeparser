@@ -692,9 +692,9 @@ const fn token_kind_to_infix_parselet(kind: TokenKind) -> &'static dyn InfixPars
         //
         // Calls
         //
-        TK::OpenSquare                 => CallParselet::new(&GroupParselet::new(TK::OpenSquare, GroupOperator::CodeParser_GroupSquare)),
-        TK::LongName_LeftDoubleBracket => CallParselet::new(&GroupParselet::new(TK::LongName_LeftDoubleBracket, GroupOperator::CodeParser_GroupDoubleBracket)),
-        TK::ColonColonOpenSquare       => CallParselet::new(&GroupParselet::new(TK::ColonColonOpenSquare, GroupOperator::CodeParser_GroupTypeSpecifier)),
+        TK::OpenSquare                 => CallParselet::new(GroupParselet::new(TK::OpenSquare, GroupOperator::CodeParser_GroupSquare)),
+        TK::LongName_LeftDoubleBracket => CallParselet::new(GroupParselet::new(TK::LongName_LeftDoubleBracket, GroupOperator::CodeParser_GroupDoubleBracket)),
+        TK::ColonColonOpenSquare       => CallParselet::new(GroupParselet::new(TK::ColonColonOpenSquare, GroupOperator::CodeParser_GroupTypeSpecifier)),
 
 
 
