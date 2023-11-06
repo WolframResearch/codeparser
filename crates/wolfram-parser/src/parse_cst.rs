@@ -11,7 +11,7 @@ use crate::{
         ColonLHS, DynParseBuilder, ParseBuilder, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
-    utils::debug_assert_matches,
+    utils::{self, debug_assert_matches},
     NodeSeq, ParseOptions,
 };
 
@@ -283,6 +283,24 @@ impl<'i> DynParseBuilder<'i> for ParseCst<'i> {
 
     fn reduce_ternary(&mut self, op: TernaryOperator) {
         self.reduce(|ctx| TernaryNode::new(op, ctx))
+    }
+
+    fn reduce_ternary_tag_set(
+        &mut self,
+        op: TernaryOperator,
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+    ) {
+        debug_assert_eq!(tok_equal.tok, TokenKind::Equal);
+
+        self.reduce(|NodeSeq(mut ctx)| {
+            ctx = utils::insert_before_last(
+                ctx,
+                std::iter::once(Cst::Token(tok_equal))
+                    .chain(trivia.0.into_iter().map(Cst::Token)),
+            );
+            TernaryNode::new(op, NodeSeq(ctx))
+        })
     }
 
     fn reduce_ternary_tag_unset(

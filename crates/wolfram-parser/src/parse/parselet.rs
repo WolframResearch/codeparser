@@ -1585,13 +1585,19 @@ impl EqualParselet {
             return session.parse_climb();
         }
 
-        session.push_leaf(tok_in);
-        session.push_trivia_seq(trivia);
-
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.
         // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
-        ctxt.set_callback(|s| EqualParselet::reduce_TagSet(s));
+        ctxt.set_callback_with_state(move |session| {
+            // TID:231105/3
+            session.reduce_ternary_tag_set(
+                TernaryOperator::TagSet,
+                tok_in,
+                trivia,
+            );
+
+            session.parse_climb();
+        });
 
         // MUSTTAIL
         return session.parse_prefix(tok);
@@ -1605,12 +1611,6 @@ impl EqualParselet {
 
     fn reduce_Unset(session: &mut ParserSession) {
         session.reduce_binary(BinaryOperator::Unset);
-
-        session.parse_climb();
-    }
-
-    fn reduce_TagSet(session: &mut ParserSession) {
-        session.reduce_ternary(TernaryOperator::TagSet);
 
         session.parse_climb();
     }

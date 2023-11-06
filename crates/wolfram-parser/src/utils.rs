@@ -625,6 +625,17 @@ pub(crate) fn most_slice<T>(list: &[T]) -> Option<&[T]> {
     Some(&list[..list.len() - 1])
 }
 
+pub(crate) fn insert_before_last<T>(
+    mut list: Vec<T>,
+    elems: impl Iterator<Item = T>,
+) -> Vec<T> {
+    debug_assert!(!list.is_empty());
+
+    list.splice(list.len() - 1..list.len() - 1, elems);
+
+    list
+}
+
 #[test]
 fn test_join() {
     assert_eq!(join([1, 2, 3], vec![4, 5, 6]), vec![1, 2, 3, 4, 5, 6])
@@ -637,6 +648,14 @@ fn test_most_slice() {
     assert_eq!(most_slice(&[1]), Some([].as_slice()));
 
     assert_eq!(most_slice(&[1, 2, 3]), Some([1, 2].as_slice()));
+}
+
+#[test]
+fn test_insert_before_last() {
+    assert_eq!(
+        insert_before_last(vec![1, 2, 3], [4, 5, 6].into_iter()),
+        vec![1, 2, 4, 5, 6, 3]
+    )
 }
 
 //======================================

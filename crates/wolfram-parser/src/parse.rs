@@ -299,6 +299,13 @@ pub(crate) trait DynParseBuilder<'i>: Debug {
 
     fn reduce_ternary(&mut self, op: TernaryOperator);
 
+    fn reduce_ternary_tag_set(
+        &mut self,
+        op: TernaryOperator,
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+    );
+
     fn reduce_ternary_tag_unset(
         &mut self,
         // TODO(cleanup): Always the same operator?
@@ -750,6 +757,17 @@ impl<'i, 'b> ParserSession<'i, 'b> {
         let _ = self.context_stack.pop().unwrap();
 
         self.builder.reduce_ternary(op);
+    }
+
+    fn reduce_ternary_tag_set(
+        &mut self,
+        op: TernaryOperator,
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+    ) {
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder.reduce_ternary_tag_set(op, tok_equal, trivia)
     }
 
     fn reduce_ternary_tag_unset(
