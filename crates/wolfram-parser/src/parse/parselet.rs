@@ -1558,9 +1558,9 @@ impl EqualParselet {
         panic_if_aborted!();
 
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let tok = session.current_token_eat_trivia();
+        let (trivia, tok) = session.current_token_eat_trivia_into();
 
         if tok.tok == TokenKind::Dot {
             //
@@ -1572,11 +1572,21 @@ impl EqualParselet {
             // TID:231105/1: Typical TagUnset ("=.")
             // TID:231105/2: TagUnset with interior trivia ("= .")
 
-            session.push_leaf_and_next(tok);
+            session.skip(tok);
+
+            session.reduce_ternary_tag_unset(
+                TernaryOperator::TagUnset,
+                tok_in,
+                trivia,
+                tok,
+            );
 
             // MUSTTAIL
-            return EqualParselet::reduce_TagUnset(session);
+            return session.parse_climb();
         }
+
+        session.push_leaf(tok_in);
+        session.push_trivia_seq(trivia);
 
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.
@@ -1601,12 +1611,6 @@ impl EqualParselet {
 
     fn reduce_TagSet(session: &mut ParserSession) {
         session.reduce_ternary(TernaryOperator::TagSet);
-
-        session.parse_climb();
-    }
-
-    fn reduce_TagUnset(session: &mut ParserSession) {
-        session.reduce_ternary(TernaryOperator::TagUnset);
 
         session.parse_climb();
     }

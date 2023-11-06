@@ -285,6 +285,25 @@ impl<'i> DynParseBuilder<'i> for ParseCst<'i> {
         self.reduce(|ctx| TernaryNode::new(op, ctx))
     }
 
+    fn reduce_ternary_tag_unset(
+        &mut self,
+        // TODO(cleanup): Always the same operator?
+        op: TernaryOperator,
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+        tok_dot: TokenRef<'i>,
+    ) {
+        debug_assert_eq!(tok_equal.tok, TokenKind::Equal);
+        debug_assert_eq!(tok_dot.tok, TokenKind::Dot);
+
+        self.reduce(|mut ctx| {
+            ctx.push(Cst::Token(tok_equal));
+            ctx.0.extend(trivia.0.into_iter().map(Cst::Token));
+            ctx.push(Cst::Token(tok_dot));
+            TernaryNode::new(op, ctx)
+        })
+    }
+
     fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator) {
         self.reduce(|ctx| PrefixBinaryNode::new(op, ctx))
     }

@@ -299,6 +299,15 @@ pub(crate) trait DynParseBuilder<'i>: Debug {
 
     fn reduce_ternary(&mut self, op: TernaryOperator);
 
+    fn reduce_ternary_tag_unset(
+        &mut self,
+        // TODO(cleanup): Always the same operator?
+        op: TernaryOperator,
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+        tok_dot: TokenRef<'i>,
+    );
+
     fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator);
 
     fn reduce_group(&mut self, op: GroupOperator);
@@ -741,6 +750,19 @@ impl<'i, 'b> ParserSession<'i, 'b> {
         let _ = self.context_stack.pop().unwrap();
 
         self.builder.reduce_ternary(op);
+    }
+
+    fn reduce_ternary_tag_unset(
+        &mut self,
+        op: TernaryOperator,
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+        tok_dot: TokenRef<'i>,
+    ) {
+        let _ = self.context_stack.pop().unwrap();
+
+        self.builder
+            .reduce_ternary_tag_unset(op, tok_equal, trivia, tok_dot)
     }
 
     fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator) {
