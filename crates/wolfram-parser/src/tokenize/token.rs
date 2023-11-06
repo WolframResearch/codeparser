@@ -477,7 +477,7 @@ impl<I: Debug, S: Debug> Debug for Token<I, S> {
         // by reducing the labor involved in manually writing Token { ... }
         //  struct instances.
         if cfg!(test) {
-            write!(f, "token!({:?}, {:#?}, {:#?})", tok, input, src)
+            write!(f, "token!({:?}, {:#?}, {:?})", tok, input, src)
         } else {
             f.debug_struct("Token")
                 .field("tok", tok)
