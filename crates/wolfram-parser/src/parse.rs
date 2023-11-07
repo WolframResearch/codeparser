@@ -34,11 +34,12 @@
 
 pub(crate) mod parselet;
 pub(crate) mod operators;
-mod token_parselets;
+// PRECOMMIT: Visibility change
+pub(crate) mod token_parselets;
 
 #[cfg(test)]
 mod parse_tests {
-    mod test_parselet;
+    // mod test_parselet;
 }
 
 
@@ -67,7 +68,6 @@ use self::{
         PrefixOperator,
     },
     parselet::{InfixParselet, PrefixParselet},
-    token_parselets::{INFIX_PARSELETS, PREFIX_PARSELETS},
 };
 
 //======================================
@@ -75,13 +75,14 @@ use self::{
 //======================================
 
 /// Parse Wolfram Language input using the specified [`ParseBuilder`].
-pub(crate) fn parse<'i, B: ParseBuilder<'i>>(
+pub(crate) fn parse<'i, B: ParseBuilder<'i> + 'i>(
     input: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<B::Output> {
     let mut builder: B = B::new_builder();
 
-    let result: ParseResult<()> = do_parse(input, &mut builder, opts);
+    let (builder, result): (B, ParseResult<()>) =
+        do_parse(input, builder, opts);
 
     let exprs = builder.finish(input, opts);
 
@@ -94,11 +95,12 @@ pub(crate) fn parse<'i, B: ParseBuilder<'i>>(
     }
 }
 
-fn do_parse<'i: 'b, 'b>(
+fn do_parse<'i, B: ParseBuilder<'i> + 'i>(
     input: &'i [u8],
-    builder: &'b mut dyn DynParseBuilder<'i>,
+    // builder: &'b mut dyn DynParseBuilder<'i>,
+    builder: B,
     opts: &ParseOptions,
-) -> ParseResult<()> {
+) -> (B, ParseResult<()>) {
     let mut session = ParserSession::new(&*input, builder, opts);
 
     quirks::set_quirks(session.quirk_settings);
@@ -160,7 +162,7 @@ fn do_parse<'i: 'b, 'b>(
         DiagnosticsLogTime();
     }
 
-    return create_parse_result(&session.tokenizer, ());
+    return (session.builder, create_parse_result(&session.tokenizer, ()));
 }
 
 
@@ -170,18 +172,21 @@ fn do_parse<'i: 'b, 'b>(
 
 /// A parser session
 #[derive(Debug)]
-struct ParserSession<'i, 'b> {
+pub(crate) struct ParserSession<'i, B> {
     tokenizer: Tokenizer<'i>,
 
-    builder: &'b mut dyn DynParseBuilder<'i>,
+    builder: B,
 
-    context_stack: Vec<Context<'i, 'b>>,
+    prefix_parselets: Box<[Box<dyn PrefixParselet<'i, B>>; TokenKind::COUNT]>,
+    infix_parselets: Box<[Box<dyn InfixParselet<'i, B>>; TokenKind::COUNT]>,
+
+    context_stack: Vec<Context<'i, B>>,
 
     quirk_settings: QuirkSettings,
 }
 
-struct Context<'i, 'b> {
-    continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i, 'b>) + 'i>>,
+pub(crate) struct Context<'i, B> {
+    continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i, B>) + 'i>>,
 
     pub(crate) prec: Option<Precedence>,
 }
@@ -195,6 +200,14 @@ pub(crate) trait ParseBuilder<'i>: DynParseBuilder<'i> + Debug {
     type Output;
 
     fn new_builder() -> Self;
+
+    // fn prefix_parselet(kind: TokenKind) -> Box<dyn PrefixParselet<'i, Self>>;
+    // fn infix_parselet(kind: TokenKind) -> Box<dyn InfixParselet<'i, Self>>;
+
+
+    // PRECOMMIT
+    // fn prefix_parselets(
+    // ) -> [&'static dyn PrefixParselet<'i, Self>; TokenKind::COUNT];
 
     /// Complete the parse and return the parsed output.
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output;
@@ -375,7 +388,7 @@ pub(crate) enum ColonLHS {
     Error,
 }
 
-impl<'i, 'b> Context<'i, 'b> {
+impl<'i, B: 'i> Context<'i, B> {
     pub fn new(prec: Option<Precedence>) -> Self {
         Context {
             continue_parse: None,
@@ -383,13 +396,13 @@ impl<'i, 'b> Context<'i, 'b> {
         }
     }
 
-    fn init_callback(&mut self, func: fn(&mut ParserSession)) {
+    fn init_callback(&mut self, func: fn(&mut ParserSession<'i, B>)) {
         debug_assert!(matches!(self.continue_parse, None));
 
         self.continue_parse = Some(Box::new(func));
     }
 
-    fn init_callback_with_state<F: FnOnce(&mut ParserSession<'i, 'b>) + 'i>(
+    fn init_callback_with_state<F: FnOnce(&mut ParserSession<'i, B>) + 'i>(
         &mut self,
         func: F,
     ) {
@@ -404,11 +417,11 @@ impl<'i, 'b> Context<'i, 'b> {
         self.continue_parse = None;
     }
 
-    fn set_callback(&mut self, func: fn(&mut ParserSession)) {
+    fn set_callback(&mut self, func: fn(&mut ParserSession<'i, B>)) {
         self.continue_parse = Some(Box::new(func));
     }
 
-    fn set_callback_with_state<F: FnOnce(&mut ParserSession<'i, 'b>) + 'i>(
+    fn set_callback_with_state<F: FnOnce(&mut ParserSession<'i, B>) + 'i>(
         &mut self,
         func: F,
     ) {
@@ -429,27 +442,35 @@ impl<'i, 'b> Context<'i, 'b> {
 }
 
 impl TokenKind {
-    /// Get the [`PrefixParselet`] implementation associated with this token.
-    fn prefix_parselet(&self) -> &'static dyn PrefixParselet {
-        let index = usize::from(self.id());
+    // PRECOMMIT
 
-        PREFIX_PARSELETS[index]
-    }
+    // /// Get the [`PrefixParselet`] implementation associated with this token.
+    // fn prefix_parselet<'i, B: ParseBuilder<'i> + 'i>(
+    //     &self,
+    // ) -> Box<(dyn PrefixParselet<'i, B> + 'i)> {
+    //     let index = usize::from(self.id());
 
-    /// Get the [`InfixParselet`] implementation associated with this token.
-    fn infix_parselet(&self) -> &'static dyn InfixParselet {
-        let index = usize::from(self.id());
+    //     // B::prefix_parselets()[index]
+    //     todo!("PRECOMMIT")
+    // }
 
-        INFIX_PARSELETS[index]
-    }
+    // /// Get the [`InfixParselet`] implementation associated with this token.
+    // fn infix_parselet<'i, B: ParseBuilder<'i> + 'i>(
+    //     &self,
+    // ) -> Box<(dyn InfixParselet<'i, B> + 'i)> {
+    //     let index = usize::from(self.id());
+
+    //     todo!("PRECOMMIT")
+    //     // B::infix_parselets()[index]
+    // }
 }
 
-impl<'i, 'b> ParserSession<'i, 'b> {
+impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     pub fn new(
         input: &'i [u8],
-        builder: &'b mut dyn DynParseBuilder<'i>,
+        builder: B,
         opts: &ParseOptions,
-    ) -> ParserSession<'i, 'b> {
+    ) -> ParserSession<'i, B> {
         let ParseOptions {
             first_line_behavior: _,
             src_convention: _,
@@ -463,6 +484,8 @@ impl<'i, 'b> ParserSession<'i, 'b> {
         ParserSession {
             tokenizer: Tokenizer::new(input, opts),
             builder,
+            prefix_parselets: token_parselets::get_prefix_parselets(),
+            infix_parselets: token_parselets::get_infix_parselets(),
             context_stack: Vec::new(),
             quirk_settings,
         }
@@ -477,25 +500,71 @@ impl<'i, 'b> ParserSession<'i, 'b> {
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
-        // MUSTTAIL
-        token.tok.prefix_parselet().parse_prefix(self, token)
+        // // MUSTTAIL
+        // let mut parselet: Box<dyn PrefixParselet<'i, B>> =
+        //     self.prefix_parselet(token.tok);
+        // // token.tok.prefix_parselet();
+
+        // parselet.parse_prefix(self, token)
+
+        let index = usize::from(token.tok.id());
+
+        let parselet = &*self.prefix_parselets[index];
+
+        fn make<'i, B2>() -> ParserSession<'i, B2> {
+            todo!()
+        }
+
+        let mut sess: ParserSession<'i, B> = make::<'i, B>();
+
+        parselet.parse_prefix(&mut sess, token)
     }
 
     /// Lookup and apply the [`InfixParselet`] implementation associated
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     fn parse_infix(&mut self, token: TokenRef<'i>) {
-        token.tok.infix_parselet().parse_infix(self, token)
+        // token.tok.infix_parselet().parse_infix(self, token)
+        // token.tok.infix_parselet().parse_infix(self, token)
+
+        // let mut parselet = self.infix_parselet(token.tok);
+
+        // parselet.parse_infix(self, token)
+
+        todo!()
+    }
+
+    // /// Get the [`PrefixParselet`] implementation associated with this token.
+    // fn prefix_parselet(
+    //     // PRECOMMIT: Remove self?
+    //     &self,
+    //     kind: TokenKind,
+    // ) -> Box<dyn PrefixParselet<'i, B> + 'i> {
+    //     let index = usize::from(kind.id());
+
+    //     self.prefix_parselets[index]
+    // }
+
+    /// Get the [`InfixParselet`] implementation associated with this token.
+    fn infix_parselet(
+        // PRECOMMIT: Remove self?
+        &self,
+        kind: TokenKind,
+    ) -> &(dyn InfixParselet<'i, B> + 'i) {
+        let index = usize::from(kind.id());
+
+        &*self.infix_parselets[index]
+        // B::infix_parselets()[index]
     }
 
     fn do_process_implicit_times(
         &mut self,
         token: TokenRef<'i>,
     ) -> TokenRef<'i> {
-        token
-            .tok
-            .infix_parselet()
-            .process_implicit_times(self, token)
+        // self.infix_parselet(token.tok)
+        //     .process_implicit_times(self, token)
+
+        todo!()
     }
 
     pub(crate) fn push_and_climb(&mut self, leaf: TokenRef<'i>) {
@@ -519,7 +588,9 @@ impl<'i, 'b> ParserSession<'i, 'b> {
 
         token = self.do_process_implicit_times(token);
 
-        let TokenPrecedence = token.tok.infix_parselet().getPrecedence(self);
+        let TokenPrecedence =
+            // self.infix_parselet(token.tok).getPrecedence(self);
+            todo!();
 
         //
         // if (Ctxt.Prec > TokenPrecedence)
@@ -551,7 +622,7 @@ impl<'i, 'b> ParserSession<'i, 'b> {
             return;
         }
 
-        let ctxt: &mut Context = self.top_context();
+        let ctxt: &mut Context<_> = self.top_context();
 
         let Some(continue_parse) =
             std::mem::replace(&mut ctxt.continue_parse, None)
@@ -851,7 +922,7 @@ impl<'i, 'b> ParserSession<'i, 'b> {
     pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
         &'s mut self,
         prec: P,
-    ) -> &'s mut Context<'i, 'b> {
+    ) -> &'s mut Context<'i, B> {
         let prec = prec.into();
 
         let () = self.builder.begin_context();
@@ -861,7 +932,7 @@ impl<'i, 'b> ParserSession<'i, 'b> {
         return self.context_stack.last_mut().unwrap();
     }
 
-    fn top_context<'s>(&'s mut self) -> &'s mut Context<'i, 'b> {
+    fn top_context<'s>(&'s mut self) -> &'s mut Context<'i, B> {
         return self
             .context_stack
             .last_mut()
@@ -872,7 +943,7 @@ impl<'i, 'b> ParserSession<'i, 'b> {
     // Precedence management
     //==================================
 
-    pub(crate) fn top_precedence(&mut self) -> Option<Precedence> {
+    pub(crate) fn top_precedence(&self) -> Option<Precedence> {
         match self.context_stack.last() {
             Some(ctxt) => ctxt.prec,
             None => None,
@@ -1001,7 +1072,7 @@ impl<'i> TriviaSeq<TokenStr<'i>> {
 // Format Impls
 //======================================
 
-impl<'i, 'b> Debug for Context<'i, 'b> {
+impl<'i, B> Debug for Context<'i, B> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Context")
             .field("continue_parse", &"<continuation function>")

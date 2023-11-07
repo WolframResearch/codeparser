@@ -14,10 +14,10 @@ impl UnderParselet {
     }
 }
 
-impl PrefixParselet for UnderParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for UnderParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -36,9 +36,9 @@ impl PrefixParselet for UnderParselet {
 }
 
 impl UnderParselet {
-    pub(in crate::parse) fn get_parse_infix_context_sensitive<'i, 'b>(
+    pub(in crate::parse) fn get_parse_infix_context_sensitive<'i, B>(
         &self,
-        session: &mut ParserSession<'i, 'b>,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) -> UnderParseData<'i> {
         //
@@ -50,9 +50,9 @@ impl UnderParselet {
         self.get_parse_under_context_sensitive(session, tok_in)
     }
 
-    fn get_parse_under_context_sensitive<'i, 'b>(
+    fn get_parse_under_context_sensitive<'i, B>(
         &self,
-        session: &mut ParserSession<'i, 'b>,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) -> UnderParseData<'i> {
         panic_if_aborted!();
@@ -113,10 +113,10 @@ impl UnderParselet {
 // UnderDotParselet
 //======================================
 
-impl PrefixParselet for UnderDotParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for UnderDotParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //

@@ -14,7 +14,7 @@ use crate::{
     },
     panic_if_aborted,
     parse::token_parselets::{under1Parselet, under2Parselet, under3Parselet},
-    parse::{ColonLHS, ParserSession},
+    parse::{ColonLHS, ParseBuilder, ParserSession},
     precedence::Precedence,
     source::*,
     tokenize::{
@@ -27,31 +27,36 @@ use crate::{
 //
 /// Classes that derive from Parselet are responsible for parsing specific kinds of syntax
 //
-pub(crate) trait Parselet: Any + std::fmt::Debug {
-    fn as_any(&self) -> &dyn Any;
+// PRECOMMIT: Remove Any?
+pub(crate) trait Parselet: std::fmt::Debug {
+    // fn as_any(&self) -> &dyn Any;
 }
 
 //======================================
 // Parselet categories
 //======================================
 
-pub(in crate::parse) trait PrefixParselet: Parselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+// PRECOMMIT: Reduce visibility?
+pub(crate) trait PrefixParselet<'i, B>: Parselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         token: TokenRef<'i>,
     );
 }
 
 
-pub(in crate::parse) trait InfixParselet: Parselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+pub(crate) trait InfixParselet<'i, B: 'i>: Parselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         token: TokenRef<'i>,
     );
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence>;
+    fn getPrecedence(
+        &self,
+        session: &ParserSession<'i, B>,
+    ) -> Option<Precedence>;
 
     fn getOp(&self) -> InfixParseletOperator {
         // TODO: Make this sentinel value unnecessary?
@@ -62,9 +67,9 @@ pub(in crate::parse) trait InfixParselet: Parselet {
 
     /// Should always return either `tok_in` or a new
     /// [`TokenKind::Fake_ImplicitTimes`] token.
-    fn process_implicit_times<'i, 'b>(
+    fn process_implicit_times(
         &self,
-        _session: &mut ParserSession<'i, 'b>,
+        _session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         return tok_in;
@@ -98,9 +103,10 @@ macro_rules! impl_Parselet {
     ($($name:ident),* $(,)?) => {
         $(
             impl Parselet for $name {
-                fn as_any(&self) -> &dyn Any {
-                    self
-                }
+                // PRECOMMIT
+                // fn as_any(&self) -> &dyn Any {
+                //     self
+                // }
             }
         )*
     };
@@ -312,7 +318,7 @@ pub(crate) struct ColonEqualParselet /* : BinaryOperatorParselet */ {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) struct IntegralParselet /* : PrefixParselet */ {
     pub(crate) Op1: PrefixBinaryOperator,
     pub(crate) Op2: PrefixOperator,
@@ -367,10 +373,10 @@ pub(crate) struct UnderDotParselet /* : PrefixParselet */ {}
 // LeafParselet
 //======================================
 
-impl PrefixParselet for LeafParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for LeafParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         session.push_leaf_and_next(tok_in);
@@ -384,10 +390,12 @@ impl PrefixParselet for LeafParselet {
 // PrefixErrorParselet
 //======================================
 
-impl PrefixParselet for PrefixErrorParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixErrorParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         assert!(tok_in.tok.isError());
@@ -403,10 +411,12 @@ impl PrefixParselet for PrefixErrorParselet {
 // PrefixCloserParselet
 //======================================
 
-impl PrefixParselet for PrefixCloserParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixCloserParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         assert!(tok_in.tok.isCloser());
@@ -442,10 +452,12 @@ impl PrefixParselet for PrefixCloserParselet {
 // PrefixToplevelCloserParselet
 //======================================
 
-impl PrefixParselet for PrefixToplevelCloserParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixToplevelCloserParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         assert!(tok_in.tok.isCloser());
@@ -470,10 +482,12 @@ impl PrefixParselet for PrefixToplevelCloserParselet {
 // PrefixEndOfFileParselet
 //======================================
 
-impl PrefixParselet for PrefixEndOfFileParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixEndOfFileParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -500,10 +514,12 @@ impl PrefixParselet for PrefixEndOfFileParselet {
 // PrefixUnsupportedParselet
 //======================================
 
-impl PrefixParselet for PrefixUnsupportedTokenParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixUnsupportedTokenParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -522,10 +538,12 @@ impl PrefixParselet for PrefixUnsupportedTokenParselet {
 // PrefixCommaParselet
 //======================================
 
-impl PrefixParselet for PrefixCommaParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixCommaParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -553,10 +571,12 @@ impl PrefixParselet for PrefixCommaParselet {
 // PrefixUnhandledParselet
 //======================================
 
-impl PrefixParselet for PrefixUnhandledParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixUnhandledParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         assert!(!tok_in.tok.isPossibleBeginning(), "handle at call site");
@@ -576,7 +596,7 @@ impl PrefixParselet for PrefixUnhandledParselet {
         let _ = session.tokenizer.peek_token();
 
         let TokenPrecedence =
-            tok_in.tok.infix_parselet().getPrecedence(session);
+            session.infix_parselet(tok_in.tok).getPrecedence(session);
 
         //
         // if (Ctxt.prec > TokenPrecedence)
@@ -612,16 +632,18 @@ impl PrefixParselet for PrefixUnhandledParselet {
 // InfixToplevelNewlineParselet
 //======================================
 
-impl InfixParselet for InfixToplevelNewlineParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        _session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for InfixToplevelNewlineParselet
+{
+    fn parse_infix(
+        &self,
+        _session: &mut ParserSession<'i, B>,
         _token: TokenRef<'i>,
     ) {
         assert!(false);
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(&self, _: &ParserSession<'i, B>) -> Option<Precedence> {
         //
         // Do not do Implicit Times across top-level newlines
         //
@@ -634,10 +656,10 @@ impl InfixParselet for InfixToplevelNewlineParselet {
 // SymbolParselet
 //======================================
 
-impl PrefixParselet for SymbolParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for SymbolParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -754,10 +776,12 @@ impl PrefixOperatorParselet {
     }
 }
 
-impl PrefixParselet for PrefixOperatorParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixOperatorParselet
+{
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -766,10 +790,13 @@ impl PrefixParselet for PrefixOperatorParselet {
 
         let ctxt = session.push_context(self.getPrecedence());
 
-        ctxt.init_callback_with_state(|session: &mut ParserSession| {
-            session.reduce_prefix(self.Op);
-            session.parse_climb();
-        });
+        let op = self.Op;
+        ctxt.init_callback_with_state(
+            move |session: &mut ParserSession<'i, B>| {
+                session.reduce_prefix(op);
+                session.parse_climb();
+            },
+        );
 
         let tok = session.current_token_eat_trivia();
 
@@ -782,10 +809,12 @@ impl PrefixParselet for PrefixOperatorParselet {
 // InfixImplicitTimesParselet
 //======================================
 
-impl InfixParselet for InfixImplicitTimesParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        _session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for InfixImplicitTimesParselet
+{
+    fn parse_infix(
+        &self,
+        _session: &mut ParserSession<'i, B>,
         _token: TokenRef<'i>,
     ) {
         assert!(false);
@@ -793,15 +822,15 @@ impl InfixParselet for InfixImplicitTimesParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         panic!("The last token may not have been added to InfixParselets");
     }
 
 
-    fn process_implicit_times<'i, 'b>(
+    fn process_implicit_times(
         &self,
-        _session: &mut ParserSession<'i, 'b>,
+        _session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         return Token::at_start(TokenKind::Fake_ImplicitTimes, tok_in);
@@ -812,14 +841,16 @@ impl InfixParselet for InfixImplicitTimesParselet {
 // PrefixAssertFalseParselet
 //======================================
 
-impl PrefixParselet for PrefixAssertFalseParselet {
-    // fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
+    for PrefixAssertFalseParselet
+{
+    // fn getPrecedence(&self, session: &mut ParserSession<'i, B>) -> Option<Precedence> {
     //     None
     // }
 
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        _session: &mut ParserSession<'i, 'b>,
+    fn parse_prefix(
+        &self,
+        _session: &mut ParserSession<'i, B>,
         _token: TokenRef<'i>,
     ) {
         assert!(false);
@@ -831,10 +862,12 @@ impl PrefixParselet for PrefixAssertFalseParselet {
 // InfixAssertFalseParselet
 //======================================
 
-impl InfixParselet for InfixAssertFalseParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        _session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for InfixAssertFalseParselet
+{
+    fn parse_infix(
+        &self,
+        _session: &mut ParserSession<'i, B>,
         _token: TokenRef<'i>,
     ) {
         assert!(false)
@@ -842,7 +875,7 @@ impl InfixParselet for InfixAssertFalseParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         None
     }
@@ -861,10 +894,12 @@ impl BinaryOperatorParselet {
     }
 }
 
-impl InfixParselet for BinaryOperatorParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for BinaryOperatorParselet
+{
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -876,8 +911,9 @@ impl InfixParselet for BinaryOperatorParselet {
 
         let ctxt = session.top_context();
 
-        ctxt.init_callback_with_state(|session| {
-            session.reduce_binary(self.Op);
+        let op = self.Op;
+        ctxt.init_callback_with_state(move |session| {
+            session.reduce_binary(op);
             session.parse_climb();
         });
 
@@ -887,7 +923,7 @@ impl InfixParselet for BinaryOperatorParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(self.precedence)
     }
@@ -907,10 +943,12 @@ impl InfixOperatorParselet {
     }
 }
 
-impl InfixParselet for InfixOperatorParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for InfixOperatorParselet
+{
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -934,7 +972,7 @@ impl InfixParselet for InfixOperatorParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(self.precedence)
     }
@@ -945,7 +983,10 @@ impl InfixParselet for InfixOperatorParselet {
 }
 
 impl InfixOperatorParselet {
-    fn parse_loop(&self, session: &mut ParserSession) {
+    fn parse_loop<'i, B: ParseBuilder<'i> + 'i>(
+        &self,
+        session: &mut ParserSession<'i, B>,
+    ) {
         loop {
             panic_if_aborted!();
 
@@ -965,7 +1006,12 @@ impl InfixOperatorParselet {
             //
             // then just compare parselets directly here
             //
-            if tok1.tok.infix_parselet().getOp() != self.getOp() {
+            // if tok1.tok.infix_parselet().getOp() != self.getOp() {
+
+            let PRECOMMIT = session.infix_parselet(tok1.tok);
+
+            if PRECOMMIT.getOp() != <Self as InfixParselet<'i, B>>::getOp(self)
+            {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //
@@ -1005,10 +1051,12 @@ impl PostfixOperatorParselet {
     }
 }
 
-impl InfixParselet for PostfixOperatorParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for PostfixOperatorParselet
+{
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         session.skip(tok_in);
@@ -1021,7 +1069,7 @@ impl InfixParselet for PostfixOperatorParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(self.precedence)
     }
@@ -1044,10 +1092,10 @@ impl GroupParselet {
     }
 }
 
-impl PrefixParselet for GroupParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -1065,7 +1113,10 @@ impl PrefixParselet for GroupParselet {
 }
 
 impl GroupParselet {
-    fn parse_loop(&self, session: &mut ParserSession) {
+    fn parse_loop<'i, B: ParseBuilder<'i> + 'i>(
+        &self,
+        session: &mut ParserSession<'i, B>,
+    ) {
         loop {
             panic_if_aborted!();
 
@@ -1150,7 +1201,10 @@ impl GroupParselet {
         } // loop
     }
 
-    fn reduce_group(&self, session: &mut ParserSession) {
+    fn reduce_group<'i, B: ParseBuilder<'i> + 'i>(
+        &self,
+        session: &mut ParserSession<'i, B>,
+    ) {
         let op = self.Op;
 
         session.pop_group();
@@ -1160,7 +1214,10 @@ impl GroupParselet {
         session.parse_climb();
     }
 
-    fn reduce_missing_closer(&self, session: &mut ParserSession) {
+    fn reduce_missing_closer<'i, B: ParseBuilder<'i> + 'i>(
+        &self,
+        session: &mut ParserSession<'i, B>,
+    ) {
         let op = self.Op;
 
         session.pop_group();
@@ -1171,7 +1228,10 @@ impl GroupParselet {
         return session.try_continue();
     }
 
-    fn reduce_unterminated_group(&self, session: &mut ParserSession) {
+    fn reduce_unterminated_group<'i, B: ParseBuilder<'i> + 'i>(
+        &self,
+        session: &mut ParserSession<'i, B>,
+    ) {
         let op = self.Op;
 
         // The input MUST be valid UTF-8, because we only reduce an *unterminated*
@@ -1202,10 +1262,10 @@ impl CallParselet {
     }
 }
 
-impl InfixParselet for CallParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for CallParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -1223,13 +1283,18 @@ impl InfixParselet for CallParselet {
         return self.GP.parse_prefix(session, tok_in);
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(
+        &self,
+        _session: &ParserSession<'i, B>,
+    ) -> Option<Precedence> {
         Some(Precedence::CALL)
     }
 }
 
 impl CallParselet {
-    fn reduce_call(session: &mut ParserSession) {
+    fn reduce_call<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_call();
 
         session.parse_climb();
@@ -1240,10 +1305,10 @@ impl CallParselet {
 // TildeParselet
 //======================================
 
-impl InfixParselet for TildeParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TildeParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -1269,7 +1334,10 @@ impl InfixParselet for TildeParselet {
         return session.parse_prefix(first_tok);
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(
+        &self,
+        session: &ParserSession<'i, B>,
+    ) -> Option<Precedence> {
         if session.top_non_trivia_node_is_tilde() {
             return None;
         }
@@ -1279,7 +1347,9 @@ impl InfixParselet for TildeParselet {
 }
 
 impl TildeParselet {
-    fn parse1(session: &mut ParserSession) {
+    fn parse1<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         panic_if_aborted!();
 
 
@@ -1319,7 +1389,9 @@ impl TildeParselet {
         return session.parse_prefix(tok2);
     }
 
-    fn reduce_tilde(session: &mut ParserSession) {
+    fn reduce_tilde<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_ternary(TernaryOperator::CodeParser_TernaryTilde);
 
         session.parse_climb();
@@ -1330,10 +1402,10 @@ impl TildeParselet {
 // ColonParselet
 //======================================
 
-impl InfixParselet for ColonParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -1389,7 +1461,10 @@ impl InfixParselet for ColonParselet {
         }
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(
+        &self,
+        session: &ParserSession<'i, B>,
+    ) -> Option<Precedence> {
         if session.check_pattern_precedence() {
             return Some(Precedence::FAKE_OPTIONALCOLON);
         }
@@ -1402,10 +1477,10 @@ impl InfixParselet for ColonParselet {
 // SlashColonParselet
 //======================================
 
-impl InfixParselet for SlashColonParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SlashColonParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -1438,13 +1513,18 @@ impl InfixParselet for SlashColonParselet {
         return session.parse_prefix(tok);
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(
+        &self,
+        _session: &ParserSession<'i, B>,
+    ) -> Option<Precedence> {
         Some(Precedence::SLASHCOLON)
     }
 }
 
 impl SlashColonParselet {
-    fn parse1(session: &mut ParserSession) {
+    fn parse1<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         panic_if_aborted!();
 
 
@@ -1501,10 +1581,10 @@ impl EqualParselet {
     }
 }
 
-impl InfixParselet for EqualParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for EqualParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -1535,14 +1615,17 @@ impl InfixParselet for EqualParselet {
         return session.parse_prefix(tok);
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(
+        &self,
+        session: &ParserSession<'i, B>,
+    ) -> Option<Precedence> {
         self.op.getPrecedence(session)
     }
 }
 
 impl EqualParselet {
-    fn parse_infix_tag<'i, 'b>(
-        session: &mut ParserSession<'i, 'b>,
+    fn parse_infix_tag<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -1597,13 +1680,17 @@ impl EqualParselet {
         return session.parse_prefix(tok);
     }
 
-    fn reduce_Set(session: &mut ParserSession) {
+    fn reduce_Set<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_binary(BinaryOperator::Set);
 
         session.parse_climb();
     }
 
-    fn reduce_Unset(session: &mut ParserSession) {
+    fn reduce_Unset<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_binary(BinaryOperator::Unset);
 
         session.parse_climb();
@@ -1625,10 +1712,10 @@ impl ColonEqualParselet {
     }
 }
 
-impl InfixParselet for ColonEqualParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonEqualParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -1645,15 +1732,18 @@ impl InfixParselet for ColonEqualParselet {
         return session.parse_prefix(tok);
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(
+        &self,
+        session: &ParserSession<'i, B>,
+    ) -> Option<Precedence> {
         self.op.getPrecedence(session)
     }
 }
 
 
 impl ColonEqualParselet {
-    fn parse_infix_tag<'i, 'b>(
-        session: &mut ParserSession<'i, 'b>,
+    fn parse_infix_tag<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -1672,13 +1762,17 @@ impl ColonEqualParselet {
         return session.parse_prefix(tok);
     }
 
-    fn reduce_SetDelayed(session: &mut ParserSession) {
+    fn reduce_SetDelayed<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_binary(BinaryOperator::SetDelayed);
 
         session.parse_climb();
     }
 
-    fn reduce_TagSetDelayed(session: &mut ParserSession) {
+    fn reduce_TagSetDelayed<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_ternary(TernaryOperator::TagSetDelayed);
 
         session.parse_climb();
@@ -1689,10 +1783,10 @@ impl ColonEqualParselet {
 // CommaParselet
 //======================================
 
-impl InfixParselet for CommaParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for CommaParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -1735,14 +1829,16 @@ impl InfixParselet for CommaParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(Precedence::COMMA)
     }
 }
 
 impl CommaParselet {
-    fn parse_loop(session: &mut ParserSession) {
+    fn parse_loop<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         loop {
             panic_if_aborted!();
 
@@ -1792,7 +1888,9 @@ impl CommaParselet {
         } // loop
     }
 
-    fn reduce_comma(session: &mut ParserSession) {
+    fn reduce_comma<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_infix(InfixOperator::CodeParser_Comma);
 
         //
@@ -1816,10 +1914,10 @@ impl CommaParselet {
 // SemiParselet
 //======================================
 
-impl InfixParselet for SemiParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -1885,14 +1983,16 @@ impl InfixParselet for SemiParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(Precedence::SEMI)
     }
 }
 
 impl SemiParselet {
-    fn parse_loop(session: &mut ParserSession) {
+    fn parse_loop<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         loop {
             panic_if_aborted!();
 
@@ -1972,7 +2072,9 @@ impl SemiParselet {
         } // loop
     }
 
-    fn reduce_CompoundExpression(session: &mut ParserSession) {
+    fn reduce_CompoundExpression<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         session.reduce_infix(InfixOperator::CompoundExpression);
 
         session.parse_climb();
@@ -1983,10 +2085,10 @@ impl SemiParselet {
 // ColonColonParselet
 //======================================
 
-impl InfixParselet for ColonColonParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonColonParselet {
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -2016,14 +2118,16 @@ impl InfixParselet for ColonColonParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(Precedence::COLONCOLON)
     }
 }
 
 impl ColonColonParselet {
-    fn parse_loop(session: &mut ParserSession) {
+    fn parse_loop<'i, B: ParseBuilder<'i> + 'i>(
+        session: &mut ParserSession<'i, B>,
+    ) {
         loop {
             panic_if_aborted!();
 
@@ -2059,10 +2163,12 @@ impl ColonColonParselet {
 // GreaterGreaterParselet
 //======================================
 
-impl InfixParselet for GreaterGreaterParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for GreaterGreaterParselet
+{
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -2090,7 +2196,7 @@ impl InfixParselet for GreaterGreaterParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(Precedence::GREATERGREATER)
     }
@@ -2100,10 +2206,12 @@ impl InfixParselet for GreaterGreaterParselet {
 // GreaterGreaterGreaterParselet
 //======================================
 
-impl InfixParselet for GreaterGreaterGreaterParselet {
-    fn parse_infix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
+    for GreaterGreaterGreaterParselet
+{
+    fn parse_infix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -2131,7 +2239,7 @@ impl InfixParselet for GreaterGreaterGreaterParselet {
 
     fn getPrecedence(
         &self,
-        _session: &mut ParserSession,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
         Some(Precedence::GREATERGREATERGREATER)
     }
@@ -2141,10 +2249,10 @@ impl InfixParselet for GreaterGreaterGreaterParselet {
 // LessLessParselet
 //======================================
 
-impl PrefixParselet for LessLessParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for LessLessParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -2180,10 +2288,10 @@ impl PrefixParselet for LessLessParselet {
 // HashParselet
 //======================================
 
-impl PrefixParselet for HashParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for HashParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -2227,10 +2335,10 @@ impl PrefixParselet for HashParselet {
 // HashHashParselet
 //======================================
 
-impl PrefixParselet for HashHashParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for HashHashParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -2266,10 +2374,10 @@ impl PrefixParselet for HashHashParselet {
 // PercentParselet
 //======================================
 
-impl PrefixParselet for PercentParselet {
-    fn parse_prefix<'i, 'b>(
-        &'static self,
-        session: &mut ParserSession<'i, 'b>,
+impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for PercentParselet {
+    fn parse_prefix(
+        &self,
+        session: &mut ParserSession<'i, B>,
         tok_in: TokenRef<'i>,
     ) {
         //
