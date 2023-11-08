@@ -25,16 +25,12 @@ use crate::{
 //
 /// Classes that derive from Parselet are responsible for parsing specific kinds of syntax
 //
-// PRECOMMIT: Remove Any?
-pub(crate) trait Parselet: std::fmt::Debug {
-    // fn as_any(&self) -> &dyn Any;
-}
+pub(crate) trait Parselet: std::fmt::Debug {}
 
 //======================================
 // Parselet categories
 //======================================
 
-// PRECOMMIT: Reduce visibility?
 pub(crate) trait PrefixParselet<'i, B>: Parselet {
     fn parse_prefix(
         &self,
@@ -100,12 +96,7 @@ impl From<BinaryOperator> for InfixParseletOperator {
 macro_rules! impl_Parselet {
     ($($name:ident),* $(,)?) => {
         $(
-            impl Parselet for $name {
-                // PRECOMMIT
-                // fn as_any(&self) -> &dyn Any {
-                //     self
-                // }
-            }
+            impl Parselet for $name {}
         )*
     };
 }
@@ -1007,10 +998,10 @@ impl InfixOperatorParselet {
             //
             // if tok1.tok.infix_parselet().getOp() != self.getOp() {
 
-            let PRECOMMIT =
+            let tok1_op =
                 B::with_infix_parselet(tok1.tok, |parselet| parselet.getOp());
 
-            if PRECOMMIT != <Self as InfixParselet<'i, B>>::getOp(self) {
+            if tok1_op != <Self as InfixParselet<'i, B>>::getOp(self) {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //

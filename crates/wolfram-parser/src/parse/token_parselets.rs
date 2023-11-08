@@ -20,10 +20,11 @@ pub(crate) const under3Parselet: UnderParselet = UnderParselet::new(
 
 macro_rules! token_kind_to_prefix_parselet {
     ($ty:ty; $kind:ident) => {{
-        // PRECOMMIT: Cleanup
-        use crate::tokenize::TokenKind as TK;
-        use crate::parse::parselet::*;
-        use crate::precedence::Precedence;
+        use crate::{
+            tokenize::TokenKind as TK,
+            parse::parselet::*,
+            precedence::Precedence,
+        };
 
     match $kind {
         TK::EndOfFile => &PrefixEndOfFileParselet {},
@@ -216,10 +217,11 @@ macro_rules! token_kind_to_prefix_parselet {
 macro_rules! token_kind_to_infix_parselet {
     ($ty:ty; $kind:ident) => {{
 
-    // PRECOMMIT: Cleanup
-    use crate::tokenize::TokenKind as TK;
-    use crate::parse::parselet::*;
-    use crate::precedence::Precedence;
+    use crate::{
+        tokenize::TokenKind as TK,
+        parse::parselet::*,
+        precedence::Precedence
+    };
 
     match $kind {
         TK::EndOfFile => &InfixAssertFalseParselet {},

@@ -34,12 +34,11 @@
 
 pub(crate) mod parselet;
 pub(crate) mod operators;
-// PRECOMMIT: Visibility change
 pub(crate) mod token_parselets;
 
 #[cfg(test)]
 mod parse_tests {
-    // mod test_parselet;
+    mod test_parselet;
 }
 
 
@@ -97,7 +96,6 @@ pub(crate) fn parse<'i, B: ParseBuilder<'i> + 'i>(
 
 fn do_parse<'i, B: ParseBuilder<'i> + 'i>(
     input: &'i [u8],
-    // builder: &'b mut dyn DynParseBuilder<'i>,
     builder: B,
     opts: &ParseOptions,
 ) -> (B, ParseResult<()>) {
@@ -198,11 +196,15 @@ pub(crate) trait ParseBuilder<'i>: DynParseBuilder<'i> + Debug {
 
     fn new_builder() -> Self;
 
+    /// Apply the [`PrefixParselet`] implementation associated with the given
+    /// [`TokenKind`].
     fn with_prefix_parselet<F: FnOnce(&dyn PrefixParselet<'i, Self>)>(
         kind: TokenKind,
         callback: F,
     );
 
+    /// Apply the [`InfixParselet`] implementation associated with the given
+    /// [`TokenKind`].
     fn with_infix_parselet<R, F: FnOnce(&dyn InfixParselet<'i, Self>) -> R>(
         kind: TokenKind,
         callback: F,
@@ -440,30 +442,6 @@ impl<'i, B: 'i> Context<'i, B> {
     }
 }
 
-impl TokenKind {
-    // PRECOMMIT
-
-    // /// Get the [`PrefixParselet`] implementation associated with this token.
-    // fn prefix_parselet<'i, B: ParseBuilder<'i> + 'i>(
-    //     &self,
-    // ) -> Box<(dyn PrefixParselet<'i, B> + 'i)> {
-    //     let index = usize::from(self.id());
-
-    //     // B::prefix_parselets()[index]
-    //     todo!("PRECOMMIT")
-    // }
-
-    // /// Get the [`InfixParselet`] implementation associated with this token.
-    // fn infix_parselet<'i, B: ParseBuilder<'i> + 'i>(
-    //     &self,
-    // ) -> Box<(dyn InfixParselet<'i, B> + 'i)> {
-    //     let index = usize::from(self.id());
-
-    //     todo!("PRECOMMIT")
-    //     // B::infix_parselets()[index]
-    // }
-}
-
 impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     pub fn new(
         input: &'i [u8],
@@ -497,67 +475,26 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
-        // // MUSTTAIL
-        // let mut parselet: Box<dyn PrefixParselet<'i, B>> =
-        //     self.prefix_parselet(token.tok);
-        // // token.tok.prefix_parselet();
-
-        // parselet.parse_prefix(self, token)
-
-        B::with_prefix_parselet(
-            token.tok,
-            move |parselet: &dyn PrefixParselet<'i, _>| {
-                parselet.parse_prefix(self, token);
-            },
-        );
+        B::with_prefix_parselet(token.tok, |parselet| {
+            // MUSTTAIL
+            parselet.parse_prefix(self, token);
+        });
     }
 
     /// Lookup and apply the [`InfixParselet`] implementation associated
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     fn parse_infix(&mut self, token: TokenRef<'i>) {
-        // token.tok.infix_parselet().parse_infix(self, token)
-        // token.tok.infix_parselet().parse_infix(self, token)
-
-        // let mut parselet = self.infix_parselet(token.tok);
-
-        // parselet.parse_infix(self, token)
-
         B::with_infix_parselet(token.tok, |parselet| {
+            // MUSTTAIL
             parselet.parse_infix(self, token)
         });
     }
-
-    // /// Get the [`PrefixParselet`] implementation associated with this token.
-    // fn prefix_parselet(
-    //     // PRECOMMIT: Remove self?
-    //     &self,
-    //     kind: TokenKind,
-    // ) -> Box<dyn PrefixParselet<'i, B> + 'i> {
-    //     let index = usize::from(kind.id());
-
-    //     self.prefix_parselets[index]
-    // }
-
-    // /// Get the [`InfixParselet`] implementation associated with this token.
-    // fn infix_parselet(
-    //     // PRECOMMIT: Remove self?
-    //     &self,
-    //     kind: TokenKind,
-    // ) -> &(dyn InfixParselet<'i, B> + 'i) {
-    //     let index = usize::from(kind.id());
-
-    //     &*self.infix_parselets[index]
-    //     // B::infix_parselets()[index]
-    // }
 
     fn do_process_implicit_times(
         &mut self,
         token: TokenRef<'i>,
     ) -> TokenRef<'i> {
-        // self.infix_parselet(token.tok)
-        //     .process_implicit_times(self, token)
-
         B::with_infix_parselet(token.tok, |parselet| {
             parselet.process_implicit_times(self, token)
         })
@@ -583,10 +520,6 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
             self.current_token_eat_trivia_but_not_toplevel_newlines_into();
 
         token = self.do_process_implicit_times(token);
-
-        // let TokenPrecedence =
-        //     // self.infix_parselet(token.tok).getPrecedence(self);
-        //     todo!();
 
         let TokenPrecedence = B::with_infix_parselet(token.tok, |parselet| {
             parselet.getPrecedence(self)
