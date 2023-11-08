@@ -191,8 +191,30 @@ pub(crate) struct Context<'i, B> {
 //
 pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 
-pub(crate) trait ParseBuilder<'i>: DynParseBuilder<'i> + Debug {
+
+/// Handler for parse events to build up a representation of the parsed input.
+///
+/// Types that implement this trait receive parsing "events" in the form of
+/// calls to the methods defined by this trait, and use those events to build up
+/// some representation of the parsed input, typically a [`Cst`] or Wolfram
+/// Language expression.
+///
+/// Prior to the introduction of this trait, the parser could only produce
+/// [`Cst`] values as output. However, that limited the utility of this parser
+/// for the performant construction of Wolfram Language expressions, because
+/// the required pipeline was `Input &str => Cst => Expr` — the intermediate
+/// `Cst` and all its allocations and overhead was superfluous to the ultimate
+/// goal of creating an `Expr`.
+///
+/// This abstraction allows `Input &str => Expr` with no intermediate stage,
+/// while also preserving the ability to do `Input &str => Cst`, or any other
+/// type buildable from parsing.
+pub(crate) trait ParseBuilder<'i>: Debug {
     type Output;
+
+    //==================================
+    // Lifecycle
+    //==================================
 
     fn new_builder() -> Self;
 
@@ -212,26 +234,7 @@ pub(crate) trait ParseBuilder<'i>: DynParseBuilder<'i> + Debug {
 
     /// Complete the parse and return the parsed output.
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output;
-}
 
-/// Handler for parse events to build up a representation of the parsed input.
-///
-/// Types that implement this trait receive parsing "events" in the form of
-/// calls to the methods defined by this trait, and use those events to build up
-/// some representation of the parsed input, typically a [`Cst`] or Wolfram
-/// Language expression.
-///
-/// Prior to the introduction of this trait, the parser could only produce
-/// [`Cst`] values as output. However, that limited the utility of this parser
-/// for the performant construction of Wolfram Language expressions, because
-/// the required pipeline was `Input &str => Cst => Expr` — the intermediate
-/// `Cst` and all its allocations and overhead was superfluous to the ultimate
-/// goal of creating an `Expr`.
-///
-/// This abstraction allows `Input &str => Expr` with no intermediate stage,
-/// while also preserving the ability to do `Input &str => Cst`, or any other
-/// type buildable from parsing.
-pub(crate) trait DynParseBuilder<'i>: Debug {
     //==================================
     // Context management
     //==================================
