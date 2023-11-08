@@ -13,6 +13,18 @@ use crate::{
     utils::from_fn,
 };
 
+pub(crate) fn get_prefix_parselet<'i, B: ParseBuilder<'i> + 'i>(
+    kind: TokenKind,
+) -> Box<dyn PrefixParselet<'i, B>> {
+    token_kind_to_prefix_parselet!(B; kind)
+}
+
+pub(crate) fn get_infix_parselet<'i, B: ParseBuilder<'i> + 'i>(
+    kind: TokenKind,
+) -> Box<dyn InfixParselet<'i, B>> {
+    token_kind_to_infix_parselet!(B; kind)
+}
+
 pub(crate) fn get_prefix_parselets<'i, B: ParseBuilder<'i> + 'i>(
 ) -> Box<[Box<dyn PrefixParselet<'i, B>>; TokenKind::COUNT]> {
     // PRECOMMIT: Make not mut reference

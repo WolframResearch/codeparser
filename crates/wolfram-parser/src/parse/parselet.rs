@@ -4,8 +4,6 @@ mod times_parselet;
 mod under_parselet;
 
 
-use std::any::Any;
-
 use crate::{
     cst::{
         BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
@@ -595,8 +593,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
         // TODO(cleanup): This call does nothing? Add test and remove.
         let _ = session.tokenizer.peek_token();
 
-        let TokenPrecedence =
-            session.infix_parselet(tok_in.tok).getPrecedence(session);
+        let TokenPrecedence = B::with_infix_parselet(tok_in.tok, |parselet| {
+            parselet.getPrecedence(session)
+        });
 
         //
         // if (Ctxt.prec > TokenPrecedence)
@@ -1008,10 +1007,10 @@ impl InfixOperatorParselet {
             //
             // if tok1.tok.infix_parselet().getOp() != self.getOp() {
 
-            let PRECOMMIT = session.infix_parselet(tok1.tok);
+            let PRECOMMIT =
+                B::with_infix_parselet(tok1.tok, |parselet| parselet.getOp());
 
-            if PRECOMMIT.getOp() != <Self as InfixParselet<'i, B>>::getOp(self)
-            {
+            if PRECOMMIT != <Self as InfixParselet<'i, B>>::getOp(self) {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //

@@ -9,6 +9,7 @@ use crate::{
     },
     parse::{
         parselet::{InfixParselet, PrefixParselet},
+        token_parselets::{get_infix_parselets, get_prefix_parselets},
         ColonLHS, DynParseBuilder, ParseBuilder, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
@@ -106,19 +107,28 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         }
     }
 
-    // fn prefix_parselet(kind: TokenKind) -> Box<dyn PrefixParselet<'i, Self>> {
-    //     let index = usize::from(kind.id());
+    fn with_prefix_parselet<
+        R,
+        F: FnOnce(&dyn PrefixParselet<'i, Self>) -> R,
+    >(
+        kind: TokenKind,
+        callback: F,
+    ) -> R {
+        let parselet =
+            &*crate::parse::token_parselets::get_prefix_parselet(kind);
 
-    //     self.prefix_parselets[index]
-    // }
+        callback(parselet)
+    }
 
-    // fn infix_parselet(kind: TokenKind) -> Box<dyn InfixParselet<'i, Self>> {
-    //     // let index = usize::from(kind.id());
+    fn with_infix_parselet<R, F: FnOnce(&dyn InfixParselet<'i, Self>) -> R>(
+        kind: TokenKind,
+        callback: F,
+    ) -> R {
+        let parselet =
+            &*crate::parse::token_parselets::get_infix_parselet(kind);
 
-    //     // let kind = TokenKind::VARIANTS[index];
-
-    //     crate::parse::token_parselets::token_kind_to_infix_parselet!(ParseCst; kind)
-    // }
+        callback(parselet)
+    }
 
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output {
         let ParseCst {
