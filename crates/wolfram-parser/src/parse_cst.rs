@@ -9,7 +9,9 @@ use crate::{
     },
     parse::{
         parselet::{InfixParselet, PrefixParselet},
-        token_parselets::{get_infix_parselets, get_prefix_parselets},
+        token_parselets::{
+            token_kind_to_infix_parselet, token_kind_to_prefix_parselet,
+        },
         ColonLHS, DynParseBuilder, ParseBuilder, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
@@ -107,25 +109,50 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         }
     }
 
-    fn with_prefix_parselet<
-        R,
-        F: FnOnce(&dyn PrefixParselet<'i, Self>) -> R,
-    >(
+    fn with_prefix_parselet<F: FnOnce(&dyn PrefixParselet<'i, Self>)>(
         kind: TokenKind,
         callback: F,
-    ) -> R {
-        let parselet =
-            &*crate::parse::token_parselets::get_prefix_parselet(kind);
+    ) {
+        const PREFIX_PARSELETS: [&dyn for<'ii> PrefixParselet<
+            'ii,
+            ParseCst<'ii>,
+        >; TokenKind::COUNT] = crate::utils::from_fn!(
+            [&'static dyn for<'ii> PrefixParselet<'ii, ParseCst<'ii>>, TokenKind::COUNT],
+            |index: usize| {
+                let kind = TokenKind::VARIANTS[index];
 
-        callback(parselet)
+                token_kind_to_prefix_parselet!(
+                    &dyn for<'ii> PrefixParselet<'ii, ParseCst<'ii>>;
+                    kind
+                )
+            }
+        );
+
+        let parselet = &*PREFIX_PARSELETS[usize::from(kind.id())];
+
+        callback(parselet);
     }
 
     fn with_infix_parselet<R, F: FnOnce(&dyn InfixParselet<'i, Self>) -> R>(
         kind: TokenKind,
         callback: F,
     ) -> R {
-        let parselet =
-            &*crate::parse::token_parselets::get_infix_parselet(kind);
+        const INFIX_PARSELETS: [&dyn for<'ii> InfixParselet<
+            'ii,
+            ParseCst<'ii>,
+        >; TokenKind::COUNT] = crate::utils::from_fn!(
+            [&'static dyn for<'ii> InfixParselet<'ii, ParseCst<'ii>>, TokenKind::COUNT],
+            |index: usize| {
+                let kind = TokenKind::VARIANTS[index];
+
+                token_kind_to_infix_parselet!(
+                    &dyn for<'ii> InfixParselet<'ii, ParseCst<'ii>>;
+                    kind
+                )
+            }
+        );
+
+        let parselet = &*INFIX_PARSELETS[usize::from(kind.id())];
 
         callback(parselet)
     }

@@ -198,23 +198,15 @@ pub(crate) trait ParseBuilder<'i>: DynParseBuilder<'i> + Debug {
 
     fn new_builder() -> Self;
 
-    fn with_prefix_parselet<R, F: FnOnce(&dyn PrefixParselet<'i, Self>) -> R>(
+    fn with_prefix_parselet<F: FnOnce(&dyn PrefixParselet<'i, Self>)>(
         kind: TokenKind,
         callback: F,
-    ) -> R;
+    );
 
     fn with_infix_parselet<R, F: FnOnce(&dyn InfixParselet<'i, Self>) -> R>(
         kind: TokenKind,
         callback: F,
     ) -> R;
-
-    // fn prefix_parselet(kind: TokenKind) -> Box<dyn PrefixParselet<'i, Self>>;
-    // fn infix_parselet(kind: TokenKind) -> Box<dyn InfixParselet<'i, Self>>;
-
-
-    // PRECOMMIT
-    // fn prefix_parselets(
-    // ) -> [&'static dyn PrefixParselet<'i, Self>; TokenKind::COUNT];
 
     /// Complete the parse and return the parsed output.
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output;
@@ -512,9 +504,12 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
         // parselet.parse_prefix(self, token)
 
-        B::with_prefix_parselet(token.tok, |parselet| {
-            parselet.parse_prefix(self, token)
-        });
+        B::with_prefix_parselet(
+            token.tok,
+            move |parselet: &dyn PrefixParselet<'i, _>| {
+                parselet.parse_prefix(self, token);
+            },
+        );
     }
 
     /// Lookup and apply the [`InfixParselet`] implementation associated
