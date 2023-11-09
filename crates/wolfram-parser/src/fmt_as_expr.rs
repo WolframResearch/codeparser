@@ -321,7 +321,7 @@ impl<S: TokenSource> Display for FmtAsExpr<&S> {
 
         match source {
             Source::Span(span) => write!(f, "{}", FmtAsExpr(span)),
-            Source::BoxPosition(_) => todo!(),
+            Source::Box(_) => todo!(),
             Source::After(_) => todo!(),
             Source::Unknown => todo!(),
         }

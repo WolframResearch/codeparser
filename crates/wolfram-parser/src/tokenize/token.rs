@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Display};
 
 use crate::{
-    source::{BufferAndLength, Source, Span},
+    source::{BoxPosition, BufferAndLength, Source, Span},
     tokenize::{TokenKind, Tokenizer},
 };
 
@@ -70,16 +70,11 @@ impl TokenSource for Source {
             (Source::Span(start), Source::Span(end)) => {
                 Source::Span(Span::between(*start, *end))
             },
-            (Source::BoxPosition(start), Source::BoxPosition(end)) => {
-                // FIXME: This cannot, in general, be the right way to compute
-                //        a span that covers both start and end. But it happens
-                //        to work for the one case I know of where a synthetic
-                //        source is needed (processPlusPair). Some thought
-                //        should be put into how to represent box position spans
-                //        and then this should be fixed up and get some
-                //        additional tests.
-                // TID:20231031/1: Synthetic box source for process plus pair
-                Source::BoxPosition(vec![start[0], end[1]])
+            (Source::Box(start), Source::Box(end)) => {
+                match BoxPosition::between(start, end) {
+                    Some(box_source) => Source::Box(box_source),
+                    None => Source::Unknown,
+                }
             },
             (Source::After(_), Source::After(_)) => {
                 todo!("synthetic source of After: start = {start:?}, end = {end:?}")

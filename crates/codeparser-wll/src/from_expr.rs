@@ -17,7 +17,7 @@ use wolfram_parser::{
     cst::{CompoundOperator, CstSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
-    source::{LineColumn, Source, Span},
+    source::{BoxPosition, LineColumn, Source, Span},
     symbols as sym,
     tokenize::{Token, TokenKind, TokenString},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq,
@@ -733,7 +733,7 @@ impl FromExpr for Source {
 
                 // Note: `elements` can sometimes be {}, {1, 1, 1}, etc.
                 //        These are the source positions of boxes.
-                return Ok(Source::BoxPosition(indexes));
+                return Ok(Source::Box(BoxPosition::At(indexes)));
             },
             ContainerKind::String
             | ContainerKind::Byte
@@ -850,7 +850,7 @@ impl FromExpr for Span {
         match Source::from_expr(expr)? {
             Source::Span(span) => Ok(span),
             Source::Unknown => todo!("Source from Source::Unknown"),
-            Source::BoxPosition(_) => todo!("Source from Source::BoxPosition"),
+            Source::Box(_) => todo!("Source from Source::Box"),
             Source::After(_) => todo!("Source from Source::After"),
         }
     }
@@ -1139,7 +1139,7 @@ impl FromExpr for CodeAction {
 
         let src = match src {
             Source::Span(src) => src,
-            Source::BoxPosition(_) | Source::After(_) | Source::Unknown => {
+            Source::Box(_) | Source::After(_) | Source::Unknown => {
                 todo!("unexpected source for CodeAction: {src:?}")
             },
         };

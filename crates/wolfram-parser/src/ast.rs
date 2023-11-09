@@ -174,7 +174,7 @@ impl Ast {
 
         match general_source {
             Source::Span(span) => *span,
-            Source::BoxPosition(_) | Source::After(_) | Source::Unknown => {
+            Source::Box(_) | Source::After(_) | Source::Unknown => {
                 todo!("non-typical source: {general_source:?}")
             },
         }

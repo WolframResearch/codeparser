@@ -23,7 +23,7 @@ use crate::{
     },
     macros::{src, token},
     parse_bytes_cst,
-    source::{Source, SourceConvention},
+    source::{BoxPosition, Source, SourceConvention},
     tokenize,
     tokenize::{Token, TokenKind as TK, TokenStr, TokenString},
     FirstLineBehavior, NodeSeq, ParseOptions,
@@ -261,7 +261,7 @@ fn test_box_source_recovery() {
         src: src!({ 1 }), // <|Source -> {1} |>
     };
 
-    assert_eq!(cst.src, Source::BoxPosition(vec![1]))
+    assert_eq!(cst.src, Source::Box(BoxPosition::At(vec![1])));
 }
 
 #[test]

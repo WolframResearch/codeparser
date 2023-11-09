@@ -1128,6 +1128,21 @@ fn validatePath(path: &str) -> bool {
     return is_valid;
 }
 
+/// Note: See callsites of this function for case-by-case documentation of what
+/// behavior it effects.
+fn compatibility_mode() -> bool {
+    let var = "CODEPARSER_MODE";
+
+    match std::env::var(var) {
+        Ok(value) if value == "Modern" => false,
+        Ok(value) => panic!("Unrecognized {var} env mode value: {value}"),
+        // Default to "compatibility" mode, where CodeParser will avoid producing
+        // any new forms that other CodeTools projects might not be updated to
+        // understand yet.
+        Err(_) => true,
+    }
+}
+
 //======================================
 // WSTP Serialization
 //======================================

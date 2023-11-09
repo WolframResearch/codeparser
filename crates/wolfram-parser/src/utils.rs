@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::{fmt::Display, num::NonZeroU32};
 
 use crate::{
     generated::long_names_registration::*,
@@ -620,4 +620,42 @@ pub(crate) fn prepend<T>(mut list: Vec<T>, elem: T) -> Vec<T> {
 #[test]
 fn test_join() {
     assert_eq!(join([1, 2, 3], vec![4, 5, 6]), vec![1, 2, 3, 4, 5, 6])
+}
+
+//======================================
+// CommaSeparated and CommaTerminated display forms
+//======================================
+
+pub(crate) struct CommaSeparated<'a, T>(pub &'a Vec<T>);
+
+pub(crate) struct CommaTerminated<'a, T>(pub &'a Vec<T>);
+
+impl<'a, T: Display> Display for CommaSeparated<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let CommaSeparated(sequence) = self;
+
+        for (index, elem) in sequence.iter().enumerate() {
+            write!(f, "{elem}")?;
+
+            let is_last = index == sequence.len() - 1;
+
+            if !is_last {
+                write!(f, ", ")?
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl<'a, T: Display> Display for CommaTerminated<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let CommaTerminated(sequence) = self;
+
+        for elem in sequence.into_iter() {
+            write!(f, "{elem}, ")?;
+        }
+
+        Ok(())
+    }
 }

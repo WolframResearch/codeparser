@@ -17,7 +17,7 @@ use crate::{
         Escape, WLCharacter,
     },
     tokenize::tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
-    utils::non_zero_u32_incr,
+    utils::{non_zero_u32_incr, CommaSeparated, CommaTerminated},
 };
 
 use wolfram_expr::Expr;
@@ -384,7 +384,7 @@ pub enum Source {
     /// Box structure position.
     ///
     /// Source was `StandardForm` boxes.
-    BoxPosition(Vec<usize>),
+    Box(BoxPosition),
 
     /// `After[{..}]`
     ///
@@ -483,6 +483,18 @@ pub struct LineColumnSpan {
 
 const _: () = assert!(std::mem::size_of::<LineColumnSpan>() == 16);
 
+/// A position in a a StandardForm box expression.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum BoxPosition {
+    /// `{1, 2, 3}`
+    At(Vec<usize>),
+    /// `{1, 2, 3 ;; 5}`
+    Spanning {
+        index: Vec<usize>,
+        span: (usize, usize),
+    },
+}
+
 //======================================
 // Source types formatting impls
 //======================================
@@ -544,8 +556,7 @@ impl Display for Source {
         match self {
             Source::Unknown => write!(f, "<unknown>"),
             Source::Span(span) => write!(f, "{span}"),
-            // TODO: Format as {...} list
-            Source::BoxPosition(box_pos) => write!(f, "{box_pos:?}"),
+            Source::Box(box_pos) => write!(f, "{box_pos}"),
             Source::After(after) => write!(f, "After[{after}]"),
         }
     }
@@ -554,6 +565,42 @@ impl Display for Source {
 impl Debug for Span {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self)
+    }
+}
+
+/// Format [`BoxPosition`] as `{...}` lists.
+///
+/// # Examples
+///
+/// ```
+/// use wolfram_parser::source::BoxPosition;
+///
+/// # assert_eq!(BoxPosition::At(vec![]).to_string(), "{}");
+/// assert_eq!(BoxPosition::At(vec![1, 2, 3]).to_string(), "{1, 2, 3}");
+///
+/// assert_eq!(
+///     BoxPosition::Spanning { index: vec![1, 1] , span: (1, 3) }.to_string(),
+///     "{1, 1, 1 ;; 3}"
+/// );
+/// ```
+impl Display for BoxPosition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BoxPosition::At(position) => {
+                write!(f, "{{")?;
+                write!(f, "{}", CommaSeparated(position))?;
+                write!(f, "}}")
+            },
+            BoxPosition::Spanning {
+                index,
+                span: (span_start, span_end),
+            } => {
+                write!(f, "{{")?;
+                write!(f, "{}", CommaTerminated(index))?;
+                write!(f, "{span_start} ;; {span_end}")?;
+                write!(f, "}}")
+            },
+        }
     }
 }
 
@@ -846,10 +893,54 @@ impl Source {
     pub fn is_unknown(&self) -> bool {
         match self {
             Source::Unknown => true,
-            Source::Span(_) | Source::BoxPosition(_) | Source::After(_) => {
-                false
-            },
+            Source::Span(_) | Source::Box(_) | Source::After(_) => false,
         }
+    }
+}
+
+impl BoxPosition {
+    pub fn between(
+        start: &BoxPosition,
+        end: &BoxPosition,
+    ) -> Option<BoxPosition> {
+        let combined = match (start, end) {
+            (BoxPosition::At(start), BoxPosition::At(end)) => {
+                if start.len() != end.len() {
+                    // TODO(test): Test case for this
+                    return None;
+                } else if start.len() >= 2 {
+                    // TID:231108/1: Computed box source position for PostfixNode
+                    let start = start[..start.len() - 2].to_vec();
+                    BoxPosition::At(start)
+                } else {
+                    // FIXME: This cannot, in general, be the right way to compute
+                    //        a span that covers both start and end. But it happens
+                    //        to work for the one case I know of where a synthetic
+                    //        source is needed (processPlusPair). Some thought
+                    //        should be put into how to represent box position spans
+                    //        and then this should be fixed up and get some
+                    //        additional tests.
+                    // TID:20231031/1: Synthetic box source for process plus pair
+                    BoxPosition::At(vec![start[0], end[1]])
+                }
+            },
+
+            (BoxPosition::At(_), BoxPosition::Spanning { .. }) => {
+                todo!("FIXME: BoxPosition::between({start}, {end}")
+            },
+
+            (BoxPosition::Spanning { .. }, BoxPosition::At(_)) => {
+                todo!("FIXME: BoxPosition::between({start}, {end}")
+            },
+
+            (BoxPosition::Spanning { .. }, BoxPosition::Spanning { .. }) => {
+                // TODO: Can we calulate a better source position between two
+                //       Span positions?
+                return None;
+            },
+        };
+
+        Some(combined)
     }
 }
 
