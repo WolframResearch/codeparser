@@ -38,7 +38,11 @@ Test[
 (*
 Bug 409472
 *)
-cst = CodeConcreteParseBox[{RowBox[{"Begin", "[", "\"\<FindMinimumTrek`\>\"", "]"}], "\n", RowBox[{"End", "[", "]"}]}]
+cst = CodeConcreteParseBox[{
+	RowBox[{"Begin", "[", "\"\<FindMinimumTrek`\>\"", "]"}],
+	"\n",
+	RowBox[{"End", "[", "]"}]
+}]
 
 Test[
 	cst,

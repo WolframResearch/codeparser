@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::{cell::Cell, num::NonZeroU32};
 
 use wolfram_library_link::expr::{
     symbol::SymbolRef, Expr, ExprKind, Normal, Number, Symbol,
@@ -28,6 +28,46 @@ pub(crate) trait FromExpr: Sized {
     fn from_expr(expr: &Expr) -> Result<Self, String>;
 }
 
+thread_local! {
+    /// Global used to guide the implementation of [`Source::from_expr()`].
+    ///
+    /// See also [`from_expr_with_container_kind()`].
+    static CONTAINER_KIND: Cell<Option<ContainerKind>> = Cell::new(None);
+}
+
+/// Parse `T` from an [`Expr`], using the specified [`ContainerKind`] to guide
+/// the interpretation of `Source` values.
+///
+/// The `kind` [`ContainerKind`] value is used to guide the implementation of
+/// [`Source::from_expr()`] calls made during the execution of this function.
+///
+/// Knowing `kind` is necessary to resolve an ambiguity: A node with metadata of
+/// `<| Source -> {1, 2} |>` could either be a
+/// [`CharacterSpan`][wolfram_parser::source::CharacterSpan] or a
+/// [`Source::BoxPosition(_)`] specification, and there is no way to know
+/// just by locally examining that expression.
+///
+/// To resolve the ambiguity, we must know what the [`ContainerKind`] value
+/// was from the top-level `Container[kind, ...]` that is currently being
+/// processed.
+///
+/// codeparser-wll public library functions should either use
+/// [`Container::from_expr()`] or [`from_expr_with_container_kind()`] at the
+/// top-level to ensure that this [`CONTAINER_KIND`] global is set during
+/// the expr processing.
+pub(crate) fn from_expr_with_container_kind<T: FromExpr>(
+    expr: &Expr,
+    kind: ContainerKind,
+) -> Result<T, String> {
+    CONTAINER_KIND.set(Some(kind));
+
+    let result = T::from_expr(expr);
+
+    CONTAINER_KIND.set(None);
+
+    result
+}
+
 //==========================================================
 // FromExpr impls
 //==========================================================
@@ -47,8 +87,14 @@ impl FromExpr for Container<Cst<TokenString, Source>> {
                 return Err(format!("invalid Container: {expr}: {err}"))
             },
         };
+
+        CONTAINER_KIND.set(Some(kind));
+
         let body = ContainerBody::from_expr(&elements[1]).expect("PRE_COMMIT");
+
         let metadata = Metadata::from_expr(&elements[2])?;
+
+        CONTAINER_KIND.set(None);
 
         Ok(Container {
             kind,
@@ -657,35 +703,58 @@ impl FromExpr for Source {
 
         let elements = try_normal_with_head(expr, sym::List)?;
 
-        if elements.len() != 2 {
-            let mut indexes = Vec::new();
+        // NOTE: If you see this panic, use from_expr_with_container_kind(..)
+        //       instead of TheType::from_expr() at the top level of whatever
+        //       FromExpr conversion is triggering this panic.
+        let global_container_kind = CONTAINER_KIND.get().expect("CONTAINER_KIND was None on code path that executed Source::from_expr()");
 
-            for elem in elements {
-                let index: i64 = match elem.kind() {
-                    ExprKind::Integer(int) => *int,
-                    _ => {
-                        return Err(format!(
-                            "invalid box position element: {elem}. Expected Integer."
+        let [source_start, source_end] = match global_container_kind {
+            ContainerKind::Cell | ContainerKind::Box => {
+                let mut indexes = Vec::new();
+
+                for elem in elements {
+                    let index: i64 = match elem.kind() {
+                        ExprKind::Integer(int) => *int,
+                        _ => {
+                            return Err(format!(
+                                "invalid box position element: {elem}. Expected Integer."
+                            ))
+                        },
+                    };
+                    let index = match usize::try_from(index) {
+                        Ok(index) => index,
+                        Err(err) => return Err(format!(
+                            "invalid box position index: negative or too large to fix in usize: {err}: {index}"
                         ))
-                    },
+                    };
+
+                    indexes.push(index);
+                }
+
+                // Note: `elements` can sometimes be {}, {1, 1, 1}, etc.
+                //        These are the source positions of boxes.
+                return Ok(Source::BoxPosition(indexes));
+            },
+            ContainerKind::String
+            | ContainerKind::Byte
+            | ContainerKind::File
+            | ContainerKind::Hold => {
+                let Ok([start_pos, end_pos]): Result<&[_; 2], _> =
+                    elements.try_into()
+                else {
+                    return Err(format!(
+                        "expected Source value of node inside container of kind {:?} to have length 2; got: {:?}",
+                        global_container_kind,
+                        elements
+                    ));
                 };
-                let index = match usize::try_from(index) {
-                    Ok(index) => index,
-                    Err(err) => return Err(format!(
-                        "invalid box position index: negative or too large to fix in usize: {err}: {index}"
-                    ))
-                };
 
-                indexes.push(index);
-            }
+                [start_pos, end_pos]
+            },
+        };
 
-            // Note: `elements` can sometimes be {}, {1, 1, 1}, etc.
-            //        These are the source positions of boxes.
-            return Ok(Source::BoxPosition(indexes));
-        }
-
-        if let Ok(start_index) = get_source_pos(&elements[0]) {
-            let end_index = get_source_pos(&elements[1])?;
+        if let Ok(start_index) = get_source_pos(&source_start) {
+            let end_index = get_source_pos(&source_end)?;
 
             return Ok(Source::Span(Span::from_character_span(
                 start_index,
@@ -698,8 +767,8 @@ impl FromExpr for Source {
             )));
         }
 
-        let start = try_normal_with_head(&elements[0], sym::List)?;
-        let end = try_normal_with_head(&elements[1], sym::List)?;
+        let start = try_normal_with_head(&source_start, sym::List)?;
+        let end = try_normal_with_head(&source_end, sym::List)?;
 
         if start.len() != 2 || end.len() != 2 {
             todo!()

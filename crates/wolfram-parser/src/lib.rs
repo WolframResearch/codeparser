@@ -152,6 +152,7 @@ pub struct Container<N> {
     pub metadata: Metadata,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ContainerKind {
     String,
     File,

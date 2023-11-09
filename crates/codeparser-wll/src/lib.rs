@@ -360,19 +360,31 @@ pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
 #[cfg(feature = "USE_MATHLINK")]
 #[wll::export(wstp)]
 pub fn Abstract_LibraryLink(link: &mut wstp::Link) {
+    use wolfram_parser::ContainerKind;
+
+    use crate::from_expr::from_expr_with_container_kind;
+
     let mut args: Vec<Expr> = parse_assuming_link_print_full_symbols(link);
 
-    if args.len() != 2 {
+    if args.len() != 3 {
         panic!("unexpected number of arguments passed to Abstract: {args:?}")
     }
 
     let arg = args.remove(0);
     let quirks = args.remove(0);
+    let container_kind = args.remove(0);
 
     let quirk_settings = QuirkSettings::from_expr(&quirks)
         .expect("invalid quirk settings value for abstract");
 
-    let node = match Cst::from_expr(&arg) {
+    let Ok(container_kind) = ContainerKind::from_expr(&container_kind) else {
+        panic!("invalid ContainerKind value: {}", container_kind)
+    };
+
+    let node = match from_expr_with_container_kind::<Cst<_, _>>(
+        &arg,
+        container_kind,
+    ) {
         Ok(node) => abstract_cst(node, quirk_settings),
         Err(err) => panic!("Error parsing arg: {err}: (expr: {arg})"),
     };
