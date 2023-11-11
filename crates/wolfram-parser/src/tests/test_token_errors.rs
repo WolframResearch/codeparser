@@ -2,13 +2,15 @@ use pretty_assertions::assert_eq;
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CallOperator,
-        CompoundNode, CompoundOperator,
+        BinaryNode, CallBody, CallHead, CallNode, CompoundNode,
         Cst::{self, Token},
-        GroupNode, InfixNode, InfixOperator, OperatorNode, PrefixNode,
-        PrefixOperator,
+        GroupNode, InfixNode, OperatorNode, PrefixNode, TriviaSeq,
     },
     macros::{src, token},
+    parse::operators::{
+        BinaryOperator, CallOperator, CompoundOperator, InfixOperator,
+        PrefixOperator,
+    },
     parse_cst, NodeSeq,
 };
 

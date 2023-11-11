@@ -1,18 +1,21 @@
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CallBody, CallNode, CompoundNode,
-        CompoundOperator, Cst, CstSeq, GroupMissingCloserNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, OperatorNode, PostfixNode,
-        PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode,
-        PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
-        TernaryOperator, TriviaSeq,
+        BinaryNode, CallBody, CallNode, CompoundNode, Cst, CstSeq,
+        GroupMissingCloserNode, GroupNode, InfixNode, OperatorNode,
+        PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
+        TernaryNode, TriviaSeq,
     },
     parse::{
+        operators::{
+            BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
+            PostfixOperator, PrefixBinaryOperator, PrefixOperator,
+            TernaryOperator,
+        },
         parselet::{InfixParselet, PrefixParselet},
         token_parselets::{
             token_kind_to_infix_parselet, token_kind_to_prefix_parselet,
         },
-        ColonLHS, ParseBuilder, TriviaSeqRef, UnderParseData,
+        ColonLHS, ParseBuilder, SyntaxErrorKind, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
     utils::{self, debug_assert_matches},

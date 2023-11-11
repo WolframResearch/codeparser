@@ -6,17 +6,22 @@ use crate::{
     agg::{AggNodeSeq, LHS},
     ast::{AbstractSyntaxError, Ast, AstCall, AstMetadata},
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallHead, CallNode,
-        CodeNode, CompoundNode, CompoundOperator, Cst, CstSeq,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode,
-        InfixOperator::{self, self as Op},
-        Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
-        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode, TernaryOperator,
+        BinaryNode, BoxKind, BoxNode, CallHead, CallNode, CodeNode,
+        CompoundNode, Cst, CstSeq, GroupMissingCloserNode,
+        GroupMissingOpenerNode, GroupNode, InfixNode, OperatorNode,
+        PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
+        TernaryNode, TriviaSeq,
     },
     issue::{Issue, IssueTag, Severity},
     macros::leaf,
+    parse::{
+        operators::{
+            BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
+            Operator, PostfixOperator, PrefixBinaryOperator, PrefixOperator,
+            TernaryOperator,
+        },
+        SyntaxErrorKind,
+    },
     quirks::{self, Quirk},
     symbol::Symbol,
     symbols as st,
@@ -700,7 +705,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         })) => {
             match op {
                 // InfixNode[InfixInequality, children_, data_]
-                Op::CodeParser_InfixInequality => {
+                InfixOperator::CodeParser_InfixInequality => {
                     abstractInfixInequality(children, data)
                 },
 
@@ -708,7 +713,9 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 // participate in the InfixBinaryAt quirk (TID:231010/3)
                 //
                 // InfixNode[op:SameQ | UnsameQ, children_ /; OddQ[Length[children]], data_]
-                Op::SameQ | Op::UnsameQ if is_odd(children.len()) => {
+                InfixOperator::SameQ | InfixOperator::UnsameQ
+                    if is_odd(children.len()) =>
+                {
                     let children = part_span_even_children(children, None);
 
                     let children =
@@ -718,21 +725,21 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 },
 
                 // InfixNode[Plus, children_, data_]
-                Op::Plus => {
+                InfixOperator::Plus => {
                     // Do not do children[[;;;;2]]
                     // need to remember whether Token`Plus or Token`Minus
                     abstractPlus(children, data)
                 },
 
                 // InfixNode[Times, children_, data_]
-                Op::Times => {
+                InfixOperator::Times => {
                     // Skip every other child, which are Star tokens.
                     //   children[[;; ;; 2]]
                     let children = part_span_even_children(children, None);
 
                     abstractTimes_InfixNode(
                         InfixNode(OperatorNode {
-                            op: Op::Times,
+                            op: InfixOperator::Times,
                             children: NodeSeq(children),
                         }),
                         data,
@@ -740,7 +747,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 },
 
                 // InfixNode[Divisible, children_, data_]
-                Op::Divisible => {
+                InfixOperator::Divisible => {
                     let children = part_span_even_children(children, None);
 
                     let processed = children
@@ -757,7 +764,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 },
 
                 // InfixNode[CompoundExpression, children_, data_]
-                Op::CompoundExpression => {
+                InfixOperator::CompoundExpression => {
                     // Skip every other child, which are Semi tokens.
                     //   children[[;; ;; 2]]
                     let children = part_span_even_children(
@@ -782,14 +789,14 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 },
 
                 // InfixNode[MessageName, children_, data_]
-                Op::MessageName => {
+                InfixOperator::MessageName => {
                     let children =
                         part_span_even_children(children, Some(TK::ColonColon));
 
                     abstractMessageName(children, data)
                 },
 
-                Op::CodeParser_InfixTilde => {
+                InfixOperator::CodeParser_InfixTilde => {
                     // children[[;; ;;2]]
                     let children = part_span_even_children(
                         children,
@@ -844,7 +851,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     if matches!(
                         middle,
                         Cst::Infix(InfixNode(OperatorNode {
-                            op: Op::CodeParser_Comma,
+                            op: InfixOperator::CodeParser_Comma,
                             ..
                         }))
                     ) {
@@ -945,7 +952,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         // GroupNode[GroupParen, { _, InfixNode[Comma, commaChildren, _], _ }, data_]
                         Ok(
                             [_, Cst::Infix(InfixNode(OperatorNode {
-                                op: Op::CodeParser_Comma,
+                                op: InfixOperator::CodeParser_Comma,
                                 children: NodeSeq(comma_children),
                                 ..
                             })), _],
@@ -995,7 +1002,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     match children.0.as_slice() {
                         // GroupNode[GroupSquare, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
                         [_, Cst::Infix(InfixNode(OperatorNode {
-                            op: Op::CodeParser_Comma,
+                            op: InfixOperator::CodeParser_Comma,
                             children: NodeSeq(comma_children),
                             ..
                         })), _] => {
@@ -1033,7 +1040,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     match children.0.as_slice() {
                         // GroupNode[GroupTypeSpecifier, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
                         [_, Cst::Infix(InfixNode(OperatorNode {
-                            op: Op::CodeParser_Comma,
+                            op: InfixOperator::CodeParser_Comma,
                             children: NodeSeq(comma_children),
                             ..
                         })), _] => {
@@ -1071,7 +1078,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     match children.0.as_slice() {
                         // GroupNode[GroupDoubleBracket, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
                         [_, Cst::Infix(InfixNode(OperatorNode {
-                            op: Op::CodeParser_Comma,
+                            op: InfixOperator::CodeParser_Comma,
                             children: NodeSeq(comma_children),
                             ..
                         })), _] => {
@@ -2048,7 +2055,7 @@ where
             }
         },
         Cst::Infix(InfixNode(OperatorNode {
-            op: Op::Times,
+            op: InfixOperator::Times,
             children: NodeSeq(children),
         })) => {
             let children = part_span_even_children(children, Some(TK::Star));
@@ -2089,7 +2096,7 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
         children: NodeSeq(children),
     }) = infix;
 
-    debug_assert!(op == Op::Times);
+    debug_assert!(op == InfixOperator::Times);
 
     let flattened = flattenTimes(children, data.clone());
 

@@ -5,10 +5,11 @@ use crate::{
     ast::{Ast, AstMetadata},
     cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode,
-        CallOperator, CompoundNode, Cst, GroupNode, GroupOperator, InfixNode,
-        OperatorNode, PostfixNode, PrefixNode,
+        CompoundNode, Cst, GroupNode, InfixNode, OperatorNode, PostfixNode,
+        PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
+    parse::operators::{CallOperator, GroupOperator},
     symbols as st,
     tokenize::{
         Token, TokenInput,

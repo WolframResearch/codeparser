@@ -2,7 +2,7 @@
 
 #![allow(non_upper_case_globals)]
 
-use crate::{cst::CompoundOperator, parse::parselet::*};
+use crate::parse::{operators::CompoundOperator, parselet::*};
 
 
 pub(crate) const under1Parselet: UnderParselet = UnderParselet::new(

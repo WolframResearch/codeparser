@@ -2,9 +2,7 @@ use std::{num::NonZeroU32, ops::Range};
 
 use crate::{
     agg::AggNodeSeq,
-    cst::{
-        Cst, GroupMissingCloserNode, OperatorNode,
-    },
+    cst::{Cst, GroupMissingCloserNode, OperatorNode},
     parse::operators::GroupOperator,
     source::{
         BufferAndLength, CharacterSpan, LineColumn, LineColumnSpan, Location,

@@ -4,12 +4,14 @@ use std::fmt::Display;
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CompoundNode,
-        CompoundOperator, Cst, GroupMissingCloserNode, GroupMissingOpenerNode,
-        GroupNode, InfixNode, InfixOperator, Operator, OperatorNode,
-        PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
-        PrefixNode, PrefixOperator, SyntaxErrorNode, TernaryNode,
-        TernaryOperator,
+        BinaryNode, CallBody, CallHead, CallNode, CompoundNode, Cst,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode,
+        SyntaxErrorNode, TernaryNode,
+    },
+    parse::operators::{
+        BinaryOperator, CompoundOperator, InfixOperator, Operator,
+        PostfixOperator, PrefixBinaryOperator, PrefixOperator, TernaryOperator,
     },
     source::{LineColumn, LineColumnSpan, Location, Source, Span, SpanKind},
     symbol::Symbol,

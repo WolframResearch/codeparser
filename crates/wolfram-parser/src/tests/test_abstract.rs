@@ -2,12 +2,14 @@ use crate::{
     abstract_cst::{abstract_cst, aggregate_cst},
     ast::{Ast, AstMetadata},
     cst::{
-        BinaryNode, BinaryOperator,
+        BinaryNode,
         Cst::{self, Token},
-        GroupNode, GroupOperator, InfixNode, InfixOperator, OperatorNode,
-        PrefixNode, PrefixOperator,
+        GroupNode, InfixNode, OperatorNode, PrefixNode, TriviaSeq,
     },
     macros::{leaf, src, token},
+    parse::operators::{
+        BinaryOperator, GroupOperator, InfixOperator, PrefixOperator,
+    },
     parse_cst,
     tests::assert_src,
     NodeSeq, QuirkSettings,

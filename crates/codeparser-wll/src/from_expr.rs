@@ -5,17 +5,22 @@ use wolfram_library_link::expr::{
 };
 
 use wolfram_parser::{
+    cst::CstSeq,
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
-        CallNode, CallOperator, CodeNode, CompoundNode, Cst,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, LeafNode, Operator,
-        OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
-        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode, TernaryOperator,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode, CodeNode,
+        CompoundNode, Cst, GroupMissingCloserNode, GroupMissingOpenerNode,
+        GroupNode, InfixNode, LeafNode, OperatorNode, PostfixNode,
+        PrefixBinaryNode, PrefixNode, SyntaxErrorNode, TernaryNode,
     },
-    cst::{CompoundOperator, CstSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
+    parse::{
+        operators::{
+            BinaryOperator, CallOperator, CompoundOperator, GroupOperator,
+            InfixOperator, Operator, PostfixOperator, PrefixBinaryOperator,
+            PrefixOperator, TernaryOperator,
+        },
+        SyntaxErrorKind,
+    },
     quirks::QuirkSettings,
     source::{BoxPosition, LineColumn, Source, Span},
     symbols as sym,

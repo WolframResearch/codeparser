@@ -77,34 +77,34 @@ macro_rules! LHS {
 
     (CompoundNode[$($op_kind:ident)|*, _, _]) => {
         Cst::Compound(CompoundNode(OperatorNode {
-            op: $(crate::cst::CompoundOperator::$op_kind)|*,
+            op: $(crate::parse::operators::CompoundOperator::$op_kind)|*,
             ..
         }))
     };
 
     (BinaryNode[$($op_kind:ident)|*, _, _]) => {
         Cst::Binary(BinaryNode(OperatorNode {
-            op: $($crate::cst::BinaryOperator::$op_kind)|*,
+            op: $($crate::parse::operators::BinaryOperator::$op_kind)|*,
             ..
         }))
     };
 
     (InfixNode[$($op_kind:ident)|*, _, _]) => {
         Cst::Infix(InfixNode(OperatorNode {
-            op: $($crate::cst::InfixOperator::$op_kind)|*,
+            op: $($crate::parse::operators::InfixOperator::$op_kind)|*,
             ..
         }))
     };
     (PrefixNode[$($op_kind:ident)|*, _, _]) => {
         Cst::Prefix(PrefixNode(OperatorNode {
-            op: $($crate::cst::PrefixOperator::$op_kind)|*,
+            op: $($crate::parse::operators::PrefixOperator::$op_kind)|*,
             ..
         }))
     };
 
     (PostfixNode[$($op_kind:ident)|*, _, _]) => {
         Cst::Postfix(PostfixNode(OperatorNode {
-            op: $(crate::cst::PostfixOperator::$op_kind)|*,
+            op: $(crate::parse::operators::PostfixOperator::$op_kind)|*,
             ..
         }))
     };
@@ -128,7 +128,7 @@ macro_rules! LHS {
     };
     ($name:ident:GroupNode[$group_kind:ident, _]) => {
         CallBody::Group($name @ GroupNode(OperatorNode {
-            op: $crate::cst::CallOperator::$group_kind,
+            op: $crate::parse::operators::CallOperator::$group_kind,
             children: _,
         }))
     };
@@ -146,7 +146,7 @@ macro_rules! LHS {
 
     ($name:ident:GroupMissingCloserNode[$($op_kind:ident)|*, _]) => {
         $crate::cst::CallBody::GroupMissingCloser($name @ $crate::cst::GroupMissingCloserNode(OperatorNode {
-            op: $($crate::cst::CallOperator::$op_kind)|*,
+            op: $($crate::parse::operators::CallOperator::$op_kind)|*,
             ..
         }))
     };

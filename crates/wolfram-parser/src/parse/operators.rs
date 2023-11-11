@@ -18,14 +18,22 @@
 use wolfram_expr::symbol::SymbolRef;
 
 use crate::{
-	cst::Operator,
 	symbol::Symbol,
 	symbols as sym
 };
 
-//
-//
-//
+/// Marker denoting enums whose variants represent named operators, which
+/// can be converted to or from a corresponding canonical symbol representation.
+pub trait Operator: Sized + 'static {
+    fn to_symbol(&self) -> crate::symbol::Symbol;
+
+    fn try_from_symbol(symbol: wolfram_expr::symbol::SymbolRef)
+        -> Option<Self>;
+}
+
+//==========================================================
+// Operator enum definitions
+//==========================================================
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -403,6 +411,49 @@ pub enum CallOperator {
     CodeParser_GroupDoubleBracket,
     CodeParser_GroupTypeSpecifier,
 }
+
+//==========================================================
+// Operator enum inherent impls
+//==========================================================
+
+impl GroupOperator {
+    // FIXME: Make this function unnecessary by removing the GroupOperator
+    //        variants that overlap with CallOperator. This will require some
+    //        refactoring of how the parser parsing of CallParselet works.
+    pub(crate) fn try_to_call_operator(self) -> Option<CallOperator> {
+        let op = match self {
+            GroupOperator::CodeParser_GroupSquare => {
+                CallOperator::CodeParser_GroupSquare
+            },
+            GroupOperator::CodeParser_GroupTypeSpecifier => {
+                CallOperator::CodeParser_GroupTypeSpecifier
+            },
+            GroupOperator::CodeParser_GroupDoubleBracket => {
+                CallOperator::CodeParser_GroupDoubleBracket
+            },
+            GroupOperator::Token_Comment
+            | GroupOperator::CodeParser_Comment
+            | GroupOperator::CodeParser_GroupParen
+            | GroupOperator::List
+            | GroupOperator::Association
+            | GroupOperator::AngleBracket
+            | GroupOperator::Ceiling
+            | GroupOperator::Floor
+            | GroupOperator::BracketingBar
+            | GroupOperator::DoubleBracketingBar
+            | GroupOperator::CurlyQuote
+            | GroupOperator::CurlyDoubleQuote => {
+                panic!("GroupOperator::{self:?} cannot be converted to CallOperator")
+            },
+        };
+
+        Some(op)
+    }
+}
+
+//==========================================================
+// Operator trait impls
+//==========================================================
 
 impl Operator for InfixOperator {
     #[allow(dead_code)]
