@@ -170,7 +170,10 @@ TestMatch[
 bug 414139
 *)
 
-cst = CodeConcreteParseBox[RowBox[{RowBox[{"Function", "[", RowBox[{"x", ",", RowBox[{"x", "^", "2"}]}], "]"}], "'"}]]
+cst = CodeConcreteParseBox[RowBox[{
+	RowBox[{"Function", "[", RowBox[{"x", ",", RowBox[{"x", "^", "2"}]}], "]"}],
+	"'"
+}]]
 
 Test[
 	cst,

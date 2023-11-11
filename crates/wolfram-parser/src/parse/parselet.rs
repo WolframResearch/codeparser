@@ -1254,23 +1254,23 @@ impl CallParselet {
 
         let body: CallBody<_> = match body {
             crate::cst::Cst::Group(group) => {
-                let GroupNode(OperatorNode { op, children, src}) = group;
+                let GroupNode(OperatorNode { op, children }) = group;
 
                 let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");
 
                 let group = GroupNode(OperatorNode {
-                    op, children, src
+                    op, children
                 });
 
                 CallBody::Group(group)
             },
             crate::cst::Cst::GroupMissingCloser(group) => {
-                let GroupMissingCloserNode(OperatorNode { op, children, src}) = group;
+                let GroupMissingCloserNode(OperatorNode { op, children}) = group;
 
                 let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");
 
                 let group = GroupMissingCloserNode(OperatorNode {
-                    op, children, src
+                    op, children
                 });
 
                 CallBody::GroupMissingCloser(group)

@@ -72,6 +72,31 @@ pub(crate) fn from_expr_with_container_kind<T: FromExpr>(
 // FromExpr impls
 //==========================================================
 
+macro_rules! compare_declared_and_computed_src {
+    ($node_name:literal, $node:expr, $declared_src:expr) => {'ret_macro: {
+        use wolfram_parser::source::BoxPosition;
+
+        if !crate::codeparser_debug() {
+            break 'ret_macro;
+        }
+
+        let computed_src  = $node.get_source();
+
+        if computed_src == $declared_src {
+            break 'ret_macro;
+        }
+
+        if $node_name == "GroupNode" && matches!(computed_src, Source::Box(BoxPosition::Spanning { .. })) {
+            break 'ret_macro;
+        }
+
+        panic!(
+            "declared {} source differs from computed: declared = {}, computed = {}",
+            $node_name, $declared_src, computed_src
+        );
+    }}
+}
+
 impl FromExpr for Container<Cst<TokenString, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements =
@@ -317,9 +342,12 @@ impl FromExpr for CallNode<TokenString, Source> {
         };
 
         let metadata = Metadata::from_expr(&elements[2])?;
-        let src = metadata.source;
 
-        Ok(CallNode { head, body, src })
+        let node = CallNode { head, body };
+
+        compare_declared_and_computed_src!("CallNode", node, metadata.source);
+
+        Ok(node)
     }
 }
 
@@ -336,9 +364,11 @@ impl FromExpr for PrefixNode<TokenString, Source> {
 
         let Metadata { source, .. } = Metadata::from_expr(&elements[2])?;
 
-        let src = source;
+        let node = PrefixNode(OperatorNode { op, children });
 
-        Ok(PrefixNode(OperatorNode { op, children, src }))
+        compare_declared_and_computed_src!("PrefixNode", node, source);
+
+        Ok(node)
     }
 }
 
@@ -356,9 +386,11 @@ impl FromExpr for InfixNode<TokenString, Source> {
         let Metadata { source, .. } =
             Metadata::from_expr(&elements[2]).expect("PRE_COMMIT");
 
-        let src = source;
+        let node = InfixNode(OperatorNode { op, children });
 
-        Ok(InfixNode(OperatorNode { op, children, src }))
+        compare_declared_and_computed_src!("InfixNode", node, source);
+
+        Ok(node)
     }
 }
 
@@ -375,7 +407,11 @@ impl FromExpr for PrefixBinaryNode<TokenString, Source> {
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(PrefixBinaryNode(OperatorNode { op, children, src }))
+        let node = PrefixBinaryNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("PrefixBinaryNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -391,7 +427,11 @@ impl FromExpr for BinaryNode<TokenString, Source> {
         let children = NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(BinaryNode(OperatorNode { op, children, src }))
+        let node = BinaryNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("BinaryNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -407,7 +447,11 @@ impl FromExpr for TernaryNode<TokenString, Source> {
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(TernaryNode(OperatorNode { op, children, src }))
+        let node = TernaryNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("TernaryNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -423,7 +467,11 @@ impl FromExpr for PostfixNode<TokenString, Source> {
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(PostfixNode(OperatorNode { op, children, src }))
+        let node = PostfixNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("PostfixNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -439,7 +487,11 @@ impl<O: FromExpr> FromExpr for GroupNode<TokenString, Source, O> {
         let children = NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(GroupNode(OperatorNode { op, children, src }))
+        let node = GroupNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("GroupNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -506,7 +558,11 @@ impl<O: FromExpr> FromExpr for GroupMissingCloserNode<TokenString, Source, O> {
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(GroupMissingCloserNode(OperatorNode { op, children, src }))
+        let node = GroupMissingCloserNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("GroupMissingCloserNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -523,7 +579,11 @@ impl FromExpr for GroupMissingOpenerNode<TokenString, Source> {
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(GroupMissingOpenerNode(OperatorNode { op, children, src }))
+        let node = GroupMissingOpenerNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("GroupMissingOpenerNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -540,7 +600,11 @@ impl FromExpr for CompoundNode<TokenString, Source> {
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
-        Ok(CompoundNode(OperatorNode { op, children, src }))
+        let node = CompoundNode(OperatorNode { op, children });
+
+        compare_declared_and_computed_src!("CompoundNode", node, src);
+
+        Ok(node)
     }
 }
 
@@ -707,12 +771,23 @@ impl FromExpr for Metadata {
 
 impl FromExpr for Source {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        // FIXME: This means Source::After actually covers both After
-        //        and Before. Represent this more cleanly.
-        if expr.has_normal_head(&Symbol::new("System`After"))
-            || expr.has_normal_head(&Symbol::new("System`Before"))
+        // Check for After[{..}] and Before[{..}]
+        if let Some([list]) = try_normal_with_head_and_len(expr, sym::After)? {
+            let List(indexes) =
+                List::<usize>::from_expr(list).map_err(|err| {
+                    format!("invalid After[..] box position list: {err}")
+                })?;
+
+            return Ok(Source::Box(BoxPosition::After(indexes)));
+        } else if let Some([list]) =
+            try_normal_with_head_and_len(expr, sym::Before)?
         {
-            return Ok(Source::After(expr.clone()));
+            let List(indexes) =
+                List::<usize>::from_expr(list).map_err(|err| {
+                    format!("invalid Before[..] box position list: {err}")
+                })?;
+
+            return Ok(Source::Box(BoxPosition::Before(indexes)));
         }
 
         let elements = try_normal_with_head(expr, sym::List)?;
@@ -724,26 +799,10 @@ impl FromExpr for Source {
 
         let [source_start, source_end] = match global_container_kind {
             ContainerKind::Cell | ContainerKind::Box => {
-                let mut indexes = Vec::new();
-
-                for elem in elements {
-                    let index: i64 = match elem.kind() {
-                        ExprKind::Integer(int) => *int,
-                        _ => {
-                            return Err(format!(
-                                "invalid box position element: {elem}. Expected Integer."
-                            ))
-                        },
-                    };
-                    let index = match usize::try_from(index) {
-                        Ok(index) => index,
-                        Err(err) => return Err(format!(
-                            "invalid box position index: negative or too large to fix in usize: {err}: {index}"
-                        ))
-                    };
-
-                    indexes.push(index);
-                }
+                let List(indexes) =
+                    List::<usize>::from_expr(expr).map_err(|err| {
+                        format!("invalid box position list: {err}")
+                    })?;
 
                 // Note: `elements` can sometimes be {}, {1, 1, 1}, etc.
                 //        These are the source positions of boxes.
@@ -863,9 +922,8 @@ impl FromExpr for Span {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         match Source::from_expr(expr)? {
             Source::Span(span) => Ok(span),
-            Source::Unknown => todo!("Source from Source::Unknown"),
-            Source::Box(_) => todo!("Source from Source::Box"),
-            Source::After(_) => todo!("Source from Source::After"),
+            Source::Unknown => todo!("Span from Source::Unknown"),
+            Source::Box(_) => todo!("Span from Source::Box"),
         }
     }
 }
@@ -1153,7 +1211,7 @@ impl FromExpr for CodeAction {
 
         let src = match src {
             Source::Span(src) => src,
-            Source::Box(_) | Source::After(_) | Source::Unknown => {
+            Source::Box(_) | Source::Unknown => {
                 todo!("unexpected source for CodeAction: {src:?}")
             },
         };
@@ -1269,6 +1327,36 @@ impl FromExpr for List<String> {
     }
 }
 
+impl FromExpr for List<usize> {
+    fn from_expr(expr: &Expr) -> Result<Self, String> {
+        let elements = try_normal_with_head(expr, sym::List)?;
+
+        let mut indexes = Vec::new();
+
+        for elem in elements {
+            let index: i64 = match elem.kind() {
+                ExprKind::Integer(int) => *int,
+                _ => {
+                    return Err(format!(
+                        "expected non-negative Integer, got {elem}"
+                    ))
+                },
+            };
+
+            let index = match usize::try_from(index) {
+                Ok(index) => index,
+                Err(err) => return Err(format!(
+                    "expected non-negative Integer, got negative or too large to fix in usize: {err}: {index}"
+                ))
+            };
+
+            indexes.push(index);
+        }
+
+        Ok(List(indexes))
+    }
+}
+
 struct Rule {
     lhs: Expr,
     rhs: Expr,
@@ -1313,4 +1401,39 @@ fn try_normal_with_head<'e>(
             normal.head()
         ))
     }
+}
+
+fn try_normal_with_head_2<'e>(
+    expr: &'e Expr,
+    expected_head: SymbolRef,
+) -> Option<&'e [Expr]> {
+    let Some(normal) = expr.try_as_normal() else {
+        return None;
+    };
+
+    if *normal.head() == expected_head.to_symbol() {
+        Some(normal.elements())
+    } else {
+        None
+    }
+}
+
+fn try_normal_with_head_and_len<'e, const LEN: usize>(
+    expr: &'e Expr,
+    expected_head: SymbolRef,
+) -> Result<Option<&'e [Expr; LEN]>, String> {
+    let Some(elements) = try_normal_with_head_2(expr, expected_head) else {
+        return Ok(None);
+    };
+
+    let array: &[_; LEN] = elements.try_into().map_err(|_| {
+        format!(
+            "expected expression with head '{}' and length {LEN}, \
+             actual expression had length {}: ",
+            expected_head.as_str(),
+            elements.len()
+        )
+    })?;
+
+    Ok(Some(array))
 }

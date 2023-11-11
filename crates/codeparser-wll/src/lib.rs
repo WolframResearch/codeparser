@@ -1177,6 +1177,23 @@ fn compatibility_mode() -> bool {
     }
 }
 
+/// Whether to perform debug sanity checks that might be too sensitive to
+/// enable during normal usage of CodeParser.
+///
+/// This should be enabled during the CodeParser test suite run.
+fn codeparser_debug() -> bool {
+    let var = "CODEPARSER_DEBUG";
+
+    match std::env::var(var) {
+        Ok(value) if value == "True" => true,
+        Ok(value) if value == "False" => false,
+        Ok(value) => panic!("Unrecognized {var} env mode value: {value}"),
+        // Default to non-strict mode, where CodeParser will silently ignore
+        // certain potential issues.
+        Err(_) => false,
+    }
+}
+
 //======================================
 // WSTP Serialization
 //======================================

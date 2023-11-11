@@ -83,7 +83,6 @@ pub(super) fn abstract_call_node<
                 CallBody::Group(GroupNode(OperatorNode {
                     op: CallOperator::CodeParser_GroupSquare,
                     children,
-                    src: _,
                 })),
             src: data,
         } if matches!(
@@ -294,7 +293,7 @@ pub(super) fn abstract_call_node<
         // ##2 represents a sequence of arguments, so it is wrong to call
         LHS!(CallNode[
             head:(LeafNode[HashHash, _, _] | CompoundNode[SlotSequence, _, _]),
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let first = part.0.children.0.first().unwrap();
@@ -325,7 +324,7 @@ pub(super) fn abstract_call_node<
                 | CallNode[_, _, _]
                 | CompoundNode[Blank | BlankSequence | BlankNullSequence | CodeParser_PatternBlank | CodeParser_PatternBlankSequence | CodeParser_PatternBlankNullSequence | Slot /*| SlotSequence*/, _, _]
             ),
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -353,7 +352,7 @@ pub(super) fn abstract_call_node<
         // TODO(test): Add test for this case ("%[5]")
         LHS!(CallNode[
             head:(LeafNode[Percent | PercentPercent, _, _] | CompoundNode[Out, _, _]),
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             // let first = part.0.children.0.first().unwrap();
@@ -377,7 +376,7 @@ pub(super) fn abstract_call_node<
         },
         LHS!(CallNode[
             head:BinaryNode[PatternTest, _, _],
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -387,7 +386,7 @@ pub(super) fn abstract_call_node<
         },
         LHS!(CallNode[
             head:InfixNode[CompoundExpression, _, _],
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let first = part.0.children.0.first().unwrap();
@@ -416,7 +415,7 @@ pub(super) fn abstract_call_node<
         // Through[{a, b, c}[1]]
         LHS!(CallNode[
             head:GroupNode[CodeParser_GroupParen | List | Association, _, _],
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -426,7 +425,7 @@ pub(super) fn abstract_call_node<
         },
         LHS!(CallNode[
             head:GroupNode[_, _, _],
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let first = part.0.children.0.first().unwrap();
@@ -455,7 +454,7 @@ pub(super) fn abstract_call_node<
         //
         LHS!(CallNode[
             head:PostfixNode[Function | Derivative, _, _],
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -474,7 +473,7 @@ pub(super) fn abstract_call_node<
         // TODO(test): Add test case for this branch.
         AggCallNode {
             head: Cst::Box(head @ BoxNode { .. }),
-            body: LHS!(part:GroupNode[CodeParser_GroupSquare, _, _]),
+            body: LHS!(part:GroupNode[CodeParser_GroupSquare, _]),
             src: data,
         } if OK_CALL_BOX_KINDS.contains(&head.kind) => {
             let head = abstract_(Cst::from(head));
@@ -490,7 +489,7 @@ pub(super) fn abstract_call_node<
         // TODO(test): Add test case that covers this branch.
         AggCallNode {
             head: Cst::Box(head @ BoxNode { .. }),
-            body: LHS!(part:GroupNode[CodeParser_GroupSquare, _, _]),
+            body: LHS!(part:GroupNode[CodeParser_GroupSquare, _]),
             src: data,
         } => {
             let first = part.0.children.0.first().unwrap();
@@ -519,7 +518,7 @@ pub(super) fn abstract_call_node<
         //
         LHS!(CallNode[
             head:_,
-            part:GroupNode[CodeParser_GroupSquare, _, _],
+            part:GroupNode[CodeParser_GroupSquare, _],
             data:_]) => {
             let first = part.0.children.0.first().unwrap();
             let last = part.0.children.0.last().unwrap();
@@ -550,7 +549,7 @@ pub(super) fn abstract_call_node<
         //
         LHS!(CallNode[
             head:LeafNode[String, _, _],
-            part:GroupNode[CodeParser_GroupTypeSpecifier, _, _],
+            part:GroupNode[CodeParser_GroupTypeSpecifier, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -565,7 +564,7 @@ pub(super) fn abstract_call_node<
         //
         // warn about anything else
         //
-        LHS!(CallNode[head:_, part:GroupNode[CodeParser_GroupTypeSpecifier, _, _], data:_]) =>
+        LHS!(CallNode[head:_, part:GroupNode[CodeParser_GroupTypeSpecifier, _], data:_]) =>
         {
             let mut data = AstMetadata::from_src(data);
 
@@ -598,7 +597,7 @@ pub(super) fn abstract_call_node<
         //--------------------
         LHS!(CallNode[
             head:_,
-            part:GroupNode[CodeParser_GroupDoubleBracket, _, _],
+            part:GroupNode[CodeParser_GroupDoubleBracket, _],
             data:_
         ]) => {
             let first = part.0.children.0.first().unwrap();
@@ -797,7 +796,7 @@ pub(super) fn abstract_call_node<
         //
         LHS!(CallNode[
             head:_,
-            part:GroupMissingCloserNode[CodeParser_GroupSquare, _, _],
+            part:GroupMissingCloserNode[CodeParser_GroupSquare, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -809,7 +808,7 @@ pub(super) fn abstract_call_node<
         },
         LHS!(CallNode[
             head:_,
-            part:GroupMissingCloserNode[CodeParser_GroupTypeSpecifier, _, _],
+            part:GroupMissingCloserNode[CodeParser_GroupTypeSpecifier, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -837,7 +836,7 @@ pub(super) fn abstract_call_node<
         },
         LHS!(CallNode[
             head:_,
-            part:GroupMissingCloserNode[CodeParser_GroupDoubleBracket, _, _],
+            part:GroupMissingCloserNode[CodeParser_GroupDoubleBracket, _],
             data:_
         ]) => {
             let head = abstract_(head);
@@ -878,9 +877,11 @@ struct AggCallNode<I, S> {
     src: S,
 }
 
-impl<I: Debug, S: Debug> AggCallNode<I, S> {
+impl<I: Debug, S: TokenSource + Debug> AggCallNode<I, S> {
     fn from_cst(call: CallNode<I, S>) -> Self {
-        let CallNode { head, body, src } = call;
+        let src = call.get_source();
+
+        let CallNode { head, body } = call;
 
         let head: Cst<I, S> = match head {
             CallHead::Concrete(_) => panic!(

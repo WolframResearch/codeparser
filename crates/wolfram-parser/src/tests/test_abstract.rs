@@ -8,7 +8,9 @@ use crate::{
         PrefixNode, PrefixOperator,
     },
     macros::{leaf, src, token},
-    parse_cst, NodeSeq, QuirkSettings,
+    parse_cst,
+    tests::assert_src,
+    NodeSeq, QuirkSettings,
 };
 
 use pretty_assertions::assert_eq;
@@ -24,23 +26,21 @@ fn test_negate_infix_times() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-6 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2),),
                 Token(token!(Minus, "-", 1:2-3),),
-                Cst::Infix(InfixNode(OperatorNode {
+                assert_src!(1:3-6 => Cst::Infix(InfixNode(OperatorNode {
                     op: InfixOperator::Times,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "b", 1:3-4),),
                         Token(token!(Star, "*", 1:4-5),),
                         Token(token!(Symbol, "c", 1:5-6),),
                     ],),
-                    src: src!(1:3-6).into(),
-                },),),
+                }))),
             ]),
-            src: src!(1:1-6).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -91,23 +91,21 @@ fn test_negate_infix_times() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-6 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2),),
                 Token(token!(Minus, "-", 1:2-3),),
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:3-6 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::Divide,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "b", 1:3-4)),
                         Token(token!(Slash, "/", 1:4-5)),
                         Token(token!(Symbol, "c", 1:5-6)),
                     ]),
-                    src: src!(1:3-6).into(),
-                })),
+                })))
             ]),
-            src: src!(1:1-6).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -200,21 +198,20 @@ fn test_abstract_flatten_times_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-44 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
-                Cst::Prefix(PrefixNode(OperatorNode {
+                Cst::Prefix(assert_src!(1:1-3 => PrefixNode(OperatorNode {
                     op: PrefixOperator::Minus,
                     children: NodeSeq(vec![
                         Token(token!(Minus, "-", 1:1-2)),
                         Token(token!(Symbol, "a", 1:2-3)),
                     ]),
-                    src: src!(1:1-3).into(),
-                })),
+                }))),
                 Token(token!(Whitespace, " ", 1:3-4)),
                 Token(token!(Star, "*", 1:4-5)),
                 Token(token!(Whitespace, " ", 1:5-6)),
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:6-11 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::Divide,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "b", 1:6-7)),
@@ -223,8 +220,7 @@ fn test_abstract_flatten_times_quirk() {
                         Token(token!(Whitespace, " ", 1:9-10)),
                         Token(token!(Symbol, "c", 1:10-11)),
                     ]),
-                    src: src!(1:6-11).into(),
-                })),
+                }))),
                 Token(token!(Whitespace, " ", 1:11-12)),
                 Token(token!(Fake_ImplicitTimes, "", 1:12-12)),
                 Token(token!(Symbol, "d", 1:12-13)),
@@ -239,8 +235,7 @@ fn test_abstract_flatten_times_quirk() {
                 Token(token!(Whitespace, " ", 1:42-43)),
                 Token(token!(Symbol, "f", 1:43-44)),
             ]),
-            src: src!(1:1-44).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -320,23 +315,21 @@ fn test_abstract_flatten_times_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Prefix(PrefixNode(OperatorNode {
+        Cst::Prefix(assert_src!(1:1-6 => PrefixNode(OperatorNode {
             op: PrefixOperator::Minus,
             children: NodeSeq(vec![
                 Token(token!(Minus, "-", 1:1-2)),
                 Token(token!(Whitespace, " ", 1:2-3)),
-                Cst::Prefix(PrefixNode(OperatorNode {
+                Cst::Prefix(assert_src!(1:3-6 => PrefixNode(OperatorNode {
                     op: PrefixOperator::Minus,
                     children: NodeSeq(vec![
                         Token(token!(Minus, "-", 1:3-4)),
                         Token(token!(Whitespace, " ", 1:4-5)),
                         Token(token!(Symbol, "a", 1:5-6)),
                     ]),
-                    src: src!(1:3-6).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-6).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -386,33 +379,30 @@ fn test_abstract_flatten_times_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-10 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
-                Cst::Prefix(PrefixNode(OperatorNode {
+                Cst::Prefix(assert_src!(1:1-6 => PrefixNode(OperatorNode {
                     op: PrefixOperator::Minus,
                     children: NodeSeq(vec![
                         Token(token!(Minus, "-", 1:1-2)),
                         Token(token!(Whitespace, " ", 1:2-3)),
-                        Cst::Prefix(PrefixNode(OperatorNode {
+                        assert_src!(1:3-6 => Cst::Prefix(PrefixNode(OperatorNode {
                             op: PrefixOperator::Minus,
                             children: NodeSeq(vec![
                                 Token(token!(Minus, "-", 1:3-4)),
                                 Token(token!(Whitespace, " ", 1:4-5)),
                                 Token(token!(Symbol, "a", 1:5-6)),
-                            ],),
-                            src: src!(1:3-6).into(),
-                        })),
+                            ]),
+                        }))),
                     ]),
-                    src: src!(1:1-6).into(),
-                })),
+                }))),
                 Token(token!(Whitespace, " ", 1:6-7)),
                 Token(token!(Star, "*", 1:7-8)),
                 Token(token!(Whitespace, " ", 1:8-9)),
                 Token(token!(Symbol, "b", 1:9-10)),
             ]),
-            src: src!(1:1-10).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -476,22 +466,20 @@ fn test_abstract_flatten_times_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Binary(BinaryNode(OperatorNode {
+        assert_src!(1:1-5 => Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Divide,
             children: NodeSeq(vec![
-                Cst::Prefix(PrefixNode(OperatorNode {
+                Cst::Prefix(assert_src!(1:1-3 => PrefixNode(OperatorNode {
                     op: PrefixOperator::Minus,
                     children: NodeSeq(vec![
                         Token(token!(Minus, "-", 1:1-2)),
                         Token(token!(Symbol, "a", 1:2-3))
                     ]),
-                    src: src!(1:1-3).into()
-                })),
+                }))),
                 Token(token!(Slash, "/", 1:3-4)),
                 Token(token!(Symbol, "b", 1:4-5)),
             ]),
-            src: src!(1:1-5).into()
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -563,38 +551,34 @@ fn test_abstract_flatten_times_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-9 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2)),
                 Token(token!(Star, "*", 1:2-3)),
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:3-9 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::Divide,
                     children: NodeSeq(vec![
-                        Cst::Prefix(PrefixNode(OperatorNode {
+                        Cst::Prefix(assert_src!(1:3-7 => PrefixNode(OperatorNode {
                             op: PrefixOperator::Minus,
                             children: NodeSeq(vec![
                                 Token(token!(Minus, "-", 1:3-4)),
-                                Cst::Group(GroupNode(OperatorNode {
+                                assert_src!(1:4-7 => Cst::Group(GroupNode(OperatorNode {
                                     op: GroupOperator::CodeParser_GroupParen,
                                     children: NodeSeq(vec![
                                         Token(token!(OpenParen, "(", 1:4-5)),
                                         Token(token!(Symbol, "b", 1:5-6)),
                                         Token(token!(CloseParen, ")", 1:6-7)),
                                     ]),
-                                    src: src!(1:4-7).into(),
-                                }))
+                                })))
                             ]),
-                            src: src!(1:3-7).into(),
-                        })),
+                        }))),
                         Token(token!(Slash, "/", 1:7-8)),
                         Token(token!(Symbol, "c", 1:8-9)),
                     ]),
-                    src: src!(1:3-9).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-9).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -678,37 +662,33 @@ fn test_abstract_flatten_times_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-8 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2)),
                 Token(token!(Star, "*", 1:2-3)),
-                Cst::Prefix(PrefixNode(OperatorNode {
+                Cst::Prefix(assert_src!(1:3-8 => PrefixNode(OperatorNode {
                     op: PrefixOperator::Minus,
                     children: NodeSeq(vec![
                         Token(token!(Minus, "-", 1:3-4)),
-                        Cst::Group(GroupNode(OperatorNode {
+                        assert_src!(1:4-8 => Cst::Group(GroupNode(OperatorNode {
                             op: GroupOperator::CodeParser_GroupParen,
                             children: NodeSeq(vec![
                                 Token(token!(OpenParen, "(", 1:4-5)),
-                                Cst::Prefix(PrefixNode(OperatorNode {
+                                Cst::Prefix(assert_src!(1:5-7 => PrefixNode(OperatorNode {
                                     op: PrefixOperator::Minus,
                                     children: NodeSeq(vec![
                                         Token(token!(Minus, "-", 1:5-6)),
                                         Token(token!(Symbol, "b", 1:6-7)),
                                     ]),
-                                    src: src!(1:5-7).into(),
-                                })),
+                                }))),
                                 Token(token!(CloseParen, ")", 1:7-8)),
                             ]),
-                            src: src!(1:4-8).into(),
-                        }))
+                        })))
                     ]),
-                    src: src!(1:3-8).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-8).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -775,38 +755,34 @@ fn test_abstract_flatten_times_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-9 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2)),
                 Token(token!(Star, "*", 1:2-3)),
-                Cst::Prefix(PrefixNode(OperatorNode {
+                Cst::Prefix(assert_src!(1:3-9 => PrefixNode(OperatorNode {
                     op: PrefixOperator::Minus,
                     children: NodeSeq(vec![
                         Token(token!(Minus, "-", 1:3-4)),
-                        Cst::Group(GroupNode(OperatorNode {
+                        assert_src!(1:4-9 => Cst::Group(GroupNode(OperatorNode {
                             op: GroupOperator::CodeParser_GroupParen,
                             children: NodeSeq(vec![
                                 Token(token!(OpenParen, "(", 1:4-5)),
-                                Cst::Infix(InfixNode(OperatorNode {
+                                assert_src!(1:5-8 => Cst::Infix(InfixNode(OperatorNode {
                                     op: InfixOperator::Times,
                                     children: NodeSeq(vec![
                                         Token(token!(Symbol, "b", 1:5-6)),
                                         Token(token!(Star, "*", 1:6-7)),
                                         Token(token!(Symbol, "c", 1:7-8)),
                                     ]),
-                                    src: src!(1:5-8).into(),
-                                })),
+                                }))),
                                 Token(token!(CloseParen, ")", 1:8-9)),
                             ]),
-                            src: src!(1:4-9).into(),
-                        }))
+                        })))
                     ]),
-                    src: src!(1:3-9).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-9).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -877,23 +853,21 @@ fn test_abstract_infix_binary_at_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-16 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::StringJoin,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2),),
                 Token(token!(LessGreater, "<>", 1:2-4),),
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:4-16 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::CodeParser_BinaryAt,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "StringJoin", 1:4-14),),
                         Token(token!(At, "@", 1:14-15),),
                         Token(token!(Symbol, "b", 1:15-16),),
                     ]),
-                    src: src!(1:4-16).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-16).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -943,14 +917,14 @@ fn test_abstract_infix_binary_at_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-13 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2),),
                 Token(token!(Whitespace, " ", 1:2-3),),
                 Token(token!(Plus, "+", 1:3-4),),
                 Token(token!(Whitespace, " ", 1:4-5),),
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:5-13 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::CodeParser_BinaryAt,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "Plus", 1:5-9),),
@@ -959,11 +933,9 @@ fn test_abstract_infix_binary_at_quirk() {
                         Token(token!(Whitespace, " ", 1:11-12),),
                         Token(token!(Symbol, "b", 1:12-13),),
                     ]),
-                    src: src!(1:5-13).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-13).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -1016,14 +988,14 @@ fn test_abstract_infix_binary_at_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-16 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::SameQ,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2),),
                 Token(token!(Whitespace, " ", 1:2-3),),
                 Token(token!(EqualEqualEqual, "===", 1:3-6),),
                 Token(token!(Whitespace, " ", 1:6-7),),
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:7-16 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::CodeParser_BinaryAt,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "SameQ", 1:7-12),),
@@ -1032,11 +1004,9 @@ fn test_abstract_infix_binary_at_quirk() {
                         Token(token!(Whitespace, " ", 1:14-15),),
                         Token(token!(Symbol, "b", 1:15-16),),
                     ]),
-                    src: src!(1:7-16).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-16).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -1079,23 +1049,21 @@ fn test_abstract_infix_binary_at_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Binary(BinaryNode(OperatorNode {
+        assert_src!(1:1-10 => Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Divide,
             children: NodeSeq(vec![
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:1-8 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::CodeParser_BinaryAt,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "Times", 1:1-6),),
                         Token(token!(At, "@", 1:6-7),),
                         Token(token!(Symbol, "a", 1:7-8),),
                     ]),
-                    src: src!(1:1-8).into(),
-                })),
+                }))),
                 Token(token!(Slash, "/", 1:8-9),),
                 Token(token!(Symbol, "b", 1:9-10),),
-            ],),
-            src: src!(1:1-10).into(),
-        })),
+            ]),
+        }))),
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -1136,23 +1104,21 @@ fn test_abstract_infix_binary_at_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Binary(BinaryNode(OperatorNode {
+        assert_src!(1:1-11 => Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Divide,
             children: NodeSeq(vec![
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:1-9 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::CodeParser_BinaryAt,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "Divide", 1:1-7),),
                         Token(token!(At, "@", 1:7-8),),
                         Token(token!(Symbol, "a", 1:8-9),),
                     ]),
-                    src: src!(1:1-9).into(),
-                })),
+                }))),
                 Token(token!(Slash, "/", 1:9-10),),
                 Token(token!(Symbol, "b", 1:10-11),),
-            ],),
-            src: src!(1:1-11).into(),
-        })),
+            ]),
+        }))),
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -1205,34 +1171,31 @@ fn test_abstract_flatten_times_combined_with_infix_binary_at_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-15 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
                 Token(token!(Symbol, "a", 1:1-2)),
                 Token(token!(Whitespace, " ", 1:2-3)),
                 Token(token!(Star, "*", 1:3-4)),
                 Token(token!(Whitespace, " ", 1:4-5)),
-                Cst::Binary(BinaryNode(OperatorNode {
+                assert_src!(1:5-15 => Cst::Binary(BinaryNode(OperatorNode {
                     op: BinaryOperator::CodeParser_BinaryAt,
                     children: NodeSeq(vec![
                         Token(token!(Symbol, "Times", 1:5-10)),
                         Token(token!(Whitespace, " ", 1:10-11)),
                         Token(token!(At, "@", 1:11-12)),
                         Token(token!(Whitespace, " ", 1:12-13)),
-                        Cst::Prefix(PrefixNode(OperatorNode {
+                        assert_src!(1:13-15 => Cst::Prefix(PrefixNode(OperatorNode {
                             op: PrefixOperator::Minus,
                             children: NodeSeq(vec![
                                 Token(token!(Minus, "-", 1:13-14),),
                                 Token(token!(Symbol, "b", 1:14-15),),
                             ]),
-                            src: src!(1:13-15).into(),
-                        })),
+                        }))),
                     ]),
-                    src: src!(1:5-15).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-15).into(),
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -1365,7 +1328,7 @@ fn test_abstract_old_at_at_at_quirk() {
 
     assert_eq!(
         cst,
-        Cst::Binary(BinaryNode(OperatorNode {
+        assert_src!(1:1-8 => Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::MapApply,
             children: NodeSeq(vec![
                 Cst::Token(token!(Symbol, "a", 1:1-2)),
@@ -1374,8 +1337,7 @@ fn test_abstract_old_at_at_at_quirk() {
                 Cst::Token(token!(Whitespace, " ", 1:6-7)),
                 Cst::Token(token!(Symbol, "b", 1:7-8)),
             ]),
-            src: src!(1:1-8).into()
-        }))
+        })))
     );
 
     let agg = aggregate_cst(cst.clone()).unwrap();
@@ -1425,21 +1387,20 @@ fn test_abstract_plus() {
 
     assert_eq!(
         agg,
-        Cst::Infix(InfixNode(OperatorNode {
+        assert_src!(1:1-29 => Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
-                Cst::Prefix(PrefixNode(OperatorNode {
+                assert_src!(1:1-3 => Cst::Prefix(PrefixNode(OperatorNode {
                     op: PrefixOperator::Plus,
                     children: NodeSeq(vec![
                         Token(token!(Plus, "+", 1:1-2)),
                         Token(token!(Symbol, "a", 1:2-3)),
                     ]),
-                    src: src!(1:1-3).into(),
-                })),
+                }))),
                 Cst::Token(token!(Plus, "+", 1:4-5)),
                 Cst::Token(token!(Symbol, "b", 1:6-7)),
                 Cst::Token(token!(Minus, "-", 1:8-9)),
-                Cst::Infix(InfixNode(OperatorNode {
+                assert_src!(1:10-29 => Cst::Infix(InfixNode(OperatorNode {
                     op: InfixOperator::Plus,
                     children: NodeSeq(vec![
                         Cst::Token(token!(Symbol, "c", 1:10-11)),
@@ -1448,11 +1409,9 @@ fn test_abstract_plus() {
                         ),
                         Cst::Token(token!(Symbol, "d", 1:28-29)),
                     ]),
-                    src: src!(1:10-29).into(),
-                })),
+                }))),
             ]),
-            src: src!(1:1-29).into()
-        }))
+        })))
     );
 
     let ast = abstract_cst(agg, QuirkSettings::default());
@@ -1481,6 +1440,49 @@ fn test_abstract_plus() {
                 },
             ],
             data: src!(1:1-29).into(),
+        }
+    );
+}
+
+#[test]
+fn test_abstract_box_sources() {
+    //
+    // TID:231110/2 — Plus pair synthetic "between" BoxPosition
+    //
+
+    // From: RowBox[{"{", RowBox[{"E", "-", "1"}], "}"}]
+    let cst = assert_src!(src!({}) => Cst::Group(GroupNode(OperatorNode {
+        op: GroupOperator::List,
+        children: NodeSeq(vec![
+            Cst::Token(token!(OpenCurly, "{", {1, 1})),
+            assert_src!(src!({1, 2}) => Cst::Infix(InfixNode(OperatorNode {
+                op: InfixOperator::Plus,
+                children: NodeSeq(vec![
+                    Cst::Token(token![Symbol, "E", {1, 2, 1, 1}]),
+                    Cst::Token(token![Minus, "-", {1, 2, 1, 2}]),
+                    Cst::Token(token![Integer, "1", {1, 2, 1, 3}])
+                ]),
+            }))),
+            Cst::Token(token![CloseCurly, "}", {1, 3}])
+        ])
+    })));
+
+    assert_eq!(
+        abstract_cst(cst, QuirkSettings::default()),
+        Ast::Call {
+            head: Box::new(leaf![Symbol, "List", <||>]),
+            args: vec![Ast::Call {
+                head: Box::new(leaf![Symbol, "Plus", <||>]),
+                args: vec![
+                    leaf![Symbol, "E", {1, 2, 1, 1}],
+                    // NOTE: The source location of this node has to be computed
+                    //       from the separate `-` and `1` tokens in the
+                    //       original box input.
+                    leaf![Integer, "-1", src!({1, 2, 1, (2 ;; 3)})]
+                ],
+                data: AstMetadata::from(src!({1, 2}))
+            }],
+            data: AstMetadata::from(src!({}))
         }
     );
 }

@@ -617,9 +617,26 @@ pub(crate) fn prepend<T>(mut list: Vec<T>, elem: T) -> Vec<T> {
     list
 }
 
+pub(crate) fn most_slice<T>(list: &[T]) -> Option<&[T]> {
+    if list.is_empty() {
+        return None;
+    }
+
+    Some(&list[..list.len() - 1])
+}
+
 #[test]
 fn test_join() {
     assert_eq!(join([1, 2, 3], vec![4, 5, 6]), vec![1, 2, 3, 4, 5, 6])
+}
+
+#[test]
+fn test_most_slice() {
+    assert_eq!(most_slice::<i32>(&[]), None);
+
+    assert_eq!(most_slice(&[1]), Some([].as_slice()));
+
+    assert_eq!(most_slice(&[1, 2, 3]), Some([1, 2].as_slice()));
 }
 
 //======================================

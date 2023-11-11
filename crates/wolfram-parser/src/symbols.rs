@@ -29,6 +29,9 @@ crate::symbol::symbol! {
 
     Information;
 
+    Before;
+    After;
+
     Inequality;
 
     Equal;

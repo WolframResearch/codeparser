@@ -76,9 +76,6 @@ impl TokenSource for Source {
                     None => Source::Unknown,
                 }
             },
-            (Source::After(_), Source::After(_)) => {
-                todo!("synthetic source of After: start = {start:?}, end = {end:?}")
-            },
             (start, end) => {
                 panic!("Unexpected combination of Source variants: start = {start:?}, end = {end:?}")
             },

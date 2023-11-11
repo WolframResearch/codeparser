@@ -17,10 +17,8 @@ use crate::{
         Escape, WLCharacter,
     },
     tokenize::tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
-    utils::{non_zero_u32_incr, CommaSeparated, CommaTerminated},
+    utils::{most_slice, non_zero_u32_incr, CommaSeparated, CommaTerminated},
 };
-
-use wolfram_expr::Expr;
 
 //==========================================================
 // Slices of source code: Buffer and BufferAndLength
@@ -386,14 +384,6 @@ pub enum Source {
     /// Source was `StandardForm` boxes.
     Box(BoxPosition),
 
-    /// `After[{..}]`
-    ///
-    /// Used to indicate the position of fake implicit Null or Times tokens, or
-    /// expected operand error tokens, that come after a specific position in
-    /// the source.
-    // TODO: Parse this into a strongly typed value
-    After(Expr),
-
     /// `<||>`
     Unknown,
 }
@@ -484,6 +474,9 @@ pub struct LineColumnSpan {
 const _: () = assert!(std::mem::size_of::<LineColumnSpan>() == 16);
 
 /// A position in a a StandardForm box expression.
+///
+/// The [`src!`][crate::macros::src] can be used to conveniently construct
+/// [`BoxPosition`] values.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BoxPosition {
     /// `{1, 2, 3}`
@@ -493,6 +486,14 @@ pub enum BoxPosition {
         index: Vec<usize>,
         span: (usize, usize),
     },
+    /// `Before[{..}]`
+    Before(Vec<usize>),
+    /// `After[{..}]`
+    ///
+    /// Used to indicate the position of fake implicit Null or Times tokens, or
+    /// expected operand error tokens, that come after a specific position in
+    /// the source.
+    After(Vec<usize>),
 }
 
 //======================================
@@ -557,7 +558,6 @@ impl Display for Source {
             Source::Unknown => write!(f, "<unknown>"),
             Source::Span(span) => write!(f, "{span}"),
             Source::Box(box_pos) => write!(f, "{box_pos}"),
-            Source::After(after) => write!(f, "After[{after}]"),
         }
     }
 }
@@ -603,6 +603,12 @@ impl Display for BoxPosition {
                 write!(f, "{}", CommaTerminated(index))?;
                 write!(f, "{span_start} ;; {span_end}")?;
                 write!(f, "}}")
+            },
+            BoxPosition::Before(position) => {
+                write!(f, "Before[{{{}}}]", CommaSeparated(position))
+            },
+            BoxPosition::After(position) => {
+                write!(f, "After[{{{}}}]", CommaSeparated(position))
             },
         }
     }
@@ -897,51 +903,174 @@ impl Source {
     pub fn is_unknown(&self) -> bool {
         match self {
             Source::Unknown => true,
-            Source::Span(_) | Source::Box(_) | Source::After(_) => false,
+            Source::Span(_) | Source::Box(_) => false,
         }
     }
 }
 
 impl BoxPosition {
+    /// Compute a [`BoxPosition`] value that covers the source region between
+    /// `start` and `end`, inclusive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use wolfram_parser::{source::BoxPosition, macros::src};
+    ///
+    /// assert_eq!(
+    ///     BoxPosition::between(
+    ///         &src!({1, 1, 2}),
+    ///         &src!({1, 1, 4})
+    ///     ),
+    ///     Some(src!({1, 1, (2 ;; 4)}))
+    /// );
+    /// ```
     pub fn between(
         start: &BoxPosition,
         end: &BoxPosition,
     ) -> Option<BoxPosition> {
-        let combined = match (start, end) {
-            (BoxPosition::At(start), BoxPosition::At(end)) => {
-                if start.len() != end.len() {
-                    // TODO(test): Test case for this
-                    return None;
-                } else if start.len() >= 2 {
-                    // TID:231108/1: Computed box source position for PostfixNode
-                    let start = start[..start.len() - 2].to_vec();
-                    BoxPosition::At(start)
+        #[derive(Copy, Clone, Debug)]
+        enum Pos {
+            Index(usize),
+            /// `a ;; b`
+            Span((usize, usize)),
+        }
+
+        let todo = || -> ! {
+            todo!("FIXME: Invalid or unhandled box position range: BoxPosition::between({start}, {end})")
+        };
+
+        if start == end {
+            // TID:231111/1: CompoundNode computed box source
+            return Some(start.clone());
+        }
+
+        //------------------------------
+        // Normalize lengths
+        //------------------------------
+
+        let (start, end) = match (start, end) {
+            // TID:231110/1 - BoxPosition::between for start/end tokens at different depths
+            //     Test case: BoxPosition::between(&src!({1, 1}), &src!({1, 2, 1, 2}))
+            (BoxPosition::At(start), BoxPosition::At(end))
+                if end.len() == start.len() + 2 =>
+            {
+                let normalized_end = &end[..end.len() - 2];
+
+                debug_assert_eq!(start.len(), normalized_end.len());
+
+                let start_most = most_slice(start);
+                let end_most = most_slice(normalized_end);
+
+                if start_most.is_some() && start_most == end_most {
+                    // If the original start and end were {1, 1} and {1, 2, 1, 2},
+                    // the new start and end are {1, 1} and {1, 2} -- we've
+                    // normalized the end location to make them the same
+                    // length.
+                    //
+                    // The correctness of this assumes that the position
+                    // represented by the dropped indexs in `end` were the last
+                    // expressions at their respective depth -- which should
+                    // always be the case when these positions are the start/end
+                    // source location of a well-formed Cst node.
+                    (
+                        BoxPosition::At(start.to_vec()),
+                        BoxPosition::At(normalized_end.to_vec()),
+                    )
                 } else {
-                    // FIXME: This cannot, in general, be the right way to compute
-                    //        a span that covers both start and end. But it happens
-                    //        to work for the one case I know of where a synthetic
-                    //        source is needed (processPlusPair). Some thought
-                    //        should be put into how to represent box position spans
-                    //        and then this should be fixed up and get some
-                    //        additional tests.
-                    // TID:20231031/1: Synthetic box source for process plus pair
-                    BoxPosition::At(vec![start[0], end[1]])
+                    (
+                        BoxPosition::At(start.to_vec()),
+                        BoxPosition::At(end.to_vec()),
+                    )
+                }
+            },
+            (start, end) => (start.clone(), end.clone()),
+        };
+
+        //------------------------------
+        // Compare and extract common prefix
+        //------------------------------
+
+        let (common, (start_pos, end_pos)) = match (start, end) {
+            (
+                BoxPosition::At(start) | BoxPosition::Before(start),
+                BoxPosition::At(end) | BoxPosition::After(end),
+            ) => match (start.split_last(), end.split_last()) {
+                (
+                    Some((start_last, start_most)),
+                    Some((end_last, end_most)),
+                ) => 'ret: {
+                    if start_most == end_most {
+                        break 'ret (
+                            start_most.to_vec(),
+                            (Pos::Index(*start_last), Pos::Index(*end_last)),
+                        );
+                    }
+
+                    todo();
+                },
+
+                (None, None) => return Some(BoxPosition::At(vec![])),
+
+                (None, Some(_)) | (Some(_), None) => return None,
+            },
+
+            // Occurs when the start position is the head of a CallNode and the
+            // end Spanning position is the source of the CallBody::Group.
+            //
+            // Test case: start = {1, 1, 1}, end = {1, 1, 2 ;; 4}
+            //
+            // TID:231031/1: Synthetic box source for process plus pair
+            // TID:231110/2: Plus pair synthetic "between" BoxPosition
+            //
+            (
+                BoxPosition::At(start),
+                BoxPosition::Spanning {
+                    index: end,
+                    span: end_span,
+                },
+            ) => {
+                let Some((start_last, start_most)) = start.split_last() else {
+                    // TODO: Test
+                    return None;
+                };
+
+                if start_most != end {
+                    return None;
+                }
+
+                (
+                    start_most.to_vec(),
+                    (Pos::Index(*start_last), Pos::Span(end_span)),
+                )
+            },
+
+            (_, _) => {
+                todo();
+            },
+        };
+
+        //------------------------------
+        // Compare last elements in each box position
+        //------------------------------
+
+        let combined = match (start_pos, end_pos) {
+            // TID:231108/1: Computed box source position for PostfixNode with GroupNode
+            (Pos::Index(1), Pos::Index(_) | Pos::Span((2, _))) => {
+                match most_slice(&common) {
+                    Some(parent_box_pos) => {
+                        BoxPosition::At(parent_box_pos.to_vec())
+                    },
+                    None => todo(),
                 }
             },
 
-            (BoxPosition::At(_), BoxPosition::Spanning { .. }) => {
-                todo!("FIXME: BoxPosition::between({start}, {end}")
+            (Pos::Index(2), Pos::Index(end_pos)) => BoxPosition::Spanning {
+                index: common,
+                span: (2, end_pos),
             },
 
-            (BoxPosition::Spanning { .. }, BoxPosition::At(_)) => {
-                todo!("FIXME: BoxPosition::between({start}, {end}")
-            },
-
-            (BoxPosition::Spanning { .. }, BoxPosition::Spanning { .. }) => {
-                // TODO: Can we calulate a better source position between two
-                //       Span positions?
-                return None;
-            },
+            (_, _) => todo(),
         };
 
         Some(combined)
@@ -980,6 +1109,11 @@ impl From<CharacterSpan> for Span {
     }
 }
 
+impl From<BoxPosition> for Source {
+    fn from(value: BoxPosition) -> Source {
+        Source::Box(value)
+    }
+}
 
 //======================================
 // Source types comparision impls
@@ -1327,4 +1461,64 @@ impl Display for SourceCharacter {
 
         return Ok(());
     }
+}
+
+//==========================================================
+// Tests
+//==========================================================
+
+#[test]
+fn test_box_position_between() {
+    use crate::macros::src;
+
+    assert_eq!(BoxPosition::between(&src!({}), &src!({})), Some(src!({})));
+
+    // Occurs when the start and end positions are the source locations,
+    // respectively, of the `[` and `]` tokens in a CallBody::Group.
+    assert_eq!(
+        BoxPosition::between(&src!({1, 1, 2}), &src!({1, 1, 4})),
+        Some(src!({1, 1, (2 ;; 4)}))
+    );
+
+    // Occurs when the start position is the head of a CallNode and the
+    // end Spanning position is the source of the CallBody::Group.
+    assert_eq!(
+        BoxPosition::between(&src!({1, 1, 1}), &src!({1, 1, (2 ;; 4)})),
+        Some(src!({ 1 }))
+    );
+
+    assert_eq!(
+        BoxPosition::between(&src!({1, 1, 1}), &src!({1, 1, 3})),
+        Some(src!({ 1 }))
+    );
+
+    // TID:231110/1 - BoxPosition::between for start/end tokens at different depths
+    // Occurs when parsing:
+    //     RowBox[{
+    //         "\[Integral]",
+    //         RowBox[{
+    //             RowBox[{"Sin", "[", "x", "]"}],
+    //             RowBox[{"\[DifferentialD]", "x"}]
+    //         }]
+    //     }]
+    // where when calculating the position of the outer PrefixBinaryNode,
+    // the start position comes from the leaf node for "\[Integral]", and the
+    // end position comes from the second "x", which has a deeper source
+    // position.
+    assert_eq!(
+        BoxPosition::between(&src!({1, 1}), &src!({1, 2, 1, 2})),
+        Some(src!({}))
+    );
+
+    assert_eq!(
+        BoxPosition::between(&src!({1, 1, 1, 1}), &src!({1, 1, 1, 2, 1, 2})),
+        Some(src!({1, 1}))
+    );
+
+    // Occurs when parsing:
+    //     RowBox[{"~", "f"}]
+    assert_eq!(
+        BoxPosition::between(&src!(Before[{1, 1}]), &src!({1, 2})),
+        Some(src!({}))
+    );
 }

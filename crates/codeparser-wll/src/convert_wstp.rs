@@ -662,7 +662,9 @@ fn put_op<I: TokenInput, S: TokenSource + WstpPut, O: WstpPut>(
     node: &OperatorNode<I, S, O>,
     op_head: Symbol,
 ) {
-    let OperatorNode { op, children, src } = node;
+    let src = node.get_source();
+
+    let OperatorNode { op, children } = node;
 
     link.put_function(op_head.as_str(), 3).unwrap();
 
@@ -729,7 +731,9 @@ impl WstpPut for CompoundOperator {
 
 impl<I: TokenInput, S: TokenSource + WstpPut> WstpPut for CallNode<I, S> {
     fn put(&self, callLink: &mut wstp::Link) {
-        let CallNode { head, body, src } = self;
+        let CallNode { head, body } = self;
+
+        let src = self.get_source();
 
         callLink
             .put_function(sym::CodeParser_CallNode.as_str(), 3)
@@ -1008,7 +1012,6 @@ fn put_source_rhs(link: &mut wstp::Link, source: &Source) {
     match source {
         Source::Span(span) => put_span_rhs(link, *span),
         Source::Box(box_pos) => put_box_position(link, box_pos),
-        Source::After(expr) => link.put_expr(expr).unwrap(),
         // `{}`
         // TODO: What representation should `<| Source -> <unknown> |>`
         //       have?
@@ -1078,6 +1081,28 @@ fn put_box_position(link: &mut wstp::Link, box_pos: &BoxPosition) {
 
             link.put_i64(span_start).unwrap();
             link.put_i64(span_end).unwrap();
+        },
+        BoxPosition::Before(indexes) => {
+            link.put_function(sym::Before.as_str(), 1).unwrap();
+
+            link.put_function(sym::List.as_str(), indexes.len())
+                .unwrap();
+            for index in indexes {
+                let index = i64::try_from(*index)
+                    .expect("box position usize index overflows i64");
+                link.put_i64(index).unwrap();
+            }
+        },
+        BoxPosition::After(indexes) => {
+            link.put_function(sym::After.as_str(), 1).unwrap();
+
+            link.put_function(sym::List.as_str(), indexes.len())
+                .unwrap();
+            for index in indexes {
+                let index = i64::try_from(*index)
+                    .expect("box position usize index overflows i64");
+                link.put_i64(index).unwrap();
+            }
         },
     }
 }

@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use crate::{
     cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
-    source::{LineColumnSpan, Source, Span},
+    source::{BoxPosition, LineColumnSpan, Source, Span},
     tokenize::{TokenKind, TokenSource, TokenString},
 };
 
@@ -174,7 +174,7 @@ impl Ast {
 
         match general_source {
             Source::Span(span) => *span,
-            Source::Box(_) | Source::After(_) | Source::Unknown => {
+            Source::Box(_) | Source::Unknown => {
                 todo!("non-typical source: {general_source:?}")
             },
         }
@@ -370,6 +370,15 @@ impl From<LineColumnSpan> for AstMetadata {
     fn from(value: LineColumnSpan) -> Self {
         AstMetadata {
             source: Source::Span(Span::from(value)),
+            issues: Vec::new(),
+        }
+    }
+}
+
+impl From<BoxPosition> for AstMetadata {
+    fn from(value: BoxPosition) -> Self {
+        AstMetadata {
+            source: Source::Box(value),
             issues: Vec::new(),
         }
     }

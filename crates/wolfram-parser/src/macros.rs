@@ -31,13 +31,26 @@
 ///
 /// ## Boxes
 ///
-/// Construct a [`Source::Box`][crate::source::Source::Box]:
+/// Construct a [`BoxPosition::At`][crate::source::BoxPosition::At]:
 ///
 /// ```
-/// # use wolfram_parser::{macros::src, source::Source};
-/// let pos: Source = src!({1, 2, 3});
+/// # use wolfram_parser::{macros::src, source::BoxPosition};
+/// let pos: BoxPosition = src!({1, 2, 3});
 /// ```
 ///
+/// Construct a [`BoxPosition::Spanning { .. }`][crate::source::BoxPosition::Spanning]:
+///
+/// ```
+/// # use wolfram_parser::{macros::src, source::BoxPosition};
+/// let pos: BoxPosition = src!({1, 1, (3 ;; 5)});
+/// ```
+///
+/// Construct a [`BoxPosition::Before`][crate::source::BoxPosition::Before]:
+///
+/// ```
+/// # use wolfram_parser::{macros::src, source::BoxPosition};
+/// let pos: BoxPosition = src!(Before[{1, 1}]);
+/// ```
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __src {
@@ -85,10 +98,23 @@ macro_rules! __src {
     // Boxes
     //==================================
 
+    // {a, b, c, ...}
     ({$($value:literal),*}) => {
-        $crate::source::Source::Box(
-            $crate::source::BoxPosition::At(vec![$($value),*])
-        )
+        $crate::source::BoxPosition::At(vec![$($value),*])
+    };
+
+    // Note: (..) are needed to avoid macro ambiguity.
+    // {a, b, (c ;; d)}
+    ({$($value:literal),*, ($span_start:literal ;; $span_end:literal) }) => {
+        $crate::source::BoxPosition::Spanning {
+            index: vec![$($value),*],
+            span: ($span_start, $span_end)
+        }
+    };
+
+    // Before[{a, b, c, ...}]
+    (Before[{$($value:literal),* }]) => {
+        $crate::source::BoxPosition::Before(vec![$($value),*])
     };
 }
 
@@ -195,7 +221,7 @@ macro_rules! __leaf {
 
     // leaf!(Kind, "...", {1, 2, 3})
     ($kind:ident, $input:tt, {$($value:literal),*}) => {
-        $crate:::ast:Ast::Leaf {
+        $crate::ast::Ast::Leaf {
             kind: $crate::tokenize::TokenKind::$kind,
             input: $crate::tokenize::TokenString::new($input.as_ref()),
             data: $crate::ast::AstMetadata::from($crate::macros::src!({$($value),*})),

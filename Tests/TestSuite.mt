@@ -2,6 +2,8 @@
 
 Needs["MUnit`"]
 
+SetEnvironment["CODEPARSER_DEBUG" -> "True"]
+
 TestSuite[{
 	"Abstract.mt",
 	"AbstractCallNode.mt",

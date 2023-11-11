@@ -4,6 +4,8 @@ Needs["CodeParser`"]
 Needs["CodeParser`Concretify`"]
 Needs["CodeParser`Utils`"]
 
+SetEnvironment["CODEPARSER_DEBUG" -> "False"]
+
 
 Test[
     ToSourceCharacterString[Concretify[CodeParse["a ^ b"]]]
@@ -1133,3 +1135,4 @@ Test[
 
 
 
+SetEnvironment["CODEPARSER_DEBUG" -> "True"]
