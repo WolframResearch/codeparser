@@ -466,7 +466,6 @@ type HandlerFunction = for<'p, 'i> fn(
 #[rustfmt::skip]
 const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = from_fn!(
     [HandlerFunction, 128],
-    Tokenizer_nextToken_uncommon,
     |index: usize| {
         let index = index as u8;
 

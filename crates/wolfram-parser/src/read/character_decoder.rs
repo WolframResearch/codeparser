@@ -40,7 +40,6 @@ type HandlerFunction = for<'i, 's> fn(
 #[rustfmt::skip]
 const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = from_fn!(
     [HandlerFunction, 128],
-    |_, _, _| unimplemented!(),
     |index: usize| {
         let index = index as u8;
 

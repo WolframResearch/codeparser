@@ -15,7 +15,6 @@ use crate::{
 
 pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::COUNT] = from_fn!(
     [&'static dyn PrefixParselet, TokenKind::COUNT],
-    &PrefixUnhandledParselet {},
     |index: usize| {
         let kind = TokenKind::VARIANTS[index];
 
@@ -25,7 +24,6 @@ pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::COUNT] = fro
 
 pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::COUNT] = from_fn!(
     [&'static dyn InfixParselet, TokenKind::COUNT],
-    &InfixAssertFalseParselet {},
     |index: usize| {
         let kind = TokenKind::VARIANTS[index];
 

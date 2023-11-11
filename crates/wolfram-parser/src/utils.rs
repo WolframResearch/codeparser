@@ -408,22 +408,29 @@ pub(crate) fn is_sorted_by<T, B: Ord, F: Fn(&T) -> B>(
     slice.windows(2).all(|elem| by(&elem[0]) <= by(&elem[1]))
 }
 
+/// Alternative to [`std::array::from_fn`] that works in `const` contexts.
+///
+/// See also: <https://doc.rust-lang.org/stable/std/mem/union.MaybeUninit.html#initializing-an-array-element-by-element>
 macro_rules! from_fn {
-    ([$ty:ty, $len:expr], $default:expr, |$index:ident: usize| $expr:expr) => {{
-        let mut table: [$ty; $len] = [$default; $len];
+    ([$T:ty, $N:expr], |$index:ident: usize| $expr:expr) => {{
+        use std::mem::MaybeUninit;
+
+        let mut table: [MaybeUninit<$T>; $N] =
+            unsafe { MaybeUninit::uninit().assume_init() };
 
         let mut $index: usize = 0;
+
         loop {
-            if $index >= $len {
+            if $index >= $N {
                 break;
             }
 
-            table[$index] = $expr;
+            table[$index] = MaybeUninit::new($expr);
 
             $index += 1;
         }
 
-        table
+        unsafe { std::mem::transmute::<[MaybeUninit<$T>; $N], [$T; $N]>(table) }
     }};
 }
 
