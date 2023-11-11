@@ -98,6 +98,25 @@ impl UnsafeCharacterEncoding {
 
         Some(value)
     }
+
+    #[doc(hidden)]
+    pub fn from_missing_reason(missing_reason: &str) -> Option<Self> {
+        if !missing_reason.starts_with("UnsafeCharacterEncoding_") {
+            return None;
+        }
+
+        let variant_name: &str =
+            missing_reason.trim_start_matches("UnsafeCharacterEncoding_");
+
+        UnsafeCharacterEncoding::from_str(variant_name)
+    }
+
+    #[doc(hidden)]
+    pub fn missing_reason(&self) -> String {
+        let variant_name: &'static str = self.as_str();
+
+        format!("UnsafeCharacterEncoding_{variant_name}")
+    }
 }
 
 impl<'i> std::ops::Deref for Tokenizer<'i> {

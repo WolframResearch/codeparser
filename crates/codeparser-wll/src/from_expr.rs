@@ -20,8 +20,8 @@ use wolfram_parser::{
     source::{BoxPosition, LineColumn, Source, Span},
     symbols as sym,
     tokenize::{Token, TokenKind, TokenString},
-    Container, ContainerBody, ContainerKind, Metadata, NodeSeq,
-    UnsafeCharacterEncoding,
+    Container, ContainerBody, ContainerKind, ContainerMissingReason, Metadata,
+    NodeSeq, UnsafeCharacterEncoding,
 };
 
 pub(crate) trait FromExpr: Sized {
@@ -127,12 +127,33 @@ impl FromExpr for ContainerKind {
 
 impl FromExpr for ContainerBody<Cst<TokenString, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
+        // Check for Missing["reason"]
         if let Ok(elements) = try_normal_with_head(expr, sym::List) {
             if elements.len() == 1 {
-                if let Ok(node) =
-                    UnsafeCharacterEncoding::from_expr(&elements[0])
+                if let Ok(missing_args) =
+                    try_normal_with_head(&elements[0], sym::Missing)
                 {
-                    return Ok(ContainerBody::Missing(node));
+                    let Ok([missing_reason]): Result<&[_; 1], _> =
+                        missing_args.try_into()
+                    else {
+                        return Err(format!("expected ContainerNode body Missing[..] to have 1 argument, got: {expr}"));
+                    };
+
+                    // Container[_, {Missing["EmptyInput"]}, _]
+                    match missing_reason.try_as_str() {
+                        Some("EmptyInput") => {
+                            return Ok(ContainerBody::Missing(
+                                ContainerMissingReason::EmptyInput,
+                            ));
+                        },
+                        Some(other) => match UnsafeCharacterEncoding::from_missing_reason(other) {
+                            Some(kind) => return Ok(ContainerBody::Missing(
+                                ContainerMissingReason::UnsafeCharacterEncoding(kind)
+                            )),
+                            None => return Err(format!("invalid ContainerNode Missing reason: {missing_reason}"))
+                        },
+                        None => return Err(format!("invalid ContainerNode Missing reason: {missing_reason}")),
+                    }
                 }
             }
         }
@@ -578,18 +599,11 @@ impl FromExpr for UnsafeCharacterEncoding {
             None => todo!(),
         };
 
-        if !err.starts_with("UnsafeCharacterEncoding_") {
-            todo!()
-        }
-
-        let variant_name: &str =
-            err.trim_start_matches("UnsafeCharacterEncoding_");
-
-        let kind = match UnsafeCharacterEncoding::from_str(variant_name) {
-            Some(kind) => kind,
-            None => {
-                panic!("unrecognized UnsafeCharacterEncoding name: '{variant_name}'")
-            },
+        let Some(kind) = UnsafeCharacterEncoding::from_missing_reason(err)
+        else {
+            return Err(format!(
+                "not a recognized UnsafeCharacterEncoding name: '{err}'"
+            ));
         };
 
         Ok(kind)

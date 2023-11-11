@@ -85,6 +85,7 @@ pub enum BoxKind {
     NamespaceBox,
     OverscriptBox,
     SubsuperscriptBox,
+    GraphicsBox,
     // TODO(cleanup):
     //   Make this unnecessary? Try to represent _every_ box kind
     //   as a variant? Or represent all box kinds as a Symbol
@@ -773,6 +774,7 @@ impl GroupOperator {
                 CallOperator::CodeParser_GroupDoubleBracket
             },
             GroupOperator::Token_Comment
+            | GroupOperator::CodeParser_Comment
             | GroupOperator::CodeParser_GroupParen
             | GroupOperator::List
             | GroupOperator::Association
@@ -832,6 +834,8 @@ impl BoxKind {
             BoxKind::NamespaceBox => "NamespaceBox",
             BoxKind::OverscriptBox => "OverscriptBox",
             BoxKind::SubsuperscriptBox => "SubsuperscriptBox",
+            BoxKind::GraphicsBox => "GraphicsBox",
+            // NOTE: When adding a case here, also update from_str().
             BoxKind::Other(name) => {
                 if name.context().as_str() == "System`" {
                     name.symbol_name().as_str()
@@ -855,6 +859,7 @@ impl BoxKind {
             "NamespaceBox" => BoxKind::NamespaceBox,
             "OverscriptBox" => BoxKind::OverscriptBox,
             "SubsuperscriptBox" => BoxKind::SubsuperscriptBox,
+            "GraphicsBox" => BoxKind::GraphicsBox,
             _ => return None,
         };
 

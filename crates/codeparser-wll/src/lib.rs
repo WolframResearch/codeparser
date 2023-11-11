@@ -26,9 +26,11 @@ use wolfram_parser::{
     abstract_cst::{abstract_cst, aggregate_cst, aggregate_cst_seq},
     cst::Cst,
     quirks::QuirkSettings,
-    source::SourceConvention,
-    symbols as sym, Container, ContainerBody, EncodingMode, FirstLineBehavior,
-    ParseOptions, StringifyMode,
+    source::{Source, SourceConvention},
+    symbols as sym,
+    tokenize::TokenString,
+    Container, ContainerBody, EncodingMode, FirstLineBehavior, ParseOptions,
+    StringifyMode,
 };
 
 use crate::{convert_wstp::WstpPut, from_expr::FromExpr};
@@ -290,6 +292,38 @@ pub fn DestroyParserSession_LibraryLink(link: &mut wstp::Link) {
 //==========================================================
 // Abstract Parsing
 //==========================================================
+
+//======================================
+// RoundTripTest_LibraryLink
+//======================================
+
+#[wll::export(wstp)]
+pub fn RoundTripTest_LibraryLink(link: &mut wstp::Link) {
+    let mut args: Vec<Expr> = parse_assuming_link_print_full_symbols(link);
+
+    if args.len() != 1 {
+        panic!(
+            "unexpected number of arguments passed to RoundTripTest: {args:?}"
+        )
+    }
+
+    let arg = args.remove(0);
+
+    if arg.has_normal_head(&expr::Symbol::new("System`Failure")) {
+        link.put_expr(&arg).unwrap();
+        return;
+    }
+
+    let container: Container<Cst<TokenString, Source>> =
+        match Container::from_expr(&arg) {
+            Ok(container) => container,
+            Err(err) => panic!("Error parsing '{arg}': {err}"),
+        };
+
+    debug_assert!(!link.is_ready());
+
+    container.put(link);
+}
 
 //======================================
 // Aggregate_LibraryLink

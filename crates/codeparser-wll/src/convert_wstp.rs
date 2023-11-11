@@ -21,8 +21,8 @@ use wolfram_parser::{
     symbol::Symbol,
     symbols as sym,
     tokenize::{Token, TokenInput, TokenKind, TokenSource},
-    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult,
-    UnsafeCharacterEncoding,
+    Container, ContainerBody, ContainerKind, ContainerMissingReason, Metadata,
+    NodeSeq, ParseResult, UnsafeCharacterEncoding,
 };
 
 use crate::from_expr::List;
@@ -70,9 +70,22 @@ impl<S: WstpPut> WstpPut for ContainerBody<S> {
     fn put(&self, link: &mut wstp::Link) {
         match self {
             ContainerBody::Nodes(nodes) => nodes.put(link),
-            ContainerBody::Missing(flag) => {
+            ContainerBody::Missing(reason) => {
                 link.put_function(sym::List.as_str(), 1).unwrap();
-                flag.put(link);
+                link.put_function(sym::Missing.as_str(), 1).unwrap();
+
+                let missing_reason: String = match reason {
+                    ContainerMissingReason::EmptyInput => {
+                        "EmptyInput".to_owned()
+                    },
+                    ContainerMissingReason::UnsafeCharacterEncoding(err) => {
+                        let variant_name = err.as_str();
+
+                        format!("UnsafeCharacterEncoding_{variant_name}")
+                    },
+                };
+
+                link.put_str(&missing_reason).unwrap();
             },
         }
     }
@@ -780,12 +793,7 @@ impl WstpPut for SyntaxErrorKind {
 impl WstpPut for UnsafeCharacterEncoding {
     fn put(&self, link: &mut wstp::Link) {
         link.put_function(sym::Missing.as_str(), 1).unwrap();
-
-        let variant_name: &'static str = self.as_str();
-
-        let name = format!("UnsafeCharacterEncoding_{variant_name}");
-
-        link.put_str(&name).unwrap();
+        link.put_str(&self.missing_reason()).unwrap();
     }
 }
 
