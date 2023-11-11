@@ -18,6 +18,8 @@ Needs["CodeParser`Utils`"]
 ScopingData[astIn_] :=
   ScopingData[astIn, True&]
 
+ScopingData[f_Failure, _] := f
+
 ScopingData[astIn_, pred_] :=
 Module[{ast, definitions},
 

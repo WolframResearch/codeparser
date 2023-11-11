@@ -3,6 +3,7 @@ Print["\n===== Start Scoping.mt =====\n"]
 Needs["CodeParser`"]
 Needs["CodeParser`Scoping`"]
 Needs["CodeParser`Utils`"]
+Needs["CodeParser`Library`"]
 
 
 ast = CodeParse["Module[{x, y}, Block[{x, z}, x]]"];
@@ -16,10 +17,10 @@ Test[
 	ScopingData[ast]
 	,
 	{
- scopingDataObject[{{1, 30}, {1, 31}}, {"Module", "Block"}, {"shadowed"}, "x"], 
- scopingDataObject[{{1, 23}, {1, 24}}, {"Module", "Block"}, {"shadowed"}, "x"], 
- scopingDataObject[{{1, 9}, {1, 10}}, {"Module"}, {}, "x"], 
- scopingDataObject[{{1, 26}, {1, 27}}, {"Block"}, {"unused"}, "z"], 
+ scopingDataObject[{{1, 30}, {1, 31}}, {"Module", "Block"}, {"shadowed"}, "x"],
+ scopingDataObject[{{1, 23}, {1, 24}}, {"Module", "Block"}, {"shadowed"}, "x"],
+ scopingDataObject[{{1, 9}, {1, 10}}, {"Module"}, {}, "x"],
+ scopingDataObject[{{1, 26}, {1, 27}}, {"Block"}, {"unused"}, "z"],
  scopingDataObject[{{1, 12}, {1, 13}}, {"Module"}, {"unused"}, "y"]}
 	,
 	TestID->"Scoping-20210921-U4U6T2"
@@ -30,11 +31,55 @@ Test[
 
 
 
-box = RowBox[{SuperscriptBox["u", 
-     TagBox[RowBox[{"(", RowBox[{"dx_", ",", "0"}], ")"}], 
+box = RowBox[{SuperscriptBox["u",
+     TagBox[RowBox[{"(", RowBox[{"dx_", ",", "0"}], ")"}],
       Derivative]], "\[RuleDelayed]", "a"}];
 
 cst = CodeConcreteParseBox[box];
+
+Test[
+	cst,
+	ContainerNode[Box, {
+		BinaryNode[RuleDelayed, {
+			BoxNode[SuperscriptBox, {
+				LeafNode[Symbol, "u", <| Source -> {1, 1, 1} |>],
+				BoxNode[TagBox, {
+					GroupNode[
+						GroupParen,
+						{
+							LeafNode[Token`OpenParen, "(", <| Source -> {1, 1, 2, 1, 1, 1} |>],
+							InfixNode[Comma, {
+								CompoundNode[
+									PatternBlank,
+									{
+										LeafNode[Symbol, "dx", <| Source -> {1, 1, 2, 1, 1, 2, 1, 1} |>],
+										LeafNode[Token`Under, "_", <| Source -> {1, 1, 2, 1, 1, 2, 1, 1} |>]
+									},
+									<| Source -> {1, 1, 2, 1, 1, 2, 1, 1} |>
+								],
+								LeafNode[Token`Comma, ",", <| Source -> {1, 1, 2, 1, 1, 2, 1, 2} |>],
+								LeafNode[Integer, "0", <| Source -> {1, 1, 2, 1, 1, 2, 1, 3} |>]
+							},
+								<| Source -> {1, 1, 2, 1, 1, 2} |>
+							],
+							LeafNode[Token`CloseParen, ")" , <| Source -> {1, 1, 2, 1, 1, 3} |>]
+						},
+						<| Source -> {1, 1, 2, 1} |>
+					],
+					CodeNode @@ {Evaluated, Derivative, <||>}
+				},
+					<| Source -> {1, 1, 2} |>
+				]
+			},
+				<| Source -> {1, 1} |>
+			],
+			LeafNode[Token`LongName`RuleDelayed, "\[RuleDelayed]",<| Source -> {1, 2} |>],
+			LeafNode[Symbol, "a", <| Source -> {1, 3} |>]
+		}, <|Source -> {} |>]
+	}, <||>]
+]
+
+Test[RoundTripCst[cst], cst]
 
 agg = CodeParser`Abstract`Aggregate[cst];
 
