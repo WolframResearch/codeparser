@@ -1,3 +1,4 @@
+Print["\n===== Start TokenErrors.mt =====\n"]
 
 Needs["CodeParser`"]
 

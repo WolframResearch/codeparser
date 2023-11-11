@@ -1,3 +1,4 @@
+Print["\n===== Start CodeParser.mt =====\n"]
 
 Needs["CodeParser`"]
 

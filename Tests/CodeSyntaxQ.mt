@@ -1,3 +1,5 @@
+Print["\n===== Start CodeSyntaxQ.mt =====\n"]
+
 (* Wolfram Language Test file *)
 
 Needs["CodeParser`"]

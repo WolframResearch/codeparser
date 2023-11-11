@@ -1,3 +1,4 @@
+Print["\n===== Start Errors.mt =====\n"]
 
 path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]

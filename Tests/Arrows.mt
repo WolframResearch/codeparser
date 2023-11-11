@@ -1,3 +1,4 @@
+Print["\n===== Start Arrows.mt =====\n"]
 
 
 path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]

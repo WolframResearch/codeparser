@@ -1,3 +1,4 @@
+Print["\n===== Start Quirks.mt =====\n"]
 
 Needs["CodeParser`"]
 

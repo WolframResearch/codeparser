@@ -1,3 +1,4 @@
+Print["\n===== Start AbstractSyntaxErrorNodes.mt =====\n"]
 
 Needs["CodeParser`"]
 

@@ -1,3 +1,4 @@
+Print["\n===== Start Span.mt =====\n"]
 
 path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]

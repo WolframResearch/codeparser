@@ -1,3 +1,4 @@
+Print["\n===== Start ToString.mt =====\n"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Abstract`"]

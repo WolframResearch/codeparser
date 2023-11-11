@@ -1,3 +1,4 @@
+Print["\n===== Start TypeSpecifier.mt =====\n"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Abstract`"]
