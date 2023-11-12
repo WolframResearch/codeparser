@@ -935,6 +935,34 @@ Test[
 
 Test[RoundTripCst[cst], cst]
 
+agg = CodeParser`Abstract`Aggregate[cst]
+
+Test[
+	agg,
+	ContainerNode[Box, {
+		BinaryNode[SetDelayed, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`ColonEqual, ":=", <|Source -> {1, 3}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]
+		}, <|Source -> {}|>]
+	}, <||>]
+]
+
+Test[
+	CodeParser`Abstract`Abstract[agg],
+	ContainerNode[Box, {
+		CallNode[LeafNode[Symbol, "SetDelayed", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]
+		}, <|
+			Source -> {},
+			"Definitions" -> {
+				LeafNode[Symbol, "a", <| Source -> {1, 1} |>]
+			}
+		|>]
+	}, <||>]
+]
+
 
 
 
