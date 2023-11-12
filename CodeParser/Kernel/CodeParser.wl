@@ -211,6 +211,9 @@ ContainerNode
 
 SyntaxErrorNode
 GroupMissingCloserNode
+(* TODO(cleanup):
+	UnterminatedGroupNeedsReparseNode symbol is now unused. Remove if there is
+	limited risk of backwards incompatibility. *)
 UnterminatedGroupNeedsReparseNode
 (*
 GroupMissingOpenerNode is only used in Boxes

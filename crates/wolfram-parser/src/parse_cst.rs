@@ -5,7 +5,7 @@ use crate::{
         GroupOperator, InfixNode, InfixOperator, OperatorNode, PostfixNode,
         PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode,
         PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
-        TernaryOperator, TriviaSeq, UnterminatedGroupNeedsReparseNode,
+        TernaryOperator, TriviaSeq,
     },
     parse::{ColonLHS, ParseBuilder, TriviaSeqRef, UnderParseData},
     tokenize::{TokenKind, TokenRef, TokenStr},
@@ -313,10 +313,10 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         tab_width: usize,
     ) {
         self.reduce(|ctx| {
-            let node = UnterminatedGroupNeedsReparseNode::new(op, ctx);
-
             crate::error::reparse_unterminated_group_node(
-                node, input, tab_width,
+                (op, ctx),
+                input,
+                tab_width,
             )
         });
     }

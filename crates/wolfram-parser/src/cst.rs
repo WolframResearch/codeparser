@@ -211,12 +211,6 @@ pub struct GroupMissingOpenerNode<I = TokenString, S = Span>(
     pub OperatorNode<I, S, GroupOperator>,
 );
 
-/// `{`
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct UnterminatedGroupNeedsReparseNode<I = TokenString, S = Span>(
-    pub OperatorNode<I, S, GroupOperator>,
-);
-
 /// Node representation of a token.
 ///
 /// [`LeafNode`] instances are *not* constructed during concrete parsing.
@@ -336,6 +330,18 @@ impl<N> NodeSeq<N> {
     fn last(&self) -> &N {
         let NodeSeq(vec) = self;
         vec.last().expect("NodeSeq::last(): vector is empty")
+    }
+}
+
+impl<I, S: TokenSource> CstSeq<I, S> {
+    pub(crate) fn get_source(&self) -> S {
+        // FIXME: This recursive source getting might be slower than necessary
+        //        because we get the full source for each child and then only
+        //        use the start half and end half respectively.
+        //        Enforce this by making Span::between() take Location instead
+        //        (and then remove it because its redundant with Span::new at
+        //        that point.)
+        S::between(self.first().source(), self.last().source())
     }
 }
 
@@ -483,10 +489,7 @@ impl<I, S: TokenSource, O> OperatorNode<I, S, O> {
     pub fn get_source(&self) -> S {
         let OperatorNode { op: _, children } = self;
 
-        let src =
-            S::between(children.first().source(), children.last().source());
-
-        return src;
+        children.get_source()
     }
 
     pub(crate) fn getSource(&self) -> S {
@@ -693,18 +696,6 @@ impl<I, S: TokenSource, O> GroupMissingCloserNode<I, S, O> {
 }
 
 //======================================
-// UnterminatedGroupNeedsReparseNode
-//======================================
-
-impl<I> UnterminatedGroupNeedsReparseNode<I> {
-    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
-        incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
-
-        UnterminatedGroupNeedsReparseNode(OperatorNode::new(op, args))
-    }
-}
-
-//======================================
 // GroupMissingOpenerNode
 //======================================
 
@@ -855,13 +846,7 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
     pub fn get_source(&self) -> S {
         let SyntaxErrorNode { err: _, children } = self;
 
-        // FIXME: This recursive source getting might be slower than necessary
-        //        because we get the full source for each child and then only
-        //        use the start half and end half respectively.
-        //        Enforce this by making Span::between() take Location instead
-        //        (and then remove it because its redundant with Span::new at
-        //        that point.)
-        S::between(children.first().source(), children.last().source())
+        children.get_source()
     }
 }
 
