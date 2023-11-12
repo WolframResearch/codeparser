@@ -46,6 +46,8 @@ pub(super) fn abstract_call_node<
 >(
     call: CallNode<I, S>,
 ) -> Ast {
+    // FIXME(test): Add tests for the branches below. Many of the arms are
+    //              currently NOT covered by test cases.
     match AggCallNode::from_cst(call) {
         //==============================
         // handle CallNode before possible GroupNode errors
@@ -76,8 +78,7 @@ pub(super) fn abstract_call_node<
             dataIn_
         ]
         */
-        // FIXME(test): Add tests for the branches below. It seems like none of
-        //              these are currently tested. E.g. "f[[x]]".
+        // TID:231112/1: "f[[x]]"
         AggCallNode {
             head,
             body:
@@ -292,6 +293,8 @@ pub(super) fn abstract_call_node<
 
         // feel strongly about ##2[arg]
         // ##2 represents a sequence of arguments, so it is wrong to call
+        //
+        // TID:231112/2: "##2[arg]"
         LHS!(CallNode[
             head:(LeafNode[HashHash, _, _] | CompoundNode[SlotSequence, _, _]),
             part:GroupNode[CodeParser_GroupSquare, _],
@@ -548,6 +551,7 @@ pub(super) fn abstract_call_node<
         //
         // this is fine
         //
+        // TID:231112/3:  "foo"::[arg]
         LHS!(CallNode[
             head:LeafNode[String, _, _],
             part:GroupNode[CodeParser_GroupTypeSpecifier, _],
@@ -596,6 +600,8 @@ pub(super) fn abstract_call_node<
         // Concrete parse of a\[LeftDoubleBracket]2\[RightDoubleBracket] returns CallNode[a, GroupNode[DoubleBracket, {2}]]
         // abstract parse of a\[LeftDoubleBracket]2\[RightDoubleBracket] returns CallNode[Part, {a, 2}]
         //--------------------
+        // TID:231112/4: "a\[LeftDoubleBracket]2\[RightDoubleBracket]"
+        // TID:231112/5: "a\[LeftDoubleBracket]1, 2, 3\[RightDoubleBracket]"
         LHS!(CallNode[
             head:_,
             part:GroupNode[CodeParser_GroupDoubleBracket, _],

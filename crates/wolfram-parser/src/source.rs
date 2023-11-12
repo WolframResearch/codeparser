@@ -1118,6 +1118,12 @@ impl From<LineColumnSpan> for Span {
     }
 }
 
+impl From<LineColumnSpan> for Source {
+    fn from(value: LineColumnSpan) -> Self {
+        Source::Span(Span::from(value))
+    }
+}
+
 impl From<CharacterSpan> for Span {
     fn from(value: CharacterSpan) -> Span {
         let CharacterSpan(start, end) = value;

@@ -2,15 +2,17 @@ use crate::{
     abstract_cst::{abstract_cst, aggregate_cst},
     ast::{Ast, AstMetadata},
     cst::{
-        BinaryNode,
-        Cst::{self, Token},
+        BinaryNode, CallBody, CallHead, CallNode, CompoundNode,
+        Cst::{self, Call, Compound, Group, Infix, Token},
         GroupNode, InfixNode, OperatorNode, PrefixNode, TriviaSeq,
     },
+    issue::{Issue, IssueTag, Severity},
     macros::{leaf, src, token},
     parse::operators::{
-        BinaryOperator, GroupOperator, InfixOperator, PrefixOperator,
+        BinaryOperator, CallOperator, CompoundOperator, GroupOperator,
+        InfixOperator, PrefixOperator,
     },
-    parse_cst,
+    parse_cst, symbols as st,
     tests::assert_src,
     NodeSeq, QuirkSettings,
 };
@@ -1485,6 +1487,250 @@ fn test_abstract_box_sources() {
                 data: AstMetadata::from(src!({1, 2}))
             }],
             data: AstMetadata::from(src!({}))
+        }
+    );
+}
+
+#[test]
+fn test_abstract_call() {
+    //==================================
+    // Test Part syntax
+    // TID:231112/1: "f[[x]]"
+    //==================================
+
+    let cst = parse_cst("f[[x]]", &Default::default()).syntax;
+
+    assert_eq!(
+        cst,
+        Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Token(
+                token!(Symbol, "f", 1:1-2),
+            )])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupSquare,
+                children: NodeSeq(vec![
+                    Token(token!(OpenSquare, "[", 1:2-3)),
+                    Group(GroupNode(OperatorNode {
+                        op: GroupOperator::CodeParser_GroupSquare,
+                        children: NodeSeq(vec![
+                            Token(token!(OpenSquare, "[", 1:3-4)),
+                            Token(token!(Symbol, "x", 1:4-5)),
+                            Token(token!(CloseSquare, "]", 1:5-6)),
+                        ]),
+                    })),
+                    Token(token!(CloseSquare, "]", 1:6-7)),
+                ]),
+            })),
+        })
+    );
+
+    let agg = aggregate_cst(cst).unwrap();
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default()),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Part", <||>)),
+            args: vec![leaf!(Symbol, "f", 1:1-2), leaf!(Symbol, "x", 1:4-5)],
+            data: src!(1:1-7).into()
+        }
+    );
+
+    //==================================
+    // Test suspicious call of SlotSequence
+    // TID:231112/2: "##2[arg]"
+    //==================================
+
+    let cst = parse_cst("##2[arg]", &Default::default()).syntax;
+
+    assert_eq!(
+        cst,
+        Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Compound(CompoundNode(
+                OperatorNode {
+                    op: CompoundOperator::SlotSequence,
+                    children: NodeSeq(vec![
+                        Token(token!(HashHash, "##", 1:1-3)),
+                        Token(token!(Integer, "2", 1:3-4)),
+                    ]),
+                },
+            ))])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupSquare,
+                children: NodeSeq(vec![
+                    Token(token!(OpenSquare, "[", 1:4-5)),
+                    Token(token!(Symbol, "arg", 1:5-8)),
+                    Token(token!(CloseSquare, "]", 1:8-9)),
+                ]),
+            })),
+        })
+    );
+
+    let agg = aggregate_cst(cst).unwrap();
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default()),
+        Ast::Call {
+            head: Box::new(Ast::Call {
+                head: Box::new(leaf!(Symbol, "SlotSequence", <||>)),
+                args: vec![leaf!(Integer, "2", 1:3-4),],
+                data: src!(1:1-4).into(),
+            }),
+            args: vec![leaf!(Symbol, "arg", 1:5-8),],
+            data: AstMetadata {
+                source: src!(1:1-9).into(),
+                issues: vec![Issue {
+                    make_sym: st::CodeParser_SyntaxIssue,
+                    tag: IssueTag::StrangeCallSlotSequence,
+                    msg: "Unexpected call.".to_owned(),
+                    sev: Severity::Error,
+                    src: src!(1:4-5).into(),
+                    val: 1.0,
+                    actions: vec![],
+                    additional_descriptions: vec![],
+                    additional_sources: vec![src!(1:8-9).into()],
+                }],
+            },
+        }
+    );
+
+    //==================================
+    // Test TypeSpecifier syntax
+    // TID:231112/3: "foo"::[arg]
+    //==================================
+
+    let cst = parse_cst(r#""foo"::[arg]"#, &Default::default()).syntax;
+
+    assert_eq!(
+        cst,
+        Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Token(
+                token!(String, "\"foo\"", 1:1-6),
+            )])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupTypeSpecifier,
+                children: NodeSeq(vec![
+                    Token(token!(ColonColonOpenSquare, "::[", 1:6-9)),
+                    Token(token!(Symbol, "arg", 1:9-12)),
+                    Token(token!(CloseSquare, "]", 1:12-13)),
+                ]),
+            })),
+        })
+    );
+
+    let agg = aggregate_cst(cst).unwrap();
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default()),
+        Ast::Call {
+            head: Box::new(Ast::Call {
+                head: Box::new(leaf!(Symbol, "TypeSpecifier", <||>)),
+                args: vec![leaf!(String, "\"foo\"", 1:1-6),],
+                data: AstMetadata::empty(),
+            }),
+            args: vec![leaf!(Symbol, "arg", 1:9-12),],
+            data: src!(1:1-13).into(),
+        }
+    );
+
+    //==================================
+    // Test double bracket long name syntax
+    // TID:231112/4: "a\[LeftDoubleBracket]2\[RightDoubleBracket]"
+    //==================================
+
+    let cst = parse_cst(
+        r#"a\[LeftDoubleBracket]2\[RightDoubleBracket]"#,
+        &Default::default(),
+    )
+    .syntax;
+
+    assert_eq!(
+        cst,
+        Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Token(
+                token!(Symbol, "a", 1:1-2),
+            )])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupDoubleBracket,
+                children: NodeSeq(vec![
+                    Token(
+                        token!(LongName_LeftDoubleBracket, "\\[LeftDoubleBracket]", 1:2-22)
+                    ),
+                    Token(token!(Integer, "2", 1:22-23)),
+                    Token(
+                        token!(LongName_RightDoubleBracket, "\\[RightDoubleBracket]", 1:23-44)
+                    ),
+                ]),
+            })),
+        })
+    );
+
+    let agg = aggregate_cst(cst).unwrap();
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default()),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Part", <||>)),
+            args: vec![leaf!(Symbol, "a", 1:1-2), leaf!(Integer, "2", 1:22-23),],
+            data: src!(1:1-44).into(),
+        }
+    );
+
+    //==================================
+    // Test double bracket long name syntax with multiple args
+    // TID:231112/5: "a\[LeftDoubleBracket]1, 2, 3\[RightDoubleBracket]"
+    //==================================
+
+    let cst = parse_cst(
+        r#"a\[LeftDoubleBracket]1, 2, 3\[RightDoubleBracket]"#,
+        &Default::default(),
+    )
+    .syntax;
+
+    assert_eq!(
+        cst,
+        Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Token(
+                token!(Symbol, "a", 1:1-2),
+            )])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOperator::CodeParser_GroupDoubleBracket,
+                children: NodeSeq(vec![
+                    Token(
+                        token!(LongName_LeftDoubleBracket, "\\[LeftDoubleBracket]", 1:2-22),
+                    ),
+                    Infix(InfixNode(OperatorNode {
+                        op: InfixOperator::CodeParser_Comma,
+                        children: NodeSeq(vec![
+                            Token(token!(Integer, "1", 1:22-23)),
+                            Token(token!(Comma, ",", 1:23-24)),
+                            Token(token!(Whitespace, " ", 1:24-25)),
+                            Token(token!(Integer, "2", 1:25-26)),
+                            Token(token!(Comma, ",", 1:26-27)),
+                            Token(token!(Whitespace, " ", 1:27-28)),
+                            Token(token!(Integer, "3", 1:28-29)),
+                        ]),
+                    })),
+                    Token(
+                        token!(LongName_RightDoubleBracket, "\\[RightDoubleBracket]", 1:29-50),
+                    ),
+                ]),
+            })),
+        })
+    );
+
+    let agg = aggregate_cst(cst).unwrap();
+
+    assert_eq!(
+        abstract_cst(agg, QuirkSettings::default()),
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Part", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                leaf!(Integer, "1", 1:22-23),
+                leaf!(Integer, "2", 1:25-26),
+                leaf!(Integer, "3", 1:28-29),
+            ],
+            data: src!(1:1-50).into(),
         }
     );
 }

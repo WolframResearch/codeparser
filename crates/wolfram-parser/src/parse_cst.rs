@@ -280,7 +280,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             op,
             CompoundOperator::Slot | CompoundOperator::SlotSequence
         );
-        debug_assert_eq!(hash.tok, TokenKind::Hash);
+        debug_assert_matches!(hash.tok, TokenKind::Hash | TokenKind::HashHash);
         debug_assert_matches!(arg.tok, TokenKind::Integer | TokenKind::String);
 
         let node = CompoundNode::new2(op, hash, arg);
