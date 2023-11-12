@@ -676,3 +676,50 @@ impl<'a, T: Display> Display for CommaTerminated<'a, T> {
         Ok(())
     }
 }
+
+//======================================
+// is_interval_member()
+//======================================
+
+/// Returns true if `b` is an interval that is completely contained inside `a`.
+pub(crate) fn is_interval_member(a: (u32, u32), b: (u32, u32)) -> bool {
+    let (a_start, a_end) = a;
+    let (b_start, b_end) = b;
+
+    b_start >= a_start && b_end <= a_end
+}
+
+// TODO: Do more testing of this intersection function.
+pub(crate) fn intersection(a: (u32, u32), b: (u32, u32)) -> Option<(u32, u32)> {
+    use std::cmp::{max, min};
+
+    let (a, b) = if a.0 < b.0 { (a, b) } else { (b, a) };
+
+    let (a_start, a_end) = a;
+    let (b_start, b_end) = b;
+
+    assert!(a_start <= a_end);
+    assert!(b_start <= b_end);
+
+    debug_assert!(a_start <= b_start);
+
+    let highest_start = max(a_start, b_start);
+    let lowest_end = min(a_end, b_end);
+
+    if highest_start > lowest_end {
+        return None;
+    }
+
+    Some((highest_start, lowest_end))
+}
+
+#[test]
+fn test_intersection() {
+    assert_eq!(intersection((0, 0), (0, 0)), Some((0, 0)));
+    assert_eq!(intersection((1, 3), (1, 3)), Some((1, 3)));
+    assert_eq!(intersection((1, 4), (1, 3)), Some((1, 3)));
+    assert_eq!(intersection((1, 3), (1, 4)), Some((1, 3)));
+    assert_eq!(intersection((1, 2), (3, 4)), None);
+    assert_eq!(intersection((3, 4), (1, 2)), None);
+    assert_eq!(intersection((3, 4), (1, 3)), Some((3, 3)));
+}

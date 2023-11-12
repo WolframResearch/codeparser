@@ -79,60 +79,31 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
     let (_, _, better_src) =
         first_chunk_and_last_good_line(str, tab_width, src);
 
+    // Flatten out children, because there may be parsing errors from missing bracket, and
+    // we do not want to propagate
+    //
+    //   betterLeaves = Cases[
+    //       children,
+    //       (LeafNode|ErrorNode)[_, _, data_ /; srcMemberFunc[data[Source]]],
+    //       Infinity
+    //   ];
+
+    let mut better_leaves: Vec<Cst<_>> = Vec::new();
+
     // Use original src Start, but readjust src End to be the EndOfLine of the
     // last good line of the chunk
-    let better_leaves = match better_src.kind() {
-        SpanKind::LineColumnSpan(better_src) => {
-            // Flatten out children, because there may be parsing errors from missing bracket, and
-            // we do not want to propagate
-            //
-            //   betterLeaves = Cases[
-            //       children,
-            //       (LeafNode|ErrorNode)[_, _, data_ /; srcMemberFunc[data[Source]]],
-            //       Infinity
-            //   ];
-
-            let mut better_leaves: Vec<Cst<_>> = Vec::new();
-
-            children.visit(&mut |node: &Cst<_>| match node {
-                Cst::Token(Token {
-                    tok: _,
-                    input: _,
-                    src: node_src,
-                }) => {
-                    if better_src.overlaps(node_src.line_column_span()) {
-                        better_leaves.push(node.clone());
-                    }
-                },
-                _ => (),
-            });
-
-            better_leaves
+    children.visit(&mut |node: &Cst<_>| match node {
+        Cst::Token(Token {
+            tok: _,
+            input: _,
+            src: node_src,
+        }) => {
+            if better_src.overlaps(*node_src) {
+                better_leaves.push(node.clone());
+            }
         },
-        SpanKind::CharacterSpan(better_src) => {
-            // Flatten out children, because there may be parsing errors from missing bracket, and
-            // we do not want to propagate
-            let mut better_leaves: Vec<Cst<_>> = Vec::new();
-
-            children.visit(&mut |node: &Cst<_>| match node {
-                Cst::Token(Token {
-                    tok: _,
-                    input: _,
-                    src: node_src,
-                }) => {
-                    if is_interval_member(
-                        better_src.tuple(),
-                        node_src.character_span().tuple(),
-                    ) {
-                        better_leaves.push(node.clone());
-                    }
-                },
-                _ => (),
-            });
-
-            better_leaves
-        },
-    };
+        _ => (),
+    });
 
     // Purposely only returning leaves that are in the "better" Source
     //
@@ -279,7 +250,7 @@ fn first_chunk_and_last_good_line(
                 > = specs_of_lines
                     .flat_map(|(line, pos): (Line, CharacterSpan)| {
                         // Only returns lines that intersect with the source character span.
-                        if intersection(pos.tuple(), src.tuple()).is_some() {
+                        if pos.intersects(src) {
                             Some((line, pos))
                         } else {
                             None
@@ -632,49 +603,6 @@ fn to_zero_index(value: NonZeroU32) -> usize {
 //--------------------------------------
 // Source interval comparison
 //--------------------------------------
-
-// TODO: Do more testing of this intersection function.
-fn intersection(a: (u32, u32), b: (u32, u32)) -> Option<(u32, u32)> {
-    use std::cmp::{max, min};
-
-    let (a, b) = if a.0 < b.0 { (a, b) } else { (b, a) };
-
-    let (a_start, a_end) = a;
-    let (b_start, b_end) = b;
-
-    assert!(a_start <= a_end);
-    assert!(b_start <= b_end);
-
-    debug_assert!(a_start <= b_start);
-
-    let highest_start = max(a_start, b_start);
-    let lowest_end = min(a_end, b_end);
-
-    if highest_start > lowest_end {
-        return None;
-    }
-
-    Some((highest_start, lowest_end))
-}
-
-/// Returns true if `b` is an interval that is completely contained inside `a`.
-fn is_interval_member(a: (u32, u32), b: (u32, u32)) -> bool {
-    let (a_start, a_end) = a;
-    let (b_start, b_end) = b;
-
-    b_start >= a_start && b_end <= a_end
-}
-
-#[test]
-fn test_intersection() {
-    assert_eq!(intersection((0, 0), (0, 0)), Some((0, 0)));
-    assert_eq!(intersection((1, 3), (1, 3)), Some((1, 3)));
-    assert_eq!(intersection((1, 4), (1, 3)), Some((1, 3)));
-    assert_eq!(intersection((1, 3), (1, 4)), Some((1, 3)));
-    assert_eq!(intersection((1, 2), (3, 4)), None);
-    assert_eq!(intersection((3, 4), (1, 2)), None);
-    assert_eq!(intersection((3, 4), (1, 3)), Some((3, 3)));
-}
 
 //--------------------------------------
 // Lines

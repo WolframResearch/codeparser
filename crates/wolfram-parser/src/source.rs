@@ -678,6 +678,16 @@ impl Location {
 
 
 impl CharacterSpan {
+    /// Returns `true` if `other` is completely contained inside `self`.
+    #[allow(dead_code)]
+    pub(crate) fn contains_span(&self, other: CharacterSpan) -> bool {
+        crate::utils::is_interval_member(self.tuple(), other.tuple())
+    }
+
+    pub(crate) fn intersects(&self, other: CharacterSpan) -> bool {
+        crate::utils::intersection(self.tuple(), other.tuple()).is_some()
+    }
+
     pub(crate) fn tuple(self) -> (u32, u32) {
         let CharacterSpan(start, end) = self;
 
@@ -758,21 +768,31 @@ impl Span {
         (start, end)
     }
 
-    pub(crate) fn character_span(&self) -> CharacterSpan {
-        match self.kind() {
-            SpanKind::CharacterSpan(range) => range,
-            other => {
-                panic!("Span::character_span(): Span is not a character span: {other:?}")
+    /// Returns true if `other` partially or completely overlaps with this
+    /// [`Span`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if `self` and `other` are different
+    /// [`SpanKind`] values.
+    pub fn overlaps(&self, other: Span) -> bool {
+        match (self.kind(), other.kind()) {
+            (
+                SpanKind::LineColumnSpan(self_),
+                SpanKind::LineColumnSpan(other),
+            ) => {
+                self_.overlaps(other)
             },
-        }
-    }
-
-    pub(crate) fn line_column_span(&self) -> LineColumnSpan {
-        match self.kind() {
-            SpanKind::LineColumnSpan(span) => span,
-            other => {
-                panic!("Span::line_column_span(): Span is not a line/column span: {other:?}")
+            (
+                SpanKind::CharacterSpan(self_),
+                SpanKind::CharacterSpan(other),
+            ) => {
+                self_.intersects(other)
             },
+            (SpanKind::LineColumnSpan(_), SpanKind::CharacterSpan(_))
+            | (SpanKind::CharacterSpan(_), SpanKind::LineColumnSpan(_)) => panic!(
+                "Invalid combination of Span types: Span::overlaps({self}, {other})"
+            )
         }
     }
 
@@ -1466,6 +1486,17 @@ impl Display for SourceCharacter {
 //==========================================================
 // Tests
 //==========================================================
+
+#[test]
+fn test_character_span_intersects() {
+    let CS = CharacterSpan;
+
+    assert!(CS(1, 2).intersects(CS(1, 2)));
+    assert!(CS(1, 3).intersects(CS(2, 4)));
+    assert!(CS(2, 4).intersects(CS(1, 3)));
+
+    assert!(!CS(1, 2).intersects(CS(3, 4)));
+}
 
 #[test]
 fn test_box_position_between() {
