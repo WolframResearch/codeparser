@@ -267,8 +267,6 @@ fn abstract_cst_seq<I: TokenInput + Debug, S: TokenSource + Debug>(
     ast_children
 }
 
-// TODO(cleanup): Make this private again. Abstract(..) is the crate-public
-//                interface.
 fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
     node: Cst<I, S>,
 ) -> Ast {
