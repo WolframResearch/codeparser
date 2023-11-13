@@ -21,7 +21,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for IntegralParselet {
         tok_in: TokenRef<'i>,
     ) {
         //
-        // Something like  \[Integral] f \[DifferentialD] x
+        // Something like "\[Integral] f \[DifferentialD] x" (TID:231113/1)
         //
 
         panic_if_aborted!();
@@ -40,7 +40,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for IntegralParselet {
             || Tok.tok == TokenKind::LongName_CapitalDifferentialD
         {
             //
-            // \[Integral] \[DifferentialD] x
+            // TID:231113/2: "\[Integral] \[DifferentialD] x"
             //
 
             session
@@ -68,6 +68,10 @@ impl IntegralParselet {
             || tok.tok == TokenKind::LongName_CapitalDifferentialD)
         {
             trivia1.reset(&mut session.tokenizer);
+
+            //
+            // TID:231113/3: "\[Integral] f"
+            //
 
             // MUSTTAIL
             return IntegralParselet::reduceIntegral(self, session);
