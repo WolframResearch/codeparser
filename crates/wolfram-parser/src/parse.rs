@@ -236,8 +236,8 @@ impl<'i> ParserSession<'i> {
         self.parse_climb();
     }
 
-    /// A complete expression was just finished being parsed, so "climb" up by
-    /// parsing the next "infix" token in the input.
+    /// A complete sub-expression was just finished being parsed, so "climb" up
+    /// by parsing the next "infix" token in the input.
     pub(crate) fn parse_climb(&mut self) {
         //
         // Check isAbort() inside loops
