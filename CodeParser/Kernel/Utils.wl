@@ -40,6 +40,11 @@ FIXME: when a dependency on CodeFormatter is created, then use those functions a
 *)
 replaceTabs
 
+(* NOTE:
+	This function is called directly from CodeFormatter, so even though it is
+	unused in CodeParser, it cannot be deleted. See bug 442107. *)
+tabReplacementFunc
+
 
 $systemNewline
 
@@ -824,6 +829,23 @@ FIXME: when a dependency on CodeFormatter is created, then use those functions a
 *)
 
 
+(*
+Memoizing function that returns the number of spaces that a tab should be replaced with
+
+tabReplacementFunc[1, 4] => "    "
+tabReplacementFunc[2, 4] => "   "
+tabReplacementFunc[3, 4] => "  "
+tabReplacementFunc[4, 4] => " "
+tabReplacementFunc[5, 4] => "    "
+tabReplacementFunc[6, 4] => "   "
+tabReplacementFunc[7, 4] => "  "
+tabReplacementFunc[8, 4] => " "
+tabReplacementFunc[9, 4] => "    "
+
+*)
+tabReplacementFunc[col_Integer, tabWidth_Integer] :=
+  tabReplacementFunc[col, tabWidth] =
+  StringJoin[Table[" ", Mod[1 - col, tabWidth, 1]]]
 
 
 replaceTabs[str_String, startingColumn_Integer, newline_String, tabWidth_Integer] :=
