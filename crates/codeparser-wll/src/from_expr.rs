@@ -32,10 +32,8 @@ pub(crate) trait FromExpr: Sized {
 
 impl FromExpr for Container<Cst<TokenString, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(
-            expr,
-            SymbolRef::try_new("CodeParser`ContainerNode").unwrap(),
-        )?;
+        let elements =
+            try_normal_with_head(expr, sym::CodeParser_ContainerNode)?;
 
         if elements.len() != 3 {
             todo!()
