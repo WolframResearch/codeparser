@@ -66,9 +66,10 @@ impl FromExpr for ContainerKind {
         let kind = match sym.as_str() {
             "System`String" => ContainerKind::String,
             "System`File" => ContainerKind::File,
-            "System`Box" => ContainerKind::Box,
-            "System`Hold" => ContainerKind::Hold,
             "System`Byte" => ContainerKind::Byte,
+            "System`Box" => ContainerKind::Box,
+            "System`Cell" => ContainerKind::Cell,
+            "System`Hold" => ContainerKind::Hold,
             other => return Err(format!("invalid ContainerKind: {other}")),
         };
 
@@ -398,20 +399,9 @@ impl FromExpr for BoxKind {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let symbol = expr.try_as_symbol().expect("PRE_COMMIT");
 
-        let context = symbol.context().as_str();
-        let symbol_name = symbol.symbol_name().as_str();
-
-        if context != "System`" {
-            todo!()
-        }
-
-        if !symbol_name.ends_with("Box") {
-            todo!("unexpected box name: {symbol_name}")
-        }
-
-        let kind = match BoxKind::from_str(symbol_name) {
+        let kind = match BoxKind::from_symbol(symbol.as_symbol_ref()) {
             Some(kind) => kind,
-            None => panic!("unrecognized BoxKind name: '{symbol_name}'"),
+            None => panic!("unrecognized BoxKind name: '{symbol}'"),
         };
 
         Ok(kind)

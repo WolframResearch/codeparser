@@ -2,7 +2,7 @@
 //!
 //! [`Cst`] — root and element type in a concrete syntax tree.
 
-use wolfram_expr::Expr;
+use wolfram_expr::{symbol::SymbolRef, Expr};
 
 use crate::{
     source::{Source, Span},
@@ -64,7 +64,7 @@ pub struct BoxNode<I = TokenString, S = Span> {
     pub src: S,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BoxKind {
     RowBox,
     GridBox,
@@ -77,6 +77,12 @@ pub enum BoxKind {
     NamespaceBox,
     OverscriptBox,
     SubsuperscriptBox,
+    // TODO(cleanup):
+    //   Make this unnecessary? Try to represent _every_ box kind
+    //   as a variant? Or represent all box kinds as a Symbol
+    //   field?
+    /// Must be a `` System` `` symbol that ends in "Box".
+    Other(wolfram_expr::Symbol),
 }
 
 /// Any kind of prefix, postfix, binary, or infix operator
@@ -1031,7 +1037,7 @@ impl SyntaxErrorKind {
 }
 
 impl BoxKind {
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             BoxKind::TagBox => "TagBox",
             BoxKind::SuperscriptBox => "SuperscriptBox",
@@ -1044,12 +1050,17 @@ impl BoxKind {
             BoxKind::NamespaceBox => "NamespaceBox",
             BoxKind::OverscriptBox => "OverscriptBox",
             BoxKind::SubsuperscriptBox => "SubsuperscriptBox",
-            // NOTE: When adding a case here, also update from_str().
+            BoxKind::Other(name) => {
+                if name.context().as_str() == "System`" {
+                    name.symbol_name().as_str()
+                } else {
+                    todo!("PRECOMMIT")
+                }
+            }, // NOTE: When adding a case here, also update from_str().
         }
     }
 
-    #[doc(hidden)]
-    pub fn from_str(string: &str) -> Option<Self> {
+    fn from_str(string: &str) -> Option<Self> {
         let value = match string {
             "TagBox" => BoxKind::TagBox,
             "SuperscriptBox" => BoxKind::SuperscriptBox,
@@ -1066,5 +1077,23 @@ impl BoxKind {
         };
 
         Some(value)
+    }
+
+    pub fn from_symbol(symbol: SymbolRef) -> Option<Self> {
+        let context = symbol.context().as_str();
+        let symbol_name = symbol.symbol_name().as_str();
+
+        if context != "System`" {
+            todo!()
+        }
+
+        if !symbol_name.ends_with("Box") {
+            return None;
+        }
+
+        Some(
+            BoxKind::from_str(symbol_name)
+                .unwrap_or_else(|| BoxKind::Other(symbol.to_symbol())),
+        )
     }
 }

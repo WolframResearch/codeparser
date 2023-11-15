@@ -1599,3 +1599,38 @@ Module[{
 
 
 
+
+Module[{
+	cst
+},
+	(* Test CodeConcreteParse of Cell. *)
+	Test[
+		cst = CodeConcreteParse @ Cell[BoxData[FractionBox["1", "0"]], "Input"]
+		,
+		ContainerNode[Cell, {
+			BoxNode[
+				FractionBox,
+				{
+					LeafNode[Integer,"1",<|Source -> {1}|>],
+					LeafNode[Integer, "0", <| Source -> {2}|>]
+				},
+				<|Source -> {}|>
+			]
+		},
+			<||>
+		]
+
+	];
+
+	(* Test Aggregate of ContainerNode[Cell, ...] *)
+	Test[
+		CodeParser`Abstract`Aggregate[cst]
+		,
+		ContainerNode[Cell, {
+			BoxNode[FractionBox, {
+				LeafNode[Integer, "1", <|Source -> {1}|>],
+				LeafNode[Integer, "0", <|Source -> {2}|>]
+			}, <|Source -> {}|>]
+		}, <||>]
+	]
+]

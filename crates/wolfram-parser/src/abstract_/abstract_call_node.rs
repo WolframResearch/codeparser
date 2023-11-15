@@ -227,8 +227,8 @@ pub(super) fn abstract_call_node<
                 //
                 // Now handle boxes
                 //
-                LHS!(BoxNode[box_kind:_, _, _])
-                    if OK_CALL_BOX_KINDS.contains(&box_kind) =>
+                Cst::Box(BoxNode { ref kind, .. })
+                    if OK_CALL_BOX_KINDS.contains(&kind) =>
                 {
                     // (* this is fine *)
                     // Null
@@ -477,10 +477,10 @@ pub(super) fn abstract_call_node<
         // ]) if OK_CALL_BOX_KINDS.contains(&box_kind)
         // TODO(test): Add test case for this branch.
         AggCallNode {
-            head: Cst::Box(head @ BoxNode { kind: box_kind, .. }),
+            head: Cst::Box(head @ BoxNode { .. }),
             body: LHS!(part:GroupNode[CodeParser_GroupSquare, _, _]),
             src: data,
-        } if OK_CALL_BOX_KINDS.contains(&box_kind) => {
+        } if OK_CALL_BOX_KINDS.contains(&head.kind) => {
             let head = abstract_(Cst::from(head));
             let part = abstractGroupNode(part);
 
@@ -493,7 +493,7 @@ pub(super) fn abstract_call_node<
         // ])
         // TODO(test): Add test case that covers this branch.
         AggCallNode {
-            head: Cst::Box(head @ BoxNode { kind: tag, .. }),
+            head: Cst::Box(head @ BoxNode { .. }),
             body: LHS!(part:GroupNode[CodeParser_GroupSquare, _, _]),
             src: data,
         } => {
@@ -505,7 +505,7 @@ pub(super) fn abstract_call_node<
             data.issues.push(
                 Issue::syntax(
                     IssueTag::StrangeCall,
-                    format!("Unexpected call: ``{}``.", tag.as_str()),
+                    format!("Unexpected call: ``{}``.", head.kind.as_str()),
                     Severity::Error,
                     first.source().into_general(),
                     0.95,
@@ -731,8 +731,8 @@ pub(super) fn abstract_call_node<
                 //
                 // Now handle boxes
                 //
-                LHS!(BoxNode[box_kind:_, _, _])
-                    if OK_CALL_BOX_KINDS.contains(&box_kind) =>
+                Cst::Box(BoxNode { ref kind, .. })
+                    if OK_CALL_BOX_KINDS.contains(kind) =>
                 {
                     // this is fine
                 },
