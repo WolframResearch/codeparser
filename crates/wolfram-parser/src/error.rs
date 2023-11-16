@@ -728,7 +728,7 @@ fn split_lines_keep_sep<'i>(input: &'i str) -> Vec<(&'i str, &'i str)> {
     let mut lines = Vec::new();
     let mut start = 0;
 
-    let mut char_indices = input.char_indices();
+    let mut char_indices = input.char_indices().peekable();
 
     while let Some((index, char)) = char_indices.next() {
         match char {
@@ -739,8 +739,10 @@ fn split_lines_keep_sep<'i>(input: &'i str) -> Vec<(&'i str, &'i str)> {
 
                 start = index + 1;
             },
-            '\r' => match char_indices.next() {
-                Some((next_index, '\n')) => {
+            '\r' => match char_indices.peek() {
+                Some(&(next_index, '\n')) => {
+                    char_indices.next();
+
                     let line = &input[start..index];
                     let sep = &input[index..=next_index];
                     lines.push((line, sep));
@@ -925,6 +927,15 @@ fn test_split_lines_keep_sep() {
     assert_eq!(split_lines_keep_sep("\n"), vec![("", "\n")]);
     assert_eq!(split_lines_keep_sep("\r\n"), vec![("", "\r\n")]);
     assert_eq!(split_lines_keep_sep("\n\r"), vec![("", "\n"), ("", "\r")]);
+
+    assert_eq!(
+        split_lines_keep_sep("a\n\nc\n"),
+        vec![("a", "\n"), ("", "\n"), ("c", "\n")]
+    );
+    assert_eq!(
+        split_lines_keep_sep("a\r\rc\r"),
+        vec![("a", "\r"), ("", "\r"), ("c", "\r")]
+    );
 
     assert_eq!(
         split_lines_keep_sep("one\ntwo"),
