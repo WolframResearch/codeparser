@@ -18,6 +18,9 @@ pub(crate) fn reparse_unterminated<'i>(
     input: &'i str,
     tab_width: usize,
 ) -> AggNodeSeq<TokenStr<'i>> {
+    // TODO(cleanup): Change function parameter to take tab width as u32.
+    let tab_width = u32::try_from(tab_width).unwrap();
+
     nodes.map_visit(&mut |node| match node {
         Cst::Token(token)
             if token.tok.isError() && token.tok.isUnterminated() =>
@@ -36,6 +39,9 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
     input: &'i str,
     tab_width: usize,
 ) -> Tokens<TokenStr<'i>> {
+    // TODO(cleanup): Change function parameter to take tab width as u32.
+    let tab_width = u32::try_from(tab_width).unwrap();
+
     let Tokens(tokens) = tokens;
 
     let tokens = tokens
@@ -75,6 +81,9 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
         children,
         src,
     }) = group;
+
+    // TODO(cleanup): Change function parameter to take tab width as u32.
+    let tab_width = u32::try_from(tab_width).unwrap();
 
     let (_, _, better_src) =
         first_chunk_and_last_good_line(str, tab_width, src);
@@ -156,7 +165,7 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
 fn reparse_unterminated_token_error_node<'i>(
     error: Token<TokenStr<'i>>,
     str: &'i str,
-    tab_width: usize,
+    tab_width: u32,
 ) -> Token<TokenStr<'i>> {
     debug_assert!(error.tok.isError() && error.tok.isUnterminated());
 
@@ -173,8 +182,8 @@ fn reparse_unterminated_token_error_node<'i>(
             let mut components: Vec<&str> = Vec::new();
 
             components.push(
-                &first_chunk[0].content
-                    [usize::try_from(better_src.start.column()).unwrap() - 1..],
+                first_chunk[0]
+                    .index_columns(tab_width, better_src.start.column()..),
             );
 
             if first_chunk.len() > 1 {
@@ -235,7 +244,7 @@ fn make_better_input<'i>(better: &'i str) -> TokenStr<'i> {
 
 fn first_chunk_and_last_good_line(
     input: &str,
-    tab_width: usize,
+    tab_width: u32,
     src: Span,
 ) -> (Vec<Line>, usize, Span) {
     let lines = to_lines_and_expand_tabs(input, tab_width);
@@ -343,9 +352,7 @@ fn first_chunk_and_last_good_line(
                             u32::try_from(last_good_line_index).unwrap(),
                         )
                         .expect("source line overflow u32"),
-                    u32::try_from(last_good_line.column_width(tab_width))
-                        .unwrap()
-                        + 1,
+                    last_good_line.column_width(tab_width) + 1,
                 )),
             }
         },
@@ -537,7 +544,7 @@ fn is_top_level_directive(symbol: &str) -> bool {
     .contains(&symbol)
 }
 
-fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
+fn to_lines_and_expand_tabs(input: &str, _tab_width: u32) -> Vec<Line> {
     //------------------------------------------------------------
     // Split `input` into lines and expand \t characters to spaces
     //------------------------------------------------------------
@@ -702,13 +709,94 @@ impl<'i> Line<'i> {
         Line { content, newline }
     }
 
-    fn column_width(&self, tab_width: usize) -> usize {
+    fn column_width(&self, tab_width: u32) -> u32 {
         let Line {
             content,
             newline: _,
         } = *self;
 
         line_column_width(content, tab_width)
+    }
+
+    /// Get a substring of this line by indexing using a column range.
+    fn index_columns(
+        &self,
+        tab_width: u32,
+        range: std::ops::RangeFrom<u32>,
+    ) -> &str {
+        // Get the first character whose column range includes the
+        // specified range start position.
+        let index = self.char_indices_and_column_ranges(tab_width).find_map(
+            |(_, index, column_range)| {
+                if column_range.contains(range.start) {
+                    Some(index)
+                } else {
+                    None
+                }
+            },
+        );
+
+        let Line {
+            content,
+            newline: _,
+        } = self;
+
+        let Some(index) = index else {
+            panic!(
+                "column index {range:?} is out of bounds for line {:?}",
+                content
+            )
+        };
+
+        &content[index..]
+    }
+
+    /// Return iterator of `(char, byte index, column range)`.
+    ///
+    /// *byte index* — offset in bytes of the unicode character occupying the
+    /// specified column.
+    /// *column range* — half-open range of visual columns that the character
+    /// occupies. E.g. a tab character will typically occupy 2 or 4 visual
+    /// columns.
+    //
+    // TODO: What happens when a single char other than tab occupies multiple
+    //       columns? For this to be (more) correct in general, do we need to
+    //       count grapheme clusters?
+    fn char_indices_and_column_ranges(
+        &self,
+        tab_width: u32,
+    ) -> impl Iterator<Item = (char, usize, ColumnRange)> + 'i {
+        let mut column: u32 = 1;
+
+        self.content
+            .char_indices()
+            .map(move |(index, char): (usize, char)| {
+                let start_column = column;
+
+                column = next_column(column, tab_width, char);
+
+                // For the vast majority of characters, this will be a one
+                // element range.
+                let column_range = ColumnRange(start_column..column);
+
+                (char, index, column_range)
+            })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ColumnRange(std::ops::Range<u32>);
+
+impl ColumnRange {
+    #[allow(dead_code)]
+    fn at(column: u32) -> Self {
+        ColumnRange(column..column + 1)
+    }
+
+    fn contains(&self, column: u32) -> bool {
+        let ColumnRange(range) = self;
+
+        range.contains(&column)
     }
 }
 
@@ -771,25 +859,33 @@ fn split_lines_keep_sep<'i>(input: &'i str) -> Vec<(&'i str, &'i str)> {
     lines
 }
 
-/// Get the rendered width of a line of tex
-fn line_column_width(line: &str, tab_width: usize) -> usize {
+/// Get the rendered width of a line of text
+fn line_column_width(line: &str, tab_width: u32) -> u32 {
     debug_assert!(!line.contains(&['\n', '\r']));
 
     let mut column = 1;
 
     for char in line.chars() {
-        match char {
-            '\t' => {
-                let currentTabStop = tab_width * ((column - 1) / tab_width) + 1;
-
-                column = currentTabStop + tab_width;
-            },
-            _ => column += 1,
-        }
+        column = next_column(column, tab_width, char)
     }
 
     // -1 because `column` is ordinal, and width is a cardinal number.
     column - 1
+}
+
+fn next_column(column: u32, tab_width: u32, char: char) -> u32 {
+    match char {
+        '\t' => tab_next_column(column, tab_width),
+        _ => column + 1,
+    }
+}
+
+fn tab_next_column(column: u32, tab_width: u32) -> u32 {
+    assert!(column != 0);
+
+    let current_tab_stop = tab_width * ((column - 1) / tab_width) + 1;
+
+    current_tab_stop + tab_width
 }
 
 //--------------------------------------
@@ -975,6 +1071,69 @@ fn test_line_column_width() {
     assert_eq!(line_column_width("ab\tc", 1), 4);
 }
 
+#[test]
+fn test_tab_next_column() {
+    assert_eq!(tab_next_column(1, 4), 5);
+    assert_eq!(tab_next_column(2, 4), 5);
+    assert_eq!(tab_next_column(3, 4), 5);
+    assert_eq!(tab_next_column(4, 4), 5);
+    assert_eq!(tab_next_column(5, 4), 9);
+
+    assert_eq!(tab_next_column(1, 1), 2);
+    assert_eq!(tab_next_column(2, 1), 3);
+    assert_eq!(tab_next_column(3, 1), 4);
+}
+
+#[test]
+fn test_char_indices_and_columns() {
+    assert_eq!(
+        Line::new("f[x]", "")
+            .char_indices_and_column_ranges(4)
+            .collect::<Vec<_>>(),
+        vec![
+            ('f', 0, ColumnRange::at(1)),
+            ('[', 1, ColumnRange::at(2)),
+            ('x', 2, ColumnRange::at(3)),
+            (']', 3, ColumnRange::at(4)),
+        ]
+    );
+
+    assert_eq!(
+        Line::new("\tf[x]", "")
+            .char_indices_and_column_ranges(4)
+            .collect::<Vec<_>>(),
+        vec![
+            ('\t', 0, ColumnRange(1..5)),
+            ('f', 1, ColumnRange::at(5)),
+            ('[', 2, ColumnRange::at(6)),
+            ('x', 3, ColumnRange::at(7)),
+            (']', 4, ColumnRange::at(8))
+        ]
+    );
+
+    // ï is two bytes (0xC3 0xAF) in UTF-8, but only one character/column.
+    assert_eq!(
+        Line::new("f[ï]", "")
+            .char_indices_and_column_ranges(4)
+            .collect::<Vec<_>>(),
+        vec![
+            ('f', 0, ColumnRange::at(1)),
+            ('[', 1, ColumnRange::at(2)),
+            ('ï', 2, ColumnRange::at(3)),
+            (']', 4, ColumnRange::at(4)),
+        ]
+    );
+}
+
+#[test]
+fn test_index_line_by_column() {
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 1..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 2..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 3..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 4..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 5..), "f[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 6..), "[x]");
+}
 
 struct CollectMultiple<A, B>(Vec<A>, Vec<B>);
 

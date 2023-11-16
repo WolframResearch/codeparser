@@ -24,6 +24,7 @@ TestSuite[{
 	"LineContinuations.mt",
 	"Parse.mt",
 	"Quirks.mt",
+	"Regressions.mt",
 	"SafeString.mt",
 	"Scoping.mt",
 	"Span.mt",
