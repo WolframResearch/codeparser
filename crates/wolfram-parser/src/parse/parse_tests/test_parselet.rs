@@ -17,14 +17,10 @@ fn ParseletTest_Bug1() {
 
     let tok = session.tokenizer.peek_token();
 
-    session.parse_prefix(tok);
+    let P = session.parse_prefix(tok);
 
     assert_eq!(session.tokenizer.non_fatal_issues.len(), 0);
     assert_eq!(session.tokenizer.fatal_issues.len(), 0);
-
-    let mut builder = session.builder;
-
-    let P: &mut Cst<_> = builder.top_node();
 
     assert!(matches!(P, Cst::Ternary(_)));
 }

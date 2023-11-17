@@ -42,6 +42,10 @@ Concretify[ast_] :=
 Catch[
 Module[{cst, agg, ast2, astToCompare, ast2ToCompare, str},
 
+	If[FailureQ[ast],
+		Throw[ast]
+	];
+
   cst = walk[ast];
 
   If[TrueQ[$DisableSanityChecking],

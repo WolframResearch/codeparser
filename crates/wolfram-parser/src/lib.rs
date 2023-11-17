@@ -771,7 +771,7 @@ macro_rules! panic_if_aborted {
 
 pub(crate) use panic_if_aborted;
 
-fn expect_single_item<N>(
+fn expect_single_item<N: Debug>(
     result: ParseResult<NodeSeq<N>>,
     func: &'static str,
     ty: &'static str,
@@ -788,9 +788,9 @@ fn expect_single_item<N>(
     //        one left off. ParseResult is a bad name anyway because it sounds
     //        like a type alias for Result<T, ParseError> or something similar.
     //        Maybe ParseData and ResumableParseData? Or ParseData<I, Resume = ()>?
-    let [item]: [_; 1] = syntax
-        .try_into()
-        .unwrap_or_else(|_| panic!("{func}: more than one {ty} in input"));
+    let [item]: [_; 1] = syntax.try_into().unwrap_or_else(|syntax| {
+        panic!("{func}: more than one {ty} in input: {syntax:?}")
+    });
 
     ParseResult {
         syntax: item,
