@@ -31,6 +31,19 @@ line using the
 $ wolfram-cli paclet test build/paclet/CodeParser Tests/TestSuite.mt
 ```
 
+#### Run the wolfram-parser benchmarks:
+
+To run the benchmarks, execute:
+
+```shell
+$ cargo bench
+```
+
+Re-running the benchmarks will print out comparision statistics between the latest
+and most recent previous benchmark run. See also
+[criterion.rs](https://github.com/bheisler/criterion.rs).
+
+
 ## Testing
 
 CodeParser has two test suites:
@@ -38,5 +51,18 @@ CodeParser has two test suites:
 1. Tests written in Rust, primarily located in [crates/wolfram-parser/src/tests/](../crates/wolfram-parser/src/tests/).
 2. Tests written in Wolfram, primarily located in [Tests](../Tests/).
 
+## Benchmarking
 
+To capture a named baseline benchmark, execute:
+
+```shell
+$ cargo bench -p wolfram-parser -- --save-baseline <BASELINE NAME>
+```
+
+Then, to run benchmarks that show comparision results compared to that captured
+baseline, execute:
+
+```shell
+$ cargo bench -p wolfram-parser -- --baseline master
+```
 

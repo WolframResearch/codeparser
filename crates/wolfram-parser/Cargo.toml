@@ -6,6 +6,12 @@ rust-version = "1.70"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+bench = false
+
+[[bin]]
+name = "main"
+bench = false
 
 [features]
 COMPUTE_SOURCE = []
@@ -30,7 +36,7 @@ wolfram-library-link = { version = "0.2.10", optional = true, default-features =
 [dev-dependencies]
 pretty_assertions = "1.2.1"
 
-criterion = "0.3.6"
+criterion = "0.5.1"
 
 [[bench]]
 name = "bench_general"
