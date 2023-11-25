@@ -164,6 +164,11 @@ macro_rules! __token {
         $crate::macros::token!($kind, $input, $crate::macros::src!($l1:$c1-$c2))
     };
 
+    // token!(Kind, "...", 1..3)
+    ($kind:ident, $input:tt, $start:literal .. $end:literal) => {
+        $crate::macros::token!($kind, $input, $crate::macros::src!($start .. $end))
+    };
+
     // token!(Kind, "...", {1, 2, 3})
     ($kind:ident, $input:tt, {$($value:literal),*}) => {
         $crate::tokenize::Token {
