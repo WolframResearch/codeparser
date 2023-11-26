@@ -3,15 +3,17 @@ use crate::{
     ast::Ast,
     cst::{
         BinaryNode, CallBody, CallHead, CallNode,
-        Cst::{Binary, Call, Group, Prefix, PrefixBinary, Ternary, Token},
-        GroupNode, OperatorNode, PrefixBinaryNode, PrefixNode, TernaryNode,
-        TriviaSeq,
+        Cst::{
+            Binary, Call, Group, Infix, Prefix, PrefixBinary, Ternary, Token,
+        },
+        GroupNode, InfixNode, OperatorNode, PrefixBinaryNode, PrefixNode,
+        TernaryNode, TriviaSeq,
     },
     macros::{leaf, src, token},
     parse::operators::{
         BinaryOperator as BinaryOp, CallOperator as CallOp,
-        GroupOperator as GroupOp, PrefixBinaryOperator, PrefixOperator,
-        TernaryOperator as TernaryOp,
+        GroupOperator as GroupOp, InfixOperator as InfixOp,
+        PrefixBinaryOperator, PrefixOperator, TernaryOperator as TernaryOp,
     },
     parse_cst,
     tests::assert_src,
@@ -247,4 +249,34 @@ fn test_prefix_binary_integral() {
             data: src!(1:1-14).into(),
         }
     );
+}
+
+#[test]
+fn test_span() {
+    assert_eq!(
+        parse_cst(";; ;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: BinaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1)),
+                        Token(token!(SemiSemi, ";;", 1:1-3)),
+                        Token(token!(Whitespace, " ", 1:3-4)),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4)),
+                    ])
+                })),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4)),
+                Binary(BinaryNode(OperatorNode {
+                    op: BinaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4)),
+                        Token(token!(SemiSemi, ";;", 1:4-6)),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6)),
+                    ])
+                })),
+            ]),
+        }))
+    )
 }
