@@ -1321,19 +1321,14 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TildeParselet {
 
         let ctxt = session.top_context();
         ctxt.init_callback(|s| TildeParselet::parse1(s));
-        ctxt.set_precedence(None);
 
         return session.parse_prefix(first_tok);
     }
 
     fn getPrecedence(
         &self,
-        session: &ParserSession<'i, B>,
+        _session: &ParserSession<'i, B>,
     ) -> Option<Precedence> {
-        if session.top_non_trivia_node_is_tilde() {
-            return None;
-        }
-
         return Some(Precedence::TILDE);
     }
 }
@@ -1368,15 +1363,10 @@ impl TildeParselet {
 
         let tok2 = session.current_token_eat_trivia();
 
-        //
-        // Reset back to "outside" precedence
-        //
-
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.
         // assert!(Ctxt.f.unwrap() as usize == TildeParselet_parse1 as usize);
         ctxt.set_callback(|s| TildeParselet::reduce_tilde(s));
-        ctxt.set_precedence(Precedence::TILDE);
 
         return session.parse_prefix(tok2);
     }

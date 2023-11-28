@@ -557,38 +557,6 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         }
     }
 
-    fn top_non_trivia_node_is_tilde(&self) -> bool {
-        //
-        // work backwards, looking for ~
-        //
-
-        if self.context_stack_mirror.is_empty() {
-            return false;
-        }
-
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        let top_non_trivia_in_context = self
-            .top_context_nodes()
-            // Skip past top
-            .skip(1)
-            .find(
-                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
-            )
-            .expect(
-                "unable to check tilde: no non-trivia token in top context",
-            );
-
-        if let Cst::Token(tok) = top_non_trivia_in_context {
-            if tok.tok == TokenKind::Tilde {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
     fn top_node_is_span(&self) -> bool {
         assert!(!self.node_stack.is_empty());
 

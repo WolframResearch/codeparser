@@ -132,25 +132,25 @@ fn CrashTest_Crash3() {
     assert_eq!(
         result.syntax,
         Binary(BinaryNode(OperatorNode {
-            op: BinaryOperator::Pattern,
+            op: BinaryOperator::Optional,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Colon, ":", 1:2-3)),
-                SyntaxError(SyntaxErrorNode {
-                    err: SyntaxErrorKind::ExpectedTilde,
+                Binary(BinaryNode(OperatorNode {
+                    op: BinaryOperator::Pattern,
                     children: NodeSeq(vec![
-                        Token(token!(Symbol, "b", 1:3-4)),
-                        Token(token!(Tilde, "~", 1:4-5)),
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Colon, ":", 1:2-3)),
                         SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedSymbol,
+                            err: SyntaxErrorKind::ExpectedTilde,
                             children: NodeSeq(vec![
+                                Token(token!(Symbol, "b", 1:3-4)),
+                                Token(token!(Tilde, "~", 1:4-5)),
                                 Token(token!(Integer, "1", 1:5-6)),
-                                Token(token!(Colon, ":", 1:6-7)),
-                                Token(token!(Integer, "2", 1:7-8)),
                             ]),
                         }),
-                    ]),
-                }),
+                    ])
+                })),
+                Token(token!(Colon, ":", 1:6-7)),
+                Token(token!(Integer, "2", 1:7-8)),
             ])
         }))
     );

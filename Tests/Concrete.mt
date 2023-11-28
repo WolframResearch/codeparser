@@ -131,15 +131,22 @@ Test[
 	CodeConcreteParse["a ~f x", ContainerNode -> f]
 	,
 	f[{{
-		SyntaxErrorNode[SyntaxError`ExpectedTilde, {
-			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
-			LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 4}}|>],
-			InfixNode[Times, {
-				LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 5}}|>],
-				LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
-				LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 6}, {1, 6}}|>],
-				LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 4}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]},
+		InfixNode[Times, {
+			SyntaxErrorNode[
+				SyntaxError`ExpectedTilde,
+				{
+					LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+					LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
+					LeafNode[Token`Tilde, "~", <|Source -> {{1, 3},{1, 4}}|>],
+					LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 5}}|>]
+				},
+				<|Source -> {{1, 1}, {1, 5}}|>
+			],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 6}, {1, 6}}|>],
+			LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 7}}|>]
+		}, <|Source -> {{1, 1}, {1, 7}}|>]
+	},
 		{}, {}, {}, {}, {}}]
 	,
 	TestID->"Concrete-20190521-L2C2Y8"

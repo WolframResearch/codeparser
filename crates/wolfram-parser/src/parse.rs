@@ -367,8 +367,6 @@ pub(crate) trait ParseBuilder<'i>: Debug {
 
     fn check_colon_lhs(&self) -> ColonLHS;
 
-    fn top_non_trivia_node_is_tilde(&self) -> bool;
-
     fn top_node_is_span(&self) -> bool;
 }
 
@@ -845,10 +843,6 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     fn check_colon_lhs(&self) -> ColonLHS {
         self.builder.check_colon_lhs()
-    }
-
-    fn top_non_trivia_node_is_tilde(&self) -> bool {
-        self.builder.top_non_trivia_node_is_tilde()
     }
 
     //==================================

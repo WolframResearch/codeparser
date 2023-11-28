@@ -396,14 +396,14 @@ fn test_tilde() {
     // "a~x*f~b"     | ❌       | ❌        | ❌         | syntax error because * has lower precedence than ~
     // "a~x f~b"     | ❌       | ❌        | ❌         | syntax error because implicit Times has lower precedence than ~
     // "a ~f x"      | ❌       | ❌        | ❌         |
-    // "a~f;;~b"     | ❌       | ✅        | ✅         | valid, despite ;; having lower precedence than ~
+    // "a~f;;~b"     | ❌       | ✅        | ❌         | valid, despite ;; having lower precedence than ~
     // "a~f;;x~b"    | ❌       | ❌        | ❌         |
     // "a~f;;x;;~b"  | ❌       | ✅        | ❌         | valid, despite ;; having lower precedence than ~
-    // "a ~f;~ b"    | ❌       | ✅        | ✅         | valid, despite ;  having lower precedence than ~
-    // "a ~f!~ b"    | ❌       | ✅        | ✅         | valid, despite !  having lower precedence than ~
-    // "a~f+x&~b"    | ❌       | ✅        | ✅         | valid, despite + and & both having lower prec than ~
+    // "a ~f;~ b"    | ❌       | ✅        | ❌         | valid, despite ;  having lower precedence than ~
+    // "a ~f!~ b"    | ❌       | ✅        | ❌         | valid, despite !  having lower precedence than ~
+    // "a~f+x&~b"    | ❌       | ✅        | ❌         | valid, despite + and & both having lower prec than ~
     // "a~f+x!~b"    | ❌       | ❌        | ❌         |
-    // "a~f?x!~b"    | ❌       | ✅        | ✅         |
+    // "a~f?x!~b"    | ❌       | ✅        | ❌         |
     //
     // "a ~f,~ b"   -- syntax error
     // "a~f,x~b"    -- syntax error
@@ -459,56 +459,56 @@ fn test_tilde() {
     // Explicit Times (*) operator, which has lower precedence than ~
     assert_eq!(
         parse_cst("a~x*f~b", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::Times,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
-                Infix(InfixNode(OperatorNode {
-                    op: InfixOp::Times,
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Tilde, "~", 1:2-3)),
                         Token(token!(Symbol, "x", 1:3-4)),
-                        Token(token!(Star, "*", 1:4-5)),
-                        SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedTilde,
-                            children: NodeSeq(vec![
-                                Token(token!(Symbol, "f", 1:5-6)),
-                                Token(token!(Tilde, "~", 1:6-7)),
-                                Token(token!(Symbol, "b", 1:7-8)),
-                            ]),
-                        }),
                     ]),
-                })),
+                }),
+                Token(token!(Star, "*", 1:4-5)),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "f", 1:5-6)),
+                        Token(token!(Tilde, "~", 1:6-7)),
+                        Token(token!(Symbol, "b", 1:7-8)),
+                    ]),
+                }),
             ]),
-        })
+        }))
     );
 
     // Implicit times
     assert_eq!(
         parse_cst("a~x f~b", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::Times,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
-                Infix(InfixNode(OperatorNode {
-                    op: InfixOp::Times,
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Tilde, "~", 1:2-3)),
                         Token(token!(Symbol, "x", 1:3-4)),
-                        Token(token!(Whitespace, " ", 1:4-5)),
-                        Token(token!(Fake_ImplicitTimes, "", 1:5-5)),
-                        SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedTilde,
-                            children: NodeSeq(vec![
-                                Token(token!(Symbol, "f", 1:5-6)),
-                                Token(token!(Tilde, "~", 1:6-7)),
-                                Token(token!(Symbol, "b", 1:7-8)),
-                            ]),
-                        }),
                     ]),
-                })),
+                }),
+                Token(token!(Whitespace, " ", 1:4-5)),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5)),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "f", 1:5-6)),
+                        Token(token!(Tilde, "~", 1:6-7)),
+                        Token(token!(Symbol, "b", 1:7-8)),
+                    ]),
+                }),
             ]),
-        })
+        }))
     );
 
     assert_eq!(
@@ -541,36 +541,41 @@ fn test_tilde() {
 
     assert_eq!(
         parse_cst("a ~f x", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::Times,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Whitespace, " ", 1:2-3)),
-                Token(token!(Tilde, "~", 1:3-4)),
-                Infix(InfixNode(OperatorNode {
-                    op: InfixOp::Times,
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Whitespace, " ", 1:2-3)),
+                        Token(token!(Tilde, "~", 1:3-4)),
                         Token(token!(Symbol, "f", 1:4-5)),
-                        Token(token!(Whitespace, " ", 1:5-6)),
-                        Token(token!(Fake_ImplicitTimes, "", 1:6-6)),
-                        Token(token!(Symbol, "x", 1:6-7)),
                     ]),
-                })),
+                }),
+                Token(token!(Whitespace, " ", 1:5-6)),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6)),
+                Token(token!(Symbol, "x", 1:6-7)),
             ]),
-        })
+        }))
     );
 
     assert_eq!(
         parse_cst("a~f;;~b", &Default::default()).syntax,
-        Ternary(TernaryNode(OperatorNode {
-            op: TernaryOp::CodeParser_TernaryTilde,
+        SyntaxError(SyntaxErrorNode {
+            err: SyntaxErrorKind::ExpectedTilde,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
                 Binary(BinaryNode(OperatorNode {
                     op: BinaryOp::Span,
                     children: NodeSeq(vec![
-                        Token(token!(Symbol, "f", 1:3-4)),
+                        SyntaxError(SyntaxErrorNode {
+                            err: SyntaxErrorKind::ExpectedTilde,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "a", 1:1-2)),
+                                Token(token!(Tilde, "~", 1:2-3)),
+                                Token(token!(Symbol, "f", 1:3-4)),
+                            ]),
+                        }),
                         Token(token!(SemiSemi, ";;", 1:4-6)),
                         Token(token!(Fake_ImplicitAll, "", 1:6-6)),
                     ])
@@ -578,33 +583,33 @@ fn test_tilde() {
                 Token(token!(Tilde, "~", 1:6-7)),
                 Token(token!(Symbol, "b", 1:7-8)),
             ]),
-        }))
+        })
     );
 
     assert_eq!(
         parse_cst("a~f;;x~b", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Binary(BinaryNode(OperatorNode {
+            op: BinaryOp::Span,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
-                Binary(BinaryNode(OperatorNode {
-                    op: BinaryOp::Span,
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Tilde, "~", 1:2-3)),
                         Token(token!(Symbol, "f", 1:3-4)),
-                        Token(token!(SemiSemi, ";;", 1:4-6)),
-                        SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedTilde,
-                            children: NodeSeq(vec![
-                                Token(token!(Symbol, "x", 1:6-7)),
-                                Token(token!(Tilde, "~", 1:7-8)),
-                                Token(token!(Symbol, "b", 1:8-9)),
-                            ]),
-                        }),
-                    ])
-                })),
-            ]),
-        })
+                    ]),
+                }),
+                Token(token!(SemiSemi, ";;", 1:4-6)),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "x", 1:6-7)),
+                        Token(token!(Tilde, "~", 1:7-8)),
+                        Token(token!(Symbol, "b", 1:8-9)),
+                    ]),
+                }),
+            ])
+        }))
     );
 
     // FIXME:
@@ -612,60 +617,61 @@ fn test_tilde() {
     //     Times[Span[f, x], Span[1, All]][a, b]
     assert_eq!(
         parse_cst("a~f;;x;;~b", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::Times,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
-                Infix(InfixNode(OperatorNode {
-                    op: InfixOp::Times,
+                Binary(BinaryNode(OperatorNode {
+                    op: BinaryOp::Span,
+                    children: NodeSeq(vec![
+                        SyntaxError(SyntaxErrorNode {
+                            err: SyntaxErrorKind::ExpectedTilde,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "a", 1:1-2)),
+                                Token(token!(Tilde, "~", 1:2-3)),
+                                Token(token!(Symbol, "f", 1:3-4)),
+                            ]),
+                        }),
+                        Token(token!(SemiSemi, ";;", 1:4-6)),
+                        Token(token!(Symbol, "x", 1:6-7)),
+                    ])
+                })),
+                Token(token!(Fake_ImplicitTimes, "", 1:7-7),),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
                         Binary(BinaryNode(OperatorNode {
                             op: BinaryOp::Span,
                             children: NodeSeq(vec![
-                                Token(token!(Symbol, "f", 1:3-4)),
-                                Token(token!(SemiSemi, ";;", 1:4-6)),
-                                Token(token!(Symbol, "x", 1:6-7)),
+                                Token(token!(Fake_ImplicitOne, "", 1:7-7)),
+                                Token(token!(SemiSemi, ";;", 1:7-9)),
+                                Token(token!(Fake_ImplicitAll, "", 1:9-9)),
                             ])
                         })),
-                        Token(token!(Fake_ImplicitTimes, "", 1:7-7)),
-                        SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedTilde,
-                            children: NodeSeq(vec![
-                                Binary(BinaryNode(OperatorNode {
-                                    op: BinaryOp::Span,
-                                    children: NodeSeq(vec![
-                                        Token(
-                                            token!(Fake_ImplicitOne, "", 1:7-7)
-                                        ),
-                                        Token(token!(SemiSemi, ";;", 1:7-9)),
-                                        Token(
-                                            token!(Fake_ImplicitAll, "", 1:9-9)
-                                        ),
-                                    ])
-                                })),
-                                Token(token!(Tilde, "~", 1:9-10)),
-                                Token(token!(Symbol, "b", 1:10-11)),
-                            ]),
-                        }),
+                        Token(token!(Tilde, "~", 1:9-10)),
+                        Token(token!(Symbol, "b", 1:10-11)),
                     ]),
-                })),
+                }),
             ]),
-        })
+        }))
     );
 
     assert_eq!(
         parse_cst("a ~f;~ b", &Default::default()).syntax,
-        Ternary(TernaryNode(OperatorNode {
-            op: TernaryOp::CodeParser_TernaryTilde,
+        SyntaxError(SyntaxErrorNode {
+            err: SyntaxErrorKind::ExpectedTilde,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Whitespace, " ", 1:2-3)),
-                Token(token!(Tilde, "~", 1:3-4)),
                 Infix(InfixNode(OperatorNode {
                     op: InfixOp::CompoundExpression,
                     children: NodeSeq(vec![
-                        Token(token!(Symbol, "f", 1:4-5)),
+                        SyntaxError(SyntaxErrorNode {
+                            err: SyntaxErrorKind::ExpectedTilde,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "a", 1:1-2)),
+                                Token(token!(Whitespace, " ", 1:2-3)),
+                                Token(token!(Tilde, "~", 1:3-4)),
+                                Token(token!(Symbol, "f", 1:4-5)),
+                            ]),
+                        }),
                         Token(token!(Semi, ";", 1:5-6)),
                         Token(token!(Fake_ImplicitNull, "", 1:6-6)),
                     ]),
@@ -674,21 +680,26 @@ fn test_tilde() {
                 Token(token!(Whitespace, " ", 1:7-8)),
                 Token(token!(Symbol, "b", 1:8-9)),
             ]),
-        }))
+        })
     );
 
     assert_eq!(
         parse_cst("a ~f!~ b", &Default::default()).syntax,
-        Ternary(TernaryNode(OperatorNode {
-            op: TernaryOp::CodeParser_TernaryTilde,
+        SyntaxError(SyntaxErrorNode {
+            err: SyntaxErrorKind::ExpectedTilde,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Whitespace, " ", 1:2-3)),
-                Token(token!(Tilde, "~", 1:3-4)),
                 Postfix(PostfixNode(OperatorNode {
                     op: PostfixOp::Factorial,
                     children: NodeSeq(vec![
-                        Token(token!(Symbol, "f", 1:4-5)),
+                        SyntaxError(SyntaxErrorNode {
+                            err: SyntaxErrorKind::ExpectedTilde,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "a", 1:1-2)),
+                                Token(token!(Whitespace, " ", 1:2-3)),
+                                Token(token!(Tilde, "~", 1:3-4)),
+                                Token(token!(Symbol, "f", 1:4-5)),
+                            ]),
+                        }),
                         Token(token!(Bang, "!", 1:5-6)),
                     ])
                 })),
@@ -696,23 +707,28 @@ fn test_tilde() {
                 Token(token!(Whitespace, " ", 1:7-8)),
                 Token(token!(Symbol, "b", 1:8-9)),
             ]),
-        }))
+        })
     );
 
     assert_eq!(
         parse_cst("a~f+x&~b", &Default::default()).syntax,
-        Ternary(TernaryNode(OperatorNode {
-            op: TernaryOp::CodeParser_TernaryTilde,
+        SyntaxError(SyntaxErrorNode {
+            err: SyntaxErrorKind::ExpectedTilde,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
                 Postfix(PostfixNode(OperatorNode {
                     op: PostfixOp::Function,
                     children: NodeSeq(vec![
                         Infix(InfixNode(OperatorNode {
                             op: InfixOp::Plus,
                             children: NodeSeq(vec![
-                                Token(token!(Symbol, "f", 1:3-4)),
+                                SyntaxError(SyntaxErrorNode {
+                                    err: SyntaxErrorKind::ExpectedTilde,
+                                    children: NodeSeq(vec![
+                                        Token(token!(Symbol, "a", 1:1-2)),
+                                        Token(token!(Tilde, "~", 1:2-3)),
+                                        Token(token!(Symbol, "f", 1:3-4)),
+                                    ]),
+                                }),
                                 Token(token!(Plus, "+", 1:4-5)),
                                 Token(token!(Symbol, "x", 1:5-6)),
                             ]),
@@ -723,120 +739,158 @@ fn test_tilde() {
                 Token(token!(Tilde, "~", 1:7-8)),
                 Token(token!(Symbol, "b", 1:8-9)),
             ]),
+        })
+    );
+
+
+    assert_eq!(
+        parse_cst("a~f+x!~b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::Plus,
+            children: NodeSeq(vec![
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Tilde, "~", 1:2-3)),
+                        Token(token!(Symbol, "f", 1:3-4)),
+                    ]),
+                }),
+                Token(token!(Plus, "+", 1:4-5)),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Postfix(PostfixNode(OperatorNode {
+                            op: PostfixOp::Factorial,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "x", 1:5-6)),
+                                Token(token!(Bang, "!", 1:6-7)),
+                            ]),
+                        })),
+                        Token(token!(Tilde, "~", 1:7-8)),
+                        Token(token!(Symbol, "b", 1:8-9)),
+                    ]),
+                },),
+            ]),
         }))
     );
 
     assert_eq!(
         parse_cst("a~f+x!~b", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::Plus,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
-                Infix(InfixNode(OperatorNode {
-                    op: InfixOp::Plus,
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Tilde, "~", 1:2-3)),
                         Token(token!(Symbol, "f", 1:3-4)),
-                        Token(token!(Plus, "+", 1:4-5)),
-                        SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedTilde,
-                            children: NodeSeq(vec![
-                                Postfix(PostfixNode(OperatorNode {
-                                    op: PostfixOp::Factorial,
-                                    children: NodeSeq(vec![
-                                        Token(token!(Symbol, "x", 1:5-6)),
-                                        Token(token!(Bang, "!", 1:6-7)),
-                                    ])
-                                })),
-                                Token(token!(Tilde, "~", 1:7-8)),
-                                Token(token!(Symbol, "b", 1:8-9)),
-                            ]),
-                        }),
                     ]),
-                })),
+                },),
+                Token(token!(Plus, "+", 1:4-5),),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Postfix(PostfixNode(OperatorNode {
+                            op: PostfixOp::Factorial,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "x", 1:5-6)),
+                                Token(token!(Bang, "!", 1:6-7)),
+                            ])
+                        })),
+                        Token(token!(Tilde, "~", 1:7-8)),
+                        Token(token!(Symbol, "b", 1:8-9)),
+                    ]),
+                }),
             ]),
-        })
+        }))
     );
 
     assert_eq!(
         parse_cst("a~f?x!~b", &Default::default()).syntax,
-        Ternary(TernaryNode(OperatorNode {
-            op: TernaryOp::CodeParser_TernaryTilde,
+        SyntaxError(SyntaxErrorNode {
+            err: SyntaxErrorKind::ExpectedTilde,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
                 Postfix(PostfixNode(OperatorNode {
                     op: PostfixOp::Factorial,
                     children: NodeSeq(vec![
-                        Binary(BinaryNode(OperatorNode {
-                            op: BinaryOp::PatternTest,
+                        SyntaxError(SyntaxErrorNode {
+                            err: SyntaxErrorKind::ExpectedTilde,
                             children: NodeSeq(vec![
-                                Token(token!(Symbol, "f", 1:3-4)),
-                                Token(token!(Question, "?", 1:4-5)),
-                                Token(token!(Symbol, "x", 1:5-6)),
-                            ])
-                        })),
+                                Token(token!(Symbol, "a", 1:1-2)),
+                                Token(token!(Tilde, "~", 1:2-3)),
+                                Binary(BinaryNode(OperatorNode {
+                                    op: BinaryOp::PatternTest,
+                                    children: NodeSeq(vec![
+                                        Token(token!(Symbol, "f", 1:3-4)),
+                                        Token(token!(Question, "?", 1:4-5)),
+                                        Token(token!(Symbol, "x", 1:5-6)),
+                                    ])
+                                })),
+                            ]),
+                        }),
                         Token(token!(Bang, "!", 1:6-7)),
                     ])
                 })),
                 Token(token!(Tilde, "~", 1:7-8)),
                 Token(token!(Symbol, "b", 1:8-9)),
             ]),
-        }))
+        })
     );
 
     assert_eq!(
         parse_cst("a ~f,~ b", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::CodeParser_Comma,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Whitespace, " ", 1:2-3)),
-                Token(token!(Tilde, "~", 1:3-4)),
-                Infix(InfixNode(OperatorNode {
-                    op: InfixOp::CodeParser_Comma,
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Whitespace, " ", 1:2-3)),
+                        Token(token!(Tilde, "~", 1:3-4)),
                         Token(token!(Symbol, "f", 1:4-5)),
-                        Token(token!(Comma, ",", 1:5-6)),
-                        SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedTilde,
-                            children: NodeSeq(vec![
-                                Token(token!(Error_ExpectedOperand, "", 1:6-6)),
-                                Token(token!(Tilde, "~", 1:6-7)),
-                                Token(token!(Whitespace, " ", 1:7-8)),
-                                Token(token!(Symbol, "b", 1:8-9)),
-                            ]),
-                        }),
                     ]),
-                })),
+                }),
+                Token(token!(Comma, ",", 1:5-6)),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Token(token!(Error_ExpectedOperand, "", 1:6-6)),
+                        Token(token!(Tilde, "~", 1:6-7)),
+                        Token(token!(Whitespace, " ", 1:7-8)),
+                        Token(token!(Symbol, "b", 1:8-9)),
+                    ]),
+                }),
             ]),
-        })
+        }))
     );
 
     assert_eq!(
         parse_cst("a~f,x~b", &Default::default()).syntax,
-        SyntaxError(SyntaxErrorNode {
-            err: SyntaxErrorKind::ExpectedTilde,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::CodeParser_Comma,
             children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Tilde, "~", 1:2-3)),
-                Infix(InfixNode(OperatorNode {
-                    op: InfixOp::CodeParser_Comma,
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
                     children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2)),
+                        Token(token!(Tilde, "~", 1:2-3)),
                         Token(token!(Symbol, "f", 1:3-4)),
-                        Token(token!(Comma, ",", 1:4-5)),
-                        SyntaxError(SyntaxErrorNode {
-                            err: SyntaxErrorKind::ExpectedTilde,
-                            children: NodeSeq(vec![
-                                Token(token!(Symbol, "x", 1:5-6)),
-                                Token(token!(Tilde, "~", 1:6-7)),
-                                Token(token!(Symbol, "b", 1:7-8)),
-                            ]),
-                        }),
                     ]),
-                })),
+                }),
+                Token(token!(Comma, ",", 1:4-5)),
+                SyntaxError(SyntaxErrorNode {
+                    err: SyntaxErrorKind::ExpectedTilde,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "x", 1:5-6)),
+                        Token(token!(Tilde, "~", 1:6-7)),
+                        Token(token!(Symbol, "b", 1:7-8)),
+                    ]),
+                }),
             ]),
-        })
+        }))
     );
 
     assert_eq!(
@@ -845,32 +899,30 @@ fn test_tilde() {
             op: GroupOp::List,
             children: NodeSeq(vec![
                 Token(token!(OpenCurly, "{", 1:1-2)),
-                SyntaxError(SyntaxErrorNode {
-                    err: SyntaxErrorKind::ExpectedTilde,
+                Infix(InfixNode(OperatorNode {
+                    op: InfixOp::CodeParser_Comma,
                     children: NodeSeq(vec![
-                        Token(token!(Symbol, "a", 1:2-3)),
-                        Token(token!(Whitespace, " ", 1:3-4)),
-                        Token(token!(Tilde, "~", 1:4-5)),
-                        Infix(InfixNode(OperatorNode {
-                            op: InfixOp::CodeParser_Comma,
+                        SyntaxError(SyntaxErrorNode {
+                            err: SyntaxErrorKind::ExpectedTilde,
                             children: NodeSeq(vec![
+                                Token(token!(Symbol, "a", 1:2-3)),
+                                Token(token!(Whitespace, " ", 1:3-4)),
+                                Token(token!(Tilde, "~", 1:4-5)),
                                 Token(token!(Symbol, "f", 1:5-6)),
-                                Token(token!(Comma, ",", 1:6-7)),
-                                SyntaxError(SyntaxErrorNode {
-                                    err: SyntaxErrorKind::ExpectedTilde,
-                                    children: NodeSeq(vec![
-                                        Token(
-                                            token!(Error_ExpectedOperand, "", 1:7-7)
-                                        ),
-                                        Token(token!(Tilde, "~", 1:7-8)),
-                                        Token(token!(Whitespace, " ", 1:8-9)),
-                                        Token(token!(Symbol, "b", 1:9-10)),
-                                    ]),
-                                }),
                             ]),
-                        })),
+                        }),
+                        Token(token!(Comma, ",", 1:6-7)),
+                        SyntaxError(SyntaxErrorNode {
+                            err: SyntaxErrorKind::ExpectedTilde,
+                            children: NodeSeq(vec![
+                                Token(token!(Error_ExpectedOperand, "", 1:7-7)),
+                                Token(token!(Tilde, "~", 1:7-8)),
+                                Token(token!(Whitespace, " ", 1:8-9)),
+                                Token(token!(Symbol, "b", 1:9-10)),
+                            ]),
+                        }),
                     ]),
-                }),
+                })),
                 Token(token!(CloseCurly, "}", 1:10-11)),
             ]),
         }))

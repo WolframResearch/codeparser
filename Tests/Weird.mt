@@ -137,12 +137,37 @@ Test[
 	CodeParse["a ~f;~ b"]
 	,
 	ContainerNode[String, {
-		CallNode[CallNode[LeafNode[Symbol, "CompoundExpression", <||>], {
-			LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 5}}|>],
-			LeafNode[Symbol, "Null", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 4}, {1, 6}}|>], {
-			
-			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Symbol, "b", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]
+		SyntaxErrorNode[
+			SyntaxError`ExpectedTilde,
+			{
+				CallNode[
+					LeafNode[Symbol, "CompoundExpression", <||>],
+					{
+						SyntaxErrorNode[
+							SyntaxError`ExpectedTilde,
+							{
+								LeafNode[
+									Symbol,
+									"a",
+									<| Source -> {{1, 1}, {1, 2}} |>
+								],
+								LeafNode[
+									Symbol,
+									"f",
+									<| Source -> {{1, 4}, {1, 5}} |>
+								]
+							},
+							<| Source -> {{1, 1}, {1, 5}} |>
+						],
+						LeafNode[Symbol, "Null", <| Source -> {{1, 6}, {1, 6}}|>]
+					},
+					<|Source -> {{1, 1}, {1, 6}}|>
+				],
+				LeafNode[Symbol, "b", <|Source -> {{1, 8}, {1, 9}}|>]
+			},
+			<|Source -> {{1, 1}, {1, 9}}|>
+		]
+	}, <|Source -> {{1, 1}, {1, 9}}|>]
 	,
 	TestID->"Weird-20220629-F5L9D1"
 ]
@@ -151,12 +176,24 @@ Test[
 	CodeParse["a ~f;;~ b"]
 	,
 	ContainerNode[String, {
-		CallNode[CallNode[LeafNode[Symbol, "Span", <||>], {
-			LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 5}}|>],
-			LeafNode[Symbol, "All", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 4}, {1, 7}}|>], {
-			
-			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Symbol, "b", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]
+		SyntaxErrorNode[
+			SyntaxError`ExpectedTilde,
+			{
+				CallNode[
+					LeafNode[Symbol, "Span", <||>],
+					{
+						SyntaxErrorNode[SyntaxError`ExpectedTilde, {
+							LeafNode[Symbol,"a",<|Source -> {{1, 1}, {1, 2}}|>],
+							LeafNode[Symbol,"f",<|Source -> {{1, 4}, {1, 5}}|>]
+						}, <|Source -> {{1, 1}, {1, 5}}|>],
+						LeafNode[Symbol, "All", <|Source -> {{1, 7}, {1, 7}}|>]
+					},
+					<|Source -> {{1, 1}, {1, 7}}|>
+				],
+				LeafNode[Symbol, "b", <|Source -> {{1, 9}, {1, 10}}|>]
+			}, <|Source -> {{1, 1}, {1, 10}}|>
+		]
+	}, <|Source -> {{1, 1}, {1, 10}}|>]
 	,
 	TestID->"Weird-20220629-Q2W2O5"
 ]
