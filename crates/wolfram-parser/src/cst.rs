@@ -22,7 +22,10 @@ use crate::{
 /// including comments and whitespace.
 pub type CstSeq<I = TokenString, S = Span> = NodeSeq<Cst<I, S>>;
 
-
+/// Sequence of non-semantically-meaningful tokens in the input, i.e. Whitespace
+/// and Comment.
+///
+/// See also: [`TokenKind::isTrivia()`].
 #[derive(Debug)]
 pub struct TriviaSeq<I>(pub Vec<Token<I>>);
 
