@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::{
     cst::{
         BinaryNode, CallBody, CallNode, CompoundNode, Cst, CstSeq,
@@ -25,6 +27,8 @@ use crate::{
 
 #[derive(Debug)]
 pub(crate) struct ParseCst<'i> {
+    trivia_stack: Vec<TokenRef<'i>>,
+
     finished: Vec<Cst<TokenStr<'i>>>,
 }
 
@@ -41,37 +45,44 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     type InfixParseState = InfixParseCst<'i>;
 
-    type TriviaAccumulator = Vec<TokenRef<'i>>;
-    type TriviaHandle = TriviaSeqRef<'i>;
+    // PRECOMMIT: Use a newtype?
+    // PRECOMMIT: Broken, because trivia is never removed from trivia_stack.
+    type TriviaAccumulator = usize;
+    type TriviaHandle = Range<usize>;
 
     //==================================
     // Trivia handling
     //==================================
 
     fn trivia_begin(&mut self) -> Self::TriviaAccumulator {
-        Vec::new()
+        self.trivia_stack.len()
     }
 
-    fn trivia_push(
-        &mut self,
-        accum: &mut Vec<TokenRef<'i>>,
-        trivia: TokenRef<'i>,
-    ) {
-        accum.push(trivia);
+    fn trivia_push(&mut self, _start: &mut usize, trivia: TokenRef<'i>) {
+        self.trivia_stack.push(trivia);
     }
 
-    fn trivia_end(&mut self, accum: Vec<TokenRef<'i>>) -> Self::TriviaHandle {
-        TriviaSeq(accum)
+    fn trivia_end(&mut self, start: usize) -> Self::TriviaHandle {
+        Range {
+            start,
+            end: self.trivia_stack.len(),
+        }
+        // PRECOMMIT
+        // let trivia = self.trivia_stack.drain(start_index..).collect();
     }
 
     fn empty_trivia() -> Self::TriviaHandle {
-        TriviaSeq(Vec::new())
+        // PRECOMMIT
+        0..0
     }
 
     fn trivia_first(&self, trivia: Self::TriviaHandle) -> Option<TokenRef<'i>> {
-        let TriviaSeq(vec) = trivia;
+        // PRECOMMIT
+        self.trivia_stack.get(trivia.start).copied()
 
-        vec.first().copied()
+        // let TriviaSeq(vec) = trivia;
+
+        // vec.first().copied()
     }
 
     //==================================
@@ -80,6 +91,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn new_builder() -> Self {
         ParseCst {
+            trivia_stack: Vec::new(),
             finished: Vec::new(),
         }
     }
@@ -133,7 +145,12 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     }
 
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output {
-        let ParseCst { finished } = self;
+        let ParseCst {
+            trivia_stack,
+            finished,
+        } = self;
+
+        // debug_assert_eq!(trivia_stack.len(), 0);
 
         let mut exprs = NodeSeq(finished);
 
@@ -157,8 +174,13 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     }
 
     fn is_quiescent(&self) -> bool {
-        let ParseCst { finished: _ } = self;
+        let ParseCst {
+            trivia_stack,
+            finished: _,
+        } = self;
 
+        // PRECOMMIT
+        // trivia_stack.is_empty()
         true
     }
 
@@ -250,6 +272,9 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     ) -> Self::Node {
         debug_assert_eq!(op, PrefixOperator::Get);
 
+
+        let trivia = self.get_trivia(trivia);
+
         let mut children = Vec::with_capacity(trivia.0.len() + 2);
         children.push(Cst::Token(tok1));
         children.extend(trivia.0.into_iter().map(Cst::Token));
@@ -269,10 +294,14 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         trivia: Self::TriviaHandle,
         operand: Self::Node,
     ) -> Self::Node {
+        let start = trivia.start;
+
         let mut children = Vec::new();
         children.push(Cst::Token(op_token));
-        children.extend(trivia.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia));
         children.push(operand);
+
+        self.trivia_stack.truncate(start);
 
         Cst::Prefix(PrefixNode::new(op, NodeSeq(children)))
     }
@@ -284,10 +313,14 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         trivia: Self::TriviaHandle,
         op_tok: TokenRef<'i>,
     ) -> Self::Node {
+        let start = trivia.start;
+
         let mut children = Vec::new();
         children.push(operand);
-        children.extend(trivia.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia));
         children.push(Cst::Token(op_tok));
+
+        self.trivia_stack.truncate(start);
 
         Cst::Postfix(PostfixNode::new(op, NodeSeq(children)))
     }
@@ -301,12 +334,16 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         trivia2: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node {
+        let start = trivia1.start;
+
         let mut children = Vec::new();
         children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia1));
         children.push(Cst::Token(op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia2));
         children.push(rhs_node);
+
+        self.trivia_stack.truncate(start);
 
         Cst::Binary(BinaryNode::new(op, NodeSeq(children)))
     }
@@ -325,15 +362,19 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         trivia2: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
+        let start = trivia1.start;
+
         debug_assert_eq!(op, BinaryOperator::Unset);
         debug_assert_eq!(dot_token.tok, TokenKind::Dot);
 
         let mut children = Vec::new();
         children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia1));
         children.push(Cst::Token(op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia2));
         children.push(Cst::Token(dot_token));
+
+        self.trivia_stack.truncate(start);
 
         Cst::Binary(BinaryNode::new(op, NodeSeq(children)))
     }
@@ -351,16 +392,20 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         trivia4: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node {
+        let start = trivia1.start;
+
         let mut children = Vec::new();
         children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia1));
         children.push(Cst::Token(first_op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia2));
         children.push(middle_node);
-        children.extend(trivia3.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia3));
         children.push(Cst::Token(second_op_token));
-        children.extend(trivia4.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia4));
         children.push(rhs_node);
+
+        self.trivia_stack.truncate(start);
 
         Cst::Ternary(TernaryNode::new(op, NodeSeq(children)))
     }
@@ -384,20 +429,24 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         trivia4: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
+        let start = trivia1.start;
+
         debug_assert_eq!(slash_colon_token.tok, TokenKind::SlashColon);
         debug_assert_eq!(equal_token.tok, TokenKind::Equal);
         debug_assert_eq!(dot_token.tok, TokenKind::Dot);
 
         let mut children = Vec::new();
         children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia1));
         children.push(Cst::Token(slash_colon_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia2));
         children.push(middle_node);
-        children.extend(trivia3.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia3));
         children.push(Cst::Token(equal_token));
-        children.extend(trivia4.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia4));
         children.push(Cst::Token(dot_token));
+
+        self.trivia_stack.truncate(start);
 
         Cst::Ternary(TernaryNode::new(op, NodeSeq(children)))
     }
@@ -411,12 +460,16 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         trivia2: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node {
+        let start = trivia1.start;
+
         let mut children = Vec::new();
         children.push(Cst::Token(prefix_op_token));
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia1));
         children.push(lhs_node);
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia2));
         children.push(rhs_node);
+
+        self.trivia_stack.truncate(start);
 
         Cst::PrefixBinary(PrefixBinaryNode::new(op, NodeSeq(children)))
     }
@@ -447,9 +500,9 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     ) {
         let InfixParseCst { op: _, children } = infix_state;
 
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia1));
         children.push(Cst::Token(op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trivia2));
         children.push(operand)
     }
 
@@ -478,17 +531,24 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
-        TriviaSeq(trailing_trivia): Self::TriviaHandle,
+        trailing_trivia: Self::TriviaHandle,
         closer_tok: TokenRef<'i>,
     ) -> Self::Node {
+        let start = group_children
+            .first()
+            .map(|child| child.0.start)
+            .unwrap_or(trailing_trivia.start);
+
         let mut children = Vec::new();
         children.push(Cst::Token(opener_tok));
-        for (TriviaSeq(trivia), node) in group_children {
-            children.extend(trivia.into_iter().map(Cst::Token));
+        for (trivia, node) in group_children {
+            children.extend(self.get_trivia_as_cst(trivia));
             children.push(node);
         }
-        children.extend(trailing_trivia.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trailing_trivia));
         children.push(Cst::Token(closer_tok));
+
+        self.trivia_stack.truncate(start);
 
         Cst::Group(GroupNode::new(op, NodeSeq(children)))
     }
@@ -528,6 +588,12 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             ),
         };
 
+        let start = head_trivia.start;
+
+        let head_trivia = self.get_trivia(head_trivia);
+
+        self.trivia_stack.truncate(start);
+
         Cst::Call(CallNode::concrete(head, head_trivia, body))
     }
 
@@ -542,17 +608,21 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         let (kind, children) = match data {
             SyntaxErrorData::ExpectedSymbol {
                 lhs_node,
-                trivia1: TriviaSeq(trivia1),
+                trivia1,
                 tok_in,
-                trivia2: TriviaSeq(trivia2),
+                trivia2,
                 rhs_node,
             } => {
+                let start = trivia1.start;
+
                 let mut children = Vec::new();
                 children.push(lhs_node);
-                children.extend(trivia1.into_iter().map(Cst::Token));
+                children.extend(self.get_trivia_as_cst(trivia1));
                 children.push(Cst::Token(tok_in));
-                children.extend(trivia2.into_iter().map(Cst::Token));
+                children.extend(self.get_trivia_as_cst(trivia2));
                 children.push(rhs_node);
+
+                self.trivia_stack.truncate(start);
 
                 (SyntaxErrorKind::ExpectedSymbol, children)
             },
@@ -561,17 +631,21 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             },
             SyntaxErrorData::ExpectedTilde {
                 lhs_node,
-                trivia1: TriviaSeq(trivia1),
+                trivia1,
                 first_op_token,
-                trivia2: TriviaSeq(trivia2),
+                trivia2,
                 middle_node,
             } => {
+                let start = trivia1.start;
+
                 let mut children = Vec::new();
                 children.push(lhs_node);
-                children.extend(trivia1.into_iter().map(Cst::Token));
+                children.extend(self.get_trivia_as_cst(trivia1));
                 children.push(Cst::Token(first_op_token));
-                children.extend(trivia2.into_iter().map(Cst::Token));
+                children.extend(self.get_trivia_as_cst(trivia2));
                 children.push(middle_node);
+
+                self.trivia_stack.truncate(start);
 
                 (SyntaxErrorKind::ExpectedTilde, children)
             },
@@ -587,15 +661,22 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
-        TriviaSeq(trailing_trivia): Self::TriviaHandle,
+        trailing_trivia: Self::TriviaHandle,
     ) -> Self::Node {
+        let start = group_children
+            .first()
+            .map(|child| child.0.start)
+            .unwrap_or(trailing_trivia.start);
+
         let mut children = Vec::new();
         children.push(Cst::Token(opener_tok));
-        for (TriviaSeq(trivia), node) in group_children {
-            children.extend(trivia.into_iter().map(Cst::Token));
+        for (trivia, node) in group_children {
+            children.extend(self.get_trivia_as_cst(trivia));
             children.push(node);
         }
-        children.extend(trailing_trivia.into_iter().map(Cst::Token));
+        children.extend(self.get_trivia_as_cst(trailing_trivia));
+
+        self.trivia_stack.truncate(start);
 
         let node = crate::error::reparse_unterminated_group_node(
             (op, NodeSeq(children)),
@@ -612,11 +693,17 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node {
+        let start = group_children.first().map(|child| child.0.start);
+
         let mut children = Vec::new();
         children.push(Cst::Token(opener_tok));
-        for (TriviaSeq(trivia), node) in group_children {
-            children.extend(trivia.into_iter().map(Cst::Token));
+        for (trivia, node) in group_children {
+            children.extend(self.get_trivia_as_cst(trivia));
             children.push(node);
+        }
+
+        if let Some(start) = start {
+            self.trivia_stack.truncate(start);
         }
 
         Cst::GroupMissingCloser(GroupMissingCloserNode::new(
@@ -744,6 +831,22 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             },
             _ => false,
         }
+    }
+}
+
+impl<'i> ParseCst<'i> {
+    fn get_trivia_as_cst<'s>(
+        &'s self,
+        range: Range<usize>,
+    ) -> impl ExactSizeIterator<Item = Cst<TokenStr<'i>>> + 's {
+        self.trivia_stack[range]
+            .into_iter()
+            .cloned()
+            .map(Cst::Token)
+    }
+
+    fn get_trivia(&self, range: Range<usize>) -> TriviaSeqRef<'i> {
+        TriviaSeq(self.trivia_stack[range].to_vec())
     }
 }
 
