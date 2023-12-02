@@ -240,6 +240,34 @@ where
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output;
 
     //==================================
+    // Trivia handling
+    //==================================
+
+    type TriviaAccumulator;
+    type TriviaHandle;
+
+    fn trivia_begin(&mut self) -> Self::TriviaAccumulator;
+
+    fn trivia_push(
+        &mut self,
+        accum: &mut Self::TriviaAccumulator,
+        trivia: TokenRef<'i>,
+    );
+
+    fn trivia_end(
+        &mut self,
+        accum: Self::TriviaAccumulator,
+    ) -> Self::TriviaHandle;
+
+    fn empty_trivia() -> Self::TriviaHandle;
+
+    /// Get the first piece of trivia in a set of trivia.
+    ///
+    /// Used to reset the position of the underlying [`Reader`] when a
+    /// potential parse fails.
+    fn trivia_first(&self, trivia: Self::TriviaHandle) -> Option<TokenRef<'i>>;
+
+    //==================================
     // Context management
     //==================================
 
@@ -294,7 +322,7 @@ where
         // TODO(cleanup): Can this only ever have one value?
         op: PrefixOperator,
         op_token: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
+        trivia: Self::TriviaHandle,
         stringify_token: TokenRef<'i>,
     ) -> Self::Node;
 
@@ -310,7 +338,7 @@ where
         &mut self,
         op: PrefixOperator,
         op_token: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
+        trivia: Self::TriviaHandle,
         operand: Self::Node,
     ) -> Self::Node;
 
@@ -324,7 +352,7 @@ where
         &mut self,
         op: PostfixOperator,
         operand: Self::Node,
-        trivia: TriviaSeqRef<'i>,
+        trivia: Self::TriviaHandle,
         op_tok: TokenRef<'i>,
     ) -> Self::Node;
 
@@ -332,9 +360,9 @@ where
         &mut self,
         op: BinaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node;
 
@@ -342,9 +370,9 @@ where
         &mut self,
         op: BinaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node;
 
@@ -352,13 +380,13 @@ where
         &mut self,
         op: TernaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: Self::TriviaHandle,
         second_op_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
+        trivia4: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node;
 
@@ -367,13 +395,13 @@ where
         // TODO(cleanup): Always the same operator?
         op: TernaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         slash_colon_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: Self::TriviaHandle,
         equal_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
+        trivia4: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node;
 
@@ -381,9 +409,9 @@ where
         &mut self,
         op: PrefixBinaryOperator,
         prefix_op_token: TokenRef<'i>,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         lhs_node: Self::Node,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node;
 
@@ -391,15 +419,15 @@ where
         &mut self,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
+        trailing_trivia: Self::TriviaHandle,
         closer_tok: TokenRef<'i>,
     ) -> Self::Node;
 
     fn reduce_call(
         &mut self,
         head: Self::Node,
-        head_trivia: TriviaSeqRef<'i>,
+        head_trivia: Self::TriviaHandle,
         group: Self::Node,
     ) -> Self::Node;
 
@@ -409,7 +437,7 @@ where
 
     fn reduce_syntax_error(
         &mut self,
-        data: SyntaxErrorData<'i, Self::Node>,
+        data: SyntaxErrorData<'i, Self::Node, Self::TriviaHandle>,
     ) -> Self::Node;
 
     fn reduce_unterminated_group(
@@ -418,15 +446,15 @@ where
         tab_width: usize,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
+        trailing_trivia: Self::TriviaHandle,
     ) -> Self::Node;
 
     fn reduce_group_missing_closer(
         &mut self,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node;
 
     //==================================
@@ -461,9 +489,9 @@ where
 pub(crate) trait InfixParseBuilder<'i, B: ParseBuilder<'i> + 'i> {
     fn add(
         &mut self,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         operand: B::Node,
     );
 
@@ -495,7 +523,7 @@ pub(crate) enum UnderParseData<'i> {
 /// Values of this type are passed to [`ParseBuilder::reduce_syntax_error()`]
 /// by the parser.
 #[derive(Debug)]
-pub(crate) enum SyntaxErrorData<'i, N> {
+pub(crate) enum SyntaxErrorData<'i, N, TRV> {
     /// E.g. `5:_` -- occurs when a symbol is required to appear as the
     /// left-hand operand of Pattern (`:`).
     ///
@@ -522,9 +550,9 @@ pub(crate) enum SyntaxErrorData<'i, N> {
     /// ```
     ExpectedSymbol {
         lhs_node: N,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: TRV,
         tok_in: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: TRV,
         rhs_node: N,
     },
 
@@ -586,9 +614,9 @@ pub(crate) enum SyntaxErrorData<'i, N> {
     /// ```
     ExpectedTilde {
         lhs_node: N,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: TRV,
         first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: TRV,
         middle_node: N,
     },
 }
@@ -667,7 +695,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn parse_infix(
         &mut self,
         finished: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         token: TokenRef<'i>,
     ) -> B::Node {
         B::with_infix_parselet(token.tok, |parselet| {
@@ -721,7 +749,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         //
 
         if Precedence::greater(self.top_precedence(), TokenPrecedence) {
-            trivia1.reset(&mut self.tokenizer);
+            self.trivia_reset(trivia1);
 
             return finished;
         }
@@ -740,6 +768,17 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         token.skip(&mut self.tokenizer)
     }
 
+    /// Move the underlying [`Reader`][crate::read::Reader] cursor to before
+    /// `trivia`.
+    fn trivia_reset(&mut self, trivia: B::TriviaHandle) {
+        //
+        // Just need to reset the global buffer to the buffer of the first token in the sequence
+        //
+        if let Some(first) = self.builder.trivia_first(trivia) {
+            first.reset(&mut self.tokenizer)
+        }
+    }
+
     /// Get the current token, eating trivia tokens.
     ///
     /// If the current token is already a non-trivia token, it will be returned.
@@ -751,17 +790,20 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     /// ([`TokenKind::isTrivia()`] is false).
     pub(crate) fn current_token_eat_trivia_into(
         &mut self,
-    ) -> (TriviaSeqRef<'i>, TokenRef<'i>) {
-        let mut trivia = TriviaSeqRef::new();
+    ) -> (B::TriviaHandle, TokenRef<'i>) {
         let mut tok = self.tokenizer.peek_token();
 
+        let mut trivia = self.builder.trivia_begin();
+
         while tok.tok.isTrivia() {
-            trivia.push(tok.clone());
+            self.builder.trivia_push(&mut trivia, tok);
 
             tok.skip(&mut self.tokenizer);
 
             tok = self.tokenizer.peek_token();
         }
+
+        let trivia = self.builder.trivia_end(trivia);
 
         debug_assert!(!tok.tok.isTrivia());
 
@@ -770,14 +812,14 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     pub(crate) fn current_syntax_token_stringify_as_file(
         &mut self,
-    ) -> (TriviaSeqRef<'i>, TokenRef<'i>) {
+    ) -> (B::TriviaHandle, TokenRef<'i>) {
         let mut token =
             Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
 
-        let mut trivia = Vec::new();
+        let mut trivia = self.builder.trivia_begin();
 
         while token.tok.isTrivia() {
-            trivia.push(token);
+            self.builder.trivia_push(&mut trivia, token);
 
             token.skip(&mut self.tokenizer);
 
@@ -786,28 +828,28 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
         debug_assert!(!token.tok.isTrivia());
 
-        (TriviaSeq(trivia), token)
+        (self.builder.trivia_end(trivia), token)
     }
 
     pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines_into(
         &mut self,
-    ) -> (TriviaSeqRef<'i>, TokenRef<'i>) {
+    ) -> (B::TriviaHandle, TokenRef<'i>) {
         let mut tok = self.tokenizer.peek_token();
 
         //
         // CompoundExpression should not cross toplevel newlines
         //
-        let mut trivia = TriviaSeq::new();
+        let mut trivia = self.builder.trivia_begin();
 
         while tok.tok.isTriviaButNotToplevelNewline() {
-            trivia.push(tok.clone().into());
+            self.builder.trivia_push(&mut trivia, tok);
 
             tok.skip(&mut self.tokenizer);
 
             tok = self.tokenizer.peek_token();
         }
 
-        (trivia, tok)
+        (self.builder.trivia_end(trivia), tok)
     }
 
     //==================================
@@ -818,7 +860,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: PrefixOperator,
         op_token: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
+        trivia: B::TriviaHandle,
         operand: B::Node,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -844,7 +886,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: PostfixOperator,
         operand: B::Node,
-        trivia: TriviaSeqRef<'i>,
+        trivia: B::TriviaHandle,
         op_tok: TokenRef<'i>,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -856,9 +898,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: BinaryOperator,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -871,9 +913,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: BinaryOperator,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> B::Node {
         debug_assert_eq!(op, BinaryOperator::Unset);
@@ -891,13 +933,13 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: TernaryOperator,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         middle_node: B::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: B::TriviaHandle,
         second_op_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
+        trivia4: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -920,13 +962,13 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: TernaryOperator,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         slash_colon_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         middle_node: B::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: B::TriviaHandle,
         equal_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
+        trivia4: B::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -951,9 +993,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: PrefixBinaryOperator,
         prefix_op_token: TokenRef<'i>,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         lhs_node: B::Node,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -972,8 +1014,8 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, B::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
+        group_children: Vec<(B::TriviaHandle, B::Node)>,
+        trailing_trivia: B::TriviaHandle,
         closer_tok: TokenRef<'i>,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -992,7 +1034,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_call(
         &mut self,
         head: B::Node,
-        head_trivia: TriviaSeqRef<'i>,
+        head_trivia: B::TriviaHandle,
         group: B::Node,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
@@ -1006,7 +1048,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     fn reduce_syntax_error(
         &mut self,
-        data: SyntaxErrorData<'i, B::Node>,
+        data: SyntaxErrorData<'i, B::Node, B::TriviaHandle>,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
 
@@ -1017,8 +1059,8 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, B::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
+        group_children: Vec<(B::TriviaHandle, B::Node)>,
+        trailing_trivia: B::TriviaHandle,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
 
@@ -1047,7 +1089,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, B::Node)>,
+        group_children: Vec<(B::TriviaHandle, B::Node)>,
     ) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
 
@@ -1197,37 +1239,6 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;
-    }
-}
-
-//======================================
-// TriviaSeq
-//======================================
-
-impl<'i> TriviaSeq<TokenStr<'i>> {
-    pub(crate) fn new() -> Self {
-        TriviaSeq(Vec::new())
-    }
-
-    pub(crate) fn reset(self, session: &mut Tokenizer) {
-        let TriviaSeq(vec) = self;
-
-        //
-        // Just need to reset the global buffer to the buffer of the first token in the sequence
-        //
-
-        if vec.is_empty() {
-            return;
-        }
-
-        let T = &vec[0];
-
-        T.reset(session);
-    }
-
-    pub(crate) fn push(&mut self, token: TokenRef<'i>) {
-        let TriviaSeq(vec) = self;
-        vec.push(token);
     }
 }
 

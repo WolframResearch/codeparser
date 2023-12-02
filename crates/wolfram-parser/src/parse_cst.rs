@@ -15,8 +15,8 @@ use crate::{
         token_parselets::{
             token_kind_to_infix_parselet, token_kind_to_prefix_parselet,
         },
-        ColonLHS, InfixParseBuilder, ParseBuilder, ParserSession,
-        SyntaxErrorData, SyntaxErrorKind, TriviaSeqRef, UnderParseData,
+        ColonLHS, InfixParseBuilder, ParseBuilder, SyntaxErrorData,
+        SyntaxErrorKind, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
     utils::debug_assert_matches,
@@ -34,6 +34,39 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     type Output = CstSeq<TokenStr<'i>>;
 
     type InfixParseBuilder = InfixParseCst<'i>;
+
+    type TriviaAccumulator = Vec<TokenRef<'i>>;
+    type TriviaHandle = TriviaSeqRef<'i>;
+
+    //==================================
+    // Trivia handling
+    //==================================
+
+    fn trivia_begin(&mut self) -> Self::TriviaAccumulator {
+        Vec::new()
+    }
+
+    fn trivia_push(
+        &mut self,
+        accum: &mut Vec<TokenRef<'i>>,
+        trivia: TokenRef<'i>,
+    ) {
+        accum.push(trivia);
+    }
+
+    fn trivia_end(&mut self, accum: Vec<TokenRef<'i>>) -> Self::TriviaHandle {
+        TriviaSeq(accum)
+    }
+
+    fn empty_trivia() -> Self::TriviaHandle {
+        TriviaSeq(Vec::new())
+    }
+
+    fn trivia_first(&self, trivia: Self::TriviaHandle) -> Option<TokenRef<'i>> {
+        let TriviaSeq(vec) = trivia;
+
+        vec.first().copied()
+    }
 
     //==================================
     // Lifecycle
@@ -206,7 +239,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: PrefixOperator,
         tok1: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
+        trivia: Self::TriviaHandle,
         tok2: TokenRef<'i>,
     ) -> Self::Node {
         debug_assert_eq!(op, PrefixOperator::Get);
@@ -227,7 +260,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: PrefixOperator,
         op_token: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
+        trivia: Self::TriviaHandle,
         operand: Self::Node,
     ) -> Self::Node {
         let mut children = Vec::new();
@@ -254,7 +287,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: PostfixOperator,
         operand: Self::Node,
-        trivia: TriviaSeqRef<'i>,
+        trivia: Self::TriviaHandle,
         op_tok: TokenRef<'i>,
     ) -> Self::Node {
         let mut children = Vec::new();
@@ -269,9 +302,9 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: BinaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node {
         let mut children = Vec::new();
@@ -293,9 +326,9 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: BinaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
         debug_assert_eq!(op, BinaryOperator::Unset);
@@ -315,13 +348,13 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: TernaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: Self::TriviaHandle,
         second_op_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
+        trivia4: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node {
         let mut children = Vec::new();
@@ -348,13 +381,13 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         // TODO(cleanup): Always the same operator?
         op: TernaryOperator,
         lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         slash_colon_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: Self::TriviaHandle,
         equal_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
+        trivia4: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
         debug_assert_eq!(slash_colon_token.tok, TokenKind::SlashColon);
@@ -379,9 +412,9 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: PrefixBinaryOperator,
         prefix_op_token: TokenRef<'i>,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: Self::TriviaHandle,
         lhs_node: Self::Node,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node {
         let mut children = Vec::new();
@@ -398,8 +431,8 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        TriviaSeq(trailing_trivia): TriviaSeqRef<'i>,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
+        TriviaSeq(trailing_trivia): Self::TriviaHandle,
         closer_tok: TokenRef<'i>,
     ) -> Self::Node {
         let mut children = Vec::new();
@@ -417,7 +450,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     fn reduce_call(
         &mut self,
         head: Self::Node,
-        head_trivia: TriviaSeqRef<'i>,
+        head_trivia: Self::TriviaHandle,
         body: Self::Node,
     ) -> Self::Node {
         let body: CallBody<_> = match body {
@@ -458,7 +491,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn reduce_syntax_error(
         &mut self,
-        data: SyntaxErrorData<'i, Self::Node>,
+        data: SyntaxErrorData<'i, Self::Node, Self::TriviaHandle>,
     ) -> Self::Node {
         let (kind, children) = match data {
             SyntaxErrorData::ExpectedSymbol {
@@ -507,8 +540,8 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         tab_width: usize,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        TriviaSeq(trailing_trivia): TriviaSeqRef<'i>,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
+        TriviaSeq(trailing_trivia): Self::TriviaHandle,
     ) -> Self::Node {
         let mut children = Vec::new();
         children.push(Cst::Token(opener_tok));
@@ -531,7 +564,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node {
         let mut children = Vec::new();
         children.push(Cst::Token(opener_tok));
@@ -676,13 +709,17 @@ pub(crate) struct InfixParseCst<'i> {
 
 impl<'i> InfixParseBuilder<'i, ParseCst<'i>> for InfixParseCst<'i>
 where
-    ParseCst<'i>: ParseBuilder<'i, Node = Cst<TokenStr<'i>>>,
+    ParseCst<'i>: ParseBuilder<
+        'i,
+        Node = Cst<TokenStr<'i>>,
+        TriviaHandle = TriviaSeqRef<'i>,
+    >,
 {
     fn add(
         &mut self,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
         op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
         operand: Cst<TokenStr<'i>>,
     ) {
         let InfixParseCst { op: _, children } = self;

@@ -1,6 +1,6 @@
 use crate::{
     panic_if_aborted,
-    parse::{parselet::*, ParserSession, TriviaSeqRef},
+    parse::{parselet::*, ParserSession},
     precedence::Precedence,
     tokenize::{Token, TokenKind, TokenRef},
 };
@@ -61,7 +61,7 @@ impl IntegralParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         prefix_op_token: TokenRef<'i>,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         first_operand: B::Node,
     ) -> B::Node {
         panic_if_aborted!();
@@ -72,7 +72,7 @@ impl IntegralParselet {
         if !(tok.tok == TokenKind::LongName_DifferentialD
             || tok.tok == TokenKind::LongName_CapitalDifferentialD)
         {
-            trivia2.reset(&mut session.tokenizer);
+            session.trivia_reset(trivia2);
 
             //
             // TID:231113/3: "\[Integral] f"
@@ -120,7 +120,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         _session: &mut ParserSession<'i, B>,
         _node: B::Node,
-        _trivia1: TriviaSeqRef<'i>,
+        _trivia1: B::TriviaHandle,
         _token: TokenRef,
     ) -> B::Node {
         panic!("illegal call to InfixDifferentialDParselet::parse_infix()")

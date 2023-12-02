@@ -14,7 +14,7 @@ use crate::{
         },
         token_parselets::{under1Parselet, under2Parselet, under3Parselet},
         ColonLHS, InfixParseBuilder, ParseBuilder, ParserSession,
-        SyntaxErrorData, TriviaSeqRef,
+        SyntaxErrorData,
     },
     precedence::Precedence,
     source::*,
@@ -55,7 +55,7 @@ pub(crate) trait InfixParselet<'i, B: ParseBuilder<'i> + 'i>:
         // The previous node that was just parsed.
         node: B::Node,
         // The trivia between the previous node and infix `token`.
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         token: TokenRef<'i>,
     ) -> B::Node;
 
@@ -623,7 +623,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
         session.push_context(TokenPrecedence);
 
         // MUSTTAIL
-        return session.parse_infix(node, TriviaSeqRef::new(), tok_in);
+        return session.parse_infix(node, B::empty_trivia(), tok_in);
     }
 }
 
@@ -638,7 +638,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         _session: &mut ParserSession<'i, B>,
         _node: B::Node,
-        _trivia: TriviaSeqRef<'i>,
+        _trivia: B::TriviaHandle,
         _token: TokenRef<'i>,
     ) -> B::Node {
         panic!("invalid infix toplevel newline parselet")
@@ -812,7 +812,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         _session: &mut ParserSession<'i, B>,
         _node: B::Node,
-        _trivia: TriviaSeqRef<'i>,
+        _trivia: B::TriviaHandle,
         _token: TokenRef<'i>,
     ) -> B::Node {
         panic!("invalid infix implicit times parselet")
@@ -868,7 +868,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         _session: &mut ParserSession<'i, B>,
         _node: B::Node,
-        _trivia: TriviaSeqRef<'i>,
+        _trivia: B::TriviaHandle,
         _token: TokenRef<'i>,
     ) -> B::Node {
         panic!("unexpected infix assert false parselet")
@@ -902,7 +902,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -950,7 +950,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         session: &mut ParserSession<'i, B>,
         first_operand: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -1019,7 +1019,7 @@ impl InfixOperatorParselet {
                 // Tok.tok != tok_in.tok, so break
                 //
 
-                trivia1.reset(&mut session.tokenizer);
+                session.trivia_reset(trivia1);
 
                 let node = session.reduce_infix(infix_builder);
 
@@ -1058,7 +1058,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         session: &mut ParserSession<'i, B>,
         finished: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         session.skip(tok_in);
@@ -1116,7 +1116,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
         // FIXME(cleanup):
         //     Add a ParseBuilder::GroupBuilder associated type
         //     to avoid the intermediate GroupChildren allocation.
-        let mut group_children: Vec<(TriviaSeqRef<'i>, B::Node)> =
+        let mut group_children: Vec<(B::TriviaHandle, B::Node)> =
             Vec::with_capacity(1);
 
         loop {
@@ -1167,7 +1167,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
                     // Do not consume the bad closer now
                     //
 
-                    trivia1.reset(&mut session.tokenizer);
+                    session.trivia_reset(trivia1);
 
                     let node = session.reduce_group_missing_closer(
                         self.Op,
@@ -1233,7 +1233,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for CallParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         head: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -1270,7 +1270,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TildeParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         //
@@ -1299,7 +1299,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TildeParselet {
             // Not structurally correct, so return SyntaxErrorNode
             //
 
-            trivia3.reset(&mut session.tokenizer);
+            session.trivia_reset(trivia3);
 
             let node =
                 session.reduce_syntax_error(SyntaxErrorData::ExpectedTilde {
@@ -1353,7 +1353,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         //
@@ -1449,7 +1449,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SlashColonParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         //
@@ -1513,7 +1513,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SlashColonParselet {
             _ => (),
         } // switch
 
-        trivia3.reset(&mut session.tokenizer);
+        session.trivia_reset(trivia3);
 
         //
         // Anything other than:
@@ -1556,7 +1556,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for EqualParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -1614,11 +1614,11 @@ impl EqualParselet {
     fn parse_infix_tag<'i, B: ParseBuilder<'i> + 'i>(
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         middle_node: B::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         //
@@ -1704,7 +1704,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonEqualParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -1740,11 +1740,11 @@ impl ColonEqualParselet {
     fn parse_infix_tag<'i, B: ParseBuilder<'i> + 'i>(
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
+        trivia2: B::TriviaHandle,
         middle_node: B::Node,
-        trivia3: TriviaSeqRef<'i>,
+        trivia3: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -1783,7 +1783,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for CommaParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         first_operand: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -1849,7 +1849,7 @@ impl CommaParselet {
                 tok1.tok,
                 TokenKind::Comma | TokenKind::LongName_InvisibleComma
             ) {
-                trivia1.reset(&mut session.tokenizer);
+                session.trivia_reset(trivia1);
 
                 let node = session.reduce_infix(infix_builder);
 
@@ -1914,7 +1914,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         first_operand: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -2006,7 +2006,7 @@ impl SemiParselet {
                 // Something like  a;b
                 //
 
-                trivia1.reset(&mut session.tokenizer);
+                session.trivia_reset(trivia1);
 
                 // MUSTTAIL
                 return SemiParselet::reduce_CompoundExpression(
@@ -2100,7 +2100,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonColonParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         head_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         //
@@ -2131,7 +2131,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonColonParselet {
             tok_in,
             // TODO: Document, stringify as tag doesn't allow leading whitespace
             //       E.g. "a:: b" is an error.
-            TriviaSeqRef::new(),
+            B::empty_trivia(),
             second_operand,
         );
 
@@ -2158,7 +2158,7 @@ impl ColonColonParselet {
             let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             if tok1.tok != TokenKind::ColonColon {
-                trivia1.reset(&mut session.tokenizer);
+                session.trivia_reset(trivia1);
 
                 let node = session.reduce_infix(infix_builder);
 
@@ -2177,7 +2177,7 @@ impl ColonColonParselet {
 
             let operand = session.push_leaf_and_next(Tok2);
 
-            infix_builder.add(trivia1, tok1, TriviaSeqRef::new(), operand);
+            infix_builder.add(trivia1, tok1, B::empty_trivia(), operand);
         } // loop
     }
 }
@@ -2193,7 +2193,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         //
@@ -2245,7 +2245,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         //

@@ -11,7 +11,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TimesParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         first_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
+        trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -65,7 +65,7 @@ impl TimesParselet {
                 // so reset and try again
                 //
 
-                trivia1.reset(&mut session.tokenizer);
+                session.trivia_reset(trivia1);
 
                 (trivia1, tok1) = session
                     .current_token_eat_trivia_but_not_toplevel_newlines_into();
@@ -92,7 +92,7 @@ impl TimesParselet {
                 // Tok.tok != tok_in.tok, so break
                 //
 
-                trivia1.reset(&mut session.tokenizer);
+                session.trivia_reset(trivia1);
 
                 let node = session.reduce_infix(infix_builder);
 
