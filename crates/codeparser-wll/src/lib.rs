@@ -23,14 +23,13 @@ use wolfram_library_link::{
 };
 
 use wolfram_parser::{
-    abstract_cst::{abstract_cst, aggregate_cst, aggregate_cst_seq},
+    abstract_cst::abstract_cst,
     cst::Cst,
     quirks::QuirkSettings,
     source::{Source, SourceConvention},
     symbols as sym,
     tokenize::TokenString,
-    Container, ContainerBody, EncodingMode, FirstLineBehavior, ParseOptions,
-    StringifyMode,
+    Container, EncodingMode, FirstLineBehavior, ParseOptions, StringifyMode,
 };
 
 use crate::{convert_wstp::WstpPut, from_expr::FromExpr};
@@ -323,68 +322,6 @@ pub fn RoundTripTest_LibraryLink(link: &mut wstp::Link) {
     debug_assert!(!link.is_ready());
 
     container.put(link);
-}
-
-//======================================
-// Aggregate_LibraryLink
-//======================================
-
-#[cfg(feature = "USE_MATHLINK")]
-#[wll::export(wstp)]
-pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
-    let mut args: Vec<Expr> = parse_assuming_link_print_full_symbols(link);
-
-    if args.len() != 1 {
-        panic!("unexpected number of arguments passed to Aggregate: {args:?}")
-    }
-
-    let arg = args.remove(0);
-
-    if arg.has_normal_head(&expr::Symbol::new("System`Failure")) {
-        link.put_expr(&arg).unwrap();
-        return;
-    }
-
-    match Container::from_expr(&arg) {
-        Ok(Container {
-            kind,
-            body,
-            metadata,
-        }) => {
-            let body = match body {
-                ContainerBody::Nodes(nodes) => {
-                    ContainerBody::Nodes(aggregate_cst_seq(nodes))
-                },
-                ContainerBody::Missing(_) => body,
-            };
-
-            let container = Container {
-                kind,
-                body,
-                metadata,
-            };
-
-            debug_assert!(!link.is_ready());
-
-            container.put(link);
-        },
-        Err(err)
-            if arg.has_normal_head(
-                &sym::CodeParser_ContainerNode.to_symbol(),
-            ) =>
-        {
-            panic!("Error parsing ContainerNode: {err}")
-        },
-        Err(_) => match Cst::from_expr(&arg) {
-            Ok(cst) => match aggregate_cst(cst) {
-                Some(agg) => agg.put(link),
-                None => link.put_symbol(sym::Nothing.as_str()).unwrap(),
-            },
-            Err(cst_err) => {
-                panic!("Error parsing concrete syntax node: {cst_err}")
-            },
-        },
-    }
 }
 
 //======================================

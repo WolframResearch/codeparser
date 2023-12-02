@@ -23,7 +23,8 @@ Needs["CodeParser`"]
 Needs["CodeParser`Quirks`"]
 Needs["CodeParser`TopLevel`"] (* for abstractTopLevelChildren *)
 Needs["CodeParser`Utils`"]
-Needs["CodeParser`Library`"] (* For aggregateFunc, abstractFunc *)
+Needs["CodeParser`Library`"] (* For abstractFunc *)
+Needs["CodeParser`Folds`"] (* For aggregate *)
 
 
 $containerKind = None
@@ -39,29 +40,7 @@ Module[{agg},
 
   CodeParser`Abstract`$AggregateParseProgress = 5;
 
-  agg = aggregateFunc[cst];
-
-	(* NOTE:
-		This ReplaceAll forces evaluation of the 3rd argument of CodeNode.
-
-		This is necessary because:
-			* Hold[Association[]] is NOT equal to Hold[<||>].
-			  - The former is a TNORMAL expression, while the later is a
-			    TASSOCIATION, which means they are not considered SameQ.
-		    * aggregateFunc[..] is implemented as a LibraryLink WSTP function, and
-			  Association expressions deserialized from WSTP are intially
-			  constructed as TNORMAL expressions. They only get turned into
-			  TASSOCIATION expressions if they are evaluated.
-			* The 3rd argument of CodeNode is an Association, typically
-			  containing Source info.
-		    * Since Association[] and <||> are not the same, tests involving
-			  CodeNode will otherwise fail if the test is written using <||>.
-			* Forcing evaluating of the 3rd parameter turns the TNORMAL into
-			  a TASSOCIATION, causes the tests to succeed.
-	*)
-	agg = ReplaceAll[agg, {
-		CodeNode[a_, b_, c0_] :> With[{c = c0}, CodeNode[a, b, c]]
-	}];
+  agg = aggregate[cst];
 
   CodeParser`Abstract`$AggregateParseProgress = 100;
   CodeParser`Abstract`$AggregateParseTime = Now - CodeParser`Abstract`$AggregateParseStart;
@@ -122,7 +101,7 @@ Module[{ast, batchMode},
 			* Hold[Association[]] is NOT equal to Hold[<||>].
 				- The former is a TNORMAL expression, while the later is a
 				TASSOCIATION, which means they are not considered SameQ.
-			* aggregateFunc[..] is implemented as a LibraryLink WSTP function, and
+			* abstractFunc[..] is implemented as a LibraryLink WSTP function, and
 				Association expressions deserialized from WSTP are intially
 				constructed as TNORMAL expressions. They only get turned into
 				TASSOCIATION expressions if they are evaluated.

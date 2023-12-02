@@ -18,8 +18,40 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 Needs["CodeParser`Library`"]
 
-aggregate = aggregateFunc
+(*====================================*)
+(* aggregate    *)
+(*====================================*)
 
+(* TODO: Keep in sync with aggregate_cst() set of trivia tokens *)
+$triviaTokenPattern = Alternatives[
+	Token`Comment,
+	Token`Newline,
+	Token`Boxes`MultiWhitespace,
+	Whitespace
+]
+
+aggregate[cst_] := (
+	Replace[cst, {
+		LeafNode[$triviaTokenPattern, _, _]
+			:> Nothing,
+
+		CallNode[head_List, group_, data_]
+			:> CallNode[
+				First[aggregate /@ head],
+				aggregate[group],
+				data
+			],
+
+		node_[tag_, children_List, data_]
+			:> node[tag, aggregate /@ children, data]
+
+		(* Leave unrecognized forms untouched. *)
+	}]
+)
+
+(*====================================*)
+(* aggregateButNotToplevelNewlines    *)
+(*====================================*)
 
 (*
 Remove comments, whitespace, and newlines
