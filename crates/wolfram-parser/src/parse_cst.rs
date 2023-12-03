@@ -15,8 +15,8 @@ use crate::{
         token_parselets::{
             token_kind_to_infix_parselet, token_kind_to_prefix_parselet,
         },
-        ColonLHS, InfixParseBuilder, ParseBuilder, SyntaxErrorData,
-        SyntaxErrorKind, TriviaSeqRef, UnderParseData,
+        ColonLHS, ParseBuilder, SyntaxErrorData, SyntaxErrorKind, TriviaSeqRef,
+        UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
     utils::debug_assert_matches,
@@ -28,12 +28,18 @@ pub(crate) struct ParseCst<'i> {
     finished: Vec<Cst<TokenStr<'i>>>,
 }
 
+#[derive(Debug)]
+pub(crate) struct InfixParseCst<'i> {
+    op: InfixOperator,
+    children: Vec<Cst<TokenStr<'i>>>,
+}
+
 impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     type Node = Cst<TokenStr<'i>>;
 
     type Output = CstSeq<TokenStr<'i>>;
 
-    type InfixParseBuilder = InfixParseCst<'i>;
+    type InfixParseState = InfixParseCst<'i>;
 
     type TriviaAccumulator = Vec<TokenRef<'i>>;
     type TriviaHandle = TriviaSeqRef<'i>;
@@ -271,18 +277,6 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         Cst::Prefix(PrefixNode::new(op, NodeSeq(children)))
     }
 
-    fn begin_infix(
-        &mut self,
-        op: InfixOperator,
-        first_node: Self::Node,
-    ) -> Self::InfixParseBuilder {
-        // TODO(optimize): Use a single Vec allocation for efficiency?
-        InfixParseCst {
-            op,
-            children: vec![first_node],
-        }
-    }
-
     fn reduce_postfix(
         &mut self,
         op: PostfixOperator,
@@ -425,6 +419,58 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         children.push(rhs_node);
 
         Cst::PrefixBinary(PrefixBinaryNode::new(op, NodeSeq(children)))
+    }
+
+    //----------------------------------
+    // Infix parsing
+    //----------------------------------
+
+    fn begin_infix(
+        &mut self,
+        op: InfixOperator,
+        first_node: Self::Node,
+    ) -> Self::InfixParseState {
+        // TODO(optimize): Use a single Vec allocation for efficiency?
+        InfixParseCst {
+            op,
+            children: vec![first_node],
+        }
+    }
+
+    fn infix_add(
+        &mut self,
+        infix_state: &mut Self::InfixParseState,
+        trivia1: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
+        op_token: TokenRef<'i>,
+        trivia2: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
+        operand: Cst<TokenStr<'i>>,
+    ) {
+        let InfixParseCst { op: _, children } = infix_state;
+
+        children.extend(trivia1.0.into_iter().map(Cst::Token));
+        children.push(Cst::Token(op_token));
+        children.extend(trivia2.0.into_iter().map(Cst::Token));
+        children.push(operand)
+    }
+
+    fn infix_last_node<'s>(
+        &self,
+        infix_state: &'s Self::InfixParseState,
+    ) -> &'s Cst<TokenStr<'i>> {
+        let InfixParseCst { op: _, children } = infix_state;
+
+        children
+            .last()
+            .expect("InfixParseCst::last_node: node list is empty")
+    }
+
+    fn infix_finish(
+        &mut self,
+        builder: Self::InfixParseState,
+    ) -> Cst<TokenStr<'i>> {
+        let InfixParseCst { op, children } = builder;
+
+        Cst::Infix(InfixNode::new(op, NodeSeq(children)))
     }
 
     fn reduce_group(
@@ -698,50 +744,6 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             },
             _ => false,
         }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct InfixParseCst<'i> {
-    op: InfixOperator,
-    children: Vec<Cst<TokenStr<'i>>>,
-}
-
-impl<'i> InfixParseBuilder<'i, ParseCst<'i>> for InfixParseCst<'i>
-where
-    ParseCst<'i>: ParseBuilder<
-        'i,
-        Node = Cst<TokenStr<'i>>,
-        TriviaHandle = TriviaSeqRef<'i>,
-    >,
-{
-    fn add(
-        &mut self,
-        trivia1: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
-        op_token: TokenRef<'i>,
-        trivia2: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
-        operand: Cst<TokenStr<'i>>,
-    ) {
-        let InfixParseCst { op: _, children } = self;
-
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
-        children.push(operand)
-    }
-
-    fn last_node(&self) -> &Cst<TokenStr<'i>> {
-        let InfixParseCst { op: _, children } = self;
-
-        children
-            .last()
-            .expect("InfixParseCst::last_node: node list is empty")
-    }
-
-    fn finish(self) -> Cst<TokenStr<'i>> {
-        let InfixParseCst { op, children } = self;
-
-        Cst::Infix(InfixNode::new(op, NodeSeq(children)))
     }
 }
 

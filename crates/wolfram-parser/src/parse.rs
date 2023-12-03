@@ -215,7 +215,7 @@ where
     type Node;
     type Output;
 
-    type InfixParseBuilder: InfixParseBuilder<'i, Self> + Debug;
+    type InfixParseState: Debug;
 
     //==================================
     // Lifecycle
@@ -342,12 +342,6 @@ where
         operand: Self::Node,
     ) -> Self::Node;
 
-    fn begin_infix(
-        &mut self,
-        op: InfixOperator,
-        first_node: Self::Node,
-    ) -> Self::InfixParseBuilder;
-
     fn reduce_postfix(
         &mut self,
         op: PostfixOperator,
@@ -415,6 +409,44 @@ where
         rhs_node: Self::Node,
     ) -> Self::Node;
 
+    /// Build up an infix parse.
+    ///
+    /// ```text
+    /// a + b + c
+    /// a[ + b][ + c]
+    /// ```
+    fn begin_infix(
+        &mut self,
+        op: InfixOperator,
+        first_node: Self::Node,
+    ) -> Self::InfixParseState;
+
+    fn infix_add(
+        &mut self,
+        infix_state: &mut Self::InfixParseState,
+        trivia1: Self::TriviaHandle,
+        op_token: TokenRef<'i>,
+        trivia2: Self::TriviaHandle,
+        operand: Self::Node,
+    );
+
+    /// Get the last parsed node contained in this infix expression.
+    ///
+    /// Needed specially to support custom context-dependent
+    /// [`SemiSemiParselet::process_implicit_times()`][self::parselet::SemiSemiParselet::process_implicit_times]
+    /// implementation.
+    fn infix_last_node<'s>(
+        &self,
+        infix_state: &'s Self::InfixParseState,
+    ) -> &'s Self::Node;
+
+    /// Parselet implementations should not call this method directly, and
+    /// instead call [`ParserSession::reduce_infix()`].
+    fn infix_finish(
+        &mut self,
+        infix_state: Self::InfixParseState,
+    ) -> Self::Node;
+
     fn reduce_group(
         &mut self,
         op: GroupOperator,
@@ -477,34 +509,6 @@ where
     fn check_colon_lhs(&self, lhs: &Self::Node) -> ColonLHS;
 
     fn top_node_is_span(&self, top_node: &Self::Node) -> bool;
-}
-
-/// Build up an infix parse.
-///
-/// ```text
-/// a + b + c
-/// a[ + b][ + c]
-/// [a +][ b +] c
-/// ```
-pub(crate) trait InfixParseBuilder<'i, B: ParseBuilder<'i> + 'i> {
-    fn add(
-        &mut self,
-        trivia1: B::TriviaHandle,
-        op_token: TokenRef<'i>,
-        trivia2: B::TriviaHandle,
-        operand: B::Node,
-    );
-
-    /// Get the last parsed node contained in this infix expression.
-    ///
-    /// Needed specially to support custom context-dependent
-    /// [`SemiSemiParselet::process_implicit_times()`][self::parselet::SemiSemiParselet::process_implicit_times]
-    /// implementation.
-    fn last_node(&self) -> &B::Node;
-
-    /// Parselet implementations should not call this method directly, and
-    /// instead call [`ParserSession::reduce_infix()`].
-    fn finish(self) -> B::Node;
 }
 
 pub(crate) enum UnderParseData<'i> {
@@ -872,14 +876,14 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         op: InfixOperator,
         first_node: B::Node,
-    ) -> B::InfixParseBuilder {
+    ) -> B::InfixParseState {
         self.builder.begin_infix(op, first_node)
     }
 
-    fn reduce_infix(&mut self, builder: B::InfixParseBuilder) -> B::Node {
+    fn reduce_infix(&mut self, state: B::InfixParseState) -> B::Node {
         let _ = self.context_stack.pop().unwrap();
 
-        builder.finish()
+        self.builder.infix_finish(state)
     }
 
     fn reduce_postfix(
