@@ -466,7 +466,14 @@ pub fn parse_cst<'i>(
 ) -> ParseResult<Cst<TokenStr<'i>>> {
     let result = parse_cst_seq(input, opts);
 
-    expect_single_item(result, "parse_cst", "Cst")
+    let result = expect_single_item(result, "parse_cst", "Cst");
+
+    #[cfg(test)]
+    {
+        crate::utils::copy_to_clipboard(&format!("{:#?}", result.syntax));
+    }
+
+    result
 }
 
 /// Parse bytes containing Wolfram Language input into a concrete syntax tree.

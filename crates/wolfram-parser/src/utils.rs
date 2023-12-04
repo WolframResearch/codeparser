@@ -755,3 +755,28 @@ fn test_intersection() {
     assert_eq!(intersection((3, 4), (1, 2)), None);
     assert_eq!(intersection((3, 4), (1, 3)), Some((3, 3)));
 }
+
+//======================================
+// Copy to clipboard
+//======================================
+
+#[cfg(test)]
+pub(crate) fn copy_to_clipboard(content: &str) {
+    if cfg!(target_os = "macos") {
+        use std::io::Write;
+        use std::process::{Command, Stdio};
+
+        let mut child = Command::new("pbcopy")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+
+        let child_stdin = child.stdin.as_mut().unwrap();
+        child_stdin.write_all(content.as_bytes()).unwrap();
+
+        let output = child.wait_with_output().unwrap();
+
+        eprintln!("copied to clipboard with result: {output:?}");
+    }
+}

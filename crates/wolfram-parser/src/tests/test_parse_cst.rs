@@ -22,8 +22,9 @@ use crate::{
         },
         SyntaxErrorKind,
     },
-    parse_cst,
+    parse_ast, parse_cst, parse_cst_seq,
     tests::assert_src,
+    tokenize::{TokenKind, TokenString},
     NodeSeq, QuirkSettings,
 };
 
@@ -285,7 +286,1641 @@ fn test_span() {
                 })),
             ]),
         }))
-    )
+    );
+
+    //==============================
+    // Implicit times and span
+    //==============================
+
+    use crate::parse::operators::{BinaryOperator::Span, InfixOperator::Times};
+
+    assert_eq!(
+        parse_cst(";; ;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Whitespace, " ", 1:3-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;", &Default::default()).syntax,
+        Binary(BinaryNode(OperatorNode {
+            op: Span,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(SemiSemi, ";;", 1:2-4),),
+                Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;b", &Default::default()).syntax,
+        Binary(BinaryNode(OperatorNode {
+            op: Span,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(SemiSemi, ";;", 1:2-4),),
+                Token(token!(Symbol, "b", 1:4-5),),
+            ]),
+        },),)
+    );
+
+
+    assert_eq!(
+        parse_cst("a;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Symbol, "a", 1:3-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;a", &Default::default()).syntax,
+        Ternary(TernaryNode(OperatorNode {
+            op: TernaryOp::Span,
+            children: NodeSeq(vec![
+                Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                Token(token!(SemiSemi, ";;", 1:1-3),),
+                Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                Token(token!(SemiSemi, ";;", 1:3-5),),
+                Token(token!(Symbol, "a", 1:5-6),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;b", &Default::default()).syntax,
+        Ternary(TernaryNode(OperatorNode {
+            op: TernaryOp::Span,
+            children: NodeSeq(vec![
+                Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                Token(token!(SemiSemi, ";;", 1:1-3),),
+                Token(token!(Symbol, "a", 1:3-4),),
+                Token(token!(SemiSemi, ";;", 1:4-6),),
+                Token(token!(Symbol, "b", 1:6-7),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;;;b", &Default::default()).syntax,
+        Ternary(TernaryNode(OperatorNode {
+            op: TernaryOp::Span,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(SemiSemi, ";;", 1:2-4),),
+                Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                Token(token!(SemiSemi, ";;", 1:4-6),),
+                Token(token!(Symbol, "b", 1:6-7),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;b;;c", &Default::default()).syntax,
+        Ternary(TernaryNode(OperatorNode {
+            op: TernaryOp::Span,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(SemiSemi, ";;", 1:2-4),),
+                Token(token!(Symbol, "b", 1:4-5),),
+                Token(token!(SemiSemi, ";;", 1:5-7),),
+                Token(token!(Symbol, "c", 1:7-8),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;b;;c;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Symbol, "b", 1:3-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Symbol, "c", 1:6-7),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:7-7),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Fake_ImplicitAll, "", 1:9-9),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;b;;c;;d", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Symbol, "b", 1:4-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "c", 1:7-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "d", 1:10-11),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Symbol, "a", 1:3-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+    //==============================
+    assert_eq!(
+        parse_cst(";;;;a;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Symbol, "a", 1:5-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;a", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "a", 1:7-8),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:7-7),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Fake_ImplicitAll, "", 1:9-9),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;;;;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Fake_ImplicitAll, "", 1:10-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Symbol, "a", 1:3-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Fake_ImplicitAll, "", 1:10-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;a;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Symbol, "a", 1:5-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Fake_ImplicitAll, "", 1:10-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;a;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "a", 1:7-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Fake_ImplicitAll, "", 1:10-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;;;a", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Symbol, "a", 1:9-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Symbol, "b", 1:8-9),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Symbol, "a", 1:3-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Symbol, "b", 1:8-9),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;a;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Symbol, "a", 1:5-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Symbol, "b", 1:8-9),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+
+    assert_eq!(
+        parse_cst(";;;;;;a", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "a", 1:7-8),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Symbol, "b", 1:9-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;;;;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "b", 1:10-11),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Symbol, "a", 1:3-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "b", 1:10-11),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;a;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Symbol, "a", 1:5-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Fake_ImplicitAll, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "b", 1:10-11),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;a;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "a", 1:7-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "b", 1:10-11),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;;;a", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Symbol, "a", 1:9-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Symbol, "b", 1:9-10),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;c;;;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Symbol, "c", 1:4-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:7-7),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Fake_ImplicitAll, "", 1:9-9),),
+                        Token(token!(SemiSemi, ";;", 1:9-11),),
+                        Token(token!(Symbol, "b", 1:11-12),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;c;;;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Symbol, "a", 1:3-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Symbol, "c", 1:6-7),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:7-7),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Fake_ImplicitAll, "", 1:9-9),),
+                        Token(token!(SemiSemi, ";;", 1:9-11),),
+                        Token(token!(Symbol, "b", 1:11-12),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;a;;c;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Symbol, "a", 1:5-6),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:6-6),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Symbol, "c", 1:8-9),),
+                        Token(token!(SemiSemi, ";;", 1:9-11),),
+                        Token(token!(Symbol, "b", 1:11-12),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("c;;;;;;a;;b", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "c", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                        Token(token!(SemiSemi, ";;", 1:6-8),),
+                        Token(token!(Symbol, "a", 1:8-9),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:9-9),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:9-9),),
+                        Token(token!(SemiSemi, ";;", 1:9-11),),
+                        Token(token!(Symbol, "b", 1:11-12),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("{ ;;\n;; }", &Default::default()).syntax,
+        Group(GroupNode(OperatorNode {
+            op: GroupOp::List,
+            children: NodeSeq(vec![
+                Token(token!(OpenCurly, "{", 1:1-2),),
+                Token(token!(Whitespace, " ", 1:2-3),),
+                Infix(InfixNode(OperatorNode {
+                    op: Times,
+                    children: NodeSeq(vec![
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                                Token(token!(SemiSemi, ";;", 1:3-5),),
+                                Token(token!(InternalNewline, "\n", 1:5-2:1),),
+                                Token(token!(Fake_ImplicitAll, "", 2:1-1),),
+                            ]),
+                        },),),
+                        Token(token!(Fake_ImplicitTimes, "", 2:1-1),),
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Fake_ImplicitOne, "", 2:1-1),),
+                                Token(token!(SemiSemi, ";;", 2:1-3),),
+                                Token(token!(Whitespace, " ", 2:3-4),),
+                                Token(token!(Fake_ImplicitAll, "", 2:4-4),),
+                            ]),
+                        },),),
+                    ]),
+                },),),
+                Token(token!(CloseCurly, "}", 2:4-5),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("{ ;;\n;;a }", &Default::default()).syntax,
+        Group(GroupNode(OperatorNode {
+            op: GroupOp::List,
+            children: NodeSeq(vec![
+                Token(token!(OpenCurly, "{", 1:1-2),),
+                Token(token!(Whitespace, " ", 1:2-3),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(InternalNewline, "\n", 1:5-2:1),),
+                        Token(token!(Fake_ImplicitAll, "", 2:1-1),),
+                        Token(token!(SemiSemi, ";;", 2:1-3),),
+                        Token(token!(Symbol, "a", 2:3-4),),
+                    ]),
+                },),),
+                Token(token!(Whitespace, " ", 2:4-5),),
+                Token(token!(CloseCurly, "}", 2:5-6),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;;;;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Fake_ImplicitAll, "", 1:3-3),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:3-3),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:3-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Fake_ImplicitAll, "", 1:5-5),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:7-7),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Fake_ImplicitAll, "", 1:9-9),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;b;;c;;d;;e", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Symbol, "b", 1:4-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "c", 1:7-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "d", 1:10-11),),
+                        Token(token!(SemiSemi, ";;", 1:11-13),),
+                        Token(token!(Symbol, "e", 1:13-14),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;b;;c;;d;;e;;f", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Symbol, "b", 1:4-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "c", 1:7-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "d", 1:10-11),),
+                        Token(token!(SemiSemi, ";;", 1:11-13),),
+                        Token(token!(Symbol, "e", 1:13-14),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:14-14),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:14-14),),
+                        Token(token!(SemiSemi, ";;", 1:14-16),),
+                        Token(token!(Symbol, "f", 1:16-17),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;b;;c;;d;;e;;f;;g", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Symbol, "b", 1:4-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "c", 1:7-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "d", 1:10-11),),
+                        Token(token!(SemiSemi, ";;", 1:11-13),),
+                        Token(token!(Symbol, "e", 1:13-14),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:14-14),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:14-14),),
+                        Token(token!(SemiSemi, ";;", 1:14-16),),
+                        Token(token!(Symbol, "f", 1:16-17),),
+                        Token(token!(SemiSemi, ";;", 1:17-19),),
+                        Token(token!(Symbol, "g", 1:19-20),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;b;;c;;d;;e;;f;;g;;h", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(SemiSemi, ";;", 1:2-4),),
+                        Token(token!(Symbol, "b", 1:4-5),),
+                        Token(token!(SemiSemi, ";;", 1:5-7),),
+                        Token(token!(Symbol, "c", 1:7-8),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:8-8),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:8-8),),
+                        Token(token!(SemiSemi, ";;", 1:8-10),),
+                        Token(token!(Symbol, "d", 1:10-11),),
+                        Token(token!(SemiSemi, ";;", 1:11-13),),
+                        Token(token!(Symbol, "e", 1:13-14),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:14-14),),
+                Ternary(TernaryNode(OperatorNode {
+                    op: TernaryOp::Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:14-14),),
+                        Token(token!(SemiSemi, ";;", 1:14-16),),
+                        Token(token!(Symbol, "f", 1:16-17),),
+                        Token(token!(SemiSemi, ";;", 1:17-19),),
+                        Token(token!(Symbol, "g", 1:19-20),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:20-20),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:20-20),),
+                        Token(token!(SemiSemi, ";;", 1:20-22),),
+                        Token(token!(Symbol, "h", 1:22-23),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("a;;;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::CompoundExpression,
+            children: NodeSeq(vec![
+                Infix(InfixNode(OperatorNode {
+                    op: Times,
+                    children: NodeSeq(vec![
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "a", 1:1-2),),
+                                Token(token!(SemiSemi, ";;", 1:2-4),),
+                                Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                            ]),
+                        },),),
+                        Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                                Token(token!(SemiSemi, ";;", 1:4-6),),
+                                Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                            ]),
+                        },),),
+                    ]),
+                },),),
+                Token(token!(Semi, ";", 1:6-7),),
+                Token(token!(Fake_ImplicitNull, "", 1:7-7),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst("b;;a;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::CompoundExpression,
+            children: NodeSeq(vec![
+                Infix(InfixNode(OperatorNode {
+                    op: Times,
+                    children: NodeSeq(vec![
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Symbol, "b", 1:1-2),),
+                                Token(token!(SemiSemi, ";;", 1:2-4),),
+                                Token(token!(Symbol, "a", 1:4-5),),
+                            ]),
+                        },),),
+                        Token(token!(Fake_ImplicitTimes, "", 1:5-5),),
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Fake_ImplicitOne, "", 1:5-5),),
+                                Token(token!(SemiSemi, ";;", 1:5-7),),
+                                Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                            ]),
+                        },),),
+                    ]),
+                },),),
+                Token(token!(Semi, ";", 1:7-8),),
+                Token(token!(Fake_ImplicitNull, "", 1:8-8),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst(";;a;;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: InfixOp::CompoundExpression,
+            children: NodeSeq(vec![
+                Infix(InfixNode(OperatorNode {
+                    op: Times,
+                    children: NodeSeq(vec![
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                                Token(token!(SemiSemi, ";;", 1:1-3),),
+                                Token(token!(Symbol, "a", 1:3-4),),
+                            ]),
+                        },),),
+                        Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                        Binary(BinaryNode(OperatorNode {
+                            op: Span,
+                            children: NodeSeq(vec![
+                                Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                                Token(token!(SemiSemi, ";;", 1:4-6),),
+                                Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                            ]),
+                        },),),
+                    ]),
+                },),),
+                Token(token!(Semi, ";", 1:6-7),),
+                Token(token!(Fake_ImplicitNull, "", 1:7-7),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_ast("a;;!", &Default::default()).syntax,
+        Ast::Call {
+            head: Box::new(leaf!(Symbol, "Span", <||>)),
+            args: vec![
+                leaf!(Symbol, "a", 1:1-2),
+                Ast::Call {
+                    head: Box::new(leaf!(Symbol, "Not", <||>)),
+                    args: vec![Ast::Error {
+                        kind: TokenKind::Error_ExpectedOperand,
+                        input: TokenString::new(""),
+                        data: src!(1:5-5).into(),
+                    },],
+                    data: src!(1:4-5).into(),
+                },
+            ],
+            data: src!(1:1-5).into(),
+        }
+    );
+
+    //
+    // verify that nested ImplicitTimes are not created
+    //
+
+    assert_eq!(
+        parse_cst(";; ;; ;;", &Default::default()).syntax,
+        Infix(InfixNode(OperatorNode {
+            op: Times,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:1-1),),
+                        Token(token!(SemiSemi, ";;", 1:1-3),),
+                        Token(token!(Whitespace, " ", 1:3-4),),
+                        Token(token!(Fake_ImplicitAll, "", 1:4-4),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:4-4),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:4-4),),
+                        Token(token!(SemiSemi, ";;", 1:4-6),),
+                        Token(token!(Whitespace, " ", 1:6-7),),
+                        Token(token!(Fake_ImplicitAll, "", 1:7-7),),
+                    ]),
+                },),),
+                Token(token!(Fake_ImplicitTimes, "", 1:7-7),),
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Fake_ImplicitOne, "", 1:7-7),),
+                        Token(token!(SemiSemi, ";;", 1:7-9),),
+                        Token(token!(Fake_ImplicitAll, "", 1:9-9),),
+                    ]),
+                },),),
+            ]),
+        },),)
+    );
+
+
+    //==================================
+
+
+    assert_eq!(
+        parse_cst("a ;; &", &Default::default()).syntax,
+        Postfix(PostfixNode(OperatorNode {
+            op: PostfixOp::Function,
+            children: NodeSeq(vec![
+                Binary(BinaryNode(OperatorNode {
+                    op: Span,
+                    children: NodeSeq(vec![
+                        Token(token!(Symbol, "a", 1:1-2),),
+                        Token(token!(Whitespace, " ", 1:2-3),),
+                        Token(token!(SemiSemi, ";;", 1:3-5),),
+                        Token(token!(Whitespace, " ", 1:5-6),),
+                        Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                    ]),
+                },),),
+                Token(token!(Amp, "&", 1:6-7),),
+            ]),
+        },),)
+    );
+
+    assert_eq!(
+        parse_cst_seq("a ;; \\t", &Default::default()).syntax,
+        NodeSeq(vec![
+            Binary(BinaryNode(OperatorNode {
+                op: Span,
+                children: NodeSeq(vec![
+                    Token(token!(Symbol, "a", 1:1-2),),
+                    Token(token!(Whitespace, " ", 1:2-3),),
+                    Token(token!(SemiSemi, ";;", 1:3-5),),
+                    Token(token!(Whitespace, " ", 1:5-6),),
+                    Token(token!(Fake_ImplicitAll, "", 1:6-6),),
+                ]),
+            },),),
+            Token(token!(Error_UnhandledCharacter, "\\t", 1:6-8),),
+        ])
+    );
+
+    assert_eq!(
+        parse_cst("a ;; b ;; c", &Default::default()).syntax,
+        Ternary(TernaryNode(OperatorNode {
+            op: TernaryOp::Span,
+            children: NodeSeq(vec![
+                Token(token!(Symbol, "a", 1:1-2),),
+                Token(token!(Whitespace, " ", 1:2-3),),
+                Token(token!(SemiSemi, ";;", 1:3-5),),
+                Token(token!(Whitespace, " ", 1:5-6),),
+                Token(token!(Symbol, "b", 1:6-7),),
+                Token(token!(Whitespace, " ", 1:7-8),),
+                Token(token!(SemiSemi, ";;", 1:8-10),),
+                Token(token!(Whitespace, " ", 1:10-11),),
+                Token(token!(Symbol, "c", 1:11-12),),
+            ]),
+        },),)
+    );
 }
 
 #[test]
