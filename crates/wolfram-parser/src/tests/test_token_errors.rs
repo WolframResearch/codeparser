@@ -4,7 +4,7 @@ use crate::{
     cst::{
         BinaryNode, CallBody, CallHead, CallNode, CompoundNode,
         Cst::{self, Token},
-        GroupNode, InfixNode, OperatorNode, PrefixNode, TriviaSeq,
+        GroupNode, InfixNode, OperatorNode, PrefixNode,
     },
     macros::{src, token},
     parse::operators::{

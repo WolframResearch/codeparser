@@ -19,7 +19,7 @@ use crate::{
     cst::{
         BinaryNode, CallBody, CallHead, CallNode, CompoundNode, Cst,
         Cst::Token as NVToken, GroupMissingCloserNode, GroupNode, InfixNode,
-        OperatorNode, PostfixNode, TriviaSeq,
+        OperatorNode, PostfixNode,
     },
     macros::{src, token},
     parse::operators::{

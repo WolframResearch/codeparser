@@ -644,7 +644,7 @@ where
         trivia1: Self::TriviaHandle,
         op_token: Self::SyntaxTokenNode,
         trivia2: Self::TriviaHandle,
-        dot_token: TokenRef<'i>,
+        dot_token: Self::SyntaxTokenNode,
     ) -> Self::Node;
 
     fn reduce_ternary(
@@ -675,7 +675,7 @@ where
         trivia3: Self::TriviaHandle,
         equal_token: Self::SyntaxTokenNode,
         trivia4: Self::TriviaHandle,
-        dot_token: TokenRef<'i>,
+        dot_token: Self::SyntaxTokenNode,
     ) -> Self::Node;
 
     fn reduce_prefix_binary(
@@ -844,6 +844,7 @@ pub(crate) enum SyntaxErrorData<N, TRV, STN> {
     ///     })
     /// );
     /// ```
+    #[allow(dead_code)]
     ExpectedSymbol {
         lhs_node: N,
         trivia1: TRV,
@@ -871,9 +872,13 @@ pub(crate) enum SyntaxErrorData<N, TRV, STN> {
     ///         children: NodeSeq(vec![
     ///             Cst::SyntaxError(SyntaxErrorNode {
     ///                 err: SyntaxErrorKind::ExpectedSet,
-    ///                 // FIXME: This should include the "a /: b" portion
-    ///                 //        of the input.
-    ///                 children: NodeSeq(vec![])
+    ///                 children: NodeSeq(vec![
+    ///                     Cst::Token(token!(Symbol, "a", 1:1-2)),
+    ///                     Cst::Token(token!(Whitespace, " ", 1:2-3)),
+    ///                     Cst::Token(token!(SlashColon, "/:", 1:3-5)),
+    ///                     Cst::Token(token!(Whitespace, " ", 1:5-6)),
+    ///                     Cst::Token(token!(Symbol, "b", 1:6-7)),
+    ///                 ])
     ///             }),
     ///             Cst::Token(token!(Whitespace, " ", 1:7-8)),
     ///             Cst::Token(token!(Semi, ";", 1:8-9)),
@@ -908,6 +913,7 @@ pub(crate) enum SyntaxErrorData<N, TRV, STN> {
     ///      })
     /// );
     /// ```
+    #[allow(dead_code)]
     ExpectedTilde {
         lhs_node: N,
         trivia1: TRV,
@@ -1321,10 +1327,10 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia1: B::TriviaHandle,
         op_token: B::SyntaxTokenNode,
         trivia2: B::TriviaHandle,
-        dot_token: TokenRef<'i>,
+        dot_token: B::SyntaxTokenNode,
     ) -> B::Node {
         debug_assert_eq!(op, BinaryOperator::Unset);
-        debug_assert_eq!(dot_token.tok, TokenKind::Dot);
+        // debug_assert_eq!(dot_token.tok, TokenKind::Dot);
 
         let ctx_data = self.context_stack.pop().unwrap().builder_data;
 
@@ -1375,7 +1381,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia3: B::TriviaHandle,
         equal_token: B::SyntaxTokenNode,
         trivia4: B::TriviaHandle,
-        dot_token: TokenRef<'i>,
+        dot_token: B::SyntaxTokenNode,
     ) -> B::Node {
         let ctx_data = self.context_stack.pop().unwrap().builder_data;
 

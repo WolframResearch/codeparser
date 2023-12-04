@@ -4,7 +4,7 @@ use crate::{
     cst::{
         BinaryNode, CallBody, CallHead, CallNode, CompoundNode,
         Cst::{self, Call, Compound, Group, Infix, Token},
-        GroupNode, InfixNode, OperatorNode, PrefixNode, TriviaSeq,
+        GroupNode, InfixNode, OperatorNode, PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
     macros::{leaf, src, token},
