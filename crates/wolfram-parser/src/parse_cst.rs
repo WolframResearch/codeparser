@@ -44,6 +44,7 @@ pub(crate) struct InfixParseCst {
 
 impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     type Node = ();
+    type SyntaxTokenNode = ();
 
     type Output = CstSeq<TokenStr<'i>>;
 
@@ -216,6 +217,12 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         self.push_node(Cst::Token(token))
     }
 
+    fn push_syntax(&mut self, token: TokenRef<'i>) -> Self::Node {
+        debug_assert!(!token.tok.isTrivia());
+
+        self.push_node(Cst::Token(token))
+    }
+
     fn push_compound_pattern_blank(
         &mut self,
         op: CompoundOperator,
@@ -293,7 +300,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         ctx_data: Self::ContextData,
         op: PrefixOperator,
-        op_token: TokenRef<'i>,
+        _op_token: Self::SyntaxTokenNode,
         _trivia: Self::TriviaHandle,
         _operand: Self::Node,
     ) -> Self::Node {
@@ -308,7 +315,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         ctx_data: Self::ContextData,
         op: PrefixOperator,
-        tok1: TokenRef<'i>,
+        _tok1: Self::SyntaxTokenNode,
         _trivia: Self::TriviaHandle,
         tok2: TokenRef<'i>,
     ) -> Self::Node {
@@ -326,9 +333,9 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         ctx_data: Self::ContextData,
         op: PostfixOperator,
-        operand: Self::Node,
-        trivia: Self::TriviaHandle,
-        op_tok: TokenRef<'i>,
+        _operand: Self::Node,
+        _trivia: Self::TriviaHandle,
+        _op_tok: Self::SyntaxTokenNode,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);
 
@@ -343,7 +350,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: BinaryOperator,
         _lhs_node: Self::Node,
         _trivia1: Self::TriviaHandle,
-        op_token: TokenRef<'i>,
+        _op_token: Self::SyntaxTokenNode,
         _trivia2: Self::TriviaHandle,
         _rhs_node: Self::Node,
     ) -> Self::Node {
@@ -365,7 +372,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: BinaryOperator,
         _lhs_node: Self::Node,
         _trivia1: Self::TriviaHandle,
-        op_token: TokenRef<'i>,
+        _op_token: Self::SyntaxTokenNode,
         _trivia2: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
@@ -382,11 +389,11 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: TernaryOperator,
         _lhs_node: Self::Node,
         _trivia1: Self::TriviaHandle,
-        first_op_token: TokenRef<'i>,
+        _first_op_token: Self::SyntaxTokenNode,
         _trivia2: Self::TriviaHandle,
         _middle_node: Self::Node,
         _trivia3: Self::TriviaHandle,
-        second_op_token: TokenRef<'i>,
+        _second_op_token: Self::SyntaxTokenNode,
         _trivia4: Self::TriviaHandle,
         _rhs_node: Self::Node,
     ) -> Self::Node {
@@ -409,11 +416,11 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: TernaryOperator,
         _lhs_node: Self::Node,
         _trivia1: Self::TriviaHandle,
-        slash_colon_token: TokenRef<'i>,
+        _slash_colon_token: Self::SyntaxTokenNode,
         _trivia2: Self::TriviaHandle,
         _middle_node: Self::Node,
         _trivia3: Self::TriviaHandle,
-        equal_token: TokenRef<'i>,
+        _equal_token: Self::SyntaxTokenNode,
         _trivia4: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
@@ -428,7 +435,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         ctx_data: Self::ContextData,
         op: PrefixBinaryOperator,
-        prefix_op_token: TokenRef<'i>,
+        _prefix_op_token: Self::SyntaxTokenNode,
         _trivia1: Self::TriviaHandle,
         _lhs_node: Self::Node,
         _trivia2: Self::TriviaHandle,
@@ -459,7 +466,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         _infix_state: &mut Self::InfixParseState,
         _trivia1: Self::TriviaHandle,
-        op_token: TokenRef<'i>,
+        _op_token: Self::SyntaxTokenNode,
         _trivia2: Self::TriviaHandle,
         _operand: Self::Node,
     ) {
@@ -485,10 +492,10 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        opener_tok: TokenRef<'i>,
+        _opener_tok: Self::SyntaxTokenNode,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         _trailing_trivia: Self::TriviaHandle,
-        closer_tok: TokenRef<'i>,
+        _closer_tok: Self::SyntaxTokenNode,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);
 
@@ -549,7 +556,11 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     fn reduce_syntax_error(
         &mut self,
         ctx_data: Self::ContextData,
-        data: SyntaxErrorData<'i, Self::Node, Self::TriviaHandle>,
+        data: SyntaxErrorData<
+            Self::Node,
+            Self::TriviaHandle,
+            Self::SyntaxTokenNode,
+        >,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);
 
@@ -557,7 +568,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             SyntaxErrorData::ExpectedSymbol {
                 lhs_node: _,
                 trivia1: _,
-                tok_in,
+                tok_in: _,
                 trivia2: _,
                 rhs_node: _,
             } => SyntaxErrorKind::ExpectedSymbol,
@@ -565,7 +576,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             SyntaxErrorData::ExpectedTilde {
                 lhs_node: _,
                 trivia1: _,
-                first_op_token,
+                first_op_token: _,
                 trivia2: _,
                 middle_node: _,
             } => SyntaxErrorKind::ExpectedTilde,
@@ -582,7 +593,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         input: &'i str,
         tab_width: usize,
         op: GroupOperator,
-        opener_tok: TokenRef<'i>,
+        _opener_tok: Self::SyntaxTokenNode,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         _trailing_trivia: Self::TriviaHandle,
     ) -> Self::Node {
@@ -601,7 +612,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        opener_tok: TokenRef<'i>,
+        _opener_tok: Self::SyntaxTokenNode,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);

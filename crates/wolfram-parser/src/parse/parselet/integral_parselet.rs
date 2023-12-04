@@ -26,7 +26,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for IntegralParselet {
 
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        let tok_in = session.push_syntax_and_next(tok_in);
 
         let _ = session.push_context(Precedence::CLASS_INTEGRATIONOPERATORS);
 
@@ -60,7 +60,7 @@ impl IntegralParselet {
     fn parse1<'i, B: ParseBuilder<'i> + 'i>(
         &self,
         session: &mut ParserSession<'i, B>,
-        prefix_op_token: TokenRef<'i>,
+        prefix_op_token: B::SyntaxTokenNode,
         trivia1: B::TriviaHandle,
         first_operand: B::Node,
     ) -> B::Node {

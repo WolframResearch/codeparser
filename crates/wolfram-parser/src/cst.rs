@@ -535,22 +535,6 @@ impl<I> BinaryNode<I> {
 
         BinaryNode(OperatorNode::new(op, args))
     }
-
-    pub(crate) fn new2(
-        op: BinaryOperator,
-        // Operator
-        op_token: Token<I>,
-        TriviaSeq(trivia): TriviaSeq<I>,
-        // Operand
-        rand_token: Token<I>,
-    ) -> Self {
-        let mut args = Vec::with_capacity(trivia.len() + 2);
-        args.push(Cst::Token(op_token));
-        args.extend(trivia.into_iter().map(Cst::Token));
-        args.push(Cst::Token(rand_token));
-
-        BinaryNode(OperatorNode::new(op, NodeSeq(args)))
-    }
 }
 
 impl<I, S: TokenSource> BinaryNode<I, S> {

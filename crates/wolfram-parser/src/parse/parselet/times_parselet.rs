@@ -16,7 +16,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TimesParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        let tok_in = session.push_syntax_and_next(tok_in);
 
         let mut infix_state =
             session.begin_infix(InfixOperator::Times, first_node);
@@ -103,7 +103,7 @@ impl TimesParselet {
                 return session.parse_climb(node);
             }
 
-            let trivia1 = session.commit_and_next(trivia1, tok1);
+            let (trivia1, tok1) = session.commit_syntax_and_next(trivia1, tok1);
 
             let (trivia2, Tok2) = session.current_token_eat_trivia();
 
