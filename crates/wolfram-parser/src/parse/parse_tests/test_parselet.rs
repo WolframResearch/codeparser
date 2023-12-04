@@ -17,7 +17,9 @@ fn ParseletTest_Bug1() {
 
     let tok = session.tokenizer.peek_token();
 
-    let P = session.parse_prefix(tok);
+    let () = session.parse_prefix(tok);
+
+    let P = session.builder.top_node();
 
     assert_eq!(session.tokenizer.non_fatal_issues.len(), 0);
     assert_eq!(session.tokenizer.fatal_issues.len(), 0);

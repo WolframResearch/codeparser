@@ -26,11 +26,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for IntegralParselet {
 
         panic_if_aborted!();
 
-        session.skip(tok_in);
-
-        let (trivia1, Tok) = session.current_token_eat_trivia_into();
+        session.push_leaf_and_next(tok_in);
 
         let _ = session.push_context(Precedence::CLASS_INTEGRATIONOPERATORS);
+
+        let (trivia1, Tok) = session.current_token_eat_trivia();
 
         if Tok.tok == TokenKind::LongName_DifferentialD
             || Tok.tok == TokenKind::LongName_CapitalDifferentialD
@@ -67,7 +67,7 @@ impl IntegralParselet {
         panic_if_aborted!();
 
 
-        let (trivia2, tok) = session.current_token_eat_trivia_into();
+        let (trivia2, tok) = session.current_token();
 
         if !(tok.tok == TokenKind::LongName_DifferentialD
             || tok.tok == TokenKind::LongName_CapitalDifferentialD)
@@ -88,6 +88,8 @@ impl IntegralParselet {
             // MUSTTAIL
             return session.parse_climb(node);
         }
+
+        let trivia2 = session.builder.push_trivia_seq(trivia2);
 
         // TODO(cleanup):
         // `tok` here is a known prefix operator.
@@ -144,7 +146,6 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
     fn process_implicit_times(
         &self,
         session: &mut ParserSession<'i, B>,
-        _prev_node: &B::Node,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         if session.top_precedence() == Precedence::CLASS_INTEGRATIONOPERATORS {

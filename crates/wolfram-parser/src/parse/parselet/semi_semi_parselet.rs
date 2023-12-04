@@ -20,7 +20,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiSemiParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.skip(tok_in);
+        session.push_leaf_and_next(tok_in);
 
         // MUSTTAIL
         return SemiSemiParselet::parse1(session, lhs_node, trivia1, tok_in);
@@ -33,14 +33,13 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiSemiParselet {
     fn process_implicit_times(
         &self,
         session: &mut ParserSession<'i, B>,
-        prev_node: &B::Node,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         //
         // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
         //
 
-        if session.builder.top_node_is_span(prev_node) {
+        if session.builder.top_node_is_span() {
             return Token::at_start(TokenKind::Fake_ImplicitTimes, tok_in);
         }
 
@@ -90,7 +89,7 @@ impl SemiSemiParselet {
         // Span should not cross toplevel newlines
         //
         let (trivia2, SecondTok) =
-            session.current_token_eat_trivia_but_not_toplevel_newlines_into();
+            session.current_token_eat_trivia_but_not_toplevel_newlines();
 
         //
         // a;;
@@ -198,9 +197,13 @@ impl SemiSemiParselet {
         //      ^ThirdTok
         //
 
+        session.push_leaf(SecondTok);
+
         //
         // nextToken() already handled above
         //
+
+        let trivia4 = session.builder.push_trivia_seq(trivia4);
 
         // MUSTTAIL
         let third_operand = session.parse_prefix(ThirdTok);
@@ -313,9 +316,15 @@ impl SemiSemiParselet {
         //       ^FourthTok
         //
 
+        let trivia3 = session.builder.push_trivia_seq(trivia3);
+
+        session.push_leaf(ThirdTok);
+
         //
         // nextToken() already handled above
         //
+
+        let trivia4 = session.builder.push_trivia_seq(trivia4);
 
         let third_node = session.parse_prefix(FourthTok);
 

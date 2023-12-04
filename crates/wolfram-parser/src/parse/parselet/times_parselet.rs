@@ -16,16 +16,16 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TimesParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
+        session.push_leaf_and_next(tok_in);
+
         let mut infix_state =
             session.begin_infix(InfixOperator::Times, first_node);
-
-        session.skip(tok_in);
 
         //
         // Unroll 1 iteration of the loop because we know that tok_in has already been read
         //
 
-        let (trivia2, tok2) = session.current_token_eat_trivia_into();
+        let (trivia2, tok2) = session.current_token_eat_trivia();
 
         let second_node = session.parse_prefix(tok2);
 
@@ -58,13 +58,9 @@ impl TimesParselet {
             panic_if_aborted!();
 
 
-            let (mut trivia1, mut tok1) =
-                session.current_token_eat_trivia_into();
+            let (mut trivia1, mut tok1) = session.current_token();
 
-            tok1 = session.do_process_implicit_times(
-                session.builder.infix_last_node(&infix_state),
-                tok1,
-            );
+            tok1 = session.do_process_implicit_times(tok1);
 
             if tok1.tok == TokenKind::Fake_ImplicitTimes {
                 //
@@ -78,10 +74,7 @@ impl TimesParselet {
                 (trivia1, tok1) = session
                     .current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-                tok1 = session.do_process_implicit_times(
-                    session.builder.infix_last_node(&infix_state),
-                    tok1,
-                )
+                tok1 = session.do_process_implicit_times(tok1)
             }
 
             //
@@ -110,9 +103,9 @@ impl TimesParselet {
                 return session.parse_climb(node);
             }
 
-            session.skip(tok1);
+            let trivia1 = session.commit_and_next(trivia1, tok1);
 
-            let (trivia2, Tok2) = session.current_token_eat_trivia_into();
+            let (trivia2, Tok2) = session.current_token_eat_trivia();
 
             let operand = session.parse_prefix(Tok2);
 
