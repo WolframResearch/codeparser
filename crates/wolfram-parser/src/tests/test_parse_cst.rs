@@ -9,7 +9,7 @@ use crate::{
         },
         GroupMissingCloserNode, GroupNode, InfixNode, OperatorNode,
         PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
-        TernaryNode, TriviaSeq,
+        TernaryNode,
     },
     macros::{leaf, src, token},
     parse::{
@@ -1361,5 +1361,31 @@ fn test_regressions() {
                 Token(token!(String, "b\\1c", 1:4-8)),
             ])
         }))
+    );
+
+    assert_eq!(
+        parse_cst("f[a : b]", &Default::default()).syntax,
+        Call(CallNode {
+            head: CallHead::Concrete(NodeSeq(vec![Token(
+                token!(Symbol, "f", 1:1-2)
+            )])),
+            body: CallBody::Group(GroupNode(OperatorNode {
+                op: CallOp::CodeParser_GroupSquare,
+                children: NodeSeq(vec![
+                    Token(token!(OpenSquare, "[", 1:2-3)),
+                    Binary(BinaryNode(OperatorNode {
+                        op: BinaryOp::Pattern,
+                        children: NodeSeq(vec![
+                            Token(token!(Symbol, "a", 1:3-4)),
+                            Token(token!(Whitespace, " ", 1:4-5)),
+                            Token(token!(Colon, ":", 1:5-6)),
+                            Token(token!(Whitespace, " ", 1:6-7)),
+                            Token(token!(Symbol, "b", 1:7-8)),
+                        ]),
+                    })),
+                    Token(token!(CloseSquare, "]", 1:8-9),),
+                ]),
+            })),
+        })
     );
 }
