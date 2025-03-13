@@ -121,6 +121,8 @@ impl<'i> ParserSession<'i> {
             DiagnosticsMarkTime();
         }
 
+        let mut nodes = NodeSeq::new();
+
         //
         // Collect all expressions
         //
@@ -170,7 +172,6 @@ impl<'i> ParserSession<'i> {
 
         let collected = Node::from(CollectedExpressionsNode::new(exprs));
 
-        let mut nodes = NodeSeq::new();
         nodes.push(collected);
 
         if self.tokenizer.unsafeCharacterEncodingFlag != UnsafeCharacterEncoding::Ok {
@@ -267,6 +268,8 @@ impl<'i> ParserSession<'i> {
     }
 
     pub fn concreteParseLeaf(&mut self, mode: StringifyMode) -> NodeContainer {
+        let mut nodes = NodeSeq::new();
+
         //
         // Collect all expressions
         //
@@ -277,7 +280,6 @@ impl<'i> ParserSession<'i> {
 
         let Collected = CollectedExpressionsNode::new(exprs);
 
-        let mut nodes = NodeSeq::new();
         nodes.push(Collected);
 
         if self.tokenizer.unsafeCharacterEncodingFlag != UnsafeCharacterEncoding::Ok {
