@@ -57,7 +57,7 @@ impl PrefixParselet for UnderParselet {
 
         if tok.tok == TokenKind::Error_ExpectedLetterlike {
             //
-            // Something like  _a`  (TID:231016/1)
+            // Something like  _a`
             //
             // It's nice to include the error inside of the blank
             //
@@ -115,7 +115,7 @@ impl UnderParselet {
 
         if tok.tok == TokenKind::Error_ExpectedLetterlike {
             //
-            // Something like  a_b`  (TID:231016/2)
+            // Something like  a_b`
             //
             // It's nice to include the error inside of the blank
             //
