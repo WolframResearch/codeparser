@@ -1,7 +1,4 @@
-use crate::{
-    macros::{src, token},
-    ParseOptions, ParserSession, SourceConvention,
-};
+use crate::{src, token, ParseOptions, ParserSession, SourceConvention};
 
 use pretty_assertions::assert_eq;
 
