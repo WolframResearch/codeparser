@@ -9,7 +9,7 @@ use crate::{
     source::{
         BufferAndLength, CharacterSpan, LineColumn, Location, Span, SpanKind,
     },
-    tokenize::{Token, TokenStr},
+    tokenize::{BorrowedTokenInput, Token},
     NodeSeq, Tokens,
 };
 
@@ -76,10 +76,10 @@ TagSetDelayed\
 });
 
 pub(crate) fn reparse_unterminated<'i>(
-    nodes: AggNodeSeq<TokenStr<'i>>,
+    nodes: AggNodeSeq<BorrowedTokenInput<'i>>,
     input: &'i str,
     tab_width: usize,
-) -> AggNodeSeq<TokenStr<'i>> {
+) -> AggNodeSeq<BorrowedTokenInput<'i>> {
     nodes.map_visit(&mut |node| match node {
         Cst::Token(token)
             if token.tok.isError() && token.tok.isUnterminated() =>
@@ -94,10 +94,10 @@ pub(crate) fn reparse_unterminated<'i>(
 }
 
 pub(crate) fn reparse_unterminated_tokens<'i>(
-    tokens: Tokens<TokenStr<'i>>,
+    tokens: Tokens<BorrowedTokenInput<'i>>,
     input: &'i str,
     tab_width: usize,
-) -> Tokens<TokenStr<'i>> {
+) -> Tokens<BorrowedTokenInput<'i>> {
     let Tokens(tokens) = tokens;
 
     let tokens = tokens
@@ -128,10 +128,10 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
 //
 // But return the opener to make ToString stuff easier
 pub(crate) fn reparse_unterminated_group_node<'i>(
-    group: UnterminatedGroupNeedsReparseNode<TokenStr<'i>>,
+    group: UnterminatedGroupNeedsReparseNode<BorrowedTokenInput<'i>>,
     str: &'i str,
     tab_width: usize,
-) -> GroupMissingCloserNode<TokenStr<'i>> {
+) -> GroupMissingCloserNode<BorrowedTokenInput<'i>> {
     let UnterminatedGroupNeedsReparseNode(OperatorNode {
         op: tag,
         children,
@@ -215,10 +215,10 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
 //
 // Do not return the previous children, because they are useless any way.
 fn reparse_unterminated_token_error_node<'i>(
-    error: Token<TokenStr<'i>>,
+    error: Token<BorrowedTokenInput<'i>>,
     str: &'i str,
     tab_width: usize,
-) -> Token<TokenStr<'i>> {
+) -> Token<BorrowedTokenInput<'i>> {
     debug_assert!(error.tok.isError() && error.tok.isUnterminated());
 
     // TODO: Use `input` here to optimize the process_lines() calculation?
@@ -281,8 +281,8 @@ fn reparse_unterminated_token_error_node<'i>(
     }
 }
 
-fn make_better_input<'i>(better: &'i str) -> TokenStr<'i> {
-    TokenStr {
+fn make_better_input<'i>(better: &'i str) -> BorrowedTokenInput<'i> {
+    BorrowedTokenInput {
         buf: BufferAndLength {
             buf: better.as_bytes(),
         },

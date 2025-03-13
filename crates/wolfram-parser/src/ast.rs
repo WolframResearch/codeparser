@@ -4,7 +4,7 @@ use crate::{
     cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
     source::{Source, Span},
-    tokenize::{TokenKind, TokenSource, TokenString},
+    tokenize::{OwnedTokenInput, TokenKind, TokenSource},
 };
 
 /// An abstract syntax tree (AST) node.
@@ -13,13 +13,13 @@ pub enum Ast {
     /// `LeafNode[...]`
     Leaf {
         kind: TokenKind,
-        input: TokenString,
+        input: OwnedTokenInput,
         data: AstMetadata,
     },
     /// `ErrorNode[..]`
     Error {
         kind: TokenKind,
-        input: TokenString,
+        input: OwnedTokenInput,
         data: AstMetadata,
     },
     /// `CallNode[...]`
@@ -296,7 +296,7 @@ macro_rules! WL {
 
         let node = $crate::ast::Ast::Leaf {
             kind: $crate::tokenize::TokenKind::$token_kind,
-            input: $crate::tokenize::TokenString {
+            input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
             },
             data: AstMetadata::empty(),
@@ -311,7 +311,7 @@ macro_rules! WL {
 
         let node = $crate::ast::Ast::Leaf {
             kind: $crate::tokenize::TokenKind::$token_kind,
-            input: $crate::tokenize::TokenString {
+            input: $crate::tokenize::OwnedTokenInput {
                 buf: input.into_bytes(),
             },
             data: AstMetadata::from_src(src),

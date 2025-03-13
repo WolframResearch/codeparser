@@ -24,11 +24,13 @@ use crate::{
     parse_bytes_to_cst,
     source::{Source, SourceConvention},
     tokenize,
-    tokenize::{Token, TokenInput, TokenKind as TK, TokenStr, TokenString},
+    tokenize::{
+        BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK,
+    },
     FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
 };
 
-pub(crate) fn nodes(input: &str) -> Vec<Cst<TokenStr>> {
+pub(crate) fn nodes(input: &str) -> Vec<Cst<BorrowedTokenInput>> {
     let mut session =
         ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
@@ -39,13 +41,16 @@ pub(crate) fn nodes(input: &str) -> Vec<Cst<TokenStr>> {
     nodes
 }
 
-pub(crate) fn tokens(input: &str) -> Vec<Token<TokenStr>> {
+pub(crate) fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
     let Tokens(tokens) = tokenize(input, &ParseOptions::default());
 
     tokens
 }
 
-fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Cst<TokenStr>> {
+fn concrete_exprs(
+    input: &str,
+    opts: ParseOptions,
+) -> Vec<Cst<BorrowedTokenInput>> {
     let mut session = ParserSession::new(input.as_bytes(), &opts);
 
     let ParseResult { nodes, .. } = session.concrete_parse_expressions();
@@ -55,7 +60,7 @@ fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Cst<TokenStr>> {
     nodes
 }
 
-fn concrete_exprs_character_index(input: &str) -> Vec<Cst<TokenStr>> {
+fn concrete_exprs_character_index(input: &str) -> Vec<Cst<BorrowedTokenInput>> {
     let mut session = ParserSession::new(
         input.as_bytes(),
         &ParseOptions::default()
@@ -173,7 +178,10 @@ pub fn test_tokenize_is_not_idempotent() {
     );
 
     // Test that ParserSession::tokenize() is NOT idempotent.
-    assert_eq!(session.tokenize().unwrap().0, Vec::<Token<TokenStr>>::new())
+    assert_eq!(
+        session.tokenize().unwrap().0,
+        Vec::<Token<BorrowedTokenInput>>::new()
+    )
 }
 
 #[test]
@@ -354,13 +362,13 @@ fn test_abstract_parse() {
         &[Ast::Call {
             head: Box::new(Ast::Leaf {
                 kind: TK::Symbol,
-                input: TokenString::fake("Plus"),
+                input: OwnedTokenInput::fake("Plus"),
                 data: AstMetadata::empty()
             }),
             args: vec![
                 Ast::Leaf {
                     kind: TK::Integer,
-                    input: TokenString::fake("2"),
+                    input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {
                         source: Source::Span(src!(1:1-1:2).into()),
                         issues: vec![],
@@ -368,7 +376,7 @@ fn test_abstract_parse() {
                 },
                 Ast::Leaf {
                     kind: TK::Integer,
-                    input: TokenString::fake("2"),
+                    input: OwnedTokenInput::fake("2"),
                     data: AstMetadata {
                         source: Source::Span(src!(1:5-1:6).into()),
                         issues: vec![],

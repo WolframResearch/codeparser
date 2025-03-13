@@ -5,10 +5,10 @@ use crate::{
     tokenize::{TokenKind, Tokenizer},
 };
 
-pub(crate) type TokenRef<'i> = Token<TokenStr<'i>>;
+pub(crate) type TokenRef<'i> = Token<BorrowedTokenInput<'i>>;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Token<I = TokenString, S = Span> {
+pub struct Token<I = OwnedTokenInput, S = Span> {
     pub tok: TokenKind,
 
     pub input: I,
@@ -16,13 +16,6 @@ pub struct Token<I = TokenString, S = Span> {
     pub src: S,
 }
 
-/// Trait implemented for types that can store the piece of input associated
-/// with a [`Token`].
-///
-/// This trait is implemented for two types:
-///
-/// * [`TokenStr`] — the [`Token`] input is borrowed from a buffer
-/// * [`TokenString`] — the [`Token`] input is its own owned allocation
 pub trait TokenInput: Clone {
     fn as_bytes(&self) -> &[u8];
 
@@ -31,7 +24,7 @@ pub trait TokenInput: Clone {
             .expect("TokenInput::as_str(): as_bytes() for this token did not return valid UTF-8")
     }
 
-    fn into_owned(self) -> TokenString;
+    fn into_owned(self) -> OwnedTokenInput;
 
     #[doc(hidden)]
     fn fake(input: &'static str) -> Self;
@@ -78,23 +71,23 @@ impl TokenSource for Span {
     }
 }
 
-impl<'i> TokenInput for TokenStr<'i> {
+impl<'i> TokenInput for BorrowedTokenInput<'i> {
     fn as_bytes(&self) -> &[u8] {
-        let TokenStr { buf } = self;
+        let BorrowedTokenInput { buf } = self;
 
         buf.as_bytes()
     }
 
-    fn into_owned(self) -> TokenString {
-        let TokenStr { buf } = self;
+    fn into_owned(self) -> OwnedTokenInput {
+        let BorrowedTokenInput { buf } = self;
 
-        TokenString {
+        OwnedTokenInput {
             buf: buf.as_bytes().to_vec(),
         }
     }
 
     fn fake(input: &'static str) -> Self {
-        TokenStr {
+        BorrowedTokenInput {
             buf: BufferAndLength {
                 buf: input.as_bytes(),
             },
@@ -102,28 +95,29 @@ impl<'i> TokenInput for TokenStr<'i> {
     }
 }
 
-impl TokenInput for TokenString {
+impl TokenInput for OwnedTokenInput {
     fn as_bytes(&self) -> &[u8] {
-        let TokenString { buf } = self;
+        let OwnedTokenInput { buf } = self;
 
         buf.as_slice()
     }
 
-    fn into_owned(self) -> TokenString {
+    fn into_owned(self) -> OwnedTokenInput {
         self
     }
 
     fn fake(input: &'static str) -> Self {
-        TokenString {
+        OwnedTokenInput {
             buf: input.as_bytes().to_vec(),
         }
     }
 }
 
-impl TokenString {
+impl OwnedTokenInput {
     pub fn to_str(&self) -> &str {
-        std::str::from_utf8(self.as_bytes())
-            .expect("TokenString::to_str(): token source is not valid UTF-8")
+        std::str::from_utf8(self.as_bytes()).expect(
+            "OwnedTokenInput::to_str(): token source is not valid UTF-8",
+        )
     }
 }
 
@@ -132,40 +126,36 @@ impl TokenString {
 ///
 /// This type is used for efficient zero-copy parsing of input during the
 /// tokenization and parsing steps.
-///
-/// **Naming:** The data contained in a [`TokenStr`] is in almost all cases
-/// valid UTF-8. However, if the input contains a
-/// [`TokenKind::Error_UnsafeCharacterEncoding`] token, then this may be invalid.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct TokenStr<'i> {
+pub struct BorrowedTokenInput<'i> {
     pub(crate) buf: BufferAndLength<'i>,
 }
 
 /// Owned subslice of the input that is associated with a particular
 /// [`Token`] instance.
 #[derive(Clone, PartialEq)]
-pub struct TokenString {
+pub struct OwnedTokenInput {
     pub buf: Vec<u8>,
 }
 
-impl<'i> TokenStr<'i> {
+impl<'i> BorrowedTokenInput<'i> {
     #[doc(hidden)]
     pub fn new(slice: &'i [u8]) -> Self {
-        TokenStr {
+        BorrowedTokenInput {
             buf: BufferAndLength { buf: slice },
         }
     }
 
     pub(crate) fn from_buf(buf: BufferAndLength<'i>) -> Self {
-        TokenStr { buf }
+        BorrowedTokenInput { buf }
     }
 
     fn into_empty(self) -> Self {
-        let TokenStr { mut buf } = self;
+        let BorrowedTokenInput { mut buf } = self;
 
         buf.buf = &buf.buf[..0];
 
-        TokenStr { buf }
+        BorrowedTokenInput { buf }
     }
 }
 
@@ -176,13 +166,13 @@ impl<'i> TokenStr<'i> {
 // TODO(optimize): In the C++ version (which used bitfields to pack the `len` to
 //                 48 bits), this was 32 bytes.
 const _: () = assert!(std::mem::size_of::<TokenRef>() == 40);
-const _: () = assert!(std::mem::size_of::<TokenStr>() == 16);
+const _: () = assert!(std::mem::size_of::<BorrowedTokenInput>() == 16);
 
 #[cfg(target_pointer_width = "64")]
 #[test]
 fn test_token_size() {
     assert_eq!(std::mem::size_of::<TokenRef>(), 40);
-    assert_eq!(std::mem::size_of::<TokenStr>(), 16);
+    assert_eq!(std::mem::size_of::<BorrowedTokenInput>(), 16);
 }
 
 impl<'i> TokenRef<'i> {
@@ -193,7 +183,7 @@ impl<'i> TokenRef<'i> {
     ) -> Self {
         let token = Token {
             src,
-            input: TokenStr::from_buf(buf),
+            input: BorrowedTokenInput::from_buf(buf),
             tok,
         };
 
@@ -321,7 +311,7 @@ impl<'i> TokenRef<'i> {
 }
 
 impl<I: TokenInput, S> Token<I, S> {
-    pub(crate) fn into_owned_input(self) -> Token<TokenString, S> {
+    pub(crate) fn into_owned_input(self) -> Token<OwnedTokenInput, S> {
         let Token { tok, src, input } = self;
 
         Token {
@@ -396,7 +386,7 @@ impl<I, S> Token<I, S> {
     // }
 }
 
-impl PartialEq<Token> for Token<TokenStr<'_>> {
+impl PartialEq<Token> for Token<BorrowedTokenInput<'_>> {
     fn eq(&self, other: &Token) -> bool {
         let Token { tok, src, input } = *self;
 
@@ -404,7 +394,7 @@ impl PartialEq<Token> for Token<TokenStr<'_>> {
             return false;
         }
 
-        let TokenStr { buf } = input;
+        let BorrowedTokenInput { buf } = input;
 
         buf.as_bytes() == other.input.buf
     }
@@ -414,15 +404,18 @@ impl PartialEq<Token> for Token<TokenStr<'_>> {
 // Format Impls
 //======================================
 
-impl Debug for TokenString {
+impl Debug for OwnedTokenInput {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let TokenString { buf } = self;
+        let OwnedTokenInput { buf } = self;
 
         match std::str::from_utf8(buf) {
-            Ok(str) => {
-                f.debug_struct("TokenString").field("buf", &str).finish()
+            Ok(str) => f
+                .debug_struct("OwnedTokenInput")
+                .field("buf", &str)
+                .finish(),
+            Err(_) => {
+                f.debug_struct("OwnedTokenInput").field("buf", buf).finish()
             },
-            Err(_) => f.debug_struct("TokenString").field("buf", buf).finish(),
         }
     }
 }

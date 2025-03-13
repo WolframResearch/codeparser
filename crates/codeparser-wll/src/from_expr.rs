@@ -17,7 +17,7 @@ use wolfram_parser::{
     quirks::QuirkSettings,
     source::{Location, Source, Span},
     symbols as sym,
-    tokenize::{Token, TokenKind, TokenString},
+    tokenize::{OwnedTokenInput, Token, TokenKind},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq,
     UnsafeCharacterEncoding,
 };
@@ -30,7 +30,7 @@ pub(crate) trait FromExpr: Sized {
 // FromExpr impls
 //==========================================================
 
-impl FromExpr for Container<Cst<TokenString, Source>> {
+impl FromExpr for Container<Cst<OwnedTokenInput, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(
             expr,
@@ -78,7 +78,7 @@ impl FromExpr for ContainerKind {
     }
 }
 
-impl FromExpr for ContainerBody<Cst<TokenString, Source>> {
+impl FromExpr for ContainerBody<Cst<OwnedTokenInput, Source>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(elements) = try_normal_with_head(expr, sym::List) {
             if elements.len() == 1 {
@@ -109,13 +109,13 @@ impl<N: FromExpr> FromExpr for NodeSeq<N> {
     }
 }
 
-impl FromExpr for Cst<TokenString, Source> {
+impl FromExpr for Cst<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         if let Ok(LeafNode { kind, input, src }) = LeafNode::from_expr(expr) {
             let token = Token {
                 tok: kind,
                 src,
-                input: TokenString {
+                input: OwnedTokenInput {
                     buf: input.into_bytes(),
                 },
             };
@@ -221,7 +221,7 @@ impl FromExpr for LeafNode {
     }
 }
 
-impl FromExpr for CallNode<TokenString, Source> {
+impl FromExpr for CallNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_CallNode)?;
 
@@ -255,7 +255,7 @@ impl FromExpr for CallNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for PrefixNode<TokenString, Source> {
+impl FromExpr for PrefixNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_PrefixNode)?;
 
@@ -274,7 +274,7 @@ impl FromExpr for PrefixNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for InfixNode<TokenString, Source> {
+impl FromExpr for InfixNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_InfixNode)?;
 
@@ -294,7 +294,7 @@ impl FromExpr for InfixNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for PrefixBinaryNode<TokenString, Source> {
+impl FromExpr for PrefixBinaryNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements =
             try_normal_with_head(expr, sym::CodeParser_PrefixBinaryNode)?;
@@ -311,7 +311,7 @@ impl FromExpr for PrefixBinaryNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for BinaryNode<TokenString, Source> {
+impl FromExpr for BinaryNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_BinaryNode)?;
 
@@ -327,7 +327,7 @@ impl FromExpr for BinaryNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for TernaryNode<TokenString, Source> {
+impl FromExpr for TernaryNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_TernaryNode)?;
 
@@ -343,7 +343,7 @@ impl FromExpr for TernaryNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for PostfixNode<TokenString, Source> {
+impl FromExpr for PostfixNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_PostfixNode)?;
 
@@ -359,7 +359,7 @@ impl FromExpr for PostfixNode<TokenString, Source> {
     }
 }
 
-impl<O: FromExpr> FromExpr for GroupNode<TokenString, Source, O> {
+impl<O: FromExpr> FromExpr for GroupNode<OwnedTokenInput, Source, O> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_GroupNode)?;
 
@@ -375,7 +375,7 @@ impl<O: FromExpr> FromExpr for GroupNode<TokenString, Source, O> {
     }
 }
 
-impl FromExpr for BoxNode<TokenString, Source> {
+impl FromExpr for BoxNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_BoxNode)?;
 
@@ -384,7 +384,7 @@ impl FromExpr for BoxNode<TokenString, Source> {
         }
 
         let kind = BoxKind::from_expr(&elements[0]).expect("PRE_COMMIT");
-        let children: CstNodeSeq<TokenString, Source> =
+        let children: CstNodeSeq<OwnedTokenInput, Source> =
             NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -436,7 +436,9 @@ impl FromExpr for CodeNode<Source> {
     }
 }
 
-impl<O: FromExpr> FromExpr for GroupMissingCloserNode<TokenString, Source, O> {
+impl<O: FromExpr> FromExpr
+    for GroupMissingCloserNode<OwnedTokenInput, Source, O>
+{
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements =
             try_normal_with_head(expr, sym::CodeParser_GroupMissingCloserNode)?;
@@ -453,7 +455,7 @@ impl<O: FromExpr> FromExpr for GroupMissingCloserNode<TokenString, Source, O> {
     }
 }
 
-impl FromExpr for GroupMissingOpenerNode<TokenString, Source> {
+impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements =
             try_normal_with_head(expr, sym::CodeParser_GroupMissingOpenerNode)?;
@@ -470,7 +472,7 @@ impl FromExpr for GroupMissingOpenerNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for CompoundNode<TokenString, Source> {
+impl FromExpr for CompoundNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements =
             try_normal_with_head(expr, sym::CodeParser_CompoundNode)?;
@@ -487,7 +489,7 @@ impl FromExpr for CompoundNode<TokenString, Source> {
     }
 }
 
-impl FromExpr for SyntaxErrorNode<TokenString, Source> {
+impl FromExpr for SyntaxErrorNode<OwnedTokenInput, Source> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements =
             try_normal_with_head(expr, sym::CodeParser_SyntaxErrorNode)?;

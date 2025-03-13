@@ -3,7 +3,7 @@ pub(crate) mod token_kind;
 pub(crate) mod tokenizer;
 
 pub use self::{
-    token::{Token, TokenStr, TokenString},
+    token::{BorrowedTokenInput, OwnedTokenInput, Token},
     token_kind::TokenKind,
 };
 

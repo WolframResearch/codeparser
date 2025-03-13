@@ -53,7 +53,7 @@ use crate::{
     tokenize::{
         token_kind::Closer,
         tokenizer::{Tokenizer, Tokenizer_currentToken_stringifyAsFile},
-        TokenKind, TokenRef, TokenStr,
+        BorrowedTokenInput, TokenKind, TokenRef,
     },
     FirstLineBehavior,
     NodeSeq,
@@ -301,8 +301,8 @@ impl<'i> ParserSession<'i> {
     /// call [`ParserSession::parse_climb()`].
     pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)
     where
-        N: Into<Cst<TokenStr<'i>>>,
-        F: FnOnce(CstNodeSeq<TokenStr<'i>>) -> N,
+        N: Into<Cst<BorrowedTokenInput<'i>>>,
+        F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
     {
         self.reduce(func);
 
@@ -313,8 +313,8 @@ impl<'i> ParserSession<'i> {
     /// Pop the top context and push a new node constructed by `func`.
     pub(crate) fn reduce<N, F>(&mut self, func: F)
     where
-        N: Into<Cst<TokenStr<'i>>>,
-        F: FnOnce(CstNodeSeq<TokenStr<'i>>) -> N,
+        N: Into<Cst<BorrowedTokenInput<'i>>>,
+        F: FnOnce(CstNodeSeq<BorrowedTokenInput<'i>>) -> N,
     {
         // Remove the top context
         let ctxt = self
@@ -604,13 +604,13 @@ impl<'i> ParserSession<'i> {
 
     pub(crate) fn push_node<N>(&mut self, node: N)
     where
-        N: Into<Cst<TokenStr<'i>>>,
+        N: Into<Cst<BorrowedTokenInput<'i>>>,
     {
         let node = node.into();
         self.NodeStack.push(node);
     }
 
-    pub(crate) fn pop_node(&mut self) -> Cst<TokenStr<'i>> {
+    pub(crate) fn pop_node(&mut self) -> Cst<BorrowedTokenInput<'i>> {
         assert!(!self.NodeStack.is_empty());
 
         let top = self.NodeStack.pop().unwrap();
@@ -619,7 +619,9 @@ impl<'i> ParserSession<'i> {
     }
 
     #[cfg(test)]
-    pub(crate) fn top_node<'s>(&'s mut self) -> &'s mut Cst<TokenStr<'i>> {
+    pub(crate) fn top_node<'s>(
+        &'s mut self,
+    ) -> &'s mut Cst<BorrowedTokenInput<'i>> {
         assert!(!self.NodeStack.is_empty());
 
         return self.NodeStack.last_mut().unwrap();
