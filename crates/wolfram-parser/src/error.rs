@@ -3,12 +3,9 @@ use std::{num::NonZeroU32, ops::Range};
 use crate::{
     agg::AggNodeSeq,
     cst::{GroupMissingCloserNode, Node, OperatorNode, UnterminatedGroupNeedsReparseNode},
-    source::{
-        Buffer, BufferAndLength, CharacterSpan, LineColumn, Source, SourceLocation,
-        StringSourceKind,
-    },
+    source::{Buffer, BufferAndLength, CharacterSpan, LineColumn},
     tokenize::{BorrowedTokenInput, Token},
-    NodeSeq, Tokens,
+    NodeSeq, Source, SourceLocation, StringSourceKind, Tokens,
 };
 
 use once_cell::sync::Lazy;

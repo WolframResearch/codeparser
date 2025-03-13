@@ -12,11 +12,12 @@ use wolfram_parser::{
     cst::{CompoundOperator, CstNodeSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
-    source::{GeneralSource, Source, SourceLocation},
+    source::GeneralSource,
     symbol_registration as sym,
     token_enum_registration::SymbolToToken,
     tokenize::{OwnedTokenInput, Token, TokenKind},
-    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, UnsafeCharacterEncoding,
+    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, Source, SourceLocation,
+    UnsafeCharacterEncoding,
 };
 
 pub(crate) trait FromExpr: Sized {
