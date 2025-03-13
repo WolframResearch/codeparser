@@ -20,12 +20,9 @@ With modifications based on empirical observations
 *)
 
 <|
-(* The lowest precedence value has been replace with Option<Precedence>, where
-   None represents the absence of a precedence value. *)
-(* Precedence`Lowest -> {0, Associativity`NonRight},
-Precedence`Comma -> {Next, Associativity`NonRight}, *)
+Precedence`Lowest -> {0, Associativity`NonRight},
 
-Precedence`Comma -> {1, Associativity`NonRight},
+Precedence`Comma -> {Next, Associativity`NonRight},
 Precedence`LongName`InvisibleComma -> Precedence`Comma,
 
 Precedence`Semi -> {Next, Associativity`NonRight}, (* Precedence[CompoundExpression] == 10 *)

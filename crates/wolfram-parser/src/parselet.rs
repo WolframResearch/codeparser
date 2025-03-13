@@ -16,7 +16,7 @@ use crate::{
     panic_if_aborted,
     parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS, *},
     parser::{ColonLHS, ParserSession, Parser_identity},
-    precedence::Precedence,
+    precedence::{Precedence, *},
     source::*,
     token::{Token, TokenKind, TokenRef},
     token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
@@ -48,7 +48,7 @@ pub(crate) trait PrefixParselet: Parselet {
 pub(crate) trait InfixParselet: Parselet {
     fn parse_infix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>);
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence>;
+    fn getPrecedence(&self, session: &mut ParserSession) -> Precedence;
 
     fn getOp(&self) -> InfixParseletOperator {
         // TODO: Make this sentinel value unnecessary?
@@ -449,7 +449,7 @@ impl PrefixParselet for PrefixCloserParselet {
 
         let createdToken: TokenRef;
 
-        if session.top_precedence() == Precedence::COMMA {
+        if session.top_precedence() == PRECEDENCE_COMMA {
             createdToken = Token::error_at_start(TokenKind::Error_InfixImplicitNull, tok_in);
         } else {
             createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, tok_in);
@@ -508,7 +508,7 @@ impl PrefixParselet for PrefixEndOfFileParselet {
 
         let createdToken: TokenRef;
 
-        if session.top_precedence() == Precedence::COMMA {
+        if session.top_precedence() == PRECEDENCE_COMMA {
             createdToken = Token::error_at_start(TokenKind::Error_InfixImplicitNull, tok_in);
         } else {
             createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, tok_in);
@@ -556,7 +556,7 @@ impl PrefixParselet for PrefixCommaParselet {
 
         let createdToken: TokenRef;
 
-        if session.top_precedence() == None {
+        if session.top_precedence() == PRECEDENCE_LOWEST {
             createdToken = Token::error_at_start(TokenKind::Error_PrefixImplicitNull, tok_in);
         } else {
             createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, tok_in);
@@ -601,7 +601,7 @@ impl PrefixParselet for PrefixUnhandledParselet {
         // else if (Ctxt.prec == TokenPrecedence && Ctxt.prec.Associativity is NonRight)
         //   goto prefixUnhandledParseletRet;
         //
-        if Precedence::greater(session.top_precedence(), TokenPrecedence) {
+        if (session.top_precedence() | 0x1) > TokenPrecedence {
             //
             // Something like  a + | 2
             //
@@ -636,11 +636,11 @@ impl InfixParselet for InfixToplevelNewlineParselet {
         assert!(false);
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
         //
         // Do not do Implicit Times across top-level newlines
         //
-        return None;
+        return PRECEDENCE_LOWEST;
     }
 }
 
@@ -672,7 +672,7 @@ impl PrefixParselet for SymbolParselet {
                 // Something like  a_
                 //
 
-                session.push_context(Precedence::HIGHEST);
+                session.push_context(PRECEDENCE_HIGHEST);
 
                 //
                 // Context-sensitive and OK to build stack
@@ -688,7 +688,7 @@ impl PrefixParselet for SymbolParselet {
                 // Something like  a__
                 //
 
-                session.push_context(Precedence::HIGHEST);
+                session.push_context(PRECEDENCE_HIGHEST);
 
                 //
                 // Context-sensitive and OK to build stack
@@ -704,7 +704,7 @@ impl PrefixParselet for SymbolParselet {
                 // Something like  a___
                 //
 
-                session.push_context(Precedence::HIGHEST);
+                session.push_context(PRECEDENCE_HIGHEST);
 
                 //
                 // Context-sensitive and OK to build stack
@@ -720,7 +720,7 @@ impl PrefixParselet for SymbolParselet {
                 // Something like  a_.
                 //
 
-                session.push_context(Precedence::HIGHEST);
+                session.push_context(PRECEDENCE_HIGHEST);
 
                 //
                 // Context-sensitive and OK to build stack
@@ -788,8 +788,8 @@ impl PrefixOperatorParselet {
         PrefixOperatorParselet { precedence, Op }
     }
 
-    fn getPrecedence(&self) -> Option<Precedence> {
-        return Some(self.precedence);
+    fn getPrecedence(&self) -> Precedence {
+        return self.precedence;
     }
 
     fn getOp(&self) -> PrefixOperator {
@@ -834,7 +834,7 @@ impl InfixParselet for InfixImplicitTimesParselet {
         assert!(false);
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         panic!("The last token may not have been added to InfixParselets");
     }
 
@@ -853,8 +853,8 @@ impl InfixParselet for InfixImplicitTimesParselet {
 //======================================
 
 impl PrefixParselet for PrefixAssertFalseParselet {
-    // fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
-    //     None
+    // fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
+    //     PRECEDENCE_LOWEST
     // }
 
     fn parse_prefix<'i>(&'static self, _session: &mut ParserSession<'i>, _token: TokenRef<'i>) {
@@ -872,8 +872,8 @@ impl InfixParselet for InfixAssertFalseParselet {
         assert!(false)
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        None
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        PRECEDENCE_LOWEST
     }
 }
 
@@ -904,8 +904,8 @@ impl InfixParselet for BinaryOperatorParselet {
         return session.parse_prefix(tok);
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(self.precedence)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        self.precedence
     }
 
     fn getOp(&self) -> InfixParseletOperator {
@@ -968,8 +968,8 @@ impl InfixParselet for InfixOperatorParselet {
         // #endif // !USE_MUSTTAIL
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(self.precedence)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        self.precedence
     }
 
     fn getOp(&self) -> InfixParseletOperator {
@@ -1067,8 +1067,8 @@ impl InfixParselet for PostfixOperatorParselet {
         return self.reduce_postfix_operator(session);
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(self.precedence)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        self.precedence
     }
 
     fn getOp(&self) -> InfixParseletOperator {
@@ -1114,7 +1114,7 @@ impl PrefixParselet for GroupParselet {
 
         session.push_group(GroupOpenerToCloser(tok_in.tok));
 
-        let ctxt = session.push_context(None);
+        let ctxt = session.push_context(PRECEDENCE_LOWEST);
         ctxt.init_callback(Parser_identity, None);
 
         // #if !USE_MUSTTAIL
@@ -1309,12 +1309,12 @@ impl InfixParselet for CallParselet {
 
 
         //
-        // if we used Precedence::CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
+        // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
         //
 
         let ctxt = session.top_context();
         ctxt.init_callback(|s, _| CallParselet::reduce_call(s), None);
-        ctxt.set_precedence(Precedence::HIGHEST);
+        ctxt.set_precedence(PRECEDENCE_HIGHEST);
 
         let GP = self.getGP();
 
@@ -1322,8 +1322,8 @@ impl InfixParselet for CallParselet {
         return GP.parse_prefix(session, tok_in);
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
-        Some(Precedence::CALL)
+    fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
+        PRECEDENCE_CALL
     }
 }
 
@@ -1388,17 +1388,17 @@ impl InfixParselet for TildeParselet {
 
         let ctxt = session.top_context();
         ctxt.init_callback(|s, _| TildeParselet::parse1(s), None);
-        ctxt.set_precedence(None);
+        ctxt.set_precedence(PRECEDENCE_LOWEST);
 
         return session.parse_prefix(first_tok);
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
         if session.top_non_trivia_node_is_tilde() {
-            return None;
+            return PRECEDENCE_LOWEST;
         }
 
-        return Some(Precedence::TILDE);
+        return PRECEDENCE_TILDE;
     }
 }
 
@@ -1438,7 +1438,7 @@ impl TildeParselet {
         // TODO: Figure out how to express this logic and re-enable this assertion.
         // assert!(Ctxt.f.unwrap() as usize == TildeParselet_parse1 as usize);
         ctxt.set_callback(|s, _| TildeParselet::reduce_tilde(s));
-        ctxt.set_precedence(Precedence::TILDE);
+        ctxt.set_precedence(PRECEDENCE_TILDE);
 
         return session.parse_prefix(tok2);
     }
@@ -1476,14 +1476,14 @@ impl InfixParselet for ColonParselet {
             ColonLHS::Pattern => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(|s, _| ColonParselet::reduce_pattern(s), None);
-                ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
+                ctxt.set_precedence(PRECEDENCE_FAKE_PATTERNCOLON);
 
                 return session.parse_prefix(tok);
             },
             ColonLHS::Optional => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(|s, _| ColonParselet::reduce_optional(s), None);
-                ctxt.set_precedence(Precedence::FAKE_OPTIONALCOLON);
+                ctxt.set_precedence(PRECEDENCE_FAKE_OPTIONALCOLON);
 
                 // MUSTTAIl
                 return session.parse_prefix(tok);
@@ -1491,7 +1491,7 @@ impl InfixParselet for ColonParselet {
             ColonLHS::Error => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(|s, _| ColonParselet::reduce_error(s), None);
-                ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
+                ctxt.set_precedence(PRECEDENCE_FAKE_PATTERNCOLON);
 
                 // MUSTTAIl
                 return session.parse_prefix(tok);
@@ -1499,12 +1499,12 @@ impl InfixParselet for ColonParselet {
         }
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
         if session.check_pattern_precedence() {
-            return Some(Precedence::FAKE_OPTIONALCOLON);
+            return PRECEDENCE_FAKE_OPTIONALCOLON;
         }
 
-        return Some(Precedence::HIGHEST);
+        return PRECEDENCE_HIGHEST;
     }
 }
 
@@ -1558,8 +1558,8 @@ impl InfixParselet for SlashColonParselet {
         return session.parse_prefix(tok);
     }
 
-    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
-        Some(Precedence::SLASHCOLON)
+    fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
+        PRECEDENCE_SLASHCOLON
     }
 }
 
@@ -1576,7 +1576,7 @@ impl SlashColonParselet {
             TokenKind::Equal => {
                 session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-                session.set_precedence(Precedence::EQUAL);
+                session.set_precedence(PRECEDENCE_EQUAL);
 
                 // MUSTTAIl
                 return EqualParselet::parse_infix_tag(session, tok);
@@ -1584,7 +1584,7 @@ impl SlashColonParselet {
             TokenKind::ColonEqual => {
                 session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-                session.set_precedence(Precedence::COLONEQUAL);
+                session.set_precedence(PRECEDENCE_COLONEQUAL);
 
                 // MUSTTAIl
                 return ColonEqualParselet::parse_infix_tag(session, tok);
@@ -1617,7 +1617,7 @@ impl SlashColonParselet {
 impl EqualParselet {
     pub(crate) const fn new() -> Self {
         Self {
-            op: BinaryOperatorParselet::new(Precedence::EQUAL, BinaryOperator::Set),
+            op: BinaryOperatorParselet::new(PRECEDENCE_EQUAL, BinaryOperator::Set),
         }
     }
 }
@@ -1652,7 +1652,7 @@ impl InfixParselet for EqualParselet {
         return session.parse_prefix(tok);
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
         self.op.getPrecedence(session)
     }
 }
@@ -1717,7 +1717,7 @@ impl EqualParselet {
 impl ColonEqualParselet {
     pub(crate) const fn new() -> Self {
         ColonEqualParselet {
-            op: BinaryOperatorParselet::new(Precedence::COLONEQUAL, BinaryOperator::SetDelayed),
+            op: BinaryOperatorParselet::new(PRECEDENCE_COLONEQUAL, BinaryOperator::SetDelayed),
         }
     }
 }
@@ -1738,7 +1738,7 @@ impl InfixParselet for ColonEqualParselet {
         return session.parse_prefix(tok);
     }
 
-    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
+    fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
         self.op.getPrecedence(session)
     }
 }
@@ -1832,8 +1832,8 @@ impl InfixParselet for CommaParselet {
         // #endif // !USE_MUSTTAIL
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(Precedence::COMMA)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        PRECEDENCE_COMMA
     }
 }
 
@@ -2009,8 +2009,8 @@ impl InfixParselet for SemiParselet {
         return SemiParselet::reduce_CompoundExpression(session);
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(Precedence::SEMI)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        PRECEDENCE_SEMI
     }
 }
 
@@ -2148,8 +2148,8 @@ impl InfixParselet for ColonColonParselet {
         return ColonColonParselet::parse_loop(session);
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(Precedence::COLONCOLON)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        PRECEDENCE_COLONCOLON
     }
 }
 
@@ -2225,8 +2225,8 @@ impl InfixParselet for GreaterGreaterParselet {
         return GreaterGreaterParselet::reduce_Put(session);
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(Precedence::GREATERGREATER)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        PRECEDENCE_GREATERGREATER
     }
 }
 
@@ -2263,8 +2263,8 @@ impl InfixParselet for GreaterGreaterGreaterParselet {
         return GreaterGreaterGreaterParselet::reduce_PutAppend(session);
     }
 
-    fn getPrecedence(&self, _session: &mut ParserSession) -> Option<Precedence> {
-        Some(Precedence::GREATERGREATERGREATER)
+    fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
+        PRECEDENCE_GREATERGREATERGREATER
     }
 }
 
@@ -2293,7 +2293,7 @@ impl PrefixParselet for LessLessParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        session.push_context(Precedence::HIGHEST);
+        session.push_context(PRECEDENCE_HIGHEST);
 
         let tok = session.current_token_stringify_as_file_eat_trivia();
 
@@ -2339,7 +2339,7 @@ impl PrefixParselet for HashParselet {
 
         match tok.tok {
             TokenKind::Integer | TokenKind::String => {
-                session.push_context(Precedence::HIGHEST);
+                session.push_context(PRECEDENCE_HIGHEST);
 
                 session.push_leaf_and_next(tok);
 
@@ -2379,7 +2379,7 @@ impl PrefixParselet for HashHashParselet {
 
         match tok.tok {
             TokenKind::Integer => {
-                session.push_context(Precedence::HIGHEST);
+                session.push_context(PRECEDENCE_HIGHEST);
 
                 session.push_leaf_and_next(tok);
 
@@ -2419,7 +2419,7 @@ impl PrefixParselet for PercentParselet {
 
         match tok.tok {
             TokenKind::Integer => {
-                session.push_context(Precedence::HIGHEST);
+                session.push_context(PRECEDENCE_HIGHEST);
 
                 session.push_leaf_and_next(tok);
 

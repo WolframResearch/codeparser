@@ -78,26 +78,20 @@ precedenceCPPHeader = {
 
 #![allow(dead_code)]
 
-use crate::precedence::Precedence;
+/// All levels of precedence
+pub type Precedence = u8;
 
-impl Precedence {\
 "} ~Join~
 	KeyValueMap[
-		{key, value} |-> Row[{
-			"\tpub const ",
-			toGlobal[key, "DefinePrecedence"],
-			": Precedence = Precedence::new(",
-			BitShiftLeft[value[[1]], 1] + associativityToValue[value[[2]]],
-			"); // prec: ", value[[1]], ", assoc: ", value[[2]]
-		}],
+		(Row[{
+			"pub const ",
+			toGlobal[#1], ": u8 = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ";", " // prec: ", #2[[1]], ", assoc: ", #2[[2]]
+		}])&,
 		enumMap
-	]
-~Join~ {
-	"\n}"
-};
+	];
 
 Print["exporting Precedence.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "precedence_values.rs"}], Column[precedenceCPPHeader], "String"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "precedence.rs"}], Column[precedenceCPPHeader], "String"];
 
 Print[res];
 
