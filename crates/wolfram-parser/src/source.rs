@@ -509,13 +509,7 @@ impl Display for LineColumnSpan {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let LineColumnSpan { start, end } = self;
 
-        if start.line() == end.line() {
-            // a:b-c
-            write!(f, "{start}-{}", end.column())
-        } else {
-            // a:b-c:d
-            write!(f, "{start}-{end}")
-        }
+        write!(f, "{start}-{end}")
     }
 }
 
