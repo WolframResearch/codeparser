@@ -37,9 +37,7 @@ pub(crate) struct Reader<'i> {
     pub(crate) wasEOF: bool,
 
     pub(crate) SrcLoc: Location,
-
     pub(crate) tab_width: u32,
-    pub(crate) check_issues: bool,
 
     encoding_mode: EncodingMode,
 
@@ -78,7 +76,6 @@ impl<'i> Reader<'i> {
             src_convention,
             encoding_mode,
             tab_width,
-            check_issues,
             quirk_settings: _,
         } = *opts;
 
@@ -87,9 +84,8 @@ impl<'i> Reader<'i> {
             offset: 0,
             wasEOF: false,
             SrcLoc: src_convention.newSourceLocation(),
-
             tab_width,
-            check_issues,
+
             encoding_mode,
 
             fatal_issues: Vec::new(),

@@ -1,4 +1,5 @@
 use crate::{
+    feature,
     generated::long_names_registration::CODEPOINT_TO_LONGNAME_MAP,
     issue::{CodeAction, IssueTag, Severity, SyntaxIssue},
     long_names::{self as LongNames, self},
@@ -147,7 +148,7 @@ fn CharacterDecoder_handleStringMetaOpen(
 
     let c = WLCharacter::new_with_escape(StringMeta_Open, Escape::Single);
 
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         let graphicalStr = c.graphicalString();
 
         let currentWLCharacterStartLoc = escaped.src_loc.previous();
@@ -190,7 +191,7 @@ fn CharacterDecoder_handleStringMetaClose(
 
     let c = WLCharacter::new_with_escape(StringMeta_Close, Escape::Single);
 
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         let graphicalStr = c.graphicalString();
 
         let currentWLCharacterStartLoc = escaped.src_loc.previous();
@@ -300,7 +301,7 @@ fn CharacterDecoder_handleLongName(
         // Not well-formed
         //
 
-        if session.check_issues
+        if feature::CHECK_ISSUES
             && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
         {
             let currentWLCharacterStartLoc = open_square.src_loc.previous();
@@ -421,7 +422,7 @@ fn CharacterDecoder_handleLongName(
         // Name not found
         //
 
-        if session.check_issues
+        if feature::CHECK_ISSUES
             && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
         {
             let longNameEndLoc = session.SrcLoc;
@@ -535,7 +536,8 @@ fn CharacterDecoder_handleLongName(
 
     session.next_source_char(policy);
 
-    if session.check_issues && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+    if feature::CHECK_ISSUES
+        && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
     {
         // let longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
         let longNameBufAndLen =
@@ -585,7 +587,7 @@ fn CharacterDecoder_handle4Hex(
             // Something like \:z
             //
 
-            if session.check_issues
+            if feature::CHECK_ISSUES
                 && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
             {
                 let currentWLCharacterStartLoc = colon.src_loc.previous();
@@ -654,6 +656,7 @@ fn CharacterDecoder_handle4Hex(
         _ => (),
     }
 
+    #[cfg(feature = "CHECK_ISSUES")]
     check_strange_syntax_issue(
         session,
         policy,
@@ -688,7 +691,7 @@ fn CharacterDecoder_handle2Hex(
             // Something like \.z
             //
 
-            if session.check_issues
+            if feature::CHECK_ISSUES
                 && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
             {
                 let currentWLCharacterStartLoc = dot.src_loc.previous();
@@ -754,6 +757,7 @@ fn CharacterDecoder_handle2Hex(
         _ => (),
     }
 
+    #[cfg(feature = "CHECK_ISSUES")]
     check_strange_syntax_issue(
         session,
         policy,
@@ -791,7 +795,7 @@ fn CharacterDecoder_handleOctal(
             // Something like \1z
             //
 
-            if session.check_issues
+            if feature::CHECK_ISSUES
                 && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
             {
                 let currentWLCharacterStartLoc = first_octal.src_loc.previous();
@@ -863,6 +867,7 @@ fn CharacterDecoder_handleOctal(
         _ => (),
     }
 
+    #[cfg(feature = "CHECK_ISSUES")]
     check_strange_syntax_issue(
         session,
         policy,
@@ -897,7 +902,7 @@ fn CharacterDecoder_handle6Hex(
             // Something like \|z
             //
 
-            if session.check_issues
+            if feature::CHECK_ISSUES
                 && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
             {
                 let currentWLCharacterStartLoc = bar.src_loc.previous();
@@ -983,6 +988,7 @@ fn CharacterDecoder_handle6Hex(
         _ => (),
     }
 
+    #[cfg(feature = "CHECK_ISSUES")]
     check_strange_syntax_issue(
         session,
         policy,
@@ -1003,7 +1009,7 @@ fn CharacterDecoder_handleBackslash(
     // converting "\[Alpa]" into "\\[Alpa]", copying that, and then never giving any further warnings
     // when dealing with "\\[Alpa]"
     //
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         let reset_mark = session.mark();
 
         //
@@ -1081,7 +1087,8 @@ fn CharacterDecoder_handleUnhandledEscape(
     // Make the warnings a little more relevant
     //
 
-    if session.check_issues && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+    if feature::CHECK_ISSUES
+        && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
     {
         let currentWLCharacterStartLoc = unhandled.src_loc.previous();
 
@@ -1446,7 +1453,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
                 Escape::Single,
             );
 
-            if session.check_issues {
+            if feature::CHECK_ISSUES {
                 let graphicalStr = c.graphicalString();
 
                 let currentWLCharacterStartLoc = escaped.src_loc.previous();
@@ -1492,7 +1499,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
                 Escape::Single,
             );
 
-            if session.check_issues {
+            if feature::CHECK_ISSUES {
                 let graphicalStr = c.graphicalString();
 
                 let currentWLCharacterStartLoc = escaped.src_loc.previous();
@@ -1774,11 +1781,6 @@ pub(crate) fn check_strange_syntax_issue(
     start_loc: Location,
     escape_style: Escape,
 ) {
-    if !session.check_issues {
-        // Don't add any issues
-        return;
-    }
-
     let c = WLCharacter::new_with_escape(point, escape_style);
 
     let issue_value: f64 = if utils::isStrange(point) {

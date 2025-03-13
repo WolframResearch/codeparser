@@ -45,7 +45,6 @@ impl<'i> ParserSession<'i> {
             src_convention: _,
             encoding_mode: _,
             tab_width: _,
-            check_issues: _,
             quirk_settings,
         } = *opts;
 

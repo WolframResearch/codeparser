@@ -146,28 +146,30 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 session.src().newline();
             }
 
-            if session.check_issues && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES) {
+            if feature::CHECK_ISSUES {
+                if policy.contains(ENABLE_CHARACTER_DECODING_ISSUES) {
 
-                //
-                // No CodeAction here
-                //
+                    //
+                    // No CodeAction here
+                    //
 
-                //
-                // FIXME: no way to do endOfPreviousLine()
-                //
-                let currentSourceCharacterStartLoc = session.SrcLoc;
+                    //
+                    // FIXME: no way to do endOfPreviousLine()
+                    //
+                    let currentSourceCharacterStartLoc = session.SrcLoc;
 
-                let I = EncodingIssue(
-                    IssueTag::UnexpectedCarriageReturn,
-                    format!("Unexpected ``\\r`` character."),
-                    Severity::Warning,
-                    Span::new(currentSourceCharacterStartLoc, session.SrcLoc),
-                    1.0,
-                    vec![],
-                    vec![]
-                );
+                    let I = EncodingIssue(
+                        IssueTag::UnexpectedCarriageReturn,
+                        format!("Unexpected ``\\r`` character."),
+                        Severity::Warning,
+                        Span::new(currentSourceCharacterStartLoc, session.SrcLoc),
+                        1.0,
+                        vec![],
+                        vec![]
+                    );
 
-                session.addIssue(I);
+                    session.addIssue(I);
+                }
             }
 
             return SourceCharacter::from('\r');
@@ -934,7 +936,7 @@ fn ByteDecoder_validStrange(
         session.src().increment();
     }
 
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         let currentSourceCharacterStartLoc = session.SrcLoc.previous();
 
         ByteDecoder_strangeWarning(
@@ -957,7 +959,7 @@ fn ByteDecoder_validMB(
         session.src().increment();
     }
 
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         let currentSourceCharacterStartLoc = session.SrcLoc.previous();
 
         if crate::utils::isMBStrange(decoded) {
@@ -1024,7 +1026,7 @@ fn ByteDecoder_incompleteByteSequence(
         session.src().increment();
     }
 
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         //
         // No CodeAction here
         //
@@ -1068,7 +1070,7 @@ fn ByteDecoder_straySurrogate(
         session.src().increment();
     }
 
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         //
         // No CodeAction here
         //
@@ -1109,7 +1111,7 @@ fn ByteDecoder_bom(
         session.src().increment();
     }
 
-    if session.check_issues {
+    if feature::CHECK_ISSUES {
         //
         // No CodeAction here
         //
