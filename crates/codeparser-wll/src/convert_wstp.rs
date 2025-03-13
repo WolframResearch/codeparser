@@ -6,9 +6,9 @@ use wolfram_parser::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
     cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode,
-        Operator, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Operator,
+        OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
+        TernaryNode,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, GeneralSource, LineColumn, Source, SourceLocation, StringSourceKind},
@@ -458,7 +458,7 @@ impl WstpPut for AstNode {
                     link.put_function(sym::CodeParser_GroupNode.as_str(), 3)
                         .unwrap();
 
-                    GroupOperator::CodeParser_GroupParen.put(link);
+                    Operator::CodeParser_GroupParen.put(link);
 
                     let (o, b, c, data2) = &**group;
                     link.put_function(sym::List.as_str(), 3).unwrap();
@@ -650,9 +650,9 @@ impl<S: WstpPut> WstpPut for CodeNode<S> {
     }
 }
 
-fn put_op<I: TokenInput, S: WstpPut, O: WstpPut>(
+fn put_op<I: TokenInput, S: WstpPut>(
     link: &mut wstp::Link,
-    node: &OperatorNode<I, S, O>,
+    node: &OperatorNode<I, S>,
     op_head: Symbol,
 ) {
     let OperatorNode { op, children, src } = node;
@@ -667,12 +667,6 @@ fn put_op<I: TokenInput, S: WstpPut, O: WstpPut>(
 }
 
 impl WstpPut for Operator {
-    fn put(&self, link: &mut wstp::Link) {
-        Symbol_put(self.to_symbol(), link)
-    }
-}
-
-impl WstpPut for GroupOperator {
     fn put(&self, link: &mut wstp::Link) {
         Symbol_put(self.to_symbol(), link)
     }

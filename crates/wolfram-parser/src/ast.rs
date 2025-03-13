@@ -1,7 +1,7 @@
 //! Abstract syntax trees.
 
 use crate::{
-    cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
+    cst::{BoxKind, CodeNode, Operator, SyntaxErrorKind},
     issue::Issue,
     source::GeneralSource,
     token::{OwnedTokenInput, TokenKind, TokenSource},
@@ -66,7 +66,7 @@ pub enum AstNode {
     // Used in `BoxNode[_, {.., GroupNode[kind, {...}, data], ..}, _]`.
     #[allow(non_camel_case_types)]
     Group {
-        kind: GroupOperator,
+        kind: Operator,
         children: Box<(
             AstNode, // Opener
             AstNode, // Body
@@ -75,12 +75,12 @@ pub enum AstNode {
         data: AstMetadata,
     },
     GroupMissingCloser {
-        kind: GroupOperator,
+        kind: Operator,
         children: Vec<AstNode>,
         data: AstMetadata,
     },
     GroupMissingOpener {
-        kind: GroupOperator,
+        kind: Operator,
         children: Vec<AstNode>,
         data: AstMetadata,
     },

@@ -7,7 +7,7 @@ use crate::{
     ast::{AstCall, AstMetadata, AstNode, WL},
     cst::{
         BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNodeSeq,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode, Node,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Node,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
         TernaryNode,
@@ -51,7 +51,7 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
         Node::Token(_) => return Some(node),
         // Remove comments.
         Node::Group(GroupNode(OperatorNode {
-            op: GroupOperator::Token_Comment,
+            op: Operator::Token_Comment,
             ..
         })) => return None,
 
@@ -165,7 +165,7 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
     Some(node)
 }
 
-fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNode<I, S, O> {
+fn aggregate_op<I: Debug, S: Debug>(op: OperatorNode<I, S>) -> OperatorNode<I, S> {
     let OperatorNode { op, children, src } = op;
 
     OperatorNode {
@@ -185,12 +185,6 @@ fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNod
 
 /// Returns a `LeafNode[Symbol, ..]`
 fn ToNode_Op(op: Operator) -> AstNode {
-    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
-    ToNode_Symbol(s)
-}
-
-/// Returns a `LeafNode[Symbol, ..]`
-fn ToNode_GroupOp(op: GroupOperator) -> AstNode {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
     ToNode_Symbol(s)
 }
@@ -578,7 +572,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 Operator::MapApply => {
                     if quirks::is_quirk_enabled(Quirk::OldAtAtAt) {
                         let group = GroupNode(OperatorNode {
-                            op: GroupOperator::List,
+                            op: Operator::List,
                             children: NodeSeq(vec![
                                 agg::WL!(LeafNode[OpenCurly, "{", <||>]),
                                 agg::WL!(ToNode[1]),
@@ -892,7 +886,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             src: data,
         })) => {
             match op {
-                GroupOperator::CodeParser_GroupParen => {
+                Op::CodeParser_GroupParen => {
                     let NodeSeq(children) = children;
 
                     let children: Result<[_; 3], _> = children.try_into();
@@ -935,7 +929,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 // naked \[LeftDoubleBracket]\[RightDoubleBracket]
 
                 // GroupNode[GroupSquare, children_, data_]
-                GroupOperator::CodeParser_GroupSquare => match children.0.as_slice() {
+                Op::CodeParser_GroupSquare => match children.0.as_slice() {
                     // GroupNode[GroupSquare, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
                     [_, Node::Infix(InfixNode(OperatorNode {
                         op: Op::CodeParser_Comma,
@@ -959,7 +953,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 },
 
                 // GroupNode[GroupTypeSpecifier, children_, data_]
-                GroupOperator::CodeParser_GroupTypeSpecifier => match children.0.as_slice() {
+                Op::CodeParser_GroupTypeSpecifier => match children.0.as_slice() {
                     // GroupNode[GroupTypeSpecifier, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
                     [_, Node::Infix(InfixNode(OperatorNode {
                         op: Op::CodeParser_Comma,
@@ -983,7 +977,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 },
 
                 // GroupNode[GroupDoubleBracket, children_, data_]
-                GroupOperator::CodeParser_GroupDoubleBracket => match children.0.as_slice() {
+                Op::CodeParser_GroupDoubleBracket => match children.0.as_slice() {
                     // GroupNode[GroupDoubleBracket, {_, InfixNode[Comma, commaChildren_, _], _}, data_]
                     [_, Node::Infix(InfixNode(OperatorNode {
                         op: Op::CodeParser_Comma,
@@ -1411,7 +1405,7 @@ fn parenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: &Node<I, S>) -> bool {
         // parenthesizedIntegerOrRealQ[GroupNode[GroupParen, { _, child_, _ }, _]] :=
         //     parenthesizedIntegerOrRealQ[child]
         Node::Group(GroupNode(OperatorNode {
-            op: GroupOperator::CodeParser_GroupParen,
+            op: Operator::CodeParser_GroupParen,
             children,
             src: _,
         })) => {
@@ -1442,7 +1436,7 @@ fn extractParenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: Node<I, S>) -> N
         // parenthesizedIntegerOrRealQ[GroupNode[GroupParen, { _, child_, _ }, _]] :=
         //     parenthesizedIntegerOrRealQ[child]
         Node::Group(GroupNode(OperatorNode {
-            op: GroupOperator::CodeParser_GroupParen,
+            op: Operator::CodeParser_GroupParen,
             children: NodeSeq(children),
             src: _,
         })) => {
@@ -1469,7 +1463,7 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(node: Node<I, S>) -> bo
         // possiblyNegatedZeroQ[GroupNode[GroupParen, { _, child_, _ }, _]] :=
         //     possiblyNegatedZeroQ[child]
         Node::Group(GroupNode(OperatorNode {
-            op: GroupOperator::CodeParser_GroupParen,
+            op: Operator::CodeParser_GroupParen,
             children,
             src: _,
         })) => {
@@ -1539,7 +1533,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
         // negate[GroupNode[GroupParen, {_, child_?possiblyNegatedZeroQ, _}, _], data_] :=
         //   negate[child, data]
         Node::Group(GroupNode(OperatorNode {
-            op: GroupOperator::CodeParser_GroupParen,
+            op: Operator::CodeParser_GroupParen,
             children: NodeSeq(mut children),
             src: _,
             // TODO(optimization): Avoid this clone().
@@ -1622,7 +1616,7 @@ fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node
     Node::Call(CallNode {
         head: NodeSeq(vec![agg::WL!(ToNode[Power])]),
         body: CallBody::Group(GroupNode(OperatorNode {
-            op: GroupOperator::CodeParser_GroupSquare,
+            op: Op::CodeParser_GroupSquare,
             children: NodeSeq(vec![
                 agg::WL!(LeafNode[OpenSquare, "[", <||>]),
                 agg::WL!(InfixNode[
@@ -2450,7 +2444,7 @@ fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug>(
         //              abstractGroupNode()? I don't think so, since the
         //              ToNode_Op(tag) where tag is CodeParser`* are not valid
         //              abstract syntax nodes anyway.
-        head: Box::new(ToNode_GroupOp(tag)),
+        head: Box::new(ToNode_Op(tag)),
         args: abstracted_children,
         data: data.into_general(),
     }
@@ -2458,7 +2452,7 @@ fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 fn abstractGroupNode_GroupMissingCloserNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     group: GroupMissingCloserNode<I, S>,
-) -> (GroupOperator, Vec<AstNode>, AstMetadata) {
+) -> (Operator, Vec<AstNode>, AstMetadata) {
     let GroupMissingCloserNode(OperatorNode {
         op,
         children: NodeSeq(mut children),
@@ -2720,11 +2714,11 @@ fn try_subscript_box_part_special_cases<I: TokenInput + Debug, S: TokenSource + 
                         vec![
                             abstract_(a),
                             AstNode::Group {
-                                kind: GroupOperator::CodeParser_GroupSquare,
+                                kind: Op::CodeParser_GroupSquare,
                                 children: Box::new((
                                     o1,
                                     AstNode::Group{
-                                        kind: GroupOperator::CodeParser_GroupSquare,
+                                        kind: Op::CodeParser_GroupSquare,
                                         children: Box::new((
                                             o2,
                                             abstract_(b),
@@ -2768,7 +2762,7 @@ fn try_subscript_box_part_special_cases<I: TokenInput + Debug, S: TokenSource + 
                 vec![
                     abstract_(a),
                     AstNode::Group {
-                        kind: GroupOperator::CodeParser_GroupDoubleBracket,
+                        kind: Op::CodeParser_GroupDoubleBracket,
                         children: Box::new((
                             abstract_(o),
                             abstract_(b),
