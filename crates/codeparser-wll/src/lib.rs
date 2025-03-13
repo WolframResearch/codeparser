@@ -23,7 +23,7 @@ use wolfram_library_link::{
 };
 
 use wolfram_parser::{
-    abstract_::{abstract_, aggregate_replace, Aggregate},
+    abstract_::{abstract_, Aggregate},
     cst::Cst,
     quirks::QuirkSettings,
     source::SourceConvention,
@@ -311,46 +311,29 @@ pub fn Aggregate_LibraryLink(link: &mut wstp::Link) {
         return;
     }
 
-    match Container::from_expr(&arg) {
-        Ok(Container {
-            kind,
-            body,
-            metadata,
-        }) => {
-            let body = match body {
-                ContainerBody::Nodes(nodes) => {
-                    ContainerBody::Nodes(Aggregate(nodes))
-                },
-                ContainerBody::Missing(_) => body,
-            };
+    let Container {
+        kind,
+        body,
+        metadata,
+    } = match Container::from_expr(&arg) {
+        Ok(container) => container,
+        Err(err) => panic!("Error parsing '{arg}': {err}"),
+    };
 
-            let container = Container {
-                kind,
-                body,
-                metadata,
-            };
+    let body = match body {
+        ContainerBody::Nodes(nodes) => ContainerBody::Nodes(Aggregate(nodes)),
+        ContainerBody::Missing(_) => body,
+    };
 
-            debug_assert!(!link.is_ready());
+    let container = Container {
+        kind,
+        body,
+        metadata,
+    };
 
-            container.put(link);
-        },
-        Err(err)
-            if arg.has_normal_head(
-                &sym::CodeParser_ContainerNode.to_symbol(),
-            ) =>
-        {
-            panic!("Error parsing ContainerNode: {err}")
-        },
-        Err(_) => match Cst::from_expr(&arg) {
-            Ok(cst) => match aggregate_replace(cst) {
-                Some(agg) => agg.put(link),
-                None => link.put_symbol(sym::Nothing.as_str()).unwrap(),
-            },
-            Err(cst_err) => {
-                panic!("Error parsing concrete syntax node: {cst_err}")
-            },
-        },
-    }
+    debug_assert!(!link.is_ready());
+
+    container.put(link);
 }
 
 //======================================

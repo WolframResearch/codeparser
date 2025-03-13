@@ -7,7 +7,6 @@ TestSuite[{
 	"AbstractCallNode.mt",
 	"AbstractSyntaxErrorNodes.mt",
 	"AbstractSyntaxIssues.mt",
-	"Aggregate.mt",
 	"Arrows.mt",
 	"Boxes.mt",
 	"CallMissingCloserNodes.mt",

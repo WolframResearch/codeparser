@@ -40,9 +40,7 @@ pub fn Aggregate<I: Debug, S: Debug>(
     NodeSeq(agg_children)
 }
 
-pub fn aggregate_replace<I: Debug, S: Debug>(
-    node: Cst<I, S>,
-) -> Option<Cst<I, S>> {
+fn aggregate_replace<I: Debug, S: Debug>(node: Cst<I, S>) -> Option<Cst<I, S>> {
     let node: Cst<_, _> = match node {
         // Remove comments, whitespace, and newlines
         Cst::Token(Token {

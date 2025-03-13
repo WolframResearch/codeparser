@@ -1,7 +1,6 @@
 BeginPackage["CodeParser`Folds`"]
 
-(* NOTE: This symbol is called directly by CodeInspector. *)
-aggregate
+aggregate = aggregateFunc
 
 deparen
 
@@ -16,9 +15,6 @@ Begin["`Private`"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
-Needs["CodeParser`Library`"]
-
-aggregate = aggregateFunc
 
 
 (*
