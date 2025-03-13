@@ -1241,18 +1241,21 @@ impl GroupParselet {
     }
 
     fn reduce_missing_closer(&self, session: &mut ParserSession) {
-        let op = self.getOp();
+        let Op = self.getOp();
+
+        let node = GroupMissingCloserNode::new(Op, session.pop_context());
+        session.push_node(node);
 
         session.pop_group();
-
-        session.reduce(|ctx| GroupMissingCloserNode::new(op, ctx));
 
         // MUSTTAIL
         return session.try_continue();
     }
 
     fn reduce_unterminated_group(&self, session: &mut ParserSession) {
-        let op = self.getOp();
+        let Op = self.getOp();
+
+        let node = UnterminatedGroupNeedsReparseNode::new(Op, session.pop_context());
 
         // The input MUST be valid UTF-8, because we only reduce an *unterminated*
         // group node if we've read an EOF (which is how we know it must be
@@ -1260,15 +1263,15 @@ impl GroupParselet {
         let input = std::str::from_utf8(session.input())
             .expect("cannot reparse unterminated group node: input is not valid UTF-8");
 
-        let tab_width = session.tokenizer.tabWidth as usize;
+        let node = crate::error::reparseUnterminatedGroupNode(
+            node,
+            input,
+            session.tokenizer.tabWidth as usize,
+        );
+
+        session.push_node(node);
 
         session.pop_group();
-
-        session.reduce(|ctx| {
-            let node = UnterminatedGroupNeedsReparseNode::new(op, ctx);
-
-            crate::error::reparseUnterminatedGroupNode(node, input, tab_width)
-        });
 
         // MUSTTAIL
         return session.try_continue();
@@ -1883,7 +1886,8 @@ impl CommaParselet {
     }
 
     fn reduce_comma(session: &mut ParserSession) {
-        session.reduce(|ctx| InfixNode::new(InfixOperator::CodeParser_Comma, ctx));
+        let node = InfixNode::new(InfixOperator::CodeParser_Comma, session.pop_context());
+        session.push_node(node);
 
         //
         // was:
