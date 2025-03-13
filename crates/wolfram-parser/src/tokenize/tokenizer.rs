@@ -119,14 +119,27 @@ impl<'i> Tokenizer<'i> {
     pub(crate) fn new(input: &'i [u8], opts: &ParseOptions) -> Self {
         let ParseOptions {
             first_line_behavior,
-            src_convention: _,
-            encoding_mode: _,
-            tab_width: _,
+            src_convention,
+            encoding_mode,
+            tab_width,
             quirk_settings: _,
         } = *opts;
 
         let mut tokenizer = Tokenizer {
-            reader: Reader::new(input, opts),
+            reader: Reader {
+                input,
+                offset: 0,
+                wasEOF: false,
+                SrcLoc: src_convention.newSourceLocation(),
+                tab_width,
+
+                encoding_mode,
+
+                fatalIssues: Vec::new(),
+                nonFatalIssues: Vec::new(),
+
+                unsafe_character_encoding_flag: None,
+            },
 
             first_line_behavior,
 
