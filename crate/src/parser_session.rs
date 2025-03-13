@@ -291,7 +291,6 @@ impl<'i> ParserSession<'i> {
 
 impl ParseResult {
     pub fn nodes(&self) -> &[Node] {
-        let NodeSeq(vec) = &self.nodes;
-        vec.as_slice()
+        &self.nodes.vec
     }
 }

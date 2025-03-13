@@ -25,7 +25,9 @@ pub struct TriviaSeq {
 // So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct NodeSeq(pub Vec<Node>);
+pub struct NodeSeq {
+    pub vec: Vec<Node>,
+}
 
 /// An expression representing a node in the syntax tree
 #[derive(Debug, Clone, PartialEq)]
@@ -228,30 +230,26 @@ impl From<Token> for Node {
 
 impl NodeSeq {
     pub(crate) fn new() -> NodeSeq {
-        NodeSeq(Vec::new())
+        NodeSeq { vec: Vec::new() }
     }
 
     pub fn push<N: Into<Node>>(&mut self, node: N) {
-        let NodeSeq(vec) = self;
-
         let node = node.into();
-        vec.push(node);
+        self.vec.push(node);
     }
 
     pub fn clear(&mut self) {
-        let NodeSeq(vec) = self;
+        let NodeSeq { vec } = self;
 
         vec.clear();
     }
 
     pub fn is_empty(&self) -> bool {
-        let NodeSeq(vec) = self;
-        return vec.is_empty();
+        return self.vec.is_empty();
     }
 
     pub fn len(&self) -> usize {
-        let NodeSeq(vec) = self;
-        return vec.len();
+        return self.vec.len();
     }
 
     // PRE_COMMIT: impl Index?
@@ -260,13 +258,11 @@ impl NodeSeq {
     // }
 
     fn first(&self) -> &Node {
-        let NodeSeq(vec) = self;
-        vec.first().expect("NodeSeq::first(): vector is empty")
+        self.vec.first().expect("NodeSeq::first(): vector is empty")
     }
 
     fn last(&self) -> &Node {
-        let NodeSeq(vec) = self;
-        vec.last().expect("NodeSeq::last(): vector is empty")
+        self.vec.last().expect("NodeSeq::last(): vector is empty")
     }
 
     // TODO: impl Display
@@ -284,7 +280,7 @@ impl NodeSeq {
     // }
 
     pub(crate) fn check(&self) -> bool {
-        let NodeSeq(vec) = self;
+        let NodeSeq { vec } = self;
 
         for elem in vec {
             if !elem.check() {
