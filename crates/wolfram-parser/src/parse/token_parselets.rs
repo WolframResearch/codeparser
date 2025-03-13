@@ -7,28 +7,31 @@ use crate::{
         BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
         PostfixOperator, PrefixBinaryOperator, PrefixOperator,
     },
-    parse::{parselet::*, ParseBuilder},
+    parse::parselet::*,
     precedence::Precedence,
     tokenize::TokenKind,
     utils::from_fn,
 };
 
-pub(crate) fn get_prefix_parselets<'i, B: ParseBuilder<'i> + 'i>(
-) -> Box<[Box<dyn PrefixParselet<'i, B>>; TokenKind::COUNT]> {
-    // PRECOMMIT: Make not mut reference
-    Box::new(std::array::from_fn(|index: usize| {
+pub(in crate::parse) const PREFIX_PARSELETS: [&dyn PrefixParselet;
+    TokenKind::COUNT] = from_fn!(
+    [&'static dyn PrefixParselet, TokenKind::COUNT],
+    |index: usize| {
         let kind = TokenKind::VARIANTS[index];
-        token_kind_to_prefix_parselet!(B; kind)
-    }))
-}
 
-pub(crate) fn get_infix_parselets<'i, B: ParseBuilder<'i> + 'i>(
-) -> Box<[Box<dyn InfixParselet<'i, B>>; TokenKind::COUNT]> {
-    Box::new(std::array::from_fn(|index: usize| {
+        token_kind_to_prefix_parselet(kind)
+    }
+);
+
+pub(in crate::parse) const INFIX_PARSELETS: [&dyn InfixParselet;
+    TokenKind::COUNT] = from_fn!(
+    [&'static dyn InfixParselet, TokenKind::COUNT],
+    |index: usize| {
         let kind = TokenKind::VARIANTS[index];
-        token_kind_to_infix_parselet!(B; kind)
-    }))
-}
+
+        token_kind_to_infix_parselet(kind)
+    }
+);
 
 pub(crate) const under1Parselet: UnderParselet = UnderParselet::new(
     CompoundOperator::Blank,
@@ -52,24 +55,19 @@ macro_rules! const_cases {
     ) => {
         match $kind {
             $($lhs => {
-                let value: Box<$ty> = Box::new($rhs);
-                value
-                // const VALUE: $ty = &$rhs;
+                const VALUE: $ty = &$rhs;
 
-                // VALUE
+                VALUE
             }),*
         }
     }
 }
 
-macro_rules! token_kind_to_prefix_parselet {
-    ($ty:ty; $kind:ident) => {{
-        // PRECOMMIT: Cleanup
-        use crate::tokenize::TokenKind as TK;
-        use crate::parse::parselet::*;
-        use crate::precedence::Precedence;
+#[rustfmt::skip]
+const fn token_kind_to_prefix_parselet(kind: TokenKind) -> &'static dyn PrefixParselet {
+    use TokenKind as TK;
 
-        $crate::parse::token_parselets::const_cases!(dyn PrefixParselet<$ty>: match $kind {
+    const_cases!(&dyn PrefixParselet: match kind {
         TK::EndOfFile => PrefixEndOfFileParselet {},
 
         TK::String
@@ -250,22 +248,18 @@ macro_rules! token_kind_to_prefix_parselet {
 
 
         _ => PrefixUnhandledParselet {},
-    }) }}
+    })
 }
 
 //======================================
 // Infix Parselets
 //======================================
 
-macro_rules! token_kind_to_infix_parselet {
-    ($ty:ty; $kind:ident) => {{
+#[rustfmt::skip]
+const fn token_kind_to_infix_parselet(kind: TokenKind) -> &'static dyn InfixParselet {
+    use TokenKind as TK;
 
-    // PRECOMMIT: Cleanup
-    use crate::tokenize::TokenKind as TK;
-    use crate::parse::parselet::*;
-    use crate::precedence::Precedence;
-
-    crate::parse::token_parselets::const_cases!(dyn InfixParselet<$ty>: match $kind {
+    const_cases!(&dyn InfixParselet: match kind {
         TK::EndOfFile => InfixAssertFalseParselet {},
 
         TK::Unknown
@@ -781,10 +775,4 @@ macro_rules! token_kind_to_infix_parselet {
             InfixImplicitTimesParselet {}
         },
     })
-
-    }}
 }
-
-use {
-    const_cases, token_kind_to_infix_parselet, token_kind_to_prefix_parselet,
-};

@@ -6,10 +6,10 @@ use crate::{
 };
 
 
-impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TimesParselet {
-    fn parse_infix(
-        &self,
-        session: &mut ParserSession<'i, B>,
+impl InfixParselet for TimesParselet {
+    fn parse_infix<'i, 'b>(
+        &'static self,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -34,15 +34,13 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TimesParselet {
         return InfixOperator::Times.into();
     }
 
-    fn getPrecedence(&self, _: &ParserSession<'i, B>) -> Option<Precedence> {
+    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
         return Some(Precedence::STAR);
     }
 }
 
 impl TimesParselet {
-    fn parse_loop<'i, B: ParseBuilder<'i> + 'i>(
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn parse_loop(session: &mut ParserSession) {
         loop {
             panic_if_aborted!();
 
@@ -74,9 +72,7 @@ impl TimesParselet {
             //
             // and we want only a single Infix node created
             //
-            if session.infix_parselet(tok1.tok).getOp()
-                != <TimesParselet as InfixParselet<B>>::getOp(&TimesParselet {})
-            {
+            if tok1.tok.infix_parselet().getOp() != (TimesParselet {}).getOp() {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //

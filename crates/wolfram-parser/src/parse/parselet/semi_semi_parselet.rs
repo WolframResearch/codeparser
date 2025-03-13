@@ -10,10 +10,10 @@ use crate::{
 // The syntax for ;; is complicated and has a lot of edge cases.
 //
 
-impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiSemiParselet {
-    fn parse_infix(
-        &self,
-        session: &mut ParserSession<'i, B>,
+impl InfixParselet for SemiSemiParselet {
+    fn parse_infix<'i, 'b>(
+        &'static self,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -25,13 +25,13 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiSemiParselet {
         return SemiSemiParselet::parse1(session);
     }
 
-    fn getPrecedence(&self, _: &ParserSession<'i, B>) -> Option<Precedence> {
+    fn getPrecedence(&self, _: &mut ParserSession) -> Option<Precedence> {
         return Some(Precedence::SEMISEMI);
     }
 
-    fn process_implicit_times(
+    fn process_implicit_times<'i, 'b>(
         &self,
-        session: &mut ParserSession<'i, B>,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         //
@@ -46,10 +46,10 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiSemiParselet {
     }
 }
 
-impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for SemiSemiParselet {
-    fn parse_prefix(
-        &self,
-        session: &mut ParserSession<'i, B>,
+impl PrefixParselet for SemiSemiParselet {
+    fn parse_prefix<'i, 'b>(
+        &'static self,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -70,9 +70,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for SemiSemiParselet {
 }
 
 impl SemiSemiParselet {
-    fn parse1<'i, B: ParseBuilder<'i> + 'i>(
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn parse1(session: &mut ParserSession) {
         panic_if_aborted!();
 
         //
@@ -174,9 +172,7 @@ impl SemiSemiParselet {
         return session.parse_prefix(ThirdTok);
     }
 
-    fn parse2<'i, B: ParseBuilder<'i> + 'i>(
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn parse2(session: &mut ParserSession) {
         panic_if_aborted!();
 
 
@@ -263,17 +259,13 @@ impl SemiSemiParselet {
         return session.parse_prefix(FourthTok);
     }
 
-    fn reduce_binary<'i, B: ParseBuilder<'i> + 'i>(
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn reduce_binary(session: &mut ParserSession) {
         session.reduce_binary(BinaryOperator::Span);
 
         session.parse_climb();
     }
 
-    fn reduce_ternary<'i, B: ParseBuilder<'i> + 'i>(
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn reduce_ternary(session: &mut ParserSession) {
         session.reduce_ternary(TernaryOperator::Span);
 
         session.parse_climb();

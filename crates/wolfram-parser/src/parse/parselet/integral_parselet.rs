@@ -14,10 +14,10 @@ impl IntegralParselet {
     }
 }
 
-impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for IntegralParselet {
-    fn parse_prefix(
-        &self,
-        session: &mut ParserSession<'i, B>,
+impl PrefixParselet for IntegralParselet {
+    fn parse_prefix<'i, 'b>(
+        &'static self,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) {
         //
@@ -28,10 +28,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for IntegralParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let self_ = *self;
         let ctxt = session.push_context(Precedence::CLASS_INTEGRATIONOPERATORS);
         ctxt.init_callback_with_state(move |session| {
-            IntegralParselet::parse1(&self_, session)
+            IntegralParselet::parse1(self, session)
         });
 
         let Tok = session.current_token_eat_trivia();
@@ -55,10 +54,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for IntegralParselet {
 }
 
 impl IntegralParselet {
-    fn parse1<'i, B: ParseBuilder<'i> + 'i>(
-        &self,
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn parse1(&'static self, session: &mut ParserSession) {
         panic_if_aborted!();
 
 
@@ -75,50 +71,38 @@ impl IntegralParselet {
 
         session.push_trivia_seq(trivia1);
 
-        let self_ = *self;
         let ctxt = session.top_context();
-        ctxt.set_callback_with_state(move |session| {
-            IntegralParselet::reduceIntegrate(&self_, session)
+        ctxt.set_callback_with_state(|session| {
+            IntegralParselet::reduceIntegrate(self, session)
         });
 
         // MUSTTAIL
         return session.parse_prefix(tok);
     }
 
-    fn reduceIntegrate<'i, B: ParseBuilder<'i> + 'i>(
-        &self,
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn reduceIntegrate(&self, session: &mut ParserSession) {
         session.reduce_prefix_binary(self.Op1);
 
         session.parse_climb();
     }
 
-    fn reduceIntegral<'i, B: ParseBuilder<'i> + 'i>(
-        &self,
-        session: &mut ParserSession<'i, B>,
-    ) {
+    fn reduceIntegral(&self, session: &mut ParserSession) {
         session.reduce_prefix(self.Op2);
 
         session.parse_climb();
     }
 }
 
-impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
-    for InfixDifferentialDParselet
-{
+impl InfixParselet for InfixDifferentialDParselet {
     fn parse_infix(
-        &self,
-        _session: &mut ParserSession<'i, B>,
+        &'static self,
+        _session: &mut ParserSession,
         _token: TokenRef,
     ) {
         panic!("illegal call to InfixDifferentialDParselet::parse_infix()")
     }
 
-    fn getPrecedence(
-        &self,
-        session: &ParserSession<'i, B>,
-    ) -> Option<Precedence> {
+    fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
         if session.top_precedence() == Precedence::CLASS_INTEGRATIONOPERATORS {
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
@@ -130,9 +114,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         return Some(Precedence::FAKE_IMPLICITTIMES);
     }
 
-    fn process_implicit_times(
+    fn process_implicit_times<'i, 'b>(
         &self,
-        session: &mut ParserSession<'i, B>,
+        session: &mut ParserSession<'i, 'b>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         if session.top_precedence() == Precedence::CLASS_INTEGRATIONOPERATORS {

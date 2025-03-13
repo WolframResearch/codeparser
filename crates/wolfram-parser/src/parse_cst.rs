@@ -8,7 +8,6 @@ use crate::{
         TernaryOperator, TriviaSeq,
     },
     parse::{
-        parselet::{InfixParselet, PrefixParselet},
         ColonLHS, DynParseBuilder, ParseBuilder, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
@@ -105,20 +104,6 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             finished: Vec::new(),
         }
     }
-
-    // fn prefix_parselet(kind: TokenKind) -> Box<dyn PrefixParselet<'i, Self>> {
-    //     let index = usize::from(kind.id());
-
-    //     self.prefix_parselets[index]
-    // }
-
-    // fn infix_parselet(kind: TokenKind) -> Box<dyn InfixParselet<'i, Self>> {
-    //     // let index = usize::from(kind.id());
-
-    //     // let kind = TokenKind::VARIANTS[index];
-
-    //     crate::parse::token_parselets::token_kind_to_infix_parselet!(ParseCst; kind)
-    // }
 
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output {
         let ParseCst {
