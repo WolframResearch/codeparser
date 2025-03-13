@@ -168,9 +168,6 @@ impl CodePoint {
     pub(crate) fn is_line_continuation(&self) -> bool {
         let point = self;
 
-        //
-        // this is a negative range, so remember to test with >=
-        //
         CodePoint::LineContinuation_LineFeed.as_i32() >= point.as_i32()
             && point.as_i32() >= CodePoint::LineContinuation_CRLF.as_i32()
     }

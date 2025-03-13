@@ -15,7 +15,7 @@ use crate::{
     parselet::{PrefixParselet, PrefixToplevelCloserParselet},
     parser::{Context, Parser_handleFirstLine},
     quirks::{self, QuirkSettings},
-    read::Reader,
+    read::{ByteDecoder_nextSourceCharacter, Reader},
     source::{SourceConvention, TOPLEVEL},
     token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::{
@@ -296,9 +296,9 @@ impl<'i> ParserSession<'i> {
         // read all characters, just to set unsafeCharacterEncoding flag if necessary
         //
         loop {
-            let char = self.tokenizer.next_source_char(TOPLEVEL);
+            let Char = ByteDecoder_nextSourceCharacter(&mut self.tokenizer, TOPLEVEL);
 
-            if char.isEndOfFile() {
+            if Char.isEndOfFile() {
                 break;
             }
         } // while (true)

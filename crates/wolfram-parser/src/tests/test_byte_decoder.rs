@@ -1,6 +1,11 @@
 use pretty_assertions::assert_eq;
 
-use crate::{code_point::CodePoint, source::TOPLEVEL, ParseOptions, ParserSession};
+use crate::{
+    code_point::CodePoint,
+    read::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
+    source::TOPLEVEL,
+    ParseOptions, ParserSession,
+};
 
 #[test]
 fn ByteDecoderTest_Empty() {
@@ -8,31 +13,31 @@ fn ByteDecoderTest_Empty() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
-
-    assert_eq!(c, CodePoint::EndOfFile);
-
-    session.tokenizer.next_source_char(TOPLEVEL);
-
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    assert_eq!(c, CodePoint::EndOfFile);
+
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
+
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -47,31 +52,31 @@ fn ByteDecoderTest_Basic1() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '2');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -88,31 +93,31 @@ fn ByteDecoderTest_Basic2() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c: CodePoint = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c: CodePoint = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c.as_i32(), 0x03b1);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -132,31 +137,31 @@ fn ByteDecoderTest_Basic3() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c.as_i32(), 0x26A1);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -173,31 +178,31 @@ fn ByteDecoderTest_Invalid1() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::Unsafe1ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -216,31 +221,31 @@ fn ByteDecoderTest_Invalid2() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::Unsafe1ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -257,32 +262,32 @@ fn ByteDecoderTest_Invalid3() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     // from 0xE2 byte
     assert_eq!(c, CodePoint::Unsafe1ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -299,32 +304,32 @@ fn ByteDecoderTest_Invalid4() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     // from 0xE2 byte
     assert_eq!(c, CodePoint::Unsafe2ByteUtf8Sequence);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, CodePoint::EndOfFile);
 
@@ -341,32 +346,32 @@ fn ByteDecoderTest_Surrogate1() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
     assert_eq!(session.tokenizer.buffer().slice, &arr[0..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
     assert_eq!(session.tokenizer.buffer().slice, &arr[1..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     // from 0xED byte
     assert_eq!(c, CodePoint::Unsafe3ByteUtf8Sequence);
 
     assert_eq!(session.tokenizer.buffer().slice, &arr[2..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     // from 0xA0 byte
     assert_eq!(c, CodePoint::EndOfFile);
@@ -389,32 +394,32 @@ fn ByteDecoderTest_Surrogate2() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_source_char(TOPLEVEL);
+    let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '1');
 
     assert_eq!(session.tokenizer.buffer().slice, &arr[0..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, '+');
 
     assert_eq!(session.tokenizer.buffer().slice, &arr[1..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     // from 0xED byte
     assert_eq!(c, CodePoint::Unsafe3ByteUtf8Sequence);
 
     assert_eq!(session.tokenizer.buffer().slice, &arr[2..]);
 
-    session.tokenizer.next_source_char(TOPLEVEL);
+    ByteDecoder_nextSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_source_char(TOPLEVEL);
+    c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
 
     // from 0xB0 byte
     assert_eq!(c, CodePoint::EndOfFile);

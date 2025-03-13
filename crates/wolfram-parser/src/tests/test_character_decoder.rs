@@ -1,5 +1,6 @@
 use crate::{
     code_point::CodePoint,
+    read::{CharacterDecoder_currentWLCharacter, CharacterDecoder_nextWLCharacter},
     source::TOPLEVEL,
     wl_character::{EscapeStyle, WLCharacter},
     ParseOptions, ParserSession,
@@ -12,25 +13,25 @@ fn CharacterDecoderTest_Basic1() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('2'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -44,28 +45,28 @@ fn CharacterDecoderTest_LongName() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(
         c,
         WLCharacter::new_with_escape(CodePoint::from_u32(0x03b1).unwrap(), EscapeStyle::LongName)
     );
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -79,28 +80,28 @@ fn CharacterDecoderTest_4Hex() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(
         c,
         WLCharacter::new_with_escape(CodePoint::from_u32(0x03b1).unwrap(), EscapeStyle::Hex4)
     );
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -114,25 +115,25 @@ fn CharacterDecoderTest_2Hex() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new_with_escape(242, EscapeStyle::Hex2));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -146,25 +147,25 @@ fn CharacterDecoderTest_Octal() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new_with_escape(219, EscapeStyle::Octal));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -178,25 +179,25 @@ fn CharacterDecoderTest_6Hex() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new_with_escape(242, EscapeStyle::Hex6));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -210,25 +211,25 @@ fn CharacterDecoderTest_Raw() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new_with_escape('^', EscapeStyle::Raw));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -242,73 +243,73 @@ fn CharacterDecoderTest_LongNameError1() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('\\'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('['));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('A'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('l'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('p'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('h'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('a'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('2'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -322,73 +323,73 @@ fn CharacterDecoderTest_LongNameError2() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('\\'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('['));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('A'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('l'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('p'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('a'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(']'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('2'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -402,61 +403,61 @@ fn CharacterDecoderTest_4HexError1() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('\\'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(':'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('0'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('3'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('b'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('+'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('1'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
@@ -473,28 +474,28 @@ fn CharacterDecoderTest_UnexpectedEscapeSequence() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('"'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(
         c,
         WLCharacter::new_with_escape(CodePoint::from_u32(0x03b1).unwrap(), EscapeStyle::LongName)
     );
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new('"'));
 
-    session.tokenizer.next_wolfram_char(TOPLEVEL);
+    CharacterDecoder_nextWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
-    c = session.tokenizer.peek_wolfram_char(TOPLEVEL);
+    c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(c, WLCharacter::new(CodePoint::EndOfFile));
 
