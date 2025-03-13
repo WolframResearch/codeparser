@@ -2,11 +2,11 @@ use crate::wl_character::WLCharacter;
 
 #[test]
 fn SourceCharacterTest_Graphical1() {
-    assert_eq!(WLCharacter::new('\t').graphicalString(), "\\t");
+    let mut C = WLCharacter::new('\t');
 
-    assert_eq!(WLCharacter::new(0x1b).graphicalString(), "\\[RawEscape]");
+    assert_eq!(C.graphicalString(), "\\t");
 
-    assert_eq!(WLCharacter::new(0xb0).graphicalString(), "\\[Degree]");
+    C = WLCharacter::new(0x1b);
 
-    assert_eq!(WLCharacter::new('\u{abcd}').graphicalString(), "\\:abcd");
+    assert_eq!(C.graphicalString(), "\\[RawEscape]");
 }

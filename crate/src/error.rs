@@ -1,9 +1,7 @@
 use std::ops::Range;
 
 use crate::{
-    node::{
-        GroupMissingCloserNode, Node, NodeSeq, OperatorNode, UnterminatedGroupNeedsReparseNode,
-    },
+    node::{Node, NodeSeq, OperatorNode, UnterminatedGroupNeedsReparseNode, UnterminatedGroupNode},
     source::{Buffer, BufferAndLength, CharacterRange},
     token::{BorrowedTokenInput, Token},
     Source, SourceConvention, SourceLocation, Tokens,
@@ -124,7 +122,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
     str: &'i str,
     convention: SourceConvention,
     tab_width: usize,
-) -> GroupMissingCloserNode<BorrowedTokenInput<'i>> {
+) -> UnterminatedGroupNode<BorrowedTokenInput<'i>> {
     let UnterminatedGroupNeedsReparseNode(OperatorNode {
         op: tag,
         children,
@@ -192,7 +190,7 @@ pub(crate) fn reparseUnterminatedGroupNode<'i>(
     //
     // Rationale: there is not a useful purpose for returning the rest of the
     // file, which may be massive.
-    GroupMissingCloserNode(OperatorNode {
+    UnterminatedGroupNode(OperatorNode {
         op: tag,
         children: NodeSeq(better_leaves),
         src: better_src,
