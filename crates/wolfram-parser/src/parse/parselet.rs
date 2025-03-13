@@ -1804,10 +1804,9 @@ impl InfixParselet for CommaParselet {
 
         let tok2 = session.current_token_eat_trivia();
 
-        if matches!(
-            tok2.tok,
-            TokenKind::Comma | TokenKind::LongName_InvisibleComma
-        ) {
+        if tok2.tok == TokenKind::Comma
+            || tok2.tok == TokenKind::LongName_InvisibleComma
+        {
             //
             // Something like  a,,
             //
@@ -1870,10 +1869,9 @@ impl CommaParselet {
 
             let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
-            if !matches!(
-                tok1.tok,
-                TokenKind::Comma | TokenKind::LongName_InvisibleComma
-            ) {
+            if !(tok1.tok == TokenKind::Comma
+                || tok1.tok == TokenKind::LongName_InvisibleComma)
+            {
                 trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
@@ -1890,10 +1888,9 @@ impl CommaParselet {
 
             let tok2 = session.current_token_eat_trivia();
 
-            if matches!(
-                tok2.tok,
-                TokenKind::Comma | TokenKind::LongName_InvisibleComma
-            ) {
+            if tok2.tok == TokenKind::Comma
+                || tok2.tok == TokenKind::LongName_InvisibleComma
+            {
                 //
                 // Something like  a,,
                 //
