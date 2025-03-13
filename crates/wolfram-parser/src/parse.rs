@@ -64,14 +64,11 @@ use self::{
 
 pub(crate) use self::parser_session::ParserSession;
 
-enum ParseContinuation {
-    Old(Option<ParseFunction>, Option<ParseletPtr>),
-    New(Box<dyn FnMut(&mut ParserSession)>),
-}
 
 #[derive(Debug)]
 pub(crate) struct Context {
-    continue_parse: ParseContinuation,
+    f: Option<ParseFunction>,
+    p: Option<ParseletPtr>,
 
     /// The position in [`ParserSession.node_stack`][ParserSession::node_stack]
     /// that marks the first node associated with this [`Context`].
@@ -89,19 +86,19 @@ pub(crate) enum ColonLHS {
 impl Context {
     pub fn new(index: usize, prec: Option<Precedence>) -> Self {
         Context {
-            continue_parse: ParseContinuation::Old(None, None),
+            f: None,
+            p: None,
             index,
             prec,
         }
     }
 
     pub(crate) fn init_callback(&mut self, func: ParseFunction) {
-        assert!(matches!(
-            self.continue_parse,
-            ParseContinuation::Old(f, p) if f.is_none() && p.is_none()
-        ));
+        assert!(self.f.is_none());
+        assert!(self.p.is_none());
 
-        self.continue_parse = ParseContinuation::Old(Some(func), None)
+        self.f = Some(func);
+        self.p = None;
     }
 
     pub(crate) fn init_callback_with_parselet(
@@ -109,12 +106,11 @@ impl Context {
         func: ParseFunction,
         parselet: ParseletPtr,
     ) {
-        assert!(matches!(
-            self.continue_parse,
-            ParseContinuation::Old(f, p) if f.is_none() && p.is_none()
-        ));
+        assert!(self.f.is_none());
+        assert!(self.p.is_none());
 
-        self.continue_parse = ParseContinuation::Old(Some(func), Some(parselet))
+        self.f = Some(func);
+        self.p = Some(parselet);
     }
 
     pub(crate) fn init_identity(&mut self) {
@@ -122,13 +118,8 @@ impl Context {
     }
 
     pub(crate) fn set_callback(&mut self, func: ParseFunction) {
-        match self.continue_parse {
-            ParseContinuation::Old(ref mut f, _) => {
-                // assert!(f.is_some());
-                *f = Some(func)
-            },
-            ParseContinuation::New(_) => todo!("PRECOMMIT"),
-        }
+        assert!(self.f.is_some());
+        self.f = Some(func);
     }
 
     pub(crate) fn set_callback_2(
@@ -137,13 +128,13 @@ impl Context {
         parselet: ParseletPtr,
     ) {
         // TODO: Should `f` already have some value in this case?
-        self.continue_parse =
-            ParseContinuation::Old(Some(func), Some(parselet));
+        self.f = Some(func);
+        self.p = Some(parselet);
     }
 
-    // pub(crate) fn is_identity(&self) -> bool {
-    //     self.f == Some(Parser_identity)
-    // }
+    pub(crate) fn is_identity(&self) -> bool {
+        self.f == Some(Parser_identity)
+    }
 
     pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(
         &mut self,
@@ -295,28 +286,13 @@ impl<'i> ParserSession<'i> {
 
         let ctxt: &mut Context = self.top_context();
 
-        let continue_parse = std::mem::replace(
-            &mut ctxt.continue_parse,
-            ParseContinuation::Old(None, None),
-        );
+        let F = ctxt.f.expect("Ctxt.f is unexpectedly None");
+        let P = ctxt
+            .p
+            .unwrap_or_else(|| &self::parselet::PrefixAssertFalseParselet {});
 
-        match continue_parse {
-            ParseContinuation::Old(F, P) => {
-                let Some(F) = F else {
-                    // let F = F.expect("Ctxt.f is unexpectedly None");
-                    return;
-                };
-                let P = P.unwrap_or_else(|| {
-                    &self::parselet::PrefixAssertFalseParselet {}
-                });
-
-                // MUSTTAIL
-                return F(self, P);
-            },
-            ParseContinuation::New(mut continue_parse) => {
-                (continue_parse)(self)
-            },
-        }
+        // MUSTTAIL
+        return F(self, P);
     }
 
     //======================================
@@ -792,23 +768,5 @@ impl<'i> ParserSession<'i> {
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;
-    }
-}
-
-//======================================
-// Format Impls
-//======================================
-
-impl Debug for ParseContinuation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Old(arg0, arg1) => {
-                f.debug_tuple("Old").field(arg0).field(arg1).finish()
-            },
-            Self::New(_) => f
-                .debug_tuple("New")
-                .field(&"<continuation closure>")
-                .finish(),
-        }
     }
 }
