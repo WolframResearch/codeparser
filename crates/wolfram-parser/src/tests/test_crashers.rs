@@ -2,7 +2,8 @@ use crate::{
     source::TOPLEVEL,
     src, token,
     tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
-    ParseOptions, ParserSession, SourceConvention,
+    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
+    DEFAULT_TAB_WIDTH,
 };
 
 use pretty_assertions::assert_eq;
@@ -12,7 +13,14 @@ use pretty_assertions::assert_eq;
 fn CrashTest_Crash0_tokens() {
     let bufAndLen: &[u8] = &[b'1', b'\\', b'\n'];
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let mut session = ParserSession::new(
+        bufAndLen,
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let policy = TOPLEVEL;
 
@@ -34,7 +42,14 @@ fn CrashTest_Crash0_tokens() {
 fn CrashTest_Crash1() {
     let bufAndLen = &[b'1', b':', b':', b'*', b'\\', b'\r', b'\n'];
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let mut session = ParserSession::new(
+        bufAndLen,
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let _ = session.concrete_parse_expressions();
 
@@ -74,7 +89,14 @@ fn CrashTest_Crash2() {
 
     let bufAndLen = arr;
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let mut session = ParserSession::new(
+        bufAndLen,
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let _ = session.concrete_parse_expressions();
 
@@ -88,7 +110,14 @@ fn CrashTest_Crash3() {
 
     let bufAndLen = arr;
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let mut session = ParserSession::new(
+        bufAndLen,
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let _ = session.concrete_parse_expressions();
 
@@ -105,7 +134,14 @@ fn CrashTest_Crash4() {
 
     let bufAndLen = arr;
 
-    let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
+    let mut session = ParserSession::new(
+        bufAndLen,
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let _ = session.concrete_parse_expressions();
 
@@ -121,7 +157,11 @@ fn CrashTest_Crash5() {
 
     let mut session = ParserSession::new(
         bufAndLen,
-        &ParseOptions::default().source_convention(SourceConvention::CharacterIndex),
+        SourceConvention::CharacterIndex,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();

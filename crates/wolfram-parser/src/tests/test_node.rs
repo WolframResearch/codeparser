@@ -1,7 +1,8 @@
 use crate::{
     cst::{CompoundNode, CompoundOperator, CstNode},
     source::SourceLocation,
-    src, token, NodeSeq, ParseOptions, ParserSession,
+    src, token, EncodingMode, FirstLineBehavior, NodeSeq, ParserSession, QuirkSettings,
+    SourceConvention, DEFAULT_TAB_WIDTH,
 };
 
 
@@ -11,7 +12,14 @@ fn NodeTest_Bug1() {
 
     let input = "a_.";
 
-    let session = ParserSession::new(input.as_bytes(), &ParseOptions::default());
+    let session = ParserSession::new(
+        input.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let T1 = token!(Symbol, "a" @ 0, src!(1:1-1:2));
     Args.push(CstNode::Token(T1));

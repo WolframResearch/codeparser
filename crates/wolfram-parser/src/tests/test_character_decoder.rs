@@ -3,7 +3,8 @@ use crate::{
     code_point::CodePoint,
     source::TOPLEVEL,
     wl_character::{EscapeStyle, WLCharacter},
-    ParseOptions, ParserSession,
+    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
+    DEFAULT_TAB_WIDTH,
 };
 
 
@@ -11,7 +12,14 @@ use crate::{
 fn CharacterDecoderTest_Basic1() {
     let strIn = "1+2";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -43,7 +51,14 @@ fn CharacterDecoderTest_Basic1() {
 fn CharacterDecoderTest_LongName() {
     let strIn = "1+\\[Alpha]";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -78,7 +93,14 @@ fn CharacterDecoderTest_LongName() {
 fn CharacterDecoderTest_4Hex() {
     let strIn = "1+\\:03b1";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -113,7 +135,14 @@ fn CharacterDecoderTest_4Hex() {
 fn CharacterDecoderTest_2Hex() {
     let strIn = "1+\\.f2";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -145,7 +174,14 @@ fn CharacterDecoderTest_2Hex() {
 fn CharacterDecoderTest_Octal() {
     let strIn = "1+\\333";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -177,7 +213,14 @@ fn CharacterDecoderTest_Octal() {
 fn CharacterDecoderTest_6Hex() {
     let strIn = "1+\\|0000f2";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -209,7 +252,14 @@ fn CharacterDecoderTest_6Hex() {
 fn CharacterDecoderTest_Raw() {
     let strIn = "1+\\[RawWedge]";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -241,7 +291,14 @@ fn CharacterDecoderTest_Raw() {
 fn CharacterDecoderTest_LongNameError1() {
     let strIn = "1+\\[Alpha+2";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -321,7 +378,14 @@ fn CharacterDecoderTest_LongNameError1() {
 fn CharacterDecoderTest_LongNameError2() {
     let strIn = "1+\\[Alpa]+2";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -401,7 +465,14 @@ fn CharacterDecoderTest_LongNameError2() {
 fn CharacterDecoderTest_4HexError1() {
     let strIn = "1+\\:03b+1";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
@@ -472,7 +543,14 @@ fn CharacterDecoderTest_4HexError1() {
 fn CharacterDecoderTest_UnexpectedEscapeSequence() {
     let strIn = "\"\\[Alpha]\"";
 
-    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(
+        strIn.as_bytes(),
+        SourceConvention::LineColumn,
+        DEFAULT_TAB_WIDTH,
+        FirstLineBehavior::NotScript,
+        EncodingMode::Normal,
+        QuirkSettings::default(),
+    );
 
     let mut c = CharacterDecoder_currentWLCharacter(&mut session.tokenizer, TOPLEVEL);
 
