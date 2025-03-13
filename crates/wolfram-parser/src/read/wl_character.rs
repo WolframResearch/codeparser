@@ -42,7 +42,7 @@ pub(crate) enum EscapeStyle {
 /// The text `\[Alpha]` would be 1 `WLCharacter`
 #[derive(Copy, Clone, PartialEq)]
 pub struct WLCharacter {
-    pub(crate) point: CodePoint,
+    val: CodePoint,
     escape: EscapeStyle,
     //
     // valBits: i32, // uint32_t valBits : 21;
@@ -58,17 +58,17 @@ pub struct WLCharacter {
 
 impl Debug for WLCharacter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let WLCharacter { point, escape } = *self;
+        let WLCharacter { val, escape } = *self;
 
         match escape {
-            EscapeStyle::None => write!(f, "WLCharacter({point:?})"),
+            EscapeStyle::None => write!(f, "WLCharacter({val:?})"),
             EscapeStyle::Raw
             | EscapeStyle::Single
             | EscapeStyle::Hex2
             | EscapeStyle::Hex4
             | EscapeStyle::Hex6
             | EscapeStyle::Octal
-            | EscapeStyle::LongName => write!(f, "WLCharacter({point:?}, {escape:?})"),
+            | EscapeStyle::LongName => write!(f, "WLCharacter({val:?}, {escape:?})"),
         }
     }
 }
@@ -80,7 +80,7 @@ impl WLCharacter {
 
     pub(crate) fn new_with_escape<T: Into<CodePoint>>(val: T, escape: EscapeStyle) -> Self {
         Self {
-            point: val.into(),
+            val: val.into(),
             // signBit: val < 0,
             // escapeBits: escape,
             escape,
@@ -102,7 +102,7 @@ impl WLCharacter {
     // }
 
     pub(crate) fn to_point(&self) -> CodePoint {
-        self.point
+        self.val
     }
 
     // pub(crate) fn as_char(&self) -> char {
@@ -330,7 +330,7 @@ impl WLCharacter {
     }
 
     pub(crate) fn safeAndGraphicalString(&self) -> String {
-        let WLCharacter { point: _, escape } = *self;
+        let WLCharacter { val: _, escape } = *self;
 
         if escape == EscapeStyle::None {
             return format!("\"{}\" ({:#})", self, self);

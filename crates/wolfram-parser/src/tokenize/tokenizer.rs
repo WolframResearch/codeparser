@@ -736,12 +736,16 @@ fn Tokenizer_nextWLCharacter<'i>(
 
     let mut c = session.next_wolfram_char(policy);
 
+    let mut point = c.to_point();
+
     loop {
-        if !c.point.is_line_continuation() {
+        if !point.is_line_continuation() {
             return c;
         }
 
         c = session.peek_wolfram_char(policy);
+
+        point = c.to_point();
 
         //
         // Even though strings preserve the whitespace after a line continuation, and
@@ -753,7 +757,7 @@ fn Tokenizer_nextWLCharacter<'i>(
         //
         while c.isWhitespace() {
             if feature::COMPUTE_OOB {
-                if c.point == '\t' {
+                if point == '\t' {
                     if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
                         //
                         // It is possible to have e.g.:
@@ -773,6 +777,8 @@ fn Tokenizer_nextWLCharacter<'i>(
             session.next_wolfram_char(policy);
 
             c = session.peek_wolfram_char(policy);
+
+            point = c.to_point();
         }
 
         if feature::COMPUTE_OOB {
