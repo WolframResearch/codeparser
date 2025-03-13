@@ -6,9 +6,9 @@ use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AbstractSyntaxError, Ast, AstCall, AstMetadata, WL},
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallHead, CallNode,
-        CodeNode, CompoundNode, CompoundOperator, Cst, CstSeq,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
+        CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator, Cst,
+        CstSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
         GroupOperator, InfixNode,
         InfixOperator::{self, self as Op},
         Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
@@ -23,7 +23,7 @@ use crate::{
         TokenKind::{self, self as TK},
         TokenSource, TokenString,
     },
-    utils::{append, join},
+    utils::join,
     NodeSeq, QuirkSettings,
 };
 
@@ -1735,30 +1735,42 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 //======================================
 
-enum CstOrReciprocate<I, S> {
-    Cst(Cst<I, S>),
-    Reciprocate(Reciprocate<I, S>),
-}
-
-/// Represents a [`Cst`] value that should be reciprocated once it is
-/// abstracted.
-///
-/// This avoids the need to construct a fake [`Cst`] nodes with "unknown" source
-/// location values--but the eventual [`Ast`] value does have interior nodes
-/// with unknown source locations.
-struct Reciprocate<I, S>(Cst<I, S>, S);
-
-impl<I: TokenInput + Debug, S: TokenSource + Debug> Reciprocate<I, S> {
-    fn into_ast(self) -> Ast {
-        let Reciprocate(node, data) = self;
-
-        // Power[node, -1]
-        Ast::Call {
-            head: Box::new(ToNode_Symbol(crate::symbols::Power)),
-            args: vec![abstract_(node), ToNode_Integer(-1)],
-            data: AstMetadata::from_src(data),
-        }
-    }
+fn reciprocate<I: TokenInput, S: TokenSource>(
+    node: Cst<I, S>,
+    data: S,
+) -> Cst<I, S> {
+    /*
+        CallNode[
+            ToNode[Power],
+            GroupNode[GroupSquare, {
+                LeafNode[Token`OpenSquare, "[", <||>],
+                InfixNode[Comma, { node, LeafNode[Token`Comma, ",", <||>], ToNode[-1] }, <||>],
+                LeafNode[Token`CloseSquare, "]", <||>]
+            }, <||> ],
+            data
+        ]
+    */
+    Cst::Call(CallNode {
+        head: CallHead::Aggregate(Box::new(agg::WL!(ToNode[Power]))),
+        body: CallBody::Group(GroupNode(OperatorNode {
+            op: CallOperator::CodeParser_GroupSquare,
+            children: NodeSeq(vec![
+                agg::WL!(LeafNode[OpenSquare, "[", <||>]),
+                agg::WL!(InfixNode[
+                    CodeParser_Comma,
+                    {
+                        node,
+                        agg::WL!(LeafNode[Comma, ",", <||>]),
+                        agg::WL!(ToNode[-1])
+                    },
+                    <||>
+                ]),
+                agg::WL!(LeafNode[CloseSquare, "]", <||>]),
+            ]),
+            src: S::unknown(),
+        })),
+        src: data,
+    })
 }
 
 //======================================
@@ -1910,17 +1922,14 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
     nodes: Vec<Cst<I, S>>,
     data: S,
-) -> Vec<CstOrReciprocate<TokenString, S>> {
+) -> Vec<Cst<TokenString, S>> {
     nodes
         .into_iter()
         .flat_map(|node| flatten_times_cst(node, data.clone()))
         .collect()
 }
 
-fn flatten_times_cst<I, S>(
-    node: Cst<I, S>,
-    data: S,
-) -> Vec<CstOrReciprocate<TokenString, S>>
+fn flatten_times_cst<I, S>(node: Cst<I, S>, data: S) -> Vec<Cst<TokenString, S>>
 where
     I: TokenInput + Debug,
     S: TokenSource + Debug,
@@ -1946,14 +1955,10 @@ where
                     tok: TK::Integer | TK::Real,
                     input: _,
                     src: _,
-                }) => vec![CstOrReciprocate::Cst(
-                    negate(operand).into_cst(data.clone()),
-                )],
+                }) => vec![negate(operand).into_cst(data.clone())],
                 // PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _]
                 _ if parenthesizedIntegerOrRealQ(&operand) => {
-                    vec![CstOrReciprocate::Cst(
-                        negate(operand).into_cst(data.clone()),
-                    )]
+                    vec![negate(operand).into_cst(data.clone())]
                 },
                 // PrefixNode[Minus, {_, _}, _]
                 _ => {
@@ -1969,13 +1974,11 @@ where
                         //     recursed here.
                         // *)
                         join(
-                            [CstOrReciprocate::Cst(
-                                agg::WL!(ToNode[-1]).into_owned_input(),
-                            )],
+                            [agg::WL!(ToNode[-1]).into_owned_input()],
                             flatten_times_cst(operand, data),
                         )
                     } else {
-                        vec![CstOrReciprocate::Cst(node.into_owned_input())]
+                        vec![node.into_owned_input()]
                     }
                 },
             }
@@ -2002,18 +2005,15 @@ where
                 let [left, _, right] = expect_children(children.clone());
 
                 // TID:231010/1
-                append(
-                    flatten_times_cst(left, data.clone()),
-                    CstOrReciprocate::Reciprocate(Reciprocate(
-                        right.into_owned_input(),
-                        data.clone(),
-                    )),
+                flattenTimes(
+                    vec![left, reciprocate(right, data.clone())],
+                    data.clone(),
                 )
             } else {
-                vec![CstOrReciprocate::Cst(node.into_owned_input())]
+                vec![node.into_owned_input()]
             }
         },
-        _ => vec![CstOrReciprocate::Cst(node.into_owned_input())],
+        _ => vec![node.into_owned_input()],
     }
 }
 
@@ -2033,14 +2033,8 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
 
     let children: Vec<Ast> = flattened
         .into_iter()
-        .map(|node| match node {
-            CstOrReciprocate::Cst(node) => {
-                abstract_(processInfixBinaryAtQuirk(node, "Times"))
-            },
-            CstOrReciprocate::Reciprocate(reciprocate) => {
-                reciprocate.into_ast()
-            },
-        })
+        .map(|node| processInfixBinaryAtQuirk(node, "Times"))
+        .map(abstract_)
         .collect();
 
     WL!( CallNode[ToNode[Times], children, data] )
@@ -2055,19 +2049,14 @@ fn abstractTimes_BinaryNode_Divide<
     data: S,
 ) -> Ast {
     // TID:231010/4 -- flatten times through Divide numerator
+    let children = flattenTimes(
+        vec![left, reciprocate(right, data.clone())],
+        data.clone(),
+    )
+    .into_iter()
     // TID:231010/5 -- do NOT do infix binary at quirk here
-    let children = append(
-        flatten_times_cst(left, data.clone())
-            .into_iter()
-            .map(|node| match node {
-                CstOrReciprocate::Cst(node) => abstract_(node),
-                CstOrReciprocate::Reciprocate(reciprocate) => {
-                    reciprocate.into_ast()
-                },
-            })
-            .collect(),
-        Reciprocate(right, data.clone()).into_ast(),
-    );
+    .map(abstract_)
+    .collect();
 
     WL!( CallNode[ToNode[Times], children, data] )
 }
