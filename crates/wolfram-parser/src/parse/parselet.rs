@@ -2424,19 +2424,17 @@ impl PrefixParselet for LessLessParselet {
         // Special tokenization, so must do parsing here
         //
 
-        tok_in.skip(&mut session.tokenizer);
+        session.push_leaf_and_next(tok_in);
 
-        let (trivia, tok) = session.current_syntax_token_stringify_as_file();
+        session.push_context(Precedence::HIGHEST);
 
-        tok.skip(&mut session.tokenizer);
+        let tok = session.current_token_stringify_as_file_eat_trivia();
+
+        session.push_leaf_and_next(tok);
 
         // MUSTTAIL
-        return session.push_and_climb(PrefixNode::new2(
-            PrefixOperator::Get,
-            tok_in,
-            trivia,
-            tok,
-        ));
+        return session
+            .reduce_and_climb(|ctx| PrefixNode::new(PrefixOperator::Get, ctx));
     }
 }
 
@@ -2466,22 +2464,27 @@ impl PrefixParselet for HashParselet {
 
         panic_if_aborted!();
 
-        tok_in.skip(&mut session.tokenizer);
+
+        session.push_leaf_and_next(tok_in);
 
         let tok = session.tokenizer.peek_token_with(INSIDE_SLOT);
 
-        if matches!(tok.tok, TokenKind::Integer | TokenKind::String) {
-            tok.skip(&mut session.tokenizer);
+        match tok.tok {
+            TokenKind::Integer | TokenKind::String => {
+                session.push_context(Precedence::HIGHEST);
 
-            return session.push_and_climb(CompoundNode::new2(
-                CompoundOperator::Slot,
-                tok_in,
-                tok,
-            ));
+                session.push_leaf_and_next(tok);
+
+                // MUSTTAIl
+                return session.reduce_and_climb(|ctx| {
+                    CompoundNode::new(CompoundOperator::Slot, ctx)
+                });
+            },
+            _ => (),
         }
 
         // MUSTTAIL
-        return session.push_and_climb(tok_in);
+        return session.parse_climb();
     }
 }
 
@@ -2502,23 +2505,26 @@ impl PrefixParselet for HashHashParselet {
         panic_if_aborted!();
 
 
-        tok_in.skip(&mut session.tokenizer);
+        session.push_leaf_and_next(tok_in);
 
         let tok = session.tokenizer.peek_token_with(INSIDE_SLOTSEQUENCE);
 
-        if tok.tok == TokenKind::Integer {
-            tok.skip(&mut session.tokenizer);
+        match tok.tok {
+            TokenKind::Integer => {
+                session.push_context(Precedence::HIGHEST);
 
-            // MUSTTAIl
-            return session.push_and_climb(CompoundNode::new2(
-                CompoundOperator::SlotSequence,
-                tok_in,
-                tok,
-            ));
+                session.push_leaf_and_next(tok);
+
+                // MUSTTAIl
+                return session.reduce_and_climb(|ctx| {
+                    CompoundNode::new(CompoundOperator::SlotSequence, ctx)
+                });
+            },
+            _ => (),
         }
 
         // MUSTTAIL
-        return session.push_and_climb(tok_in);
+        return session.parse_climb();
     }
 }
 
@@ -2539,22 +2545,25 @@ impl PrefixParselet for PercentParselet {
         panic_if_aborted!();
 
 
-        tok_in.skip(&mut session.tokenizer);
+        session.push_leaf_and_next(tok_in);
 
         let tok = session.tokenizer.peek_token_with(INSIDE_OUT);
 
-        if tok.tok == TokenKind::Integer {
-            tok.skip(&mut session.tokenizer);
+        match tok.tok {
+            TokenKind::Integer => {
+                session.push_context(Precedence::HIGHEST);
 
-            // MUSTTAIl
-            return session.push_and_climb(CompoundNode::new2(
-                CompoundOperator::Out,
-                tok_in,
-                tok,
-            ));
+                session.push_leaf_and_next(tok);
+
+                // MUSTTAIl
+                return session.reduce_and_climb(|ctx| {
+                    CompoundNode::new(CompoundOperator::Out, ctx)
+                });
+            },
+            _ => (),
         }
 
         // MUSTTAIL
-        return session.push_and_climb(tok_in);
+        return session.parse_climb();
     }
 }

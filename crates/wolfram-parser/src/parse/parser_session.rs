@@ -9,7 +9,7 @@ use Diagnostics::*;
 use crate::{
     abstract_::{abstract_cst, aggregate_cst_seq},
     ast::Ast,
-    cst::{Cst, CstSeq, TriviaSeq},
+    cst::{Cst, CstSeq},
     feature,
     issue::Issue,
     parse::{
@@ -48,7 +48,8 @@ pub(crate) type NodeStack<'i> = Vec<Cst<TokenStr<'i>>>;
 //
 // Used mainly for collecting trivia that has been eaten
 //
-pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
+#[derive(Debug)]
+pub(crate) struct TriviaSeq<'i>(pub(crate) Vec<Token<TokenStr<'i>>>);
 
 pub struct ParseResult<T> {
     /// Tokens, concrete syntax, or abstract syntax.
@@ -392,12 +393,12 @@ impl<'i> ParserSession<'i> {
 // TriviaSeq
 //======================================
 
-impl<'i> TriviaSeq<TokenStr<'i>> {
+impl<'i> TriviaSeq<'i> {
     pub(crate) fn new() -> Self {
         TriviaSeq(Vec::new())
     }
 
-    pub(crate) fn reset(self, session: &mut Tokenizer) {
+    pub fn reset(self, session: &mut Tokenizer) {
         let TriviaSeq(vec) = self;
 
         //
@@ -413,7 +414,7 @@ impl<'i> TriviaSeq<TokenStr<'i>> {
         T.reset(session);
     }
 
-    pub(crate) fn push(&mut self, token: TokenRef<'i>) {
+    pub fn push(&mut self, token: TokenRef<'i>) {
         let TriviaSeq(vec) = self;
         vec.push(token);
     }
