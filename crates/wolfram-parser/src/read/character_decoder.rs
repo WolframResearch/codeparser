@@ -15,7 +15,7 @@ use crate::{
         },
         SourceCharacter, Span, STRING_OR_COMMENT,
     },
-    utils::{self, from_fn},
+    utils,
 };
 
 use super::InputMark;
@@ -39,13 +39,12 @@ type HandlerFunction = for<'i, 's> fn(
 /// However, the lookup table-based implementation performs ~10-15% better than
 /// the `match` statement version on some of the large benchmarks.
 #[rustfmt::skip]
-const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = from_fn!(
-    [HandlerFunction, 128],
-    |_, _, _| unimplemented!(),
-    |index: usize| {
-        let index = index as u8;
+const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = {
+    let mut table: [HandlerFunction; 128] = [|_, _, _| unimplemented!(); 128];
 
-        match index {
+    let mut i: u8 = 0;
+    loop {
+        table[i as usize] = match i {
             00..=31 => CharacterDecoder_handleUncommon,
             32 => CharacterDecoder_handleUncommon,              // SPACE
             33 => CharacterDecoder_handleUncommon,              // !
@@ -59,10 +58,17 @@ const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = from_fn!(
             93..=127 => CharacterDecoder_handleUncommon,
             // "invalid ASCII byte value: {i}"
             128..=255 => panic!(),
-        }
-    }
-);
+        };
 
+        if i >= 127 {
+            break;
+        }
+
+        i += 1;
+    }
+
+    table
+};
 
 /// Precondition: buffer is pointing to current WLCharacter
 /// Postcondition: buffer is pointing to next WLCharacter

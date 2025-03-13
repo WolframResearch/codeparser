@@ -19,8 +19,7 @@ use crate::{
         TOPLEVEL,
     },
     tokenize::{token_enum::Closer, Token, TokenKind, TokenRef},
-    utils::{self, from_fn},
-    FirstLineBehavior,
+    utils, FirstLineBehavior,
 };
 
 use crate::source::NextPolicyBits::*;
@@ -323,13 +322,12 @@ type HandlerFunction = for<'p, 'i> fn(
 ///
 /// See also `CHARACTER_DECODER_HANDLER_TABLE` in character_decoder.rs.
 #[rustfmt::skip]
-const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = from_fn!(
-    [HandlerFunction, 128],
-    Tokenizer_nextToken_uncommon,
-    |index: usize| {
-        let index = index as u8;
+const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = {
+    let mut table: [HandlerFunction; 128] = [Tokenizer_nextToken_uncommon; 128];
 
-        match index {
+    let mut i: u8 = 0;
+    loop {
+        table[i as usize] = match i {
             0..=9 => Tokenizer_nextToken_uncommon,
             10 => Tokenizer_handleLineFeed,
             11..=31 => Tokenizer_nextToken_uncommon,
@@ -356,9 +354,17 @@ const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = from_fn!(
             126..=127 => Tokenizer_nextToken_uncommon,
             // Not a valid ASCII character
             128..=255 => panic!(),
+        };
+
+        if i >= 127 {
+            break;
         }
+
+        i += 1;
     }
-);
+
+    table
+};
 
 pub(crate) const ASCII_VTAB: char = '\x0B';
 pub(crate) const ASCII_FORM_FEED: char = '\x0C';
