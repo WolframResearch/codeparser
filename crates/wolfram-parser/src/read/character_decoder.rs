@@ -1,8 +1,11 @@
 use crate::{
     feature,
-    generated::long_names_registration::CODEPOINT_TO_LONGNAME_MAP,
+    generated::long_names_registration::{
+        CODE_POINT_TO_LONGNAME_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__NAMES,
+        LONGNAME_TO_CODE_POINT_MAP__POINTS,
+    },
     issue::{CodeAction, IssueTag, Severity, SyntaxIssue},
-    long_names::{self as LongNames, self},
+    long_names as LongNames,
     read::{
         code_point::{CodePoint::*, *},
         wl_character::{Escape, WLCharacter},
@@ -334,8 +337,9 @@ fn CharacterDecoder_handleLongName(
 
                 let mut Actions: Vec<CodeAction> = Vec::new();
 
-                let found =
-                    long_names::longname_to_codepoint(longNameStr).is_some();
+                let found = LONGNAME_TO_CODE_POINT_MAP__NAMES
+                    .binary_search(&longNameStr)
+                    .is_ok();
 
                 if found {
                     Actions.push(CodeAction::insert_text(
@@ -420,8 +424,10 @@ fn CharacterDecoder_handleLongName(
     // let longNameStr = std::string(reinterpret_cast::<*const i8>(longNameBufAndLen.Buf), longNameBufAndLen.length());
     let longNameStr = longNameBufAndLen.as_str();
 
-    let found: Option<CodePoint> =
-        long_names::longname_to_codepoint(longNameStr);
+    debug_assert!(utils::is_sorted(&LONGNAME_TO_CODE_POINT_MAP__NAMES));
+    let found: Option<usize> = LONGNAME_TO_CODE_POINT_MAP__NAMES
+        .binary_search(&longNameStr)
+        .ok();
 
     if found == None {
         //
@@ -534,13 +540,15 @@ fn CharacterDecoder_handleLongName(
         return WLCharacter::new('\\');
     }
 
+    let found: usize = found.unwrap();
+
     //
     // Success!
     //
 
-    let point: CodePoint = found.unwrap();
-
     session.next_source_char(policy);
+
+    let point: CodePoint = LONGNAME_TO_CODE_POINT_MAP__POINTS[found];
 
     if feature::CHECK_ISSUES
         && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
@@ -1140,9 +1148,9 @@ fn CharacterDecoder_handleUnhandledEscape(
             let mut wellFormedAndFound = false;
 
             if wellFormed {
-                wellFormedAndFound =
-                    long_names::longname_to_codepoint(alnumRun.as_str())
-                        .is_some();
+                wellFormedAndFound = LONGNAME_TO_CODE_POINT_MAP__NAMES
+                    .binary_search(&alnumRun.as_str())
+                    .is_ok();
             }
 
             if wellFormedAndFound {
@@ -1757,9 +1765,8 @@ fn CharacterDecoder_longNameSuggestion(input: String) -> String {
 fn CharacterDecoder_longNameSuggestion(input: &str) -> String {
     use edit_distance::edit_distance;
 
-    let closest: Option<&&str> = CODEPOINT_TO_LONGNAME_MAP
+    let closest: Option<&&str> = CODE_POINT_TO_LONGNAME_MAP__NAMES
         .iter()
-        .map(|(_, longname): &(CodePoint, &str)| longname)
         .min_by_key(|name| edit_distance(input, name));
 
     match closest {

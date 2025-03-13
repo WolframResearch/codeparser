@@ -10,7 +10,7 @@ use std::{
 
 use crate::{
     feature,
-    long_names::{self as LongNames, codepoint_has_longname},
+    long_names::{self as LongNames, code_point_has_long_name},
     read::{
         code_point::{
             CodePoint::{self, Char, *},
@@ -1171,7 +1171,7 @@ impl Display for SourceCharacter {
         let val: char = val;
 
         if val > '\u{ffff}' {
-            if codepoint_has_longname(val) {
+            if code_point_has_long_name(val) {
                 //
                 // Use LongName if available
                 //
@@ -1191,7 +1191,7 @@ impl Display for SourceCharacter {
         }
 
         if val > '\u{ff}' {
-            if codepoint_has_longname(val) {
+            if code_point_has_long_name(val) {
                 //
                 // Use LongName if available
                 //
@@ -1211,7 +1211,7 @@ impl Display for SourceCharacter {
         }
 
         if val > '\u{7f}' {
-            if codepoint_has_longname(val) {
+            if code_point_has_long_name(val) {
                 //
                 // Use LongName if available
                 //
