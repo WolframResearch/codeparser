@@ -2,6 +2,7 @@ use crate::{
     node::CompoundNode,
     panic_if_aborted,
     parselet::*,
+    parselet_registration::*,
     parser::{
         Parser_parseClimb, Parser_popContext, Parser_pushContext, Parser_pushLeafAndNext,
         Parser_pushNode,
@@ -56,7 +57,7 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, Tok
         // Context-sensitive and OK to build stack
         //
 
-        SymbolParselet_parseInfixContextSensitive(session, Tok);
+        SymbolParselet_parseInfixContextSensitive(session, &symbolParselet, Tok);
 
         // MUSTTAIL
         return UnderParselet_reduceBlank(session, P, TokIn /*ignored*/);
@@ -112,7 +113,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
         // Context-sensitive and OK to build stack
         //
 
-        SymbolParselet_parseInfixContextSensitive(session, Tok);
+        SymbolParselet_parseInfixContextSensitive(session, &symbolParselet, Tok);
 
         // MUSTTAIL
         return UnderParselet_reduceBlankContextSensitive(session, P, TokIn /*ignored*/);
@@ -196,6 +197,7 @@ fn UnderDotParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
 //
 pub(crate) fn UnderDotParselet_parseInfixContextSensitive(
     session: &mut ParserSession,
+    _: ParseletPtr,
     TokIn: Token,
 ) {
     //

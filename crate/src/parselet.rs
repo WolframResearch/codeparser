@@ -38,8 +38,9 @@ pub(crate) type ParseletPtr = &'static dyn Parselet;
 pub(crate) type PrefixParseletPtr = &'static dyn PrefixParselet;
 pub(crate) type InfixParseletPtr = &'static dyn InfixParselet;
 
-pub(crate) type ParseFunction =
-    for<'i> fn(session: &mut ParserSession<'i>, parselet: ParseletPtr, firstTok: Token);
+// pub(crate) type ParseFunction = fn(parser: &mut ParserSession, parselet: ParseletPtr, firstTok: Token);
+pub(crate) type ParseFunction<T = ParseletPtr> =
+    for<'i> fn(session: &mut ParserSession<'i>, parselet: T, firstTok: Token);
 
 //
 /// Classes that derive from Parselet are responsible for parsing specific kinds of syntax
@@ -770,7 +771,7 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
             // Context-sensitive and OK to build stack
             //
 
-            UnderDotParselet_parseInfixContextSensitive(session, Tok);
+            UnderDotParselet_parseInfixContextSensitive(session, &underDotParselet, Tok);
 
             // MUSTTAIl
             return SymbolParselet_reducePatternOptionalDefault(session, Tok /*ignored*/);
@@ -786,7 +787,11 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
-pub(crate) fn SymbolParselet_parseInfixContextSensitive(session: &mut ParserSession, TokIn: Token) {
+pub(crate) fn SymbolParselet_parseInfixContextSensitive(
+    session: &mut ParserSession,
+    _: ParseletPtr,
+    TokIn: Token,
+) {
     //
     // Something like  _b
     //                  ^
@@ -856,11 +861,12 @@ impl PrefixParselet for PrefixOperatorParselet {
     }
 }
 
-fn PrefixOperatorParselet_parsePrefix(
-    session: &mut ParserSession,
-    P: &'static PrefixOperatorParselet,
-    TokIn: Token,
-) {
+fn PrefixOperatorParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<PrefixOperatorParselet>()
+        .expect("unable to downcast to PrefixOperatorParselet");
+
     panic_if_aborted!();
 
 
@@ -988,11 +994,7 @@ impl InfixParselet for BinaryOperatorParselet {
 }
 
 
-fn BinaryOperatorParselet_parseInfix(
-    session: &mut ParserSession,
-    P: &'static BinaryOperatorParselet,
-    TokIn: Token,
-) {
+fn BinaryOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
     panic_if_aborted!();
 
 
