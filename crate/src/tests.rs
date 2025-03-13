@@ -20,8 +20,8 @@ use crate::{
     parser_session::ParserSession,
     source::SourceConvention,
     src, token,
-    token::{BorrowedTokenInput, Token},
-    EncodingMode, FirstLineBehavior, ParseOptions, ParseResult, Tokens, DEFAULT_TAB_WIDTH,
+    token::BorrowedTokenInput,
+    EncodingMode, FirstLineBehavior, ParseOptions, ParseResult, DEFAULT_TAB_WIDTH,
 };
 
 fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
@@ -40,7 +40,8 @@ fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
     nodes
 }
 
-fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
+// TODO: Change this to return Vec<Token>.
+fn tokens(input: &str) -> Vec<Node<BorrowedTokenInput>> {
     let mut session = ParserSession::new(
         input.as_bytes(),
         SourceConvention::LineColumn,
@@ -49,11 +50,11 @@ fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
         EncodingMode::Normal,
     );
 
-    let tokens: Tokens<BorrowedTokenInput> = session.tokenize().unwrap();
+    let nodes: NodeSeq<BorrowedTokenInput> = session.tokenize().unwrap();
 
-    let Tokens(tokens) = tokens;
+    let NodeSeq(nodes) = nodes;
 
-    tokens
+    nodes
 }
 
 fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Node<BorrowedTokenInput>> {
@@ -100,7 +101,7 @@ fn concrete_exprs_character_index(input: &str) -> Vec<Node<BorrowedTokenInput>> 
 fn test_something() {
     assert_eq!(
         tokens("123"),
-        vec![token![Integer, "123" @ 0, src!(1:1-1:4)]]
+        vec![NVToken(token![Integer, "123" @ 0, src!(1:1-1:4)])]
     );
 
     assert_eq!(
@@ -111,28 +112,28 @@ fn test_something() {
     assert_eq!(
         tokens("a+b"),
         vec![
-            token![Symbol, "a" @ 0, src!(1:1-1:2)],
-            token![Plus, "+" @ 1, src!(1:2-1:3)],
-            token![Symbol, "b" @ 2, src!(1:3-1:4)],
+            NVToken(token![Symbol, "a" @ 0, src!(1:1-1:2)]),
+            NVToken(token![Plus, "+" @ 1, src!(1:2-1:3)]),
+            NVToken(token![Symbol, "b" @ 2, src!(1:3-1:4)]),
         ]
     );
 
     assert_eq!(
         tokens("!a"),
         vec![
-            token![Bang, "!" @ 0, src!(1:1-1:2)],
-            token![Symbol, "a" @ 1, src!(1:2-1:3)]
+            NVToken(token![Bang, "!" @ 0, src!(1:1-1:2)]),
+            NVToken(token![Symbol, "a" @ 1, src!(1:2-1:3)])
         ]
     );
 
     assert_eq!(
         tokens("2 + 2"),
         vec![
-            token![Integer, "2" @ 0, src!(1:1-1:2)],
-            token![Whitespace, " " @ 1, src!(1:2-1:3)],
-            token![Plus, "+" @ 2, src!(1:3-1:4)],
-            token![Whitespace, " " @ 3, src!(1:4-1:5)],
-            token![Integer, "2" @ 4, src!(1:5-1:6)],
+            NVToken(token![Integer, "2" @ 0, src!(1:1-1:2)]),
+            NVToken(token![Whitespace, " " @ 1, src!(1:2-1:3)]),
+            NVToken(token![Plus, "+" @ 2, src!(1:3-1:4)]),
+            NVToken(token![Whitespace, " " @ 3, src!(1:4-1:5)]),
+            NVToken(token![Integer, "2" @ 4, src!(1:5-1:6)]),
         ]
     );
 
@@ -186,17 +187,14 @@ pub fn test_tokenize_is_not_idempotent() {
     assert_eq!(
         session.tokenize().unwrap().0,
         vec![
-            token![Integer, "2" @ 0, src!(0:1-0:2)],
-            token![Plus, "+" @ 1, src!(0:2-0:3)],
-            token![Integer, "2" @ 2, src!(0:3-0:4)]
+            NVToken(token![Integer, "2" @ 0, src!(0:1-0:2)]),
+            NVToken(token![Plus, "+" @ 1, src!(0:2-0:3)]),
+            NVToken(token![Integer, "2" @ 2, src!(0:3-0:4)])
         ]
     );
 
     // Test that ParserSession::tokenize() is NOT idempotent.
-    assert_eq!(
-        session.tokenize().unwrap().0,
-        Vec::<Token<BorrowedTokenInput>>::new()
-    )
+    assert_eq!(session.tokenize().unwrap().0, vec![])
 }
 
 #[test]

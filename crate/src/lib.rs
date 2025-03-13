@@ -156,16 +156,16 @@ pub mod test_utils {
     /// use wolfram_code_parse::{
     ///     tokenize_bytes,
     ///     ParseOptions,
-    ///     Tokens,
+    ///     node::{NodeSeq, Node},
     ///     test_utils::{src, token}
     /// };
     ///
-    /// let Tokens(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).unwrap();
+    /// let NodeSeq(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).unwrap();
     ///
     /// assert_eq!(tokens, &[
-    ///     token!(Symbol, b"foo" @ 0, src!(1:1-1:4)),
-    ///     token!(Plus, b"+" @ 3, src!(1:4-1:5)),
-    ///     token!(Integer, b"1" @ 4, src!(1:5-1:6)),
+    ///     Node::Token(token!(Symbol, b"foo" @ 0, src!(1:1-1:4))),
+    ///     Node::Token(token!(Plus, b"+" @ 3, src!(1:4-1:5))),
+    ///     Node::Token(token!(Integer, b"1" @ 4, src!(1:5-1:6))),
     /// ]);
     /// ```
     macro_rules! token {
@@ -181,9 +181,9 @@ pub mod test_utils {
     pub use {src, token};
 }
 
-//==========================================================
+//======================================
 // API
-//==========================================================
+//======================================
 
 //-----------
 // Re-exports
@@ -203,9 +203,9 @@ pub use crate::{
     },
 };
 
-//======================================
+//-----------
 // Types
-//======================================
+//-----------
 
 /// How `#!` [shebangs](https://en.wikipedia.org/wiki/Shebang_(Unix))
 /// should be treated if they appear in the first line of input.
@@ -266,12 +266,6 @@ pub(crate) enum StringifyMode {
     File = 2,
 }
 
-pub struct Tokens<I = OwnedTokenInput>(pub Vec<Token<I>>);
-
-//-------------
-// ParseOptions
-//-------------
-
 pub struct ParseOptions {
     first_line_behavior: FirstLineBehavior,
     src_convention: SourceConvention,
@@ -296,10 +290,6 @@ impl ParseOptions {
     }
 }
 
-//======================================
-// Functions
-//======================================
-
 use crate::parser_session::ParserSession;
 
 /// Parse bytes containing Wolfram Language input into a sequence of tokens.
@@ -310,25 +300,23 @@ use crate::parser_session::ParserSession;
 ///
 /// ```
 /// use wolfram_code_parse::{
-///     tokenize_bytes, ParseOptions, Tokens,
-///     test_utils::{token, src}
+///     tokenize_bytes,
+///     ParseOptions,
+///     node::NodeSeq
 /// };
 ///
-/// let Tokens(tokens) = tokenize_bytes(b"2 + 2", &ParseOptions::default())
-///     .unwrap();
+/// let nodes = tokenize_bytes(b"2 + 2", &ParseOptions::default());
 ///
-/// assert_eq!(tokens, &[
-///     token![Integer, "2" @ 0, src!(1:1-1:2)],
-///     token![Whitespace, " " @ 1, src!(1:2-1:3)],
-///     token![Plus, "+" @ 2, src!(1:3-1:4)],
-///     token![Whitespace, " " @ 3, src!(1:4-1:5)],
-///     token![Integer, "2" @ 4, src!(1:5-1:6)],
-/// ]);
+/// /* TODO: assert_eq!(nodes, NodeContainer {
+///     nodes: NodeSeq(vec![
+///
+///     ])
+/// }); */
 /// ```
 pub fn tokenize_bytes<'i>(
     input: &'i [u8],
     opts: &ParseOptions,
-) -> Result<Tokens<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
+) -> Result<NodeSeq<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
     let ParseOptions {
         first_line_behavior,
         src_convention,
@@ -416,6 +404,7 @@ macro_rules! panic_if_aborted {
     };
 }
 
+use node::NodeSeq;
 pub(crate) use panic_if_aborted;
-use token::{BorrowedTokenInput, OwnedTokenInput, Token};
+use token::BorrowedTokenInput;
 use tokenizer::UnsafeCharacterEncoding;
