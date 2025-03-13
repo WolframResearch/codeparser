@@ -692,18 +692,6 @@ if(BUILD_PACLET)
 	endif()
 
 	#
-	# Assemble Paclet
-	#
-
-	add_custom_target(assemble-paclet
-		DEPENDS
-			${PACLET_SOURCES}
-			${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl
-			${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-			${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	)
-
-	#
 	# paclet archive
 	#
 	if(LOCAL_BUILD)
@@ -733,7 +721,10 @@ if(BUILD_PACLET)
 		#
 		${CMAKE_COMMAND} -DRETRY_ON_FAILURE=ON -DSCRIPT=${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET_LAYOUT_DIR=${PACLET_LAYOUT_DIR} -DPACLET=${PACLET} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 		DEPENDS
-			assemble-paclet
+		${PACLET_SOURCES}
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 		VERBATIM
 		WORKING_DIRECTORY
 		${PROJECT_BINARY_DIR}
