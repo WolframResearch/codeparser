@@ -276,7 +276,6 @@ pub struct ParseOptions {
     encoding_mode: EncodingMode,
     tab_width: u32,
     check_issues: bool,
-    compute_oob: bool,
     pub quirk_settings: QuirkSettings,
 }
 
@@ -288,7 +287,6 @@ impl Default for ParseOptions {
             encoding_mode: EncodingMode::Normal,
             tab_width: DEFAULT_TAB_WIDTH,
             check_issues: true,
-            compute_oob: true,
             quirk_settings: QuirkSettings::default(),
         }
     }
@@ -310,7 +308,6 @@ impl ParseOptions {
             encoding_mode,
             tab_width,
             check_issues: true,
-            compute_oob: true,
             quirk_settings,
         }
     }

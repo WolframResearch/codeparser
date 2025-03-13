@@ -122,7 +122,6 @@ impl<'i> Tokenizer<'i> {
             encoding_mode: _,
             tab_width: _,
             check_issues: _,
-            compute_oob: _,
             quirk_settings: _,
         } = *opts;
 
@@ -951,7 +950,7 @@ fn Tokenizer_nextWLCharacter<'i>(
         // All whitespace after a line continuation can be ignored for the purposes of tokenization
         //
         while c.isWhitespace() {
-            if session.compute_oob {
+            if feature::COMPUTE_OOB {
                 if c.point == '\t' {
                     if policy.contains(STRING_OR_COMMENT) {
                         //
@@ -974,7 +973,7 @@ fn Tokenizer_nextWLCharacter<'i>(
             c = session.peek_wolfram_char(policy);
         }
 
-        if session.compute_oob {
+        if feature::COMPUTE_OOB {
             if policy.contains(TRACK_LC) {
                 if policy.contains(STRING_OR_COMMENT) {
                     session.addComplexLineContinuation(token_start.loc);
@@ -1173,14 +1172,14 @@ fn Tokenizer_handleComment<'i>(
                     .token(TokenKind::Error_UnterminatedComment, token_start);
             },
             Char('\n' | '\r') | CRLF => {
-                if session.compute_oob {
+                if feature::COMPUTE_OOB {
                     session.addEmbeddedNewline(token_start.loc);
                 }
 
                 c = session.next_source_char(policy);
             },
             Char('\t') => {
-                if session.compute_oob {
+                if feature::COMPUTE_OOB {
                     session.addEmbeddedTab(token_start.loc);
                 }
 
@@ -1520,7 +1519,7 @@ fn Tokenizer_handleString<'i>(
     let mut terminated = false;
 
     if feature::FAST_STRING_SCAN
-        && !session.compute_oob
+        && !feature::COMPUTE_OOB
         && !session.check_issues
         && !feature::COMPUTE_SOURCE
     {
@@ -1619,10 +1618,10 @@ fn Tokenizer_handleString<'i>(
                 return session
                     .token(TokenKind::Error_UnterminatedString, token_start);
             },
-            Char('\n' | '\r') | CRLF if session.compute_oob => {
+            Char('\n' | '\r') | CRLF if feature::COMPUTE_OOB => {
                 session.addEmbeddedNewline(token_start.loc);
             },
-            Char('\t') if session.compute_oob => {
+            Char('\t') if feature::COMPUTE_OOB => {
                 session.addEmbeddedTab(token_start.loc);
             },
             _ => (),
