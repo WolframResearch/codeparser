@@ -767,14 +767,7 @@ impl PrefixParselet for PrefixOperatorParselet {
         let ctxt = session.push_context(self.getPrecedence());
 
         ctxt.init_callback(
-            |session: &mut ParserSession, P: ParseletPtr| {
-                let P = P
-                    .as_any()
-                    .downcast_ref::<PrefixOperatorParselet>()
-                    .expect("unable to downcast to PrefixOperatorParselet");
-
-                session.reduce_and_climb(|ctx| PrefixNode::new(P.Op, ctx))
-            },
+            PrefixOperatorParselet::reducePrefixOperator,
             Some(self),
         );
 
@@ -782,6 +775,17 @@ impl PrefixParselet for PrefixOperatorParselet {
 
         // MUSTTAIL
         return session.parse_prefix(tok);
+    }
+}
+
+impl PrefixOperatorParselet {
+    fn reducePrefixOperator(session: &mut ParserSession, P: ParseletPtr) {
+        let P = P
+            .as_any()
+            .downcast_ref::<PrefixOperatorParselet>()
+            .expect("unable to downcast to PrefixOperatorParselet");
+
+        session.reduce_and_climb(|ctx| PrefixNode::new(P.Op, ctx))
     }
 }
 
@@ -884,14 +888,7 @@ impl InfixParselet for BinaryOperatorParselet {
         let ctxt = session.top_context();
 
         ctxt.init_callback(
-            |session, P| {
-                let P = P
-                    .as_any()
-                    .downcast_ref::<BinaryOperatorParselet>()
-                    .expect("unable to downcast to BinaryOperatorParselet");
-
-                session.reduce_and_climb(|ctx| BinaryNode::new(P.Op, ctx))
-            },
+            BinaryOperatorParselet::reduceBinaryOperator,
             Some(self),
         );
 
@@ -908,6 +905,17 @@ impl InfixParselet for BinaryOperatorParselet {
 
     fn getOp(&self) -> InfixParseletOperator {
         self.Op.into()
+    }
+}
+
+impl BinaryOperatorParselet {
+    fn reduceBinaryOperator(session: &mut ParserSession, P: ParseletPtr) {
+        let P = P
+            .as_any()
+            .downcast_ref::<BinaryOperatorParselet>()
+            .expect("unable to downcast to BinaryOperatorParselet");
+
+        session.reduce_and_climb(|ctx| BinaryNode::new(P.Op, ctx))
     }
 }
 
