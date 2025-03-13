@@ -150,12 +150,12 @@ pub mod test_utils {
     /// let span: LineColumnSpan = src!(1:3-1:8);
     /// ```
     ///
-    /// Construct a [`CharacterSpan`][crate::source::CharacterSpan] span:
+    /// Construct a [`CharacterRange`][crate::source::CharacterRange] span:
     ///
     /// ```
-    /// # use wolfram_parser::{test_utils::src, source::CharacterSpan};
+    /// # use wolfram_parser::{test_utils::src, source::CharacterRange};
     /// // Characters 1 through 4
-    /// let span: CharacterSpan = src!(1-4);
+    /// let span: CharacterRange = src!(1-4);
     /// ```
     macro_rules! src {
         // a:b
@@ -183,10 +183,10 @@ pub mod test_utils {
         // TODO: Pick only one of these syntaxes to use
         // a-b  OR  a..b
         ($start:literal - $end:literal) => {
-            $crate::source::CharacterSpan($start, $end)
+            $crate::source::CharacterRange($start, $end)
         };
         ($start:literal .. $end:literal) => {
-            $crate::source::CharacterSpan($start, $end)
+            $crate::source::CharacterRange($start, $end)
         };
     }
 
