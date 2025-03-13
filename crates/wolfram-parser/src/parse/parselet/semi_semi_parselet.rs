@@ -15,7 +15,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiSemiParselet {
         &self,
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: B::TriviaHandle,
+        trivia1: TriviaSeqRef<'i>,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -71,7 +71,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for SemiSemiParselet {
         return self.parse_infix(
             session,
             first_operand,
-            B::empty_trivia(),
+            TriviaSeqRef::new(),
             tok_in,
         );
     }
@@ -81,7 +81,7 @@ impl SemiSemiParselet {
     fn parse1<'i, B: ParseBuilder<'i> + 'i>(
         session: &mut ParserSession<'i, B>,
         first_operand: B::Node,
-        trivia1: B::TriviaHandle,
+        trivia1: TriviaSeqRef<'i>,
         first_op_token: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
@@ -158,7 +158,7 @@ impl SemiSemiParselet {
         //     a ;; <All> ;; b
         //      1  2     3  4
         //      ------------- trivias
-        let trivia3 = B::empty_trivia();
+        let trivia3 = TriviaSeqRef::new();
 
         //
         // Span should not cross toplevel newlines
@@ -179,7 +179,7 @@ impl SemiSemiParselet {
             //      ^~ThirdTok
             //
 
-            session.trivia_reset(trivia4);
+            trivia4.reset(&mut session.tokenizer);
             SecondTok.reset(&mut session.tokenizer);
 
             // MUSTTAIL
@@ -222,9 +222,9 @@ impl SemiSemiParselet {
     fn parse2<'i, B: ParseBuilder<'i> + 'i>(
         session: &mut ParserSession<'i, B>,
         first_operand: B::Node,
-        trivia1: B::TriviaHandle,
+        trivia1: TriviaSeqRef<'i>,
         first_op_token: TokenRef<'i>,
-        trivia2: B::TriviaHandle,
+        trivia2: TriviaSeqRef<'i>,
         second_operand: B::Node,
     ) -> B::Node {
         panic_if_aborted!();
@@ -252,7 +252,7 @@ impl SemiSemiParselet {
             //               ^~~~~~~~~~~~~~~~ThirdTok
             //
 
-            session.trivia_reset(trivia3);
+            trivia3.reset(&mut session.tokenizer);
 
             // MUSTTAIL
             return SemiSemiParselet::reduce_binary(
@@ -293,9 +293,9 @@ impl SemiSemiParselet {
             //       ^~FourthTok
             //
 
-            session.trivia_reset(trivia4);
+            trivia4.reset(&mut session.tokenizer);
             ThirdTok.reset(&mut session.tokenizer);
-            session.trivia_reset(trivia3);
+            trivia3.reset(&mut session.tokenizer);
 
             // MUSTTAIL
             return SemiSemiParselet::reduce_binary(
@@ -338,9 +338,9 @@ impl SemiSemiParselet {
     fn reduce_binary<'i, B: ParseBuilder<'i> + 'i>(
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: B::TriviaHandle,
+        trivia1: TriviaSeqRef<'i>,
         op_token: TokenRef<'i>,
-        trivia2: B::TriviaHandle,
+        trivia2: TriviaSeqRef<'i>,
         rhs_node: B::Node,
     ) -> B::Node {
         let node = session.reduce_binary(
@@ -358,13 +358,13 @@ impl SemiSemiParselet {
     fn reduce_ternary<'i, B: ParseBuilder<'i> + 'i>(
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
-        trivia1: B::TriviaHandle,
+        trivia1: TriviaSeqRef<'i>,
         first_op_token: TokenRef<'i>,
-        trivia2: B::TriviaHandle,
+        trivia2: TriviaSeqRef<'i>,
         middle_node: B::Node,
-        trivia3: B::TriviaHandle,
+        trivia3: TriviaSeqRef<'i>,
         second_op_token: TokenRef<'i>,
-        trivia4: B::TriviaHandle,
+        trivia4: TriviaSeqRef<'i>,
         rhs_node: B::Node,
     ) -> B::Node {
         let node = session.reduce_ternary(
