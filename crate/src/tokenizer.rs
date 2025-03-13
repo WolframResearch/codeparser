@@ -77,7 +77,7 @@ pub(crate) struct SourceManager<'t> {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum UnsafeCharacterEncoding {
+pub(crate) enum UnsafeCharacterEncoding {
     // Ok = 0,
     IncompleteUTF8Sequence = 1,
     StraySurrogate = 2,

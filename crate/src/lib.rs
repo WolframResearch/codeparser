@@ -155,7 +155,7 @@ pub mod test_utils {
     ///     test_utils::{src, token}
     /// };
     ///
-    /// let NodeSeq(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).unwrap();
+    /// let NodeSeq(tokens) = tokenize_bytes(b"foo+1", &ParseOptions::default()).nodes;
     ///
     /// assert_eq!(tokens, &[
     ///     Node::Token(token!(Symbol, b"foo" @ 0, src!(1:1-1:4))),
@@ -305,7 +305,7 @@ use crate::parser_session::ParserSession;
 pub fn tokenize_bytes<'i>(
     input: &'i [u8],
     opts: &ParseOptions,
-) -> Result<NodeSeq<BorrowedTokenInput<'i>>, UnsafeCharacterEncoding> {
+) -> NodeContainer<BorrowedTokenInput<'i>> {
     let ParseOptions {
         first_line_behavior,
         src_convention,
@@ -393,7 +393,6 @@ macro_rules! panic_if_aborted {
     };
 }
 
-use node::NodeSeq;
+use node::NodeContainer;
 pub(crate) use panic_if_aborted;
 use token::BorrowedTokenInput;
-use tokenizer::UnsafeCharacterEncoding;

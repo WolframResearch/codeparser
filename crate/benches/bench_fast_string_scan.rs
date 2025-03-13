@@ -9,7 +9,7 @@ fn parse_tokens(input: &str) {
 }
 
 fn parse_tokens_u8(input: &[u8]) {
-    wolfram_code_parse::tokenize_bytes(input, &ParseOptions::default()).unwrap();
+    wolfram_code_parse::tokenize_bytes(input, &ParseOptions::default());
 }
 
 fn benchmark(c: &mut Criterion) {
