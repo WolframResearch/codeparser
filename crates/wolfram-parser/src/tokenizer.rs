@@ -19,7 +19,7 @@ use crate::{
     token_enum::Closer,
     utils,
     wl_character::{EscapeStyle, WLCharacter},
-    EncodingMode, FirstLineBehavior,
+    EncodingMode, FirstLineBehavior, SourceConvention,
 };
 
 use crate::source::NextPolicyBits::*;
@@ -41,6 +41,7 @@ pub struct Tokenizer<'i> {
 
     pub encodingMode: EncodingMode,
 
+    pub srcConvention: SourceConvention,
     pub SrcLoc: SourceLocation,
 
     pub GroupStack: Vec<Closer>,
@@ -65,9 +66,14 @@ pub struct TrackedSourceLocations {
 /// A set of fields of [`Tokenizer`] used to update the current
 /// [`SourceLocation`].
 pub(crate) struct SourceManager<'t> {
-    pub(crate) loc: &'t mut SourceLocation,
-
     pub(crate) tab_width: u32,
+    pub(crate) convention: SourceConvention,
+    // TODO(cleanup):
+    //     Make the `loc` field an `SourceConvention` instead of being a mutable
+    //     reference to the `SrcLoc` field of `Tokenizer`. Then likewise
+    //     remove the Tokenizer.srcConvention field and just use the `convention`
+    //     field of this struct.
+    pub(crate) loc: &'t mut SourceLocation,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -178,6 +184,7 @@ impl<'i> Tokenizer<'i> {
     pub(crate) fn src(&mut self) -> SourceManager {
         SourceManager {
             tab_width: self.tabWidth,
+            convention: self.srcConvention,
             loc: &mut self.SrcLoc,
         }
     }
