@@ -91,7 +91,6 @@ $Operators = Join[
 		CodeParser`PatternBlankNullSequence,
 		CodeParser`PatternOptionalDefault,
 		CodeParser`TernaryTilde,
-		CodeParser`TernaryOptionalPattern,
 		CodeParser`InfixTilde
 	}],
 	DeleteDuplicates @ Association @ Flatten @ Replace[

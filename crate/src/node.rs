@@ -2,9 +2,7 @@ use wolfram_expr::Expr;
 
 use crate::{
     source::{GeneralSource, Source},
-    token::{
-        BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind, TokenRef, TokenSource,
-    },
+    token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::Tokenizer,
 };
 
@@ -67,19 +65,10 @@ pub struct BoxNode<I = OwnedTokenInput, S = Source> {
     pub src: S,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BoxKind {
-    RowBox,
-    GridBox,
-    TagBox,
-    TemplateBox,
-    InterpretationBox,
-    SubscriptBox,
-    SuperscriptBox,
-    StyleBox,
-    NamespaceBox,
-    OverscriptBox,
-    SubsuperscriptBox,
+    Tag,
+    Superscript,
 }
 
 /// Any kind of prefix, postfix, binary, or infix operator
@@ -166,7 +155,7 @@ pub struct SyntaxErrorNode<I = OwnedTokenInput, S = Source> {
     pub src: S,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SyntaxErrorKind {
     ExpectedSymbol,
     ExpectedSet,
@@ -253,8 +242,8 @@ impl<I, S> From<CodeNode<S>> for Node<I, S> {
 // NodeSeq
 //======================================
 
-impl<I, S> NodeSeq<I, S> {
-    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I, S>)) {
+impl<I> NodeSeq<I> {
+    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I>)) {
         let NodeSeq(elements) = self;
 
         for elem in elements {
@@ -262,7 +251,7 @@ impl<I, S> NodeSeq<I, S> {
         }
     }
 
-    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
+    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I>) -> Node<I>) -> Self {
         let NodeSeq(elements) = self;
 
         let elements = elements
@@ -285,9 +274,7 @@ impl<I> NodeSeq<I> {
         let node = node.into();
         vec.push(node);
     }
-}
 
-impl<I, S> NodeSeq<I, S> {
     pub fn clear(&mut self) {
         let NodeSeq(vec) = self;
 
@@ -309,12 +296,12 @@ impl<I, S> NodeSeq<I, S> {
     //     return vec[index];
     // }
 
-    fn first(&self) -> &Node<I, S> {
+    fn first(&self) -> &Node<I> {
         let NodeSeq(vec) = self;
         vec.first().expect("NodeSeq::first(): vector is empty")
     }
 
-    fn last(&self) -> &Node<I, S> {
+    fn last(&self) -> &Node<I> {
         let NodeSeq(vec) = self;
         vec.last().expect("NodeSeq::last(): vector is empty")
     }
@@ -332,9 +319,7 @@ impl<I, S> NodeSeq<I, S> {
 
     //     s << "]";
     // }
-}
 
-impl<I, S: TokenSource> NodeSeq<I, S> {
     pub(crate) fn check(&self) -> bool {
         let NodeSeq(vec) = self;
 
@@ -348,8 +333,8 @@ impl<I, S: TokenSource> NodeSeq<I, S> {
     }
 }
 
-impl<I: TokenInput, S> NodeSeq<I, S> {
-    pub(crate) fn into_owned_input(self) -> NodeSeq<OwnedTokenInput, S> {
+impl NodeSeq<BorrowedTokenInput<'_>> {
+    pub(crate) fn into_owned_input(self) -> NodeSeq {
         let NodeSeq(nodes) = self;
 
         let nodes = nodes.into_iter().map(Node::into_owned_input).collect();
@@ -405,9 +390,9 @@ impl<'i> TriviaSeq<'i> {
 // Nodes
 //==========================================================
 
-impl<I, S> Node<I, S> {
+impl<I> Node<I> {
     /// Visit this node and every child node, recursively.
-    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I, S>)) {
+    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I>)) {
         // Visit the current node.
         visit(self);
 
@@ -462,12 +447,12 @@ impl<I, S> Node<I, S> {
     }
 
     /// Transform this node tree by visiting this node and every child node, recursively.
-    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
+    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I>) -> Node<I>) -> Self {
         // Visit the current node.
         let self_ = visit(self);
 
         // Visit child nodes.
-        let node: Node<I, S> = match self_ {
+        let node: Node<I> = match self_ {
             Node::Token(_) => return self_,
             Node::Call(CallNode {
                 head,
@@ -531,8 +516,8 @@ impl<I, S> Node<I, S> {
     }
 }
 
-impl<I: TokenInput, S> Node<I, S> {
-    pub fn into_owned_input(self) -> Node<OwnedTokenInput, S> {
+impl Node<BorrowedTokenInput<'_>> {
+    pub fn into_owned_input(self) -> Node {
         match self {
             Node::Token(token) => Node::Token(token.into_owned_input()),
             Node::Call(CallNode {
@@ -583,16 +568,15 @@ impl<I: TokenInput, S> Node<I, S> {
     }
 }
 
-
-impl<I, S: TokenSource> Node<I, S> {
+impl<I> Node<I> {
     // TODO(cleanup): Combine with getSource()
-    pub(crate) fn source(&self) -> S {
+    fn source(&self) -> Source {
         self.getSource()
     }
 
-    pub(crate) fn getSource(&self) -> S {
+    pub(crate) fn getSource(&self) -> Source {
         match self {
-            Node::Token(token) => token.src.clone(),
+            Node::Token(token) => token.src,
             Node::Call(node) => node.getSource(),
             Node::SyntaxError(node) => node.getSource(),
             Node::Prefix(PrefixNode(op)) => op.getSource(),
@@ -664,15 +648,13 @@ impl<I> OperatorNode<I> {
             src: src,
         }
     }
-}
 
-impl<I, S: TokenSource> OperatorNode<I, S> {
     pub fn getOp(&self) -> Operator {
         return self.op;
     }
 
-    pub fn getSource(&self) -> S {
-        return self.src.clone();
+    pub fn getSource(&self) -> Source {
+        return self.src;
     }
 
     pub(crate) fn check(&self) -> bool {
@@ -697,8 +679,8 @@ impl<I, S: TokenSource> OperatorNode<I, S> {
     // }
 }
 
-impl<I: TokenInput, S> OperatorNode<I, S> {
-    fn into_owned_input(self) -> OperatorNode<OwnedTokenInput, S> {
+impl OperatorNode<BorrowedTokenInput<'_>> {
+    fn into_owned_input(self) -> OperatorNode {
         let OperatorNode { op, children, src } = self;
 
         OperatorNode {
@@ -709,8 +691,8 @@ impl<I: TokenInput, S> OperatorNode<I, S> {
     }
 }
 
-impl<I, S> OperatorNode<I, S> {
-    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>) -> Self {
+impl<I> OperatorNode<I> {
+    pub fn map_visit(self, visit: &mut dyn FnMut(Node<I>) -> Node<I>) -> Self {
         let OperatorNode { op, children, src } = self;
 
         let children = children.map_visit(visit);
@@ -723,7 +705,7 @@ impl<I, S> OperatorNode<I, S> {
 // Missing closer nodes
 //======================================
 
-impl<I, S: TokenSource> GroupMissingCloserNode<I, S> {
+impl<I> GroupMissingCloserNode<I> {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
@@ -836,15 +818,13 @@ impl<I> CallNode<I> {
             is_concrete: true,
         }
     }
-}
 
-impl<I, S: TokenSource> CallNode<I, S> {
     // pub(crate) fn group(head: NodeVariant<I>, group: GroupNode<I>) -> Self {
     //     CallNode::new(NodeSeq(vec![head]), NodeVariant::Node(Node::Group(group)))
     // }
 
-    fn getSource(&self) -> S {
-        return self.src.clone();
+    fn getSource(&self) -> Source {
+        return self.src;
     }
 
     // TODO: Display
@@ -893,15 +873,13 @@ impl<I> SyntaxErrorNode<I> {
 
         SyntaxErrorNode { err, children, src }
     }
-}
 
-impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
 
-    fn getSource(&self) -> S {
-        return self.src.clone();
+    fn getSource(&self) -> Source {
+        return self.src;
     }
 
     // TODO: Display
@@ -940,34 +918,16 @@ impl SyntaxErrorKind {
 impl BoxKind {
     pub(crate) fn as_str(&self) -> &'static str {
         match self {
-            BoxKind::TagBox => "TagBox",
-            BoxKind::SuperscriptBox => "SuperscriptBox",
-            BoxKind::RowBox => "RowBox",
-            BoxKind::GridBox => "GridBox",
-            BoxKind::TemplateBox => "TemplateBox",
-            BoxKind::InterpretationBox => "InterpretationBox",
-            BoxKind::SubscriptBox => "SubscriptBox",
-            BoxKind::StyleBox => "StyleBox",
-            BoxKind::NamespaceBox => "NamespaceBox",
-            BoxKind::OverscriptBox => "OverscriptBox",
-            BoxKind::SubsuperscriptBox => "SubsuperscriptBox",
+            BoxKind::Tag => "Tag",
+            BoxKind::Superscript => "Superscript",
             // NOTE: When adding a case here, also update from_str().
         }
     }
 
     pub(crate) fn from_str(string: &str) -> Option<Self> {
         let value = match string {
-            "TagBox" => BoxKind::TagBox,
-            "SuperscriptBox" => BoxKind::SuperscriptBox,
-            "RowBox" => BoxKind::RowBox,
-            "GridBox" => BoxKind::GridBox,
-            "TemplateBox" => BoxKind::TemplateBox,
-            "InterpretationBox" => BoxKind::InterpretationBox,
-            "SubscriptBox" => BoxKind::SubscriptBox,
-            "StyleBox" => BoxKind::StyleBox,
-            "NamespaceBox" => BoxKind::NamespaceBox,
-            "OverscriptBox" => BoxKind::OverscriptBox,
-            "SubsuperscriptBox" => BoxKind::SubsuperscriptBox,
+            "Tag" => BoxKind::Tag,
+            "Superscript" => BoxKind::Superscript,
             _ => return None,
         };
 

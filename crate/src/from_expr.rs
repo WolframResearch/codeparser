@@ -395,9 +395,11 @@ impl FromExpr for BoxKind {
             todo!()
         }
 
-        let kind = match BoxKind::from_str(symbol_name) {
+        let box_name: &str = symbol_name.trim_end_matches("Box");
+
+        let kind = match BoxKind::from_str(box_name) {
             Some(kind) => kind,
-            None => panic!("unrecognized BoxKind name: '{symbol_name}'"),
+            None => panic!("unrecognized BoxKind name: '{box_name}'"),
         };
 
         Ok(kind)
@@ -808,17 +810,23 @@ impl FromExpr for Issue {
             None => todo!(),
         };
 
+        let src = match source {
+            GeneralSource::String(src) => src,
+            GeneralSource::BoxPosition(_) => {
+                todo!("unexpected source for Issue: {source:?}")
+            },
+        };
+
         Ok(Issue {
             make_sym,
             tag,
             msg,
             sev,
-            src: source,
+            src,
             val,
             // FIXME: These aren't always empty.
             actions: code_actions.unwrap_or_else(Vec::new),
             additional_descriptions: vec![],
-            additional_sources: vec![],
         })
     }
 }
