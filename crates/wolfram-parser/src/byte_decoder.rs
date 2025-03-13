@@ -33,8 +33,7 @@ use crate::{
     feature,
     issue::{CodeAction, EncodingIssue, IssueTag, Severity},
     source::{
-        LineColumn, NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention,
-        SourceLocation,
+        NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention, SourceLocation,
     },
     tokenizer::{SourceManager, Tokenizer, UnsafeCharacterEncoding},
     utils,
@@ -1258,7 +1257,7 @@ impl SourceConvention {
 impl<'t> SourceManager<'t> {
     fn newline(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(line, column)) => {
+            SourceLocation::LineColumn { line, column } => {
                 debug_assert!(self.convention == SourceConvention::LineColumn);
 
                 *line = line.checked_add(1).expect("line overflows u32");
@@ -1274,7 +1273,7 @@ impl<'t> SourceManager<'t> {
 
     fn windowsNewline(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(line, column)) => {
+            SourceLocation::LineColumn { line, column } => {
                 debug_assert!(self.convention == SourceConvention::LineColumn);
 
                 *line = line.checked_add(1).expect("line overflows u32");
@@ -1290,7 +1289,7 @@ impl<'t> SourceManager<'t> {
 
     fn tab(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(_, column)) => {
+            SourceLocation::LineColumn { line: _, column } => {
                 debug_assert!(self.convention == SourceConvention::LineColumn);
 
                 let currentTabStop = self.tab_width * ((*column - 1) / self.tab_width) + 1;
@@ -1307,7 +1306,7 @@ impl<'t> SourceManager<'t> {
 
     fn increment(&mut self) {
         match self.loc {
-            SourceLocation::LineColumn(LineColumn(_, column)) => *column += 1,
+            SourceLocation::LineColumn { line: _, column } => *column += 1,
             SourceLocation::CharacterIndex(index) => *index += 1,
         }
     }
