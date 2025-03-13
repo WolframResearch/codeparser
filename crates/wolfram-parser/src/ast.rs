@@ -3,7 +3,7 @@
 use crate::{
     cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
-    source::{Source, Span},
+    source::{GeneralSource, Source},
     tokenize::{OwnedTokenInput, TokenKind, TokenSource},
 };
 
@@ -86,8 +86,8 @@ pub enum AstNode {
     // TODO: Store these in abstracted form?
     #[allow(non_camel_case_types)]
     TagBox_GroupParen {
-        group: Box<(AstNode, AstNode, AstNode, Source)>,
-        tag: CodeNode<Source>,
+        group: Box<(AstNode, AstNode, AstNode, GeneralSource)>,
+        tag: CodeNode<GeneralSource>,
         data: AstMetadata,
     },
     // FIXME: Handle linear syntax
@@ -99,7 +99,7 @@ pub enum AstNode {
 // TODO(cleanup): Combine this with `Metadata`?
 #[derive(Debug, Clone, PartialEq)]
 pub struct AstMetadata {
-    pub source: Source,
+    pub source: GeneralSource,
     pub issues: Vec<Issue>,
 }
 
@@ -122,7 +122,7 @@ pub enum AbstractSyntaxError {
 pub(crate) struct AstCall {
     pub head: Box<AstNode>,
     pub args: Vec<AstNode>,
-    pub data: Source,
+    pub data: GeneralSource,
 }
 
 //======================================
@@ -130,7 +130,7 @@ pub(crate) struct AstCall {
 //======================================
 
 impl AstNode {
-    pub(crate) fn into_children_and_source(self) -> (Vec<AstNode>, Source) {
+    pub(crate) fn into_children_and_source(self) -> (Vec<AstNode>, GeneralSource) {
         match self {
             AstNode::Leaf { .. } | AstNode::Error { .. } => panic!(
                 "AstNode::into_children_and_source(): AstNode variant has no children: {self:?}"
@@ -176,13 +176,12 @@ impl AstNode {
         }
     }
 
-    // TODO(cleanup): Document panic, add separate source() method.
-    pub fn span(&self) -> Span {
+    pub fn source(&self) -> Source {
         let general_source = &self.metadata().source;
 
         match general_source {
-            Source::Span(span) => *span,
-            Source::BoxPosition(_) | Source::After(_) => {
+            GeneralSource::String(source) => *source,
+            GeneralSource::BoxPosition(_) | GeneralSource::After(_) => {
                 todo!("non-typical source: {general_source:?}")
             },
         }
@@ -220,7 +219,7 @@ impl AstMetadata {
     /// `<||>`
     pub fn empty() -> Self {
         AstMetadata {
-            source: Source::unknown(),
+            source: GeneralSource::unknown(),
             issues: Vec::new(),
         }
     }
@@ -304,7 +303,7 @@ macro_rules! WL {
 
     (LeafNode[$token_kind:ident, $input:expr, $data:expr]) => {{
         let input: String = String::from($input);
-        let src: $crate::source::Source = $data.into_general();
+        let src: $crate::source::GeneralSource = $data.into_general();
 
         let node = $crate::ast::AstNode::Leaf {
             kind: $crate::tokenize::TokenKind::$token_kind,

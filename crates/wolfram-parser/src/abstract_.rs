@@ -16,7 +16,7 @@ use crate::{
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
-    source::{Source, Span},
+    source::{GeneralSource, Source},
     symbol::{self as sym, Symbol},
     tokenize::{
         OwnedTokenInput, Token, TokenInput,
@@ -1683,21 +1683,23 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
             input: _,
             src: opData,
         }), rand] => {
-            // When parsing a - b + c, make sure to give the abstracted Times expression the correct Span.
+            // When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
             // That is, the source of  - b
             let source: S = {
                 let opData = opData.into_general();
 
                 match (opData, rand.source().into_general()) {
                     (a, b) if a.is_unknown() || b.is_unknown() => S::unknown(),
-                    (Source::Span(opData), Source::Span(rand)) => S::from_span(Span {
-                        start: opData.start,
-                        end: rand.end,
-                    }),
-                    (Source::BoxPosition(_), _) | (_, Source::BoxPosition(_)) => {
+                    (GeneralSource::String(opData), GeneralSource::String(rand)) => {
+                        S::from_source(Source {
+                            start: opData.start,
+                            end: rand.end,
+                        })
+                    },
+                    (GeneralSource::BoxPosition(_), _) | (_, GeneralSource::BoxPosition(_)) => {
                         todo!("processPlusPair synthetic source of BoxPosition's")
                     },
-                    (Source::After(_), _) | (_, Source::After(_)) => {
+                    (GeneralSource::After(_), _) | (_, GeneralSource::After(_)) => {
                         todo!("processPlusPair synthetic source of After's")
                     },
                 }

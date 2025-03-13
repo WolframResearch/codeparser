@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use ordered_float::NotNan;
 
 use crate::{
-    source::{Source, Span},
+    source::{GeneralSource, Source},
     symbol::Symbol,
     symbol_registration as sym,
 };
@@ -17,11 +17,11 @@ pub struct Issue {
     pub tag: IssueTag,
     pub msg: String,
     pub sev: Severity,
-    pub src: Source,
+    pub src: GeneralSource,
     pub val: NotNan<f64>,
     pub actions: Vec<CodeAction>,
     pub additional_descriptions: AdditionalDescriptionVector,
-    pub additional_sources: Vec<Source>,
+    pub additional_sources: Vec<GeneralSource>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -64,7 +64,7 @@ pub enum Severity {
 pub struct CodeAction {
     pub label: String,
     pub kind: CodeActionKind,
-    pub src: Span,
+    pub src: Source,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash)]
@@ -170,7 +170,7 @@ impl Severity {
 
 
 impl CodeAction {
-    pub fn replace_text(label: String, src: Span, replacement_text: String) -> Self {
+    pub fn replace_text(label: String, src: Source, replacement_text: String) -> Self {
         CodeAction {
             label,
             src,
@@ -178,7 +178,7 @@ impl CodeAction {
         }
     }
 
-    pub fn insert_text(label: String, src: Span, insertion_text: String) -> Self {
+    pub fn insert_text(label: String, src: Source, insertion_text: String) -> Self {
         CodeAction {
             label,
             src,
@@ -186,7 +186,7 @@ impl CodeAction {
         }
     }
 
-    pub fn delete_text(label: String, src: Span) -> Self {
+    pub fn delete_text(label: String, src: Source) -> Self {
         CodeAction {
             label,
             src,
@@ -251,7 +251,7 @@ impl Issue {
         tag: IssueTag,
         msg: String,
         sev: Severity,
-        src: Span,
+        src: Source,
         val: std::os::raw::c_double,
         actions: Vec<CodeAction>,
         additional_descriptions: AdditionalDescriptionVector,
@@ -263,7 +263,7 @@ impl Issue {
             tag,
             msg,
             sev,
-            src: Source::Span(src),
+            src: GeneralSource::String(src),
             val,
             actions,
             additional_descriptions,
@@ -271,7 +271,13 @@ impl Issue {
         }
     }
 
-    pub(crate) fn syntax(tag: IssueTag, msg: String, sev: Severity, src: Source, val: f64) -> Self {
+    pub(crate) fn syntax(
+        tag: IssueTag,
+        msg: String,
+        sev: Severity,
+        src: GeneralSource,
+        val: f64,
+    ) -> Self {
         let val = NotNan::new(val).expect("unable to construct Issue with NaN val");
 
         Issue {
@@ -287,7 +293,7 @@ impl Issue {
         }
     }
 
-    pub fn with_additional_sources(self, additional_sources: Vec<Source>) -> Self {
+    pub fn with_additional_sources(self, additional_sources: Vec<GeneralSource>) -> Self {
         debug_assert!(self.additional_sources.is_empty());
 
         Issue {
@@ -344,7 +350,7 @@ pub fn SyntaxIssue(
     tag: IssueTag,
     msg: String,
     sev: Severity,
-    src: Span,
+    src: Source,
     val: std::os::raw::c_double,
     actions: Vec<CodeAction>,
     additional_descriptions: AdditionalDescriptionVector,
@@ -365,7 +371,7 @@ pub(crate) fn FormatIssue(
     tag: IssueTag,
     msg: String,
     sev: Severity,
-    src: Span,
+    src: Source,
     val: std::os::raw::c_double,
     actions: Vec<CodeAction>,
     additional_descriptions: AdditionalDescriptionVector,
@@ -386,7 +392,7 @@ pub fn EncodingIssue(
     tag: IssueTag,
     msg: String,
     sev: Severity,
-    src: Span,
+    src: Source,
     val: std::os::raw::c_double,
     actions: Vec<CodeAction>,
     additional_descriptions: AdditionalDescriptionVector,

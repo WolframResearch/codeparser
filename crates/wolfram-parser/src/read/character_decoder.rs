@@ -11,9 +11,9 @@ use crate::{
         Reader,
     },
     source::{
-        BufferAndLength, Location, NextPolicy,
+        BufferAndLength, NextPolicy,
         NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
-        SourceCharacter, Span, STRING_OR_COMMENT,
+        Source, SourceCharacter, SourceLocation, STRING_OR_COMMENT,
     },
     utils,
 };
@@ -193,7 +193,7 @@ fn CharacterDecoder_handleStringMetaOpen(
 
         let currentWLCharacterEndLoc = session.SrcLoc;
 
-        let Src = Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+        let Src = Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
 
         //
         // matched reduced severity of unexpected characters inside strings or comments
@@ -235,7 +235,7 @@ fn CharacterDecoder_handleStringMetaClose(
 
         let currentWLCharacterEndLoc = session.SrcLoc;
 
-        let Src = Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+        let Src = Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
 
         //
         // matched reduced severity of unexpected characters inside strings or comments
@@ -369,7 +369,7 @@ fn CharacterDecoder_handleLongName(
                 if found {
                     Actions.push(CodeAction::insert_text(
                         format!("Insert ``]`` to form ``\\[{suggestion}]``"),
-                        Span::from_location(currentWLCharacterEndLoc),
+                        Source::from_location(currentWLCharacterEndLoc),
                         "]".into(),
                     ));
                 }
@@ -378,7 +378,7 @@ fn CharacterDecoder_handleLongName(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character: ``\\[{longNameStr}``."),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -397,7 +397,7 @@ fn CharacterDecoder_handleLongName(
 
                 Actions.push(CodeAction::replace_text(
                     format!("Replace with ``\\\\[{longNameStr}``"),
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     format!("\\\\[{longNameStr}"),
                 ));
 
@@ -405,7 +405,7 @@ fn CharacterDecoder_handleLongName(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character: ``\\[{}``.", longNameStr),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -468,7 +468,7 @@ fn CharacterDecoder_handleLongName(
             // if !suggestion.is_empty() {
             //     Actions.push(CodeAction::replace_text(
             //         format!("Replace with ``\\[{suggestion}]``"),
-            //         Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+            //         Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
             //         format!("\\[{suggestion}]"),
             //     ));
             // }
@@ -480,7 +480,7 @@ fn CharacterDecoder_handleLongName(
             //     STRING_UNHANDLEDCHARACTER,
             //     format!("Unhandled character: ``\\[{longNameStr}]``."),
             //     STRING_FATAL,
-            //     Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+            //     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
             //     1.0,
             //     Actions,
             //     vec![format!("``{longNameStr}`` is not a recognized long name.")],
@@ -494,7 +494,7 @@ fn CharacterDecoder_handleLongName(
                 if !suggestion.is_empty() {
                     Actions.push(CodeAction::replace_text(
                         format!("Replace with ``\\\\[{suggestion}]``"),
-                        Span::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
+                        Source::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
                         format!("\\\\[{suggestion}]"),
                     ));
                 }
@@ -503,7 +503,7 @@ fn CharacterDecoder_handleLongName(
                     IssueTag::UnrecognizedLongName,
                     format!("Unrecognized longname: ``\\\\[{longNameStr}]``."),
                     Severity::Error,
-                    Span::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
                     0.75,
                     Actions,
                     vec![format!("``{longNameStr}`` is not a valid long name.")],
@@ -514,7 +514,7 @@ fn CharacterDecoder_handleLongName(
                 if !suggestion.is_empty() {
                     Actions.push(CodeAction::replace_text(
                         format!("Replace with ``\\[{suggestion}]``"),
-                        Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                        Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         format!("\\[{suggestion}]"),
                     ));
                 }
@@ -523,7 +523,7 @@ fn CharacterDecoder_handleLongName(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character: ``\\[{longNameStr}]``."),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![format!("``{longNameStr}`` is not a valid long name.")],
@@ -616,7 +616,7 @@ fn CharacterDecoder_handle4Hex(
 
                 Actions.push(CodeAction::replace_text(
                     format!("Replace with ``\\\\:{hexStr}``"),
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     format!("\\\\:{hexStr}"),
                 ));
 
@@ -624,7 +624,7 @@ fn CharacterDecoder_handle4Hex(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character: ``\\:{hexStr}``."),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -707,7 +707,7 @@ fn CharacterDecoder_handle2Hex(
 
                 Actions.push(CodeAction::replace_text(
                     format!("Replace with ``\\\\.{hexStr}``"),
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     format!("\\\\.{hexStr}"),
                 ));
 
@@ -715,7 +715,7 @@ fn CharacterDecoder_handle2Hex(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character: ``\\.{hexStr}``."),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -795,7 +795,7 @@ fn CharacterDecoder_handleOctal(
 
                 Actions.push(CodeAction::replace_text(
                     format!("Replace with ``\\\\{octalStr}``"),
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     format!("\\\\{octalStr}"),
                 ));
 
@@ -803,7 +803,7 @@ fn CharacterDecoder_handleOctal(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character: ``\\{octalStr}``."),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -895,7 +895,7 @@ fn CharacterDecoder_handle6Hex(
 
                 Actions.push(CodeAction::replace_text(
                     format!("Replace with ``\\\\|{hexStr}``"),
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     format!("\\\\|{hexStr}"),
                 ));
 
@@ -903,7 +903,7 @@ fn CharacterDecoder_handle6Hex(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character: ``\\|{hexStr}``."),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -1110,7 +1110,7 @@ fn CharacterDecoder_handleUnhandledEscape(
 
                 Actions.push(CodeAction::insert_text(
                     format!("Insert ``[`` to form ``\\[{alnumRun}]``"),
-                    Span::from_location(currentWLCharacterStartLoc.next()),
+                    Source::from_location(currentWLCharacterStartLoc.next()),
                     "[".into(),
                 ));
 
@@ -1118,7 +1118,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character ``\\{curSourceGraphicalStr}``."),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -1133,13 +1133,13 @@ fn CharacterDecoder_handleUnhandledEscape(
 
                     Actions.push(CodeAction::replace_text(
                         format!("Replace with ``\\[{}XXX]``", curSourceGraphicalStr),
-                        Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                        Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         format!("\\[{}XXX]", curSourceGraphicalStr),
                     ));
 
                     Actions.push(CodeAction::replace_text(
                         format!("Replace with ``\\:{}XXX``", curSourceGraphicalStr),
-                        Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                        Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         format!("\\:{}XXX", curSourceGraphicalStr),
                     ));
 
@@ -1147,7 +1147,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                         IssueTag::UnhandledCharacter,
                         format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                         Severity::Fatal,
-                        Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                        Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         1.0,
                         Actions,
                         vec![],
@@ -1161,7 +1161,7 @@ fn CharacterDecoder_handleUnhandledEscape(
 
                     Actions.push(CodeAction::replace_text(
                         format!("Replace with ``\\[{}XXX]``", curSourceGraphicalStr),
-                        Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                        Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         format!("\\[{}XXX]", curSourceGraphicalStr),
                     ));
 
@@ -1169,7 +1169,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                         IssueTag::UnhandledCharacter,
                         format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                         Severity::Fatal,
-                        Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                        Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                         1.0,
                         Actions,
                         vec![],
@@ -1185,7 +1185,7 @@ fn CharacterDecoder_handleUnhandledEscape(
 
             Actions.push(CodeAction::replace_text(
                 format!("Replace with ``\\:{}xxx``", curSourceGraphicalStr),
-                Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                 format!("\\:{}xxx", curSourceGraphicalStr),
             ));
 
@@ -1193,7 +1193,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                 IssueTag::UnhandledCharacter,
                 format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                 Severity::Fatal,
-                Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                 1.0,
                 Actions,
                 vec![],
@@ -1233,7 +1233,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character ``\\\\{}``.", curSourceGraphicalStr),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     vec![],
                     vec![],
@@ -1245,7 +1245,7 @@ fn CharacterDecoder_handleUnhandledEscape(
 
                 Actions.push(CodeAction::replace_text(
                     format!("Replace with ``\\\\{}``", curSourceGraphicalStr),
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     format!("\\\\{}", curSourceGraphicalStr),
                 ));
 
@@ -1253,7 +1253,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                     IssueTag::UnhandledCharacter,
                     format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                     Severity::Fatal,
-                    Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
+                    Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -1363,7 +1363,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
                 let currentWLCharacterEndLoc = session.SrcLoc;
 
-                let Src = Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                let Src = Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
 
                 //
                 // matched reduced severity of unexpected characters inside strings or comments
@@ -1403,7 +1403,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
                 let currentWLCharacterEndLoc = session.SrcLoc;
 
-                let Src = Span::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                let Src = Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
 
                 //
                 // matched reduced severity of unexpected characters inside strings or comments
@@ -1636,7 +1636,7 @@ pub(crate) fn check_strange_syntax_issue(
     session: &mut Reader,
     policy: NextPolicy,
     point: CodePoint,
-    start_loc: Location,
+    start_loc: SourceLocation,
     escape_style: EscapeStyle,
 ) {
     let c = WLCharacter::new_with_escape(point, escape_style);
@@ -1667,7 +1667,7 @@ pub(crate) fn check_strange_syntax_issue(
 
     let graphicalStr = c.graphicalString();
 
-    let Src = Span::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+    let Src = Source::new(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
 
     let mut Actions: Vec<CodeAction> = Vec::new();
 

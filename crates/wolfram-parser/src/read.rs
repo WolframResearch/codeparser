@@ -10,7 +10,7 @@ pub(crate) mod wl_character;
 
 use crate::{
     issue::{Issue, Severity},
-    source::{Buffer, Location, NextPolicy, SourceCharacter},
+    source::{Buffer, NextPolicy, SourceCharacter, SourceLocation},
     EncodingMode, UnsafeCharacterEncoding,
 };
 
@@ -34,7 +34,7 @@ pub(crate) struct Reader<'i> {
 
     pub(crate) wasEOF: bool,
 
-    pub(crate) SrcLoc: Location,
+    pub(crate) SrcLoc: SourceLocation,
     pub(crate) tabWidth: u32,
 
     pub(crate) encodingMode: EncodingMode,
@@ -48,17 +48,17 @@ pub(crate) struct Reader<'i> {
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct InputMark {
     offset: usize,
-    pub src_loc: Location,
+    pub src_loc: SourceLocation,
 
     wasEOF: Option<bool>,
 }
 
-/// A set of fields of [`Reader`] used to update the current [`Location`].
+/// A set of fields of [`Reader`] used to update the current [`SourceLocation`].
 //
 // TODO(cleanup): Remove this type, just make the methods of this type methods
 //                on Reader.
 pub(crate) struct SourceManager<'t> {
-    pub(crate) loc: &'t mut Location,
+    pub(crate) loc: &'t mut SourceLocation,
 
     pub(crate) tab_width: u32,
 }
@@ -229,7 +229,7 @@ impl<'i> Reader<'i> {
 impl InputMark {
     // TODO(cleanup): Make this function unnecessary, always use Reader::mark().
     //                Then change wasEOF back to a non-Option field.
-    pub(crate) fn new(offset: usize, src_loc: Location) -> Self {
+    pub(crate) fn new(offset: usize, src_loc: SourceLocation) -> Self {
         InputMark {
             offset,
             src_loc,

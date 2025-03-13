@@ -495,7 +495,7 @@ impl CodeAction {
     }
 }
 
-impl Location {
+impl SourceLocation {
     fn toExpr(&self, session: &ParserSession) -> expr {
         let head = SYMBOL_LIST.toExpr(session);
 
