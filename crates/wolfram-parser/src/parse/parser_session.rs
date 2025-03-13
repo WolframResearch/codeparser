@@ -146,13 +146,13 @@ impl<'i> ParserSession<'i> {
     }
 
     #[cfg(test)]
-    pub(crate) fn fatal_issues(&self) -> &Vec<crate::issue::Issue> {
-        &self.tokenizer.fatal_issues
+    pub(crate) fn fatalIssues(&self) -> &Vec<crate::issue::Issue> {
+        &self.tokenizer.fatalIssues
     }
 
     #[cfg(test)]
-    pub(crate) fn non_fatal_issues(&self) -> &Vec<crate::issue::Issue> {
-        &self.tokenizer.non_fatal_issues
+    pub(crate) fn nonFatalIssues(&self) -> &Vec<crate::issue::Issue> {
+        &self.tokenizer.nonFatalIssues
     }
 }
 
