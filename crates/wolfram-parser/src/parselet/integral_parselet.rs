@@ -1,5 +1,5 @@
 use crate::{
-    cst::{PrefixBinaryNode, PrefixNode},
+    cst::{Operator, PrefixBinaryNode, PrefixNode},
     panic_if_aborted,
     parselet::*,
     parser::{
@@ -15,7 +15,7 @@ use crate::{
 };
 
 impl IntegralParselet {
-    pub(crate) const fn new(Op1: PrefixBinaryOperator, Op2: PrefixOperator) -> Self {
+    pub(crate) const fn new(Op1: PrefixBinaryOperator, Op2: Operator) -> Self {
         IntegralParselet { Op1, Op2 }
     }
 }
@@ -130,7 +130,9 @@ fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) 
         .downcast_ref::<IntegralParselet>()
         .expect("unable to downcast to IntegralParselet");
 
-    let node = PrefixNode::new(P.Op2, Parser_popContext(session));
+    let Op2 = P.Op2;
+
+    let node = PrefixNode::new(Op2, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

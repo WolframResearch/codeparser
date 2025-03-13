@@ -82,7 +82,6 @@ pub(crate) trait InfixParselet: Parselet {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum InfixParseletOperator {
-    Prefix(PrefixOperator),
     Infix(Operator),
     Postfix(PostfixOperator),
     Binary(BinaryOperator),
@@ -91,12 +90,6 @@ pub(crate) enum InfixParseletOperator {
 impl From<Operator> for InfixParseletOperator {
     fn from(op: Operator) -> Self {
         Self::Infix(op)
-    }
-}
-
-impl From<PrefixOperator> for InfixParseletOperator {
-    fn from(op: PrefixOperator) -> Self {
-        Self::Prefix(op)
     }
 }
 
@@ -110,9 +103,7 @@ impl InfixParseletOperator {
     fn unwrap_op(self) -> Operator {
         match self {
             InfixParseletOperator::Infix(op) => op,
-            InfixParseletOperator::Prefix(_)
-            | InfixParseletOperator::Postfix(_)
-            | InfixParseletOperator::Binary(_) => {
+            InfixParseletOperator::Postfix(_) | InfixParseletOperator::Binary(_) => {
                 panic!("expected Infix operator, got: {self:?}")
             },
         }
@@ -120,9 +111,7 @@ impl InfixParseletOperator {
 
     fn unwrap_postfix_op(self) -> PostfixOperator {
         match self {
-            InfixParseletOperator::Prefix(_)
-            | InfixParseletOperator::Infix(_)
-            | InfixParseletOperator::Binary(_) => {
+            InfixParseletOperator::Infix(_) | InfixParseletOperator::Binary(_) => {
                 panic!("expected Postfix operator, got: {self:?}")
             },
             InfixParseletOperator::Postfix(op) => op,
@@ -252,7 +241,7 @@ pub(crate) struct PrefixUnhandledParselet /* : PrefixParselet */ {}
 #[derive(Debug)]
 pub(crate) struct PrefixOperatorParselet /* : PrefixParselet */ {
     precedence: Precedence,
-    Op: PrefixOperator,
+    Op: Operator,
 }
 
 #[derive(Debug)]
@@ -372,7 +361,7 @@ pub(crate) struct ColonEqualParselet /* : BinaryOperatorParselet */ {
 #[derive(Debug)]
 pub(crate) struct IntegralParselet /* : PrefixParselet */ {
     pub(crate) Op1: PrefixBinaryOperator,
-    pub(crate) Op2: PrefixOperator,
+    pub(crate) Op2: Operator,
 }
 
 
@@ -853,7 +842,7 @@ fn SymbolParselet_reducePatternOptionalDefault(session: &mut ParserSession) {
 //======================================
 
 impl PrefixOperatorParselet {
-    pub(crate) const fn new(precedence: Precedence, Op: PrefixOperator) -> Self {
+    pub(crate) const fn new(precedence: Precedence, Op: Operator) -> Self {
         PrefixOperatorParselet { precedence, Op }
     }
 
@@ -861,7 +850,7 @@ impl PrefixOperatorParselet {
         return self.precedence;
     }
 
-    fn getOp(&self) -> PrefixOperator {
+    fn getOp(&self) -> Operator {
         self.Op
     }
 }
@@ -914,7 +903,9 @@ fn PrefixOperatorParselet_reducePrefixOperator(session: &mut ParserSession, P: P
         .downcast_ref::<PrefixOperatorParselet>()
         .expect("unable to downcast to PrefixOperatorParselet");
 
-    let node = PrefixNode::new(P.getOp(), Parser_popContext(session));
+    let Op = P.getOp();
+
+    let node = PrefixNode::new(Op, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2656,7 +2647,7 @@ fn LessLessParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
 }
 
 fn LessLessParselet_reduceGet(session: &mut ParserSession) {
-    let node = PrefixNode::new(PrefixOperator::Get, Parser_popContext(session));
+    let node = PrefixNode::new(Operator::Get, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
