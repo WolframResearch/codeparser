@@ -16,7 +16,7 @@ use crate::{
     ast::{AstMetadata, AstNode},
     node::{
         CallNode, GroupMissingCloserNode, GroupNode, InfixNode, Node, Node::Token as NVToken,
-        NodeSeq, Operator, OperatorNode,
+        NodeSeq, Operator, OperatorNode, UnterminatedGroupNode,
     },
     parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},

@@ -100,9 +100,6 @@ Symbol! {
     VectorGreater;
     VectorLessEqual;
     VectorGreaterEqual;
-
-    Part;
-    TypeSpecifier;
 }
 
 

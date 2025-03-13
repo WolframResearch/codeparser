@@ -10,8 +10,8 @@ use crate::{
     my_string_registration::*,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
-        GroupMissingOpenerNode, GroupNode, InfixNode, Node, NodeSeq, Operator, OperatorNode,
-        PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        GroupNode, InfixNode, Node, NodeSeq, Operator, OperatorNode, PostfixNode, PrefixBinaryNode,
+        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, UnterminatedGroupNode,
     },
     source::{
         BufferAndLength, CharacterRange, CodeAction, CodeActionKind, GeneralSource, Issue,
@@ -82,7 +82,6 @@ impl Metadata {
             syntax_issues,
             confidence_level,
             code_actions,
-            additional_descriptions,
             file_name,
             embedded_tabs,
             embedded_newlines,
@@ -105,10 +104,6 @@ impl Metadata {
         }
 
         if code_actions.is_some() {
-            len += 1;
-        }
-
-        if additional_descriptions.is_some() {
             len += 1;
         }
 
@@ -173,7 +168,6 @@ impl Metadata {
             match source {
                 GeneralSource::String(source) => put_source_rhs(link, *source),
                 GeneralSource::BoxPosition(other) => put_box_position(link, other),
-                GeneralSource::After(expr) => link.put_expr(expr).unwrap(),
             }
         }
 
@@ -189,15 +183,6 @@ impl Metadata {
             // TODO: This clone() is unnecessarily inefficient.
             let actions = List(actions.clone());
             actions.put(link);
-        }
-
-        if let Some(additional_descriptions) = additional_descriptions {
-            link.put_function("System`Rule", 2).unwrap();
-            link.put_str("AdditionalDescriptions").unwrap();
-
-            // TODO: This clone() is unnecessarily inefficient.
-            let descs = List(additional_descriptions.clone());
-            descs.put(link);
         }
 
         if let Some(file_name) = file_name {
@@ -228,7 +213,6 @@ impl WstpPut for AstMetadata {
             match source {
                 GeneralSource::String(source) => put_source_rhs(link, *source),
                 GeneralSource::BoxPosition(other) => put_box_position(link, other),
-                GeneralSource::After(expr) => link.put_expr(expr).unwrap(),
             }
         }
 
@@ -386,44 +370,6 @@ impl WstpPut for AstNode {
 
                 data.put(link);
             },
-            AstNode::GroupMissingCloser {
-                kind,
-                children,
-                data,
-            } => {
-                link.put_function(sym::CodeParser_GroupMissingCloserNode.as_str(), 3)
-                    .unwrap();
-
-                kind.put(link);
-
-                link.put_function(SYMBOL_LIST.as_str(), children.len())
-                    .unwrap();
-
-                for child in children {
-                    child.put(link);
-                }
-
-                data.put(link);
-            },
-            AstNode::GroupMissingOpener {
-                kind,
-                children,
-                data,
-            } => {
-                link.put_function(sym::CodeParser_GroupMissingOpenerNode.as_str(), 3)
-                    .unwrap();
-
-                kind.put(link);
-
-                link.put_function(SYMBOL_LIST.as_str(), children.len())
-                    .unwrap();
-
-                for child in children {
-                    child.put(link);
-                }
-
-                data.put(link);
-            },
             AstNode::Code {
                 first,
                 second,
@@ -566,11 +512,11 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Node<I, S> {
             },
             Node::Compound(CompoundNode(op)) => op.put(link, SYMBOL_CODEPARSER_COMPOUNDNODE),
             Node::Group(GroupNode(op)) => op.put(link, SYMBOL_CODEPARSER_GROUPNODE),
+            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
+                op.put(link, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNODE)
+            },
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
-            },
-            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGOPENERNODE)
             },
             Node::Box(box_node) => box_node.put(link),
             Node::Code(node) => node.put(link),
@@ -840,7 +786,6 @@ impl Issue {
                     match source {
                         GeneralSource::String(source) => put_source_rhs(callLink, *source),
                         GeneralSource::BoxPosition(other) => put_box_position(callLink, other),
-                        GeneralSource::After(expr) => callLink.put_expr(expr).unwrap(),
                     }
                 }
             }
@@ -1005,7 +950,6 @@ impl WstpPut for GeneralSource {
         match self {
             GeneralSource::String(source) => put_source_rhs(link, *source),
             GeneralSource::BoxPosition(other) => put_box_position(link, other),
-            GeneralSource::After(expr) => link.put_expr(expr).unwrap(),
         }
     }
 }
@@ -1135,18 +1079,6 @@ impl List<CodeAction> {
 
         for elem in elements {
             elem.put(link);
-        }
-    }
-}
-
-impl List<String> {
-    pub(crate) fn put(&self, link: &mut wstp::Link) {
-        let List(elements) = self;
-
-        link.put_function("System`List", elements.len()).unwrap();
-
-        for elem in elements {
-            link.put_str(elem).unwrap();
         }
     }
 }

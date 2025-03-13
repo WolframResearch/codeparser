@@ -9,6 +9,8 @@ Abstract
 
 abstract
 
+abstractGroupNode
+
 $AggregateParseProgress
 
 $AbstractParseProgress
@@ -61,6 +63,11 @@ Module[{agg},
 	agg = ReplaceAll[agg, {
 		CodeNode[a_, b_, c0_] :> With[{c = c0}, CodeNode[a, b, c]]
 	}];
+
+	(* PRE_COMMIT: Remove this *)
+	If[FailureQ[agg],
+		Echo[agg, "aggregate[cst]"];
+	];
 
   CodeParser`Abstract`$AggregateParseProgress = 100;
   CodeParser`Abstract`$AggregateParseTime = Now - CodeParser`Abstract`$AggregateParseStart;
@@ -189,11 +196,25 @@ abstract[expr_BoxNode] :=
 abstract[expr_SyntaxErrorNode] :=
 	abstractFunc[expr]
 
-abstract[expr_GroupMissingCloserNode] :=
-	abstractFunc[expr]
 
-abstract[expr_GroupMissingOpenerNode] :=
-	abstractFunc[expr]
+
+(*
+Missing closers
+*)
+
+abstract[GroupMissingCloserNode[tag_, children_, data_]] :=
+	Throw["unexpected abstract[GroupMissingCloserNode[..]]"]
+
+
+
+(*
+Missing openers
+
+Only possible with boxes
+*)
+
+abstract[GroupMissingOpenerNode[tag_, children_, data_]] :=
+  abstractGroupNode[GroupMissingOpenerNode[tag, children, data]]
 
 
 
@@ -268,6 +289,27 @@ Module[{abstracted, issues, issues1, issues2, data,
 selectChildren[CallNode[ToNode[Comma], children_, _]] := children
 
 selectChildren[n_] := n
+
+
+abstractGroupNode[GroupMissingOpenerNode[tag_, childrenIn_, dataIn_]] :=
+Module[{children, abstractedChildren, issues, data},
+
+  children = childrenIn;
+  data = dataIn;
+
+  children = children[[;;-2]];
+
+  abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
+
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+  If[issues != {},
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
+
+  GroupMissingOpenerNode[tag, abstractedChildren, data]
+]
+
 
 
 abstract[CellNode[c_, children_, data_]] := CellNode[c, abstract /@ children, data]
