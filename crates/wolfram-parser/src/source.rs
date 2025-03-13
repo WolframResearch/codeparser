@@ -35,6 +35,7 @@ use wolfram_expr::Expr;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) struct Buffer<'i> {
     pub slice: &'i [u8],
+    pub offset: usize,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -43,7 +44,7 @@ pub(crate) struct BufferAndLength<'i> {
 }
 
 #[cfg(target_pointer_width = "64")]
-const _: () = assert!(std::mem::size_of::<BufferAndLength>() == 16);
+const _: () = assert!(std::mem::size_of::<BufferAndLength>() == 24);
 
 /* FIXME: Re-enable this assertion, or a variation of it.
 const _: () = assert!(
@@ -52,11 +53,27 @@ const _: () = assert!(
 );
 */
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub(crate) struct ByteSpan {
+    /// The offset into the [`ParserSession.input`] buffer that this token
+    /// starts at.
+    pub offset: usize,
+    pub len: usize,
+}
+
+impl ByteSpan {
+    pub(crate) fn end(&self) -> usize {
+        let ByteSpan { offset, len } = *self;
+
+        return offset + len;
+    }
+}
+
 impl<'i, I: SliceIndex<[u8]>> Index<I> for Buffer<'i> {
     type Output = <I as SliceIndex<[u8]>>::Output;
 
     fn index(&self, index: I) -> &Self::Output {
-        let Buffer { slice } = self;
+        let Buffer { slice, offset: _ } = self;
 
         &slice[index]
     }
@@ -64,12 +81,12 @@ impl<'i, I: SliceIndex<[u8]>> Index<I> for Buffer<'i> {
 
 impl<'i> BufferAndLength<'i> {
     pub fn from_buffer_with_len(buf: Buffer<'i>, len: usize) -> Self {
-        let Buffer { slice } = buf;
+        let Buffer { offset, slice } = buf;
 
         let slice = &slice[..len];
 
         BufferAndLength {
-            buf: Buffer { slice },
+            buf: Buffer { offset, slice },
         }
     }
 
@@ -90,20 +107,16 @@ impl<'i> BufferAndLength<'i> {
         start: Buffer<'s>,
         end: Buffer<'e>,
     ) -> BufferAndLength<'s> {
-        let start_addr = start.slice.as_ptr() as usize;
-        let end_addr = end.slice.as_ptr() as usize;
-        debug_assert!(
-            start_addr <= end_addr,
-            "start: {start:?} @ {start_addr}     end: {end:?} @ {end_addr}"
-        );
+        debug_assert!(start.offset <= end.offset);
 
-        let size = end_addr - start_addr;
+        let size = end.offset - start.offset;
 
         debug_assert!(start.slice.len() >= size);
 
         BufferAndLength {
             buf: Buffer {
                 slice: &start.slice[0..size],
+                offset: start.offset,
             },
         }
     }
@@ -135,6 +148,17 @@ impl<'i> BufferAndLength<'i> {
         let BufferAndLength { buf } = *self;
 
         buf.slice
+    }
+
+    pub(crate) fn byte_span(&self) -> ByteSpan {
+        let BufferAndLength {
+            buf: Buffer { slice, offset },
+        } = *self;
+
+        ByteSpan {
+            offset,
+            len: slice.len(),
+        }
     }
 
     #[allow(dead_code)]

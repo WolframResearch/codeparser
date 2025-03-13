@@ -84,7 +84,8 @@ impl<'i> Reader<'i> {
             // includes the last byte in the input, it must be possible to
             // construct a buffer that points past the last byte.
             return Buffer {
-                slice: &self.input[self.input.len()..],
+                slice: &self.input[0..0],
+                offset,
             };
         } else if offset >= self.input.len() {
             panic!(
@@ -96,16 +97,10 @@ impl<'i> Reader<'i> {
 
         let (_, rest) = self.input.split_at(offset);
 
-        Buffer { slice: rest }
-    }
-
-    pub(crate) fn offset_of(&self, buffer: Buffer<'i>) -> usize {
-        let input_addr = self.input.as_ptr() as usize;
-        let buffer_addr = buffer.slice.as_ptr() as usize;
-
-        debug_assert!(input_addr <= buffer_addr);
-
-        buffer_addr - input_addr
+        Buffer {
+            slice: rest,
+            offset,
+        }
     }
 
     //==================================
