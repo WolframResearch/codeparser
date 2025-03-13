@@ -268,12 +268,10 @@ impl<'i> TokenRef<'i> {
                             // so nothing to do
                             //
                         },
-                        SpanKind::LineColumnSpan(
-                            src @ LineColumnSpan {
-                                start: LineColumn(start_line, _),
-                                end: LineColumn(end_line, _),
-                            },
-                        ) => {
+                        SpanKind::LineColumnSpan(LineColumnSpan {
+                            start: LineColumn(start_line, _),
+                            end: LineColumn(end_line, _),
+                        }) => {
                             if start_line == end_line {
                                 if src.column_width() != buf.length() {
                                     //
