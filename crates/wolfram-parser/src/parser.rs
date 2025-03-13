@@ -591,7 +591,7 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.GroupStack.pop();
     }
 
-    pub(crate) fn check_group(&self, closer: Closer) -> bool {
+    pub(crate) fn check_group(&mut self, closer: Closer) -> bool {
         for value in self.tokenizer.GroupStack.iter().rev() {
             if *value == closer {
                 return true;
@@ -605,7 +605,7 @@ impl<'i> ParserSession<'i> {
     // Assorted parselet helper functions
     //===================================
 
-    pub(crate) fn check_pattern_precedence(&self) -> bool {
+    pub(crate) fn check_pattern_precedence(&mut self) -> bool {
         for ctxt in self.ContextStack.iter().rev() {
             let prec = ctxt.prec;
 
@@ -625,24 +625,40 @@ impl<'i> ParserSession<'i> {
         return false;
     }
 
-    pub(crate) fn check_colon_lhs(&self) -> ColonLHS {
+    pub(crate) fn check_colon_lhs(&mut self) -> ColonLHS {
         //
         // work backwards, looking for a symbol or something that is a pattern
+        //
+
         //
         // skip any trivia
         //
 
         let ctxt = self.ContextStack.last().unwrap();
 
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        let top_non_trivia_in_context = (&self.NodeStack[ctxt.index..])
-            .iter()
-            .rev()
-            .find(|cst| !matches!(cst, CstNode::Token(token) if token.tok.isTrivia()))
-            .expect("unable to check colon LHS: no non-trivia token in top context");
+        let mut i: usize = self.NodeStack.len() - 1;
+        while i >= ctxt.index {
+            if let Node::Token(tok) = self.NodeStack[i] {
+                if tok.tok.isTrivia() {
+                    i -= 1;
+                    continue;
+                }
 
-        match top_non_trivia_in_context {
+                break;
+            }
+
+            break;
+        }
+
+        // if i == ctxt.index.checked_sub(1).expect("subtracted from 0 unsigned number") {
+        //     panic!();
+        // }
+
+        if Some(i) == ctxt.index.checked_sub(1) {
+            panic!();
+        }
+
+        match &self.NodeStack[i] {
             Node::Binary(BinaryNode(op)) => {
                 //
                 // Something like  a:b:c
@@ -650,7 +666,9 @@ impl<'i> ParserSession<'i> {
                 //                    ^ Optional
                 //
 
-                if op.getOp() == BinaryOperator::Pattern {
+                let op = op.getOp();
+
+                if op == BinaryOperator::Pattern {
                     return ColonLHS::Optional;
                 }
 
@@ -663,7 +681,9 @@ impl<'i> ParserSession<'i> {
                 //                   ^ Optional
                 //
 
-                match op.getOp() {
+                let op = op.getOp();
+
+                match op {
                     CompoundOperator::CodeParser_PatternBlank
                     | CompoundOperator::CodeParser_PatternBlankSequence
                     | CompoundOperator::CodeParser_PatternBlankNullSequence
@@ -715,7 +735,7 @@ impl<'i> ParserSession<'i> {
         }
     }
 
-    pub(crate) fn check_tilde(&self) -> bool {
+    pub(crate) fn check_tilde(&mut self) -> bool {
         //
         // work backwards, looking for ~
         //
@@ -726,17 +746,38 @@ impl<'i> ParserSession<'i> {
 
         let ctxt = self.ContextStack.last().unwrap();
 
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        let top_non_trivia_in_context = (&self.NodeStack[ctxt.index..])
-            .iter()
-            .rev()
-            // Skip past top
-            .skip(1)
-            .find(|cst| !matches!(cst, CstNode::Token(token) if token.tok.isTrivia()))
-            .expect("unable to check tilde: no non-trivia token in top context");
+        let mut i: usize = self.NodeStack.len() - 1;
 
-        if let Node::Token(tok) = top_non_trivia_in_context {
+        //
+        // skip past top
+        //
+        i -= 1;
+
+        //
+        // skip any trivia
+        //
+        while i >= ctxt.index {
+            if let Node::Token(tok) = self.NodeStack[i] {
+                if tok.tok.isTrivia() {
+                    i -= 1;
+                    continue;
+                }
+
+                break;
+            }
+
+            break;
+        }
+
+        // if i == ctxt.index - 1 {
+        //     panic!();
+        // }
+
+        if Some(i) == ctxt.index.checked_sub(1) {
+            panic!();
+        }
+
+        if let Node::Token(tok) = self.NodeStack[i] {
             if tok.tok == TokenKind::Tilde {
                 return true;
             }
