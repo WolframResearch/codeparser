@@ -120,6 +120,11 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
             if peek.tok != TokenKind::Hash {
                 // not #!
 
+                //
+                // reset
+                //
+                peek.reset(session);
+
                 return;
             }
 
@@ -129,6 +134,11 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
             if peek.tok != TokenKind::Bang {
                 // not #!
+
+                //
+                // reset
+                //
+                peek.reset(session);
 
                 return;
             }
