@@ -20,10 +20,12 @@ fn test_negate_infix_times() {
     // TID:231012/1
     //
 
-    let cst = parse_cst("a-b*c", &Default::default()).syntax;
+    let cst = parse_cst("a-b*c", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
@@ -87,10 +89,12 @@ fn test_negate_infix_times() {
     // Flatten times after negate TID:231012/2
     //==================================
 
-    let cst = parse_cst("a-b/c", &Default::default()).syntax;
+    let cst = parse_cst("a-b/c", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
@@ -195,11 +199,12 @@ fn test_abstract_flatten_times_quirk() {
     let cst = parse_cst(
         r#"-a * b / c d \[InvisibleTimes] e \[Times] f"#,
         &Default::default(),
-    )
-    .syntax;
+    );
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
@@ -316,10 +321,12 @@ fn test_abstract_flatten_times_quirk() {
     // Nested prefix minus *without* enclosing Times (TID:231012/3)
     //==================================
 
-    let cst = parse_cst("- - a", &Default::default()).syntax;
+    let cst = parse_cst("- - a", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Prefix(PrefixNode(OperatorNode {
             op: PrefixOperator::Minus,
             children: NodeSeq(vec![
@@ -382,10 +389,12 @@ fn test_abstract_flatten_times_quirk() {
     // Nested prefix minus *with* enclosing Times (TID:231012/4)
     //==================================
 
-    let cst = parse_cst("- - a * b", &Default::default()).syntax;
+    let cst = parse_cst("- - a * b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
@@ -472,10 +481,12 @@ fn test_abstract_flatten_times_quirk() {
     // Test basic flatten times through Binary Divide numerator (TID:231010/4)
     //==================================
 
-    let cst = parse_cst("-a/b", &Default::default()).syntax;
+    let cst = parse_cst("-a/b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Divide,
             children: NodeSeq(vec![
@@ -559,10 +570,12 @@ fn test_abstract_flatten_times_quirk() {
     // with higher precedence than `*`, so it is a separate Times from
     // Times[a, ..].
     // TODO: Are the parens really necessary for what is being tested here?
-    let cst = parse_cst("a*-(b)/c", &Default::default()).syntax;
+    let cst = parse_cst("a*-(b)/c", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
@@ -674,10 +687,12 @@ fn test_abstract_flatten_times_quirk() {
     // Variant A: Nested prefix minus "-(-b)"
     //----------------------------------------------
 
-    let cst = parse_cst("a*-(-b)", &Default::default()).syntax;
+    let cst = parse_cst("a*-(-b)", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
@@ -771,10 +786,12 @@ fn test_abstract_flatten_times_quirk() {
     // Variant B: Prefix minus before normal paren Times -(b*c)
     //------------------------------------------------------------------
 
-    let cst = parse_cst("a*-(b*c)", &Default::default()).syntax;
+    let cst = parse_cst("a*-(b*c)", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
@@ -873,10 +890,12 @@ fn test_abstract_infix_binary_at_quirk() {
     //==================================
 
     // TID:231010/2
-    let cst = parse_cst("a<>StringJoin@b", &Default::default()).syntax;
+    let cst = parse_cst("a<>StringJoin@b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::StringJoin,
             children: NodeSeq(vec![
@@ -939,10 +958,12 @@ fn test_abstract_infix_binary_at_quirk() {
     // With Plus
     //==================================
 
-    let cst = parse_cst(r#"a + Plus @ b"#, &Default::default()).syntax;
+    let cst = parse_cst(r#"a + Plus @ b"#, &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Plus,
             children: NodeSeq(vec![
@@ -1012,10 +1033,12 @@ fn test_abstract_infix_binary_at_quirk() {
     //       Kernel parser as of 13.3.
     //
 
-    let cst = parse_cst("a === SameQ @ b", &Default::default()).syntax;
+    let cst = parse_cst("a === SameQ @ b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::SameQ,
             children: NodeSeq(vec![
@@ -1075,10 +1098,12 @@ fn test_abstract_infix_binary_at_quirk() {
     // Variant A: "Times@..."
     //
 
-    let cst = parse_cst("Times@a/b", &Default::default()).syntax;
+    let cst = parse_cst("Times@a/b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Divide,
             children: NodeSeq(vec![
@@ -1132,10 +1157,12 @@ fn test_abstract_infix_binary_at_quirk() {
     // Variant B: "Divide@..."
     //
 
-    let cst = parse_cst("Divide@a/b", &Default::default()).syntax;
+    let cst = parse_cst("Divide@a/b", &Default::default());
+
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
 
     assert_eq!(
-        cst,
+        *cst,
         Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Divide,
             children: NodeSeq(vec![
@@ -1188,7 +1215,7 @@ fn test_abstract_infix_binary_at_quirk() {
 
 #[test]
 fn test_abstract_flatten_times_combined_with_infix_binary_at_quirk() {
-    let cst = parse_cst("a * Times @ -b", &Default::default()).syntax;
+    let cst = parse_cst("a * Times @ -b", &Default::default());
 
     //
     // Four different ways to abstract this:
@@ -1203,8 +1230,10 @@ fn test_abstract_flatten_times_combined_with_infix_binary_at_quirk() {
     // TODO: Is there a short input string that makes the full form of all
     //       four variants different?
 
+    let [cst]: &[_; 1] = cst.nodes().try_into().unwrap();
+
     assert_eq!(
-        cst,
+        *cst,
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(vec![
