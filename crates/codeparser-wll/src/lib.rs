@@ -25,10 +25,11 @@ use wolfram_library_link::{
 use wolfram_parser::{
     abstract_::{abstract_, Aggregate},
     cst::CstNode,
+    generated::symbol_registration as sym,
     quirks::QuirkSettings,
     source::SourceConvention,
-    symbols as sym, Container, ContainerBody, EncodingMode, FirstLineBehavior,
-    ParseOptions, StringifyMode,
+    Container, ContainerBody, EncodingMode, FirstLineBehavior, ParseOptions,
+    StringifyMode,
 };
 
 use crate::{convert_wstp::WstpPut, from_expr::FromExpr};
