@@ -41,6 +41,11 @@ Token`Buffer4 -> Next,
 
 (* errors *)
 Token`Error`ExpectedEqual -> Next, (*16*)
+(*
+Order of First appearing here is important.
+During generation, values that are not Next are removed
+*)
+Token`Error`First -> Token`Error`ExpectedEqual,
 Token`Error`Number -> Next,
 Token`Error`UnhandledCharacter -> Next,
 Token`Error`ExpectedLetterlike -> Next,
@@ -71,6 +76,7 @@ Token`Error`UnterminatedLinearSyntaxBlob -> Next,
 Token`Error`UnsupportedToken -> Next, (*32*)
 Token`Error`Unterminated`End -> Token`Error`UnsupportedToken,
 Token`Error`UnexpectedCommentCloser -> Next,
+Token`Error`End -> Next,
 
 (* 1 character tokens *)
 Token`Dot -> Next, (* . *)
