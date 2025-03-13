@@ -1,4 +1,4 @@
-use crate::read::WLCharacter;
+use crate::read::wl_character::WLCharacter;
 
 #[test]
 fn SourceCharacterTest_Graphical1() {

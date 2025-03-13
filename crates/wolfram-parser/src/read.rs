@@ -1,11 +1,11 @@
-//! Reading Wolfram Language source files by character.
+//! Reading Wolfram source files.
 
 mod byte_buffer;
 mod byte_decoder;
 mod character_decoder;
 
 pub(crate) mod code_point;
-mod wl_character;
+pub(crate) mod wl_character;
 
 
 use crate::{
@@ -17,9 +17,8 @@ use crate::{
 use self::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
     character_decoder::CharacterDecoder_nextWLCharacter,
+    wl_character::WLCharacter,
 };
-
-pub use self::wl_character::{Escape, WLCharacter};
 
 //==========================================================
 // Types

@@ -71,11 +71,9 @@ pub mod source;
 #[doc(hidden)]
 pub mod symbol;
 
-pub mod read;
+mod read;
 pub mod tokenize;
 mod parse;
-
-pub mod iter;
 
 mod error;
 
