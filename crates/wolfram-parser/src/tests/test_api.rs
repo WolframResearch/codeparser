@@ -6,14 +6,15 @@ use crate::{ParseOptions, ParserSession, SourceConvention, StringifyMode};
 //
 #[test]
 fn APITest_Bug1() {
-    let result = crate::parse_to_token(
-        b"abc[]",
-        &ParseOptions::default(),
-        StringifyMode::Normal,
-    );
+    let strIn = "abc[]";
 
-    assert_eq!(result.non_fatal_issues, Vec::new());
-    assert_eq!(result.fatal_issues, Vec::new());
+    let mut session =
+        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+
+    let _ = session.concreteParseLeaf(StringifyMode::Normal);
+
+    assert_eq!(session.nonFatalIssues().len(), 0);
+    assert_eq!(session.fatalIssues().len(), 0);
 }
 
 //
