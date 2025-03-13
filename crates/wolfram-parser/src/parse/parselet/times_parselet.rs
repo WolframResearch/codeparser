@@ -79,7 +79,7 @@ impl TimesParselet {
 
                 trivia1.reset(&mut session.tokenizer);
 
-                session.reduce_infix(InfixOperator::Times);
+                session.builder.reduce_infix(InfixOperator::Times);
 
                 // MUSTTAIL
                 return session.parse_climb();

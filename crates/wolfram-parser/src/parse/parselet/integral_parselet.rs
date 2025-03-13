@@ -81,13 +81,13 @@ impl IntegralParselet {
     }
 
     fn reduceIntegrate(&self, session: &mut ParserSession) {
-        session.reduce_prefix_binary(self.Op1);
+        session.builder.reduce_prefix_binary(self.Op1);
 
         session.parse_climb();
     }
 
     fn reduceIntegral(&self, session: &mut ParserSession) {
-        session.reduce_prefix(self.Op2);
+        session.builder.reduce_prefix(self.Op2);
 
         session.parse_climb();
     }
