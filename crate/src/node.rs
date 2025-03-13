@@ -40,8 +40,6 @@ pub enum Node<I = OwnedTokenInput> {
     PrefixBinary(PrefixBinaryNode<I>),
     Compound(CompoundNode<I>),
     Group(GroupNode<I>),
-    // TODO(cleanup): This variant is never constructed during concrete parsing.
-    UnterminatedGroup(UnterminatedGroupNode<I>),
     GroupMissingCloser(GroupMissingCloserNode<I>),
     UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode<I>),
 }
@@ -97,12 +95,6 @@ pub struct CallNode<I = OwnedTokenInput> {
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
 pub struct GroupNode<I = OwnedTokenInput>(pub OperatorNode<I>);
-
-// TODO: This type is constructed as part of the abstraction step. Should there
-//       be different CstNode and AstNode types so that this node is not part of
-//       CstNode?
-#[derive(Debug, Clone, PartialEq)]
-pub struct UnterminatedGroupNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 
 /// Any "compound" of tokens:
 ///
@@ -163,7 +155,6 @@ from_node!(InfixNode<> => Node::Infix);
 from_node!(PrefixNode<> => Node::Prefix);
 from_node!(PostfixNode<> => Node::Postfix);
 from_node!(GroupNode<> => Node::Group);
-from_node!(UnterminatedGroupNode<> => Node::UnterminatedGroup);
 from_node!(GroupMissingCloserNode<> => Node::GroupMissingCloser);
 from_node!(UnterminatedGroupNeedsReparseNode<> => Node::UnterminatedGroupNeedsReparse);
 from_node!(PrefixBinaryNode<> => Node::PrefixBinary);
@@ -327,9 +318,6 @@ impl Node<BorrowedTokenInput<'_>> {
             Node::Ternary(TernaryNode(op)) => Node::Ternary(TernaryNode(op.into_owned_input())),
             Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.into_owned_input())),
             Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.into_owned_input())),
-            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => {
-                Node::UnterminatedGroup(UnterminatedGroupNode(op.into_owned_input()))
-            },
             Node::PrefixBinary(PrefixBinaryNode(op)) => {
                 Node::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
             },
@@ -364,7 +352,6 @@ impl<I> Node<I> {
             Node::Ternary(TernaryNode(op)) => op.getSource(),
             Node::Compound(CompoundNode(op)) => op.getSource(),
             Node::Group(GroupNode(op)) => op.getSource(),
-            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.getSource(),
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => op.getSource(),
             Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
                 op.getSource()
@@ -377,7 +364,6 @@ impl<I> Node<I> {
     fn check(&self) -> bool {
         match self {
             Node::Token(token) => token.check(),
-            Node::Call(node) => node.check(),
             Node::Prefix(PrefixNode(op)) => op.check(),
             Node::Binary(BinaryNode(op)) => op.check(),
             Node::Infix(InfixNode(op)) => op.check(),
@@ -386,12 +372,10 @@ impl<I> Node<I> {
             Node::PrefixBinary(PrefixBinaryNode(op)) => op.check(),
             Node::Compound(CompoundNode(op)) => op.check(),
             Node::Group(GroupNode(op)) => op.check(),
-            // FIXME: Is this `false` by default, since it's unterminated and
-            //        therefore invalid syntax?
-            Node::UnterminatedGroup(UnterminatedGroupNode(op)) => op.check(),
+            Node::Call(node) => node.check(),
+            Node::SyntaxError(node) => node.check(),
             Node::GroupMissingCloser(node) => node.check(),
             Node::UnterminatedGroupNeedsReparse(node) => node.check(),
-            Node::SyntaxError(node) => node.check(),
         }
     }
 }
