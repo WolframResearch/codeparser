@@ -26,7 +26,6 @@ Needs["CodeParser`Utils`"]
 Needs["CodeParser`Library`"] (* For aggregateFunc, abstractFunc *)
 
 
-$containerKind = None
 
 Aggregate::usage = "Aggregate[cst] returns an aggregate syntax tree from a concrete syntax tree."
 
@@ -170,15 +169,10 @@ abstract[
 		| _GroupMissingOpenerNode
 	)
 ] :=
-	libraryFunctionWrapper[abstractFunc, expr, $Quirks, $containerKind]
+	libraryFunctionWrapper[abstractFunc, expr, $Quirks]
 
 
-abstract[ContainerNode[tag_, childrenIn_, dataIn_]] := Block[{
-	(* Set this value so that Source::from_expr() knows how to parse the Source
-	   values of the nodes, to preserve the source information as this node
-	   round-trips from WL => Rust => WL. *)
-	$containerKind = tag
-},
+abstract[ContainerNode[tag_, childrenIn_, dataIn_]] :=
 Catch[
 Module[{abstracted, issues, issues1, issues2, data,
   abstractedChildren, node, willReportToplevelIssues,
@@ -236,7 +230,7 @@ Module[{abstracted, issues, issues1, issues2, data,
   node = ContainerNode[tag, abstracted, data];
 
   node
-]]]
+]]
 
 
 
