@@ -111,7 +111,7 @@ impl SemiSemiParselet {
             //
 
             let ctxt = session.top_context();
-            ctxt.init_callback(|s, _| SemiSemiParselet::parse2(s));
+            ctxt.init_callback(|s, _| SemiSemiParselet::parse2(s), None);
 
             // MUSTTAIL
             return session.parse_prefix(SecondTok);
@@ -167,7 +167,7 @@ impl SemiSemiParselet {
         session.push_trivia_seq(trivia1);
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| SemiSemiParselet::reduce_ternary(s));
+        ctxt.init_callback(|s, _| SemiSemiParselet::reduce_ternary(s), None);
 
         // MUSTTAIL
         return session.parse_prefix(ThirdTok);

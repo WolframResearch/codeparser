@@ -98,28 +98,20 @@ impl Context {
         }
     }
 
-    pub(crate) fn init_callback(&mut self, func: ParseFunction) {
-        assert!(self.f.is_none());
-        assert!(self.p.is_none());
-
-        self.f = Some(func);
-        self.p = None;
-    }
-
-    pub(crate) fn init_callback_with_parselet(
+    pub(crate) fn init_callback(
         &mut self,
         func: ParseFunction,
-        parselet: ParseletPtr,
+        parselet: Option<ParseletPtr>,
     ) {
         assert!(self.f.is_none());
         assert!(self.p.is_none());
 
         self.f = Some(func);
-        self.p = Some(parselet);
+        self.p = parselet;
     }
 
     pub(crate) fn init_identity(&mut self) {
-        self.init_callback(Parser_identity);
+        self.init_callback(Parser_identity, None);
     }
 
     pub(crate) fn set_callback(&mut self, func: ParseFunction) {

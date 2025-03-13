@@ -765,7 +765,7 @@ impl PrefixParselet for PrefixOperatorParselet {
 
         let ctxt = session.push_context(self.getPrecedence());
 
-        ctxt.init_callback_with_parselet(
+        ctxt.init_callback(
             |session: &mut ParserSession, P: ParseletPtr| {
                 let P = P
                     .as_any()
@@ -774,7 +774,7 @@ impl PrefixParselet for PrefixOperatorParselet {
 
                 session.reduce_and_climb(|ctx| PrefixNode::new(P.Op, ctx))
             },
-            self,
+            Some(self),
         );
 
         let tok = session.current_token_eat_trivia();
@@ -882,7 +882,7 @@ impl InfixParselet for BinaryOperatorParselet {
 
         let ctxt = session.top_context();
 
-        ctxt.init_callback_with_parselet(
+        ctxt.init_callback(
             |session, P| {
                 let P = P
                     .as_any()
@@ -891,7 +891,7 @@ impl InfixParselet for BinaryOperatorParselet {
 
                 session.reduce_and_climb(|ctx| BinaryNode::new(P.Op, ctx))
             },
-            self,
+            Some(self),
         );
 
         // MUSTTAIL
@@ -1289,7 +1289,7 @@ impl InfixParselet for CallParselet {
         //
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| CallParselet::reduce_call(s));
+        ctxt.init_callback(|s, _| CallParselet::reduce_call(s), None);
         ctxt.set_precedence(Precedence::HIGHEST);
 
         let GP = self.getGP();
@@ -1367,7 +1367,7 @@ impl InfixParselet for TildeParselet {
         let first_tok = session.current_token_eat_trivia();
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| TildeParselet::parse1(s));
+        ctxt.init_callback(|s, _| TildeParselet::parse1(s), None);
         ctxt.set_precedence(None);
 
         return session.parse_prefix(first_tok);
@@ -1456,22 +1456,28 @@ impl InfixParselet for ColonParselet {
         match colonLHS {
             ColonLHS::Pattern => {
                 let ctxt = session.top_context();
-                ctxt.init_callback(|session, _| {
-                    session.reduce_and_climb(|ctx| {
-                        BinaryNode::new(BinaryOperator::Pattern, ctx)
-                    })
-                });
+                ctxt.init_callback(
+                    |session, _| {
+                        session.reduce_and_climb(|ctx| {
+                            BinaryNode::new(BinaryOperator::Pattern, ctx)
+                        })
+                    },
+                    None,
+                );
                 ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
 
                 return session.parse_prefix(tok);
             },
             ColonLHS::Optional => {
                 let ctxt = session.top_context();
-                ctxt.init_callback(|session, _| {
-                    session.reduce_and_climb(|ctx| {
-                        BinaryNode::new(BinaryOperator::Optional, ctx)
-                    })
-                });
+                ctxt.init_callback(
+                    |session, _| {
+                        session.reduce_and_climb(|ctx| {
+                            BinaryNode::new(BinaryOperator::Optional, ctx)
+                        })
+                    },
+                    None,
+                );
                 ctxt.set_precedence(Precedence::FAKE_OPTIONALCOLON);
 
                 // MUSTTAIl
@@ -1479,14 +1485,17 @@ impl InfixParselet for ColonParselet {
             },
             ColonLHS::Error => {
                 let ctxt = session.top_context();
-                ctxt.init_callback(|session, _| {
-                    session.reduce_and_climb(|ctx| {
-                        SyntaxErrorNode::new(
-                            SyntaxErrorKind::ExpectedSymbol,
-                            ctx,
-                        )
-                    })
-                });
+                ctxt.init_callback(
+                    |session, _| {
+                        session.reduce_and_climb(|ctx| {
+                            SyntaxErrorNode::new(
+                                SyntaxErrorKind::ExpectedSymbol,
+                                ctx,
+                            )
+                        })
+                    },
+                    None,
+                );
                 ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
 
                 // MUSTTAIl
@@ -1538,7 +1547,7 @@ impl InfixParselet for SlashColonParselet {
         let tok = session.current_token_eat_trivia();
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| SlashColonParselet::parse1(s));
+        ctxt.init_callback(|s, _| SlashColonParselet::parse1(s), None);
 
         // MUSTTAIL
         return session.parse_prefix(tok);
@@ -1635,7 +1644,7 @@ impl InfixParselet for EqualParselet {
         }
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| EqualParselet::reduce_Set(s));
+        ctxt.init_callback(|s, _| EqualParselet::reduce_Set(s), None);
 
         // MUSTTAIL
         return session.parse_prefix(tok);
@@ -1737,7 +1746,10 @@ impl InfixParselet for ColonEqualParselet {
         let tok = session.current_token_eat_trivia();
 
         let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| ColonEqualParselet::reduce_SetDelayed(s));
+        ctxt.init_callback(
+            |s, _| ColonEqualParselet::reduce_SetDelayed(s),
+            None,
+        );
 
         // MUSTTAIL
         return session.parse_prefix(tok);
