@@ -54,12 +54,12 @@ enumMap = <||>;
 KeyValueMap[
 	{token, value} |-> (
 		Which[
-			value === 0,
-				cur = 0,
+			IntegerQ[value],
+				cur = value,
 			value === Next,
 				cur++,
 			True,
-				FatalError["Unexpected ", token, " => ", value];
+				cur = enumMap[value]
 		];
 
 		AssociateTo[enumMap, token -> cur]
@@ -309,15 +309,6 @@ isTrivia[_] = False
 
 
 
-isUnterminated[Token`Error`UnterminatedComment] = True
-isUnterminated[Token`Error`UnterminatedString] = True
-isUnterminated[Token`Error`UnterminatedFileString] = True
-isUnterminated[Token`Error`UnterminatedLinearSyntaxBlob] = True
-
-isUnterminated[_] = False
-
-
-
 
 
 
@@ -364,11 +355,11 @@ group1Bits[tok_] :=
 
 
 group2Bits[tok_] :=
-	Which[
-		isEmpty[tok],        "Empty",
-		isUnterminated[tok], "Unterminated",
-		True,                None
-	]
+	Replace[isEmpty[tok], {
+		True -> "Empty",
+		False -> None
+	}]
+
 
 
 generate[] := (
@@ -398,26 +389,22 @@ pub(crate) enum Group1 {
     None              = 0b00 << 9,
 }
 
-#[rustfmt::skip]
 pub(crate) enum Group2 {
-    Empty        = 0b01 << 11,
-    Unterminated = 0b10 << 11,
-    None         = 0b00 << 11,
+    Empty = 0b01 << 11,
+    None  = 0b00 << 11,
 }
 
 impl Group1 {
-    /// Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
-    pub(crate) const MASK: u16 = 0b11 << 9;
+	pub(crate) const MASK: u16 = 0b11 << 9;
 }
 
 impl Group2 {
-    /// Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
-    pub(crate) const MASK: u16 = 0b11 << 11;
+	pub(crate) const MASK: u16 = 0b11 << 11;
 }
 
 macro_rules! variant {
-    ($count:literal, $group1:ident, $group2:ident) => {
-        variant_value($count, Group1::$group1, Group2::$group2)
+    ($count:literal, $group1:ident, Empty) => {
+        variant_value($count, Group1::$group1, Group2::Empty)
     };
 
     ($count:literal, Empty) => {
@@ -439,7 +426,7 @@ const fn variant_value(count: u16, group1: Group1, group2: Group2) -> u16 {
     let group2 = group2 as u16;
 
     // The unique count should only use the first 9 bits.
-    // Group1 uses the next two bits, and Group2 the two bits after that.
+	// Group1 uses the next two bits, and Group2 the two bits after that.
     debug_assert!(count  & 0b0000_0001_1111_1111 == count );
     debug_assert!(group1 & 0b0000_0110_0000_0000 == group1);
     debug_assert!(group2 & 0b0001_1000_0000_0000 == group2);
@@ -513,6 +500,12 @@ const _: () = assert!(TokenKind::Rational.value() == 0x6, \"Check your assumptio
 const _: () = assert!(TokenKind::InternalNewline.value() == 0b1000, \"Check your assumptions\");
 const _: () = assert!(TokenKind::ToplevelNewline.value() == 0b1100, \"Check your assumptions\");
 //const _: () = assert!(TokenKind::Error_First.value() == 0x10, \"Check your assumptions\");
+
+//
+// TokenKind::Error_Unterminated_First must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
+//
+const _: () = assert!(TokenKind::Error_Unterminated_First.value() == 0x1c, \"Check your assumptions\");
+const _: () = assert!(TokenKind::Error_Unterminated_End.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
 
 {"
@@ -534,6 +527,7 @@ pub fn TokenToSymbol(token: TokenKind) -> Symbol {"} ~Join~
 		tokens
 	]
 ~Join~
+{ "        _ => panic!(\"Unhandled token type\"),"} ~Join~
 {"    }",
 "}",
 ""} ~Join~ {
