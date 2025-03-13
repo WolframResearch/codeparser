@@ -3,7 +3,7 @@ mod abstract_call_node;
 use std::fmt::Debug;
 
 use crate::{
-    agg::{AggNodeSeq, LHS},
+    agg::{self, AggNodeSeq, LHS},
     ast::{AbstractSyntaxError, Ast, AstCall, AstMetadata, WL},
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallHead, CallNode,
@@ -16,7 +16,6 @@ use crate::{
         SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{Issue, IssueTag, Severity},
-    macros::leaf,
     quirks::{self, Quirk},
     symbol::{self as sym, Symbol},
     tokenize::{
@@ -1599,7 +1598,6 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
 enum Operand<I, S> {
     Cst(Cst<I, S>),
     Reciprocate(Reciprocate<I, S>),
-    NegativeOne,
     Negated(Negated<I, S>, S),
 }
 
@@ -1615,7 +1613,7 @@ impl<I: TokenInput + Debug, S: TokenSource + Debug> Negated<I, S> {
     fn into_ast(self, data: S) -> Ast {
         match self {
             Negated::Integer0 => {
-                leaf!(Integer, "0", data)
+                crate::macros::leaf!(Integer, "0", data)
             },
             Negated::IntegerNegated(input) => {
                 let str = input.as_str();
@@ -1654,7 +1652,7 @@ impl<I: TokenInput + Debug, S: TokenSource + Debug> Negated<I, S> {
                     panic!("expected InfixNode after abstract Times")
                 };
 
-                args = join([leaf!(Integer, "-1", <||>)], args);
+                args = join([crate::macros::leaf!(Integer, "-1", <||>)], args);
 
                 Ast::Call { head, args, data }
             },
@@ -1890,7 +1888,6 @@ fn abstractPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
                 // NOTE: These cases wouldn't be effected by the flatten prefix
                 //       plus or process infix binary at quirk because their
                 //       heads are never Plus.
-                Operand::NegativeOne => leaf!(Integer, "-1", <||>),
                 Operand::Reciprocate(reciprocated) => reciprocated.into_ast(),
                 Operand::Negated(negated, data) => negated.into_ast(data),
             })
@@ -1998,7 +1995,9 @@ where
                         //     recursed here.
                         // *)
                         join(
-                            [Operand::NegativeOne],
+                            [Operand::Cst(
+                                agg::WL!(ToNode[-1]).into_owned_input(),
+                            )],
                             flatten_times_cst(operand, data),
                         )
                     } else {
@@ -2064,7 +2063,6 @@ fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
             Operand::Cst(node) => {
                 abstract_(processInfixBinaryAtQuirk(node, "Times"))
             },
-            Operand::NegativeOne => leaf!(Integer, "-1", <||>),
             Operand::Negated(negated, data) => negated.into_ast(data),
             Operand::Reciprocate(reciprocate) => reciprocate.into_ast(),
         })
@@ -2088,7 +2086,6 @@ fn abstractTimes_BinaryNode_Divide<
             .into_iter()
             .map(|node| match node {
                 Operand::Cst(node) => abstract_(node),
-                Operand::NegativeOne => leaf!(Integer, "-1", <||>),
                 Operand::Negated(negated, data) => negated.into_ast(data),
                 Operand::Reciprocate(reciprocate) => reciprocate.into_ast(),
             })
