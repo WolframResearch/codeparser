@@ -233,9 +233,9 @@ impl<'i> TokenRef<'i> {
     /// Construct the token representing the input `123`:
     ///
     /// ```
-    /// use wolfram_parser::{tokenize::{Token, TokenKind}, macros::src};
+    /// use wolfram_parser::{tokenize::{Token, TokenKind}, source::Span};
     ///
-    /// let token = Token::new(TokenKind::Integer, "123", src!(1:1-4));
+    /// let token = Token::new(TokenKind::Integer, "123", Span::unknown());
     /// ```
     ///
     /// Alternatively, the [`token!()`][crate::macros::token] macro can
@@ -339,6 +339,7 @@ impl<'i> TokenRef<'i> {
                                 }
                             }
                         },
+                        SpanKind::Unknown => (),
                     }
                 }
             },

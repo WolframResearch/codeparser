@@ -519,7 +519,7 @@ pub fn parse_bytes_cst_seq<'i>(
 ///         head: Box::new(Ast::Leaf {
 ///             kind: TokenKind::Symbol,
 ///             input: TokenString::new("Plus"),
-///             data: AstMetadata::empty(),
+///             data: AstMetadata::from_src(Span::unknown()),
 ///         }),
 ///         args: vec![
 ///             Ast::Leaf {

@@ -133,6 +133,7 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
 
             better_leaves
         },
+        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
     // Purposely only returning leaves that are in the "better" Source
@@ -214,6 +215,7 @@ fn reparse_unterminated_token_error_node<'i>(
 
             make_better_input(better_str)
         },
+        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
     error.input = better_str;
@@ -303,6 +305,7 @@ fn first_chunk_and_last_good_line(
                     lines = Extract[lines, poss];
                 */
             },
+            SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
         };
 
     //--------------------------
@@ -377,6 +380,7 @@ fn first_chunk_and_last_good_line(
             //     ]]
             // };
         },
+        SpanKind::Unknown => panic!("unexpected SpanKind::Unknown"),
     };
 
     // TODO(optimization): Refactor to avoid this to_vec() call.

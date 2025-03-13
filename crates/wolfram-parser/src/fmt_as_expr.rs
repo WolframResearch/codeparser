@@ -341,7 +341,6 @@ impl<S: TokenSource> Display for FmtAsExpr<&S> {
             Source::Span(span) => write!(f, "{}", FmtAsExpr(span)),
             Source::BoxPosition(_) => todo!(),
             Source::After(_) => todo!(),
-            Source::Unknown => todo!(),
         }
     }
 }
@@ -360,6 +359,7 @@ impl Display for FmtAsExpr<Span> {
                 )
             },
             SpanKind::CharacterSpan(_) => todo!(),
+            SpanKind::Unknown => todo!(),
         }
     }
 }
