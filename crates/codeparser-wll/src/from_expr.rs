@@ -3,11 +3,11 @@ use wolfram_library_link::expr::{symbol::SymbolRef, Expr, ExprKind, Normal, Numb
 
 use wolfram_parser::{
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CallOperator, CodeNode,
-        CompoundNode, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, LeafNode, Operator, OperatorNode, PostfixNode,
-        PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator,
-        SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
+        CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
+        InfixNode, InfixOperator, LeafNode, Operator, OperatorNode, PostfixNode, PostfixOperator,
+        PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
+        SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     cst::{CompoundOperator, CstNodeSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
@@ -227,7 +227,6 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
             // PRE_COMMIT: Is this variant used?
             (NodeSeq(vec![CstNode::from_expr(&elements[0])?]), false)
         };
-
         let body = if let Ok(group) = GroupNode::from_expr(&elements[1]) {
             CallBody::Group(group)
         } else if let Ok(group) = GroupMissingCloserNode::from_expr(&elements[1]) {
@@ -235,7 +234,6 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
         } else {
             todo!("unexpected CallNode body: {}", elements[1])
         };
-
         let metadata = Metadata::from_expr(&elements[2])?;
         let src = metadata.source;
 
@@ -350,7 +348,7 @@ impl FromExpr for PostfixNode<OwnedTokenInput, GeneralSource> {
     }
 }
 
-impl<O: FromExpr> FromExpr for GroupNode<OwnedTokenInput, GeneralSource, O> {
+impl FromExpr for GroupNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_GroupNode)?;
 
@@ -358,7 +356,7 @@ impl<O: FromExpr> FromExpr for GroupNode<OwnedTokenInput, GeneralSource, O> {
             todo!()
         }
 
-        let op = O::from_expr(&elements[0]).expect("PRE_COMMIT");
+        let op = GroupOperator::from_expr(&elements[0]).expect("PRE_COMMIT");
         let children = NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -427,7 +425,7 @@ impl FromExpr for CodeNode<GeneralSource> {
     }
 }
 
-impl<O: FromExpr> FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource, O> {
+impl FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         let elements = try_normal_with_head(expr, sym::CodeParser_GroupMissingCloserNode)?;
 
@@ -435,7 +433,7 @@ impl<O: FromExpr> FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSo
             todo!()
         }
 
-        let op = O::from_expr(&elements[0])?;
+        let op = GroupOperator::from_expr(&elements[0])?;
         let children = NodeSeq::from_expr(&elements[1])?;
         let src = Metadata::from_expr(&elements[2])?.source;
 
@@ -818,20 +816,6 @@ impl FromExpr for GroupOperator {
         };
 
         match GroupOperator::try_from_symbol(sym.as_symbol_ref()) {
-            Some(op) => Ok(op),
-            None => Err(format!("unable to match symbol '{sym}' to Operator")),
-        }
-    }
-}
-
-impl FromExpr for CallOperator {
-    fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let sym = match expr.try_as_symbol() {
-            Some(sym) => sym,
-            None => panic!(),
-        };
-
-        match CallOperator::try_from_symbol(sym.as_symbol_ref()) {
             Some(op) => Ok(op),
             None => Err(format!("unable to match symbol '{sym}' to Operator")),
         }

@@ -215,25 +215,6 @@ $GroupOperators = Join[
 	]
 ]
 
-$CallOperators = Join[
-	Association @ Replace[
-		Join[
-			Values[importedPrefixParselets],
-			Values[importedInfixParselets]
-		],
-		{
-			Parselet`CallParselet[
-				Parselet`GroupParselet[tok_, op_Symbol]
-			] :> (op -> op),
-			parselet:Parselet`CallParselet[___] :> (
-				FatalError["Unexpected CallParselet: ", parselet]
-			),
-			_ -> Nothing
-		},
-		{1}
-	]
-]
-
 $CompoundOperators = Join[
 	AssociationMap[Identity, {
 		Blank,
@@ -267,10 +248,6 @@ If[!MatchQ[$BinaryOperators, <| (_Symbol -> _Symbol) ... |>],
 
 If[!MatchQ[$GroupOperators, <| (_Symbol -> _Symbol) ... |>],
 	FatalError["Bad $GroupOperators: ", InputForm @ $GroupOperators];
-]
-
-If[!MatchQ[$CallOperators, <| (_Symbol -> _Symbol) ... |>],
-	FatalError["Bad $CallOperators: ", InputForm @ $CallOperators];
 ]
 
 If[!MatchQ[$CompoundOperators, <| (_Symbol -> _Symbol) ... |>],
@@ -558,7 +535,6 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		formatOperatorEnumDef["PrefixBinaryOperator", $PrefixBinaryOperators],
 		formatOperatorEnumDef["CompoundOperator", $CompoundOperators],
 		formatOperatorEnumDef["GroupOperator", $GroupOperators],
-		formatOperatorEnumDef["CallOperator", $CallOperators],
 
 		(*============================*)
 		(* Define Impls               *)
@@ -571,8 +547,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		formatOperatorEnumImpl["TernaryOperator", $TernaryOperators],
 		formatOperatorEnumImpl["PrefixBinaryOperator", $PrefixBinaryOperators],
 		formatOperatorEnumImpl["CompoundOperator", $CompoundOperators],
-		formatOperatorEnumImpl["GroupOperator", $GroupOperators],
-		formatOperatorEnumImpl["CallOperator", $CallOperators]
+		formatOperatorEnumImpl["GroupOperator", $GroupOperators]
 	]
 };
 
