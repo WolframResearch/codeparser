@@ -21,6 +21,8 @@ use crate::{
 
 use wolfram_expr::Expr;
 
+pub type IssuePtrSet = Vec<Issue>;
+
 pub type AdditionalDescriptionVector = Vec<String>;
 
 
