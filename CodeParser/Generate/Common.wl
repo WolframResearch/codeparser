@@ -38,8 +38,7 @@ uppercases and replaces ` with _
 toGlobal[n_] :=
   StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
-(* generatedCPPDir = FileNameJoin[{buildDir, "generated", "rust"}] *)
-generatedCPPDir = FileNameJoin[{srcDir, "crate", "src", "generated"}]
+generatedCPPDir = FileNameJoin[{buildDir, "generated", "rust"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir}]
 generatedCPPSrcDir = FileNameJoin[{generatedCPPDir}]
 
