@@ -24,7 +24,10 @@ checkBuildDir[]
 
 strings = Union[Join[
   {"AdditionalDescriptions"},
-  {"InsertionText", "ReplacementText"}
+  {"InsertionText", "ReplacementText"},
+  {"UnsafeCharacterEncoding_IncompleteUTF8Sequence",
+    "UnsafeCharacterEncoding_StraySurrogate",
+    "UnsafeCharacterEncoding_BOM"}
 ]]
 
 
