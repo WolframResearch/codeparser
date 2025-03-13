@@ -1,5 +1,7 @@
 use std::{fmt::Debug, sync::Mutex};
 
+use once_cell::sync::Lazy;
+
 use crate::{
     abstract_::expect_children,
     cst::{BinaryNode, BinaryOperator, Cst, OperatorNode},
@@ -7,8 +9,8 @@ use crate::{
 };
 
 // TODO(cleanup): Don't store these settings using error-prone global state.
-static QUIRK_SETTINGS: Mutex<QuirkSettings> =
-    Mutex::new(QuirkSettings::const_default());
+static QUIRK_SETTINGS: Lazy<Mutex<QuirkSettings>> =
+    Lazy::new(|| Mutex::new(QuirkSettings::default()));
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct QuirkSettings {
@@ -97,19 +99,13 @@ pub enum Quirk {
     OldAtAtAt,
 }
 
-impl QuirkSettings {
-    pub const fn const_default() -> Self {
+impl Default for QuirkSettings {
+    fn default() -> Self {
         Self {
             infix_binary_at: true,
             flatten_times: false,
             old_at_at_at: false,
         }
-    }
-}
-
-impl Default for QuirkSettings {
-    fn default() -> Self {
-        Self::const_default()
     }
 }
 
