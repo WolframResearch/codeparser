@@ -39,13 +39,14 @@ impl TokenKind {
         return value & 0x1ff;
     }
 
-    /// Returns either [`TokenKind::ToplevelNewline`] or [`TokenKind::InternalNewline`]
-    pub(crate) fn newline_with_policy(policy: NextPolicy) -> Self {
-        if policy & RETURN_TOPLEVELNEWLINE != 0 {
+    pub(crate) fn with_policy(self, policy: NextPolicy) -> Self {
+        if self == TokenKind::InternalNewline
+            && policy & RETURN_TOPLEVELNEWLINE != 0
+        {
             return TokenKind::ToplevelNewline;
-        } else {
-            TokenKind::InternalNewline
         }
+
+        self
     }
 
     //
@@ -194,7 +195,7 @@ const _: () = assert!(TokenKind::EndOfFile.isEmpty());
 #[test]
 fn test_newline_policy() {
     assert_eq!(
-        TokenKind::newline_with_policy(RETURN_TOPLEVELNEWLINE),
+        TokenKind::InternalNewline.with_policy(RETURN_TOPLEVELNEWLINE),
         TokenKind::ToplevelNewline
     );
 }
