@@ -16,6 +16,9 @@ use crate::{
 use once_cell::sync::Lazy;
 use regex::Regex;
 
+const SPLIT_LINES_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new("\r\n|\n|\r|$").unwrap());
+
 const CHUNK_PAT: Lazy<Regex> = Lazy::new(|| {
     /*
         Annotation Comments
@@ -602,7 +605,14 @@ struct Line<'i> {
 impl<'i> Line<'i> {
     /// Split `input` into a list of [`Line`]s.
     fn split(input: &str) -> Vec<Line> {
-        split_lines_keep_sep(input)
+        //   lines = StringCases[
+        //       str,
+        //       Shortest[line:___ ~~ newline:("\r\n" | "\n" | "\r" | EndOfString)]
+        //           :> {line, newline}
+        //   ];
+        let split_lines_regex: &Regex = &SPLIT_LINES_REGEX;
+
+        split_terminator_keep(input, &split_lines_regex)
             .into_iter()
             .map(|(content, newline)| Line { content, newline })
             .collect()
@@ -618,19 +628,14 @@ impl<'i> Line<'i> {
     }
 }
 
-fn split_lines_keep_sep<'i>(input: &'i str) -> Vec<(&'i str, &'i str)> {
-    //   lines = StringCases[
-    //       str,
-    //       Shortest[line:___ ~~ newline:("\r\n" | "\n" | "\r" | EndOfString)]
-    //           :> {line, newline}
-    //   ];
-    const SPLIT_LINES_REGEX: Lazy<Regex> =
-        Lazy::new(|| Regex::new("\r\n|\n|\r|$").unwrap());
-
+fn split_terminator_keep<'i>(
+    input: &'i str,
+    regex: &Regex,
+) -> Vec<(&'i str, &'i str)> {
     let mut result = Vec::new();
     let mut last = 0;
 
-    for match_ in SPLIT_LINES_REGEX.find_iter(input) {
+    for match_ in regex.find_iter(input) {
         let index = match_.start();
         let terminator = match_.as_str();
 
