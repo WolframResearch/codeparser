@@ -1248,7 +1248,7 @@ impl GroupParselet {
                 // Handle something like   { a EOF
                 //
 
-                session.push_trivia_seq(trivia1);
+                trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
                 return self.reduce_unterminated_group(session);
