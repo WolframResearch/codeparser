@@ -11,8 +11,8 @@ use crate::{
         TernaryNode, UnterminatedGroupNode,
     },
     source::{
-        BufferAndLength, CharacterRange, CodeAction, CodeActionKind, Issue, IssueTag, Severity,
-        Source, SourceLocation, StringSourceKind,
+        BufferAndLength, CodeAction, CodeActionKind, Issue, IssueTag, Severity, Source,
+        SourceConvention, SourceLocation,
     },
     symbol::Symbol,
     symbol_registration::*,
@@ -375,36 +375,30 @@ impl SourceLocation {
 }
 
 impl Source {
-    pub(crate) fn put(&self, link: &mut wstp::Link) {
-        link.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
+        let Source { start, end } = self;
 
-        Symbol_put(SYMBOL_CODEPARSER_SOURCE, link);
+        callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
 
-        match self.kind() {
-            StringSourceKind::LineColumnRange { .. } => {
-                let Source { start, end } = self;
+        Symbol_put(SYMBOL_CODEPARSER_SOURCE, callLink);
 
-                link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+        debug_assert_eq!(start.convention(), end.convention());
 
-                start.put(link);
-                end.put(link);
+        match start.convention() {
+            SourceConvention::LineColumn => {
+                callLink.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+
+                start.put(callLink);
+                end.put(callLink);
             },
-            StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
-                link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+            SourceConvention::CharacterIndex => {
+                callLink.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
 
-                link.put_i64(start.into()).unwrap();
+                callLink.put_i64(start.second.into()).unwrap();
 
-                link.put_i64((end - 1).into()).unwrap();
-            },
-            // `{}`
-            // TODO: What representation should `<| Source -> <unknown> |>`
-            //       have?
-            //  * Source -> {}
-            //  * Source -> None
-            //  * Source -> Missing["Unknown"]
-            //  * Panic here?
-            StringSourceKind::Unknown => {
-                link.put_function(SYMBOL_LIST.as_str(), 0).unwrap();
+                callLink.put_i64((end.second - 1).into()).unwrap();
+
+                return;
             },
         }
     }

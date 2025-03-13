@@ -251,8 +251,8 @@ fn PrintTo(Loc: &SourceLocation, s: &mut std::ostream);
 
 #[derive(Copy, Clone, PartialEq, Hash)]
 pub struct Source {
-    pub(crate) start: SourceLocation,
-    pub(crate) end: SourceLocation,
+    pub start: SourceLocation,
+    pub end: SourceLocation,
 }
 
 const _: () = assert!(
@@ -260,34 +260,15 @@ const _: () = assert!(
     "Check your assumptions"
 );
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum StringSourceKind {
-    LineColumnRange {
-        start_line: u32,
-        start_column: u32,
-        end_line: u32,
-        end_column: u32,
-    },
-    CharacterRange(CharacterRange),
-    /// `<||>`
-    Unknown,
-}
-
 impl Display for Source {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let Source { start, end } = *self;
 
-        match self.kind() {
-            StringSourceKind::CharacterRange(CharacterRange(start, end)) => {
-                write!(f, "{}..{}", start, end)
-            },
-            StringSourceKind::LineColumnRange { .. } => {
-                write!(f, "{start:?}-{end:?}")
-            },
-            StringSourceKind::Unknown => {
-                // TODO: Better formatting for this? "?"
-                write!(f, "Source unknown")
-            },
+        if start.first == 0 {
+            debug_assert!(end.first == 0);
+            write!(f, "{}..{}", start.second, end.second)
+        } else {
+            write!(f, "{start:?}-{end:?}")
         }
     }
 }
@@ -749,6 +730,17 @@ impl SourceLocation {
     pub fn new(first: u32, second: u32) -> Self {
         Self { first, second }
     }
+
+    #[allow(dead_code)]
+    pub(crate) fn convention(&self) -> SourceConvention {
+        let SourceLocation { first, second: _ } = *self;
+
+        if first == 0 {
+            SourceConvention::CharacterIndex
+        } else {
+            SourceConvention::LineColumn
+        }
+    }
 }
 
 // bool operator==(SourceLocation a, SourceLocation b) {
@@ -872,8 +864,8 @@ fn PrintTo(loc: &SourceLocation, s: &mut std::ostream) {
 /// This range starts indexing at 1, and is exclusive.
 ///
 /// `CharacterRange(start, end)`
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct CharacterRange(pub u32, pub u32);
+#[derive(Debug, Copy, Clone)]
+pub(crate) struct CharacterRange(pub u32, pub u32);
 
 impl CharacterRange {
     pub(crate) fn tuple(self) -> (u32, u32) {
@@ -925,6 +917,12 @@ impl Source {
         }
     }
 
+    pub(crate) fn character_range(&self) -> CharacterRange {
+        assert!(self.start.first == 0 && self.end.first == 0);
+
+        CharacterRange(self.start.second, self.end.second)
+    }
+
     pub fn new_from_source(start: Source, end: Source) -> Self {
         assert!(start <= end);
 
@@ -934,87 +932,20 @@ impl Source {
         }
     }
 
-    pub fn unknown() -> Self {
-        // Use incompatible values for `first`.
-        Source {
-            start: SourceLocation {
-                first: 0,
-                second: 0,
-            },
-            end: SourceLocation {
-                first: 1,
-                second: 0,
-            },
-        }
-    }
+    // TODO: Display
+    // void Source::print(std::ostream& s) const {
+    //     Start.print(s);
+    //     End.print(s);
+    // }
 
-    pub(crate) fn character_range(&self) -> CharacterRange {
-        match self.kind() {
-            StringSourceKind::CharacterRange(range) => range,
-            other => {
-                panic!("Source::character_range(): Source is not a character range: {other:?}")
-            },
-        }
-    }
-
-    pub fn kind(self) -> StringSourceKind {
-        let Source { start, end } = self;
-
-        match (start, end) {
-            (
-                SourceLocation {
-                    first: 0,
-                    second: start_char,
-                },
-                SourceLocation {
-                    first: 0,
-                    second: end_char,
-                },
-            ) => StringSourceKind::CharacterRange(CharacterRange(start_char, end_char)),
-            (
-                SourceLocation {
-                    first: start_line,
-                    second: start_column,
-                },
-                SourceLocation {
-                    first: end_line,
-                    second: end_column,
-                },
-            ) if start_line > 0 && end_line > 0 => StringSourceKind::LineColumnRange {
-                start_line,
-                start_column,
-                end_line,
-                end_column,
-            },
-            (SourceLocation { first: a, .. }, SourceLocation { first: b, .. }) => {
-                debug_assert!((a, b) == (0, 1) || (a, b) == (1, 0));
-                StringSourceKind::Unknown
-            },
-        }
-    }
-
+    // PRE_COMMIT: Rename; this function will panic depending on the source
+    //             convention used.
     #[allow(dead_code)]
-    pub(crate) fn column_width(&self) -> usize {
-        let (start_column, end_column) = match self.kind() {
-            StringSourceKind::LineColumnRange {
-                start_line,
-                end_line,
-                start_column,
-                end_column,
-            } => {
-                debug_assert!(
-                    start_line == end_line,
-                    "StringSourceKind::column_width(): source locations are on different lines"
-                );
+    pub(crate) fn len(&self) -> usize {
+        let Source { start, end } = self;
+        assert!(start.first == end.first);
 
-                (start_column, end_column)
-            },
-            other => panic!(
-                "StringSourceKind::column_width(): Source is not a line column span: {other:?}"
-            ),
-        };
-
-        return end_column as usize - start_column as usize;
+        return end.second as usize - start.second as usize;
     }
 
     /// Check if a [`SourceLocation`] is inside of this [`Source`] span.
@@ -1030,21 +961,19 @@ impl Source {
     ///
     /// assert!(!src!(1:3-2:0).contains(SourceLocation::new(2, 4)));
     /// ```
-    ///
-    /// # Panics
-    ///
-    /// This function will panic if this [`Source`] is not a
-    /// [`StringSourceKind::LineColumnRange`].
     pub fn contains(&self, cursor: SourceLocation) -> bool {
-        let (srcLine1, srcCol1, srcLine2, srcCol2) = match self.kind() {
-            StringSourceKind::LineColumnRange {
-                start_line,
-                start_column,
-                end_line,
-                end_column,
-            } => (start_line, start_column, end_line, end_column),
-            other => panic!("Source::contains(): Source is not a line-column range: {other:?}"),
-        };
+        let Source {
+            start:
+                SourceLocation {
+                    first: srcLine1,
+                    second: srcCol1,
+                },
+            end:
+                SourceLocation {
+                    first: srcLine2,
+                    second: srcCol2,
+                },
+        } = *self;
 
         let SourceLocation {
             first: cursorLine,
@@ -1090,13 +1019,11 @@ impl Source {
     ///
     /// assert!(!src!(1:1-1:5).overlaps(src!(2:1-2:5)));
     /// ```
-    ///
-    /// # Panics
-    ///
-    /// This function will panic if this [`Source`] is not a
-    /// [`StringSourceKind::LineColumnRange`].
     pub fn overlaps(&self, cursor: Source) -> bool {
         let Source { start, end } = cursor;
+
+        debug_assert!(start.convention() == SourceConvention::LineColumn);
+        debug_assert!(end.convention() == SourceConvention::LineColumn);
 
         self.contains(start) || self.contains(end)
     }
