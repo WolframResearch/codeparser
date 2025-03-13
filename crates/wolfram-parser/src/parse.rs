@@ -599,10 +599,13 @@ impl<'i> ParserSession<'i> {
         // skip any trivia
         //
 
+        let ctxt = self.context_stack.last().unwrap();
+
         // Of the nodes owned by `ctxt`, get the top (last) one that
         // is not trivia.
-        let top_non_trivia_in_context = self
-            .top_context_nodes()
+        let top_non_trivia_in_context = (&self.node_stack[ctxt.index..])
+            .iter()
+            .rev()
             .find(
                 |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
             )
@@ -694,10 +697,13 @@ impl<'i> ParserSession<'i> {
             return false;
         }
 
+        let ctxt = self.context_stack.last().unwrap();
+
         // Of the nodes owned by `ctxt`, get the top (last) one that
         // is not trivia.
-        let top_non_trivia_in_context = self
-            .top_context_nodes()
+        let top_non_trivia_in_context = (&self.node_stack[ctxt.index..])
+            .iter()
+            .rev()
             // Skip past top
             .skip(1)
             .find(
@@ -743,18 +749,6 @@ impl<'i> ParserSession<'i> {
             },
             _ => false,
         }
-    }
-
-    /// Returns a last-in first-out iterator over nodes in the top
-    /// context.
-    fn top_context_nodes(&self) -> impl Iterator<Item = &Cst<TokenStr<'i>>> {
-        let ctxt = self.context_stack.last().unwrap();
-
-        let index = ctxt.index;
-
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        (&self.node_stack[index..]).iter().rev()
     }
 
     pub fn is_quiescent(&mut self) -> bool {
