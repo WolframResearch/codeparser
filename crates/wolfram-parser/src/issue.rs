@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 
+use ordered_float::NotNan;
+
 use crate::{
     source::{Source, Span},
     symbol::Symbol,
@@ -9,14 +11,14 @@ use crate::{
 
 type AdditionalDescriptionVector = Vec<String>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct Issue {
     pub make_sym: Symbol,
     pub tag: IssueTag,
     pub msg: String,
     pub sev: Severity,
     pub src: Source,
-    pub val: f64,
+    pub val: NotNan<f64>,
     pub actions: Vec<CodeAction>,
     pub additional_descriptions: AdditionalDescriptionVector,
     pub additional_sources: Vec<Source>,
@@ -274,6 +276,9 @@ impl Issue {
         actions: Vec<CodeAction>,
         additional_descriptions: AdditionalDescriptionVector,
     ) -> Issue {
+        let val =
+            NotNan::new(val).expect("unable to construct Issue with NaN val");
+
         Issue {
             make_sym,
             tag,
@@ -294,6 +299,9 @@ impl Issue {
         src: Source,
         val: f64,
     ) -> Self {
+        let val =
+            NotNan::new(val).expect("unable to construct Issue with NaN val");
+
         Issue {
             make_sym: sym::CodeParser_SyntaxIssue,
             tag,
