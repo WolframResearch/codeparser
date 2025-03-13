@@ -4,9 +4,9 @@ use std::fmt::Display;
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CompoundNode, CompoundOperator,
-        CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode,
-        InfixOperator, Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
+        BinaryNode, BinaryOperator, CallBody, CallNode, CompoundNode, CompoundOperator, CstNode,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, InfixOperator,
+        Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
         PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorNode, TernaryNode,
         TernaryOperator,
     },
@@ -133,7 +133,13 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CstNode<I, S>> {
 
 impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CallNode<I, S>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let FmtAsExpr(CallNode { head, body, src }) = self;
+        let FmtAsExpr(CallNode {
+            head,
+            body,
+            src,
+            // TODO: Consult this for formatting `head`?
+            is_concrete: _,
+        }) = self;
 
         write!(f, "{}", sym::CodeParser_CallNode.as_str())?;
         write!(f, "[")?;
@@ -149,17 +155,6 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CallNode<I, S>> {
         write!(f, "]")?;
 
         Ok(())
-    }
-}
-
-impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CallHead<I, S>> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let FmtAsExpr(call_body) = self;
-
-        match call_body {
-            CallHead::Concrete(head) => write!(f, "{}", FmtAsExpr(head)),
-            CallHead::Aggregate(head) => write!(f, "{}", FmtAsExpr(&**head)),
-        }
     }
 }
 

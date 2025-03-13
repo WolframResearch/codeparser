@@ -3,8 +3,8 @@ use wolfram_library_link::expr::{symbol::SymbolRef, Expr, ExprKind, Normal, Numb
 
 use wolfram_parser::{
     cst::{
-        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator,
-        CodeNode, CompoundNode, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CallOperator, CodeNode,
+        CompoundNode, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
         GroupOperator, InfixNode, InfixOperator, LeafNode, Operator, OperatorNode, PostfixNode,
         PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator,
         SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
@@ -219,13 +219,13 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
             todo!()
         }
 
-        let head = if elements[0].has_normal_head(&Symbol::new("System`List")) {
+        let (head, is_concrete) = if elements[0].has_normal_head(&Symbol::new("System`List")) {
             let List(head) = List::from_expr(&elements[0]).expect("PRE_COMMIT");
 
-            CallHead::Concrete(NodeSeq(head))
+            (NodeSeq(head), true)
         } else {
-            // TODO(cleanup): Is this branch used?
-            CallHead::aggregate(CstNode::from_expr(&elements[0])?)
+            // PRE_COMMIT: Is this variant used?
+            (NodeSeq(vec![CstNode::from_expr(&elements[0])?]), false)
         };
 
         let body = if let Ok(group) = GroupNode::from_expr(&elements[1]) {
@@ -239,7 +239,12 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
         let metadata = Metadata::from_expr(&elements[2])?;
         let src = metadata.source;
 
-        Ok(CallNode { head, body, src })
+        Ok(CallNode {
+            head,
+            body,
+            src,
+            is_concrete,
+        })
     }
 }
 
