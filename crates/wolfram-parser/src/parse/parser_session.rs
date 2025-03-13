@@ -10,9 +10,8 @@ use crate::{
     feature,
     parse::{
         parselet::{PrefixParselet, PrefixToplevelCloserParselet},
-        ParseBuilder,
+        Context,
     },
-    parse_cst::ParseCst,
     quirks::{self, QuirkSettings},
     tokenize::{tokenizer::Tokenizer, TokenKind, TokenRef, TokenStr},
     NodeSeq, ParseOptions, ParseResult,
@@ -21,14 +20,11 @@ use crate::{
 
 /// A parser session
 #[derive(Debug)]
-pub(crate) struct ParserSession<'i, B: ParseBuilder<'i> = ParseCst<'i>> {
+pub(crate) struct ParserSession<'i> {
     pub(crate) tokenizer: Tokenizer<'i>,
 
-    #[cfg(not(test))]
-    pub(super) builder: B,
-
-    #[cfg(test)]
-    pub(crate) builder: B,
+    pub(super) node_stack: Vec<Cst<TokenStr<'i>>>,
+    pub(super) context_stack: Vec<Context<'i>>,
 
     pub(crate) quirk_settings: QuirkSettings,
 }
@@ -56,7 +52,10 @@ impl<'i> ParserSession<'i> {
 
         ParserSession {
             tokenizer: Tokenizer::new(input, opts),
-            builder: ParseCst::new(),
+
+            node_stack: Vec::new(),
+            context_stack: Vec::new(),
+
             quirk_settings,
         }
     }
@@ -108,7 +107,7 @@ impl<'i> ParserSession<'i> {
             if peek.tok.isCloser() {
                 (PrefixToplevelCloserParselet {}).parse_prefix(self, peek);
 
-                exprs.push(self.builder.pop_finished_expr());
+                exprs.push(self.pop_node());
 
                 assert!(self.is_quiescent());
 
@@ -117,7 +116,7 @@ impl<'i> ParserSession<'i> {
 
             self.parse_prefix(peek);
 
-            exprs.push(self.builder.pop_finished_expr());
+            exprs.push(self.pop_node());
 
             assert!(self.is_quiescent());
         } // while (true)

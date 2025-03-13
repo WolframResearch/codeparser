@@ -8,13 +8,16 @@ use std::any::Any;
 
 use crate::{
     cst::{
-        BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
-        PostfixOperator, PrefixBinaryOperator, PrefixOperator, SyntaxErrorKind,
-        TernaryOperator,
+        BinaryNode, BinaryOperator, CallBody, CallNode, CompoundNode,
+        CompoundOperator, GroupMissingCloserNode, GroupNode, GroupOperator,
+        InfixNode, InfixOperator, OperatorNode, PostfixNode, PostfixOperator,
+        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
+        SyntaxErrorNode, TernaryNode, TernaryOperator,
+        UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
     parse::token_parselets::{under1Parselet, under2Parselet, under3Parselet},
-    parse::{ColonLHS, ParseBuilder, ParserSession},
+    parse::{ColonLHS, ParserSession},
     precedence::Precedence,
     source::*,
     tokenize::{
@@ -665,13 +668,11 @@ impl PrefixParselet for SymbolParselet {
                     .get_parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
-                session.builder.push_compound_pattern_blank(
+                return session.push_and_climb(CompoundNode::new3(
                     under1Parselet.PBOp,
                     tok_in,
                     under,
-                );
-
-                return session.parse_climb();
+                ));
             },
             TokenKind::UnderUnder => {
                 //
@@ -681,14 +682,12 @@ impl PrefixParselet for SymbolParselet {
                 let under = under2Parselet
                     .get_parse_infix_context_sensitive(session, tok);
 
-                session.builder.push_compound_pattern_blank(
+                // MUSTTAIl
+                return session.push_and_climb(CompoundNode::new3(
                     under2Parselet.PBOp,
                     tok_in,
                     under,
-                );
-
-                // MUSTTAIl
-                return session.parse_climb();
+                ));
             },
             TokenKind::UnderUnderUnder => {
                 //
@@ -698,14 +697,12 @@ impl PrefixParselet for SymbolParselet {
                 let under = under3Parselet
                     .get_parse_infix_context_sensitive(session, tok);
 
-                session.builder.push_compound_pattern_blank(
+                // MUSTTAIl
+                return session.push_and_climb(CompoundNode::new3(
                     under3Parselet.PBOp,
                     tok_in,
                     under,
-                );
-
-                // MUSTTAIl
-                return session.parse_climb();
+                ));
             },
             TokenKind::UnderDot => {
                 //
@@ -716,14 +713,11 @@ impl PrefixParselet for SymbolParselet {
                 tok.skip(&mut session.tokenizer);
 
                 // MUSTTAIl
-
-                session.builder.push_compound_pattern_optional(
+                return session.push_and_climb(CompoundNode::new2(
                     CompoundOperator::CodeParser_PatternOptionalDefault,
                     tok_in,
                     tok,
-                );
-
-                return session.parse_climb();
+                ));
             },
             _ => (),
         }
@@ -767,8 +761,7 @@ impl PrefixParselet for PrefixOperatorParselet {
         let ctxt = session.push_context(self.getPrecedence());
 
         ctxt.init_callback_with_state(|session: &mut ParserSession| {
-            session.builder.reduce_prefix(self.Op);
-            session.parse_climb();
+            session.reduce_and_climb(|ctx| PrefixNode::new(self.Op, ctx))
         });
 
         let tok = session.current_token_eat_trivia();
@@ -877,8 +870,7 @@ impl InfixParselet for BinaryOperatorParselet {
         let ctxt = session.top_context();
 
         ctxt.init_callback_with_state(|session| {
-            session.builder.reduce_binary(self.Op);
-            session.parse_climb();
+            session.reduce_and_climb(|ctx| BinaryNode::new(self.Op, ctx))
         });
 
         // MUSTTAIL
@@ -972,10 +964,9 @@ impl InfixOperatorParselet {
 
                 trivia1.reset(&mut session.tokenizer);
 
-                session.builder.reduce_infix(self.Op);
-
                 // MUSTTAIL
-                return session.parse_climb();
+                return session
+                    .reduce_and_climb(|ctx| InfixNode::new(self.Op, ctx));
             }
 
             session.push_trivia_seq(trivia1);
@@ -1013,10 +1004,8 @@ impl InfixParselet for PostfixOperatorParselet {
     ) {
         session.push_leaf_and_next(tok_in);
 
-        session.builder.reduce_postfix(self.Op);
-
         // MUSTTAIL
-        return session.parse_climb();
+        return session.reduce_and_climb(|ctx| PostfixNode::new(self.Op, ctx));
     }
 
     fn getPrecedence(
@@ -1155,9 +1144,7 @@ impl GroupParselet {
 
         session.pop_group();
 
-        session.builder.reduce_group(op);
-
-        session.parse_climb();
+        session.reduce_and_climb(|ctx| GroupNode::new(op, ctx))
     }
 
     fn reduce_missing_closer(&self, session: &mut ParserSession) {
@@ -1165,7 +1152,7 @@ impl GroupParselet {
 
         session.pop_group();
 
-        session.builder.reduce_group_missing_closer(op);
+        session.reduce(|ctx| GroupMissingCloserNode::new(op, ctx));
 
         // MUSTTAIL
         return session.try_continue();
@@ -1185,9 +1172,13 @@ impl GroupParselet {
 
         session.pop_group();
 
-        session
-            .builder
-            .reduce_unterminated_group(op, input, tab_width);
+        session.reduce(|ctx| {
+            let node = UnterminatedGroupNeedsReparseNode::new(op, ctx);
+
+            crate::error::reparse_unterminated_group_node(
+                node, input, tab_width,
+            )
+        });
 
         // MUSTTAIL
         return session.try_continue();
@@ -1238,9 +1229,38 @@ impl InfixParselet for CallParselet {
 
 impl CallParselet {
     fn reduce_call(session: &mut ParserSession) {
-        session.builder.reduce_call();
+        let body = session.pop_node();
 
-        session.parse_climb();
+        let body: CallBody<_> = match body {
+            crate::cst::Cst::Group(group) => {
+                let GroupNode(OperatorNode { op, children }) = group;
+
+                let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");
+
+                let group = GroupNode(OperatorNode {
+                    op, children
+                });
+
+                CallBody::Group(group)
+            },
+            crate::cst::Cst::GroupMissingCloser(group) => {
+                let GroupMissingCloserNode(OperatorNode { op, children}) = group;
+
+                let op = op.try_to_call_operator().expect("expected call group to be a valid CallOperator");
+
+                let group = GroupMissingCloserNode(OperatorNode {
+                    op, children
+                });
+
+                CallBody::GroupMissingCloser(group)
+            },
+            other => panic!(
+                "expected CallParselet body to reduce to a Group or GroupMissingCloser node; got: {:#?}",
+                other
+            ),
+        };
+
+        session.reduce_and_climb(|ctx| CallNode::concrete(ctx, body))
     }
 }
 
@@ -1278,7 +1298,7 @@ impl InfixParselet for TildeParselet {
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
-        if session.builder.top_non_trivia_node_is_tilde() {
+        if session.top_non_trivia_node_is_tilde() {
             return None;
         }
 
@@ -1302,12 +1322,10 @@ impl TildeParselet {
 
             trivia1.reset(&mut session.tokenizer);
 
-            session
-                .builder
-                .reduce_syntax_error(SyntaxErrorKind::ExpectedTilde);
-
             // MUSTTAIL
-            return session.parse_climb();
+            return session.reduce_and_climb(|ctx| {
+                SyntaxErrorNode::new(SyntaxErrorKind::ExpectedTilde, ctx)
+            });
         }
 
         session.push_trivia_seq(trivia1);
@@ -1330,11 +1348,9 @@ impl TildeParselet {
     }
 
     fn reduce_tilde(session: &mut ParserSession) {
-        session
-            .builder
-            .reduce_ternary(TernaryOperator::CodeParser_TernaryTilde);
-
-        session.parse_climb();
+        session.reduce_and_climb(|ctx| {
+            TernaryNode::new(TernaryOperator::CodeParser_TernaryTilde, ctx)
+        })
     }
 }
 
@@ -1355,7 +1371,7 @@ impl InfixParselet for ColonParselet {
         panic_if_aborted!();
 
 
-        let colonLHS = session.builder.check_colon_lhs();
+        let colonLHS = session.check_colon_lhs();
 
         session.push_leaf_and_next(tok_in);
 
@@ -1365,9 +1381,9 @@ impl InfixParselet for ColonParselet {
             ColonLHS::Pattern => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(|session| {
-                    session.builder.reduce_binary(BinaryOperator::Pattern);
-
-                    session.parse_climb();
+                    session.reduce_and_climb(|ctx| {
+                        BinaryNode::new(BinaryOperator::Pattern, ctx)
+                    })
                 });
                 ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
 
@@ -1376,9 +1392,9 @@ impl InfixParselet for ColonParselet {
             ColonLHS::Optional => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(|session| {
-                    session.builder.reduce_binary(BinaryOperator::Optional);
-
-                    session.parse_climb();
+                    session.reduce_and_climb(|ctx| {
+                        BinaryNode::new(BinaryOperator::Optional, ctx)
+                    })
                 });
                 ctxt.set_precedence(Precedence::FAKE_OPTIONALCOLON);
 
@@ -1388,11 +1404,12 @@ impl InfixParselet for ColonParselet {
             ColonLHS::Error => {
                 let ctxt = session.top_context();
                 ctxt.init_callback(|session| {
-                    session
-                        .builder
-                        .reduce_syntax_error(SyntaxErrorKind::ExpectedSymbol);
-
-                    session.parse_climb();
+                    session.reduce_and_climb(|ctx| {
+                        SyntaxErrorNode::new(
+                            SyntaxErrorKind::ExpectedSymbol,
+                            ctx,
+                        )
+                    })
                 });
                 ctxt.set_precedence(Precedence::FAKE_PATTERNCOLON);
 
@@ -1403,7 +1420,7 @@ impl InfixParselet for ColonParselet {
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Option<Precedence> {
-        if session.builder.check_pattern_precedence() {
+        if session.check_pattern_precedence() {
             return Some(Precedence::FAKE_OPTIONALCOLON);
         }
 
@@ -1492,12 +1509,10 @@ impl SlashColonParselet {
         // a /: b =.
         //
 
-        session
-            .builder
-            .reduce_syntax_error(SyntaxErrorKind::ExpectedSet);
-
         // MUSTTAIL
-        return session.parse_climb();
+        return session.reduce_and_climb(|ctx| {
+            SyntaxErrorNode::new(SyntaxErrorKind::ExpectedSet, ctx)
+        });
     }
 }
 
@@ -1595,27 +1610,25 @@ impl EqualParselet {
     }
 
     fn reduce_Set(session: &mut ParserSession) {
-        session.builder.reduce_binary(BinaryOperator::Set);
-
-        session.parse_climb();
+        session
+            .reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Set, ctx))
     }
 
     fn reduce_Unset(session: &mut ParserSession) {
-        session.builder.reduce_binary(BinaryOperator::Unset);
-
-        session.parse_climb();
+        session
+            .reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Unset, ctx))
     }
 
     fn reduce_TagSet(session: &mut ParserSession) {
-        session.builder.reduce_ternary(TernaryOperator::TagSet);
-
-        session.parse_climb();
+        session.reduce_and_climb(|ctx| {
+            TernaryNode::new(TernaryOperator::TagSet, ctx)
+        })
     }
 
     fn reduce_TagUnset(session: &mut ParserSession) {
-        session.builder.reduce_ternary(TernaryOperator::TagUnset);
-
-        session.parse_climb();
+        session.reduce_and_climb(|ctx| {
+            TernaryNode::new(TernaryOperator::TagUnset, ctx)
+        })
     }
 }
 
@@ -1682,17 +1695,15 @@ impl ColonEqualParselet {
     }
 
     fn reduce_SetDelayed(session: &mut ParserSession) {
-        session.builder.reduce_binary(BinaryOperator::SetDelayed);
-
-        session.parse_climb();
+        session.reduce_and_climb(|ctx| {
+            BinaryNode::new(BinaryOperator::SetDelayed, ctx)
+        })
     }
 
     fn reduce_TagSetDelayed(session: &mut ParserSession) {
-        session
-            .builder
-            .reduce_ternary(TernaryOperator::TagSetDelayed);
-
-        session.parse_climb();
+        session.reduce_and_climb(|ctx| {
+            TernaryNode::new(TernaryOperator::TagSetDelayed, ctx)
+        })
     }
 }
 
@@ -1805,8 +1816,7 @@ impl CommaParselet {
 
     fn reduce_comma(session: &mut ParserSession) {
         session
-            .builder
-            .reduce_infix(InfixOperator::CodeParser_Comma);
+            .reduce(|ctx| InfixNode::new(InfixOperator::CodeParser_Comma, ctx));
 
         //
         // was:
@@ -1986,11 +1996,9 @@ impl SemiParselet {
     }
 
     fn reduce_CompoundExpression(session: &mut ParserSession) {
-        session
-            .builder
-            .reduce_infix(InfixOperator::CompoundExpression);
-
-        session.parse_climb();
+        session.reduce_and_climb(|ctx| {
+            InfixNode::new(InfixOperator::CompoundExpression, ctx)
+        })
     }
 }
 
@@ -2048,10 +2056,10 @@ impl ColonColonParselet {
             if tok1.tok != TokenKind::ColonColon {
                 trivia1.reset(&mut session.tokenizer);
 
-                session.builder.reduce_infix(InfixOperator::MessageName);
-
                 // MUSTTAIL
-                return session.parse_climb();
+                return session.reduce_and_climb(|ctx| {
+                    InfixNode::new(InfixOperator::MessageName, ctx)
+                });
             }
 
             session.push_trivia_seq(trivia1);
@@ -2097,10 +2105,9 @@ impl InfixParselet for GreaterGreaterParselet {
 
         session.push_leaf_and_next(token);
 
-        session.builder.reduce_binary(BinaryOperator::Put);
-
         // MUSTTAIL
-        return session.parse_climb();
+        return session
+            .reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Put, ctx));
     }
 
     fn getPrecedence(
@@ -2138,10 +2145,10 @@ impl InfixParselet for GreaterGreaterGreaterParselet {
 
         session.push_leaf_and_next(tok);
 
-        session.builder.reduce_binary(BinaryOperator::PutAppend);
-
         // MUSTTAIL
-        return session.parse_climb();
+        return session.reduce_and_climb(|ctx| {
+            BinaryNode::new(BinaryOperator::PutAppend, ctx)
+        });
     }
 
     fn getPrecedence(
@@ -2179,15 +2186,13 @@ impl PrefixParselet for LessLessParselet {
 
         tok.skip(&mut session.tokenizer);
 
-        session.builder.push_prefix_get(
+        // MUSTTAIL
+        return session.push_and_climb(PrefixNode::new2(
             PrefixOperator::Get,
             tok_in,
             trivia,
             tok,
-        );
-
-        // MUSTTAIL
-        return session.parse_climb();
+        ));
     }
 }
 
@@ -2224,13 +2229,11 @@ impl PrefixParselet for HashParselet {
         if matches!(tok.tok, TokenKind::Integer | TokenKind::String) {
             tok.skip(&mut session.tokenizer);
 
-            session.builder.push_compound_slot(
+            return session.push_and_climb(CompoundNode::new2(
                 CompoundOperator::Slot,
                 tok_in,
                 tok,
-            );
-
-            return session.parse_climb();
+            ));
         }
 
         // MUSTTAIL
@@ -2263,13 +2266,11 @@ impl PrefixParselet for HashHashParselet {
             tok.skip(&mut session.tokenizer);
 
             // MUSTTAIl
-            session.builder.push_compound_slot(
+            return session.push_and_climb(CompoundNode::new2(
                 CompoundOperator::SlotSequence,
                 tok_in,
                 tok,
-            );
-
-            return session.parse_climb();
+            ));
         }
 
         // MUSTTAIL
@@ -2301,14 +2302,12 @@ impl PrefixParselet for PercentParselet {
         if tok.tok == TokenKind::Integer {
             tok.skip(&mut session.tokenizer);
 
-            session.builder.push_compound_out(
+            // MUSTTAIl
+            return session.push_and_climb(CompoundNode::new2(
                 CompoundOperator::Out,
                 tok_in,
                 tok,
-            );
-
-            // MUSTTAIl
-            return session.parse_climb();
+            ));
         }
 
         // MUSTTAIL
