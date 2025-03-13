@@ -36,34 +36,34 @@ macro_rules! LHS {
 
     (CallNode[
         $head_name:ident:$node_head:ident[$($node_args:tt)*],
-        $group_name:ident:$group_head:ident[$group_kind:ident, _],
+        $group_name:ident:$group_head:ident[$group_kind:ident, _, _],
         $data:ident:_
     ]) => {
         AggCallNode {
             head: $head_name @ LHS!($node_head[$($node_args)*]),
-            body: LHS!($group_name : $group_head[$group_kind, _]),
+            body: LHS!($group_name : $group_head[$group_kind, _, _]),
             src: $data,
         }
     };
     (CallNode[
         $head_name:ident:_,
-        $group_name:ident:$group_head:ident[$($group_kind:ident)|*, _],
+        $group_name:ident:$group_head:ident[$($group_kind:ident)|*, _, _],
         $data:ident:_
     ]) => {
         AggCallNode {
             head: $head_name,
-            body: LHS!($group_name:$group_head[$($group_kind)|*, _]),
+            body: LHS!($group_name:$group_head[$($group_kind)|*, _, _]),
             src: $data
         }
     };
     (CallNode[
         $head_name:ident:($($sub_head_pat:ident[$($sub_head_args:tt)*])|*),
-        $group_name:ident:GroupNode[$group_kind:ident, _],
+        $group_name:ident:GroupNode[$group_kind:ident, _, _],
         $data:ident:_
     ]) => {
         AggCallNode {
             head: $head_name @ ($(LHS!($sub_head_pat[$($sub_head_args)*]))|*),
-            body: LHS!($group_name:GroupNode[$group_kind, _]),
+            body: LHS!($group_name:GroupNode[$group_kind, _, _]),
             src: $data
         }
     };
@@ -113,10 +113,11 @@ macro_rules! LHS {
     // GroupNode
     //==================================
 
-    (GroupNode[$($op_kind:ident)|*, $children:ident:_]) => {
+    (GroupNode[$($op_kind:ident)|*, $children:ident:_, $data:ident:_]) => {
         $crate::cst::Cst::Group(GroupNode(OperatorNode {
             op: $(GroupOperator::$op_kind)|*,
             children: $children,
+            src: $data,
         }))
     };
 
@@ -126,10 +127,11 @@ macro_rules! LHS {
             ..
         }))
     };
-    ($name:ident:GroupNode[$group_kind:ident, _]) => {
+    ($name:ident:GroupNode[$group_kind:ident, _, _]) => {
         CallBody::Group($name @ GroupNode(OperatorNode {
             op: $crate::cst::CallOperator::$group_kind,
             children: _,
+            src: _,
         }))
     };
 
@@ -144,7 +146,7 @@ macro_rules! LHS {
     // GroupMissingCloserNode
     //----------------------------------
 
-    ($name:ident:GroupMissingCloserNode[$($op_kind:ident)|*, _]) => {
+    ($name:ident:GroupMissingCloserNode[$($op_kind:ident)|*, _, _]) => {
         $crate::cst::CallBody::GroupMissingCloser($name @ $crate::cst::GroupMissingCloserNode(OperatorNode {
             op: $($crate::cst::CallOperator::$op_kind)|*,
             ..

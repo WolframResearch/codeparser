@@ -59,7 +59,7 @@ impl<I, S> Cst<I, S> {
         // Visit child nodes.
         match self {
             Cst::Token(_) => (),
-            Cst::Call(CallNode { head, body }) => {
+            Cst::Call(CallNode { head, body, src: _ }) => {
                 head.visit(visit);
                 body.as_op().visit_children(visit);
             },
@@ -98,7 +98,7 @@ impl<I, S> Cst<I, S> {
         // Visit child nodes.
         match self {
             Cst::Token(_) => (),
-            Cst::Call(CallNode { head, body }) => {
+            Cst::Call(CallNode { head, body, src: _ }) => {
                 head.visit_mut(visit);
 
                 body.as_op_mut().visit_children_mut(visit);
@@ -158,14 +158,14 @@ impl<I, S> Cst<I, S> {
         // Visit child nodes.
         let node: Cst<I, S> = match self_ {
             Cst::Token(_) => return self_,
-            Cst::Call(CallNode { head, body }) => {
+            Cst::Call(CallNode { head, body, src }) => {
                 let head = head.map_visit(visit);
 
                 let body = body.map_op(|body_op: OperatorNode<_, _, _>| {
                     body_op.map_visit(visit)
                 });
 
-                Cst::Call(CallNode { head, body })
+                Cst::Call(CallNode { head, body, src })
             },
             Cst::SyntaxError(SyntaxErrorNode { err, children }) => {
                 let children = children.map_visit(visit);
@@ -237,14 +237,22 @@ impl<I, S> Cst<I, S> {
 impl<I, S, O> OperatorNode<I, S, O> {
     /// Visit this node and every child node, recursively.
     fn visit_children(&self, visit: &mut dyn FnMut(&Cst<I, S>)) {
-        let OperatorNode { op: _, children } = self;
+        let OperatorNode {
+            op: _,
+            children,
+            src: _,
+        } = self;
 
         children.visit(visit);
     }
 
     /// Mutably visit this node and every child node, recursively.
     fn visit_children_mut(&mut self, visit: &mut dyn FnMut(&mut Cst<I, S>)) {
-        let OperatorNode { op: _, children } = self;
+        let OperatorNode {
+            op: _,
+            children,
+            src: _,
+        } = self;
 
         children.visit_mut(visit);
     }
@@ -253,11 +261,11 @@ impl<I, S, O> OperatorNode<I, S, O> {
         self,
         visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
     ) -> Self {
-        let OperatorNode { op, children } = self;
+        let OperatorNode { op, children, src } = self;
 
         let children = children.map_visit(visit);
 
-        OperatorNode { op, children }
+        OperatorNode { op, children, src }
     }
 }
 

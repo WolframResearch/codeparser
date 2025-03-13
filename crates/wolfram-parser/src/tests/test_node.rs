@@ -4,9 +4,8 @@ use crate::{
         OperatorNode,
     },
     macros::{src, token},
-    parse_cst,
     source::Span,
-    tests::assert_src,
+    tests::nodes,
     NodeSeq, ParseOptions, ParserSession,
 };
 
@@ -29,7 +28,7 @@ fn NodeTest_Bug1() {
         T2,
     );
 
-    let NSource = Cst::Compound(N).get_source();
+    let NSource = Cst::Compound(N).getSource();
 
     assert_eq!(NSource.start(), src!(1:1).into());
     assert_eq!(NSource.end(), src!(1:4).into());
@@ -42,8 +41,8 @@ fn NodeTest_Bug1() {
 fn test_parse_span() {
     // Binary Span with implicit 1st arg
     assert_eq!(
-        parse_cst(";; b", &Default::default()).syntax,
-        assert_src!(1:1-5 => Cst::Binary(BinaryNode(OperatorNode {
+        nodes(";; b"),
+        vec![Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Span,
             children: NodeSeq(vec![
                 Cst::Token(token![
@@ -55,14 +54,15 @@ fn test_parse_span() {
                 Cst::Token(token![Whitespace, " ", Span::from(src!(1:3-1:4))]),
                 Cst::Token(token![Symbol, "b", Span::from(src!(1:4-1:5))]),
             ]),
-        })))
+            src: Span::from(src!(1:1-1:5))
+        }))]
     );
 
 
     // Binary Span
     assert_eq!(
-        parse_cst("a ;; b", &Default::default()).syntax,
-        assert_src!(1:1-7 => Cst::Binary(BinaryNode(OperatorNode {
+        nodes("a ;; b"),
+        vec![Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Span,
             children: NodeSeq(vec![
                 Cst::Token(token![Symbol, "a", Span::from(src!(1:1-1:2))]),
@@ -71,7 +71,7 @@ fn test_parse_span() {
                 Cst::Token(token![Whitespace, " ", Span::from(src!(1:5-1:6))]),
                 Cst::Token(token![Symbol, "b", Span::from(src!(1:6-1:7))]),
             ]),
-
-        })))
+            src: Span::from(src!(1:1-1:7))
+        }))]
     );
 }

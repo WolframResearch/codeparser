@@ -119,7 +119,7 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&Cst<I, S>> {
 
 impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CallNode<I, S>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let FmtAsExpr(CallNode { head, body }) = self;
+        let FmtAsExpr(CallNode { head, body, src }) = self;
 
         write!(f, "{}", sym::CodeParser_CallNode.as_str())?;
         write!(f, "[")?;
@@ -130,7 +130,7 @@ impl<I: TokenInput, S: TokenSource> Display for FmtAsExpr<&CallNode<I, S>> {
         write!(f, "{}", FmtAsExpr(body))?;
         write!(f, ", ")?;
 
-        write!(f, "{}", FmtAsExpr(&self.0.get_source()))?;
+        write!(f, "{}", FmtAsExpr(src))?;
 
         write!(f, "]")?;
 
@@ -293,9 +293,7 @@ fn put_op<I: TokenInput, S: TokenSource, O: Operator>(
     node: &OperatorNode<I, S, O>,
     op_head: Symbol,
 ) -> std::fmt::Result {
-    let src = node.get_source();
-
-    let OperatorNode { op, children } = node;
+    let OperatorNode { op, children, src } = node;
 
     write!(f, "{}", op_head.as_str())?;
 
@@ -307,7 +305,7 @@ fn put_op<I: TokenInput, S: TokenSource, O: Operator>(
     write!(f, "{}", FmtAsExpr(children))?;
     write!(f, ", ")?;
 
-    write!(f, "{}", FmtAsExpr(&src))?;
+    write!(f, "{}", FmtAsExpr(src))?;
 
     write!(f, "]")?;
 
@@ -324,6 +322,7 @@ impl<S: TokenSource> Display for FmtAsExpr<&S> {
         match source {
             Source::Span(span) => write!(f, "{}", FmtAsExpr(span)),
             Source::Box(_) => todo!(),
+            Source::After(_) => todo!(),
             Source::Unknown => todo!(),
         }
     }

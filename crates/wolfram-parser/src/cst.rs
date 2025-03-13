@@ -101,6 +101,7 @@ pub enum BoxKind {
 pub struct OperatorNode<I = TokenString, S = Span, O = InfixOperator> {
     pub op: O,
     pub children: CstSeq<I, S>,
+    pub src: S,
 }
 
 /// `-a`
@@ -142,6 +143,7 @@ pub struct PrefixBinaryNode<I = TokenString, S = Span>(
 pub struct CallNode<I = TokenString, S = Span> {
     pub head: CallHead<I, S>,
     pub body: CallBody<I, S>,
+    pub src: S,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -357,7 +359,7 @@ impl<I: TokenInput, S> Cst<I, S> {
     pub fn into_owned_input(self) -> Cst<TokenString, S> {
         match self {
             Cst::Token(token) => Cst::Token(token.into_owned_input()),
-            Cst::Call(CallNode { head, body }) => Cst::Call(CallNode {
+            Cst::Call(CallNode { head, body, src }) => Cst::Call(CallNode {
                 head: match head {
                     CallHead::Concrete(head) => {
                         CallHead::Concrete(head.into_owned_input())
@@ -367,6 +369,7 @@ impl<I: TokenInput, S> Cst<I, S> {
                     )),
                 },
                 body: body.map_op(|body_op| body_op.into_owned_input()),
+                src,
             }),
             Cst::SyntaxError(SyntaxErrorNode { err, children }) => {
                 Cst::SyntaxError(SyntaxErrorNode {
@@ -426,13 +429,13 @@ impl<I: TokenInput, S> Cst<I, S> {
 impl<I, S: TokenSource> Cst<I, S> {
     // TODO(cleanup): Combine with getSource()
     pub(crate) fn source(&self) -> S {
-        self.get_source()
+        self.getSource()
     }
 
-    pub fn get_source(&self) -> S {
+    pub(crate) fn getSource(&self) -> S {
         match self {
             Cst::Token(token) => token.src.clone(),
-            Cst::Call(node) => node.get_source(),
+            Cst::Call(node) => node.getSource(),
             Cst::SyntaxError(node) => node.get_source(),
             Cst::Prefix(PrefixNode(op)) => op.getSource(),
             Cst::Infix(InfixNode(op)) => op.getSource(),
@@ -471,36 +474,35 @@ impl LeafNode {
 // OperatorNode
 //======================================
 
-impl<I, S, O> OperatorNode<I, S, O> {
-    pub(crate) fn new(op: O, children: CstSeq<I, S>) -> Self {
+impl<I, O> OperatorNode<I, Span, O> {
+    pub(crate) fn new(op: O, children: CstSeq<I>) -> Self {
         assert!(!children.is_empty());
 
-        OperatorNode { op, children }
+        let src =
+            Span::between(children.first().source(), children.last().source());
+
+        OperatorNode {
+            op,
+            children,
+            src: src,
+        }
     }
 }
 
-impl<I, S: TokenSource, O> OperatorNode<I, S, O> {
-    pub fn get_source(&self) -> S {
-        let OperatorNode { op: _, children } = self;
-
-        let src =
-            S::between(children.first().source(), children.last().source());
-
-        return src;
-    }
-
-    pub(crate) fn getSource(&self) -> S {
-        self.get_source()
+impl<I, S: TokenSource, O: Copy> OperatorNode<I, S, O> {
+    pub fn getSource(&self) -> S {
+        return self.src.clone();
     }
 }
 
 impl<I: TokenInput, S, O> OperatorNode<I, S, O> {
     fn into_owned_input(self) -> OperatorNode<TokenString, S, O> {
-        let OperatorNode { op, children } = self;
+        let OperatorNode { op, children, src } = self;
 
         OperatorNode {
             op,
             children: children.into_owned_input(),
+            src,
         }
     }
 }
@@ -531,14 +533,6 @@ impl<I> PrefixNode<I> {
     }
 }
 
-impl<I, S: TokenSource> PrefixNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let PrefixNode(op) = self;
-
-        op.get_source()
-    }
-}
-
 impl<I> BinaryNode<I> {
     pub(crate) fn new(op: BinaryOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
@@ -563,18 +557,6 @@ impl<I> BinaryNode<I> {
     }
 }
 
-impl<I, S: TokenSource> BinaryNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let BinaryNode(op) = self;
-
-        op.get_source()
-    }
-}
-
-//======================================
-// InfixNode
-//======================================
-
 impl<I> InfixNode<I> {
     pub(crate) fn new(op: InfixOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
@@ -582,19 +564,6 @@ impl<I> InfixNode<I> {
         InfixNode(OperatorNode::new(op, args))
     }
 }
-
-
-impl<I, S: TokenSource> InfixNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let InfixNode(op) = self;
-
-        op.get_source()
-    }
-}
-
-//======================================
-// TernaryNode
-//======================================
 
 impl<I> TernaryNode<I> {
     pub(crate) fn new(op: TernaryOperator, args: CstSeq<I>) -> Self {
@@ -604,18 +573,6 @@ impl<I> TernaryNode<I> {
     }
 }
 
-impl<I, S: TokenSource> TernaryNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let TernaryNode(op) = self;
-
-        op.get_source()
-    }
-}
-
-//======================================
-// PostfixNode
-//======================================
-
 impl<I> PostfixNode<I> {
     pub(crate) fn new(op: PostfixOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
@@ -623,18 +580,6 @@ impl<I> PostfixNode<I> {
         PostfixNode(OperatorNode::new(op, args))
     }
 }
-
-impl<I, S: TokenSource> PostfixNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let PostfixNode(op) = self;
-
-        op.get_source()
-    }
-}
-
-//======================================
-// PrefixBinaryNode
-//======================================
 
 impl<I> PrefixBinaryNode<I> {
     pub(crate) fn new(op: PrefixBinaryOperator, args: CstSeq<I>) -> Self {
@@ -644,16 +589,8 @@ impl<I> PrefixBinaryNode<I> {
     }
 }
 
-impl<I, S: TokenSource> PrefixBinaryNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let PrefixBinaryNode(op) = self;
-
-        op.get_source()
-    }
-}
-
 //======================================
-// GroupNode
+// GroudNode and CompoundNode
 //======================================
 
 impl<I> GroupNode<I> {
@@ -663,62 +600,6 @@ impl<I> GroupNode<I> {
         GroupNode(OperatorNode::new(op, args))
     }
 }
-
-impl<I, S: TokenSource, O> GroupNode<I, S, O> {
-    pub fn get_source(&self) -> S {
-        let GroupNode(op) = self;
-
-        op.get_source()
-    }
-}
-
-//======================================
-// GroupMissingCloserNode
-//======================================
-
-impl<I> GroupMissingCloserNode<I> {
-    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
-        incr_diagnostic!(Node_GroupMissingCloserNodeCount);
-
-        GroupMissingCloserNode(OperatorNode::new(op, args))
-    }
-}
-
-impl<I, S: TokenSource, O> GroupMissingCloserNode<I, S, O> {
-    pub fn get_source(&self) -> S {
-        let GroupMissingCloserNode(op) = self;
-
-        op.get_source()
-    }
-}
-
-//======================================
-// UnterminatedGroupNeedsReparseNode
-//======================================
-
-impl<I> UnterminatedGroupNeedsReparseNode<I> {
-    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
-        incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
-
-        UnterminatedGroupNeedsReparseNode(OperatorNode::new(op, args))
-    }
-}
-
-//======================================
-// GroupMissingOpenerNode
-//======================================
-
-impl<I, S: TokenSource> GroupMissingOpenerNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let GroupMissingOpenerNode(op) = self;
-
-        op.get_source()
-    }
-}
-
-//======================================
-// CompoundNode
-//======================================
 
 impl<I> CompoundNode<I> {
     pub(crate) fn new2(
@@ -744,11 +625,19 @@ impl<I> CompoundNode<I> {
     }
 }
 
-impl<I, S: TokenSource> CompoundNode<I, S> {
-    pub fn get_source(&self) -> S {
-        let CompoundNode(op) = self;
+impl<I> GroupMissingCloserNode<I> {
+    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
+        incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
-        op.get_source()
+        GroupMissingCloserNode(OperatorNode::new(op, args))
+    }
+}
+
+impl<I> UnterminatedGroupNeedsReparseNode<I> {
+    pub(crate) fn new(op: GroupOperator, args: CstSeq<I>) -> Self {
+        incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
+
+        UnterminatedGroupNeedsReparseNode(OperatorNode::new(op, args))
     }
 }
 
@@ -762,9 +651,13 @@ impl<I> CallNode<I> {
 
         incr_diagnostic!(Node_CallNodeCount);
 
+        let src =
+            Span::between(head.first().source(), body.as_op().getSource());
+
         CallNode {
             head: CallHead::Concrete(head),
             body,
+            src,
         }
     }
 }
@@ -774,17 +667,8 @@ impl<I, S: TokenSource> CallNode<I, S> {
     //     CallNode::new(NodeSeq(vec![head]), NodeVariant::Cst(Cst::Group(group)))
     // }
 
-    pub fn get_source(&self) -> S {
-        let CallNode { head, body } = self;
-
-        let start = match head {
-            CallHead::Concrete(head_seq) => head_seq.first().source(),
-            CallHead::Aggregate(head_cst) => head_cst.source(),
-        };
-
-        let src = S::between(start, body.as_op().getSource());
-
-        return src;
+    fn getSource(&self) -> S {
+        return self.src.clone();
     }
 }
 
@@ -822,15 +706,6 @@ impl<I, S> CallBody<I, S> {
             CallBody::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 CallBody::GroupMissingCloser(GroupMissingCloserNode(func(op)))
             },
-        }
-    }
-}
-
-impl<I, S: TokenSource> CallBody<I, S> {
-    pub fn get_source(&self) -> S {
-        match self {
-            CallBody::Group(group) => group.get_source(),
-            CallBody::GroupMissingCloser(group) => group.get_source(),
         }
     }
 }
@@ -1021,6 +896,7 @@ impl<I: Debug, S: Debug, O: Debug> Debug for OperatorNode<I, S, O> {
         f.debug_struct("OperatorNode")
             .field("op", &self.op)
             .field("children", &self.children)
+            .field("src", &FmtAlternate(&self.src))
             .finish()
     }
 }

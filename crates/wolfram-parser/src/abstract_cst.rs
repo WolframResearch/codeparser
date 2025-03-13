@@ -66,6 +66,7 @@ pub fn aggregate_cst<I: Debug, S: Debug>(node: Cst<I, S>) -> Option<Cst<I, S>> {
         Cst::Infix(InfixNode(OperatorNode {
             op: InfixOperator::Times,
             children: NodeSeq(children),
+            src,
         })) => {
             let aggregated_children: Vec<_> =
                 children.into_iter().flat_map(aggregate_cst).collect();
@@ -76,10 +77,11 @@ pub fn aggregate_cst<I: Debug, S: Debug>(node: Cst<I, S>) -> Option<Cst<I, S>> {
             Cst::Infix(InfixNode(OperatorNode {
                 op: InfixOperator::Times,
                 children: NodeSeq(aggregated_children),
+                src,
             }))
         },
 
-        Cst::Call(CallNode { head, body }) => {
+        Cst::Call(CallNode { head, body, src }) => {
             let head = match head {
                 CallHead::Concrete(head) => {
                     let NodeSeq(head) = aggregate_cst_seq(head);
@@ -101,6 +103,7 @@ pub fn aggregate_cst<I: Debug, S: Debug>(node: Cst<I, S>) -> Option<Cst<I, S>> {
             Cst::Call(CallNode {
                 head: CallHead::Aggregate(Box::new(head)),
                 body,
+                src,
             })
         },
 
@@ -188,11 +191,12 @@ pub fn aggregate_cst<I: Debug, S: Debug>(node: Cst<I, S>) -> Option<Cst<I, S>> {
 fn aggregate_op<I: Debug, S: Debug, O>(
     op: OperatorNode<I, S, O>,
 ) -> OperatorNode<I, S, O> {
-    let OperatorNode { op, children } = op;
+    let OperatorNode { op, children, src } = op;
 
     OperatorNode {
         op,
         children: aggregate_cst_seq(children),
+        src,
     }
 }
 
@@ -272,155 +276,150 @@ fn abstract_cst_seq<I: TokenInput + Debug, S: TokenSource + Debug>(
 fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
     node: Cst<I, S>,
 ) -> Ast {
-    let data: S = node.get_source();
-
-    #[cfg(debug_assertions)]
-    let (node_2, data_2) = (node.clone(), data.clone().into_general());
-
-    let ast_node = match node {
+    match node {
         Cst::Token(token) => return abstract_replace_token(token),
-        Cst::Compound(CompoundNode(OperatorNode { op, children })) => {
-            match op {
-                // CompoundNode[Blank, {_, sym2_}, data_]
-                CompoundOperator::Blank => {
-                    expect_children!(children, {_, sym2:_});
-                    Ast::call(st::Blank, vec![abstract_(sym2)], data)
-                },
-                // CompoundNode[BlankSequence, {_, sym2_}, data_]
-                CompoundOperator::BlankSequence => {
-                    expect_children!(children, {_, sym2:_});
-                    Ast::call(st::BlankSequence, vec![abstract_(sym2)], data)
-                },
-                // CompoundNode[BlankNullSequence, {_, sym2_}, data_]
-                CompoundOperator::BlankNullSequence => {
-                    expect_children!(children, {_, sym2:_});
-                    Ast::call(
-                        st::BlankNullSequence,
-                        vec![abstract_(sym2)],
-                        data,
-                    )
-                },
-                // CompoundNode[PatternBlank, {sym1_, blank_}, data_]
-                CompoundOperator::CodeParser_PatternBlank => {
-                    expect_children!(children, {sym1:_, blank:_});
-                    Ast::call(
-                        st::Pattern,
-                        vec![abstract_(sym1), abstract_(blank)],
-                        data,
-                    )
-                },
-                // CompoundNode[PatternBlankSequence,     {sym1_, blankSeq_}, data_]
-                CompoundOperator::CodeParser_PatternBlankSequence => {
-                    expect_children!(children, {sym1:_, blankSeq:_});
-                    Ast::call(
-                        st::Pattern,
-                        vec![abstract_(sym1), abstract_(blankSeq)],
-                        data,
-                    )
-                },
-                // CompoundNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]
-                CompoundOperator::CodeParser_PatternBlankNullSequence => {
-                    expect_children!(children, {sym1:_, blankNullSeq:_});
-                    Ast::call(
-                        st::Pattern,
-                        vec![abstract_(sym1), abstract_(blankNullSeq)],
-                        data,
-                    )
-                },
-                // CompoundNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]
-                CompoundOperator::CodeParser_PatternOptionalDefault => {
-                    expect_children!(children, {sym1:_, LeafNode[UnderDot, _, optionalDefaultData:_]});
+        Cst::Compound(CompoundNode(OperatorNode {
+            op,
+            children,
+            src: data,
+        })) => match op {
+            // CompoundNode[Blank, {_, sym2_}, data_]
+            CompoundOperator::Blank => {
+                expect_children!(children, {_, sym2:_});
+                Ast::call(st::Blank, vec![abstract_(sym2)], data)
+            },
+            // CompoundNode[BlankSequence, {_, sym2_}, data_]
+            CompoundOperator::BlankSequence => {
+                expect_children!(children, {_, sym2:_});
+                Ast::call(st::BlankSequence, vec![abstract_(sym2)], data)
+            },
+            // CompoundNode[BlankNullSequence, {_, sym2_}, data_]
+            CompoundOperator::BlankNullSequence => {
+                expect_children!(children, {_, sym2:_});
+                Ast::call(st::BlankNullSequence, vec![abstract_(sym2)], data)
+            },
 
-                    Ast::call(
-                        st::Optional,
-                        vec![Ast::call(
-                            st::Pattern,
-                            vec![
-                                abstract_(sym1),
-                                Ast::call(
-                                    st::Blank,
-                                    vec![],
-                                    optionalDefaultData,
-                                ),
-                            ],
-                            data.clone(),
-                        )],
-                        data,
-                    )
-                },
-                // CompoundNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]
-                // CompoundNode[Slot, {_, arg:LeafNode[Symbol, s_, data1_]}, data_]
-                // CompoundNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]
-                CompoundOperator::Slot => {
-                    let [_, arg] = expect_children(children);
+            // CompoundNode[PatternBlank, {sym1_, blank_}, data_]
+            CompoundOperator::CodeParser_PatternBlank => {
+                expect_children!(children, {sym1:_, blank:_});
+                Ast::call(
+                    st::Pattern,
+                    vec![abstract_(sym1), abstract_(blank)],
+                    data,
+                )
+            },
+            // CompoundNode[PatternBlankSequence,     {sym1_, blankSeq_}, data_]
+            CompoundOperator::CodeParser_PatternBlankSequence => {
+                expect_children!(children, {sym1:_, blankSeq:_});
+                Ast::call(
+                    st::Pattern,
+                    vec![abstract_(sym1), abstract_(blankSeq)],
+                    data,
+                )
+            },
+            // CompoundNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]
+            CompoundOperator::CodeParser_PatternBlankNullSequence => {
+                expect_children!(children, {sym1:_, blankNullSeq:_});
+                Ast::call(
+                    st::Pattern,
+                    vec![abstract_(sym1), abstract_(blankNullSeq)],
+                    data,
+                )
+            },
+            // CompoundNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]
+            CompoundOperator::CodeParser_PatternOptionalDefault => {
+                expect_children!(children, {sym1:_, LeafNode[UnderDot, _, optionalDefaultData:_]});
 
-                    match arg {
-                        Cst::Token(arg) => match arg.tok {
-                            TokenKind::Integer => Ast::call(
+                Ast::call(
+                    st::Optional,
+                    vec![Ast::call(
+                        st::Pattern,
+                        vec![
+                            abstract_(sym1),
+                            Ast::call(st::Blank, vec![], optionalDefaultData),
+                        ],
+                        data.clone(),
+                    )],
+                    data,
+                )
+            },
+
+            // CompoundNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]
+            // CompoundNode[Slot, {_, arg:LeafNode[Symbol, s_, data1_]}, data_]
+            // CompoundNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]
+            CompoundOperator::Slot => {
+                let [_, arg] = expect_children(children);
+
+                match arg {
+                    Cst::Token(arg) => match arg.tok {
+                        TokenKind::Integer => Ast::call(
+                            st::Slot,
+                            vec![abstract_(Cst::Token(arg))],
+                            data,
+                        ),
+                        TokenKind::Symbol => {
+                            let Token {
+                                tok: _,
+                                input: s,
+                                src: data1,
+                            } = arg;
+                            Ast::call(
                                 st::Slot,
-                                vec![abstract_replace_token(arg)],
+                                vec![Ast::string(
+                                    escapeString_of_abstractSymbolString(
+                                        s.as_str(),
+                                    ),
+                                    data1,
+                                )],
                                 data,
-                            ),
-                            TokenKind::Symbol => {
-                                let Token {
-                                    tok: _,
-                                    input: s,
-                                    src: data1,
-                                } = arg;
-                                Ast::call(
-                                    st::Slot,
-                                    vec![Ast::string(
-                                        escapeString_of_abstractSymbolString(
-                                            s.as_str(),
-                                        ),
-                                        data1,
-                                    )],
-                                    data,
-                                )
-                            },
-                            TokenKind::String => {
-                                let Token {
-                                    tok: _,
-                                    input: s,
-                                    src: data1,
-                                } = arg;
-                                Ast::call(
-                                    st::Slot,
-                                    vec![Ast::string(
-                                        escapeString_of_abstractSymbolString(
-                                            s.as_str(),
-                                        ),
-                                        data1,
-                                    )],
-                                    data,
-                                )
-                            },
-                            _ => unhandled(),
+                            )
+                        },
+                        TokenKind::String => {
+                            let Token {
+                                tok: _,
+                                input: s,
+                                src: data1,
+                            } = arg;
+                            Ast::call(
+                                st::Slot,
+                                vec![Ast::string(
+                                    escapeString_of_abstractSymbolString(
+                                        s.as_str(),
+                                    ),
+                                    data1,
+                                )],
+                                data,
+                            )
                         },
                         _ => unhandled(),
-                    }
-                },
+                    },
+                    _ => unhandled(),
+                }
+            },
 
-                // CompoundNode[SlotSequence, {_, arg:LeafNode[Integer, _, _]}, data_]
-                CompoundOperator::SlotSequence => {
-                    expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
+            // CompoundNode[SlotSequence, {_, arg:LeafNode[Integer, _, _]}, data_]
+            CompoundOperator::SlotSequence => {
+                expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
 
-                    Ast::call(st::SlotSequence, vec![abstract_(arg)], data)
-                },
+                Ast::call(st::SlotSequence, vec![abstract_(arg)], data)
+            },
 
-                // CompoundNode[Out, {_, arg:LeafNode[Integer, _, _]}, data_]
-                CompoundOperator::Out => {
-                    expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
+            // CompoundNode[Out, {_, arg:LeafNode[Integer, _, _]}, data_]
+            CompoundOperator::Out => {
+                expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
 
-                    Ast::call(st::Out, vec![abstract_(arg)], data)
-                },
-            }
+                Ast::call(st::Out, vec![abstract_(arg)], data)
+            },
         },
 
         //============
         // PrefixNode
         //============
-        Cst::Prefix(PrefixNode(OperatorNode { op, children })) => match op {
+        Cst::Prefix(PrefixNode(OperatorNode {
+            op,
+            children,
+            src: data,
+        })) => match op {
             // PrefixNode[Minus, {_, rand_}, data_]
             PrefixOperator::Minus => {
                 expect_children!(children, {_, rand:_});
@@ -514,7 +513,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         //============
 
         // PostfixNode[op_, {operand_, rator_}, data_]
-        Cst::Postfix(PostfixNode(OperatorNode { op, children })) => {
+        Cst::Postfix(PostfixNode(OperatorNode {
+            op,
+            children,
+            src: data,
+        })) => {
             let [operand, rator] = expect_children(children);
 
             match op {
@@ -575,7 +578,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         //============
 
         // BinaryNode[Divide, { left_, _, right_ }, data_]
-        Cst::Binary(BinaryNode(OperatorNode { op, children })) => {
+        Cst::Binary(BinaryNode(OperatorNode {
+            op,
+            children,
+            src: data,
+        })) => {
             let [left, middle, right] = expect_children(children);
 
             match op {
@@ -699,6 +706,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         Cst::Infix(InfixNode(OperatorNode {
             op,
             children: NodeSeq(children),
+            src: data,
         })) => {
             match op {
                 // InfixNode[InfixInequality, children_, data_]
@@ -732,13 +740,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     //   children[[;; ;; 2]]
                     let children = part_span_even_children(children, None);
 
-                    abstractTimes_InfixNode(
-                        InfixNode(OperatorNode {
-                            op: Op::Times,
-                            children: NodeSeq(children),
-                        }),
-                        data,
-                    )
+                    abstractTimes_InfixNode(InfixNode(OperatorNode {
+                        op: Op::Times,
+                        children: NodeSeq(children),
+                        src: data,
+                    }))
                 },
 
                 // InfixNode[Divisible, children_, data_]
@@ -834,7 +840,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         //============
 
         // TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]
-        Cst::Ternary(TernaryNode(OperatorNode { op, children })) => {
+        Cst::Ternary(TernaryNode(OperatorNode {
+            op,
+            children,
+            src: data,
+        })) => {
             let [left, _, middle, middle_right, right] =
                 expect_children(children);
 
@@ -936,7 +946,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         //============
         // GroupNode
         //============
-        Cst::Group(GroupNode(OperatorNode { op, children })) => {
+        Cst::Group(GroupNode(OperatorNode {
+            op,
+            children,
+            src: data,
+        })) => {
             match op {
                 GroupOperator::CodeParser_GroupParen => {
                     let NodeSeq(children) = children;
@@ -1110,6 +1124,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 _ => Ast::from(abstractGroupNode(GroupNode(OperatorNode {
                     op,
                     children,
+                    src: data,
                 }))),
             }
         },
@@ -1138,7 +1153,11 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
         //=================
         // PrefixBinaryNode
         //=================
-        Cst::PrefixBinary(PrefixBinaryNode(OperatorNode { op, children })) => {
+        Cst::PrefixBinary(PrefixBinaryNode(OperatorNode {
+            op,
+            children,
+            src: data,
+        })) => {
             let [_, operand1, operand2] = expect_children(children);
 
             match (op, operand2) {
@@ -1159,6 +1178,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             PrefixOperator::DifferentialD
                             | PrefixOperator::CapitalDifferentialD,
                         children,
+                        src: _,
                     })),
                 ) => {
                     let [_, var] = expect_children(children);
@@ -1255,34 +1275,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
             ),
             }
         },
-    };
-
-    // Sanity check that the new Ast node doesn't have a different source
-    // region than the original Cst.
-    #[cfg(debug_assertions)]
-    if &ast_node.metadata().source != &data_2 {
-        // Note:
-        //   One way the Ast can legitimately have a different source span is if
-        //   the original Cst was a `(expr)` parenthesized expression, in
-        //   which case the Ast has the span only of the interior `expr`.
-        if !matches!(
-            node_2,
-            Cst::Group(GroupNode(OperatorNode {
-                op: GroupOperator::CodeParser_GroupParen,
-                ..
-            }))
-        ) {
-            assert_eq!(
-                ast_node.metadata().source,
-                data_2,
-                "Ast source does not match Cst source:\n\tCst = {:#?}, ast_node = {:#?}",
-                node_2,
-                ast_node
-            );
-        }
     }
-
-    ast_node
 }
 
 fn abstract_replace_token<I: TokenInput, S: TokenSource>(
@@ -1571,6 +1564,7 @@ fn parenthesizedIntegerOrRealQ<I: Debug, S: Debug>(node: &Cst<I, S>) -> bool {
         Cst::Group(GroupNode(OperatorNode {
             op: GroupOperator::CodeParser_GroupParen,
             children,
+            src: _,
         })) => {
             let [_, child, _]: &[_; 3] =
                 children.0.as_slice().try_into().expect(
@@ -1602,6 +1596,7 @@ fn extractParenthesizedIntegerOrRealQ<I: Debug, S: Debug>(
         Cst::Group(GroupNode(OperatorNode {
             op: GroupOperator::CodeParser_GroupParen,
             children: NodeSeq(children),
+            src: _,
         })) => {
             let [_, child, _]: [_; 3] = children.try_into().expect(
                 "GroupParen Group node has unexpected number of children",
@@ -1630,6 +1625,7 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
         Cst::Group(GroupNode(OperatorNode {
             op: GroupOperator::CodeParser_GroupParen,
             children,
+            src: _,
         })) => {
             expect_children!(children, {_, child:_, _});
 
@@ -1640,6 +1636,7 @@ fn possiblyNegatedZeroQ<I: TokenInput + Debug, S: Debug>(
         Cst::Prefix(PrefixNode(OperatorNode {
             op: PrefixOperator::Minus,
             children,
+            src: _,
         })) => {
             expect_children!(children, {_, child:_});
 
@@ -1661,7 +1658,6 @@ enum Operand<I, S> {
 }
 
 #[must_use]
-#[derive(Debug)]
 enum Negated<I, S> {
     Integer0,
     IntegerNegated(I),
@@ -1700,13 +1696,14 @@ impl<I: TokenInput + Debug, S: TokenSource + Debug> Negated<I, S> {
                 let infix = InfixNode(OperatorNode {
                     op: InfixOperator::Times,
                     children: NodeSeq(children).into_owned_input(),
+                    src: data,
                 });
 
                 let Ast::Call {
                     head,
                     mut args,
                     data,
-                } = abstractTimes_InfixNode(infix, data)
+                } = abstractTimes_InfixNode(infix)
                 else {
                     panic!("expected InfixNode after abstract Times")
                 };
@@ -1761,6 +1758,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
     if let Cst::Group(GroupNode(OperatorNode {
         op: GroupOperator::CodeParser_GroupParen,
         children: NodeSeq(mut children),
+        src: _,
     })) = node.clone()
     {
         // TODO(optimization): Avoid this clone().
@@ -1772,6 +1770,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
     if let Cst::Prefix(PrefixNode(OperatorNode {
         op: PrefixOperator::Minus,
         children: NodeSeq(mut children),
+        src: _,
         // TODO(optimization): Avoid this clone()
     })) = node.clone()
     {
@@ -1798,6 +1797,7 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
     if let Cst::Infix(InfixNode(OperatorNode {
         op: InfixOperator::Times,
         children: NodeSeq(children),
+        src: _,
     })) = node.clone()
     {
         return Negated::InfixTimesSeq(NodeSeq(children));
@@ -1820,7 +1820,6 @@ fn negate<I: TokenInput + Debug, S: TokenSource + Debug>(
 /// This avoids the need to construct a fake [`Cst`] nodes with "unknown" source
 /// location values--but the eventual [`Ast`] value does have interior nodes
 /// with unknown source locations.
-#[derive(Debug)]
 struct Reciprocate<I, S>(Cst<I, S>, S);
 
 impl<I: TokenInput + Debug, S: TokenSource + Debug> Reciprocate<I, S> {
@@ -1849,6 +1848,7 @@ fn derivativeOrderAndAbstractedBody<
         Cst::Postfix(PostfixNode(OperatorNode {
             op: PostfixOperator::Derivative,
             children,
+            src: _,
         })) => {
             let [rand, _] = expect_children(children);
 
@@ -1883,7 +1883,6 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
             //
             //   synthesizedData = <| Source -> { opData[[Key[Source], 1]], rand[[3, Key[Source], 2]] } |>;
 
-            // TID:231110/2 — Plus pair synthetic "between" BoxPosition
             let source: S = S::between(opData, rand.source());
 
             Operand::Negated(negate(rand.into_owned_input()), source)
@@ -1900,6 +1899,7 @@ fn flattenPrefixPlus<I: Debug, S: Debug>(node: Cst<I, S>) -> Cst<I, S> {
         Cst::Prefix(PrefixNode(OperatorNode {
             op: PrefixOperator::Plus,
             children,
+            src: _,
         })) => {
             let [_, rand] = expect_children(children);
 
@@ -1969,6 +1969,7 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
         Cst::Prefix(PrefixNode(OperatorNode {
             op: PrefixOperator::Plus,
             children,
+            src: _,
         })) => {
             let [_, rand] = expect_children(children);
 
@@ -2016,6 +2017,7 @@ where
         Cst::Prefix(PrefixNode(OperatorNode {
             op: PrefixOperator::Minus,
             ref children,
+            src: _,
         })) => {
             let [_, operand] = expect_children(children.clone());
 
@@ -2062,6 +2064,7 @@ where
         Cst::Infix(InfixNode(OperatorNode {
             op: Op::Times,
             children: NodeSeq(children),
+            src: _,
         })) => {
             let children = part_span_even_children(children, Some(TK::Star));
 
@@ -2074,6 +2077,7 @@ where
         Cst::Binary(BinaryNode(OperatorNode {
             op: BinaryOperator::Divide,
             ref children,
+            src: _,
         })) => {
             if flattenTimesQuirk {
                 let [left, _, right] = expect_children(children.clone());
@@ -2097,11 +2101,11 @@ where
 // InfixNode[Times, children_, data_]
 fn abstractTimes_InfixNode<I: TokenInput + Debug, S: TokenSource + Debug>(
     infix: InfixNode<I, S>,
-    data: S,
 ) -> Ast {
     let InfixNode(OperatorNode {
         op,
         children: NodeSeq(children),
+        src: data,
     }) = infix;
 
     debug_assert!(op == Op::Times);
@@ -2166,6 +2170,7 @@ pub(crate) fn processInfixBinaryAtQuirk<
     let Cst::Binary(BinaryNode(OperatorNode {
         op: BinaryOperator::CodeParser_BinaryAt,
         ref children,
+        src: _,
     })) = node
     else {
         return node;
@@ -2753,11 +2758,10 @@ fn abstractGroupNode<
 >(
     group: GroupNode<I, S, O>,
 ) -> AstCall {
-    let data = group.0.get_source();
-
     let GroupNode(OperatorNode {
         op: tag,
         children: NodeSeq(children),
+        src: data,
     }) = group;
 
     // children = children[[2 ;; -2]];
@@ -2797,11 +2801,10 @@ fn abstractGroupNode_GroupMissingCloserNode<
 >(
     group: GroupMissingCloserNode<I, S, O>,
 ) -> (O, Vec<Ast>, AstMetadata) {
-    let data = group.0.get_source();
-
     let GroupMissingCloserNode(OperatorNode {
         op,
         children: NodeSeq(mut children),
+        src: data,
     }) = group;
 
     // children[[2;;]]
@@ -2822,11 +2825,10 @@ fn abstractGroupNode_GroupMissingOpenerNode<
 >(
     group: GroupMissingOpenerNode<I, S>,
 ) -> Ast {
-    let data = group.0.get_source();
-
     let GroupMissingOpenerNode(OperatorNode {
         op,
         children: NodeSeq(mut children),
+        src: data,
     }) = group;
 
     // children[[;;-2]]
@@ -3024,12 +3026,11 @@ fn try_subscript_box_part_special_cases<
         _ => return Err(box_node),
     };
 
-    let data1 = middle.get_source();
-
     match middle {
         LHS!(GroupNode[
             CodeParser_GroupSquare,
-            children1:_
+            children1:_,
+            data1:_
         ]) => {
             let [o1, group, c1] = expect_children(children1);
 
@@ -3043,12 +3044,11 @@ fn try_subscript_box_part_special_cases<
                 _ => return Err(box_node),
             }
 
-            let data2 = group.get_source();
-
             match group {
                 LHS!(GroupNode[
                     CodeParser_GroupSquare,
-                    children2:_
+                    children2:_,
+                    data2:_
                 ]) => {
                     let [o2, b, c2] = expect_children(children2);
 
@@ -3097,7 +3097,8 @@ fn try_subscript_box_part_special_cases<
         },
         LHS!(GroupNode[
             CodeParser_GroupDoubleBracket,
-            children1:_
+            children1:_,
+            data1:_
         ]) => {
             let [o, b, c] = expect_children(children1);
 
@@ -3212,11 +3213,10 @@ fn try_superscript_box_derivative_special_case<
 
     let [left, t] = expect_children(children1);
 
-    let data2 = left.get_source();
-
     let LHS!(GroupNode[
         CodeParser_GroupParen,
-        children2:_
+        children2:_,
+        data2:_
     ]) = left
     else {
         return Err(box_node);

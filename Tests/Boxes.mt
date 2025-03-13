@@ -152,13 +152,7 @@ Test[RoundTripCst[cst], cst]
 
 
 
-box = RowBox[{
-	"\[Integral]",
-	RowBox[{
-		RowBox[{"Sin", "[", "x", "]"}],
-		RowBox[{"\[DifferentialD]", "x"}]
-	}]
-}]
+box = RowBox[{"\[Integral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
 
 TestMatch[
 	cst = CodeConcreteParseBox[box]
@@ -170,15 +164,10 @@ TestMatch[
 				GroupNode[GroupSquare, {
 					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
 					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
-					LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]
-				}, <||>],
-				<|Source -> {1, 2, 1, 1}|>],
-			PrefixNode[DifferentialD, {
-				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
-				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]
-			}, <|Source -> {1, 2, 1, 2}|>]
-		}, <|Source -> {}|>]
-	}, _]
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
 	,
 	TestID->"Boxes-20200126-N4V0N6"
 ]
@@ -672,15 +661,7 @@ Test[RoundTripCst[cst], cst]
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{
-		"\[Integral]",
-		RowBox[{
-			"x",
-			" ",
-			RowBox[{"Cos", "[", "x", "]"}],
-			RowBox[{"\[DifferentialD]", "x"}]
-		}]
-	}]]
+	cst = CodeConcreteParseBox[RowBox[{"\[Integral]", RowBox[{"x", " ", RowBox[{"Cos", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
@@ -1817,7 +1798,7 @@ Module[{
 
 	ast = CodeParser`Abstract`Abstract[cst];
 
-	(* TID:231031/1: Synthetic box source for process plus pair *)
+	(* TID:20231031/1: Synthetic box source for process plus pair *)
 	Test[
 		ast,
 		ContainerNode[Box, {
@@ -1828,7 +1809,7 @@ Module[{
 						LeafNode[Symbol, "Plus", <||>],
 						{
 							LeafNode[Symbol, "E", <|Source -> {1, 2, 1, 1}|>],
-							LeafNode[Integer, "-1", <||>]
+							LeafNode[Integer, "-1", <|Source -> {1, 2}|>]
 						},
 						<|Source -> {1, 2}|>
 					]

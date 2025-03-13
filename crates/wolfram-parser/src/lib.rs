@@ -456,6 +456,7 @@ pub fn tokenize_bytes<'i>(
 ///             Cst::Token(token!(Whitespace, " ", 1:4-5)),
 ///             Cst::Token(token!(Integer, "2", 1:5-6))
 ///         ]),
+///         src: src!(1:1-6).into()
 ///     }))
 /// );
 /// ```
