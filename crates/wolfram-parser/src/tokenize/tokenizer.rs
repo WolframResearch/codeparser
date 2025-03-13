@@ -902,13 +902,28 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
     assert!(c.isStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
-        add_unexpected_char_issue(
-            session,
-            c,
-            token_start.loc,
+        let Src = session.get_token_span(token_start.loc);
+
+        let mut Actions: Vec<CodeAction> = Vec::new();
+
+        for A in utils::certainCharacterReplacementActions(c, Src) {
+            Actions.push(A);
+        }
+
+        let I = SyntaxIssue(
             IssueTag::UnexpectedSpaceCharacter,
+            format!(
+                "Unexpected space character: ``{}``.",
+                c.safeAndGraphicalString()
+            ),
+            Severity::Warning,
+            Src,
             0.95,
-        )
+            Actions,
+            vec![],
+        );
+
+        session.addIssue(I);
     }
 
     return session.token(TokenKind::Whitespace, token_start);
@@ -1162,21 +1177,51 @@ fn Tokenizer_handleSymbolSegment<'i>(
             session.addIssue(I);
         }
     } else if c.isStrangeLetterlike() {
-        add_unexpected_char_issue(
-            session,
-            c,
-            charLoc,
+        let Src = session.get_token_span(charLoc);
+
+        let mut Actions: Vec<CodeAction> = Vec::new();
+
+        for A in utils::certainCharacterReplacementActions(c, Src) {
+            Actions.push(A);
+        }
+
+        let I = SyntaxIssue(
             IssueTag::UnexpectedLetterlikeCharacter,
+            format!(
+                "Unexpected letterlike character: ``{}``.",
+                c.safeAndGraphicalString()
+            ),
+            Severity::Warning,
+            Src,
             0.85,
-        )
+            Actions,
+            vec![],
+        );
+
+        session.addIssue(I);
     } else if c.isMBStrangeLetterlike() {
-        add_unexpected_char_issue(
-            session,
-            c,
-            charLoc,
+        let Src = session.get_token_span(charLoc);
+
+        let mut Actions: Vec<CodeAction> = Vec::new();
+
+        for A in utils::certainCharacterReplacementActions(c, Src) {
+            Actions.push(A);
+        }
+
+        let I = SyntaxIssue(
             IssueTag::UnexpectedLetterlikeCharacter,
+            format!(
+                "Unexpected letterlike character: ``{}``.",
+                c.safeAndGraphicalString()
+            ),
+            Severity::Warning,
+            Src,
             0.80,
-        )
+            Actions,
+            vec![],
+        );
+
+        session.addIssue(I);
     } else if !c.isAlpha() {
         if (policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG {
             //
@@ -1231,21 +1276,51 @@ fn Tokenizer_handleSymbolSegment<'i>(
                     session.addIssue(I);
                 }
             } else if c.isStrangeLetterlike() {
-                add_unexpected_char_issue(
-                    session,
-                    c,
-                    charLoc,
+                let Src = session.get_token_span(charLoc);
+
+                let mut Actions: Vec<CodeAction> = Vec::new();
+
+                for A in utils::certainCharacterReplacementActions(c, Src) {
+                    Actions.push(A);
+                }
+
+                let I = SyntaxIssue(
                     IssueTag::UnexpectedLetterlikeCharacter,
+                    format!(
+                        "Unexpected letterlike character: ``{}``.",
+                        c.safeAndGraphicalString()
+                    ),
+                    Severity::Warning,
+                    Src,
                     0.85,
-                )
+                    Actions,
+                    vec![],
+                );
+
+                session.addIssue(I);
             } else if c.isMBStrangeLetterlike() {
-                add_unexpected_char_issue(
-                    session,
-                    c,
-                    charLoc,
+                let Src = session.get_token_span(charLoc);
+
+                let mut Actions: Vec<CodeAction> = Vec::new();
+
+                for A in utils::certainCharacterReplacementActions(c, Src) {
+                    Actions.push(A);
+                }
+
+                let I = SyntaxIssue(
                     IssueTag::UnexpectedLetterlikeCharacter,
+                    format!(
+                        "Unexpected letterlike character: ``{}``.",
+                        c.safeAndGraphicalString()
+                    ),
+                    Severity::Warning,
+                    Src,
                     0.80,
-                )
+                    Actions,
+                    vec![],
+                );
+
+                session.addIssue(I);
             } else if !c.isAlphaOrDigit() {
                 if (policy & INSIDE_STRINGIFY_AS_TAG) == INSIDE_STRINGIFY_AS_TAG {
                     //
@@ -4352,13 +4427,25 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
     assert!(c.isMBStrangeNewline());
 
     if feature::CHECK_ISSUES {
-        add_unexpected_char_issue(
-            session,
-            c,
-            token_start.loc,
+        let Src = session.get_token_span(token_start.loc);
+
+        let mut Actions: Vec<CodeAction> = Vec::new();
+
+        for A in utils::certainCharacterReplacementActions(c, Src) {
+            Actions.push(A);
+        }
+
+        let I = SyntaxIssue(
             IssueTag::UnexpectedNewlineCharacter,
+            format!("Unexpected newline character: ``{}``.", c.graphicalString()),
+            Severity::Warning,
+            Src,
             0.85,
-        )
+            Actions,
+            vec![],
+        );
+
+        session.addIssue(I);
     }
 
     //
@@ -4376,13 +4463,28 @@ fn Tokenizer_handleMBStrangeWhitespace<'i>(
     assert!(c.isMBStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
-        add_unexpected_char_issue(
-            session,
-            c,
-            token_start.loc,
+        let Src = session.get_token_span(token_start.loc);
+
+        let mut Actions: Vec<CodeAction> = Vec::new();
+
+        for A in utils::certainCharacterReplacementActions(c, Src) {
+            Actions.push(A);
+        }
+
+        let I = SyntaxIssue(
             IssueTag::UnexpectedSpaceCharacter,
+            format!(
+                "Unexpected space character: ``{}``.",
+                c.safeAndGraphicalString()
+            ),
+            Severity::Warning,
+            Src,
             0.85,
-        )
+            Actions,
+            vec![],
+        );
+
+        session.addIssue(I);
     }
 
     return session.token(TokenKind::Whitespace, token_start);
@@ -4450,45 +4552,4 @@ fn Tokenizer_handleNakedMBLinearSyntax<'i>(
         },
         _ => todo!(),
     }
-}
-
-//==========================================================
-// Helper functions
-//==========================================================
-
-/// Add an [`Issue`][crate::issue::Issue] for an unexpected character.
-fn add_unexpected_char_issue(
-    session: &mut Tokenizer,
-    c: WLCharacter,
-    char_loc: Location,
-    tag: IssueTag,
-    confidence: f64,
-) {
-    let src = session.get_token_span(char_loc);
-
-    let actions: Vec<CodeAction> = utils::certainCharacterReplacementActions(c, src);
-
-    let formatted = match tag {
-        IssueTag::UnexpectedNewlineCharacter => c.graphicalString(),
-        _ => c.safeAndGraphicalString(),
-    };
-
-    let char_type = match tag {
-        IssueTag::UnexpectedSpaceCharacter => "space",
-        IssueTag::UnexpectedLetterlikeCharacter => "letterlike",
-        IssueTag::UnexpectedNewlineCharacter => "newline",
-        _ => panic!("unhandled unexpected char IssueTag: {tag:?}"),
-    };
-
-    let I = SyntaxIssue(
-        tag,
-        format!("Unexpected {char_type} character: ``{}``.", formatted),
-        Severity::Warning,
-        src,
-        confidence,
-        actions,
-        vec![],
-    );
-
-    session.addIssue(I);
 }
