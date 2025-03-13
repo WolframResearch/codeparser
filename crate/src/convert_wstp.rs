@@ -116,21 +116,21 @@ impl NodeSeq {
 impl OperatorNode {
     pub(crate) fn put(&self, session: &ParserSession, callLink: &mut wstp::Link) {
         let OperatorNode {
-            op,
-            children,
-            src,
-            make_sym,
+            Op,
+            Children,
+            Src,
+            MakeSym,
         } = self;
 
-        callLink.put_function(make_sym.name, 3).unwrap();
+        callLink.put_function(MakeSym.name, 3).unwrap();
 
-        op.put(session, callLink);
+        Op.put(session, callLink);
 
-        children.put(session, callLink);
+        Children.put(session, callLink);
 
         callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
-        src.put(session, callLink);
+        Src.put(session, callLink);
     }
 }
 
