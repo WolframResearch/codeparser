@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 
-#[allow(non_camel_case_types)]
 pub(crate) type codepoint = i32;
 
 // Validate that Rust is doing enum size optimization, by recognizing that the
@@ -17,7 +16,6 @@ const _: () = assert!(std::mem::size_of::<CodePoint>() == 4);
 ///
 /// Unicode code points are all positive integers. These special code points
 /// are all negative values.
-#[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[rustfmt::skip]
 pub enum CodePoint {

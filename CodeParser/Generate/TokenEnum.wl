@@ -401,7 +401,6 @@ use crate::symbol::Symbol;
 // All token enums
 //
 
-#[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u16)]
 pub enum TokenEnum {"} ~Join~
