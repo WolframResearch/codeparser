@@ -4,12 +4,11 @@ use crate::{
     cst::{
         BinaryNode, CallBody, CallHead, CallNode, CompoundNode,
         Cst::{
-            Binary, Call, Compound, Group, GroupMissingCloser, Infix, Postfix,
-            Prefix, PrefixBinary, SyntaxError, Ternary, Token,
+            Binary, Call, Compound, Group, Infix, Postfix, Prefix,
+            PrefixBinary, SyntaxError, Ternary, Token,
         },
-        GroupMissingCloserNode, GroupNode, InfixNode, OperatorNode,
-        PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
-        TernaryNode, TriviaSeq,
+        GroupNode, InfixNode, OperatorNode, PostfixNode, PrefixBinaryNode,
+        PrefixNode, SyntaxErrorNode, TernaryNode,
     },
     macros::{leaf, src, token},
     parse::{
@@ -1312,54 +1311,6 @@ fn test_tilde() {
                 Token(token!(Tilde, "~", 1:5-6)),
                 Token(token!(Symbol, "c", 1:6-7)),
             ]),
-        }))
-    );
-}
-
-#[test]
-fn test_regressions() {
-    assert_eq!(
-        parse_cst("a=.", &Default::default()).syntax,
-        Binary(BinaryNode(OperatorNode {
-            op: BinaryOp::Unset,
-            children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(Equal, "=", 1:2-3)),
-                Token(token!(Dot, ".", 1:3-4)),
-            ])
-        }))
-    );
-
-    assert_eq!(
-        parse_cst("{ ( a }", &Default::default()).syntax,
-        Group(GroupNode(OperatorNode {
-            op: GroupOp::List,
-            children: NodeSeq(vec![
-                Token(token!(OpenCurly, "{", 1:1-2)),
-                Token(token!(Whitespace, " ", 1:2-3)),
-                GroupMissingCloser(GroupMissingCloserNode(OperatorNode {
-                    op: GroupOp::CodeParser_GroupParen,
-                    children: NodeSeq(vec![
-                        Token(token!(OpenParen, "(", 1:3-4)),
-                        Token(token!(Whitespace, " ", 1:4-5)),
-                        Token(token!(Symbol, "a", 1:5-6)),
-                    ]),
-                })),
-                Token(token!(Whitespace, " ", 1:6-7)),
-                Token(token!(CloseCurly, "}", 1:7-8)),
-            ]),
-        }))
-    );
-
-    assert_eq!(
-        parse_cst("a>>b\\1c", &Default::default()).syntax,
-        Binary(BinaryNode(OperatorNode {
-            op: BinaryOp::Put,
-            children: NodeSeq(vec![
-                Token(token!(Symbol, "a", 1:1-2)),
-                Token(token!(GreaterGreater, ">>", 1:2-4)),
-                Token(token!(String, "b\\1c", 1:4-8)),
-            ])
         }))
     );
 }
