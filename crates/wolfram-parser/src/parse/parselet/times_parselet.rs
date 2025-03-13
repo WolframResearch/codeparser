@@ -74,11 +74,7 @@ impl TimesParselet {
             //
             // and we want only a single Infix node created
             //
-
-            let tok1_op =
-                B::with_infix_parselet(tok1.tok, |parselet| parselet.getOp());
-
-            if tok1_op
+            if session.infix_parselet(tok1.tok).getOp()
                 != <TimesParselet as InfixParselet<B>>::getOp(&TimesParselet {})
             {
                 //
