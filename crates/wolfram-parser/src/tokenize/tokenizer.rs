@@ -52,26 +52,6 @@ pub enum UnsafeCharacterEncoding {
     BOM = 3,
 }
 
-/// Marker that records where a token started.
-///
-/// An instance of this type is created when the first character in a new
-/// token is read by [`Tokenizer_nextToken()`]. When the last character in a
-/// token is read, a call to
-/// [`Tokenizer::token(kind, token_start)`][Tokenizer::token] is made to
-/// construct a new [`Token`] whose source buffer and [`Span`] start at the specified
-/// `TokenStart` instance and end at the current character in the input.
-///
-/// See also: [`InputMark`], which is a similar type that is used
-/// for resetting the input cursor to an earlier state.
-#[derive(Debug, Copy, Clone)]
-struct TokenStart<'i> {
-    buf: Buffer<'i>,
-    loc: Location,
-}
-
-const _: () = assert!(std::mem::size_of::<TokenStart>() == 32);
-const _: () = assert!(std::mem::size_of::<&TokenStart>() == 8);
-
 impl UnsafeCharacterEncoding {
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -183,30 +163,30 @@ impl<'i> Tokenizer<'i> {
     // Create tokens
     //==================================
 
-    /// Construct a new token whose source buffer and location begin at `start`
-    /// and end at the current buffer and source location.
-    fn token<T: Into<TokenKind>>(&self, tok: T, start: &TokenStart<'i>) -> TokenRef<'i> {
+    fn token<T: Into<TokenKind>>(
+        &self,
+        tok: T,
+        start_buf: Buffer<'i>,
+        start_loc: Location,
+    ) -> TokenRef<'i> {
         let tok = tok.into();
 
-        let buf = self.get_token_buffer_and_length(start.buf);
+        let buf = self.get_token_buffer_and_length(start_buf);
 
-        let span = self.get_token_span(start.loc);
+        let span = self.get_token_span(start_loc);
 
         Token::new(tok, buf, span)
     }
 
-    /// Construct a new token whose source buffer and location are exactly the
-    /// character located at `at`.
-    // TODO(cleanup): Rename to error_token_at()?
-    fn token_at<T: Into<TokenKind>>(&self, tok: T, at: &TokenStart<'i>) -> TokenRef<'i> {
+    fn token_at<T: Into<TokenKind>>(
+        &self,
+        tok: T,
+        start_buf: Buffer<'i>,
+        span: Span,
+    ) -> TokenRef<'i> {
         let tok = tok.into();
 
-        let buf = self.get_token_buffer_and_length(at.buf);
-
-        debug_assert!(tok.isError());
-        debug_assert_eq!(buf.buf.slice.len(), 0);
-
-        let span = Span::from_location(at.loc);
+        let buf = self.get_token_buffer_and_length(start_buf);
 
         Token::new(tok, buf, span)
     }
@@ -285,10 +265,8 @@ struct NumberTokenizationContext {
 // pub mod handler {
 type HandlerFunction = for<'p, 'i> fn(
     session: &'p mut Tokenizer<'i>,
-    // NOTE: Passing `token_start` by reference instead of by value is an
-    //       optimization. At time of writing TokenStart is 32 bytes in size,
-    //       but a reference is only 8.
-    token_start: &TokenStart<'i>,
+    startBuf: Buffer<'i>,
+    startLoc: Location,
     c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i>;
@@ -351,41 +329,44 @@ pub(crate) const ASCII_VTAB: char = '\x0B';
 pub(crate) const ASCII_FORM_FEED: char = '\x0C';
 
 fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) -> TokenRef<'i> {
-    let token_start = &TokenStart {
-        buf: session.buffer(),
-        loc: session.SrcLoc,
-    };
+    let tokenStartBuf = session.buffer();
+    let tokenStartLoc = session.SrcLoc;
 
-    let c = Tokenizer_nextWLCharacter(session, token_start, policy);
+    let c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     let point: CodePoint = c.to_point();
     let point = point.as_i32();
 
     if !(0x00 <= point && point <= 0x7f) {
-        return Tokenizer_nextToken_uncommon(session, token_start, c, policy);
+        return Tokenizer_nextToken_uncommon(session, tokenStartBuf, tokenStartLoc, c, policy);
     }
 
     let func = TOKENIZER_HANDLER_TABLE[usize::try_from(point).unwrap()];
-    return func(session, token_start, c, policy);
+    return func(session, tokenStartBuf, tokenStartLoc, c, policy);
 }
 
 fn Tokenizer_nextToken_uncommon<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     match c.to_point() {
         Char(_) => (),
         EndOfFile => {
-            return session.token(TokenKind::EndOfFile, token_start);
+            return session.token(TokenKind::EndOfFile, tokenStartBuf, tokenStartLoc);
         },
         Unsafe1ByteUtf8Sequence | Unsafe2ByteUtf8Sequence | Unsafe3ByteUtf8Sequence => {
             //
             // This will be disposed before the user sees it
             //
 
-            return session.token(TokenKind::Error_UnsafeCharacterEncoding, token_start);
+            return session.token(
+                TokenKind::Error_UnsafeCharacterEncoding,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         _ => (),
     }
@@ -405,19 +386,19 @@ fn Tokenizer_nextToken_uncommon<'i>(
         '\x10' | '\x11' | '\x12' | '\x13' | '\x14' | '\x15' | '\x16' | '\x17' |
         '\x18' | '\x19' | '\x1a' | '\x1b' | '\x1c' | '\x1d' | '\x1e' | '\x1f') => {
 
-            return Tokenizer_handleSymbol(session, token_start, c, policy);
+            return Tokenizer_handleSymbol(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(CODEPOINT_BEL | CODEPOINT_DEL) => {
-            return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+            return session.token(TokenKind::Error_UnhandledCharacter,  tokenStartBuf, tokenStartLoc);
         }
         Char('\t') => {
             // MUSTTAIL
-            return session.token(TokenKind::Whitespace, token_start);
+            return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
         }
         Char(ASCII_VTAB | ASCII_FORM_FEED) => {
 
 //            MUSTTAIL
-            return Tokenizer_handleStrangeWhitespace(session, token_start, c, policy);
+            return Tokenizer_handleStrangeWhitespace(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('\r') => {
 
@@ -427,128 +408,131 @@ fn Tokenizer_nextToken_uncommon<'i>(
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
             return session.token(
-                TokenKind::InternalNewline.with_policy(policy), token_start);
+                TokenKind::InternalNewline.with_policy(policy),
+                tokenStartBuf,
+                tokenStartLoc
+            );
         }
         Char('(') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleOpenParen(session, token_start, c, policy);
+            return Tokenizer_handleOpenParen(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(')') => {
 
             incr_diagnostic!(Tokenizer_CloseParenCount);
 
-            return session.token(TokenKind::CloseParen, token_start);
+            return session.token(TokenKind::CloseParen,  tokenStartBuf, tokenStartLoc);
         }
         Char('+') => {
 
 //            MUSTTAIL
-            return Tokenizer_handlePlus(session, token_start, c, policy);
+            return Tokenizer_handlePlus(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('^') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleCaret(session, token_start, c, policy);
+            return Tokenizer_handleCaret(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('=') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleEqual(session, token_start, c, policy);
+            return Tokenizer_handleEqual(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(';') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleSemi(session, token_start, c, policy);
+            return Tokenizer_handleSemi(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(':') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleColon(session, token_start, c, policy);
+            return Tokenizer_handleColon(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('#') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleHash(session, token_start, c, policy);
+            return Tokenizer_handleHash(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('&') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleAmp(session, token_start, c, policy);
+            return Tokenizer_handleAmp(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('!') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleBang(session, token_start, c, policy);
+            return Tokenizer_handleBang(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('%') => {
 
 //            MUSTTAIL
-            return Tokenizer_handlePercent(session, token_start, c, policy);
+            return Tokenizer_handlePercent(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('\'') => {
 
-            return session.token(TokenKind::SingleQuote, token_start);
+            return session.token(TokenKind::SingleQuote, tokenStartBuf, tokenStartLoc);
         }
         Char('*') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleStar(session, token_start, c, policy);
+            return Tokenizer_handleStar(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('.') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleDot(session, token_start, c, policy);
+            return Tokenizer_handleDot(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('/') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleSlash(session, token_start, c, policy);
+            return Tokenizer_handleSlash(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('<') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleLess(session, token_start, c, policy);
+            return Tokenizer_handleLess(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('>') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleGreater(session, token_start, c, policy);
+            return Tokenizer_handleGreater(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('?') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleQuestion(session, token_start, c, policy);
+            return Tokenizer_handleQuestion(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('@') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleAt(session, token_start, c, policy);
+            return Tokenizer_handleAt(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('\\') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleUnhandledBackslash(session, token_start, c, policy);
+            return Tokenizer_handleUnhandledBackslash(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('_') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleUnder(session, token_start, c, policy);
+            return Tokenizer_handleUnder(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('|') => {
 
 //            MUSTTAIL
-            return Tokenizer_handleBar(session, token_start, c, policy);
+            return Tokenizer_handleBar(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char('~') => {
             // MUSTTAIL
-            return Tokenizer_handleTilde(session, token_start, c, policy);
+            return Tokenizer_handleTilde(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         Char(CODEPOINT_LINEARSYNTAX_BANG) => {
-            return session.token(TokenKind::LinearSyntax_Bang, token_start);
+            return session.token(TokenKind::LinearSyntax_Bang, tokenStartBuf, tokenStartLoc);
         }
         Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => {
             // MUSTTAIL
-            return Tokenizer_handleMBLinearSyntaxBlob(session, token_start, c, policy);
+            return Tokenizer_handleMBLinearSyntaxBlob(session, tokenStartBuf, tokenStartLoc, c, policy);
         }
         _ => ()
     }
@@ -556,41 +540,65 @@ fn Tokenizer_nextToken_uncommon<'i>(
 
     if c.isMBLinearSyntax() {
         //        MUSTTAIL
-        return Tokenizer_handleNakedMBLinearSyntax(session, token_start, c, policy);
+        return Tokenizer_handleNakedMBLinearSyntax(
+            session,
+            tokenStartBuf,
+            tokenStartLoc,
+            c,
+            policy,
+        );
     }
 
     if c.isMBUninterpretable() {
-        return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+        return session.token(
+            TokenKind::Error_UnhandledCharacter,
+            tokenStartBuf,
+            tokenStartLoc,
+        );
     }
 
     if c.isMBStrangeWhitespace() {
         //        MUSTTAIL
-        return Tokenizer_handleMBStrangeWhitespace(session, token_start, c, policy);
+        return Tokenizer_handleMBStrangeWhitespace(
+            session,
+            tokenStartBuf,
+            tokenStartLoc,
+            c,
+            policy,
+        );
     }
 
     if c.isMBWhitespace() {
-        return session.token(TokenKind::Whitespace, token_start);
+        return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
     }
 
     if c.isMBStrangeNewline() {
         //        MUSTTAIL
-        return Tokenizer_handleMBStrangeNewline(session, token_start, c, policy);
+        return Tokenizer_handleMBStrangeNewline(session, tokenStartBuf, tokenStartLoc, c, policy);
     }
 
     if c.isMBNewline() {
         //
         // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
-        return session.token(TokenKind::InternalNewline.with_policy(policy), token_start);
+        return session.token(
+            TokenKind::InternalNewline.with_policy(policy),
+            tokenStartBuf,
+            tokenStartLoc,
+        );
     }
 
     if c.isMBPunctuation() {
         //        MUSTTAIL
-        return Tokenizer_handleMBPunctuation(session, token_start, c, policy);
+        return Tokenizer_handleMBPunctuation(session, tokenStartBuf, tokenStartLoc, c, policy);
     }
 
     if c.isMBStringMeta() {
-        return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+        return session.token(
+            TokenKind::Error_UnhandledCharacter,
+            tokenStartBuf,
+            tokenStartLoc,
+        );
     }
 
     //
@@ -600,18 +608,16 @@ fn Tokenizer_nextToken_uncommon<'i>(
     assert!(c.isMBLetterlike());
 
     //    MUSTTAIL
-    return Tokenizer_handleSymbol(session, token_start, c, policy);
+    return Tokenizer_handleSymbol(session, tokenStartBuf, tokenStartLoc, c, policy);
 }
 
 pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
-    let token_start = &TokenStart {
-        buf: session.buffer(),
-        loc: session.SrcLoc,
-    };
+    let tokenStartBuf = session.buffer();
+    let tokenStartLoc = session.SrcLoc;
 
     let policy = INSIDE_STRINGIFY_AS_TAG;
 
-    let c = Tokenizer_nextWLCharacter(session, token_start, policy);
+    let c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         EndOfFile => {
@@ -619,23 +625,39 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>
             // EndOfFile is special, so invent source
             //
 
-            return session.token_at(TokenKind::Error_ExpectedTag, token_start);
+            return session.token_at(
+                TokenKind::Error_ExpectedTag,
+                // BufferAndLength::from_buffer(tokenStartBuf),
+                tokenStartBuf,
+                Span::from_location(tokenStartLoc),
+            );
         },
         Char('\n' | '\r') | CRLF => {
             //
             // Newline is special, so invent source
             //
 
-            return session.token_at(TokenKind::Error_ExpectedTag, token_start);
+            return session.token_at(
+                TokenKind::Error_ExpectedTag,
+                // BufferAndLength::from_buffer(tokenStartBuf),
+                tokenStartBuf,
+                Span::from_location(tokenStartLoc),
+            );
         },
         Char('"') => {
-            return Tokenizer_handleString(session, token_start, c, policy);
+            return Tokenizer_handleString(session, tokenStartBuf, tokenStartLoc, c, policy);
         },
         //
         // Default
         //
         _ => {
-            return Tokenizer_handleString_stringifyAsTag(session, token_start, c, policy);
+            return Tokenizer_handleString_stringifyAsTag(
+                session,
+                tokenStartBuf,
+                tokenStartLoc,
+                c,
+                policy,
+            );
         },
     }
 }
@@ -644,10 +666,8 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>
 // Use SourceCharacters here, not WLCharacters
 //
 pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
-    let token_start = &TokenStart {
-        buf: session.buffer(),
-        loc: session.SrcLoc,
-    };
+    let tokenStartBuf = session.buffer();
+    let tokenStartLoc = session.SrcLoc;
 
     let policy = INSIDE_STRINGIFY_AS_FILE;
 
@@ -655,7 +675,12 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
 
     match c {
         EndOfFile => {
-            return session.token_at(TokenKind::Error_ExpectedFile, token_start);
+            return session.token_at(
+                TokenKind::Error_ExpectedFile,
+                // BufferAndLength::from_buffer(tokenStartBuf),
+                tokenStartBuf,
+                Span::from_location(tokenStartLoc),
+            );
         },
         Char('\n' | '\r') | CRLF => {
             //
@@ -672,7 +697,11 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return session.token(TokenKind::InternalNewline.with_policy(policy), token_start);
+            return session.token(
+                TokenKind::InternalNewline.with_policy(policy),
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         Char(' ' | '\t') => {
             //
@@ -682,16 +711,28 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i
             // a >>
             //   b
             //
-            return session.token(TokenKind::Whitespace, token_start);
+            return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
         },
         Char('"') => {
-            return Tokenizer_handleString(session, token_start, WLCharacter::new(c), policy);
+            return Tokenizer_handleString(
+                session,
+                tokenStartBuf,
+                tokenStartLoc,
+                WLCharacter::new(c),
+                policy,
+            );
         },
         //
         // Default case
         //
         _ => {
-            return Tokenizer_handleString_stringifyAsFile(session, token_start, c, policy);
+            return Tokenizer_handleString_stringifyAsFile(
+                session,
+                tokenStartBuf,
+                tokenStartLoc,
+                c,
+                policy,
+            );
         },
     }
 }
@@ -727,8 +768,8 @@ pub(crate) fn Tokenizer_currentToken_stringifyAsFile<'i>(
 //
 fn Tokenizer_nextWLCharacter<'i>(
     session: &mut Tokenizer<'i>,
-    // TODO(cleanup): Just take a Location, token_start.buf is never used
-    token_start: &TokenStart<'i>,
+    _tokenStartBuf: Buffer,
+    tokenStartLoc: Location,
     policy: NextPolicy,
 ) -> WLCharacter {
     incr_diagnostic!(Tokenizer_LineContinuationCount);
@@ -768,7 +809,7 @@ fn Tokenizer_nextWLCharacter<'i>(
                         //
                         // Must still count the embedded tab
 
-                        session.addEmbeddedTab(token_start.loc);
+                        session.addEmbeddedTab(tokenStartLoc);
                     }
                 }
             }
@@ -783,9 +824,9 @@ fn Tokenizer_nextWLCharacter<'i>(
         if feature::COMPUTE_OOB {
             if (policy & TRACK_LC) == TRACK_LC {
                 if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
-                    session.addComplexLineContinuation(token_start.loc);
+                    session.addComplexLineContinuation(tokenStartLoc);
                 } else {
-                    session.addSimpleLineContinuation(token_start.loc);
+                    session.addSimpleLineContinuation(tokenStartLoc);
                 }
             }
         }
@@ -796,7 +837,8 @@ fn Tokenizer_nextWLCharacter<'i>(
 
 fn Tokenizer_currentWLCharacter<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut policy: NextPolicy,
 ) -> WLCharacter {
     let mark = session.mark();
@@ -806,7 +848,7 @@ fn Tokenizer_currentWLCharacter<'i>(
     //
     policy &= !TRACK_LC; // bitwise not
 
-    let c = Tokenizer_nextWLCharacter(session, token_start, policy);
+    let c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     session.seek(mark);
 
@@ -815,18 +857,20 @@ fn Tokenizer_currentWLCharacter<'i>(
 
 fn Tokenizer_handleComma<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_CommaCount);
 
-    return session.token(TokenKind::Comma, token_start);
+    return session.token(TokenKind::Comma, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleLineFeed<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _firstChar: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -835,74 +879,84 @@ fn Tokenizer_handleLineFeed<'i>(
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return session.token(TokenKind::InternalNewline.with_policy(policy), token_start);
+    return session.token(
+        TokenKind::InternalNewline.with_policy(policy),
+        tokenStartBuf,
+        tokenStartLoc,
+    );
 }
 
 fn Tokenizer_handleOpenSquare<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_OpenSquareCount);
 
-    return session.token(TokenKind::OpenSquare, token_start);
+    return session.token(TokenKind::OpenSquare, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleOpenCurly<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_OpenCurlyCount);
 
-    return session.token(TokenKind::OpenCurly, token_start);
+    return session.token(TokenKind::OpenCurly, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleSpace<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_WhitespaceCount);
 
-    return session.token(TokenKind::Whitespace, token_start);
+    return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleCloseSquare<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_CloseSquareCount);
 
-    return session.token(TokenKind::CloseSquare, token_start);
+    return session.token(TokenKind::CloseSquare, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleCloseCurly<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     incr_diagnostic!(Tokenizer_CloseCurlyCount);
 
-    return session.token(TokenKind::CloseCurly, token_start);
+    return session.token(TokenKind::CloseCurly, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleStrangeWhitespace<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.isStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
-        let Src = session.get_token_span(token_start.loc);
+        let Src = session.get_token_span(tokenStartLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -926,7 +980,7 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
         session.addIssue(I);
     }
 
-    return session.token(TokenKind::Whitespace, token_start);
+    return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
 }
 
 //
@@ -939,7 +993,8 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
 //
 fn Tokenizer_handleComment<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: SourceCharacter,
     mut policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -983,25 +1038,29 @@ fn Tokenizer_handleComment<'i>(
                     depth = depth - 1;
 
                     if depth == 0 {
-                        return session.token(TokenKind::Comment, token_start);
+                        return session.token(TokenKind::Comment, tokenStartBuf, tokenStartLoc);
                     }
 
                     c = session.next_source_char(policy);
                 }
             },
             EndOfFile => {
-                return session.token(TokenKind::Error_UnterminatedComment, token_start);
+                return session.token(
+                    TokenKind::Error_UnterminatedComment,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                );
             },
             Char('\n' | '\r') | CRLF => {
                 if feature::COMPUTE_OOB {
-                    session.addEmbeddedNewline(token_start.loc);
+                    session.addEmbeddedNewline(tokenStartLoc);
                 }
 
                 c = session.next_source_char(policy);
             },
             Char('\t') => {
                 if feature::COMPUTE_OOB {
-                    session.addEmbeddedTab(token_start.loc);
+                    session.addEmbeddedTab(tokenStartLoc);
                 }
 
                 c = session.next_source_char(policy);
@@ -1015,7 +1074,8 @@ fn Tokenizer_handleComment<'i>(
 
 fn Tokenizer_handleMBLinearSyntaxBlob<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -1023,29 +1083,37 @@ fn Tokenizer_handleMBLinearSyntaxBlob<'i>(
 
     let mut depth = 1;
 
-    c = Tokenizer_nextWLCharacter(session, token_start, policy);
+    c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     loop {
         match c.to_point() {
             Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => {
                 depth = depth + 1;
 
-                c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             },
             Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => {
                 depth = depth - 1;
 
                 if depth == 0 {
-                    return session.token(TokenKind::LinearSyntaxBlob, token_start);
+                    return session.token(
+                        TokenKind::LinearSyntaxBlob,
+                        tokenStartBuf,
+                        tokenStartLoc,
+                    );
                 }
 
-                c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             },
             EndOfFile => {
-                return session.token(TokenKind::Error_UnterminatedLinearSyntaxBlob, token_start);
+                return session.token(
+                    TokenKind::Error_UnterminatedLinearSyntaxBlob,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                );
             },
             _ => {
-                c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             },
         }
     } // loop
@@ -1057,7 +1125,8 @@ fn Tokenizer_handleMBLinearSyntaxBlob<'i>(
 //
 fn Tokenizer_handleSymbol<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -1068,9 +1137,10 @@ fn Tokenizer_handleSymbol<'i>(
     if c.isLetterlike() || c.isMBLetterlike() {
         c = Tokenizer_handleSymbolSegment(
             session,
-            token_start,
-            token_start.buf,
-            token_start.loc,
+            tokenStartBuf,
+            tokenStartLoc,
+            tokenStartBuf,
+            tokenStartLoc,
             c,
             policy,
         );
@@ -1096,7 +1166,7 @@ fn Tokenizer_handleSymbol<'i>(
                 IssueTag::UndocumentedSlotSyntax,
                 "The name following ``#`` is not documented to allow the **`** character.".into(),
                 Severity::Warning,
-                session.get_token_span(token_start.loc),
+                session.get_token_span(tokenStartLoc),
                 0.33,
                 vec![],
                 vec![],
@@ -1105,17 +1175,18 @@ fn Tokenizer_handleSymbol<'i>(
             session.addIssue(I);
         }
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         if c.isLetterlike() || c.isMBLetterlike() {
             let letterlikeBuf = session.buffer();
             let letterlikeLoc = session.SrcLoc;
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             c = Tokenizer_handleSymbolSegment(
                 session,
-                token_start,
+                tokenStartBuf,
+                tokenStartLoc,
                 letterlikeBuf,
                 letterlikeLoc,
                 c,
@@ -1126,7 +1197,11 @@ fn Tokenizer_handleSymbol<'i>(
             // Something like  a`1
             //
 
-            return session.token(TokenKind::Error_ExpectedLetterlike, token_start);
+            return session.token(
+                TokenKind::Error_ExpectedLetterlike,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         }
     } // while
 
@@ -1136,7 +1211,8 @@ fn Tokenizer_handleSymbol<'i>(
         } else {
             TokenKind::Symbol
         },
-        token_start,
+        tokenStartBuf,
+        tokenStartLoc,
     );
 }
 
@@ -1148,7 +1224,8 @@ fn Tokenizer_handleSymbol<'i>(
 //
 fn Tokenizer_handleSymbolSegment<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     _charBuf: Buffer,
     mut charLoc: Location,
     mut c: WLCharacter,
@@ -1244,17 +1321,17 @@ fn Tokenizer_handleSymbolSegment<'i>(
 
     charLoc = session.SrcLoc;
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     loop {
         if c.isDigit() {
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             charLoc = session.SrcLoc;
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         } else if c.isLetterlike() || c.isMBLetterlike() {
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             #[cfg(feature = "CHECK_ISSUES")]
             if c.to_point() == '$' {
@@ -1343,13 +1420,13 @@ fn Tokenizer_handleSymbolSegment<'i>(
 
             charLoc = session.SrcLoc;
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         } else if c.to_point() == '`' {
             //
             // Advance past trailing `
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             break;
         } else {
@@ -1362,7 +1439,8 @@ fn Tokenizer_handleSymbolSegment<'i>(
 
 fn Tokenizer_handleString<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     mut policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -1377,7 +1455,7 @@ fn Tokenizer_handleString<'i>(
             IssueTag::UndocumentedSlotSyntax,
             format!("The name following ``#`` is not documented to allow the ``\"`` character."),
             Severity::Warning,
-            session.get_token_span(token_start.loc),
+            session.get_token_span(tokenStartLoc),
             0.33,
             vec![],
             vec![],
@@ -1460,12 +1538,16 @@ fn Tokenizer_handleString<'i>(
         if terminated {
             session.offset = quot_offset.unwrap() + 1;
 
-            return session.token(TokenKind::String, token_start);
+            return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
         } else {
             session.offset = session.input.len();
             session.wasEOF = true;
 
-            return session.token(TokenKind::Error_UnterminatedString, token_start);
+            return session.token(
+                TokenKind::Error_UnterminatedString,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         }
     }
 
@@ -1478,20 +1560,24 @@ fn Tokenizer_handleString<'i>(
     policy |= STRING_OR_COMMENT;
 
     loop {
-        c = Tokenizer_nextWLCharacter(session, token_start, policy);
+        c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         match c.to_point() {
             Char('"') => {
-                return session.token(TokenKind::String, token_start);
+                return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
             },
             EndOfFile => {
-                return session.token(TokenKind::Error_UnterminatedString, token_start);
+                return session.token(
+                    TokenKind::Error_UnterminatedString,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                );
             },
             Char('\n' | '\r') | CRLF if feature::COMPUTE_OOB => {
-                session.addEmbeddedNewline(token_start.loc);
+                session.addEmbeddedNewline(tokenStartLoc);
             },
             Char('\t') if feature::COMPUTE_OOB => {
-                session.addEmbeddedTab(token_start.loc);
+                session.addEmbeddedTab(tokenStartLoc);
             },
             _ => (),
         }
@@ -1500,7 +1586,8 @@ fn Tokenizer_handleString<'i>(
 
 fn Tokenizer_handleString_stringifyAsTag<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -1518,14 +1605,15 @@ fn Tokenizer_handleString_stringifyAsTag<'i>(
 
         Tokenizer_handleSymbolSegment(
             session,
-            token_start,
+            tokenStartBuf,
+            tokenStartLoc,
             letterlikeBuf,
             letterlikeLoc,
             c,
             policy,
         );
 
-        return session.token(TokenKind::String, token_start);
+        return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
     }
 
     //
@@ -1534,8 +1622,8 @@ fn Tokenizer_handleString_stringifyAsTag<'i>(
 
     return Token::new(
         TokenKind::Error_ExpectedTag,
-        BufferAndLength::from_buffer_with_len(token_start.buf, 0),
-        Span::from_location(token_start.loc),
+        BufferAndLength::from_buffer_with_len(tokenStartBuf, 0),
+        Span::from_location(tokenStartLoc),
     );
 }
 
@@ -1544,9 +1632,10 @@ const UNTERMINATED_FILESTRING: c_int = -1;
 //
 // Use SourceCharacters here, not WLCharacters
 //
-fn Tokenizer_handleString_stringifyAsFile<'i>(
+pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: SourceCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -1577,11 +1666,22 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
             // TODO: Make this a return value of the function below
             let mut handled: c_int = 0;
 
-            c = Tokenizer_handleFileOpsBrackets(session, token_start, c, policy, &mut handled);
+            c = Tokenizer_handleFileOpsBrackets(
+                session,
+                tokenStartBuf,
+                tokenStartLoc,
+                c,
+                policy,
+                &mut handled,
+            );
 
             match handled {
                 UNTERMINATED_FILESTRING => {
-                    return session.token(TokenKind::Error_UnterminatedFileString, token_start);
+                    return session.token(
+                        TokenKind::Error_UnterminatedFileString,
+                        tokenStartBuf,
+                        tokenStartLoc,
+                    );
                 },
                 _ => (),
             }
@@ -1595,7 +1695,12 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
             // So invent source
             //
 
-            return session.token_at(TokenKind::Error_ExpectedFile, token_start);
+            return session.token_at(
+                TokenKind::Error_ExpectedFile,
+                // BufferAndLength::from_buffer(tokenStartBuf),
+                tokenStartBuf,
+                Span::from_location(tokenStartLoc),
+            );
         },
     }
 
@@ -1632,17 +1737,28 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
                 // TODO: Make this a return value of the func below
                 let mut handled: c_int = 0;
 
-                c = Tokenizer_handleFileOpsBrackets(session, token_start, c, policy, &mut handled);
+                c = Tokenizer_handleFileOpsBrackets(
+                    session,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                    c,
+                    policy,
+                    &mut handled,
+                );
 
                 match handled {
                     UNTERMINATED_FILESTRING => {
-                        return session.token(TokenKind::Error_UnterminatedFileString, token_start);
+                        return session.token(
+                            TokenKind::Error_UnterminatedFileString,
+                            tokenStartBuf,
+                            tokenStartLoc,
+                        );
                     },
                     _ => (),
                 }
             },
             _ => {
-                return session.token(TokenKind::String, token_start);
+                return session.token(TokenKind::String, tokenStartBuf, tokenStartLoc);
             },
         }
     } // while
@@ -1662,7 +1778,8 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
 //
 fn Tokenizer_handleFileOpsBrackets<'i>(
     session: &mut Tokenizer<'i>,
-    _token_start: &TokenStart<'i>,
+    _tokenStartBuf: Buffer,
+    _tokenStartLoc: Location,
     mut c: SourceCharacter,
     policy: NextPolicy,
     handled: &mut c_int,
@@ -1753,7 +1870,8 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
 //
 fn Tokenizer_handleNumber<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -1777,8 +1895,7 @@ fn Tokenizer_handleNumber<'i>(
     // 0.123
     //  ^leading_digits_end_mark
     //
-    // TODO(cleanup): Replace InputMark::new() with new InputMark::from_token_start()?
-    let mut leading_digits_end_mark = InputMark::new(token_start.buf.offset, token_start.loc);
+    let mut leading_digits_end_mark = InputMark::new(tokenStartBuf.offset, tokenStartLoc);
 
     let mut caret1Buf: Option<Buffer> = None;
     let mut caret_1_mark: Option<InputMark> = None;
@@ -1797,11 +1914,12 @@ fn Tokenizer_handleNumber<'i>(
         // 002^^111
         //   ^nonZeroStartBuf
         //
-        let mut nonZeroStartBuf = token_start.buf;
+        let mut nonZeroStartBuf = tokenStartBuf;
 
         if c.to_point() == '0' {
             let mut leadingZeroCount: u32 = 0;
-            (leadingZeroCount, c) = Tokenizer_handleZeros(session, token_start, policy, c);
+            (leadingZeroCount, c) =
+                Tokenizer_handleZeros(session, tokenStartBuf, tokenStartLoc, policy, c);
 
             leadingDigitsCount += leadingZeroCount;
 
@@ -1816,7 +1934,7 @@ fn Tokenizer_handleNumber<'i>(
 
         if c.isDigit() {
             let mut count: u32 = 0;
-            (count, c) = Tokenizer_handleDigits(session, token_start, policy, c);
+            (count, c) = Tokenizer_handleDigits(session, tokenStartBuf, tokenStartLoc, policy, c);
 
             leadingDigitsCount += count;
 
@@ -1857,7 +1975,7 @@ fn Tokenizer_handleNumber<'i>(
             // Success!
             //
 
-            return session.token(Ctxt.computeTok(), token_start);
+            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
         }
 
         match c.to_point() {
@@ -1881,7 +1999,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Preserve c, but advance buffer to next character
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             },
             _ => {
                 //
@@ -1892,7 +2010,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return session.token(Ctxt.computeTok(), token_start);
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             },
         }
 
@@ -1901,7 +2019,7 @@ fn Tokenizer_handleNumber<'i>(
             // Could be 16^^blah
             //
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() != '^' {
                 //
@@ -1916,7 +2034,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return session.token(Ctxt.computeTok(), token_start);
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             }
 
             assert!(c.to_point() == '^');
@@ -1927,7 +2045,7 @@ fn Tokenizer_handleNumber<'i>(
             // Must be a number
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if nonZeroStartBuf == caret1Buf.unwrap() {
                 //
@@ -1960,7 +2078,7 @@ fn Tokenizer_handleNumber<'i>(
                 }
             }
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             //
             // What can come after ^^ ?
@@ -1976,7 +2094,8 @@ fn Tokenizer_handleNumber<'i>(
 
                     (leadingDigitsCount, c) = Tokenizer_handleAlphaOrDigits(
                         session,
-                        token_start,
+                        tokenStartBuf,
+                        tokenStartLoc,
                         c,
                         Ctxt.Base,
                         policy,
@@ -2001,7 +2120,12 @@ fn Tokenizer_handleNumber<'i>(
                             // Preserve c, but advance buffer to next character
                             //
 
-                            Tokenizer_nextWLCharacter(session, token_start, policy);
+                            Tokenizer_nextWLCharacter(
+                                session,
+                                tokenStartBuf,
+                                tokenStartLoc,
+                                policy,
+                            );
                         },
                         _ => {
                             //
@@ -2012,7 +2136,7 @@ fn Tokenizer_handleNumber<'i>(
                             // Success!
                             //
 
-                            return session.token(Ctxt.computeTok(), token_start);
+                            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                         },
                     }
                 },
@@ -2027,7 +2151,7 @@ fn Tokenizer_handleNumber<'i>(
                     // Preserve c, but advance buffer to next character
                     //
 
-                    Tokenizer_nextWLCharacter(session, token_start, policy);
+                    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 },
                 EndOfFile => {
                     //
@@ -2038,12 +2162,12 @@ fn Tokenizer_handleNumber<'i>(
                     // Make sure that bad character is read
                     //
 
-                    Tokenizer_nextWLCharacter(session, token_start, policy);
+                    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+                    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     // nee TokenKind::Error_ExpectedDIGIT
-                    return session.token(TokenKind::Error_Number, token_start);
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 },
                 _ => {
                     //
@@ -2051,7 +2175,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_UNRECOGNIZEDDIGIT
-                    return session.token(TokenKind::Error_Number, token_start);
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 },
             }
         } // if (c.to_point() == '^')
@@ -2064,7 +2188,8 @@ fn Tokenizer_handleNumber<'i>(
         let handled: HandledFractionalPart;
         (handled, c) = Tokenizer_handlePossibleFractionalPart(
             session,
-            token_start,
+            tokenStartBuf,
+            tokenStartLoc,
             leading_digits_end_mark,
             c,
             Ctxt.Base,
@@ -2080,7 +2205,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_UNHANDLEDDOT
-                    return session.token(TokenKind::Error_Number, token_start);
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 }
 
                 //
@@ -2091,7 +2216,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return session.token(Ctxt.computeTok(), token_start);
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             },
             HandledFractionalPart::Count(0) => {
                 if leadingDigitsCount == 0 {
@@ -2100,7 +2225,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_UNHANDLEDDOT
-                    return session.token(TokenKind::Error_Number, token_start);
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 }
 
                 //
@@ -2125,7 +2250,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Preserve c, but advance buffer to next character
                         //
 
-                        Tokenizer_nextWLCharacter(session, token_start, policy);
+                        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     },
                     _ => {
                         //
@@ -2136,7 +2261,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return session.token(Ctxt.computeTok(), token_start);
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             },
@@ -2163,7 +2288,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Preserve c, but advance buffer to next character
                         //
 
-                        Tokenizer_nextWLCharacter(session, token_start, policy);
+                        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                     },
                     _ => {
                         //
@@ -2174,7 +2299,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return session.token(Ctxt.computeTok(), token_start);
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             },
@@ -2193,7 +2318,7 @@ fn Tokenizer_handleNumber<'i>(
     if c.to_point() == '`' {
         Ctxt.Real = true;
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         let mut accuracy = false;
         let mut sign = false;
@@ -2203,9 +2328,9 @@ fn Tokenizer_handleNumber<'i>(
         let mut sign_mark: Option<InputMark> = None;
 
         if c.to_point() == '`' {
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             accuracy = true;
         }
@@ -2230,9 +2355,9 @@ fn Tokenizer_handleNumber<'i>(
                 // Eat the sign
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                c = Tokenizer_currentWLCharacter(session, token_start, policy);
+                c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 match c.to_point() {
                     //
@@ -2309,7 +2434,11 @@ fn Tokenizer_handleNumber<'i>(
                             //
 
                             // nee TokenKind::Error_ExpectedACCURACY
-                            return session.token(TokenKind::Error_Number, token_start);
+                            return session.token(
+                                TokenKind::Error_Number,
+                                tokenStartBuf,
+                                tokenStartLoc,
+                            );
                         }
 
                         //
@@ -2323,7 +2452,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return session.token(Ctxt.computeTok(), token_start);
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             }, // case '-': case '+'
@@ -2334,7 +2463,8 @@ fn Tokenizer_handleNumber<'i>(
             Char('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9') => {
                 let mut count: u32 = 0;
 
-                (count, c) = Tokenizer_handleDigits(session, token_start, policy, c);
+                (count, c) =
+                    Tokenizer_handleDigits(session, tokenStartBuf, tokenStartLoc, policy, c);
 
                 if count > 0 {
                     precOrAccSupplied = true;
@@ -2351,7 +2481,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return session.token(Ctxt.computeTok(), token_start);
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     },
                 }
             },
@@ -2389,9 +2519,10 @@ fn Tokenizer_handleNumber<'i>(
 
                     // look ahead
 
-                    Tokenizer_nextWLCharacter(session, token_start, policy);
+                    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    let NextChar = Tokenizer_currentWLCharacter(session, token_start, policy);
+                    let NextChar =
+                        Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     if !NextChar.isDigit() {
                         if accuracy {
@@ -2400,7 +2531,11 @@ fn Tokenizer_handleNumber<'i>(
                             //
 
                             // TokenKind::Error_ExpectedDIGIT
-                            return session.token(TokenKind::Error_Number, token_start);
+                            return session.token(
+                                TokenKind::Error_Number,
+                                tokenStartBuf,
+                                tokenStartLoc,
+                            );
                         }
 
                         if NextChar.isSign() {
@@ -2408,10 +2543,19 @@ fn Tokenizer_handleNumber<'i>(
                             // Something like  123`.+4
                             //
 
-                            Tokenizer_nextWLCharacter(session, token_start, policy);
+                            Tokenizer_nextWLCharacter(
+                                session,
+                                tokenStartBuf,
+                                tokenStartLoc,
+                                policy,
+                            );
 
                             // nee TokenKind::Error_ExpectedDIGIT
-                            return session.token(TokenKind::Error_Number, token_start);
+                            return session.token(
+                                TokenKind::Error_Number,
+                                tokenStartBuf,
+                                tokenStartLoc,
+                            );
                         }
 
                         //
@@ -2430,7 +2574,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Success!
                         //
 
-                        return session.token(Ctxt.computeTok(), token_start);
+                        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                     } else {
                         //
                         // digit
@@ -2443,9 +2587,9 @@ fn Tokenizer_handleNumber<'i>(
                     // actual decimal point
                     //
 
-                    Tokenizer_nextWLCharacter(session, token_start, policy);
+                    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+                    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
                 }
 
                 //
@@ -2460,7 +2604,8 @@ fn Tokenizer_handleNumber<'i>(
 
                 (handled, c) = Tokenizer_handlePossibleFractionalPartPastDot(
                     session,
-                    token_start,
+                    tokenStartBuf,
+                    tokenStartLoc,
                     dot_mark,
                     c,
                     baseToUse,
@@ -2479,7 +2624,7 @@ fn Tokenizer_handleNumber<'i>(
                             // Success!
                             //
 
-                            return session.token(Ctxt.computeTok(), token_start);
+                            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                         }
 
                         if sign {
@@ -2493,7 +2638,7 @@ fn Tokenizer_handleNumber<'i>(
                             // Success!
                             //
 
-                            return session.token(Ctxt.computeTok(), token_start);
+                            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
                         }
 
                         assert!(false);
@@ -2510,7 +2655,7 @@ fn Tokenizer_handleNumber<'i>(
                     //
 
                     // nee TokenKind::Error_ExpectedDIGIT
-                    return session.token(TokenKind::Error_Number, token_start);
+                    return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
                 }
             }, // case '.'
             _ => (),
@@ -2528,7 +2673,11 @@ fn Tokenizer_handleNumber<'i>(
                         //
 
                         // nee TokenKind::Error_ExpectedACCURACY
-                        return session.token(TokenKind::Error_Number, token_start);
+                        return session.token(
+                            TokenKind::Error_Number,
+                            tokenStartBuf,
+                            tokenStartLoc,
+                        );
                     }
                 }
 
@@ -2541,7 +2690,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Preserve c, but advance buffer to next character
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
             },
             _ => {
                 if accuracy {
@@ -2551,7 +2700,11 @@ fn Tokenizer_handleNumber<'i>(
                         //
 
                         // nee TokenKind::Error_ExpectedACCURACY
-                        return session.token(TokenKind::Error_Number, token_start);
+                        return session.token(
+                            TokenKind::Error_Number,
+                            tokenStartBuf,
+                            tokenStartLoc,
+                        );
                     }
                 }
 
@@ -2559,7 +2712,7 @@ fn Tokenizer_handleNumber<'i>(
                 // Success!
                 //
 
-                return session.token(Ctxt.computeTok(), token_start);
+                return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
             },
         }
     } // if (c.to_point() == '`')
@@ -2568,7 +2721,7 @@ fn Tokenizer_handleNumber<'i>(
 
     assert!(utils::ifASCIIWLCharacter(starBuf.unwrap()[0], b'*'));
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.to_point() != '^' {
         //
@@ -2583,7 +2736,7 @@ fn Tokenizer_handleNumber<'i>(
         // Success!
         //
 
-        return session.token(Ctxt.computeTok(), token_start);
+        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
     }
 
     assert!(c.to_point() == '^');
@@ -2594,17 +2747,17 @@ fn Tokenizer_handleNumber<'i>(
     // So now examine *^ notation
     //
 
-    Tokenizer_nextWLCharacter(session, token_start, policy);
+    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if let Char(c2 @ ('+' | '-')) = c.to_point() {
         if c2 == '-' {
             Ctxt.NegativeExponent = true;
         }
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
     }
 
     if !c.isDigit() {
@@ -2613,7 +2766,7 @@ fn Tokenizer_handleNumber<'i>(
         //
 
         // TokenKind::Error_ExpectedEXPONENT
-        return session.token(TokenKind::Error_Number, token_start);
+        return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
     }
 
     assert!(c.isDigit());
@@ -2624,12 +2777,13 @@ fn Tokenizer_handleNumber<'i>(
     if c.to_point() == '0' {
         let _exponentLeadingZeroCount: u32;
 
-        (_exponentLeadingZeroCount, c) = Tokenizer_handleZeros(session, token_start, policy, c);
+        (_exponentLeadingZeroCount, c) =
+            Tokenizer_handleZeros(session, tokenStartBuf, tokenStartLoc, policy, c);
     }
 
     if c.isDigit() {
         (Ctxt.NonZeroExponentDigitCount, c) =
-            Tokenizer_handleDigits(session, token_start, policy, c);
+            Tokenizer_handleDigits(session, tokenStartBuf, tokenStartLoc, policy, c);
     }
 
     if c.to_point() != '.' {
@@ -2637,7 +2791,7 @@ fn Tokenizer_handleNumber<'i>(
         // Success!
         //
 
-        return session.token(Ctxt.computeTok(), token_start);
+        return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
     }
 
     assert!(c.to_point() == '.');
@@ -2647,14 +2801,15 @@ fn Tokenizer_handleNumber<'i>(
 
     assert!(utils::ifASCIIWLCharacter(dotBuf[0], b'.'));
 
-    Tokenizer_nextWLCharacter(session, token_start, policy);
+    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     let handled: HandledFractionalPart;
     (handled, c) = Tokenizer_handlePossibleFractionalPartPastDot(
         session,
-        token_start,
+        tokenStartBuf,
+        tokenStartLoc,
         dot_mark,
         c,
         Ctxt.Base,
@@ -2674,7 +2829,7 @@ fn Tokenizer_handleNumber<'i>(
             // Success!
             //
 
-            return session.token(Ctxt.computeTok(), token_start);
+            return session.token(Ctxt.computeTok(), tokenStartBuf, tokenStartLoc);
         },
         HandledFractionalPart::Count(_) => {
             //
@@ -2684,7 +2839,7 @@ fn Tokenizer_handleNumber<'i>(
             //
 
             // nee TokenKind::Error_ExpectedEXPONENT
-            return session.token(TokenKind::Error_Number, token_start);
+            return session.token(TokenKind::Error_Number, tokenStartBuf, tokenStartLoc);
         },
     }
 }
@@ -2751,7 +2906,8 @@ enum HandledFractionalPart {
 //
 fn Tokenizer_handlePossibleFractionalPart<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     dot_mark: InputMark,
     mut c: WLCharacter,
     base: i32,
@@ -2760,12 +2916,13 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
 ) -> (HandledFractionalPart, WLCharacter) {
     assert!(c.to_point() == '.');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     // MUSTTAIL
     return Tokenizer_handlePossibleFractionalPartPastDot(
         session,
-        token_start,
+        tokenStartBuf,
+        tokenStartLoc,
         dot_mark,
         c,
         base,
@@ -2784,7 +2941,8 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
 ///
 fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     dot_mark: InputMark,
     mut c: WLCharacter,
     base: i32,
@@ -2806,14 +2964,22 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
 
         Tokenizer_backupAndWarn(session, dot_mark);
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         return (HandledFractionalPart::Bailout, c);
     }
 
     if c.isAlphaOrDigit() {
         let handled: u32;
-        (handled, c) = Tokenizer_handleAlphaOrDigits(session, token_start, c, base, policy, Ctxt);
+        (handled, c) = Tokenizer_handleAlphaOrDigits(
+            session,
+            tokenStartBuf,
+            tokenStartLoc,
+            c,
+            base,
+            policy,
+            Ctxt,
+        );
 
         if handled > 0 {
             #[cfg(feature = "CHECK_ISSUES")]
@@ -2884,7 +3050,8 @@ fn Tokenizer_backupAndWarn<'i>(session: &mut Tokenizer<'i>, reset: InputMark) {
 //
 fn Tokenizer_handleZeros<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     policy: NextPolicy,
     mut c: WLCharacter,
 ) -> (u32, WLCharacter) {
@@ -2892,16 +3059,16 @@ fn Tokenizer_handleZeros<'i>(
 
     let mut count = 1;
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     loop {
         if c.to_point() != '0' {
             break;
         }
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         count += 1;
     } // while
@@ -2917,7 +3084,8 @@ fn Tokenizer_handleZeros<'i>(
 //
 fn Tokenizer_handleDigits<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     policy: NextPolicy,
     mut c: WLCharacter,
 ) -> (u32, WLCharacter) {
@@ -2925,16 +3093,16 @@ fn Tokenizer_handleDigits<'i>(
 
     let mut count = 1;
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     loop {
         if !c.isDigit() {
             break;
         }
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         count += 1;
     } // while
@@ -2950,7 +3118,8 @@ fn Tokenizer_handleDigits<'i>(
 //
 fn Tokenizer_handleAlphaOrDigits<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     base: i32,
     policy: NextPolicy,
@@ -2981,9 +3150,9 @@ fn Tokenizer_handleAlphaOrDigits<'i>(
             }
         }
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         count += 1;
     } // while
@@ -2993,44 +3162,49 @@ fn Tokenizer_handleAlphaOrDigits<'i>(
 
 fn Tokenizer_handleColon<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == ':');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char(':') => {
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '[' {
                 //
                 // ::[
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::ColonColonOpenSquare, token_start);
+                return session.token(
+                    TokenKind::ColonColonOpenSquare,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                );
             }
 
             //
             // ::
             //
 
-            return session.token(TokenKind::ColonColon, token_start);
+            return session.token(TokenKind::ColonColon, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
             // :=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::ColonEqual, token_start);
+            return session.token(TokenKind::ColonEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('>') => {
             //
@@ -3039,23 +3213,24 @@ fn Tokenizer_handleColon<'i>(
 
             incr_diagnostic!(Tokenizer_ColonGreaterCount);
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::ColonGreater, token_start);
+            return session.token(TokenKind::ColonGreater, tokenStartBuf, tokenStartLoc);
         },
         _ => {
             //
             // :
             //
 
-            return session.token(TokenKind::Colon, token_start);
+            return session.token(TokenKind::Colon, tokenStartBuf, tokenStartLoc);
         },
     }
 }
 
 fn Tokenizer_handleOpenParen<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -3072,7 +3247,7 @@ fn Tokenizer_handleOpenParen<'i>(
         // secondChar is a SourceCharacter, so cannot MUSTTAIL
         //
         //        MUSTTAIL
-        return Tokenizer_handleComment(session, token_start, secondChar, policy);
+        return Tokenizer_handleComment(session, tokenStartBuf, tokenStartLoc, secondChar, policy);
     }
 
     //
@@ -3081,12 +3256,13 @@ fn Tokenizer_handleOpenParen<'i>(
 
     incr_diagnostic!(Tokenizer_OpenParenCount);
 
-    return session.token(TokenKind::OpenParen, token_start);
+    return session.token(TokenKind::OpenParen, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleDot<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     firstChar: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -3099,89 +3275,90 @@ fn Tokenizer_handleDot<'i>(
 
     assert!(c.to_point() == '.');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.isDigit() {
         //        MUSTTAIL
-        return Tokenizer_handleNumber(session, token_start, firstChar, policy);
+        return Tokenizer_handleNumber(session, tokenStartBuf, tokenStartLoc, firstChar, policy);
     }
 
     if c.to_point() == '.' {
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         if c.to_point() == '.' {
             //
             // ...
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::DotDotDot, token_start);
+            return session.token(TokenKind::DotDotDot, tokenStartBuf, tokenStartLoc);
         }
 
         //
         // ..
         //
 
-        return session.token(TokenKind::DotDot, token_start);
+        return session.token(TokenKind::DotDot, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // .
     //
 
-    return session.token(TokenKind::Dot, token_start);
+    return session.token(TokenKind::Dot, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleEqual<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '=');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('=') => {
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '=' {
                 //
                 // ===
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::EqualEqualEqual, token_start);
+                return session.token(TokenKind::EqualEqualEqual, tokenStartBuf, tokenStartLoc);
             }
 
             //
             // ==
             //
 
-            return session.token(TokenKind::EqualEqual, token_start);
+            return session.token(TokenKind::EqualEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('!') => {
             let bang_mark = session.mark();
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '=' {
                 //
                 // =!=
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::EqualBangEqual, token_start);
+                return session.token(TokenKind::EqualBangEqual, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -3192,7 +3369,7 @@ fn Tokenizer_handleEqual<'i>(
 
             Tokenizer_backupAndWarn(session, bang_mark);
 
-            return session.token(TokenKind::Equal, token_start);
+            return session.token(TokenKind::Equal, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3201,18 +3378,19 @@ fn Tokenizer_handleEqual<'i>(
     // =
     //
 
-    return session.token(TokenKind::Equal, token_start);
+    return session.token(TokenKind::Equal, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleUnder<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '_');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('_') => {
@@ -3220,33 +3398,33 @@ fn Tokenizer_handleUnder<'i>(
             // __
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '_' {
                 //
                 // ___
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::UnderUnderUnder, token_start);
+                return session.token(TokenKind::UnderUnderUnder, tokenStartBuf, tokenStartLoc);
             }
 
-            return session.token(TokenKind::UnderUnder, token_start);
+            return session.token(TokenKind::UnderUnder, tokenStartBuf, tokenStartLoc);
         },
         Char('.') => {
             //
             // _.
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if feature::CHECK_ISSUES {
                 let afterLoc = session.SrcLoc;
 
-                c = Tokenizer_currentWLCharacter(session, token_start, policy);
+                c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 if c.to_point() == '.' {
                     //
@@ -3283,7 +3461,7 @@ fn Tokenizer_handleUnder<'i>(
                 }
             }
 
-            return session.token(TokenKind::UnderDot, token_start);
+            return session.token(TokenKind::UnderDot, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3292,18 +3470,19 @@ fn Tokenizer_handleUnder<'i>(
     // _
     //
 
-    return session.token(TokenKind::Under, token_start);
+    return session.token(TokenKind::Under, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleLess<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '<');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('|') => {
@@ -3311,52 +3490,52 @@ fn Tokenizer_handleLess<'i>(
             // <|
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::LessBar, token_start);
+            return session.token(TokenKind::LessBar, tokenStartBuf, tokenStartLoc);
         },
         Char('<') => {
             //
             // <<
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::LessLess, token_start);
+            return session.token(TokenKind::LessLess, tokenStartBuf, tokenStartLoc);
         },
         Char('>') => {
             //
             // <>
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::LessGreater, token_start);
+            return session.token(TokenKind::LessGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
             // <=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::LessEqual, token_start);
+            return session.token(TokenKind::LessEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('-') => {
             let minus_mark = session.mark();
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '>' {
                 //
                 // <->
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::LessMinusGreater, token_start);
+                return session.token(TokenKind::LessMinusGreater, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -3367,7 +3546,7 @@ fn Tokenizer_handleLess<'i>(
 
             Tokenizer_backupAndWarn(session, minus_mark);
 
-            return session.token(TokenKind::Less, token_start);
+            return session.token(TokenKind::Less, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3376,18 +3555,19 @@ fn Tokenizer_handleLess<'i>(
     // <
     //
 
-    return session.token(TokenKind::Less, token_start);
+    return session.token(TokenKind::Less, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleGreater<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '>');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('>') => {
@@ -3395,30 +3575,34 @@ fn Tokenizer_handleGreater<'i>(
             // >>
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '>' {
                 //
                 // >>>
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::GreaterGreaterGreater, token_start);
+                return session.token(
+                    TokenKind::GreaterGreaterGreater,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                );
             }
 
-            return session.token(TokenKind::GreaterGreater, token_start);
+            return session.token(TokenKind::GreaterGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
             // >=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::GreaterEqual, token_start);
+            return session.token(TokenKind::GreaterEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3427,18 +3611,19 @@ fn Tokenizer_handleGreater<'i>(
     // >
     //
 
-    return session.token(TokenKind::Greater, token_start);
+    return session.token(TokenKind::Greater, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleMinus<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '-');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     //
     // Do not lex as a number here
@@ -3457,21 +3642,21 @@ fn Tokenizer_handleMinus<'i>(
 
             incr_diagnostic!(Tokenizer_MinusGreaterCount);
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::MinusGreater, token_start);
+            return session.token(TokenKind::MinusGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('-') => {
             //
             // --
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if feature::CHECK_ISSUES {
                 let afterLoc = session.SrcLoc;
 
-                c = Tokenizer_currentWLCharacter(session, token_start, policy);
+                c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 if c.to_point() == '>' {
                     //
@@ -3497,7 +3682,7 @@ fn Tokenizer_handleMinus<'i>(
                     //
                     Actions.push(CodeAction::replace_text(
                         "Replace with ``->``".into(),
-                        Span::new(token_start.loc, afterLoc),
+                        Span::new(tokenStartLoc, afterLoc),
                         "-".into(),
                     ));
 
@@ -3511,7 +3696,7 @@ fn Tokenizer_handleMinus<'i>(
                         IssueTag::Ambiguous,
                         "``-->`` is ambiguous syntax.".into(),
                         Severity::Error,
-                        Span::new(token_start.loc, afterLoc),
+                        Span::new(tokenStartLoc, afterLoc),
                         0.95,
                         Actions,
                         vec![],
@@ -3547,16 +3732,16 @@ fn Tokenizer_handleMinus<'i>(
                 }
             }
 
-            return session.token(TokenKind::MinusMinus, token_start);
+            return session.token(TokenKind::MinusMinus, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
             // -=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::MinusEqual, token_start);
+            return session.token(TokenKind::MinusEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3567,18 +3752,19 @@ fn Tokenizer_handleMinus<'i>(
 
     incr_diagnostic!(Tokenizer_MinusCount);
 
-    return session.token(TokenKind::Minus, token_start);
+    return session.token(TokenKind::Minus, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleBar<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '|');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('>') => {
@@ -3586,12 +3772,12 @@ fn Tokenizer_handleBar<'i>(
             // |>
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if feature::CHECK_ISSUES {
                 let afterLoc = session.SrcLoc;
 
-                c = Tokenizer_currentWLCharacter(session, token_start, policy);
+                c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 if c.to_point() == '=' {
                     //
@@ -3622,32 +3808,32 @@ fn Tokenizer_handleBar<'i>(
                 }
             }
 
-            return session.token(TokenKind::BarGreater, token_start);
+            return session.token(TokenKind::BarGreater, tokenStartBuf, tokenStartLoc);
         },
         Char('|') => {
             //
             // ||
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::BarBar, token_start);
+            return session.token(TokenKind::BarBar, tokenStartBuf, tokenStartLoc);
         },
         Char('-') => {
             let bar_mark = session.mark();
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '>' {
                 //
                 // |->
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::BarMinusGreater, token_start);
+                return session.token(TokenKind::BarMinusGreater, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -3658,7 +3844,7 @@ fn Tokenizer_handleBar<'i>(
 
             Tokenizer_backupAndWarn(session, bar_mark);
 
-            return session.token(TokenKind::Bar, token_start);
+            return session.token(TokenKind::Bar, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3667,45 +3853,47 @@ fn Tokenizer_handleBar<'i>(
     // |
     //
 
-    return session.token(TokenKind::Bar, token_start);
+    return session.token(TokenKind::Bar, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleSemi<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == ';');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.to_point() == ';' {
         //
         // ;;
         //
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return session.token(TokenKind::SemiSemi, token_start);
+        return session.token(TokenKind::SemiSemi, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // ;
     //
 
-    return session.token(TokenKind::Semi, token_start);
+    return session.token(TokenKind::Semi, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleBang<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '!');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('=') => {
@@ -3713,18 +3901,18 @@ fn Tokenizer_handleBang<'i>(
             // !=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::BangEqual, token_start);
+            return session.token(TokenKind::BangEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('!') => {
             //
             // !!
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::BangBang, token_start);
+            return session.token(TokenKind::BangBang, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3733,27 +3921,28 @@ fn Tokenizer_handleBang<'i>(
     // !
     //
 
-    return session.token(TokenKind::Bang, token_start);
+    return session.token(TokenKind::Bang, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleHash<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '#');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.to_point() == '#' {
         //
         // ##
         //
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return session.token(TokenKind::HashHash, token_start);
+        return session.token(TokenKind::HashHash, tokenStartBuf, tokenStartLoc);
     }
 
     //
@@ -3762,64 +3951,66 @@ fn Tokenizer_handleHash<'i>(
 
     incr_diagnostic!(Tokenizer_HashCount);
 
-    return session.token(TokenKind::Hash, token_start);
+    return session.token(TokenKind::Hash, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handlePercent<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '%');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.to_point() == '%' {
         //
         // %%
         //
 
-        c = Tokenizer_currentWLCharacter(session, token_start, policy);
+        c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
         loop {
             if c.to_point() != '%' {
                 break;
             }
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
         } // while
 
-        return session.token(TokenKind::PercentPercent, token_start);
+        return session.token(TokenKind::PercentPercent, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // %
     //
 
-    return session.token(TokenKind::Percent, token_start);
+    return session.token(TokenKind::Percent, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleAmp<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '&');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.to_point() == '&' {
         //
         // &&
         //
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return session.token(TokenKind::AmpAmp, token_start);
+        return session.token(TokenKind::AmpAmp, tokenStartBuf, tokenStartLoc);
     }
 
     //
@@ -3828,18 +4019,19 @@ fn Tokenizer_handleAmp<'i>(
 
     incr_diagnostic!(Tokenizer_AmpCount);
 
-    return session.token(TokenKind::Amp, token_start);
+    return session.token(TokenKind::Amp, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleSlash<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '/');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('@') => {
@@ -3847,32 +4039,32 @@ fn Tokenizer_handleSlash<'i>(
             // /@
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::SlashAt, token_start);
+            return session.token(TokenKind::SlashAt, tokenStartBuf, tokenStartLoc);
         },
         Char(';') => {
             //
             // /;
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::SlashSemi, token_start);
+            return session.token(TokenKind::SlashSemi, tokenStartBuf, tokenStartLoc);
         },
         Char('.') => {
             let dot_mark = session.mark();
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if !c.isDigit() {
                 //
                 // /.
                 //
 
-                return session.token(TokenKind::SlashDot, token_start);
+                return session.token(TokenKind::SlashDot, tokenStartBuf, tokenStartLoc);
             }
 
             //
@@ -3883,16 +4075,16 @@ fn Tokenizer_handleSlash<'i>(
 
             Tokenizer_backupAndWarn(session, dot_mark);
 
-            return session.token(TokenKind::Slash, token_start);
+            return session.token(TokenKind::Slash, tokenStartBuf, tokenStartLoc);
         },
         Char('/') => {
             //
             // //
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             match c.to_point() {
                 Char('.') => {
@@ -3900,27 +4092,27 @@ fn Tokenizer_handleSlash<'i>(
                     // //.
                     //
 
-                    Tokenizer_nextWLCharacter(session, token_start, policy);
+                    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    return session.token(TokenKind::SlashSlashDot, token_start);
+                    return session.token(TokenKind::SlashSlashDot, tokenStartBuf, tokenStartLoc);
                 },
                 Char('@') => {
                     //
                     // //@
                     //
 
-                    Tokenizer_nextWLCharacter(session, token_start, policy);
+                    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    return session.token(TokenKind::SlashSlashAt, token_start);
+                    return session.token(TokenKind::SlashSlashAt, tokenStartBuf, tokenStartLoc);
                 },
                 Char('=') => {
                     //
                     // //=
                     //
 
-                    Tokenizer_nextWLCharacter(session, token_start, policy);
+                    Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                    return session.token(TokenKind::SlashSlashEqual, token_start);
+                    return session.token(TokenKind::SlashSlashEqual, tokenStartBuf, tokenStartLoc);
                 },
                 _ => (),
             }
@@ -3929,34 +4121,34 @@ fn Tokenizer_handleSlash<'i>(
             // //
             //
 
-            return session.token(TokenKind::SlashSlash, token_start);
+            return session.token(TokenKind::SlashSlash, tokenStartBuf, tokenStartLoc);
         },
         Char(':') => {
             //
             // /:
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::SlashColon, token_start);
+            return session.token(TokenKind::SlashColon, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
             // /=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::SlashEqual, token_start);
+            return session.token(TokenKind::SlashEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('*') => {
             //
             // /*
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::SlashStar, token_start);
+            return session.token(TokenKind::SlashStar, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -3965,49 +4157,50 @@ fn Tokenizer_handleSlash<'i>(
     // /
     //
 
-    return session.token(TokenKind::Slash, token_start);
+    return session.token(TokenKind::Slash, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleAt<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '@');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('@') => {
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '@' {
                 //
                 // @@@
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::AtAtAt, token_start);
+                return session.token(TokenKind::AtAtAt, tokenStartBuf, tokenStartLoc);
             }
 
             //
             // @@
             //
 
-            return session.token(TokenKind::AtAt, token_start);
+            return session.token(TokenKind::AtAt, tokenStartBuf, tokenStartLoc);
         },
         Char('*') => {
             //
             // @*
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::AtStar, token_start);
+            return session.token(TokenKind::AtStar, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4016,18 +4209,19 @@ fn Tokenizer_handleAt<'i>(
     // @
     //
 
-    return session.token(TokenKind::At, token_start);
+    return session.token(TokenKind::At, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handlePlus<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '+');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('+') => {
@@ -4035,10 +4229,10 @@ fn Tokenizer_handlePlus<'i>(
             // ++
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if feature::CHECK_ISSUES {
-                c = Tokenizer_currentWLCharacter(session, token_start, policy);
+                c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 if c.to_point() == '=' {
                     //
@@ -4069,16 +4263,16 @@ fn Tokenizer_handlePlus<'i>(
                 }
             }
 
-            return session.token(TokenKind::PlusPlus, token_start);
+            return session.token(TokenKind::PlusPlus, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
             // +=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::PlusEqual, token_start);
+            return session.token(TokenKind::PlusEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4089,72 +4283,75 @@ fn Tokenizer_handlePlus<'i>(
 
     incr_diagnostic!(Tokenizer_PlusCount);
 
-    return session.token(TokenKind::Plus, token_start);
+    return session.token(TokenKind::Plus, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleTilde<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '~');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.to_point() == '~' {
         //
         // ~~
         //
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return session.token(TokenKind::TildeTilde, token_start);
+        return session.token(TokenKind::TildeTilde, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // ~
     //
 
-    return session.token(TokenKind::Tilde, token_start);
+    return session.token(TokenKind::Tilde, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleQuestion<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '?');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     if c.to_point() == '?' {
         //
         // ??
         //
 
-        Tokenizer_nextWLCharacter(session, token_start, policy);
+        Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return session.token(TokenKind::QuestionQuestion, token_start);
+        return session.token(TokenKind::QuestionQuestion, tokenStartBuf, tokenStartLoc);
     }
 
     //
     // ?
     //
 
-    return session.token(TokenKind::Question, token_start);
+    return session.token(TokenKind::Question, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleStar<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '*');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('=') => {
@@ -4162,27 +4359,31 @@ fn Tokenizer_handleStar<'i>(
             // *=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::StarEqual, token_start);
+            return session.token(TokenKind::StarEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('*') => {
             //
             // **
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::StarStar, token_start);
+            return session.token(TokenKind::StarStar, tokenStartBuf, tokenStartLoc);
         },
         Char(')') => {
             //
             // *)
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::Error_UnexpectedCommentCloser, token_start);
+            return session.token(
+                TokenKind::Error_UnexpectedCommentCloser,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         _ => (),
     }
@@ -4191,49 +4392,50 @@ fn Tokenizer_handleStar<'i>(
     // *
     //
 
-    return session.token(TokenKind::Star, token_start);
+    return session.token(TokenKind::Star, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleCaret<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.to_point() == '^');
 
-    c = Tokenizer_currentWLCharacter(session, token_start, policy);
+    c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char(':') => {
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            c = Tokenizer_currentWLCharacter(session, token_start, policy);
+            c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             if c.to_point() == '=' {
                 //
                 // ^:=
                 //
 
-                Tokenizer_nextWLCharacter(session, token_start, policy);
+                Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-                return session.token(TokenKind::CaretColonEqual, token_start);
+                return session.token(TokenKind::CaretColonEqual, tokenStartBuf, tokenStartLoc);
             }
 
             //
             // Has to be ^:=
             //
 
-            return session.token(TokenKind::Error_ExpectedEqual, token_start);
+            return session.token(TokenKind::Error_ExpectedEqual, tokenStartBuf, tokenStartLoc);
         },
         Char('=') => {
             //
             // ^=
             //
 
-            Tokenizer_nextWLCharacter(session, token_start, policy);
+            Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-            return session.token(TokenKind::CaretEqual, token_start);
+            return session.token(TokenKind::CaretEqual, tokenStartBuf, tokenStartLoc);
         },
         _ => (),
     }
@@ -4242,12 +4444,13 @@ fn Tokenizer_handleCaret<'i>(
     // ^
     //
 
-    return session.token(TokenKind::Caret, token_start);
+    return session.token(TokenKind::Caret, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleUnhandledBackslash<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     mut c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -4262,7 +4465,7 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
 
     assert!(c.to_point() == '\\');
 
-    c = Tokenizer_nextWLCharacter(session, token_start, policy);
+    c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
     match c.to_point() {
         Char('[') => {
@@ -4272,20 +4475,25 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
 
             let mut reset_mark = session.mark();
 
-            c = Tokenizer_nextWLCharacter(session, token_start, policy);
+            c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             let mut wellFormed = false;
 
             if c.isUpper() {
                 reset_mark = session.mark();
 
-                c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 loop {
                     if c.isAlphaOrDigit() {
                         reset_mark = session.mark();
 
-                        c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                        c = Tokenizer_nextWLCharacter(
+                            session,
+                            tokenStartBuf,
+                            tokenStartLoc,
+                            policy,
+                        );
 
                         continue;
                     }
@@ -4301,10 +4509,18 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             }
 
             if wellFormed {
-                return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+                return session.token(
+                    TokenKind::Error_UnhandledCharacter,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                );
             }
 
-            return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+            return session.token(
+                TokenKind::Error_UnhandledCharacter,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         Char(':') => {
             //
@@ -4313,13 +4529,13 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
 
             let mut reset_mark = session.mark();
 
-            c = Tokenizer_nextWLCharacter(session, token_start, policy);
+            c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..4 {
                 if c.isHex() {
                     reset_mark = session.mark();
 
-                    c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                    c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
@@ -4329,7 +4545,11 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+            return session.token(
+                TokenKind::Error_UnhandledCharacter,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         Char('.') => {
             //
@@ -4338,13 +4558,13 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
 
             let mut reset_mark = session.mark();
 
-            c = Tokenizer_nextWLCharacter(session, token_start, policy);
+            c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..2 {
                 if c.isHex() {
                     reset_mark = session.mark();
 
-                    c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                    c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
@@ -4354,7 +4574,11 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+            return session.token(
+                TokenKind::Error_UnhandledCharacter,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         Char('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7') => {
             //
@@ -4363,13 +4587,13 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
 
             let mut reset_mark = session.mark();
 
-            c = Tokenizer_nextWLCharacter(session, token_start, policy);
+            c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..3 {
                 if c.isOctal() {
                     reset_mark = session.mark();
 
-                    c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                    c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
@@ -4379,7 +4603,11 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+            return session.token(
+                TokenKind::Error_UnhandledCharacter,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         Char('|') => {
             //
@@ -4387,13 +4615,13 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             //
 
             let mut reset_mark = session.mark();
-            c = Tokenizer_nextWLCharacter(session, token_start, policy);
+            c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..6 {
                 if c.isHex() {
                     reset_mark = session.mark();
 
-                    c = Tokenizer_nextWLCharacter(session, token_start, policy);
+                    c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
@@ -4403,10 +4631,18 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                 break;
             }
 
-            return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+            return session.token(
+                TokenKind::Error_UnhandledCharacter,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         EndOfFile => {
-            return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+            return session.token(
+                TokenKind::Error_UnhandledCharacter,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         _ => (),
     } // switch
@@ -4415,19 +4651,24 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
     // Nothing special, just read next single character
     //
 
-    return session.token(TokenKind::Error_UnhandledCharacter, token_start);
+    return session.token(
+        TokenKind::Error_UnhandledCharacter,
+        tokenStartBuf,
+        tokenStartLoc,
+    );
 }
 
 fn Tokenizer_handleMBStrangeNewline<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.isMBStrangeNewline());
 
     if feature::CHECK_ISSUES {
-        let Src = session.get_token_span(token_start.loc);
+        let Src = session.get_token_span(tokenStartLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -4451,19 +4692,24 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return session.token(TokenKind::InternalNewline.with_policy(policy), token_start);
+    return session.token(
+        TokenKind::InternalNewline.with_policy(policy),
+        tokenStartBuf,
+        tokenStartLoc,
+    );
 }
 
 fn Tokenizer_handleMBStrangeWhitespace<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
     assert!(c.isMBStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
-        let Src = session.get_token_span(token_start.loc);
+        let Src = session.get_token_span(tokenStartLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -4487,12 +4733,13 @@ fn Tokenizer_handleMBStrangeWhitespace<'i>(
         session.addIssue(I);
     }
 
-    return session.token(TokenKind::Whitespace, token_start);
+    return session.token(TokenKind::Whitespace, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleMBPunctuation<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -4505,12 +4752,13 @@ fn Tokenizer_handleMBPunctuation<'i>(
 
     let Operator = crate::generated::long_names_registration::LongNameCodePointToOperator(char);
 
-    return session.token(Operator, token_start);
+    return session.token(Operator, tokenStartBuf, tokenStartLoc);
 }
 
 fn Tokenizer_handleNakedMBLinearSyntax<'i>(
     session: &mut Tokenizer<'i>,
-    token_start: &TokenStart<'i>,
+    tokenStartBuf: Buffer<'i>,
+    tokenStartLoc: Location,
     c: WLCharacter,
     _policy: NextPolicy,
 ) -> TokenRef<'i> {
@@ -4518,37 +4766,49 @@ fn Tokenizer_handleNakedMBLinearSyntax<'i>(
 
     match c.to_point() {
         Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => {
-            return session.token(TokenKind::LinearSyntax_CloseParen, token_start);
+            return session.token(
+                TokenKind::LinearSyntax_CloseParen,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         Char(CODEPOINT_LINEARSYNTAX_AT) => {
-            return session.token(TokenKind::LinearSyntax_At, token_start);
+            return session.token(TokenKind::LinearSyntax_At, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_PERCENT) => {
-            return session.token(TokenKind::LinearSyntax_Percent, token_start);
+            return session.token(
+                TokenKind::LinearSyntax_Percent,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         Char(CODEPOINT_LINEARSYNTAX_CARET) => {
-            return session.token(TokenKind::LinearSyntax_Caret, token_start);
+            return session.token(TokenKind::LinearSyntax_Caret, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_AMP) => {
-            return session.token(TokenKind::LinearSyntax_Amp, token_start);
+            return session.token(TokenKind::LinearSyntax_Amp, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_STAR) => {
-            return session.token(TokenKind::LinearSyntax_Star, token_start);
+            return session.token(TokenKind::LinearSyntax_Star, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_UNDER) => {
-            return session.token(TokenKind::LinearSyntax_Under, token_start);
+            return session.token(TokenKind::LinearSyntax_Under, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_PLUS) => {
-            return session.token(TokenKind::LinearSyntax_Plus, token_start);
+            return session.token(TokenKind::LinearSyntax_Plus, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_SLASH) => {
-            return session.token(TokenKind::LinearSyntax_Slash, token_start);
+            return session.token(TokenKind::LinearSyntax_Slash, tokenStartBuf, tokenStartLoc);
         },
         Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => {
-            return session.token(TokenKind::LinearSyntax_BackTick, token_start);
+            return session.token(
+                TokenKind::LinearSyntax_BackTick,
+                tokenStartBuf,
+                tokenStartLoc,
+            );
         },
         CodePoint::LinearSyntax_Space => {
-            return session.token(TokenKind::LinearSyntax_Space, token_start);
+            return session.token(TokenKind::LinearSyntax_Space, tokenStartBuf, tokenStartLoc);
         },
         _ => todo!(),
     }
