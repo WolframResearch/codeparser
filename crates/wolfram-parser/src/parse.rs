@@ -33,8 +33,6 @@
 
 
 pub(crate) mod parselet;
-pub(crate) mod operators;
-mod token_parselets;
 mod parser_session;
 
 
@@ -46,6 +44,7 @@ use crate::{
         CstNodeSeq, Node, TernaryNode, TernaryOperator,
     },
     feature,
+    generated::parselet_registration::{INFIX_PARSELETS, PREFIX_PARSELETS},
     panic_if_aborted,
     // parselet::Parselet,
     precedence::Precedence,
@@ -62,7 +61,6 @@ use crate::{
 use self::{
     parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
     parser_session::TriviaSeq,
-    token_parselets::{INFIX_PARSELETS, PREFIX_PARSELETS},
 };
 
 pub use self::parser_session::ParseResult;

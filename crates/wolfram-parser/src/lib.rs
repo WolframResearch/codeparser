@@ -94,6 +94,7 @@ mod feature;
 pub mod generated {
     pub mod token_enum_registration;
     pub(crate) mod long_names_registration;
+    pub(crate) mod parselet_registration;
     pub(crate) mod precedence_values;
 }
 

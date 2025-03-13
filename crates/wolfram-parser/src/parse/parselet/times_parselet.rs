@@ -1,5 +1,6 @@
 use crate::{
     cst::InfixNode,
+    generated::parselet_registration::*,
     panic_if_aborted,
     parse::{parselet::*, ParserSession},
     precedence::Precedence,
@@ -87,7 +88,7 @@ impl TimesParselet {
             //
             // and we want only a single Infix node created
             //
-            if tok1.tok.infix_parselet().getOp() != (TimesParselet {}).getOp() {
+            if tok1.tok.infix_parselet().getOp() != timesParselet.getOp() {
                 //
                 // Tok.tok != tok_in.tok, so break
                 //
