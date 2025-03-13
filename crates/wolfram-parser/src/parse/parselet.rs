@@ -27,6 +27,8 @@ use crate::{
 };
 
 pub(crate) type ParseletPtr = &'static dyn Parselet;
+pub(crate) type PrefixParseletPtr = &'static dyn PrefixParselet;
+pub(crate) type InfixParseletPtr = &'static dyn InfixParselet;
 
 pub(crate) type ParseFunction =
     for<'i> fn(session: &mut ParserSession<'i>, parselet: ParseletPtr);
@@ -157,7 +159,14 @@ impl_Parselet!(
 
 #[derive(Debug)]
 pub(crate) struct CallParselet /*: public InfixParselet*/ {
-    GP: &'static GroupParselet,
+    GP: PrefixParseletPtr,
+    // CallParselet(PrefixParseletPtr GP);
+
+    // PrefixParseletPtr getGP() const;
+
+    // ParseFunction parseInfix() const override;
+
+    // Precedence getPrecedence(session: &mut ParserSession) const override;
 }
 
 #[derive(Debug)]
@@ -1346,11 +1355,11 @@ impl GroupParselet {
 //======================================
 
 impl CallParselet {
-    pub(crate) const fn new(GP: &'static GroupParselet) -> Self {
+    pub(crate) const fn new(GP: PrefixParseletPtr) -> Self {
         Self { GP }
     }
 
-    fn getGP(&self) -> &'static GroupParselet {
+    fn getGP(&self) -> PrefixParseletPtr {
         return self.GP;
     }
 }
