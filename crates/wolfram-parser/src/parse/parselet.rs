@@ -1569,8 +1569,6 @@ impl EqualParselet {
             // tutorial/OperatorInputForms
             // Spaces to Avoid
             //
-            // TID:231105/1: Typical TagUnset ("=.")
-            // TID:231105/2: TagUnset with interior trivia ("= .")
 
             session.push_leaf_and_next(tok);
 

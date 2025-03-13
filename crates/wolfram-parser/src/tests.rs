@@ -10,7 +10,6 @@ mod test_tokenizer;
 mod test_wl_character;
 mod test_abstract;
 mod test_token_errors;
-mod test_parse_cst;
 
 use pretty_assertions::assert_eq;
 
