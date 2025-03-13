@@ -3,7 +3,6 @@ use std::fmt::{self, Debug};
 use crate::{
     feature,
     node::{BinaryNode, CompoundNode, Node, NodeSeq, TernaryNode, TriviaSeq},
-    panic_if_aborted,
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
     parselet_registration::infixParselets,
     // parselet::Parselet,
@@ -192,7 +191,9 @@ pub(crate) fn Parser_parseClimb<'i>(
     //
     // Check isAbort() inside loops
     //
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        return Parser_tryContinue(session, Ignored, Ignored2);
+    }
 
     let Trivia1 = session.trivia1.clone();
 

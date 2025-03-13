@@ -1,12 +1,13 @@
 use crate::{
-    node::InfixNode,
-    panic_if_aborted,
+    feature,
+    node::{AbortNode, InfixNode},
     parselet::*,
     parselet_registration::*,
     parser::{
         Parser_eatTrivia, Parser_eatTriviaButNotToplevelNewlines_2, Parser_eatTrivia_2,
-        Parser_identity, Parser_parseClimb, Parser_popContext, Parser_pushLeafAndNext,
-        Parser_pushNode, Parser_pushTriviaSeq, Parser_topContext,
+        Parser_identity, Parser_parseClimb, Parser_popContext, Parser_popNode,
+        Parser_pushLeafAndNext, Parser_pushNode, Parser_pushTriviaSeq, Parser_topContext,
+        Parser_tryContinue,
     },
     parser_session::ParserSession,
     precedence::*,
@@ -34,7 +35,11 @@ impl InfixParselet for TimesParselet {
 }
 
 fn TimesParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
     Parser_pushLeafAndNext(session, TokIn);
 
@@ -73,7 +78,12 @@ fn TimesParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
     loop {
         // #endif // !USE_MUSTTAIL
 
-        panic_if_aborted!();
+        if feature::CHECK_ABORT && session.abortQ() {
+            Parser_popNode(session);
+            Parser_popContext(session);
+            Parser_pushNode(session, AbortNode::new());
+            return Parser_tryContinue(session, ignored, ignored2);
+        }
 
 
         let Trivia1 = session.trivia1.clone();

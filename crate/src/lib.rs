@@ -200,17 +200,3 @@ pub(crate) fn abortQ() -> bool {
     #[cfg(not(feature = "USE_MATHLINK"))]
     return false;
 }
-
-//--------------------------------------
-// Macros
-//--------------------------------------
-
-macro_rules! panic_if_aborted {
-    () => {
-        if crate::feature::CHECK_ABORT && crate::abortQ() {
-            panic!("aborting parsing by panicking")
-        }
-    };
-}
-
-pub(crate) use panic_if_aborted;

@@ -1,11 +1,12 @@
 use crate::{
-    node::{PrefixBinaryNode, PrefixNode},
-    panic_if_aborted,
+    feature,
+    node::{AbortNode, PrefixBinaryNode, PrefixNode},
     parselet::*,
     parser::{
         Parser_eatTrivia_2, Parser_eatTrivia_transparent, Parser_parseClimb, Parser_popContext,
-        Parser_pushContext_transparent, Parser_pushLeaf, Parser_pushLeafAndNext, Parser_pushNode,
-        Parser_pushTriviaSeq, Parser_topContext, Parser_topPrecedence,
+        Parser_popNode, Parser_pushContext_transparent, Parser_pushLeaf, Parser_pushLeafAndNext,
+        Parser_pushNode, Parser_pushTriviaSeq, Parser_topContext, Parser_topPrecedence,
+        Parser_tryContinue,
     },
     parser_session::ParserSession,
     precedence::*,
@@ -33,7 +34,11 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
     // Something like  \[Integral] f \[DifferentialD] x
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, P, TokIn /*ignored*/);
+    }
+
 
     Parser_pushLeafAndNext(session, TokIn);
 
@@ -81,7 +86,12 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
 }
 
 fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr, ignored2: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, P, ignored2);
+    }
 
 
     let Trivia1 = session.trivia1.clone();

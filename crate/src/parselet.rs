@@ -1,11 +1,12 @@
 use std::any::Any;
 
 use crate::{
+    feature,
     node::{
-        BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode,
-        PostfixNode, PrefixNode, SyntaxErrorNode, TernaryNode, UnterminatedGroupNeedsReparseNode,
+        AbortNode, BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode,
+        InfixNode, PostfixNode, PrefixNode, SyntaxErrorNode, TernaryNode,
+        UnterminatedGroupNeedsReparseNode,
     },
-    panic_if_aborted,
     parselet_registration::{infixParselets, prefixParselets, *},
     parser::{
         ColonLHS, Parser_checkColonLHS, Parser_checkGroup, Parser_checkPatternPrecedence,
@@ -428,7 +429,10 @@ fn PrefixCloserParselet_parsePrefix(
 ) {
     assert!(TokIn.tok.isCloser());
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     //
@@ -480,7 +484,10 @@ pub(crate) fn PrefixToplevelCloserParselet_parsePrefix(
 ) {
     assert!(TokIn.tok.isCloser());
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     //
@@ -517,7 +524,10 @@ fn PrefixEndOfFileParselet_parsePrefix(
     // Something like  a+<EOF>
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     let createdToken: Token;
@@ -557,7 +567,10 @@ fn PrefixUnsupportedTokenParselet_parsePrefix(
     ignored: ParseletPtr,
     TokIn: Token,
 ) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeaf(
@@ -592,7 +605,10 @@ fn PrefixCommaParselet_parsePrefix(
     // if the input is  f[,2]  then we want to return TOKEN_ERROR_PREFIXIMPLICITNULL
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     let createdToken: Token;
@@ -634,7 +650,10 @@ fn PrefixUnhandledParselet_parsePrefix(
 ) {
     assert!(!TokIn.tok.isPossibleBeginning(), "handle at call site");
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeaf(
@@ -731,7 +750,10 @@ fn SymbolParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr,
     // Something like  x  or x_
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -844,7 +866,10 @@ pub(crate) fn SymbolParselet_parseInfixContextSensitive(
     //                  ^
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return;
+    }
 
 
     //
@@ -919,7 +944,10 @@ fn PrefixOperatorParselet_parsePrefix(session: &mut ParserSession, P: ParseletPt
         .downcast_ref::<PrefixOperatorParselet>()
         .expect("unable to downcast to PrefixOperatorParselet");
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, P /*ignored*/, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -1079,7 +1107,11 @@ impl InfixParselet for BinaryOperatorParselet {
 
 
 fn BinaryOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, P /*ignored*/, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -1144,7 +1176,11 @@ impl InfixParselet for InfixOperatorParselet {
 }
 
 fn InfixOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, P /*ignored*/, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -1192,7 +1228,12 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, 
     loop {
         // #endif // !USE_MUSTTAIL
 
-        panic_if_aborted!();
+        if feature::CHECK_ABORT && session.abortQ() {
+            Parser_popNode(session);
+            Parser_popContext(session);
+            Parser_pushNode(session, AbortNode::new());
+            return Parser_tryContinue(session, P /*ignored*/, ignored);
+        }
 
 
         let Trivia1 = session.trivia1.clone();
@@ -1355,7 +1396,10 @@ impl PrefixParselet for GroupParselet {
 }
 
 fn GroupParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, P /*ignored*/, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -1391,7 +1435,13 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, ignored:
     loop {
         // #endif // !USE_MUSTTAIL
 
-        panic_if_aborted!();
+        if feature::CHECK_ABORT && session.abortQ() {
+            Parser_popNode(session);
+            Parser_popContext(session);
+            Parser_popGroup(session);
+            Parser_pushNode(session, AbortNode::new());
+            return Parser_tryContinue(session, P /*ignored*/, ignored);
+        }
 
 
         //
@@ -1584,7 +1634,11 @@ fn CallParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: T
         .downcast_ref::<CallParselet>()
         .expect("unable to downcast to CallParselet");
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, P /*ignored*/, TokIn /*ignored*/);
+    }
 
 
     //
@@ -1639,7 +1693,11 @@ fn TildeParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
     // It'd be weird if this were an "infix operator"
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -1660,7 +1718,12 @@ fn TildeParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
 }
 
 fn TildeParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, ignored2);
+    }
 
 
     let Trivia1 = session.trivia1.clone();
@@ -1744,7 +1807,11 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
     // Something like  symbol:object  or  pattern:optional
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     let colonLHS = Parser_checkColonLHS(session);
@@ -1855,7 +1922,11 @@ fn SlashColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletP
     // It'd be weird if this were an "infix operator"
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -1875,7 +1946,12 @@ fn SlashColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletP
 }
 
 fn SlashColonParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, ignored2);
+    }
 
 
     let Trivia1 = session.trivia1.clone();
@@ -1952,7 +2028,11 @@ impl InfixParselet for EqualParselet {
 }
 
 fn EqualParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -1990,7 +2070,11 @@ fn EqualParselet_parseInfixTag(session: &mut ParserSession, ignored: ParseletPtr
     // a /: b = c  and  a /: b = .  are handled here
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2084,7 +2168,11 @@ impl InfixParselet for ColonEqualParselet {
 
 
 fn ColonEqualParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2108,7 +2196,11 @@ fn ColonEqualParselet_parseInfixTag(
     ignored: ParseletPtr,
     TokIn: Token,
 ) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2167,7 +2259,11 @@ impl InfixParselet for CommaParselet {
 
 
 fn CommaParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2237,7 +2333,12 @@ fn CommaParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
     loop {
         // #endif // !USE_MUSTTAIL
 
-        panic_if_aborted!();
+        if feature::CHECK_ABORT && session.abortQ() {
+            Parser_popNode(session);
+            Parser_popContext(session);
+            Parser_pushNode(session, AbortNode::new());
+            return Parser_tryContinue(session, ignored, ignored2);
+        }
 
 
         let Trivia1 = session.trivia1.clone();
@@ -2342,7 +2443,11 @@ impl InfixParselet for SemiParselet {
 
 
 fn SemiParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2447,7 +2552,12 @@ fn SemiParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ign
     loop {
         // #endif // !USE_MUSTTAIL
 
-        panic_if_aborted!();
+        if feature::CHECK_ABORT && session.abortQ() {
+            Parser_popNode(session);
+            Parser_popContext(session);
+            Parser_pushNode(session, AbortNode::new());
+            return Parser_tryContinue(session, ignored, ignored2);
+        }
 
 
         let Trivia1 = session.trivia1.clone();
@@ -2592,7 +2702,11 @@ fn ColonColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletP
     // a::b
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2621,7 +2735,12 @@ fn ColonColonParselet_parseLoop(
     loop {
         // #endif // !USE_MUSTTAIL
 
-        panic_if_aborted!();
+        if feature::CHECK_ABORT && session.abortQ() {
+            Parser_popNode(session);
+            Parser_popContext(session);
+            Parser_pushNode(session, AbortNode::new());
+            return Parser_tryContinue(session, ignored, ignored2);
+        }
 
 
         let Trivia1 = session.trivia1.clone();
@@ -2692,7 +2811,11 @@ fn GreaterGreaterParselet_parseInfix(
     // a>>b
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     //
@@ -2746,7 +2869,11 @@ fn GreaterGreaterGreaterParselet_parseInfix(
     // a>>>b
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     //
@@ -2792,7 +2919,10 @@ fn LessLessParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPt
     // <<a
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     //
@@ -2846,7 +2976,10 @@ fn HashParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr, T
     // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2892,7 +3025,10 @@ fn HashHashParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPt
     // Something like  ##  or  ##1
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -2942,7 +3078,10 @@ fn PercentParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr
     // Something like  %  or  %1
     //
 
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);

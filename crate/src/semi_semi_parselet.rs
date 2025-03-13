@@ -1,12 +1,12 @@
 use crate::{
-    node::{BinaryNode, TernaryNode},
-    panic_if_aborted,
+    feature,
+    node::{AbortNode, BinaryNode, TernaryNode},
     parselet::*,
     parser::{
         Parser_checkSpan, Parser_eatTriviaButNotToplevelNewlines,
         Parser_eatTriviaButNotToplevelNewlines_2, Parser_parseClimb, Parser_popContext,
-        Parser_pushContext, Parser_pushLeaf, Parser_pushLeafAndNext, Parser_pushNode,
-        Parser_pushTriviaSeq, Parser_topContext,
+        Parser_popNode, Parser_pushContext, Parser_pushLeaf, Parser_pushLeafAndNext,
+        Parser_pushNode, Parser_pushTriviaSeq, Parser_topContext, Parser_tryContinue,
     },
     parser_session::ParserSession,
     precedence::*,
@@ -56,7 +56,10 @@ impl PrefixParselet for SemiSemiParselet {
 }
 
 fn SemiSemiParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeaf(
@@ -79,7 +82,11 @@ fn SemiSemiParselet_parsePrefix(session: &mut ParserSession, ignored: ParseletPt
 }
 
 fn SemiSemiParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, TokIn /*ignored*/);
+    }
 
 
     Parser_pushLeafAndNext(session, TokIn);
@@ -89,7 +96,11 @@ fn SemiSemiParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr
 }
 
 fn SemiSemiParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, ignored2);
+    }
 
 
     let mut SecondTok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -215,7 +226,12 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ig
 }
 
 fn SemiSemiParselet_parse2(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
-    panic_if_aborted!();
+    if feature::CHECK_ABORT && session.abortQ() {
+        Parser_popNode(session);
+        Parser_popContext(session);
+        Parser_pushNode(session, AbortNode::new());
+        return Parser_tryContinue(session, ignored, ignored2);
+    }
 
 
     let Trivia1 = session.trivia1.clone();
