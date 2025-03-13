@@ -73,10 +73,8 @@ impl IntegralParselet {
             // TID:231113/3: "\[Integral] f"
             //
 
-            session.reduce_prefix(self.Op2);
-
             // MUSTTAIL
-            return session.parse_climb();
+            return IntegralParselet::reduceIntegral(self, session);
         }
 
         session.push_trivia_seq(trivia1);
@@ -84,13 +82,29 @@ impl IntegralParselet {
         let self_ = *self;
         let ctxt = session.top_context();
         ctxt.set_callback_with_state(move |session| {
-            session.reduce_prefix_binary(self_.Op1);
-
-            session.parse_climb();
+            IntegralParselet::reduceIntegrate(&self_, session)
         });
 
         // MUSTTAIL
         return session.parse_prefix(tok);
+    }
+
+    fn reduceIntegrate<'i, B: ParseBuilder<'i> + 'i>(
+        &self,
+        session: &mut ParserSession<'i, B>,
+    ) {
+        session.reduce_prefix_binary(self.Op1);
+
+        session.parse_climb();
+    }
+
+    fn reduceIntegral<'i, B: ParseBuilder<'i> + 'i>(
+        &self,
+        session: &mut ParserSession<'i, B>,
+    ) {
+        session.reduce_prefix(self.Op2);
+
+        session.parse_climb();
     }
 }
 
