@@ -293,7 +293,7 @@ pub(crate) trait DynParseBuilder<'i>: Debug {
 
     fn reduce_infix(&mut self, op: InfixOperator);
 
-    fn reduce_postfix(&mut self, op: PostfixOperator, op_tok: TokenRef<'i>);
+    fn reduce_postfix(&mut self, op: PostfixOperator);
 
     fn reduce_binary(&mut self, op: BinaryOperator);
 
@@ -550,10 +550,6 @@ impl<'i, 'b> ParserSession<'i, 'b> {
     // Get current token after eating trivia
     //======================================
 
-    pub(crate) fn skip(&mut self, token: TokenRef<'i>) {
-        token.skip(&mut self.tokenizer)
-    }
-
     /// Get the current token, eating trivia tokens.
     ///
     /// If the current token is already a non-trivia token, it will be returned.
@@ -725,10 +721,10 @@ impl<'i, 'b> ParserSession<'i, 'b> {
         self.builder.reduce_infix(op);
     }
 
-    fn reduce_postfix(&mut self, op: PostfixOperator, op_tok: TokenRef<'i>) {
+    fn reduce_postfix(&mut self, op: PostfixOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_postfix(op, op_tok);
+        self.builder.reduce_postfix(op);
     }
 
     fn reduce_binary(&mut self, op: BinaryOperator) {

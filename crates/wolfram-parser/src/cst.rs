@@ -620,14 +620,8 @@ impl<I, S: TokenSource> TernaryNode<I, S> {
 //======================================
 
 impl<I> PostfixNode<I> {
-    pub(crate) fn new(
-        op: PostfixOperator,
-        mut args: CstSeq<I>,
-        op_tok: Token<I>,
-    ) -> Self {
+    pub(crate) fn new(op: PostfixOperator, args: CstSeq<I>) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
-
-        args.push(Cst::Token(op_tok));
 
         PostfixNode(OperatorNode::new(op, args))
     }
