@@ -63,7 +63,11 @@ impl<I, S> Cst<I, S> {
                 head.visit(visit);
                 body.as_op().visit_children(visit);
             },
-            Cst::SyntaxError(SyntaxErrorNode { err: _, children }) => {
+            Cst::SyntaxError(SyntaxErrorNode {
+                err: _,
+                children,
+                src: _,
+            }) => {
                 children.visit(visit);
             },
             Cst::Prefix(PrefixNode(op)) => op.visit_children(visit),
@@ -103,9 +107,11 @@ impl<I, S> Cst<I, S> {
 
                 body.as_op_mut().visit_children_mut(visit);
             },
-            Cst::SyntaxError(SyntaxErrorNode { err: _, children }) => {
-                children.visit_mut(visit)
-            },
+            Cst::SyntaxError(SyntaxErrorNode {
+                err: _,
+                children,
+                src: _,
+            }) => children.visit_mut(visit),
 
             Cst::Infix(InfixNode(op)) => {
                 op.visit_children_mut(visit);
@@ -167,10 +173,10 @@ impl<I, S> Cst<I, S> {
 
                 Cst::Call(CallNode { head, body, src })
             },
-            Cst::SyntaxError(SyntaxErrorNode { err, children }) => {
+            Cst::SyntaxError(SyntaxErrorNode { err, children, src }) => {
                 let children = children.map_visit(visit);
 
-                Cst::SyntaxError(SyntaxErrorNode { err, children })
+                Cst::SyntaxError(SyntaxErrorNode { err, children, src })
             },
 
             Cst::Infix(InfixNode(op)) => {

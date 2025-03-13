@@ -184,7 +184,7 @@ impl<I: TokenInput, S: TokenSource> Display
     for FmtAsExpr<&SyntaxErrorNode<I, S>>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let FmtAsExpr(node @ SyntaxErrorNode { err, children }) = self;
+        let FmtAsExpr(SyntaxErrorNode { err, children, src }) = self;
 
         write!(f, "{}", sym::CodeParser_SyntaxErrorNode.as_str())?;
         write!(f, "[")?;
@@ -195,7 +195,7 @@ impl<I: TokenInput, S: TokenSource> Display
         write!(f, "{}", FmtAsExpr(children))?;
         write!(f, ", ")?;
 
-        write!(f, "{}", FmtAsExpr(&node.get_source()))?;
+        write!(f, "{}", FmtAsExpr(src))?;
 
         write!(f, "]")?;
 

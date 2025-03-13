@@ -8,6 +8,9 @@ pub use self::{
 };
 
 #[doc(hidden)]
-pub use self::token::{TokenInput, TokenSource};
+pub use self::token::TokenInput;
 
-pub(crate) use self::{token::TokenRef, tokenizer::Tokenizer};
+pub(crate) use self::{
+    token::{TokenRef, TokenSource},
+    tokenizer::Tokenizer,
+};
