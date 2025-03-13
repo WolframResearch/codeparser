@@ -8,7 +8,6 @@
 use wolfram_expr::symbol::SymbolRef;
 
 use crate::{
-	cst::Operator,
 	token::TokenKind,
 	symbol::Symbol,
 	symbol_registration as sym,
@@ -1317,9 +1316,10 @@ pub enum GroupOperator {
     CurlyDoubleQuote,
 }
 
-impl Operator for InfixOperator {
+impl InfixOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             InfixOperator::Times => sym::Times,
             InfixOperator::Span => sym::Span,
@@ -1520,7 +1520,8 @@ impl Operator for InfixOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Times => InfixOperator::Times,
             sym::Span => InfixOperator::Span,
@@ -1725,9 +1726,10 @@ impl Operator for InfixOperator {
     }
 }
 
-impl Operator for PrefixOperator {
+impl PrefixOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             PrefixOperator::Get => sym::Get,
             PrefixOperator::Minus => sym::Minus,
@@ -1765,7 +1767,8 @@ impl Operator for PrefixOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Get => PrefixOperator::Get,
             sym::Minus => PrefixOperator::Minus,
@@ -1807,9 +1810,10 @@ impl Operator for PrefixOperator {
     }
 }
 
-impl Operator for PostfixOperator {
+impl PostfixOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             PostfixOperator::Function => sym::Function,
             PostfixOperator::Repeated => sym::Repeated,
@@ -1827,7 +1831,8 @@ impl Operator for PostfixOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Function => PostfixOperator::Function,
             sym::Repeated => PostfixOperator::Repeated,
@@ -1849,9 +1854,10 @@ impl Operator for PostfixOperator {
     }
 }
 
-impl Operator for BinaryOperator {
+impl BinaryOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             BinaryOperator::Pattern => sym::Pattern,
             BinaryOperator::Optional => sym::Optional,
@@ -1905,7 +1911,8 @@ impl Operator for BinaryOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Pattern => BinaryOperator::Pattern,
             sym::Optional => BinaryOperator::Optional,
@@ -1963,9 +1970,10 @@ impl Operator for BinaryOperator {
     }
 }
 
-impl Operator for TernaryOperator {
+impl TernaryOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             TernaryOperator::CodeParser_TernaryTilde => sym::CodeParser_TernaryTilde,
             TernaryOperator::CodeParser_TernaryOptionalPattern => sym::CodeParser_TernaryOptionalPattern,
@@ -1976,7 +1984,8 @@ impl Operator for TernaryOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::CodeParser_TernaryTilde => TernaryOperator::CodeParser_TernaryTilde,
             sym::CodeParser_TernaryOptionalPattern => TernaryOperator::CodeParser_TernaryOptionalPattern,
@@ -1991,9 +2000,10 @@ impl Operator for TernaryOperator {
     }
 }
 
-impl Operator for PrefixBinaryOperator {
+impl PrefixBinaryOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             PrefixBinaryOperator::Integrate => sym::Integrate,
             PrefixBinaryOperator::ContourIntegral => sym::ContourIntegral,
@@ -2003,7 +2013,8 @@ impl Operator for PrefixBinaryOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Integrate => PrefixBinaryOperator::Integrate,
             sym::ContourIntegral => PrefixBinaryOperator::ContourIntegral,
@@ -2017,9 +2028,10 @@ impl Operator for PrefixBinaryOperator {
     }
 }
 
-impl Operator for CompoundOperator {
+impl CompoundOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             CompoundOperator::Blank => sym::Blank,
             CompoundOperator::BlankSequence => sym::BlankSequence,
@@ -2034,7 +2046,8 @@ impl Operator for CompoundOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Blank => CompoundOperator::Blank,
             sym::BlankSequence => CompoundOperator::BlankSequence,
@@ -2053,9 +2066,10 @@ impl Operator for CompoundOperator {
     }
 }
 
-impl Operator for GroupOperator {
+impl GroupOperator {
     #[allow(dead_code)]
-    fn to_symbol(self) -> Symbol {
+    #[doc(hidden)]
+    pub fn to_symbol(self) -> Symbol {
         match self {
             GroupOperator::Token_Comment => sym::Token_Comment,
             GroupOperator::CodeParser_GroupParen => sym::CodeParser_GroupParen,
@@ -2074,7 +2088,8 @@ impl Operator for GroupOperator {
         }
     }
 
-    fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    #[doc(hidden)]
+    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Token_Comment => GroupOperator::Token_Comment,
             sym::CodeParser_GroupParen => GroupOperator::CodeParser_GroupParen,

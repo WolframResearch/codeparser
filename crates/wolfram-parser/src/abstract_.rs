@@ -10,9 +10,8 @@ use crate::{
         CompoundOperator, CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
         GroupOperator, InfixNode,
         InfixOperator::{self, self as Op},
-        Node, Operator, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode,
-        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
-        TernaryNode, TernaryOperator,
+        Node, OperatorNode, PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
+        PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
@@ -186,7 +185,38 @@ fn aggregate_op<I: Debug, S: Debug, O>(op: OperatorNode<I, S, O>) -> OperatorNod
 //--------------------------------------
 
 /// Returns a `LeafNode[Symbol, ..]`
-fn ToNode<O: Operator>(op: O) -> AstNode {
+fn ToNode_Op(op: InfixOperator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_PrefixOp(op: PrefixOperator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_PostfixOp(op: PostfixOperator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_BinaryOp(op: BinaryOperator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_PrefixBinaryOp(op: PrefixBinaryOperator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+/// Returns a `LeafNode[Symbol, ..]`
+fn ToNode_GroupOp(op: GroupOperator) -> AstNode {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    ToNode_Symbol(s)
+}
+
+fn ToNode_CompoundOp(op: CompoundOperator) -> AstNode {
     let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
     ToNode_Symbol(s)
 }
@@ -486,7 +516,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             op => {
                 let [_, operand] = expect_children(children);
 
-                WL!( CallNode[ToNode(op), {abstract_(operand)}, data])
+                WL!( CallNode[ToNode_PrefixOp(op), {abstract_(operand)}, data])
             },
         },
 
@@ -545,7 +575,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     }
                 },
                 op => WL!(
-                    CallNode[ToNode(op), {abstract_(operand)}, data]
+                    CallNode[ToNode_PostfixOp(op), {abstract_(operand)}, data]
                 ),
             }
         },
@@ -613,7 +643,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
 
                     WL!(
                         CallNode[
-                            ToNode(op),
+                            ToNode_BinaryOp(op),
                             {
                                 abstract_(left),
                                 WL!( LeafNode[String, escapeString_of_abstractFileString(str), data1] )
@@ -664,7 +694,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 },
 
                 op => WL!(
-                    CallNode[ToNode(op), {abstract_(left), abstract_(right)}, data]
+                    CallNode[ToNode_BinaryOp(op), {abstract_(left), abstract_(right)}, data]
                 ),
             }
         },
@@ -690,7 +720,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
 
                     let children = children.into_iter().map(abstract_).collect();
 
-                    WL!( CallNode[ToNode(op), children, data] )
+                    WL!( CallNode[ToNode_Op(op), children, data] )
                 },
 
                 // InfixNode[Plus, children_, data_]
@@ -784,7 +814,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                         .map(abstract_)
                         .collect();
 
-                    WL!( CallNode[ToNode(op), children, data] )
+                    WL!( CallNode[ToNode_Op(op), children, data] )
                 },
             }
         },
@@ -1058,7 +1088,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     let [_, var] = expect_children(children);
 
                     WL!(CallNode[
-                        ToNode(op),
+                        ToNode_PrefixBinaryOp(op),
                         {abstract_(operand1), abstract_(var)},
                         data
                     ])
@@ -1070,7 +1100,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                 // PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]
                 (_, operand2) => {
                     WL!(CallNode[
-                        ToNode(op),
+                        ToNode_PrefixBinaryOp(op),
                         {abstract_(operand1), abstract_(operand2)},
                         data
                     ])
@@ -1152,7 +1182,7 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
             let count = i64::try_from(count).expect("Out[..] %-sequence overflows i64");
 
             WL!(CallNode[
-                ToNode(CompoundOperator::Out),
+                ToNode_CompoundOp(CompoundOperator::Out),
                 vec![ToNode_Integer(-count)],
                 data
             ])
@@ -2443,7 +2473,7 @@ fn abstractGroupNode<I: TokenInput + Debug, S: TokenSource + Debug>(
         //              abstractGroupNode()? I don't think so, since the
         //              ToNode_Op(tag) where tag is CodeParser`* are not valid
         //              abstract syntax nodes anyway.
-        head: Box::new(ToNode(tag)),
+        head: Box::new(ToNode_GroupOp(tag)),
         args: abstracted_children,
         data: data.into_general(),
     }
