@@ -14,7 +14,7 @@ use wolfram_parser::{
         PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
         SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
-    cst::{CompoundOperator, CstSeq},
+    cst::{CompoundOperator, CstNodeSeq},
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     quirks::QuirkSettings,
     source::{LineColumn, Location, Source, Span},
@@ -385,7 +385,7 @@ impl FromExpr for BoxNode<TokenString, Source> {
         }
 
         let kind = BoxKind::from_expr(&elements[0]).expect("PRE_COMMIT");
-        let children: CstSeq<TokenString, Source> =
+        let children: CstNodeSeq<TokenString, Source> =
             NodeSeq::from_expr(&elements[1]).expect("PRE_COMMIT");
         let src = Metadata::from_expr(&elements[2])?.source;
 
