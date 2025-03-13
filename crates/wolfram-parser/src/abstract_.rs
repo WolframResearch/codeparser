@@ -727,7 +727,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 },
 
                 // Handle SameQ and UnsameQ specially because they do not
-                // participate in the InfixBinaryAt quirk (TID:231010/3)
+                // participate in the InfixBinaryAt quirk
                 //
                 // InfixNode[op:SameQ | UnsameQ, children_ /; OddQ[Length[children]], data_]
                 Op::SameQ | Op::UnsameQ if is_odd(children.len()) => {
@@ -2064,8 +2064,9 @@ pub(crate) fn processInfixBinaryAtQuirk<
         return abstract_(node);
     }
 
-    // TODO: Make this a debug_assert!?
-    assert!(matches!(middle, Cst::Token(Token { tok: TK::At, .. })));
+    if !matches!(middle, Cst::Token(Token { tok: TK::At, .. })) {
+        todo!()
+    }
 
     // let data = rhs.source();
 
@@ -2087,7 +2088,6 @@ pub(crate) fn processInfixBinaryAtQuirk<
         rhs[[3]] = data;
     */
 
-    // TID:231010/2
     abstract_(rhs)
 }
 
