@@ -65,42 +65,38 @@ impl UnderParselet {
 
         let tok = session.tokenizer.peek_token();
 
-        match tok.tok {
-            TokenKind::Symbol => {
-                //
-                // Something like
-                //     prefix:  _b
-                //      infix:  a_b
-                //
+        if tok.tok == TokenKind::Symbol {
+            //
+            // Something like
+            //     prefix:  _b
+            //      infix:  a_b
+            //
 
-                session.push_context(Precedence::HIGHEST);
+            session.push_context(Precedence::HIGHEST);
 
-                //
-                // Context-sensitive and OK to build stack
-                //
+            //
+            // Context-sensitive and OK to build stack
+            //
 
-                SymbolParselet::parse_infix_context_sensitive(session, tok);
+            SymbolParselet::parse_infix_context_sensitive(session, tok);
 
-                session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
-            },
+            session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
+        }
 
-            TokenKind::Error_ExpectedLetterlike => {
-                //
-                // Something like:
-                //     prefix:  _a`   (TID:231016/1)
-                //      infix:  a_b`  (TID:231016/2)
-                //
-                // It's nice to include the error inside of the blank
-                //
+        if tok.tok == TokenKind::Error_ExpectedLetterlike {
+            //
+            // Something like:
+            //     prefix:  _a`   (TID:231016/1)
+            //      infix:  a_b`  (TID:231016/2)
+            //
+            // It's nice to include the error inside of the blank
+            //
 
-                session.push_context(Precedence::HIGHEST);
+            session.push_context(Precedence::HIGHEST);
 
-                session.push_leaf_and_next(tok);
+            session.push_leaf_and_next(tok);
 
-                session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
-            },
-
-            _ => (),
+            session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
         }
     }
 }
