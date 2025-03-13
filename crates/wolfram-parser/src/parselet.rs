@@ -1389,7 +1389,7 @@ impl InfixParselet for TildeParselet {
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
-        if session.top_non_trivia_node_is_tilde() {
+        if session.check_tilde() {
             return PRECEDENCE_LOWEST;
         }
 
