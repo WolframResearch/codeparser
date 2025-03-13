@@ -1233,11 +1233,15 @@ impl GroupParselet {
     }
 
     fn reduce_group(&self, session: &mut ParserSession) {
-        let op = self.getOp();
+        let Op = self.getOp();
+
+        let node = GroupNode::new(Op, session.pop_context());
+        session.push_node(node);
 
         session.pop_group();
 
-        session.reduce_and_climb(|ctx| GroupNode::new(op, ctx))
+        // MUSTTAIL
+        return session.parse_climb();
     }
 
     fn reduce_missing_closer(&self, session: &mut ParserSession) {
