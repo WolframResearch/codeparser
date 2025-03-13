@@ -7,12 +7,12 @@ use crate::{
     parselet::{InfixParselet, ParseFunction, ParseletPtr},
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
-    parser_session::{NodeStack, ParserSession},
+    parser_session::ParserSession,
     precedence::{Precedence, *},
     source::{NextPolicy, TOPLEVEL},
     symbol_registration::{SYMBOL_PATTERN, SYMBOL_SPAN, *},
 
-    token::{BorrowedTokenInput, TokenKind, TokenRef},
+    token::{Token, TokenKind},
     token_enum::Closer,
     tokenizer::{Tokenizer, Tokenizer_currentToken, Tokenizer_currentToken_stringifyAsFile},
     FirstLineBehavior,
@@ -77,7 +77,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
                 // reset
                 //
                 // session.buffer = peek.buf;
-                session.offset = peek.input.byte_span().offset;
+                session.offset = peek.span.offset;
                 session.SrcLoc = peek.src.start;
 
                 return;
@@ -94,7 +94,7 @@ pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
                 // reset
                 //
                 // session.buffer = peek.buf;
-                session.offset = peek.input.byte_span().offset;
+                session.offset = peek.span.offset;
                 session.SrcLoc = peek.src.start;
 
                 return;
@@ -256,11 +256,11 @@ pub(crate) fn Parser_identity<'i>(_: &mut ParserSession<'i>, _: ParseletPtr) {
 
 pub(crate) fn Parser_eatTrivia<'i>(
     session: &mut ParserSession<'i>,
-    token: &mut TokenRef<'i>,
+    token: &mut Token,
     policy: NextPolicy,
 ) {
     while token.tok.isTrivia() {
-        session.NodeStack.push(Node::Token(token.clone()));
+        session.NodeStack.push(token.clone().into());
 
         token.skip(&mut session.tokenizer);
 
@@ -271,13 +271,13 @@ pub(crate) fn Parser_eatTrivia<'i>(
 /// [`Parser_eatTrivia`], but the fields of [`ParserSession`] used are
 /// transparent to the borrow checker.
 pub(crate) fn Parser_eatTrivia_transparent<'i>(
-    node_stack: &mut NodeStack<'i>,
+    node_stack: &mut Vec<Node>,
     tokenizer: &mut Tokenizer<'i>,
-    token: &mut TokenRef<'i>,
+    token: &mut Token,
     policy: NextPolicy,
 ) {
     while token.tok.isTrivia() {
-        node_stack.push(Node::Token(token.clone()));
+        node_stack.push(token.clone().into());
 
         token.skip(tokenizer);
 
@@ -287,12 +287,12 @@ pub(crate) fn Parser_eatTrivia_transparent<'i>(
 
 pub(crate) fn Parser_eatTrivia_2<'i>(
     session: &mut ParserSession<'i>,
-    token: &mut TokenRef<'i>,
+    token: &mut Token,
     policy: NextPolicy,
-    Args: &mut TriviaSeq<'i>,
+    Args: &mut TriviaSeq,
 ) {
     while token.tok.isTrivia() {
-        Args.push(token.clone());
+        Args.push(token.clone().into());
 
         token.skip(&mut session.tokenizer);
 
@@ -302,10 +302,10 @@ pub(crate) fn Parser_eatTrivia_2<'i>(
 
 pub(crate) fn Parser_eatTrivia_stringifyAsFile<'i>(
     session: &mut ParserSession<'i>,
-    token: &mut TokenRef<'i>,
+    token: &mut Token,
 ) {
     while token.tok.isTrivia() {
-        session.NodeStack.push(Node::Token(token.clone()));
+        session.NodeStack.push(token.clone().into());
 
         token.skip(&mut session.tokenizer);
 
@@ -315,11 +315,11 @@ pub(crate) fn Parser_eatTrivia_stringifyAsFile<'i>(
 
 pub(crate) fn Parser_eatTriviaButNotToplevelNewlines<'i>(
     session: &mut ParserSession<'i>,
-    token: &mut TokenRef<'i>,
+    token: &mut Token,
     policy: NextPolicy,
 ) {
     while token.tok.isTriviaButNotToplevelNewline() {
-        session.NodeStack.push(Node::Token(token.clone()));
+        session.NodeStack.push(token.clone().into());
 
         token.skip(&mut session.tokenizer);
 
@@ -329,9 +329,9 @@ pub(crate) fn Parser_eatTriviaButNotToplevelNewlines<'i>(
 
 pub(crate) fn Parser_eatTriviaButNotToplevelNewlines_2<'i>(
     session: &mut ParserSession<'i>,
-    token: &mut TokenRef<'i>,
+    token: &mut Token,
     policy: NextPolicy,
-    Args: &mut TriviaSeq<'i>,
+    Args: &mut TriviaSeq,
 ) {
     while token.tok.isTriviaButNotToplevelNewline() {
         Args.push(token.clone().into());
@@ -357,7 +357,7 @@ pub(crate) fn Parser_pushContext<'i, 's>(
 
 /// Push a context, transparently to the borrow checker.
 pub(crate) fn Parser_pushContext_transparent<'c>(
-    node_stack: &mut NodeStack,
+    node_stack: &mut Vec<Node>,
     context_stack: &'c mut Vec<Context>,
     prec: Precedence,
 ) -> &'c mut Context {
@@ -368,9 +368,7 @@ pub(crate) fn Parser_pushContext_transparent<'c>(
     return context_stack.last_mut().unwrap();
 }
 
-pub(crate) fn Parser_popContext<'i>(
-    session: &mut ParserSession<'i>,
-) -> NodeSeq<BorrowedTokenInput<'i>> {
+pub(crate) fn Parser_popContext<'i>(session: &mut ParserSession<'i>) -> NodeSeq {
     assert!(!session.ContextStack.is_empty());
 
     //
@@ -383,7 +381,7 @@ pub(crate) fn Parser_popContext<'i>(
     // Move args from back of NodeStack to ArgsTmp
     //
 
-    let ArgsTmp: NodeSeq<_> = {
+    let ArgsTmp: NodeSeq = {
         // let vec = vec![session.NodeStack.begin() + Ctxt.Index, session.NodeStack.end()];
         let vec = Vec::from_iter(session.NodeStack.drain(ctxt.index..));
         NodeSeq(vec)
@@ -424,17 +422,17 @@ pub(crate) fn Parser_setPrecedence<'i>(session: &mut ParserSession<'i>, prec: Pr
     ctxt.prec = prec;
 }
 
-pub(crate) fn Parser_pushLeaf<'i>(session: &mut ParserSession<'i>, token: TokenRef<'i>) {
+pub(crate) fn Parser_pushLeaf<'i>(session: &mut ParserSession<'i>, token: Token) {
     session.NodeStack.push(Node::Token(token));
 }
 
-pub(crate) fn Parser_pushLeafAndNext<'i>(session: &mut ParserSession<'i>, token: TokenRef<'i>) {
+pub(crate) fn Parser_pushLeafAndNext<'i>(session: &mut ParserSession<'i>, token: Token) {
     session.NodeStack.push(Node::Token(token));
 
     token.skip(&mut session.tokenizer);
 }
 
-pub(crate) fn Parser_pushTriviaSeq<'i>(session: &mut ParserSession<'i>, seq: &mut TriviaSeq<'i>) {
+pub(crate) fn Parser_pushTriviaSeq<'i>(session: &mut ParserSession<'i>, seq: &mut TriviaSeq) {
     //
     // Move all trivia from Seq to back of ArgsStack
     //
@@ -449,15 +447,12 @@ pub(crate) fn Parser_pushTriviaSeq<'i>(session: &mut ParserSession<'i>, seq: &mu
     seq.clear();
 }
 
-pub(crate) fn Parser_pushNode<'i, N>(session: &mut ParserSession<'i>, node: N)
-where
-    N: Into<Node<BorrowedTokenInput<'i>>>,
-{
+pub(crate) fn Parser_pushNode<'i, N: Into<Node>>(session: &mut ParserSession<'i>, node: N) {
     let node = node.into();
     session.NodeStack.push(node);
 }
 
-pub(crate) fn Parser_popNode<'i>(session: &mut ParserSession<'i>) -> Node<BorrowedTokenInput<'i>> {
+pub(crate) fn Parser_popNode<'i>(session: &mut ParserSession<'i>) -> Node {
     assert!(!session.NodeStack.is_empty());
 
     let top = session.NodeStack.pop().unwrap();
@@ -466,9 +461,7 @@ pub(crate) fn Parser_popNode<'i>(session: &mut ParserSession<'i>) -> Node<Borrow
 }
 
 #[cfg(test)]
-pub(crate) fn Parser_topNode<'i, 's>(
-    session: &'s mut ParserSession<'i>,
-) -> &'s mut Node<BorrowedTokenInput<'i>> {
+pub(crate) fn Parser_topNode<'i, 's>(session: &'s mut ParserSession<'i>) -> &'s mut Node {
     assert!(!session.NodeStack.is_empty());
 
     return session.NodeStack.last_mut().unwrap();
@@ -678,7 +671,7 @@ pub(crate) fn Parser_checkTilde<'i>(session: &mut ParserSession<'i>) -> bool {
 pub(crate) fn Parser_checkSpan<'i>(session: &mut ParserSession<'i>) -> bool {
     assert!(!session.NodeStack.is_empty());
 
-    let N: &mut Node<_> = session.NodeStack.last_mut().unwrap();
+    let N: &mut Node = session.NodeStack.last_mut().unwrap();
 
     {
         let NN = N;

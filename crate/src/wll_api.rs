@@ -6,7 +6,6 @@ use crate::{
         NodeContainer, NodeSeq,
     },
     symbol_registration::{SYMBOL_LIST, SYMBOL_NULL},
-    token::BorrowedTokenInput,
     EncodingMode, FirstLineBehavior, ParseResult, StringifyMode,
 };
 
@@ -92,11 +91,7 @@ fn NodeContainerToExpr(session: ParserSessionPtr, C: NodeContainerPtr) -> expr {
 }
 
 #[cfg(feature = "USE_MATHLINK")]
-fn NodeContainerPut<'i>(
-    session: &ParserSession<'i>,
-    C: &NodeContainer<BorrowedTokenInput<'i>>,
-    link: &mut wstp::Link,
-) {
+fn NodeContainerPut(session: &ParserSession, C: &NodeContainer, link: &mut wstp::Link) {
     C.put(session, link);
 }
 
@@ -1095,8 +1090,8 @@ fn validatePath(path: &str) -> bool {
 // WSTP / ExprLib serialization
 //==========================================================
 
-impl<'i> ParseResult<BorrowedTokenInput<'i>> {
-    pub(crate) fn into_node_container(self) -> NodeContainer<BorrowedTokenInput<'i>> {
+impl ParseResult {
+    pub(crate) fn into_node_container(self) -> NodeContainer {
         let ParseResult {
             nodes: outer_exprs,
             unsafe_character_encoding,

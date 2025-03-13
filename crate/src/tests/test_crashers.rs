@@ -1,11 +1,10 @@
 use crate::{
-    source::TOPLEVEL,
-    src, token,
+    source::{ByteSpan, TOPLEVEL},
+    src,
+    token::{Token, TokenKind},
     tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
     EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
 };
-
-use pretty_assertions::assert_eq;
 
 
 #[test]
@@ -24,13 +23,19 @@ fn CrashTest_Crash0_tokens() {
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, policy);
 
-    assert_eq!(Tok, token!(Integer, "1" @ 0, src!(1:1-1:2)));
+    assert_eq!(
+        Tok,
+        Token::new3(TokenKind::Integer, ByteSpan::new(0, 1), src!(1:1-1:2))
+    );
 
     Tokenizer_nextToken(&mut session.tokenizer, policy);
 
     Tok = Tokenizer_currentToken(&mut session.tokenizer, policy);
 
-    assert_eq!(Tok, token!(EndOfFile, "\\\n" @ 1, src!(1:2-2:1)));
+    assert_eq!(
+        Tok,
+        Token::new3(TokenKind::EndOfFile, ByteSpan::new(1, 2), src!(1:2-2:1))
+    );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

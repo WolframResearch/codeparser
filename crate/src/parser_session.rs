@@ -16,7 +16,7 @@ use crate::{
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
-    token::{BorrowedTokenInput, TokenKind, TokenRef},
+    token::TokenKind,
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
@@ -30,18 +30,16 @@ use crate::{
 pub struct ParserSession<'i> {
     pub(crate) tokenizer: Tokenizer<'i>,
 
-    pub(crate) NodeStack: NodeStack<'i>,
+    pub(crate) NodeStack: Vec<Node>,
     pub(crate) ContextStack: Vec<Context>,
 
-    pub(crate) trivia1: Rc<RefCell<TriviaSeq<'i>>>,
-    pub(crate) trivia2: Rc<RefCell<TriviaSeq<'i>>>,
+    pub(crate) trivia1: Rc<RefCell<TriviaSeq>>,
+    pub(crate) trivia2: Rc<RefCell<TriviaSeq>>,
 }
 
-pub(crate) type NodeStack<'i> = Vec<Node<BorrowedTokenInput<'i>>>;
-
-pub struct ParseResult<I> {
+pub struct ParseResult {
     /// Tokens or expressions.
-    pub(crate) nodes: NodeSeq<I>,
+    pub(crate) nodes: NodeSeq,
 
     pub(crate) unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
 
@@ -109,7 +107,7 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.input
     }
 
-    pub fn concrete_parse_expressions(&mut self) -> ParseResult<BorrowedTokenInput<'i>> {
+    pub fn concrete_parse_expressions(&mut self) -> ParseResult {
         #[cfg(feature = "DIAGNOSTICS")]
         {
             DiagnosticsLog("enter parseExpressions");
@@ -120,21 +118,21 @@ impl<'i> ParserSession<'i> {
         // Collect all expressions
         //
 
-        let mut exprs: NodeSeq<BorrowedTokenInput<'i>> = NodeSeq::new();
+        let mut exprs = NodeSeq::new();
 
         loop {
             if feature::CHECK_ABORT && crate::abortQ() {
                 break;
             }
 
-            let peek: TokenRef = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
+            let peek = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
 
             if peek.tok == TokenKind::EndOfFile {
                 break;
             }
 
             if peek.tok.isTrivia() {
-                exprs.push(Node::Token(peek));
+                exprs.push(peek);
 
                 peek.skip(&mut self.tokenizer);
 
@@ -172,7 +170,7 @@ impl<'i> ParserSession<'i> {
         return self.create_parse_result(exprs);
     }
 
-    pub fn tokenize(&mut self) -> NodeContainer<BorrowedTokenInput<'i>> {
+    pub fn tokenize(&mut self) -> NodeContainer {
         let mut nodes = NodeSeq::new();
 
         loop {
@@ -186,7 +184,7 @@ impl<'i> ParserSession<'i> {
                 break;
             }
 
-            nodes.push(Node::Token(Tok));
+            nodes.push(Tok);
 
             Tok.skip(&mut self.tokenizer);
         } // while (true)
@@ -202,7 +200,7 @@ impl<'i> ParserSession<'i> {
         return NodeContainer::new(nodes);
     }
 
-    fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Node<BorrowedTokenInput<'i>> {
+    fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Node {
         let token = match mode {
             StringifyMode::Normal => Tokenizer_nextToken(&mut self.tokenizer, TOPLEVEL),
             StringifyMode::Tag => Tokenizer_nextToken_stringifyAsTag(&mut self.tokenizer),
@@ -213,10 +211,7 @@ impl<'i> ParserSession<'i> {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn concreteParseLeaf(
-        &mut self,
-        mode: StringifyMode,
-    ) -> ParseResult<BorrowedTokenInput<'i>> {
+    pub(crate) fn concreteParseLeaf(&mut self, mode: StringifyMode) -> ParseResult {
         //
         // Collect all expressions
         //
@@ -230,9 +225,8 @@ impl<'i> ParserSession<'i> {
 
     // TODO(cleanup): What is this used for? Perhaps ultimately this is just
     //                std::str::from_utf8()?
-    // TODO(cleanup): Make this return a SafeStringNode directly?
     #[allow(dead_code)]
-    pub fn safeString(&mut self) -> NodeContainer<BorrowedTokenInput<'i>> {
+    pub fn safeString(&mut self) -> NodeContainer {
         //
         // read all characters, just to set unsafeCharacterEncoding flag if necessary
         //
@@ -269,10 +263,7 @@ impl<'i> ParserSession<'i> {
         return NodeContainer::new(nodes);
     }
 
-    fn create_parse_result(
-        &self,
-        nodes: NodeSeq<BorrowedTokenInput<'i>>,
-    ) -> ParseResult<BorrowedTokenInput<'i>> {
+    fn create_parse_result(&self, nodes: NodeSeq) -> ParseResult {
         let result = ParseResult {
             nodes,
             unsafe_character_encoding: self.tokenizer.unsafe_character_encoding_flag,
@@ -293,8 +284,8 @@ impl<'i> ParserSession<'i> {
     }
 }
 
-impl<I> ParseResult<I> {
-    pub fn nodes(&self) -> &[Node<I>] {
+impl ParseResult {
+    pub fn nodes(&self) -> &[Node] {
         let NodeSeq(vec) = &self.nodes;
         vec.as_slice()
     }

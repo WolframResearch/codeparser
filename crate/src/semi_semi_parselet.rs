@@ -12,7 +12,7 @@ use crate::{
     precedence::*,
     source::TOPLEVEL,
     symbol_registration::SYMBOL_SPAN,
-    token::{Token, TokenKind, TokenRef},
+    token::{Token, TokenKind},
     tokenizer::Tokenizer_currentToken,
 };
 
@@ -22,7 +22,7 @@ use crate::{
 //
 
 impl InfixParselet for SemiSemiParselet {
-    fn parse_infix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
+    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
         SemiSemiParselet_parseInfix(session, token)
     }
 
@@ -30,11 +30,7 @@ impl InfixParselet for SemiSemiParselet {
         return PRECEDENCE_SEMISEMI;
     }
 
-    fn processImplicitTimes<'i>(
-        &self,
-        session: &mut ParserSession<'i>,
-        TokIn: TokenRef<'i>,
-    ) -> TokenRef<'i> {
+    fn processImplicitTimes(&self, session: &mut ParserSession, TokIn: Token) -> Token {
         //
         // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
         //
@@ -48,12 +44,12 @@ impl InfixParselet for SemiSemiParselet {
 }
 
 impl PrefixParselet for SemiSemiParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
         SemiSemiParselet_parsePrefix(session, token)
     }
 }
 
-fn SemiSemiParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
+fn SemiSemiParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     panic_if_aborted!();
 
 
@@ -72,7 +68,7 @@ fn SemiSemiParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
     return SemiSemiParselet_parseInfix(session, TokIn);
 }
 
-fn SemiSemiParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
+fn SemiSemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
     panic_if_aborted!();
 
 

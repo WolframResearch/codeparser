@@ -4,7 +4,7 @@ use crate::{
     source::{IssuePtrSet, Source, SourceLocation},
     symbol::Symbol,
     symbol_registration::*,
-    token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenRef},
+    token::Token,
     tokenizer::{Tokenizer, UnsafeCharacterEncoding},
 };
 
@@ -12,8 +12,8 @@ use crate::{
 // Used mainly for collecting trivia that has been eaten
 //
 #[derive(Debug)]
-pub(crate) struct TriviaSeq<'i> {
-    pub vec: Vec<Token<BorrowedTokenInput<'i>>>,
+pub struct TriviaSeq {
+    pub vec: Vec<Token>,
 }
 
 //
@@ -25,47 +25,47 @@ pub(crate) struct TriviaSeq<'i> {
 // So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct NodeSeq<I = OwnedTokenInput>(pub Vec<Node<I>>);
+pub struct NodeSeq(pub Vec<Node>);
 
 /// An expression representing a node in the syntax tree
 #[derive(Debug, Clone, PartialEq)]
-pub enum Node<I = OwnedTokenInput> {
-    Token(Token<I>),
-    Call(CallNode<I>),
-    SyntaxError(SyntaxErrorNode<I>),
-    Prefix(PrefixNode<I>),
-    Infix(InfixNode<I>),
-    Postfix(PostfixNode<I>),
-    Binary(BinaryNode<I>),
-    Ternary(TernaryNode<I>),
-    PrefixBinary(PrefixBinaryNode<I>),
-    Compound(CompoundNode<I>),
-    Group(GroupNode<I>),
-    CollectedExpressions(CollectedExpressionsNode<I>),
+pub enum Node {
+    Token(Token),
+    Call(CallNode),
+    SyntaxError(SyntaxErrorNode),
+    Prefix(PrefixNode),
+    Infix(InfixNode),
+    Postfix(PostfixNode),
+    Binary(BinaryNode),
+    Ternary(TernaryNode),
+    CollectedExpressions(CollectedExpressionsNode),
     CollectedSourceLocations(CollectedSourceLocationsNode),
     CollectedIssues(CollectedIssuesNode),
     MissingBecauseUnsafeCharacterEncoding(MissingBecauseUnsafeCharacterEncodingNode),
     SafeString(SafeStringNode),
-    GroupMissingCloser(GroupMissingCloserNode<I>),
-    UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode<I>),
+    Compound(CompoundNode),
+    Group(GroupNode),
+    GroupMissingCloser(GroupMissingCloserNode),
+    UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode),
+    PrefixBinary(PrefixBinaryNode),
 }
 
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
-pub struct OperatorNode<I = OwnedTokenInput> {
+pub struct OperatorNode {
     pub(crate) op: Symbol,
     pub(crate) make_sym: Symbol,
-    pub(crate) children: NodeSeq<I>,
+    pub(crate) children: NodeSeq,
     pub(crate) src: Source,
 }
 
 /// `-a`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct PrefixNode(pub OperatorNode);
 
 /// `a @ b`
 #[derive(Debug, Clone, PartialEq)]
-pub struct BinaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct BinaryNode(pub OperatorNode);
 
 //
 // InfixNode
@@ -73,15 +73,15 @@ pub struct BinaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 // a + b + c
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct InfixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct InfixNode(pub OperatorNode);
 
 /// `a /: b = c`
 #[derive(Debug, Clone, PartialEq)]
-pub struct TernaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct TernaryNode(pub OperatorNode);
 
 /// `a!`
 #[derive(Debug, Clone, PartialEq)]
-pub struct PostfixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct PostfixNode(pub OperatorNode);
 
 //
 // PrefixBinaryNode
@@ -89,19 +89,19 @@ pub struct PostfixNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 // \[Integral] f \[DifferentialD] x
 //
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixBinaryNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct PrefixBinaryNode(pub OperatorNode);
 
 /// `f[x]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CallNode<I = OwnedTokenInput> {
-    pub head: NodeSeq<I>,
-    pub body: Box<Node<I>>,
+pub struct CallNode {
+    pub head: NodeSeq,
+    pub body: Box<Node>,
     pub src: Source,
 }
 
 /// `{x}`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct GroupNode(pub OperatorNode);
 
 /// Any "compound" of tokens:
 ///
@@ -113,27 +113,27 @@ pub struct GroupNode<I = OwnedTokenInput>(pub OperatorNode<I>);
 /// * `##2`
 /// * `%2`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompoundNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct CompoundNode(pub OperatorNode);
 
 /// A syntax error that contains structure.
 #[derive(Debug, Clone, PartialEq)]
-pub struct SyntaxErrorNode<I = OwnedTokenInput> {
+pub struct SyntaxErrorNode {
     pub err: Symbol,
-    pub children: NodeSeq<I>,
+    pub children: NodeSeq,
     pub src: Source,
 }
 
 /// `{]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct GroupMissingCloserNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct GroupMissingCloserNode(pub OperatorNode);
 
 /// `{`
 #[derive(Debug, Clone, PartialEq)]
-pub struct UnterminatedGroupNeedsReparseNode<I = OwnedTokenInput>(pub OperatorNode<I>);
+pub struct UnterminatedGroupNeedsReparseNode(pub OperatorNode);
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct CollectedExpressionsNode<I = OwnedTokenInput> {
-    pub(crate) exprs: NodeSeq<I>,
+pub struct CollectedExpressionsNode {
+    pub(crate) exprs: NodeSeq,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -156,8 +156,8 @@ pub struct SafeStringNode {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct NodeContainer<I = OwnedTokenInput> {
-    pub nodes: NodeSeq<I>,
+pub struct NodeContainer {
+    pub nodes: NodeSeq,
 }
 
 //======================================
@@ -166,40 +166,37 @@ pub struct NodeContainer<I = OwnedTokenInput> {
 
 macro_rules! from_node {
     ($name:ident => Node::$variant:ident) => {
-        impl<I> From<$name> for Node<I> {
-            fn from(node: $name) -> Node<I> {
-                Node::$variant(node)
-            }
-        }
-    };
-
-    ($name:ident<> => Node::$variant:ident) => {
-        impl<I> From<$name<I>> for Node<I> {
-            fn from(node: $name<I>) -> Node<I> {
+        impl From<$name> for Node {
+            fn from(node: $name) -> Node {
                 Node::$variant(node)
             }
         }
     };
 }
 
-from_node!(CollectedExpressionsNode<> => Node::CollectedExpressions);
+from_node!(CollectedExpressionsNode => Node::CollectedExpressions);
 from_node!(CollectedSourceLocationsNode => Node::CollectedSourceLocations);
 from_node!(CollectedIssuesNode => Node::CollectedIssues);
 from_node!(MissingBecauseUnsafeCharacterEncodingNode => Node::MissingBecauseUnsafeCharacterEncoding);
 from_node!(SafeStringNode => Node::SafeString);
-from_node!(CompoundNode<> => Node::Compound);
-from_node!(BinaryNode<> => Node::Binary);
-from_node!(TernaryNode<> => Node::Ternary);
-from_node!(SyntaxErrorNode<> => Node::SyntaxError);
-from_node!(CallNode<> => Node::Call);
-from_node!(InfixNode<> => Node::Infix);
-from_node!(PrefixNode<> => Node::Prefix);
-from_node!(PostfixNode<> => Node::Postfix);
-from_node!(GroupNode<> => Node::Group);
-from_node!(GroupMissingCloserNode<> => Node::GroupMissingCloser);
-from_node!(UnterminatedGroupNeedsReparseNode<> => Node::UnterminatedGroupNeedsReparse);
-from_node!(PrefixBinaryNode<> => Node::PrefixBinary);
+from_node!(CompoundNode => Node::Compound);
+from_node!(BinaryNode => Node::Binary);
+from_node!(TernaryNode => Node::Ternary);
+from_node!(SyntaxErrorNode => Node::SyntaxError);
+from_node!(CallNode => Node::Call);
+from_node!(InfixNode => Node::Infix);
+from_node!(PrefixNode => Node::Prefix);
+from_node!(PostfixNode => Node::Postfix);
+from_node!(GroupNode => Node::Group);
+from_node!(GroupMissingCloserNode => Node::GroupMissingCloser);
+from_node!(UnterminatedGroupNeedsReparseNode => Node::UnterminatedGroupNeedsReparse);
+from_node!(PrefixBinaryNode => Node::PrefixBinary);
 
+impl From<Token> for Node {
+    fn from(token: Token) -> Self {
+        Node::Token(token)
+    }
+}
 
 //==========================================================
 // Impls
@@ -209,12 +206,12 @@ from_node!(PrefixBinaryNode<> => Node::PrefixBinary);
 // NodeSeq
 //======================================
 
-impl<I> NodeSeq<I> {
-    pub(crate) fn new() -> NodeSeq<I> {
+impl NodeSeq {
+    pub(crate) fn new() -> NodeSeq {
         NodeSeq(Vec::new())
     }
 
-    pub fn push<N: Into<Node<I>>>(&mut self, node: N) {
+    pub fn push<N: Into<Node>>(&mut self, node: N) {
         let NodeSeq(vec) = self;
 
         let node = node.into();
@@ -242,12 +239,12 @@ impl<I> NodeSeq<I> {
     //     return vec[index];
     // }
 
-    fn first(&self) -> &Node<I> {
+    fn first(&self) -> &Node {
         let NodeSeq(vec) = self;
         vec.first().expect("NodeSeq::first(): vector is empty")
     }
 
-    fn last(&self) -> &Node<I> {
+    fn last(&self) -> &Node {
         let NodeSeq(vec) = self;
         vec.last().expect("NodeSeq::last(): vector is empty")
     }
@@ -279,21 +276,11 @@ impl<I> NodeSeq<I> {
     }
 }
 
-impl NodeSeq<BorrowedTokenInput<'_>> {
-    pub(crate) fn into_owned_input(self) -> NodeSeq {
-        let NodeSeq(nodes) = self;
-
-        let nodes = nodes.into_iter().map(Node::into_owned_input).collect();
-
-        NodeSeq(nodes)
-    }
-}
-
 //======================================
 // TriviaSeq
 //======================================
 
-impl<'i> TriviaSeq<'i> {
+impl TriviaSeq {
     pub(crate) fn new() -> Self {
         TriviaSeq { vec: Vec::new() }
     }
@@ -311,13 +298,13 @@ impl<'i> TriviaSeq<'i> {
 
         let T = &vec[0];
 
-        session.offset = T.input.byte_span().offset;
+        session.offset = T.span.offset;
         session.SrcLoc = T.src.start;
 
         vec.clear();
     }
 
-    pub fn push(&mut self, token: TokenRef<'i>) {
+    pub fn push(&mut self, token: Token) {
         self.vec.push(token);
     }
 
@@ -336,56 +323,7 @@ impl<'i> TriviaSeq<'i> {
 // Nodes
 //==========================================================
 
-impl Node<BorrowedTokenInput<'_>> {
-    pub fn into_owned_input(self) -> Node {
-        match self {
-            Node::Token(token) => Node::Token(token.into_owned_input()),
-            Node::Call(CallNode { head, body, src }) => Node::Call(CallNode {
-                head: head.into_owned_input(),
-                body: Box::new(body.into_owned_input()),
-                src,
-            }),
-            Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
-                Node::SyntaxError(SyntaxErrorNode {
-                    err,
-                    children: children.into_owned_input(),
-                    src,
-                })
-            },
-            Node::Prefix(PrefixNode(op)) => Node::Prefix(PrefixNode(op.into_owned_input())),
-            Node::Infix(InfixNode(op)) => Node::Infix(InfixNode(op.into_owned_input())),
-            Node::Postfix(PostfixNode(op)) => Node::Postfix(PostfixNode(op.into_owned_input())),
-            Node::Binary(BinaryNode(op)) => Node::Binary(BinaryNode(op.into_owned_input())),
-            Node::Ternary(TernaryNode(op)) => Node::Ternary(TernaryNode(op.into_owned_input())),
-            Node::Compound(CompoundNode(op)) => Node::Compound(CompoundNode(op.into_owned_input())),
-            Node::Group(GroupNode(op)) => Node::Group(GroupNode(op.into_owned_input())),
-            Node::PrefixBinary(PrefixBinaryNode(op)) => {
-                Node::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
-            },
-            Node::CollectedExpressions(CollectedExpressionsNode { exprs }) => {
-                Node::CollectedExpressions(CollectedExpressionsNode {
-                    exprs: exprs.into_owned_input(),
-                })
-            },
-            Node::CollectedSourceLocations(node) => Node::CollectedSourceLocations(node),
-            Node::CollectedIssues(node) => Node::CollectedIssues(node),
-            Node::MissingBecauseUnsafeCharacterEncoding(node) => {
-                Node::MissingBecauseUnsafeCharacterEncoding(node)
-            },
-            Node::SafeString(node) => Node::SafeString(node),
-            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
-                Node::GroupMissingCloser(GroupMissingCloserNode(op.into_owned_input()))
-            },
-            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
-                Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(
-                    op.into_owned_input(),
-                ))
-            },
-        }
-    }
-}
-
-impl<I> Node<I> {
+impl Node {
     // TODO(cleanup): Combine with getSource()
     fn source(&self) -> Source {
         self.getSource()
@@ -446,8 +384,8 @@ impl<I> Node<I> {
 // OperatorNode
 //======================================
 
-impl<I> OperatorNode<I> {
-    pub(crate) fn new(op: Symbol, make_sym: Symbol, children: NodeSeq<I>) -> Self {
+impl OperatorNode {
+    pub(crate) fn new(op: Symbol, make_sym: Symbol, children: NodeSeq) -> Self {
         assert!(!children.is_empty());
 
         let src = Source::new_from_source(children.first().source(), children.last().source());
@@ -490,35 +428,17 @@ impl<I> OperatorNode<I> {
     // }
 }
 
-impl OperatorNode<BorrowedTokenInput<'_>> {
-    fn into_owned_input(self) -> OperatorNode {
-        let OperatorNode {
-            op,
-            make_sym,
-            children,
-            src,
-        } = self;
-
-        OperatorNode {
-            op,
-            make_sym,
-            children: children.into_owned_input(),
-            src,
-        }
-    }
-}
-
 //======================================
 // Missing closer nodes
 //======================================
 
-impl<I> GroupMissingCloserNode<I> {
+impl GroupMissingCloserNode {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
 }
 
-impl<I> UnterminatedGroupNeedsReparseNode<I> {
+impl UnterminatedGroupNeedsReparseNode {
     pub(crate) fn check(&self) -> bool {
         return false;
     }
@@ -528,48 +448,48 @@ impl<I> UnterminatedGroupNeedsReparseNode<I> {
 // Operator sub-type nodes
 //======================================
 
-impl<I> PrefixNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl PrefixNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PrefixNodeCount);
 
         PrefixNode(OperatorNode::new(op, SYMBOL_CODEPARSER_PREFIXNODE, args))
     }
 }
 
-impl<I> BinaryNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl BinaryNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_BinaryNodeCount);
 
         BinaryNode(OperatorNode::new(op, SYMBOL_CODEPARSER_BINARYNODE, args))
     }
 }
 
-impl<I> InfixNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl InfixNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_InfixNodeCount);
 
         InfixNode(OperatorNode::new(op, SYMBOL_CODEPARSER_INFIXNODE, args))
     }
 }
 
-impl<I> TernaryNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl TernaryNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_TernaryNodeCount);
 
         TernaryNode(OperatorNode::new(op, SYMBOL_CODEPARSER_TERNARYNODE, args))
     }
 }
 
-impl<I> PostfixNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl PostfixNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
 
         PostfixNode(OperatorNode::new(op, SYMBOL_CODEPARSER_POSTFIXNODE, args))
     }
 }
 
-impl<I> PrefixBinaryNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl PrefixBinaryNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_PrefixBinaryNodeCount);
 
         PrefixBinaryNode(OperatorNode::new(
@@ -584,24 +504,24 @@ impl<I> PrefixBinaryNode<I> {
 // GroudNode and CompoundNode
 //======================================
 
-impl<I> GroupNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl GroupNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_GroupNodeCount);
 
         GroupNode(OperatorNode::new(op, SYMBOL_CODEPARSER_GROUPNODE, args))
     }
 }
 
-impl<I> CompoundNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl CompoundNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_CompoundNodeCount);
 
         CompoundNode(OperatorNode::new(op, SYMBOL_CODEPARSER_COMPOUNDNODE, args))
     }
 }
 
-impl<I> GroupMissingCloserNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl GroupMissingCloserNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_GroupMissingCloserNodeCount);
 
         GroupMissingCloserNode(OperatorNode::new(
@@ -612,8 +532,8 @@ impl<I> GroupMissingCloserNode<I> {
     }
 }
 
-impl<I> UnterminatedGroupNeedsReparseNode<I> {
-    pub(crate) fn new(op: Symbol, args: NodeSeq<I>) -> Self {
+impl UnterminatedGroupNeedsReparseNode {
+    pub(crate) fn new(op: Symbol, args: NodeSeq) -> Self {
         incr_diagnostic!(Node_UnterminatedGroupNeedsReparseNodeCount);
 
         UnterminatedGroupNeedsReparseNode(OperatorNode::new(
@@ -628,9 +548,9 @@ impl<I> UnterminatedGroupNeedsReparseNode<I> {
 // CallNode
 //======================================
 
-impl<I> CallNode<I> {
-    pub(crate) fn new(head: NodeSeq<I>, body: Node<I>) -> Self {
-        debug_assert!(!head.is_empty());
+impl CallNode {
+    pub(crate) fn new(head: NodeSeq, body: Node) -> Self {
+        assert!(!head.is_empty());
 
         incr_diagnostic!(Node_CallNodeCount);
 
@@ -675,8 +595,8 @@ impl<I> CallNode<I> {
 // SyntaxErrorNode
 //======================================
 
-impl<I> SyntaxErrorNode<I> {
-    pub(crate) fn new(err: Symbol, children: NodeSeq<I>) -> Self {
+impl SyntaxErrorNode {
+    pub(crate) fn new(err: Symbol, children: NodeSeq) -> Self {
         assert!(!children.is_empty());
 
         incr_diagnostic!(Node_SyntaxErrorNodeCount);
@@ -716,9 +636,8 @@ impl<I> SyntaxErrorNode<I> {
 // CollectedExpressionsNode
 //======================================
 
-impl<I> CollectedExpressionsNode<I> {
-    #[allow(dead_code)]
-    pub(crate) fn new(exprs: NodeSeq<I>) -> Self {
+impl CollectedExpressionsNode {
+    pub(crate) fn new(exprs: NodeSeq) -> Self {
         CollectedExpressionsNode { exprs }
     }
 
@@ -869,8 +788,8 @@ impl SafeStringNode {
     // }
 }
 
-impl<I> NodeContainer<I> {
-    pub(crate) fn new(nodes: NodeSeq<I>) -> Self {
+impl NodeContainer {
+    pub(crate) fn new(nodes: NodeSeq) -> Self {
         NodeContainer { nodes }
     }
 

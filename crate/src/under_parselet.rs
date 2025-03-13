@@ -10,7 +10,7 @@ use crate::{
     precedence::*,
     source::*,
     symbol::Symbol,
-    token::{TokenKind, TokenRef},
+    token::{Token, TokenKind},
     tokenizer::Tokenizer_currentToken,
 };
 
@@ -25,16 +25,12 @@ impl UnderParselet {
 }
 
 impl PrefixParselet for UnderParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
         UnderParselet_parsePrefix(session, self, token)
     }
 }
 
-fn UnderParselet_parsePrefix<'i>(
-    session: &mut ParserSession<'i>,
-    P: &UnderParselet,
-    TokIn: TokenRef<'i>,
-) {
+fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, TokIn: Token) {
     //
     // prefix
     //
@@ -84,10 +80,10 @@ fn UnderParselet_parsePrefix<'i>(
     return Parser_parseClimb(session);
 }
 
-pub(crate) fn UnderParselet_parseInfixContextSensitive<'i>(
-    session: &mut ParserSession<'i>,
+pub(crate) fn UnderParselet_parseInfixContextSensitive(
+    session: &mut ParserSession,
     P: &UnderParselet,
-    TokIn: TokenRef<'i>,
+    TokIn: Token,
 ) {
     //
     // infix
@@ -168,12 +164,12 @@ fn UnderParselet_reduceBlankContextSensitive(session: &mut ParserSession, P: &Un
 //======================================
 
 impl PrefixParselet for UnderDotParselet {
-    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, token: TokenRef<'i>) {
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
         UnderDotParselet_parsePrefix(session, token)
     }
 }
 
-fn UnderDotParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef<'i>) {
+fn UnderDotParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     //
     // prefix
     //
@@ -193,9 +189,9 @@ fn UnderDotParselet_parsePrefix<'i>(session: &mut ParserSession<'i>, TokIn: Toke
 //
 // Called from other parselets
 //
-pub(crate) fn UnderDotParselet_parseInfixContextSensitive<'i>(
-    session: &mut ParserSession<'i>,
-    TokIn: TokenRef<'i>,
+pub(crate) fn UnderDotParselet_parseInfixContextSensitive(
+    session: &mut ParserSession,
+    TokIn: Token,
 ) {
     //
     // infix

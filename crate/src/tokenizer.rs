@@ -17,7 +17,7 @@ use crate::{
         SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT, INSIDE_STRINGIFY_AS_FILE,
         INSIDE_STRINGIFY_AS_TAG,
     },
-    token::{Token, TokenKind, TokenRef},
+    token::{Token, TokenKind},
     token_enum::Closer,
     utils,
     wl_character::{EscapeStyle, WLCharacter},
@@ -235,13 +235,13 @@ impl NumberTokenizationContext {
 // TODO: Why does putting this type in the root module cause Rust Analyzer
 //             to not work on this file?
 // pub mod handler {
-type HandlerFunction = for<'p, 'i> fn(
-    session: &'p mut Tokenizer<'i>,
-    startBuf: Buffer<'i>,
+type HandlerFunction = for<'p> fn(
+    session: &'p mut Tokenizer,
+    startBuf: Buffer,
     startLoc: SourceLocation,
     c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i>;
+) -> Token;
 // }
 
 // use self::handler::HandlerFunction;
@@ -388,11 +388,7 @@ const TOKENIZER_HANDLER_TABLE: [HandlerFunction; 128] = [
 pub(crate) const ASCII_VTAB: char = '\x0B';
 pub(crate) const ASCII_FORM_FEED: char = '\x0C';
 
-pub(crate) fn Token<'i, T: Into<TokenKind>>(
-    tok: T,
-    buf: BufferAndLength<'i>,
-    src: Source,
-) -> TokenRef<'i> {
+pub(crate) fn Token<T: Into<TokenKind>>(tok: T, buf: BufferAndLength, src: Source) -> Token {
     let tok = tok.into();
     Token::new(tok, buf, src)
 }
@@ -412,7 +408,7 @@ pub(crate) fn Token<'i, T: Into<TokenKind>>(
 // return \[Alpha]
 //
 
-pub fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) -> TokenRef<'i> {
+pub fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) -> Token {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
 
@@ -429,13 +425,13 @@ pub fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) 
     return func(session, tokenStartBuf, tokenStartLoc, c, policy);
 }
 
-fn Tokenizer_nextToken_uncommon<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_nextToken_uncommon(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     match c.to_point() {
         Char(_) => (),
         EndOfFile => {
@@ -703,7 +699,7 @@ fn Tokenizer_nextToken_uncommon<'i>(
     return Tokenizer_handleSymbol(session, tokenStartBuf, tokenStartLoc, c, policy);
 }
 
-pub fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
+pub fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> Token {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
 
@@ -757,7 +753,7 @@ pub fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> To
 //
 // Use SourceCharacters here, not WLCharacters
 //
-pub fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
+pub fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> Token {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
 
@@ -836,7 +832,7 @@ pub fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> T
 pub(crate) fn Tokenizer_currentToken<'i>(
     session: &mut Tokenizer<'i>,
     mut policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     let insideGroup: bool = !session.GroupStack.is_empty();
 
     //
@@ -862,9 +858,7 @@ pub(crate) fn Tokenizer_currentToken<'i>(
     return Tok;
 }
 
-pub(crate) fn Tokenizer_currentToken_stringifyAsTag<'i>(
-    session: &mut Tokenizer<'i>,
-) -> TokenRef<'i> {
+pub(crate) fn Tokenizer_currentToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> Token {
     let resetBuf = session.offset;
     let resetEOF = session.wasEOF;
     let resetLoc = session.SrcLoc;
@@ -878,7 +872,7 @@ pub(crate) fn Tokenizer_currentToken_stringifyAsTag<'i>(
     return Tok;
 }
 
-pub fn Tokenizer_currentToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
+pub fn Tokenizer_currentToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> Token {
     let resetBuf = session.offset;
     let resetEOF = session.wasEOF;
     let resetLoc = session.SrcLoc;
@@ -897,8 +891,8 @@ pub fn Tokenizer_currentToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -
 //
 // Some middle layer that deals with "parts" of a token.
 //
-fn Tokenizer_nextWLCharacter<'i>(
-    session: &mut Tokenizer<'i>,
+fn Tokenizer_nextWLCharacter(
+    session: &mut Tokenizer,
     _tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     policy: NextPolicy,
@@ -987,9 +981,9 @@ fn Tokenizer_nextWLCharacter<'i>(
     } // loop
 }
 
-fn Tokenizer_currentWLCharacter<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_currentWLCharacter(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut policy: NextPolicy,
 ) -> WLCharacter {
@@ -1011,13 +1005,13 @@ fn Tokenizer_currentWLCharacter<'i>(
     return c;
 }
 
-fn Tokenizer_handleComma<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleComma(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     incr_diagnostic!(Tokenizer_CommaCount);
 
     return Token(
@@ -1027,13 +1021,13 @@ fn Tokenizer_handleComma<'i>(
     );
 }
 
-fn Tokenizer_handleLineFeed<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleLineFeed(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _firstChar: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     incr_diagnostic!(Tokenizer_NewlineCount);
 
     //
@@ -1046,13 +1040,13 @@ fn Tokenizer_handleLineFeed<'i>(
     );
 }
 
-fn Tokenizer_handleOpenSquare<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleOpenSquare(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     incr_diagnostic!(Tokenizer_OpenSquareCount);
 
     return Token(
@@ -1062,13 +1056,13 @@ fn Tokenizer_handleOpenSquare<'i>(
     );
 }
 
-fn Tokenizer_handleOpenCurly<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleOpenCurly(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     incr_diagnostic!(Tokenizer_OpenCurlyCount);
 
     return Token(
@@ -1078,13 +1072,13 @@ fn Tokenizer_handleOpenCurly<'i>(
     );
 }
 
-fn Tokenizer_handleSpace<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleSpace(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     incr_diagnostic!(Tokenizer_WhitespaceCount);
 
     return Token(
@@ -1094,13 +1088,13 @@ fn Tokenizer_handleSpace<'i>(
     );
 }
 
-fn Tokenizer_handleCloseSquare<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleCloseSquare(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     incr_diagnostic!(Tokenizer_CloseSquareCount);
 
     return Token(
@@ -1110,13 +1104,13 @@ fn Tokenizer_handleCloseSquare<'i>(
     );
 }
 
-fn Tokenizer_handleCloseCurly<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleCloseCurly(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _firstChar: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     incr_diagnostic!(Tokenizer_CloseCurlyCount);
 
     return Token(
@@ -1126,13 +1120,13 @@ fn Tokenizer_handleCloseCurly<'i>(
     );
 }
 
-fn Tokenizer_handleStrangeWhitespace<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleStrangeWhitespace(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.isStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
@@ -1175,13 +1169,13 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
 //
 // Important to process SourceCharacters here: (* \\.28\\.2a *)
 //
-fn Tokenizer_handleComment<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleComment(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: SourceCharacter,
     mut policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     //
     // comment is already started
     //
@@ -1260,13 +1254,13 @@ fn Tokenizer_handleComment<'i>(
     } // loop
 }
 
-fn Tokenizer_handleMBLinearSyntaxBlob<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleMBLinearSyntaxBlob(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == CODEPOINT_LINEARSYNTAX_OPENPAREN);
 
     let mut depth = 1;
@@ -1311,13 +1305,13 @@ fn Tokenizer_handleMBLinearSyntaxBlob<'i>(
 // a segment is: [a-z$]([a-z$0-9])*
 // a symbol is: (segment)?(`segment)*
 //
-fn Tokenizer_handleSymbol<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleSymbol(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '`' || c.isLetterlike() || c.isMBLetterlike());
 
     incr_diagnostic!(Tokenizer_SymbolCount);
@@ -1410,9 +1404,9 @@ fn Tokenizer_handleSymbol<'i>(
 //
 // return: the first NON-SYMBOLSEGMENT character after all symbol segment characters
 //
-fn Tokenizer_handleSymbolSegment<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleSymbolSegment(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     _charBuf: Buffer,
     mut charLoc: SourceLocation,
@@ -1625,13 +1619,13 @@ fn Tokenizer_handleSymbolSegment<'i>(
     return c;
 }
 
-fn Tokenizer_handleString<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleString(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     mut policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '"');
 
     if feature::CHECK_ISSUES && (policy & INSIDE_SLOT) == INSIDE_SLOT {
@@ -1780,13 +1774,13 @@ fn Tokenizer_handleString<'i>(
     } // while
 }
 
-fn Tokenizer_handleString_stringifyAsTag<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleString_stringifyAsTag(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     //
     // Nothing to assert
     //
@@ -1832,13 +1826,13 @@ const UNTERMINATED_FILESTRING: c_int = -1;
 //
 // Use SourceCharacters here, not WLCharacters
 //
-pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+pub(crate) fn Tokenizer_handleString_stringifyAsFile(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: SourceCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     //
     // Nothing to assert
     //
@@ -1984,8 +1978,8 @@ pub(crate) fn Tokenizer_handleString_stringifyAsFile<'i>(
 //
 // Use SourceCharacters here, not WLCharacters
 //
-fn Tokenizer_handleFileOpsBrackets<'i>(
-    session: &mut Tokenizer<'i>,
+fn Tokenizer_handleFileOpsBrackets(
+    session: &mut Tokenizer,
     _tokenStartBuf: Buffer,
     _tokenStartLoc: SourceLocation,
     mut c: SourceCharacter,
@@ -2078,13 +2072,13 @@ const BAILOUT: i32 = -1;
 //
 // numer = base+mantissa+exponent
 //
-fn Tokenizer_handleNumber<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleNumber(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.isDigit() || c.to_point() == '.');
 
     incr_diagnostic!(Tokenizer_NumberCount);
@@ -3257,9 +3251,9 @@ impl NumberTokenizationContext {
 //
 // Return: number of digits handled after ., possibly 0, or -1 if error
 //
-fn Tokenizer_handlePossibleFractionalPart<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handlePossibleFractionalPart(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     dot_offset: usize,
     dotLoc: SourceLocation,
@@ -3295,9 +3289,9 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
 //         UNRECOGNIZED_DIGIT if base error
 //         BAILOUT if not a radix point (and also backup before dot)
 //
-fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handlePossibleFractionalPartPastDot(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     dot_offset: usize,
     dotLoc: SourceLocation,
@@ -3423,9 +3417,9 @@ fn Tokenizer_backupAndWarn<'i>(
 //
 // return: the first NON-ZERO character after all digits
 //
-fn Tokenizer_handleZeros<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleZeros(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     policy: NextPolicy,
     mut c: WLCharacter,
@@ -3460,9 +3454,9 @@ fn Tokenizer_handleZeros<'i>(
 //
 // return: the first NON-DIGIT character after all digits
 //
-fn Tokenizer_handleDigits<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleDigits(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     policy: NextPolicy,
     mut c: WLCharacter,
@@ -3497,9 +3491,9 @@ fn Tokenizer_handleDigits<'i>(
 //
 // Return: number of digits handled, possibly 0, or -1 if error
 //
-fn Tokenizer_handleAlphaOrDigits<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleAlphaOrDigits(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     base: i32,
@@ -3544,13 +3538,13 @@ fn Tokenizer_handleAlphaOrDigits<'i>(
     return c;
 }
 
-fn Tokenizer_handleColon<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleColon(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == ':');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -3627,13 +3621,13 @@ fn Tokenizer_handleColon<'i>(
     }
 }
 
-fn Tokenizer_handleOpenParen<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleOpenParen(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '(');
 
     let secondChar = ByteDecoder_currentSourceCharacter(session, policy);
@@ -3663,13 +3657,13 @@ fn Tokenizer_handleOpenParen<'i>(
     );
 }
 
-fn Tokenizer_handleDot<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleDot(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     firstChar: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     let mut c = firstChar;
 
     //
@@ -3727,13 +3721,13 @@ fn Tokenizer_handleDot<'i>(
     );
 }
 
-fn Tokenizer_handleEqual<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleEqual(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '=');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -3818,13 +3812,13 @@ fn Tokenizer_handleEqual<'i>(
     );
 }
 
-fn Tokenizer_handleUnder<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleUnder(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '_');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -3926,13 +3920,13 @@ fn Tokenizer_handleUnder<'i>(
     );
 }
 
-fn Tokenizer_handleLess<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleLess(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '<');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4040,13 +4034,13 @@ fn Tokenizer_handleLess<'i>(
     );
 }
 
-fn Tokenizer_handleGreater<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleGreater(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '>');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4108,13 +4102,13 @@ fn Tokenizer_handleGreater<'i>(
     );
 }
 
-fn Tokenizer_handleMinus<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleMinus(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '-');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4265,13 +4259,13 @@ fn Tokenizer_handleMinus<'i>(
     );
 }
 
-fn Tokenizer_handleBar<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleBar(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '|');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4387,13 +4381,13 @@ fn Tokenizer_handleBar<'i>(
     );
 }
 
-fn Tokenizer_handleSemi<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleSemi(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == ';');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4423,13 +4417,13 @@ fn Tokenizer_handleSemi<'i>(
     );
 }
 
-fn Tokenizer_handleBang<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleBang(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '!');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4475,13 +4469,13 @@ fn Tokenizer_handleBang<'i>(
     );
 }
 
-fn Tokenizer_handleHash<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleHash(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '#');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4513,13 +4507,13 @@ fn Tokenizer_handleHash<'i>(
     );
 }
 
-fn Tokenizer_handlePercent<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handlePercent(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '%');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4559,13 +4553,13 @@ fn Tokenizer_handlePercent<'i>(
     );
 }
 
-fn Tokenizer_handleAmp<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleAmp(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '&');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4597,13 +4591,13 @@ fn Tokenizer_handleAmp<'i>(
     );
 }
 
-fn Tokenizer_handleSlash<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleSlash(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '/');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4784,13 +4778,13 @@ fn Tokenizer_handleSlash<'i>(
     );
 }
 
-fn Tokenizer_handleAt<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleAt(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '@');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4852,13 +4846,13 @@ fn Tokenizer_handleAt<'i>(
     );
 }
 
-fn Tokenizer_handlePlus<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handlePlus(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '+');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4938,13 +4932,13 @@ fn Tokenizer_handlePlus<'i>(
     );
 }
 
-fn Tokenizer_handleTilde<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleTilde(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '~');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -4974,13 +4968,13 @@ fn Tokenizer_handleTilde<'i>(
     );
 }
 
-fn Tokenizer_handleQuestion<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleQuestion(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '?');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -5010,13 +5004,13 @@ fn Tokenizer_handleQuestion<'i>(
     );
 }
 
-fn Tokenizer_handleStar<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleStar(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '*');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -5075,13 +5069,13 @@ fn Tokenizer_handleStar<'i>(
     );
 }
 
-fn Tokenizer_handleCaret<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleCaret(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.to_point() == '^');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -5143,13 +5137,13 @@ fn Tokenizer_handleCaret<'i>(
     );
 }
 
-fn Tokenizer_handleUnhandledBackslash<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleUnhandledBackslash(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     mut c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     //
     // Unhandled \
     //
@@ -5371,13 +5365,13 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
     );
 }
 
-fn Tokenizer_handleMBStrangeNewline<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleMBStrangeNewline(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.isMBStrangeNewline());
 
     if feature::CHECK_ISSUES {
@@ -5412,13 +5406,13 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
     );
 }
 
-fn Tokenizer_handleMBStrangeWhitespace<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleMBStrangeWhitespace(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.isMBStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
@@ -5453,13 +5447,13 @@ fn Tokenizer_handleMBStrangeWhitespace<'i>(
     );
 }
 
-fn Tokenizer_handleMBPunctuation<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleMBPunctuation(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.isMBPunctuation());
 
     let Operator = crate::long_names_registration::LongNameCodePointToOperator(c.to_point());
@@ -5471,13 +5465,13 @@ fn Tokenizer_handleMBPunctuation<'i>(
     );
 }
 
-fn Tokenizer_handleNakedMBLinearSyntax<'i>(
-    session: &mut Tokenizer<'i>,
-    tokenStartBuf: Buffer<'i>,
+fn Tokenizer_handleNakedMBLinearSyntax(
+    session: &mut Tokenizer,
+    tokenStartBuf: Buffer,
     tokenStartLoc: SourceLocation,
     c: WLCharacter,
     _policy: NextPolicy,
-) -> TokenRef<'i> {
+) -> Token {
     assert!(c.isMBLinearSyntax());
 
     match c.to_point() {
