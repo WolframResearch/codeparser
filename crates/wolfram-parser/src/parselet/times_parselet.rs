@@ -5,7 +5,9 @@ use crate::{
     parselet_registration::*,
     parser::ParserSession,
     precedence::*,
+    source::TOPLEVEL,
     token::{TokenKind, TokenRef},
+    tokenizer::Tokenizer_currentToken,
 };
 
 
@@ -32,14 +34,16 @@ fn TimesParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
 
-    let tok2 = session.current_token_eat_trivia();
+    let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
+
+    session.eat_trivia(&mut Tok2);
 
     // #if !USE_MUSTTAIL
     let Ctxt = session.top_context();
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(Parser_identity);
 
-    session.parse_prefix(tok2);
+    session.parse_prefix(Tok2);
 
     return TimesParselet_parseLoop(session);
     // #else
@@ -64,13 +68,15 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 
         let Trivia1 = session.trivia1.clone();
 
-        let mut tok1 = session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+        let mut Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(tok1.tok.value())];
+        session.eat_trivia_2(&mut Tok1, &mut Trivia1.borrow_mut());
 
-        tok1 = I.processImplicitTimes(session, tok1);
+        let mut I: &dyn InfixParselet = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
-        if tok1.tok == TokenKind::Fake_ImplicitTimes {
+        Tok1 = I.processImplicitTimes(session, Tok1);
+
+        if Tok1.tok == TokenKind::Fake_ImplicitTimes {
             //
             // implicit Times should not cross toplevel newlines
             //
@@ -79,15 +85,16 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 
             Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
-            tok1 = session
-                .current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia1.borrow_mut());
+            Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-            I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
+            session.eat_trivia_but_not_toplevel_newlines_2(&mut Tok1, &mut Trivia1.borrow_mut());
 
-            tok1 = I.processImplicitTimes(session, tok1);
+            I = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
+
+            Tok1 = I.processImplicitTimes(session, Tok1);
         }
 
-        I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
+        I = INFIX_PARSELETS[usize::from(Tok1.tok.value())];
 
         //
         // Cannot just compare tokens
@@ -109,9 +116,11 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 
         session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-        session.push_leaf_and_next(tok1);
+        session.push_leaf_and_next(Tok1);
 
-        let Tok2 = session.current_token_eat_trivia();
+        let mut Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
+
+        session.eat_trivia(&mut Tok2);
 
         // #if !USE_MUSTTAIL
         let Ctxt = session.top_context();

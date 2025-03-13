@@ -4,7 +4,9 @@ use crate::{
     parselet::*,
     parser::ParserSession,
     precedence::*,
+    source::TOPLEVEL,
     token::{Token, TokenKind, TokenRef},
+    tokenizer::Tokenizer_currentToken,
 };
 
 impl IntegralParselet {
@@ -39,7 +41,9 @@ fn IntegralParselet_parsePrefix<'i>(
     Ctxt.f = Some(IntegralParselet_parse1);
     Ctxt.p = Some(P);
 
-    let Tok = session.current_token_eat_trivia();
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
+
+    session.eat_trivia(&mut Tok);
 
     if Tok.tok == TokenKind::LongName_DifferentialD
         || Tok.tok == TokenKind::LongName_CapitalDifferentialD
@@ -63,10 +67,12 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
 
     let Trivia1 = session.trivia1.clone();
 
-    let tok = session.current_token_eat_trivia_into(&mut Trivia1.borrow_mut());
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    if !(tok.tok == TokenKind::LongName_DifferentialD
-        || tok.tok == TokenKind::LongName_CapitalDifferentialD)
+    session.eat_trivia_2(&mut Tok, &mut Trivia1.borrow_mut());
+
+    if !(Tok.tok == TokenKind::LongName_DifferentialD
+        || Tok.tok == TokenKind::LongName_CapitalDifferentialD)
     {
         Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
@@ -81,7 +87,7 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
     Ctxt.p = Some(P);
 
     // MUSTTAIL
-    return session.parse_prefix(tok);
+    return session.parse_prefix(Tok);
 }
 
 fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr) {
