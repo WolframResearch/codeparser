@@ -23,7 +23,10 @@ use crate::{
     wl_character::{EscapeStyle, WLCharacter},
 };
 
-pub type IssuePtrSet = Vec<Issue>;
+// TODO(cleanup): Remove these aliases
+pub type IssuePtr = Issue;
+pub type IssuePtrSet = Vec<IssuePtr>;
+pub type CodeActionPtrVector = Vec<CodeAction>;
 
 pub type AdditionalDescriptionVector = Vec<String>;
 
@@ -300,7 +303,7 @@ pub struct Issue {
     pub sev: MyString,
     pub src: Source,
     pub val: NotNan<f64>,
-    pub actions: Vec<CodeAction>,
+    pub actions: CodeActionPtrVector,
     pub additional_descriptions: AdditionalDescriptionVector,
 }
 
@@ -511,7 +514,7 @@ impl Issue {
         sev: MyString,
         src: Source,
         val: std::os::raw::c_double,
-        actions: Vec<CodeAction>,
+        actions: CodeActionPtrVector,
         additional_descriptions: AdditionalDescriptionVector,
     ) -> Issue {
         let val = NotNan::new(val).expect("unable to construct Issue with NaN val");
@@ -573,7 +576,7 @@ pub fn SyntaxIssue(
     sev: MyString,
     src: Source,
     val: std::os::raw::c_double,
-    actions: Vec<CodeAction>,
+    actions: CodeActionPtrVector,
     additional_descriptions: AdditionalDescriptionVector,
 ) -> Issue {
     Issue::new(
@@ -594,7 +597,7 @@ pub(crate) fn FormatIssue(
     sev: MyString,
     src: Source,
     val: std::os::raw::c_double,
-    actions: Vec<CodeAction>,
+    actions: CodeActionPtrVector,
     additional_descriptions: AdditionalDescriptionVector,
 ) -> Issue {
     Issue::new(
@@ -615,7 +618,7 @@ pub fn EncodingIssue(
     sev: MyString,
     src: Source,
     val: std::os::raw::c_double,
-    actions: Vec<CodeAction>,
+    actions: CodeActionPtrVector,
     additional_descriptions: AdditionalDescriptionVector,
 ) -> Issue {
     Issue::new(
