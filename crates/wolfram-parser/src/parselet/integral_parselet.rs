@@ -109,7 +109,11 @@ fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr)
         .downcast_ref::<IntegralParselet>()
         .expect("unable to downcast to IntegralParselet");
 
-    session.reduce_and_climb(|ctx| PrefixBinaryNode::new(P.Op1, ctx))
+    let node = PrefixBinaryNode::new(P.Op1, session.pop_context());
+    session.push_node(node);
+
+    // MUSTTAIL
+    return session.parse_climb();
 }
 
 fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) {
@@ -118,7 +122,11 @@ fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) 
         .downcast_ref::<IntegralParselet>()
         .expect("unable to downcast to IntegralParselet");
 
-    session.reduce_and_climb(|ctx| PrefixNode::new(P.Op2, ctx))
+    let node = PrefixNode::new(P.Op2, session.pop_context());
+    session.push_node(node);
+
+    // MUSTTAIL
+    return session.parse_climb();
 }
 
 impl InfixParselet for InfixDifferentialDParselet {
