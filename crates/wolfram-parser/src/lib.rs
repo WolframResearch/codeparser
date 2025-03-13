@@ -144,9 +144,8 @@ pub struct Container<N> {
 pub enum ContainerKind {
     String,
     File,
-    Byte,
     Box,
-    Cell,
+    Byte,
     // FIXME Is this really a valid container kind?
     Hold,
 }

@@ -53,10 +53,9 @@ impl WstpPut for ContainerKind {
         let symbol = match self {
             ContainerKind::String => Symbol::try_new("System`String").unwrap(),
             ContainerKind::File => Symbol::try_new("System`File").unwrap(),
-            ContainerKind::Byte => Symbol::try_new("System`Byte").unwrap(),
             ContainerKind::Box => Symbol::try_new("System`Box").unwrap(),
-            ContainerKind::Cell => Symbol::try_new("System`Cell").unwrap(),
             ContainerKind::Hold => Symbol::try_new("System`Hold").unwrap(),
+            ContainerKind::Byte => Symbol::try_new("System`Byte").unwrap(),
         };
 
         Symbol_put(symbol, link);
