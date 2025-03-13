@@ -10,7 +10,7 @@ use crate::{
         CompoundNode, Cst, CstSeq, GroupMissingCloserNode,
         GroupMissingOpenerNode, GroupNode, InfixNode, OperatorNode,
         PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorNode,
-        TernaryNode,
+        TernaryNode, TriviaSeq,
     },
     issue::{Issue, IssueTag, Severity},
     macros::leaf,

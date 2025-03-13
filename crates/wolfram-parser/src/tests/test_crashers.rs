@@ -5,7 +5,7 @@ use crate::{
             self, Binary, GroupMissingCloser, Infix, Prefix, SyntaxError, Token,
         },
         GroupMissingCloserNode, InfixNode, OperatorNode, PrefixNode,
-        SyntaxErrorNode,
+        SyntaxErrorNode, TriviaSeq,
     },
     issue::{Issue, IssueTag, Severity},
     macros::{src, token},

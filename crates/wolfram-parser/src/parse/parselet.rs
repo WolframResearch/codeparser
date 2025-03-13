@@ -1584,7 +1584,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for EqualParselet {
             // Spaces to Avoid
             //
 
-            let tok = session.push_syntax_and_next(tok);
+            session.push_leaf_and_next(tok);
 
             let node = session.reduce_binary_unset(
                 BinaryOperator::Unset,
@@ -1652,7 +1652,7 @@ impl EqualParselet {
             // TID:231105/1: Typical TagUnset ("=.")
             // TID:231105/2: TagUnset with interior trivia ("= .")
 
-            let tok = session.push_syntax_and_next(tok);
+            session.push_leaf_and_next(tok);
 
             let node = session.reduce_ternary_tag_unset(
                 TernaryOperator::TagUnset,
@@ -2375,9 +2375,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for LessLessParselet {
 
         let (trivia, tok) = session.current_syntax_token_stringify_as_file();
 
-        // Special operand token, not processed into a Node in the normal way
-        // since this is supposed to be a String token.
-        let _ = session.push_leaf_and_next(tok);
+        session.push_leaf_and_next(tok);
 
         let node =
             session.reduce_prefix_get(PrefixOperator::Get, tok_in, trivia, tok);

@@ -321,7 +321,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: PrefixOperator,
         _tok1: Self::SyntaxTokenNode,
         _trivia: Self::TriviaHandle,
-        _tok2: TokenRef<'i>,
+        tok2: TokenRef<'i>,
     ) -> Self::Node {
         debug_assert_eq!(op, PrefixOperator::Get);
 
@@ -378,7 +378,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         _trivia1: Self::TriviaHandle,
         _op_token: Self::SyntaxTokenNode,
         _trivia2: Self::TriviaHandle,
-        _dot_token: Self::SyntaxTokenNode,
+        dot_token: TokenRef<'i>,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);
 
@@ -426,7 +426,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         _trivia3: Self::TriviaHandle,
         _equal_token: Self::SyntaxTokenNode,
         _trivia4: Self::TriviaHandle,
-        _dot_token: Self::SyntaxTokenNode,
+        dot_token: TokenRef<'i>,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);
 
