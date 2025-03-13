@@ -18,7 +18,7 @@ use wolfram_parser::{
     quirks::QuirkSettings,
     source::{Location, Source, Span},
     symbols as sym,
-    tokenize::{OwnedTokenInput, Token, TokenKind},
+    tokenize::{token_kind::SymbolToToken, OwnedTokenInput, Token, TokenKind},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq,
     UnsafeCharacterEncoding,
 };
@@ -885,7 +885,7 @@ impl FromExpr for TokenKind {
                 None => panic!(),
             };
 
-        let kind = match TokenKind::from_symbol(sym.as_symbol_ref()) {
+        let kind = match SymbolToToken(sym.as_symbol_ref()) {
             Some(kind) => kind,
             None => {
                 return Err(format!("symbol is not a known TokenKind: {sym}"))
