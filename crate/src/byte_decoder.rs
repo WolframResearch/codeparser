@@ -31,10 +31,12 @@ use crate::{
         CODEPOINT_BOM,
     },
     feature,
-    my_string_registration::{STRING_NONASCIICHARACTER, STRING_UNEXPECTEDCHARACTER, *},
+    my_string_registration::{
+        STRING_NONASCIICHARACTER, STRING_REMARK, STRING_UNEXPECTEDCHARACTER, STRING_WARNING, *,
+    },
     source::{
-        CodeAction, EncodingIssue, NextPolicy, NextPolicyBits::*, Severity, Source,
-        SourceCharacter, SourceConvention, SourceLocation,
+        CodeAction, EncodingIssue, NextPolicy, NextPolicyBits::*, Source, SourceCharacter,
+        SourceConvention, SourceLocation,
     },
     tokenizer::{SourceManager, Tokenizer, UnsafeCharacterEncoding},
     utils,
@@ -158,7 +160,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                     let I = EncodingIssue(
                         STRING_UNEXPECTEDCARRIAGERETURN,
                         format!("Unexpected ``\\r`` character."),
-                        Severity::Warning,
+                        STRING_WARNING,
                         Source::new(currentSourceCharacterStartLoc, session.SrcLoc),
                         1.0,
                         vec![],
@@ -944,7 +946,7 @@ fn ByteDecoder_strangeWarning(
         let I = EncodingIssue(
             STRING_UNEXPECTEDCHARACTER,
             format!("Unexpected character: ``{safeAndGraphicalStr}``."),
-            Severity::Remark,
+            STRING_REMARK,
             Src,
             0.95,
             Actions,
@@ -959,7 +961,7 @@ fn ByteDecoder_strangeWarning(
         let I = EncodingIssue(
             STRING_UNEXPECTEDCHARACTER,
             format!("Unexpected character: ``{safeAndGraphicalStr}``."),
-            Severity::Warning,
+            STRING_WARNING,
             Src,
             0.95,
             Actions,
@@ -1004,7 +1006,7 @@ fn ByteDecoder_nonASCIIWarning(
     let I = EncodingIssue(
         STRING_NONASCIICHARACTER,
         format!("Non-ASCII character: ``{safeAndGraphicalStr}``."),
-        Severity::Remark,
+        STRING_REMARK,
         Src,
         1.0,
         Actions,
@@ -1071,7 +1073,7 @@ fn ByteDecoder_incomplete1ByteSequence(
         let I = EncodingIssue(
             STRING_INCOMPLETEUTF8SEQUENCE,
             "Incomplete UTF-8 sequence.".into(),
-            Severity::Fatal,
+            STRING_FATAL,
             Source::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
@@ -1110,7 +1112,7 @@ fn ByteDecoder_incomplete2ByteSequence(
         let I = EncodingIssue(
             STRING_INCOMPLETEUTF8SEQUENCE,
             "Incomplete UTF-8 sequence.".into(),
-            Severity::Fatal,
+            STRING_FATAL,
             Source::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
@@ -1149,7 +1151,7 @@ fn ByteDecoder_incomplete3ByteSequence(
         let I = EncodingIssue(
             STRING_INCOMPLETEUTF8SEQUENCE,
             "Incomplete UTF-8 sequence.".into(),
-            Severity::Fatal,
+            STRING_FATAL,
             Source::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
@@ -1191,7 +1193,7 @@ fn ByteDecoder_straySurrogate(
         let I = EncodingIssue(
             STRING_STRAYSURROGATE,
             "Stray surrogate.".into(),
-            Severity::Fatal,
+            STRING_FATAL,
             Source::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
@@ -1230,7 +1232,7 @@ fn ByteDecoder_bom(
         let I = EncodingIssue(
             STRING_BOM,
             "BOM.".into(),
-            Severity::Fatal,
+            STRING_FATAL,
             Source::new(errSrcLoc, errSrcLoc.next()),
             1.0,
             vec![],
