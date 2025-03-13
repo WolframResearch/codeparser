@@ -35,7 +35,7 @@ fn nodes(input: &str) -> Vec<Node> {
         EncodingMode::Normal,
     );
 
-    let result = session.concrete_parse_expressions();
+    let result = session.parseExpressions();
     let nodes = result.nodes();
 
     nodes.to_owned()

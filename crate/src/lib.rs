@@ -304,7 +304,7 @@ pub fn parse_concrete(input: &str, opts: &ParseOptions) -> ParseResult {
         encoding_mode,
     );
 
-    session.concrete_parse_expressions()
+    session.parseExpressions()
 }
 
 //======================================
