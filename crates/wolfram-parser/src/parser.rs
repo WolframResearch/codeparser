@@ -680,18 +680,44 @@ impl<'i> ParserSession<'i> {
         return false;
     }
 
-    pub(crate) fn top_node_is_span(&self) -> bool {
+    pub(crate) fn check_span(&mut self) -> bool {
         assert!(!self.NodeStack.is_empty());
 
-        let top_node: &CstNode<_> = self.NodeStack.last().unwrap();
+        let N: &mut Node<_> = self.NodeStack.last_mut().unwrap();
 
-        match top_node {
-            // This is a BinaryNode of Span
-            CstNode::Binary(BinaryNode(node)) if node.getOp() == BinaryOperator::Span => true,
-            // This is a TernaryNode of Span
-            CstNode::Ternary(TernaryNode(node)) if node.getOp() == TernaryOperator::Span => true,
-            _ => false,
+        {
+            let NN = N;
+
+            if let Node::Binary(BinaryNode(B)) = NN {
+                let op = B.getOp();
+
+                if op == BinaryOperator::Span {
+                    return true;
+                }
+
+                //
+                // there is a BinaryNode, but it is not a Span
+                //
+
+                return false;
+            }
+
+            if let Node::Ternary(TernaryNode(op)) = NN {
+                let op = op.getOp();
+
+                if op == TernaryOperator::Span {
+                    return true;
+                }
+
+                //
+                // there is a TernaryNode, but it is not a Span
+                //
+
+                return false;
+            }
         }
+
+        return false;
     }
 
     pub fn is_quiescent(&mut self) -> bool {
