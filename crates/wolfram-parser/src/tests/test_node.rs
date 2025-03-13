@@ -4,9 +4,8 @@ use crate::{
         OperatorNode,
     },
     macros::{src, token},
-    source::Span,
     tests::nodes,
-    NodeSeq, ParseOptions, ParserSession,
+    NodeSeq, ParseOptions, ParserSession, Span,
 };
 
 use pretty_assertions::assert_eq;

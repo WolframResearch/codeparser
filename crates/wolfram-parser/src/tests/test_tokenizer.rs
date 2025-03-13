@@ -3,7 +3,7 @@ use crate::{
     source::{NextPolicyBits::RETURN_TOPLEVELNEWLINE, TOPLEVEL},
     tests::tokens,
     tokenize::Tokenizer,
-    tokenize_bytes, NodeSeq, ParseOptions,
+    tokenize_bytes, ParseOptions, Tokens,
 };
 
 use pretty_assertions::assert_eq;
@@ -315,7 +315,7 @@ fn TokenizerTest_LineContinuation4() {
 
 #[test]
 fn test_escaped_ascii_del() {
-    let NodeSeq(tokens) =
+    let Tokens(tokens) =
         crate::tokenize_bytes(&[b'\\', 127], &ParseOptions::default()).unwrap();
 
     assert_eq!(
@@ -357,7 +357,7 @@ fn test_tokenize_jpeg_string() {
             &ParseOptions::default()
         )
         .unwrap(),
-        NodeSeq(vec![
+        Tokens(vec![
             token!(Symbol, "ÿØÿà\0\u{10}JFIF\0\u{1}\u{1}\u{1}\0H\0H\0\0ÿá\0ÔExif\0\0II", 1:1-33),
             token!(Star, "*", 1:33-34),
             token!(Symbol, "\0\u{8}\0\0\0\u{8}\0\0\u{1}", 1:34-43),
