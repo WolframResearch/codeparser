@@ -68,18 +68,19 @@ myStringRegistrationCPPHeader = {
 // DO NOT MODIFY
 //
 
-#![allow(dead_code)]
+#pragma once
 
-use crate::my_string::MyString;
+#include \"MyString.h\"
+
 
 //
 // All strings that are used by CodeParser
 //"} ~Join~
-MapIndexed[Row[{"pub const ", toGlobal["String`"<>#1], ": MyString = MyString::new(", "\"", #, "\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]&, strings] ~Join~
+MapIndexed[Row[{"constexpr", " ", "MyString", " ", toGlobal["String`"<>#1], "(", "\"", #, "\"", ",", " ", StringLength[#1], ",", " ", ToString[#2[[1]]-1], ")", ";"}]&, strings] ~Join~
 {""};
 
 Print["exporting MyStringRegistration.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "my_string_registration.rs"}], Column[myStringRegistrationCPPHeader], "String"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "MyStringRegistration.h"}], Column[myStringRegistrationCPPHeader], "String"];
 
 Print[res];
 

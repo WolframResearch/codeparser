@@ -76,22 +76,20 @@ precedenceCPPHeader = {
 // DO NOT MODIFY
 //
 
-#![allow(dead_code)]
+#pragma once
 
-/// All levels of precedence
-pub type Precedence = u8;
+#include <cstdint> // for uint8_t
 
-"} ~Join~
-	KeyValueMap[
-		(Row[{
-			"pub const ",
-			toGlobal[#1], ": u8 = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ";", "// prec: ", #2[[1]], ", assoc: ", #2[[2]]
-		}])&,
-		enumMap
-	];
+//
+// All levels of precedence
+//
+enum Precedence : uint8_t {"} ~Join~
+   KeyValueMap[(Row[{toGlobal[#1], " = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ",", "// prec: ", #2[[1]], ", assoc: ", #2[[2]]}])&, enumMap] ~Join~
+   {"};",
+   ""};
 
 Print["exporting Precedence.h"];
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "precedence.rs"}], Column[precedenceCPPHeader], "String"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], Column[precedenceCPPHeader], "String"];
 
 Print[res];
 
