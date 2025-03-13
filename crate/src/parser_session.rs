@@ -8,15 +8,14 @@ use Diagnostics::*;
 
 use crate::{
     abstract_::{Abstract, Aggregate},
-    ast::AstNode,
     byte_decoder::ByteDecoder_nextSourceCharacter,
-    cst::{CstNode, CstNodeSeq},
+    cst::CstNodeSeq,
     feature,
     node::{Node, NodeSeq, TriviaSeq},
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
-    token::{BorrowedTokenInput, TokenKind, TokenRef},
+    token::{BorrowedTokenInput, OwnedTokenInput, TokenKind, TokenRef},
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
@@ -39,9 +38,9 @@ pub struct ParserSession<'i> {
 
 pub(crate) type NodeStack<'i> = Vec<Node<BorrowedTokenInput<'i>>>;
 
-pub struct ParseResult<N> {
+pub struct ParseResult<I> {
     /// Tokens or expressions.
-    pub(crate) nodes: NodeSeq<N>,
+    pub(crate) nodes: CstNodeSeq<I>,
 
     pub(crate) unsafe_character_encoding: Option<UnsafeCharacterEncoding>,
 
@@ -109,28 +108,19 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.input
     }
 
-    pub fn abstract_parse_expressions(&mut self) -> ParseResult<AstNode> {
-        let ParseResult {
-            nodes,
-            unsafe_character_encoding,
-            fatal_issues,
-            non_fatal_issues,
-            tracked,
-        } = self.concrete_parse_expressions();
+    #[allow(dead_code, unused_variables)] // PRE_COMMIT: Remove
+    pub fn abstract_parse_expressions(&mut self) -> ParseResult<OwnedTokenInput> {
+        let cst = self.concrete_parse_expressions();
 
-        let nodes = Aggregate(nodes);
-        let nodes = Abstract(nodes);
+        let agg = Aggregate(cst.nodes);
 
-        ParseResult {
-            nodes: NodeSeq(nodes),
-            unsafe_character_encoding,
-            fatal_issues,
-            non_fatal_issues,
-            tracked,
-        }
+        let ast = Abstract(agg);
+
+        // ParseResult { nodes: ast, ..cst }
+        todo!()
     }
 
-    pub fn concrete_parse_expressions(&mut self) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+    pub fn concrete_parse_expressions(&mut self) -> ParseResult<BorrowedTokenInput<'i>> {
         #[cfg(feature = "DIAGNOSTICS")]
         {
             DiagnosticsLog("enter parseExpressions");
@@ -237,7 +227,7 @@ impl<'i> ParserSession<'i> {
     pub(crate) fn concreteParseLeaf(
         &mut self,
         mode: StringifyMode,
-    ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+    ) -> ParseResult<BorrowedTokenInput<'i>> {
         //
         // Collect all expressions
         //
@@ -317,7 +307,10 @@ impl<'i> ParserSession<'i> {
         tokens
     }
 
-    fn create_parse_result<N>(&self, nodes: NodeSeq<N>) -> ParseResult<N> {
+    fn create_parse_result(
+        &self,
+        nodes: CstNodeSeq<BorrowedTokenInput<'i>>,
+    ) -> ParseResult<BorrowedTokenInput<'i>> {
         let result = ParseResult {
             nodes,
             unsafe_character_encoding: self.tokenizer.unsafe_character_encoding_flag,
@@ -338,8 +331,8 @@ impl<'i> ParserSession<'i> {
     }
 }
 
-impl<N> ParseResult<N> {
-    pub fn nodes(&self) -> &[N] {
+impl<I> ParseResult<I> {
+    pub fn nodes(&self) -> &[Node<I>] {
         let NodeSeq(vec) = &self.nodes;
         vec.as_slice()
     }
