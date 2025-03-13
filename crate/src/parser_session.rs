@@ -72,7 +72,7 @@ impl<'i> ParserSession<'i> {
                 fatalIssues: Vec::new(),
                 nonFatalIssues: Vec::new(),
 
-                unsafe_character_encoding_flag: None,
+                unsafeCharacterEncodingFlag: UnsafeCharacterEncoding::Ok,
             },
 
             NodeStack: Vec::new(),
@@ -199,10 +199,12 @@ impl<'i> ParserSession<'i> {
             Tok.skip(&mut self.tokenizer);
         } // while (true)
 
-        if let Some(flag) = self.tokenizer.unsafe_character_encoding_flag {
+        if self.tokenizer.unsafeCharacterEncodingFlag != UnsafeCharacterEncoding::Ok {
             nodes.clear();
 
-            let N = MissingBecauseUnsafeCharacterEncodingNode::new(flag);
+            let N = MissingBecauseUnsafeCharacterEncodingNode::new(
+                self.tokenizer.unsafeCharacterEncodingFlag,
+            );
 
             nodes.push(N);
         }
@@ -246,8 +248,8 @@ impl<'i> ParserSession<'i> {
             }
         } // while (true)
 
-        let node = match self.tokenizer.unsafe_character_encoding_flag {
-            None => {
+        let node = match self.tokenizer.unsafeCharacterEncodingFlag {
+            UnsafeCharacterEncoding::Ok => {
                 // let N = SafeStringNode::new(BufferAndLength::new(self.start, self.end - self.start));
                 Node::from(SafeStringNode::new(
                     std::str::from_utf8(self.input())
@@ -255,13 +257,18 @@ impl<'i> ParserSession<'i> {
                         .to_owned(),
                 ))
             },
-            Some(flag) => {
+            UnsafeCharacterEncoding::IncompleteUTF8Sequence
+            | UnsafeCharacterEncoding::StraySurrogate
+            | UnsafeCharacterEncoding::BOM => {
                 debug_assert!(
                     std::str::from_utf8(self.input()).is_err()
-                        || flag == UnsafeCharacterEncoding::BOM
+                        || self.tokenizer.unsafeCharacterEncodingFlag
+                            == UnsafeCharacterEncoding::BOM
                 );
 
-                Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(flag))
+                Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(
+                    self.tokenizer.unsafeCharacterEncodingFlag,
+                ))
             },
         };
 
@@ -275,12 +282,14 @@ impl<'i> ParserSession<'i> {
         let mut nodes = NodeSeq::new();
         nodes.push(CollectedExpressionsNode::new(outer_exprs));
 
-        if let Some(flag) = self.tokenizer.unsafe_character_encoding_flag {
+        if self.tokenizer.unsafeCharacterEncodingFlag != UnsafeCharacterEncoding::Ok {
             nodes.clear();
 
             let mut exprs = NodeSeq::new();
 
-            let node = MissingBecauseUnsafeCharacterEncodingNode::new(flag);
+            let node = MissingBecauseUnsafeCharacterEncodingNode::new(
+                self.tokenizer.unsafeCharacterEncodingFlag,
+            );
 
             exprs.push(node);
 
