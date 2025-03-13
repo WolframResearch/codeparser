@@ -171,9 +171,9 @@ impl<'i> Tokenizer<'i> {
     ) -> TokenRef<'i> {
         let tok = tok.into();
 
-        let buf = self.get_token_buffer_and_length(start_buf);
+        let buf = Tokenizer_getTokenBufferAndLength(self, start_buf);
 
-        let span = self.get_token_span(start_loc);
+        let span = Tokenizer_getTokenSource(self, start_loc);
 
         Token::new(tok, buf, span)
     }
@@ -186,21 +186,9 @@ impl<'i> Tokenizer<'i> {
     ) -> TokenRef<'i> {
         let tok = tok.into();
 
-        let buf = self.get_token_buffer_and_length(start_buf);
+        let buf = Tokenizer_getTokenBufferAndLength(self, start_buf);
 
         Token::new(tok, buf, span)
-    }
-
-    fn get_token_span(&self, tok_start_loc: Location) -> Span {
-        debug_assert!(tok_start_loc <= self.SrcLoc);
-
-        return Span::new(tok_start_loc, self.SrcLoc);
-    }
-
-    fn get_token_buffer_and_length(&self, tok_start_buf: Buffer<'i>) -> BufferAndLength<'i> {
-        // return BufferAndLength::new(tokStartBuf, session.buffer - tokStartBuf);
-
-        BufferAndLength::between(tok_start_buf, self.buffer())
     }
 
     //==================================
@@ -1057,7 +1045,7 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
     assert!(c.isStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
-        let Src = session.get_token_span(tokenStartLoc);
+        let Src = Tokenizer_getTokenSource(session, tokenStartLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -1267,7 +1255,7 @@ fn Tokenizer_handleSymbol<'i>(
                 IssueTag::UndocumentedSlotSyntax,
                 "The name following ``#`` is not documented to allow the **`** character.".into(),
                 Severity::Warning,
-                session.get_token_span(tokenStartLoc),
+                Tokenizer_getTokenSource(session, tokenStartLoc),
                 0.33,
                 vec![],
                 vec![],
@@ -1346,7 +1334,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                 "The name following ``#`` is not documented to allow the ``$`` character."
                     .to_owned(),
                 Severity::Warning,
-                session.get_token_span(charLoc),
+                Tokenizer_getTokenSource(session, charLoc),
                 0.33,
                 vec![],
                 vec![],
@@ -1355,7 +1343,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
             session.addIssue(I);
         }
     } else if c.isStrangeLetterlike() {
-        let Src = session.get_token_span(charLoc);
+        let Src = Tokenizer_getTokenSource(session, charLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -1378,7 +1366,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
 
         session.addIssue(I);
     } else if c.isMBStrangeLetterlike() {
-        let Src = session.get_token_span(charLoc);
+        let Src = Tokenizer_getTokenSource(session, charLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -1445,7 +1433,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                         IssueTag::UndocumentedSlotSyntax,
                         format!("The name following ``#`` is not documented to allow the ``$`` character."),
                         Severity::Warning,
-                        session.get_token_span( charLoc),
+                        Tokenizer_getTokenSource(session, charLoc),
                         0.33,
                         vec![],
                         vec![],
@@ -1454,7 +1442,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                     session.addIssue(I);
                 }
             } else if c.isStrangeLetterlike() {
-                let Src = session.get_token_span(charLoc);
+                let Src = Tokenizer_getTokenSource(session, charLoc);
 
                 let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -1477,7 +1465,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
 
                 session.addIssue(I);
             } else if c.isMBStrangeLetterlike() {
-                let Src = session.get_token_span(charLoc);
+                let Src = Tokenizer_getTokenSource(session, charLoc);
 
                 let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -1556,7 +1544,7 @@ fn Tokenizer_handleString<'i>(
             IssueTag::UndocumentedSlotSyntax,
             format!("The name following ``#`` is not documented to allow the ``\"`` character."),
             Severity::Warning,
-            session.get_token_span(tokenStartLoc),
+            Tokenizer_getTokenSource(session, tokenStartLoc),
             0.33,
             vec![],
             vec![],
@@ -2063,7 +2051,7 @@ fn Tokenizer_handleNumber<'i>(
                     IssueTag::Ambiguous,
                     format!("Ambiguous syntax."),
                     Severity::Formatting,
-                    session.get_token_span(dotLoc),
+                    Tokenizer_getTokenSource(session, dotLoc),
                     1.0,
                     Actions,
                     vec![],
@@ -4758,7 +4746,7 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
     assert!(c.isMBStrangeNewline());
 
     if feature::CHECK_ISSUES {
-        let Src = session.get_token_span(tokenStartLoc);
+        let Src = Tokenizer_getTokenSource(session, tokenStartLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -4799,7 +4787,7 @@ fn Tokenizer_handleMBStrangeWhitespace<'i>(
     assert!(c.isMBStrangeWhitespace());
 
     if feature::CHECK_ISSUES {
-        let Src = session.get_token_span(tokenStartLoc);
+        let Src = Tokenizer_getTokenSource(session, tokenStartLoc);
 
         let mut Actions: Vec<CodeAction> = Vec::new();
 
@@ -4902,4 +4890,20 @@ fn Tokenizer_handleNakedMBLinearSyntax<'i>(
         },
         _ => todo!(),
     }
+}
+
+// TODO(cleanup): Rename to Tokenizer::get_token_span()
+fn Tokenizer_getTokenSource<'i>(session: &Tokenizer<'i>, tokStartLoc: Location) -> Span {
+    let loc = session.SrcLoc;
+
+    return Span::new(tokStartLoc, loc);
+}
+
+fn Tokenizer_getTokenBufferAndLength<'i>(
+    session: &Tokenizer<'i>,
+    tokStartBuf: Buffer<'i>,
+) -> BufferAndLength<'i> {
+    // return BufferAndLength::new(tokStartBuf, session.buffer - tokStartBuf);
+
+    BufferAndLength::between(tokStartBuf, session.buffer())
 }
