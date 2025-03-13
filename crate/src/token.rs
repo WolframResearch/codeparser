@@ -1,5 +1,3 @@
-use std::fmt::{self, Debug};
-
 use crate::{
     source::{Buffer, BufferAndLength, ByteSpan, Source},
     tokenizer::Tokenizer,
@@ -30,7 +28,7 @@ pub struct BorrowedTokenInput<'i> {
 
 /// Owned subslice of the input that is associated with a particular
 /// [`Token`] instance.
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct OwnedTokenInput {
     pub buf: Vec<u8>,
 }
@@ -309,23 +307,5 @@ impl PartialEq<Token> for Token<BorrowedTokenInput<'_>> {
         let BorrowedTokenInput { buf } = input;
 
         buf.as_bytes() == other.input.buf
-    }
-}
-
-//======================================
-// Format Impls
-//======================================
-
-impl Debug for OwnedTokenInput {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let OwnedTokenInput { buf } = self;
-
-        match std::str::from_utf8(buf) {
-            Ok(str) => f
-                .debug_struct("OwnedTokenInput")
-                .field("buf", &str)
-                .finish(),
-            Err(_) => f.debug_struct("OwnedTokenInput").field("buf", buf).finish(),
-        }
     }
 }
