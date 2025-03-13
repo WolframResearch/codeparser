@@ -1699,7 +1699,7 @@ impl<I: TokenInput + Debug, S: TokenSource + Debug> Negated<I, S> {
 
                 let infix = InfixNode(OperatorNode {
                     op: InfixOperator::Times,
-                    children: NodeSeq(children),
+                    children: NodeSeq(children).into_owned_input(),
                 });
 
                 let Ast::Call {
@@ -1864,14 +1864,14 @@ fn derivativeOrderAndAbstractedBody<
 
 fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
     pair: [Cst<I, S>; 2],
-) -> Operand<I, S> {
+) -> Operand<TokenString, S> {
     match pair {
         // {LeafNode[Token`Plus | Token`LongName`ImplicitPlus, _, _], rand_}
         [Cst::Token(Token {
             tok: TK::Plus | TK::LongName_ImplicitPlus,
             input: _,
             src: _,
-        }), rand] => Operand::Cst(rand),
+        }), rand] => Operand::Cst(rand.into_owned_input()),
         // {LeafNode[Token`Minus | Token`LongName`Minus, _, opData_], rand_}
         [Cst::Token(Token {
             tok: TK::Minus | TK::LongName_Minus,
@@ -1886,7 +1886,7 @@ fn processPlusPair<I: TokenInput + Debug, S: TokenSource + Debug>(
             // TID:231110/2 — Plus pair synthetic "between" BoxPosition
             let source: S = S::between(opData, rand.source());
 
-            Operand::Negated(negate(rand), source)
+            Operand::Negated(negate(rand.into_owned_input()), source)
         },
         _ => unhandled(),
     }
@@ -1934,20 +1934,21 @@ fn abstractPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 
     let processedPairs = pairs.into_iter().map(processPlusPair);
 
-    let children = std::iter::once(Operand::Cst(children[0].clone()))
-        .chain(processedPairs)
-        .map(|node| match node {
-            Operand::Cst(node) => abstract_(flattenPrefixPlus(
-                processInfixBinaryAtQuirk(node, "Plus"),
-            )),
-            // NOTE: These cases wouldn't be effected by the flatten prefix
-            //       plus or process infix binary at quirk because their
-            //       heads are never Plus.
-            Operand::NegativeOne => leaf!(Integer, "-1", <||>),
-            Operand::Reciprocate(reciprocated) => reciprocated.into_ast(),
-            Operand::Negated(negated, data) => negated.into_ast(data),
-        })
-        .collect();
+    let children =
+        std::iter::once(Operand::Cst(children[0].clone().into_owned_input()))
+            .chain(processedPairs)
+            .map(|node| match node {
+                Operand::Cst(node) => abstract_(flattenPrefixPlus(
+                    processInfixBinaryAtQuirk(node, "Plus"),
+                )),
+                // NOTE: These cases wouldn't be effected by the flatten prefix
+                //       plus or process infix binary at quirk because their
+                //       heads are never Plus.
+                Operand::NegativeOne => leaf!(Integer, "-1", <||>),
+                Operand::Reciprocate(reciprocated) => reciprocated.into_ast(),
+                Operand::Negated(negated, data) => negated.into_ast(data),
+            })
+            .collect();
 
     Ast::call(st::Plus, children, data)
 }
@@ -1989,14 +1990,17 @@ fn abstractPrefixPlus<I: TokenInput + Debug, S: TokenSource + Debug>(
 fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
     nodes: Vec<Cst<I, S>>,
     data: S,
-) -> Vec<Operand<I, S>> {
+) -> Vec<Operand<TokenString, S>> {
     nodes
         .into_iter()
         .flat_map(|node| flatten_times_cst(node, data.clone()))
         .collect()
 }
 
-fn flatten_times_cst<I, S>(node: Cst<I, S>, data: S) -> Vec<Operand<I, S>>
+fn flatten_times_cst<I, S>(
+    node: Cst<I, S>,
+    data: S,
+) -> Vec<Operand<TokenString, S>>
 where
     I: TokenInput + Debug,
     S: TokenSource + Debug,
@@ -2021,10 +2025,16 @@ where
                     tok: TK::Integer | TK::Real,
                     input: _,
                     src: _,
-                }) => vec![Operand::Negated(negate(operand), data.clone())],
+                }) => vec![Operand::Negated(
+                    negate(operand.into_owned_input()),
+                    data.clone(),
+                )],
                 // PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _]
                 _ if parenthesizedIntegerOrRealQ(&operand) => {
-                    vec![Operand::Negated(negate(operand), data.clone())]
+                    vec![Operand::Negated(
+                        negate(operand.into_owned_input()),
+                        data.clone(),
+                    )]
                 },
                 // PrefixNode[Minus, {_, _}, _]
                 _ => {
@@ -2044,7 +2054,7 @@ where
                             flatten_times_cst(operand, data),
                         )
                     } else {
-                        vec![Operand::Cst(node)]
+                        vec![Operand::Cst(node.into_owned_input())]
                     }
                 },
             }
@@ -2071,13 +2081,16 @@ where
                 // TID:231010/1
                 append(
                     flatten_times_cst(left, data.clone()),
-                    Operand::Reciprocate(Reciprocate(right, data.clone())),
+                    Operand::Reciprocate(Reciprocate(
+                        right.into_owned_input(),
+                        data.clone(),
+                    )),
                 )
             } else {
-                vec![Operand::Cst(node)]
+                vec![Operand::Cst(node.into_owned_input())]
             }
         },
-        _ => vec![Operand::Cst(node)],
+        _ => vec![Operand::Cst(node.into_owned_input())],
     }
 }
 
