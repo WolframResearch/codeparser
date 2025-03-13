@@ -1,8 +1,7 @@
 use crate::{
     code_point::{CodePoint::Char, *},
-    issue::CodeAction,
     long_names_registration::*,
-    source::Source,
+    source::{CodeAction, Source},
     wl_character::{EscapeStyle, WLCharacter},
 };
 

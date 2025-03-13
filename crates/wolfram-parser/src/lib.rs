@@ -69,8 +69,6 @@ mod byte_buffer;
 mod byte_decoder;
 mod byte_encoder;
 mod code_point;
-#[doc(hidden)]
-pub mod issue;
 mod long_names;
 mod parselet;
 #[doc(hidden)]
@@ -592,9 +590,8 @@ macro_rules! panic_if_aborted {
 
 use ast::AstNode;
 use cst::CstNode;
-use issue::{CodeAction, Issue};
 pub(crate) use panic_if_aborted;
-use source::GeneralSource;
+use source::{CodeAction, GeneralSource, Issue};
 use token::{BorrowedTokenInput, OwnedTokenInput, Token};
 #[doc(hidden)]
 pub use tokenizer::UnsafeCharacterEncoding;

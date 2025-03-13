@@ -31,9 +31,9 @@ use crate::{
         CODEPOINT_BOM,
     },
     feature,
-    issue::{CodeAction, EncodingIssue, IssueTag, Severity},
     source::{
-        NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention, SourceLocation,
+        CodeAction, EncodingIssue, IssueTag, NextPolicy, NextPolicyBits::*, Severity, Source,
+        SourceCharacter, SourceConvention, SourceLocation,
     },
     tokenizer::{SourceManager, Tokenizer, UnsafeCharacterEncoding},
     utils,

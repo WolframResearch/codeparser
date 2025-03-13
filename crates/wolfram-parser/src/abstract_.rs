@@ -6,7 +6,6 @@ use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
     cst::CstNodeSeq,
-    issue::{Issue, IssueTag, Severity},
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
         GroupMissingOpenerNode, GroupNode, InfixNode, Node, NodeSeq,
@@ -15,7 +14,7 @@ use crate::{
         TernaryNode,
     },
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
-    source::GeneralSource,
+    source::{GeneralSource, Issue, IssueTag, Severity},
     symbol::{self as sym, Symbol},
     token::{
         OwnedTokenInput, Token, TokenInput,
