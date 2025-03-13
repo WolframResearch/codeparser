@@ -57,7 +57,7 @@ use crate::{
 };
 
 use self::{
-    parselet::{InfixParselet, PrefixParselet},
+    parselet::{InfixParselet, ParseFunction, ParseletPtr, PrefixParselet},
     parser_session::TriviaSeqRef,
     token_parselets::{INFIX_PARSELETS, PREFIX_PARSELETS},
 };
@@ -95,15 +95,15 @@ impl Context {
         self.continue_parse = Some(Box::new(func));
     }
 
-    pub(crate) fn init_callback_with_state<
-        F: Fn(&mut ParserSession) + 'static,
-    >(
+    pub(crate) fn init_callback_with_parselet(
         &mut self,
-        func: F,
+        func: ParseFunction,
+        parselet: ParseletPtr,
     ) {
         debug_assert!(matches!(self.continue_parse, None));
 
-        self.continue_parse = Some(Box::new(func))
+        self.continue_parse =
+            Some(Box::new(move |session| func(session, parselet)))
     }
 
     pub(crate) fn init_identity(&mut self) {
@@ -116,14 +116,14 @@ impl Context {
         self.continue_parse = Some(Box::new(func));
     }
 
-    pub(crate) fn set_callback_with_state<
-        F: Fn(&mut ParserSession) + 'static,
-    >(
+    pub(crate) fn set_callback_2(
         &mut self,
-        func: F,
+        func: ParseFunction,
+        parselet: ParseletPtr,
     ) {
         // TODO: Should `f` already have some value in this case?
-        self.continue_parse = Some(Box::new(func));
+        self.continue_parse =
+            Some(Box::new(move |session| func(session, parselet)));
     }
 
     // pub(crate) fn is_identity(&self) -> bool {

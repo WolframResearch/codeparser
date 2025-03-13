@@ -30,9 +30,7 @@ impl PrefixParselet for IntegralParselet {
         session.push_leaf_and_next(tok_in);
 
         let ctxt = session.push_context(Precedence::CLASS_INTEGRATIONOPERATORS);
-        ctxt.init_callback_with_state(move |session| {
-            IntegralParselet::parse1(self, session)
-        });
+        ctxt.init_callback_with_parselet(IntegralParselet::parse1, self);
 
         let Tok = session.current_token_eat_trivia();
 
@@ -46,7 +44,7 @@ impl PrefixParselet for IntegralParselet {
             session
                 .push_leaf(Token::at_start(TokenKind::Fake_ImplicitOne, Tok));
 
-            return IntegralParselet::parse1(self, session);
+            return IntegralParselet::parse1(session, self);
         }
 
         // MUSTTAIL
@@ -55,7 +53,7 @@ impl PrefixParselet for IntegralParselet {
 }
 
 impl IntegralParselet {
-    fn parse1(&'static self, session: &mut ParserSession) {
+    fn parse1(session: &mut ParserSession, P: ParseletPtr) {
         panic_if_aborted!();
 
 
@@ -67,26 +65,34 @@ impl IntegralParselet {
             trivia1.reset(&mut session.tokenizer);
 
             // MUSTTAIL
-            return IntegralParselet::reduceIntegral(self, session);
+            return IntegralParselet::reduceIntegral(session, P);
         }
 
         session.push_trivia_seq(trivia1);
 
         let ctxt = session.top_context();
-        ctxt.set_callback_with_state(|session| {
-            IntegralParselet::reduceIntegrate(self, session)
-        });
+        ctxt.set_callback_2(IntegralParselet::reduceIntegrate, P);
 
         // MUSTTAIL
         return session.parse_prefix(tok);
     }
 
-    fn reduceIntegrate(&self, session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| PrefixBinaryNode::new(self.Op1, ctx))
+    fn reduceIntegrate(session: &mut ParserSession, P: ParseletPtr) {
+        let P: &IntegralParselet = P
+            .as_any()
+            .downcast_ref::<IntegralParselet>()
+            .expect("unable to downcast to IntegralParselet");
+
+        session.reduce_and_climb(|ctx| PrefixBinaryNode::new(P.Op1, ctx))
     }
 
-    fn reduceIntegral(&self, session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| PrefixNode::new(self.Op2, ctx))
+    fn reduceIntegral(session: &mut ParserSession, P: ParseletPtr) {
+        let P = P
+            .as_any()
+            .downcast_ref::<IntegralParselet>()
+            .expect("unable to downcast to IntegralParselet");
+
+        session.reduce_and_climb(|ctx| PrefixNode::new(P.Op2, ctx))
     }
 }
 
