@@ -2,8 +2,7 @@ use crate::{
     source::{NextPolicyBits::RETURN_TOPLEVELNEWLINE, SourceLocation, TOPLEVEL},
     src, token,
     tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
-    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
-    DEFAULT_TAB_WIDTH,
+    EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
 };
 
 use pretty_assertions::assert_eq;
@@ -22,7 +21,6 @@ fn TokenizerTest_Bug1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -42,7 +40,6 @@ fn TokenizerTest_Bug2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -66,7 +63,6 @@ fn TokenizerTest_Bug3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -83,7 +79,6 @@ fn TokenizerTest_Bug4() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -100,7 +95,6 @@ fn TokenizerTest_Bug5() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -117,7 +111,6 @@ fn TokenizerTest_IntegerRealMixup() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -150,7 +143,6 @@ fn TokenizerTest_Basic2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -189,7 +181,6 @@ fn TokenizerTest_OldAssert1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -210,7 +201,6 @@ fn TokenizerTest_Basic3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -248,7 +238,6 @@ fn TokenizerTest_Basic4() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     assert_eq!(session.tokenizer.SrcLoc, SourceLocation::new(1, 1));
@@ -292,7 +281,6 @@ fn TokenizerTest_Crash1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -311,7 +299,6 @@ fn TokenizerTest_LineContinuation1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -338,7 +325,6 @@ fn TokenizerTest_LineContinuation2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -365,7 +351,6 @@ fn TokenizerTest_LineContinuation3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
@@ -392,7 +377,6 @@ fn TokenizerTest_LineContinuation4() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);

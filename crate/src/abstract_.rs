@@ -573,7 +573,11 @@ pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 ),
 
                 Operator::MapApply => {
-                    if quirks::is_quirk_enabled(Quirk::OldAtAtAt) {
+                    // FIXME: Check $Quirks equivalent.
+                    //     oldAtAtAtQuirk = Lookup[$Quirks, "OldAtAtAt", False];
+                    let oldAtAtAtQuirk = false;
+
+                    if oldAtAtAtQuirk {
                         let group = GroupNode(OperatorNode {
                             op: Operator::List,
                             children: NodeSeq(vec![
@@ -1794,7 +1798,7 @@ fn flattenTimes<I: TokenInput + Debug, S: TokenSource + Debug>(
     nodes: Vec<Node<I, S>>,
     data: S,
 ) -> Vec<Node<OwnedTokenInput, S>> {
-    let flattenTimesQuirk = quirks::is_quirk_enabled(Quirk::FlattenTimes);
+    let flattenTimesQuirk = quirks::lookup_quirk_enabled(Quirk::FlattenTimes, false);
 
     nodes
         .into_iter()

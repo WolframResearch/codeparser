@@ -429,7 +429,8 @@ impl<I, S> Node<I, S> {
             | Node::Compound(CompoundNode(op))
             | Node::Group(GroupNode(op))
             | Node::GroupMissingCloser(GroupMissingCloserNode(op))
-            | Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+            | Node::GroupMissingOpener(GroupMissingOpenerNode(op))
+            => {
                 let OperatorNode {
                     op: _,
                     children,

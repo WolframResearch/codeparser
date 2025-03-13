@@ -1,5 +1,5 @@
 use crate::{
-    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention, StringifyMode,
+    EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, StringifyMode,
     DEFAULT_TAB_WIDTH,
 };
 
@@ -17,7 +17,6 @@ fn APITest_Bug1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concreteParseLeaf(StringifyMode::Normal);
@@ -39,7 +38,6 @@ fn APITest_Hang1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -61,7 +59,6 @@ fn APITest_Crash1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -83,7 +80,6 @@ fn APITest_Crash2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -105,7 +101,6 @@ fn APITest_Crash3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -127,7 +122,6 @@ fn APITest_Crash4() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -149,7 +143,6 @@ fn APITest_Crash5() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -171,7 +164,6 @@ fn APITest_Crash6() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();
@@ -217,7 +209,6 @@ fn APITest_Crash8() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let _ = session.concrete_parse_expressions();

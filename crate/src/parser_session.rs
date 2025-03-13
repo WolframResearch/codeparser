@@ -15,7 +15,6 @@ use crate::{
     node::{Node, NodeSeq, TriviaSeq},
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
-    quirks::{self, QuirkSettings},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
     token::{BorrowedTokenInput, TokenKind, TokenRef},
     tokenizer::{
@@ -36,8 +35,6 @@ pub struct ParserSession<'i> {
 
     pub(crate) trivia1: Rc<RefCell<TriviaSeq<'i>>>,
     pub(crate) trivia2: Rc<RefCell<TriviaSeq<'i>>>,
-
-    pub(crate) quirk_settings: QuirkSettings,
 }
 
 pub(crate) type NodeStack<'i> = Vec<Node<BorrowedTokenInput<'i>>>;
@@ -65,7 +62,6 @@ impl<'i> ParserSession<'i> {
         tabWidth: u32,
         firstLineBehavior: FirstLineBehavior,
         encodingMode: EncodingMode,
-        quirk_settings: QuirkSettings,
     ) -> ParserSession {
         let mut session = ParserSession {
             tokenizer: Tokenizer {
@@ -101,8 +97,6 @@ impl<'i> ParserSession<'i> {
 
             trivia1: Rc::new(RefCell::new(TriviaSeq::new())),
             trivia2: Rc::new(RefCell::new(TriviaSeq::new())),
-
-            quirk_settings,
         };
 
         Parser_handleFirstLine(&mut session.tokenizer);
@@ -116,8 +110,6 @@ impl<'i> ParserSession<'i> {
     }
 
     pub fn abstract_parse_expressions(&mut self) -> ParseResult<AstNode> {
-        quirks::set_quirks(self.quirk_settings);
-
         let ParseResult {
             nodes,
             unsafe_character_encoding,
@@ -139,8 +131,6 @@ impl<'i> ParserSession<'i> {
     }
 
     pub fn concrete_parse_expressions(&mut self) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
-        quirks::set_quirks(self.quirk_settings);
-
         #[cfg(feature = "DIAGNOSTICS")]
         {
             DiagnosticsLog("enter parseExpressions");

@@ -4,8 +4,7 @@ use crate::{
     byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     code_point::CodePoint,
     source::TOPLEVEL,
-    EncodingMode, FirstLineBehavior, ParserSession, QuirkSettings, SourceConvention,
-    DEFAULT_TAB_WIDTH,
+    EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
 };
 
 
@@ -19,7 +18,6 @@ fn ByteDecoderTest_Basic1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -67,7 +65,6 @@ fn ByteDecoderTest_Basic2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c: CodePoint = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -118,7 +115,6 @@ fn ByteDecoderTest_Basic3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -166,7 +162,6 @@ fn ByteDecoderTest_Invalid1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -216,7 +211,6 @@ fn ByteDecoderTest_Invalid2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -264,7 +258,6 @@ fn ByteDecoderTest_Invalid3() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -313,7 +306,6 @@ fn ByteDecoderTest_Invalid4() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -362,7 +354,6 @@ fn ByteDecoderTest_Surrogate1() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);
@@ -417,7 +408,6 @@ fn ByteDecoderTest_Surrogate2() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let mut c = ByteDecoder_currentSourceCharacter(&mut session.tokenizer, TOPLEVEL);

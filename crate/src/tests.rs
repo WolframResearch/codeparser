@@ -22,8 +22,7 @@ use crate::{
     source::{GeneralSource, SourceConvention},
     test_utils::{src, token},
     token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
-    EncodingMode, FirstLineBehavior, ParseOptions, ParseResult, QuirkSettings, Tokens,
-    DEFAULT_TAB_WIDTH,
+    EncodingMode, FirstLineBehavior, ParseOptions, ParseResult, Tokens, DEFAULT_TAB_WIDTH,
 };
 
 fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
@@ -33,7 +32,6 @@ fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
         4,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let result = session.concrete_parse_expressions();
@@ -50,7 +48,6 @@ fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
         4,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let tokens: Tokens<BorrowedTokenInput> = session.tokenize().unwrap();
@@ -66,7 +63,6 @@ fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Node<BorrowedTokenInpu
         src_convention,
         encoding_mode,
         tab_width,
-        quirk_settings,
     } = opts;
 
     let mut session = ParserSession::new(
@@ -75,7 +71,6 @@ fn concrete_exprs(input: &str, opts: ParseOptions) -> Vec<Node<BorrowedTokenInpu
         tab_width,
         first_line_behavior,
         encoding_mode,
-        quirk_settings,
     );
 
     let ParseResult { nodes, .. } = session.concrete_parse_expressions();
@@ -92,7 +87,6 @@ fn concrete_exprs_character_index(input: &str) -> Vec<Node<BorrowedTokenInput>> 
         4,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     let ParseResult { nodes, .. } = session.concrete_parse_expressions();
@@ -189,7 +183,6 @@ pub fn test_tokenize_is_not_idempotent() {
         DEFAULT_TAB_WIDTH,
         FirstLineBehavior::NotScript,
         EncodingMode::Normal,
-        QuirkSettings::default(),
     );
 
     assert_eq!(
