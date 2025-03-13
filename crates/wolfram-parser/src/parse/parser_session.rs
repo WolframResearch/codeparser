@@ -16,7 +16,7 @@ use crate::{
     },
     quirks::{self, QuirkSettings},
     read::Reader,
-    source::TOPLEVEL,
+    source::{SourceConvention, TOPLEVEL},
     tokenize::{
         tokenizer::{
             Tokenizer, Tokenizer_nextToken_stringifyAsFile,
@@ -25,7 +25,8 @@ use crate::{
         },
         Token, TokenKind, TokenRef, TokenStr,
     },
-    NodeSeq, ParseOptions, StringifyMode, Tokens,
+    EncodingMode, FirstLineBehavior, NodeSeq, ParseOptions, StringifyMode,
+    Tokens,
 };
 
 
@@ -77,16 +78,34 @@ impl<'i> ParserSession<'i> {
             quirk_settings,
         } = *opts;
 
+        ParserSession::new_(
+            input,
+            src_convention,
+            tab_width,
+            first_line_behavior,
+            encoding_mode,
+            quirk_settings,
+        )
+    }
+
+    fn new_(
+        input: &[u8],
+        srcConvention: SourceConvention,
+        tabWidth: u32,
+        firstLineBehavior: FirstLineBehavior,
+        encodingMode: EncodingMode,
+        quirk_settings: QuirkSettings,
+    ) -> ParserSession {
         let mut session = ParserSession {
             tokenizer: Tokenizer {
                 reader: Reader {
                     input,
                     offset: 0,
                     wasEOF: false,
-                    SrcLoc: src_convention.newSourceLocation(),
-                    tab_width,
+                    SrcLoc: srcConvention.newSourceLocation(),
+                    tabWidth,
 
-                    encoding_mode,
+                    encodingMode,
 
                     fatalIssues: Vec::new(),
                     nonFatalIssues: Vec::new(),
@@ -94,7 +113,7 @@ impl<'i> ParserSession<'i> {
                     unsafe_character_encoding_flag: None,
                 },
 
-                first_line_behavior,
+                firstLineBehavior,
 
                 GroupStack: Vec::new(),
 
@@ -294,7 +313,7 @@ impl<'i> ParserSession<'i> {
             nodes = crate::error::reparse_unterminated(
                 nodes,
                 input,
-                usize::try_from(self.tokenizer.tab_width).unwrap(),
+                usize::try_from(self.tokenizer.tabWidth).unwrap(),
             );
         }
 
@@ -309,7 +328,7 @@ impl<'i> ParserSession<'i> {
             tokens = crate::error::reparse_unterminated_tokens(
                 tokens,
                 input,
-                usize::try_from(self.tokenizer.tab_width).unwrap(),
+                usize::try_from(self.tokenizer.tabWidth).unwrap(),
             );
         }
 
