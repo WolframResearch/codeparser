@@ -13,7 +13,7 @@ use crate::{
     feature,
     issue::Issue,
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
-    parser::{Context, Parser_handleFirstLine},
+    parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     quirks::{self, QuirkSettings},
     read::{ByteDecoder_nextSourceCharacter, Reader},
     source::{SourceConvention, TOPLEVEL},
@@ -210,9 +210,9 @@ impl<'i> ParserSession<'i> {
             if peek.tok.isCloser() {
                 PrefixToplevelCloserParselet_parsePrefix(self, peek);
 
-                exprs.push(self.pop_node());
+                exprs.push(Parser_popNode(self));
 
-                assert!(self.is_quiescent());
+                assert!(Parser_isQuiescent(self));
 
                 continue;
             }
@@ -221,9 +221,9 @@ impl<'i> ParserSession<'i> {
 
             P.parse_prefix(self, peek);
 
-            exprs.push(self.pop_node());
+            exprs.push(Parser_popNode(self));
 
-            assert!(self.is_quiescent());
+            assert!(Parser_isQuiescent(self));
         } // while (true)
 
         #[cfg(feature = "DIAGNOSTICS")]
