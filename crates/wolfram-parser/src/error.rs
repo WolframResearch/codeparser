@@ -7,7 +7,8 @@ use crate::{
         UnterminatedGroupNeedsReparseNode,
     },
     source::{
-        BufferAndLength, CharacterSpan, LineColumn, Location, Span, SpanKind,
+        Buffer, BufferAndLength, CharacterSpan, LineColumn, Location, Span,
+        SpanKind,
     },
     tokenize::{BorrowedTokenInput, Token},
     NodeSeq, Tokens,
@@ -284,7 +285,9 @@ fn reparse_unterminated_token_error_node<'i>(
 fn make_better_input<'i>(better: &'i str) -> BorrowedTokenInput<'i> {
     BorrowedTokenInput {
         buf: BufferAndLength {
-            buf: better.as_bytes(),
+            buf: Buffer {
+                slice: better.as_bytes(),
+            },
         },
     }
 }

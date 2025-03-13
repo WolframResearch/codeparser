@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    source::{BufferAndLength, Source, Span},
+    source::{Buffer, BufferAndLength, Source, Span},
     tokenize::{TokenKind, Tokenizer},
 };
 
@@ -89,7 +89,9 @@ impl<'i> TokenInput for BorrowedTokenInput<'i> {
     fn fake(input: &'static str) -> Self {
         BorrowedTokenInput {
             buf: BufferAndLength {
-                buf: input.as_bytes(),
+                buf: Buffer {
+                    slice: input.as_bytes(),
+                },
             },
         }
     }
@@ -142,18 +144,20 @@ impl<'i> BorrowedTokenInput<'i> {
     #[doc(hidden)]
     pub fn new(slice: &'i [u8]) -> Self {
         BorrowedTokenInput {
-            buf: BufferAndLength { buf: slice },
+            buf: BufferAndLength {
+                buf: Buffer { slice },
+            },
         }
     }
 
     pub(crate) fn from_buf(buf: BufferAndLength<'i>) -> Self {
-        BorrowedTokenInput { buf }
+        BorrowedTokenInput { buf: buf }
     }
 
     fn into_empty(self) -> Self {
         let BorrowedTokenInput { mut buf } = self;
 
-        buf.buf = &buf.buf[..0];
+        buf.buf.slice = &buf.buf.slice[..0];
 
         BorrowedTokenInput { buf }
     }
@@ -334,8 +338,8 @@ impl<'i> TokenRef<'i> {
     }
 
     pub(crate) fn skip(&self, session: &mut Tokenizer) {
-        let end =
-            session.offset_of(self.input.buf.buf) + self.input.buf.buf.len();
+        let end = session.offset_of(self.input.buf.buf)
+            + self.input.buf.buf.slice.len();
 
         session.offset = end;
         session.wasEOF = self.tok == TokenKind::EndOfFile;

@@ -4,6 +4,8 @@ use std::{
     cmp::Ordering,
     fmt::{self, Debug, Display},
     num::NonZeroU32,
+    ops::Index,
+    slice::SliceIndex,
 };
 
 use crate::{
@@ -27,9 +29,12 @@ use wolfram_expr::Expr;
 
 /// This type represents a subslice of the complete input byte sequence.
 ///
-/// Note that the length of this slice is NOT guaranteed to correspond to any
+/// Note that the length of [`slice`][Buffer::slice] is NOT guaranteed to correspond to any
 /// semantically meaningful span of the input. (For that, see [`BufferAndLength`]).
-pub(crate) type Buffer<'i> = &'i [u8];
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub(crate) struct Buffer<'i> {
+    pub slice: &'i [u8],
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) struct BufferAndLength<'i> {
@@ -46,11 +51,25 @@ const _: () = assert!(
 );
 */
 
+impl<'i, I: SliceIndex<[u8]>> Index<I> for Buffer<'i> {
+    type Output = <I as SliceIndex<[u8]>>::Output;
+
+    fn index(&self, index: I) -> &Self::Output {
+        let Buffer { slice } = self;
+
+        &slice[index]
+    }
+}
+
 impl<'i> BufferAndLength<'i> {
-    pub fn from_buffer_with_len(slice: Buffer<'i>, len: usize) -> Self {
+    pub fn from_buffer_with_len(buf: Buffer<'i>, len: usize) -> Self {
+        let Buffer { slice } = buf;
+
         let slice = &slice[..len];
 
-        BufferAndLength { buf: slice }
+        BufferAndLength {
+            buf: Buffer { slice },
+        }
     }
 
     // BufferAndLength::BufferAndLength(Buffer Buf) : Buf(Buf), Len(0) {}
@@ -70,8 +89,8 @@ impl<'i> BufferAndLength<'i> {
         start: Buffer<'s>,
         end: Buffer<'e>,
     ) -> BufferAndLength<'s> {
-        let start_addr = start.as_ptr() as usize;
-        let end_addr = end.as_ptr() as usize;
+        let start_addr = start.slice.as_ptr() as usize;
+        let end_addr = end.slice.as_ptr() as usize;
         debug_assert!(
             start_addr <= end_addr,
             "start: {start:?} @ {start_addr}     end: {end:?} @ {end_addr}"
@@ -79,10 +98,12 @@ impl<'i> BufferAndLength<'i> {
 
         let size = end_addr - start_addr;
 
-        debug_assert!(start.len() >= size);
+        debug_assert!(start.slice.len() >= size);
 
         BufferAndLength {
-            buf: &start[0..size],
+            buf: Buffer {
+                slice: &start.slice[0..size],
+            },
         }
     }
 
@@ -102,7 +123,7 @@ impl<'i> BufferAndLength<'i> {
     pub(crate) fn length(&self) -> usize {
         let BufferAndLength { buf } = self;
 
-        return buf.len();
+        return buf.slice.len();
     }
 
     // pub fn end(&self) -> Buffer {
@@ -112,7 +133,7 @@ impl<'i> BufferAndLength<'i> {
     pub fn as_bytes(&self) -> &[u8] {
         let BufferAndLength { buf } = *self;
 
-        buf
+        buf.slice
     }
 
     #[allow(dead_code)]

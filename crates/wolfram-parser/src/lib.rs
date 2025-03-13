@@ -80,6 +80,7 @@ mod agg;
 pub mod ast;
 pub mod cst;
 
+#[doc(hidden)]
 pub mod abstract_;
 
 #[doc(hidden)]
