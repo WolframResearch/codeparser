@@ -12,7 +12,7 @@ use crate::{
         token_parselets::{
             token_kind_to_infix_parselet, token_kind_to_prefix_parselet,
         },
-        ColonLHS, ParseBuilder, TriviaSeqRef, UnderParseData,
+        ColonLHS, DynParseBuilder, ParseBuilder, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
     utils::{self, debug_assert_matches},
@@ -101,10 +101,6 @@ impl<'i> ParseCst<'i> {
 impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     type Output = CstSeq<TokenStr<'i>>;
 
-    //==================================
-    // Lifecycle
-    //==================================
-
     fn new_builder() -> Self {
         ParseCst {
             node_stack: Vec::new(),
@@ -183,7 +179,10 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         exprs
     }
+}
 
+
+impl<'i> DynParseBuilder<'i> for ParseCst<'i> {
     //==================================
     // Context management
     //==================================
