@@ -32,7 +32,7 @@ impl PrefixParselet for UnderParselet {
     }
 }
 
-fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, TokIn: Token) {
+fn UnderParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
     //
     // prefix
     //
@@ -84,7 +84,7 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, Tok
 
 pub(crate) fn UnderParselet_parseInfixContextSensitive(
     session: &mut ParserSession,
-    P: &UnderParselet,
+    P: ParseletPtr,
     TokIn: Token,
 ) {
     //
@@ -138,7 +138,12 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
     return;
 }
 
-fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet, Ignored: Token) {
+fn UnderParselet_reduceBlank(session: &mut ParserSession, P: ParseletPtr, Ignored: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<UnderParselet>()
+        .expect("unable to downcast to UnderParselet");
+
     let BOp = P.getBOp();
 
     let context = Parser_popContext(session);
@@ -153,9 +158,14 @@ fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet, Ign
 //
 fn UnderParselet_reduceBlankContextSensitive(
     session: &mut ParserSession,
-    P: &UnderParselet,
+    P: ParseletPtr,
     _: Token,
 ) {
+    let P = P
+        .as_any()
+        .downcast_ref::<UnderParselet>()
+        .expect("unable to downcast to UnderParselet");
+
     let BOp = P.getBOp();
 
     let context = Parser_popContext(session);

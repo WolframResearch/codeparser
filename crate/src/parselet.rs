@@ -844,11 +844,12 @@ pub(crate) fn SymbolParselet_parseInfixContextSensitive(
     return;
 }
 
-fn SymbolParselet_reducePatternBlank(
-    session: &mut ParserSession,
-    P: &UnderParselet,
-    ignored: Token,
-) {
+fn SymbolParselet_reducePatternBlank(session: &mut ParserSession, P: ParseletPtr, ignored: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<UnderParselet>()
+        .expect("unable to downcast to UnderParselet");
+
     let PBOp = P.PBOp;
 
     let node = CompoundNode::new(PBOp, Parser_popContext(session));
@@ -1095,11 +1096,7 @@ impl InfixParselet for InfixOperatorParselet {
     }
 }
 
-fn InfixOperatorParselet_parseInfix(
-    session: &mut ParserSession,
-    P: &InfixOperatorParselet,
-    TokIn: Token,
-) {
+fn InfixOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
     panic_if_aborted!();
 
 
@@ -1138,11 +1135,12 @@ fn InfixOperatorParselet_parseInfix(
     // #endif // !USE_MUSTTAIL
 }
 
-fn InfixOperatorParselet_parseLoop(
-    session: &mut ParserSession,
-    P: &InfixOperatorParselet,
-    ignored: Token,
-) {
+fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, ignored: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<InfixOperatorParselet>()
+        .expect("unable to downcast to InfixOperatorParselet");
+
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -1214,9 +1212,14 @@ fn InfixOperatorParselet_parseLoop(
 
 fn InfixOperatorParselet_reduceInfixOperator(
     session: &mut ParserSession,
-    P: &InfixOperatorParselet,
+    P: ParseletPtr,
     ignored: Token,
 ) {
+    let P = P
+        .as_any()
+        .downcast_ref::<InfixOperatorParselet>()
+        .expect("unable to downcast to InfixOperatorParselet");
+
     let Op = P.getOp();
 
     let node = InfixNode::new(Op, Parser_popContext(session));
@@ -1251,11 +1254,7 @@ impl InfixParselet for PostfixOperatorParselet {
 }
 
 
-fn PostfixOperatorParselet_parseInfix(
-    session: &mut ParserSession,
-    P: &PostfixOperatorParselet,
-    TokIn: Token,
-) {
+fn PostfixOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
@@ -1264,9 +1263,14 @@ fn PostfixOperatorParselet_parseInfix(
 
 fn PostfixOperatorParselet_reducePostfixOperator(
     session: &mut ParserSession,
-    P: &PostfixOperatorParselet,
+    P: ParseletPtr,
     ignored: Token,
 ) {
+    let P = P
+        .as_any()
+        .downcast_ref::<PostfixOperatorParselet>()
+        .expect("unable to downcast to PostfixOperatorParselet");
+
     let Op = P.getOp();
 
     let node = PostfixNode::new(Op, Parser_popContext(session));
@@ -1303,7 +1307,7 @@ impl PrefixParselet for GroupParselet {
     }
 }
 
-fn GroupParselet_parsePrefix(session: &mut ParserSession, P: &GroupParselet, TokIn: Token) {
+fn GroupParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
     panic_if_aborted!();
 
 
@@ -1330,7 +1334,12 @@ fn GroupParselet_parsePrefix(session: &mut ParserSession, P: &GroupParselet, Tok
     // #endif // !USE_MUSTTAIL
 }
 
-fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet, ignored: Token) {
+fn GroupParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, ignored: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<GroupParselet>()
+        .expect("unable to downcast to GroupParselet");
+
     // #if !USE_MUSTTAIL
     loop {
         // #endif // !USE_MUSTTAIL
@@ -1442,7 +1451,12 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: &GroupParselet, ignor
     // #endif // !USE_MUSTTAIL
 }
 
-fn GroupParselet_reduceGroup(session: &mut ParserSession, P: &GroupParselet, ignored: Token) {
+fn GroupParselet_reduceGroup(session: &mut ParserSession, P: ParseletPtr, ignored: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<GroupParselet>()
+        .expect("unable to downcast to GroupParselet");
+
     let Op = P.getOp();
 
     let node = GroupNode::new(Op, Parser_popContext(session));
@@ -1454,11 +1468,12 @@ fn GroupParselet_reduceGroup(session: &mut ParserSession, P: &GroupParselet, ign
     return Parser_parseClimb(session, ignored);
 }
 
-fn GroupParselet_reduceMissingCloser(
-    session: &mut ParserSession,
-    P: &GroupParselet,
-    ignored: Token,
-) {
+fn GroupParselet_reduceMissingCloser(session: &mut ParserSession, P: ParseletPtr, ignored: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<GroupParselet>()
+        .expect("unable to downcast to GroupParselet");
+
     let Op = P.getOp();
 
     let node = GroupMissingCloserNode::new(Op, Parser_popContext(session));
@@ -1472,9 +1487,14 @@ fn GroupParselet_reduceMissingCloser(
 
 fn GroupParselet_reduceUnterminatedGroup(
     session: &mut ParserSession,
-    P: &GroupParselet,
+    P: ParseletPtr,
     ignored: Token,
 ) {
+    let P = P
+        .as_any()
+        .downcast_ref::<GroupParselet>()
+        .expect("unable to downcast to GroupParselet");
+
     let Op = P.getOp();
 
     let node = UnterminatedGroupNeedsReparseNode::new(Op, Parser_popContext(session));
@@ -1511,7 +1531,12 @@ impl InfixParselet for CallParselet {
 }
 
 
-fn CallParselet_parseInfix(session: &mut ParserSession, P: &CallParselet, TokIn: Token) {
+fn CallParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: Token) {
+    let P = P
+        .as_any()
+        .downcast_ref::<CallParselet>()
+        .expect("unable to downcast to CallParselet");
+
     panic_if_aborted!();
 
 
