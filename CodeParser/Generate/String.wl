@@ -75,12 +75,7 @@ use crate::my_string::MyString;
 //
 // All strings that are used by CodeParser
 //"} ~Join~
-	MapIndexed[
-		Row[{
-			"pub const ", toGlobal["String`"<>#1], ": MyString = MyString::new(\"", #, "\");"
-		}]&,
-		strings
-	] ~Join~
+MapIndexed[Row[{"pub const ", toGlobal["String`"<>#1], ": MyString = MyString::new(", "\"", #, "\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]&, strings] ~Join~
 {""};
 
 Print["exporting MyStringRegistration.h"];
