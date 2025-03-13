@@ -59,7 +59,7 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, Tok
         SymbolParselet_parseInfixContextSensitive(session, Tok);
 
         // MUSTTAIL
-        return UnderParselet_reduceBlank(session, P);
+        return UnderParselet_reduceBlank(session, P, TokIn /*ignored*/);
     }
 
     if Tok.tok == TOKEN_ERROR_EXPECTEDLETTERLIKE {
@@ -74,11 +74,11 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, Tok
         Parser_pushLeafAndNext(session, Tok);
 
         // MUSTTAIL
-        return UnderParselet_reduceBlank(session, P);
+        return UnderParselet_reduceBlank(session, P, TokIn /*ignored*/);
     }
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 pub(crate) fn UnderParselet_parseInfixContextSensitive(
@@ -137,14 +137,14 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
     return;
 }
 
-fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet) {
+fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet, Ignored: Token) {
     let BOp = P.getBOp();
 
     let context = Parser_popContext(session);
     Parser_pushNode(session, CompoundNode::new(BOp, context));
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return Parser_parseClimb(session, Ignored);
 }
 
 //
@@ -187,7 +187,7 @@ fn UnderDotParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     Parser_pushLeafAndNext(session, TokIn);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return Parser_parseClimb(session, TokIn /*ignored*/);
 }
 
 

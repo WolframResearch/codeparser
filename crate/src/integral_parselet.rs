@@ -66,7 +66,7 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
             ),
         );
 
-        return IntegralParselet_parse1(session, P);
+        return IntegralParselet_parse1(session, P, Tok);
     }
 
     assert!(Ctxt.f.is_none());
@@ -80,7 +80,7 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
     return P2.parse_prefix(session, Tok);
 }
 
-fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
+fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr, ignored2: Token) {
     panic_if_aborted!();
 
 
@@ -95,7 +95,7 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
         Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
         // MUSTTAIL
-        return IntegralParselet_reduceIntegral(session, P);
+        return IntegralParselet_reduceIntegral(session, P, ignored2);
     }
 
     Parser_pushTriviaSeq(session, &mut Trivia1.borrow_mut());
@@ -110,7 +110,7 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
     return P2.parse_prefix(session, Tok);
 }
 
-fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr) {
+fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr, ignored2: Token) {
     let P = P
         .as_any()
         .downcast_ref::<IntegralParselet>()
@@ -122,10 +122,10 @@ fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr)
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return Parser_parseClimb(session, ignored2);
 }
 
-fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) {
+fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr, ignored2: Token) {
     let P = P
         .as_any()
         .downcast_ref::<IntegralParselet>()
@@ -137,7 +137,7 @@ fn IntegralParselet_reduceIntegral(session: &mut ParserSession, P: ParseletPtr) 
     Parser_pushNode(session, node);
 
     // MUSTTAIL
-    return Parser_parseClimb(session);
+    return Parser_parseClimb(session, ignored2);
 }
 
 impl InfixParselet for InfixDifferentialDParselet {
