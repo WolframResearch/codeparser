@@ -6,9 +6,8 @@ use crate::{
     agg::{self, AggNodeSeq, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CompoundOperator,
-        CstNodeSeq, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator,
-        InfixNode, Node,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode, CstNodeSeq,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, GroupOperator, InfixNode, Node,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
         TernaryNode,
@@ -196,11 +195,6 @@ fn ToNode_GroupOp(op: GroupOperator) -> AstNode {
     ToNode_Symbol(s)
 }
 
-fn ToNode_CompoundOp(op: CompoundOperator) -> AstNode {
-    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
-    ToNode_Symbol(s)
-}
-
 fn ToNode_Symbol(s: Symbol) -> AstNode {
     // TODO(optimization): We only have to convert this to an allocated Symbol
     //                     because SymbolRef doesn't currently have context()
@@ -302,38 +296,38 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             src: data,
         })) => match op {
             // CompoundNode[Blank, {_, sym2_}, data_]
-            CompoundOperator::Blank => {
+            Operator::Blank => {
                 expect_children!(children, {_, sym2:_});
                 WL!( CallNode[ToNode[Blank], {abstract_(sym2)}, data] )
             },
             // CompoundNode[BlankSequence, {_, sym2_}, data_]
-            CompoundOperator::BlankSequence => {
+            Operator::BlankSequence => {
                 expect_children!(children, {_, sym2:_});
                 WL!( CallNode[ToNode[BlankSequence], {abstract_(sym2)}, data] )
             },
             // CompoundNode[BlankNullSequence, {_, sym2_}, data_]
-            CompoundOperator::BlankNullSequence => {
+            Operator::BlankNullSequence => {
                 expect_children!(children, {_, sym2:_});
                 WL!( CallNode[ToNode[BlankNullSequence], {abstract_(sym2)}, data] )
             },
 
             // CompoundNode[PatternBlank, {sym1_, blank_}, data_]
-            CompoundOperator::CodeParser_PatternBlank => {
+            Operator::CodeParser_PatternBlank => {
                 expect_children!(children, {sym1:_, blank:_});
                 WL!( CallNode[ToNode[Pattern], {abstract_(sym1), abstract_(blank)}, data] )
             },
             // CompoundNode[PatternBlankSequence,     {sym1_, blankSeq_}, data_]
-            CompoundOperator::CodeParser_PatternBlankSequence => {
+            Operator::CodeParser_PatternBlankSequence => {
                 expect_children!(children, {sym1:_, blankSeq:_});
                 WL!( CallNode[ToNode[Pattern], {abstract_(sym1), abstract_(blankSeq)}, data] )
             },
             // CompoundNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]
-            CompoundOperator::CodeParser_PatternBlankNullSequence => {
+            Operator::CodeParser_PatternBlankNullSequence => {
                 expect_children!(children, {sym1:_, blankNullSeq:_});
                 WL!( CallNode[ToNode[Pattern], {abstract_(sym1), abstract_(blankNullSeq)}, data] )
             },
             // CompoundNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]
-            CompoundOperator::CodeParser_PatternOptionalDefault => {
+            Operator::CodeParser_PatternOptionalDefault => {
                 expect_children!(children, {sym1:_, LeafNode[UnderDot, _, optionalDefaultData:_]});
 
                 WL!(
@@ -354,7 +348,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             // CompoundNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]
             // CompoundNode[Slot, {_, arg:LeafNode[Symbol, s_, data1_]}, data_]
             // CompoundNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]
-            CompoundOperator::Slot => {
+            Operator::Slot => {
                 let [_, arg] = expect_children(children);
 
                 match arg {
@@ -393,18 +387,20 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             },
 
             // CompoundNode[SlotSequence, {_, arg:LeafNode[Integer, _, _]}, data_]
-            CompoundOperator::SlotSequence => {
+            Operator::SlotSequence => {
                 expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
 
                 WL!( CallNode[ToNode[SlotSequence], {abstract_(arg)}, data] )
             },
 
             // CompoundNode[Out, {_, arg:LeafNode[Integer, _, _]}, data_]
-            CompoundOperator::Out => {
+            Operator::Out => {
                 expect_children!(children, {_, arg:LeafNode[Integer, _, _]});
 
                 WL!( CallNode[ToNode[Out], {abstract_(arg)}, data])
             },
+
+            op => panic!("unexpected CompoundNode operator: {op:?}"),
         },
 
         //============
@@ -1163,7 +1159,7 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
             let count = i64::try_from(count).expect("Out[..] %-sequence overflows i64");
 
             WL!(CallNode[
-                ToNode_CompoundOp(CompoundOperator::Out),
+                ToNode_Op(Op::Out),
                 vec![ToNode_Integer(-count)],
                 data
             ])

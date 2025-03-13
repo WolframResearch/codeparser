@@ -1,5 +1,5 @@
 use crate::{
-    cst::{CompoundNode, CompoundOperator},
+    cst::{CompoundNode, Operator},
     panic_if_aborted,
     parselet::*,
     parser::{
@@ -14,11 +14,11 @@ use crate::{
 };
 
 impl UnderParselet {
-    pub(crate) const fn new(BOp: CompoundOperator, PBOp: CompoundOperator) -> Self {
+    pub(crate) const fn new(BOp: Operator, PBOp: Operator) -> Self {
         Self { BOp, PBOp }
     }
 
-    fn getBOp(&self) -> CompoundOperator {
+    fn getBOp(&self) -> Operator {
         return self.BOp;
     }
 }
