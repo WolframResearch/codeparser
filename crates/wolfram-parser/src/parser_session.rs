@@ -17,7 +17,7 @@ use crate::{
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     quirks::{self, QuirkSettings},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
-    token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
+    token::{BorrowedTokenInput, TokenKind, TokenRef},
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
@@ -238,14 +238,14 @@ impl<'i> ParserSession<'i> {
         return Ok(tokens);
     }
 
-    fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Token<BorrowedTokenInput<'i>> {
+    fn concreteParseLeaf0(&mut self, mode: StringifyMode) -> Node<BorrowedTokenInput<'i>> {
         let token = match mode {
             StringifyMode::Normal => Tokenizer_nextToken(&mut self.tokenizer, TOPLEVEL),
             StringifyMode::Tag => Tokenizer_nextToken_stringifyAsTag(&mut self.tokenizer),
             StringifyMode::File => Tokenizer_nextToken_stringifyAsFile(&mut self.tokenizer),
         };
 
-        token
+        Node::Token(token)
     }
 
     #[allow(dead_code)]
@@ -253,14 +253,16 @@ impl<'i> ParserSession<'i> {
     pub fn concreteParseLeaf(
         &mut self,
         mode: StringifyMode,
-    ) -> ParseResult<Token<BorrowedTokenInput<'i>>> {
+    ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
         //
         // Collect all expressions
         //
 
-        let mut exprs: NodeSeq<Token<_>> = NodeSeq::new();
+        let mut exprs = NodeSeq::new();
 
         exprs.push(self.concreteParseLeaf0(mode));
+
+        let exprs = self.reparse_unterminated(exprs);
 
         return self.create_parse_result(exprs);
     }

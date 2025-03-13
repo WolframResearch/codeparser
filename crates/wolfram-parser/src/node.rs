@@ -263,8 +263,8 @@ impl<I, S> CstNodeSeq<I, S> {
     }
 }
 
-impl<N> NodeSeq<N> {
-    pub fn push<I: Into<N>>(&mut self, node: I) {
+impl<I> CstNodeSeq<I> {
+    pub fn push<N: Into<Node<I>>>(&mut self, node: N) {
         let NodeSeq(vec) = self;
 
         let node = node.into();
