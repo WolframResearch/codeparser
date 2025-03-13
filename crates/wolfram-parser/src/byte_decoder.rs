@@ -252,7 +252,9 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Buffer is possibly already pointing to EOF
             //
 
-            let mut mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetEOF = session.wasEOF;
+            let mut resetLoc = session.SrcLoc;
 
             let mut tmp = ByteBuffer_nextByte(session);
 
@@ -262,7 +264,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -275,12 +277,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -290,9 +296,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -305,9 +313,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
             //
@@ -334,7 +344,9 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Buffer is possibly already pointing to EOF
             //
 
-            let mut mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetEOF = session.wasEOF;
+            let mut resetLoc = session.SrcLoc;
 
             let mut tmp = ByteBuffer_nextByte(session);
 
@@ -344,7 +356,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -357,12 +369,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -372,9 +388,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -387,9 +405,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
             //
@@ -407,7 +427,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Stray surrogate
                 //
 
-                return ByteDecoder_straySurrogate(session, mark.src_loc, policy);
+                return ByteDecoder_straySurrogate(session, resetLoc, policy);
             }
 
             let decoded = CodePoint::from_u32(decoded).unwrap();
@@ -418,7 +438,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // BOM
                 //
 
-                return ByteDecoder_bom(session, mark.src_loc, policy);
+                return ByteDecoder_bom(session, resetLoc, policy);
             }
 
             return ByteDecoder_validMB(session, decoded, policy);
@@ -434,7 +454,9 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Buffer is possibly already pointing to EOF
             //
 
-            let mut mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetEOF = session.wasEOF;
+            let mut resetLoc = session.SrcLoc;
 
             let mut tmp = ByteBuffer_nextByte(session);
 
@@ -444,7 +466,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -457,12 +479,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -472,9 +498,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -487,12 +515,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -502,9 +534,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete3ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -517,9 +551,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete3ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
             }
 
             //
@@ -546,7 +582,9 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Buffer is possibly already pointing to EOF
             //
 
-            let mut mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetEOF = session.wasEOF;
+            let mut resetLoc = session.SrcLoc;
 
             let mut tmp = ByteBuffer_nextByte(session);
 
@@ -556,7 +594,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -569,12 +607,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -584,9 +626,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -599,12 +643,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -614,9 +662,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete3ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -629,9 +679,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete3ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
             }
 
             //
@@ -658,7 +710,9 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Buffer is possibly already pointing to EOF
             //
 
-            let mut mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetEOF = session.wasEOF;
+            let mut resetLoc = session.SrcLoc;
 
             let mut tmp = ByteBuffer_nextByte(session);
 
@@ -668,7 +722,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -681,12 +735,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -696,9 +754,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -711,12 +771,16 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete2ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete2ByteSequence(session, resetLoc, policy);
             }
 
-            mark = session.mark();
+            resetBuf = session.offset;
+            resetEOF = session.wasEOF;
+            resetLoc = session.SrcLoc;
 
             tmp = ByteBuffer_nextByte(session);
 
@@ -726,9 +790,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete3ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -741,9 +807,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete3ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete3ByteSequence(session, resetLoc, policy);
             }
 
             //
