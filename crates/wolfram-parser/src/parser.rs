@@ -59,7 +59,7 @@ impl Context {
     }
 }
 
-pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
+pub fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
     let firstLineBehavior = session.firstLineBehavior;
 
     match firstLineBehavior {

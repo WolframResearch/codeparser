@@ -8,7 +8,7 @@ use crate::tokenizer::Tokenizer;
 //
 // Return current byte
 //
-pub(crate) fn ByteBuffer_nextByte(session: &mut Tokenizer) -> u8 {
+pub fn ByteBuffer_nextByte(session: &mut Tokenizer) -> u8 {
     // assert!((session.start <= session.buffer && session.buffer <= session.end));
 
     // if session.buffer == session.end {
@@ -28,7 +28,7 @@ pub(crate) fn ByteBuffer_nextByte(session: &mut Tokenizer) -> u8 {
     return byte;
 }
 
-pub(crate) fn ByteBuffer_currentByte(session: &Tokenizer) -> u8 {
+pub fn ByteBuffer_currentByte(session: &Tokenizer) -> u8 {
     // assert!((session.start <= session.buffer && session.buffer <= session.end));
 
     // if session.buffer == session.end {

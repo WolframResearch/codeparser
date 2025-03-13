@@ -24,8 +24,9 @@ use crate::{
 
 use crate::source::NextPolicyBits::*;
 
+// PRE_COMMIT: Make crate-private
 #[derive(Debug)]
-pub(crate) struct Tokenizer<'i> {
+pub struct Tokenizer<'i> {
     /// The complete input buffer that is being parsed.
     pub(crate) input: &'i [u8],
 
@@ -458,10 +459,7 @@ pub(crate) fn Token<'i, T: Into<TokenKind>>(
 // return \[Alpha]
 //
 
-pub(crate) fn Tokenizer_nextToken<'i>(
-    session: &mut Tokenizer<'i>,
-    policy: NextPolicy,
-) -> TokenRef<'i> {
+pub fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) -> TokenRef<'i> {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
 
@@ -752,7 +750,7 @@ fn Tokenizer_nextToken_uncommon<'i>(
     return Tokenizer_handleSymbol(session, tokenStartBuf, tokenStartLoc, c, policy);
 }
 
-pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
+pub fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
 
@@ -806,7 +804,7 @@ pub(crate) fn Tokenizer_nextToken_stringifyAsTag<'i>(session: &mut Tokenizer<'i>
 //
 // Use SourceCharacters here, not WLCharacters
 //
-pub(crate) fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
+pub fn Tokenizer_nextToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
     let tokenStartBuf = session.buffer();
     let tokenStartLoc = session.SrcLoc;
 
@@ -919,9 +917,7 @@ pub(crate) fn Tokenizer_currentToken_stringifyAsTag<'i>(
     return Tok;
 }
 
-pub(crate) fn Tokenizer_currentToken_stringifyAsFile<'i>(
-    session: &mut Tokenizer<'i>,
-) -> TokenRef<'i> {
+pub fn Tokenizer_currentToken_stringifyAsFile<'i>(session: &mut Tokenizer<'i>) -> TokenRef<'i> {
     let mark = session.mark();
 
     let Tok = Tokenizer_nextToken_stringifyAsFile(session);
