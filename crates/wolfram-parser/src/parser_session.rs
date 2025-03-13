@@ -398,7 +398,8 @@ impl<'i> TriviaSeq<'i> {
 
         let T = &vec[0];
 
-        T.reset(session);
+        session.offset = T.input.byte_span().offset;
+        session.SrcLoc = T.src.start;
 
         vec.clear();
     }

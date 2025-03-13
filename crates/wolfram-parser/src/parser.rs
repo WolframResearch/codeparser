@@ -79,7 +79,9 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
                 //
                 // reset
                 //
-                peek.reset(session);
+                // session.buffer = peek.buf;
+                session.offset = peek.input.byte_span().offset;
+                session.SrcLoc = peek.src.start;
 
                 return;
             }
@@ -94,7 +96,9 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
                 //
                 // reset
                 //
-                peek.reset(session);
+                // session.buffer = peek.buf;
+                session.offset = peek.input.byte_span().offset;
+                session.SrcLoc = peek.src.start;
 
                 return;
             }
