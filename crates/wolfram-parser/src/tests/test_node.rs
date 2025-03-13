@@ -1,6 +1,7 @@
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, Cst,
+        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator,
+        CstNode::{self, self as Cst},
         OperatorNode,
     },
     macros::{src, token},
@@ -22,17 +23,17 @@ fn NodeTest_Bug1() {
         ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
     let T1 = token!(Symbol, "a", src!(1:1-1:2));
-    Args.push(Cst::Token(T1));
+    Args.push(CstNode::Token(T1));
 
     let T2 = token!(UnderDot, "_.", src!(1:2-1:4));
-    Args.push(Cst::Token(T2));
+    Args.push(CstNode::Token(T2));
 
     let N = CompoundNode::new(
         CompoundOperator::CodeParser_PatternOptionalDefault,
         Args,
     );
 
-    let NSource = Cst::Compound(N).getSource();
+    let NSource = CstNode::Compound(N).getSource();
 
     assert_eq!(NSource.start, Location::new(1, 1));
     assert_eq!(NSource.end, Location::new(1, 4));

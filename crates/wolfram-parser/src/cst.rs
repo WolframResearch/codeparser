@@ -1,6 +1,6 @@
 //! Input form concrete syntax trees.
 //!
-//! [`Cst`] — root and element type in a concrete syntax tree.
+//! [`CstNode`] — root and element type in a concrete syntax tree.
 
 use wolfram_expr::Expr;
 
@@ -10,6 +10,9 @@ use crate::{
     NodeSeq,
 };
 
+// TODO: #[deprecated(note = "Use CstNode instead")]
+pub(crate) type Node<I = OwnedTokenInput, S = Span> = CstNode<I, S>;
+
 /// A sequence of concrete syntax tree nodes.
 ///
 /// When parsing `a(**)+b`  we actually want to keep track of the comment.
@@ -18,18 +21,11 @@ use crate::{
 ///
 /// So pass around a structure that contains all of the nodes from the left,
 /// including comments and whitespace.
-// TODO(cleanup): CstSeq?
-pub type CstNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Cst<I, S>>;
+pub type CstNodeSeq<I = OwnedTokenInput, S = Span> = NodeSeq<Node<I, S>>;
 
-/// A concrete syntax tree (CST) node.
-///
-/// If this was parsed from well-formed input (i.e. has no internal syntax error
-/// nodes), a single [`Cst`] represents a Wolfram Language expression.
-///
-/// A typical [`Cst`] is made up of further child syntax trees. A [`Cst`] tree
-/// terminates at "leaf" variants such as [`Cst::Token(..)`].
+/// An expression representing a node in the syntax tree
 #[derive(Debug, Clone, PartialEq)]
-pub enum Cst<I = OwnedTokenInput, S = Span> {
+pub enum CstNode<I = OwnedTokenInput, S = Span> {
     Token(Token<I, S>),
     Call(CallNode<I, S>),
     SyntaxError(SyntaxErrorNode<I, S>),
@@ -140,10 +136,10 @@ pub enum CallHead<I, S> {
 
     /// Aggregate and abstract Call nodes must have exactly one element in `head`,
     /// and serialize as `CallNode[node_, ..]`.
-    Aggregate(Box<Cst<I, S>>),
+    Aggregate(Box<CstNode<I, S>>),
 }
 
-/// Subset of [`Cst`] variants that are allowed as the body of a [`CallNode`].
+/// Subset of [`CstNode`] variants that are allowed as the body of a [`CallNode`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum CallBody<I = OwnedTokenInput, S = Span> {
     Group(GroupNode<I, S, CallOperator>),
@@ -223,48 +219,48 @@ pub struct LeafNode {
 //======================================
 
 macro_rules! from_node {
-    ($name:ident => Cst::$variant:ident) => {
-        impl<I> From<$name> for Cst<I> {
-            fn from(node: $name) -> Cst<I> {
-                Cst::$variant(node)
+    ($name:ident => Node::$variant:ident) => {
+        impl<I> From<$name> for Node<I> {
+            fn from(node: $name) -> Node<I> {
+                Node::$variant(node)
             }
         }
     };
 
-    ($name:ident<I> => Cst::$variant:ident) => {
-        impl<I> From<$name<I>> for Cst<I> {
-            fn from(node: $name<I>) -> Cst<I> {
-                Cst::$variant(node)
+    ($name:ident<I> => Node::$variant:ident) => {
+        impl<I> From<$name<I>> for Node<I> {
+            fn from(node: $name<I>) -> Node<I> {
+                Node::$variant(node)
             }
         }
     };
 
-    ($name:ident<I, S> => Cst::$variant:ident) => {
-        impl<I, S> From<$name<I, S>> for Cst<I, S> {
-            fn from(node: $name<I, S>) -> Cst<I, S> {
-                Cst::$variant(node)
+    ($name:ident<I, S> => Node::$variant:ident) => {
+        impl<I, S> From<$name<I, S>> for Node<I, S> {
+            fn from(node: $name<I, S>) -> Node<I, S> {
+                Node::$variant(node)
             }
         }
     };
 }
 
-from_node!(CallNode<I, S> => Cst::Call);
-from_node!(SyntaxErrorNode<I, S> => Cst::SyntaxError);
-from_node!(BinaryNode<I, S> => Cst::Binary);
-from_node!(TernaryNode<I, S> => Cst::Ternary);
-from_node!(InfixNode<I, S> => Cst::Infix);
-from_node!(PrefixNode<I, S> => Cst::Prefix);
-from_node!(PostfixNode<I, S> => Cst::Postfix);
-from_node!(PrefixBinaryNode<I, S> => Cst::PrefixBinary);
-from_node!(CompoundNode<I, S> => Cst::Compound);
-from_node!(GroupNode<I, S> => Cst::Group);
-from_node!(GroupMissingCloserNode<I, S> => Cst::GroupMissingCloser);
-from_node!(GroupMissingOpenerNode<I, S> => Cst::GroupMissingOpener);
-from_node!(BoxNode<I, S> => Cst::Box);
+from_node!(CallNode<I, S> => Node::Call);
+from_node!(SyntaxErrorNode<I, S> => Node::SyntaxError);
+from_node!(BinaryNode<I, S> => Node::Binary);
+from_node!(TernaryNode<I, S> => Node::Ternary);
+from_node!(InfixNode<I, S> => Node::Infix);
+from_node!(PrefixNode<I, S> => Node::Prefix);
+from_node!(PostfixNode<I, S> => Node::Postfix);
+from_node!(PrefixBinaryNode<I, S> => Node::PrefixBinary);
+from_node!(CompoundNode<I, S> => Node::Compound);
+from_node!(GroupNode<I, S> => Node::Group);
+from_node!(GroupMissingCloserNode<I, S> => Node::GroupMissingCloser);
+from_node!(GroupMissingOpenerNode<I, S> => Node::GroupMissingOpener);
+from_node!(BoxNode<I, S> => Node::Box);
 
-impl<I, S> From<CodeNode<S>> for Cst<I, S> {
+impl<I, S> From<CodeNode<S>> for Node<I, S> {
     fn from(code: CodeNode<S>) -> Self {
-        Cst::Code(code)
+        Node::Code(code)
     }
 }
 
@@ -277,7 +273,7 @@ impl<I, S> From<CodeNode<S>> for Cst<I, S> {
 //======================================
 
 impl<I, S> CstNodeSeq<I, S> {
-    pub fn visit(&self, visit: &mut dyn FnMut(&Cst<I, S>)) {
+    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I, S>)) {
         let NodeSeq(elements) = self;
 
         for elem in elements {
@@ -287,7 +283,7 @@ impl<I, S> CstNodeSeq<I, S> {
 
     pub fn map_visit(
         self,
-        visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
+        visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>,
     ) -> Self {
         let NodeSeq(elements) = self;
 
@@ -364,7 +360,7 @@ impl<I: TokenInput, S> CstNodeSeq<I, S> {
     pub(crate) fn into_owned_input(self) -> CstNodeSeq<OwnedTokenInput, S> {
         let NodeSeq(nodes) = self;
 
-        let nodes = nodes.into_iter().map(Cst::into_owned_input).collect();
+        let nodes = nodes.into_iter().map(Node::into_owned_input).collect();
 
         NodeSeq(nodes)
     }
@@ -374,39 +370,41 @@ impl<I: TokenInput, S> CstNodeSeq<I, S> {
 // Nodes
 //==========================================================
 
-impl<I, S> Cst<I, S> {
+impl<I, S> Node<I, S> {
     /// Visit this node and every child node, recursively.
-    pub fn visit(&self, visit: &mut dyn FnMut(&Cst<I, S>)) {
+    pub fn visit(&self, visit: &mut dyn FnMut(&Node<I, S>)) {
         // Visit the current node.
         visit(self);
 
         // Visit child nodes.
         match self {
-            Cst::Token(_) => (),
-            Cst::Call(CallNode { head, body, src: _ }) => {
+            Node::Token(_) => (),
+            Node::Call(CallNode { head, body, src: _ }) => {
                 head.visit(visit);
                 body.as_op().visit_children(visit);
             },
-            Cst::SyntaxError(SyntaxErrorNode {
+            Node::SyntaxError(SyntaxErrorNode {
                 err: _,
                 children,
                 src: _,
             }) => {
                 children.visit(visit);
             },
-            Cst::Prefix(PrefixNode(op)) => op.visit_children(visit),
-            Cst::Infix(InfixNode(op)) => op.visit_children(visit),
-            Cst::Postfix(PostfixNode(op)) => op.visit_children(visit),
-            Cst::Binary(BinaryNode(op)) => op.visit_children(visit),
-            Cst::Ternary(TernaryNode(op)) => op.visit_children(visit),
-            Cst::PrefixBinary(PrefixBinaryNode(op)) => op.visit_children(visit),
-            Cst::Compound(CompoundNode(op)) => op.visit_children(visit),
-            Cst::Group(GroupNode(op))
-            | Cst::GroupMissingCloser(GroupMissingCloserNode(op))
-            | Cst::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+            Node::Prefix(PrefixNode(op)) => op.visit_children(visit),
+            Node::Infix(InfixNode(op)) => op.visit_children(visit),
+            Node::Postfix(PostfixNode(op)) => op.visit_children(visit),
+            Node::Binary(BinaryNode(op)) => op.visit_children(visit),
+            Node::Ternary(TernaryNode(op)) => op.visit_children(visit),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => {
                 op.visit_children(visit)
             },
-            Cst::Box(BoxNode {
+            Node::Compound(CompoundNode(op)) => op.visit_children(visit),
+            Node::Group(GroupNode(op))
+            | Node::GroupMissingCloser(GroupMissingCloserNode(op))
+            | Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                op.visit_children(visit)
+            },
+            Node::Box(BoxNode {
                 kind: _,
                 children,
                 src: _,
@@ -414,79 +412,79 @@ impl<I, S> Cst<I, S> {
                 children.visit(visit);
             },
             // These node types have no child nodes.
-            Cst::Code(_) => (),
+            Node::Code(_) => (),
         }
     }
 
     /// Transform this node tree by visiting this node and every child node, recursively.
     pub fn map_visit(
         self,
-        visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
+        visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>,
     ) -> Self {
         // Visit the current node.
         let self_ = visit(self);
 
         // Visit child nodes.
-        let node: Cst<I, S> = match self_ {
-            Cst::Token(_) => return self_,
-            Cst::Call(CallNode { head, body, src }) => {
+        let node: Node<I, S> = match self_ {
+            Node::Token(_) => return self_,
+            Node::Call(CallNode { head, body, src }) => {
                 let head = head.map_visit(visit);
 
                 let body = body.map_op(|body_op: OperatorNode<_, _, _>| {
                     body_op.map_visit(visit)
                 });
 
-                Cst::Call(CallNode { head, body, src })
+                Node::Call(CallNode { head, body, src })
             },
-            Cst::SyntaxError(SyntaxErrorNode { err, children, src }) => {
+            Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
                 let children = children.map_visit(visit);
 
-                Cst::SyntaxError(SyntaxErrorNode { err, children, src })
+                Node::SyntaxError(SyntaxErrorNode { err, children, src })
             },
 
-            Cst::Infix(InfixNode(op)) => {
-                Cst::Infix(InfixNode(op.map_visit(visit)))
+            Node::Infix(InfixNode(op)) => {
+                Node::Infix(InfixNode(op.map_visit(visit)))
             },
-            Cst::Prefix(PrefixNode(op)) => {
-                Cst::Prefix(PrefixNode(op.map_visit(visit)))
+            Node::Prefix(PrefixNode(op)) => {
+                Node::Prefix(PrefixNode(op.map_visit(visit)))
             },
-            Cst::Postfix(PostfixNode(op)) => {
-                Cst::Postfix(PostfixNode(op.map_visit(visit)))
+            Node::Postfix(PostfixNode(op)) => {
+                Node::Postfix(PostfixNode(op.map_visit(visit)))
             },
-            Cst::Binary(BinaryNode(op)) => {
-                Cst::Binary(BinaryNode(op.map_visit(visit)))
+            Node::Binary(BinaryNode(op)) => {
+                Node::Binary(BinaryNode(op.map_visit(visit)))
             },
-            Cst::Ternary(TernaryNode(op)) => {
-                Cst::Ternary(TernaryNode(op.map_visit(visit)))
+            Node::Ternary(TernaryNode(op)) => {
+                Node::Ternary(TernaryNode(op.map_visit(visit)))
             },
-            Cst::PrefixBinary(PrefixBinaryNode(op)) => {
-                Cst::PrefixBinary(PrefixBinaryNode(op.map_visit(visit)))
+            Node::PrefixBinary(PrefixBinaryNode(op)) => {
+                Node::PrefixBinary(PrefixBinaryNode(op.map_visit(visit)))
             },
-            Cst::Compound(CompoundNode(op)) => {
-                Cst::Compound(CompoundNode(op.map_visit(visit)))
+            Node::Compound(CompoundNode(op)) => {
+                Node::Compound(CompoundNode(op.map_visit(visit)))
             },
-            Cst::Group(GroupNode(op)) => {
-                Cst::Group(GroupNode(op.map_visit(visit)))
+            Node::Group(GroupNode(op)) => {
+                Node::Group(GroupNode(op.map_visit(visit)))
             },
-            Cst::GroupMissingCloser(GroupMissingCloserNode(op)) => {
-                Cst::GroupMissingCloser(GroupMissingCloserNode(
+            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                Node::GroupMissingCloser(GroupMissingCloserNode(
                     op.map_visit(visit),
                 ))
             },
-            Cst::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                Cst::GroupMissingOpener(GroupMissingOpenerNode(
+            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                Node::GroupMissingOpener(GroupMissingOpenerNode(
                     op.map_visit(visit),
                 ))
             },
 
-            Cst::Box(BoxNode {
+            Node::Box(BoxNode {
                 kind,
                 children,
                 src,
             }) => {
                 let children = children.map_visit(visit);
 
-                Cst::Box(BoxNode {
+                Node::Box(BoxNode {
                     kind,
                     children,
                     src,
@@ -494,18 +492,18 @@ impl<I, S> Cst<I, S> {
             },
 
             // These node types have no child nodes.
-            node @ Cst::Code(_) => node,
+            node @ Node::Code(_) => node,
         };
 
         node
     }
 }
 
-impl<I: TokenInput, S> Cst<I, S> {
-    pub fn into_owned_input(self) -> Cst<OwnedTokenInput, S> {
+impl<I: TokenInput, S> Node<I, S> {
+    pub fn into_owned_input(self) -> Node<OwnedTokenInput, S> {
         match self {
-            Cst::Token(token) => Cst::Token(token.into_owned_input()),
-            Cst::Call(CallNode { head, body, src }) => Cst::Call(CallNode {
+            Node::Token(token) => Node::Token(token.into_owned_input()),
+            Node::Call(CallNode { head, body, src }) => Node::Call(CallNode {
                 head: match head {
                     CallHead::Concrete(head) => {
                         CallHead::Concrete(head.into_owned_input())
@@ -517,63 +515,63 @@ impl<I: TokenInput, S> Cst<I, S> {
                 body: body.map_op(|body_op| body_op.into_owned_input()),
                 src,
             }),
-            Cst::SyntaxError(SyntaxErrorNode { err, children, src }) => {
-                Cst::SyntaxError(SyntaxErrorNode {
+            Node::SyntaxError(SyntaxErrorNode { err, children, src }) => {
+                Node::SyntaxError(SyntaxErrorNode {
                     err,
                     children: children.into_owned_input(),
                     src,
                 })
             },
-            Cst::Prefix(PrefixNode(op)) => {
-                Cst::Prefix(PrefixNode(op.into_owned_input()))
+            Node::Prefix(PrefixNode(op)) => {
+                Node::Prefix(PrefixNode(op.into_owned_input()))
             },
-            Cst::Infix(InfixNode(op)) => {
-                Cst::Infix(InfixNode(op.into_owned_input()))
+            Node::Infix(InfixNode(op)) => {
+                Node::Infix(InfixNode(op.into_owned_input()))
             },
-            Cst::Postfix(PostfixNode(op)) => {
-                Cst::Postfix(PostfixNode(op.into_owned_input()))
+            Node::Postfix(PostfixNode(op)) => {
+                Node::Postfix(PostfixNode(op.into_owned_input()))
             },
-            Cst::Binary(BinaryNode(op)) => {
-                Cst::Binary(BinaryNode(op.into_owned_input()))
+            Node::Binary(BinaryNode(op)) => {
+                Node::Binary(BinaryNode(op.into_owned_input()))
             },
-            Cst::Ternary(TernaryNode(op)) => {
-                Cst::Ternary(TernaryNode(op.into_owned_input()))
+            Node::Ternary(TernaryNode(op)) => {
+                Node::Ternary(TernaryNode(op.into_owned_input()))
             },
-            Cst::PrefixBinary(PrefixBinaryNode(op)) => {
-                Cst::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
+            Node::PrefixBinary(PrefixBinaryNode(op)) => {
+                Node::PrefixBinary(PrefixBinaryNode(op.into_owned_input()))
             },
-            Cst::Compound(CompoundNode(op)) => {
-                Cst::Compound(CompoundNode(op.into_owned_input()))
+            Node::Compound(CompoundNode(op)) => {
+                Node::Compound(CompoundNode(op.into_owned_input()))
             },
-            Cst::Group(GroupNode(op)) => {
-                Cst::Group(GroupNode(op.into_owned_input()))
+            Node::Group(GroupNode(op)) => {
+                Node::Group(GroupNode(op.into_owned_input()))
             },
-            Cst::GroupMissingCloser(GroupMissingCloserNode(op)) => {
-                Cst::GroupMissingCloser(GroupMissingCloserNode(
+            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+                Node::GroupMissingCloser(GroupMissingCloserNode(
                     op.into_owned_input(),
                 ))
             },
-            Cst::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                Cst::GroupMissingOpener(GroupMissingOpenerNode(
+            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+                Node::GroupMissingOpener(GroupMissingOpenerNode(
                     op.into_owned_input(),
                 ))
             },
-            Cst::Box(BoxNode {
+            Node::Box(BoxNode {
                 kind,
                 children,
                 src,
-            }) => Cst::Box(BoxNode {
+            }) => Node::Box(BoxNode {
                 kind,
                 children: children.into_owned_input(),
                 src,
             }),
-            Cst::Code(node) => Cst::Code(node),
+            Node::Code(node) => Node::Code(node),
         }
     }
 }
 
 
-impl<I, S: TokenSource> Cst<I, S> {
+impl<I, S: TokenSource> Node<I, S> {
     // TODO(cleanup): Combine with getSource()
     pub(crate) fn source(&self) -> S {
         self.getSource()
@@ -581,51 +579,51 @@ impl<I, S: TokenSource> Cst<I, S> {
 
     pub(crate) fn getSource(&self) -> S {
         match self {
-            Cst::Token(token) => token.src.clone(),
-            Cst::Call(node) => node.getSource(),
-            Cst::SyntaxError(node) => node.getSource(),
-            Cst::Prefix(PrefixNode(op)) => op.getSource(),
-            Cst::Infix(InfixNode(op)) => op.getSource(),
-            Cst::Postfix(PostfixNode(op)) => op.getSource(),
-            Cst::Binary(BinaryNode(op)) => op.getSource(),
-            Cst::PrefixBinary(PrefixBinaryNode(op)) => op.getSource(),
-            Cst::Ternary(TernaryNode(op)) => op.getSource(),
-            Cst::Compound(CompoundNode(op)) => op.getSource(),
-            Cst::Group(GroupNode(op)) => op.getSource(),
-            Cst::GroupMissingCloser(GroupMissingCloserNode(op)) => {
+            Node::Token(token) => token.src.clone(),
+            Node::Call(node) => node.getSource(),
+            Node::SyntaxError(node) => node.getSource(),
+            Node::Prefix(PrefixNode(op)) => op.getSource(),
+            Node::Infix(InfixNode(op)) => op.getSource(),
+            Node::Postfix(PostfixNode(op)) => op.getSource(),
+            Node::Binary(BinaryNode(op)) => op.getSource(),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => op.getSource(),
+            Node::Ternary(TernaryNode(op)) => op.getSource(),
+            Node::Compound(CompoundNode(op)) => op.getSource(),
+            Node::Group(GroupNode(op)) => op.getSource(),
+            Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 op.getSource()
             },
-            Cst::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
+            Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
                 op.getSource()
             },
-            Cst::Box(BoxNode { src, .. }) => src.clone(),
-            Cst::Code(node) => node.src.clone(),
+            Node::Box(BoxNode { src, .. }) => src.clone(),
+            Node::Code(node) => node.src.clone(),
         }
     }
 }
 
-impl<I, S> Cst<I, S> {
+impl<I, S> Node<I, S> {
     // TODO(cleanup): Are these check() methods used anywhere? What do they even do?
     #[allow(dead_code)]
     fn check(&self) -> bool {
         match self {
-            Cst::Token(token) => token.check(),
-            Cst::Call(node) => node.check(),
-            Cst::Prefix(PrefixNode(op)) => op.check(),
-            Cst::Binary(BinaryNode(op)) => op.check(),
-            Cst::Infix(InfixNode(op)) => op.check(),
-            Cst::Ternary(TernaryNode(op)) => op.check(),
-            Cst::Postfix(PostfixNode(op)) => op.check(),
-            Cst::PrefixBinary(PrefixBinaryNode(op)) => op.check(),
-            Cst::Compound(CompoundNode(op)) => op.check(),
-            Cst::Group(GroupNode(op)) => op.check(),
+            Node::Token(token) => token.check(),
+            Node::Call(node) => node.check(),
+            Node::Prefix(PrefixNode(op)) => op.check(),
+            Node::Binary(BinaryNode(op)) => op.check(),
+            Node::Infix(InfixNode(op)) => op.check(),
+            Node::Ternary(TernaryNode(op)) => op.check(),
+            Node::Postfix(PostfixNode(op)) => op.check(),
+            Node::PrefixBinary(PrefixBinaryNode(op)) => op.check(),
+            Node::Compound(CompoundNode(op)) => op.check(),
+            Node::Group(GroupNode(op)) => op.check(),
             // FIXME: Is this `false` by default, since it's unterminated and
             //        therefore invalid syntax?
-            Cst::GroupMissingCloser(node) => node.check(),
-            Cst::GroupMissingOpener(node) => node.check(),
-            Cst::SyntaxError(node) => node.check(),
-            Cst::Box(BoxNode { children, .. }) => children.check(),
-            Cst::Code(_) => panic!("unexpected CodeNode in Cst::check()"),
+            Node::GroupMissingCloser(node) => node.check(),
+            Node::GroupMissingOpener(node) => node.check(),
+            Node::SyntaxError(node) => node.check(),
+            Node::Box(BoxNode { children, .. }) => children.check(),
+            Node::Code(_) => panic!("unexpected CodeNode in Node::check()"),
         }
     }
 }
@@ -690,7 +688,7 @@ impl<I: TokenInput, S, O> OperatorNode<I, S, O> {
 
 impl<I, S, O> OperatorNode<I, S, O> {
     /// Visit this node and every child node, recursively.
-    fn visit_children(&self, visit: &mut dyn FnMut(&Cst<I, S>)) {
+    fn visit_children(&self, visit: &mut dyn FnMut(&Node<I, S>)) {
         let OperatorNode {
             op: _,
             children,
@@ -702,7 +700,7 @@ impl<I, S, O> OperatorNode<I, S, O> {
 
     pub fn map_visit(
         self,
-        visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
+        visit: &mut dyn FnMut(Node<I, S>) -> Node<I, S>,
     ) -> Self {
         let OperatorNode { op, children, src } = self;
 
@@ -841,7 +839,7 @@ impl<I> CallNode<I> {
 
 impl<I, S: TokenSource> CallNode<I, S> {
     // pub(crate) fn group(head: NodeVariant<I>, group: GroupNode<I>) -> Self {
-    //     CallNode::new(NodeSeq(vec![head]), NodeVariant::Cst(Cst::Group(group)))
+    //     CallNode::new(NodeSeq(vec![head]), NodeVariant::Node(Node::Group(group)))
     // }
 
     fn getSource(&self) -> S {
@@ -861,12 +859,12 @@ impl<I, S> CallNode<I, S> {
 }
 
 impl<I, S> CallHead<I, S> {
-    pub fn aggregate(node: Cst<I, S>) -> Self {
+    pub fn aggregate(node: CstNode<I, S>) -> Self {
         CallHead::Aggregate(Box::new(node))
     }
 
     /// Visit this node and every child node, recursively.
-    pub fn visit(&self, visit: &mut dyn FnMut(&Cst<I, S>)) {
+    pub fn visit(&self, visit: &mut dyn FnMut(&CstNode<I, S>)) {
         match self {
             CallHead::Concrete(head) => head.visit(visit),
             CallHead::Aggregate(head) => head.visit(visit),
@@ -875,14 +873,14 @@ impl<I, S> CallHead<I, S> {
 
     pub fn map_visit(
         self,
-        visit: &mut dyn FnMut(Cst<I, S>) -> Cst<I, S>,
+        visit: &mut dyn FnMut(CstNode<I, S>) -> CstNode<I, S>,
     ) -> Self {
         match self {
             CallHead::Concrete(head) => {
                 CallHead::Concrete(head.map_visit(visit))
             },
             CallHead::Aggregate(head) => {
-                let head: Cst<I, S> = *head;
+                let head: CstNode<I, S> = *head;
                 CallHead::Aggregate(Box::new(head.map_visit(visit)))
             },
         }

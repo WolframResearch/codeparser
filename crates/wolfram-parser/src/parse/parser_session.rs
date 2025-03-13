@@ -8,8 +8,8 @@ use Diagnostics::*;
 
 use crate::{
     abstract_::{Abstract, Aggregate},
-    ast::Ast,
-    cst::{Cst, CstNodeSeq},
+    ast::AstNode,
+    cst::{CstNode, CstNodeSeq},
     feature,
     issue::Issue,
     parse::{
@@ -43,7 +43,7 @@ pub(crate) struct ParserSession<'i> {
     pub(crate) quirk_settings: QuirkSettings,
 }
 
-pub(crate) type NodeStack<'i> = Vec<Cst<BorrowedTokenInput<'i>>>;
+pub(crate) type NodeStack<'i> = Vec<CstNode<BorrowedTokenInput<'i>>>;
 
 //
 // Used mainly for collecting trivia that has been eaten
@@ -147,7 +147,7 @@ impl<'i> ParserSession<'i> {
         self.tokenizer.input
     }
 
-    pub fn abstract_parse_expressions(&mut self) -> ParseResult<Ast> {
+    pub fn abstract_parse_expressions(&mut self) -> ParseResult<AstNode> {
         quirks::set_quirks(self.quirk_settings);
 
         let ParseResult {
@@ -172,7 +172,7 @@ impl<'i> ParserSession<'i> {
 
     pub fn concrete_parse_expressions(
         &mut self,
-    ) -> ParseResult<Cst<BorrowedTokenInput<'i>>> {
+    ) -> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
         quirks::set_quirks(self.quirk_settings);
 
         #[cfg(feature = "DIAGNOSTICS")]
@@ -199,7 +199,7 @@ impl<'i> ParserSession<'i> {
             }
 
             if peek.tok.isTrivia() {
-                exprs.push(Cst::Token(peek));
+                exprs.push(CstNode::Token(peek));
 
                 peek.skip(&mut self.tokenizer);
 
