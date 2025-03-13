@@ -2,7 +2,7 @@ pub(crate) mod parselet;
 mod parser_session;
 
 
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
 
 use crate::{
     cst::{
@@ -34,7 +34,6 @@ pub use self::parser_session::ParseResult;
 pub(crate) use self::parser_session::ParserSession;
 
 
-#[derive(Debug)]
 pub(crate) struct Context {
     f: Option<ParseFunction>,
     p: Option<ParseletPtr>,
@@ -44,6 +43,19 @@ pub(crate) struct Context {
     index: usize,
 
     prec: Option<Precedence>,
+}
+
+impl Debug for Context {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let Context { f, p, index, prec } = self;
+
+        fmt.debug_struct("Context")
+            .field("f", &f.is_some())
+            .field("p", p)
+            .field("index", index)
+            .field("prec", prec)
+            .finish()
+    }
 }
 
 pub(crate) enum ColonLHS {
