@@ -693,7 +693,7 @@ impl<'i> ParserSession<'i> {
                 //                    ^ Optional
                 //
 
-                if op.op == BinaryOperator::Pattern {
+                if op.getOp() == BinaryOperator::Pattern {
                     return ColonLHS::Optional;
                 }
 
@@ -706,7 +706,7 @@ impl<'i> ParserSession<'i> {
                 //                   ^ Optional
                 //
 
-                match op.op {
+                match op.getOp() {
                     CompoundOperator::CodeParser_PatternBlank
                     | CompoundOperator::CodeParser_PatternBlankSequence
                     | CompoundOperator::CodeParser_PatternBlankNullSequence
@@ -805,13 +805,13 @@ impl<'i> ParserSession<'i> {
         match top_node {
             // This is a BinaryNode of Span
             CstNode::Binary(BinaryNode(node))
-                if node.op == BinaryOperator::Span =>
+                if node.getOp() == BinaryOperator::Span =>
             {
                 true
             },
             // This is a TernaryNode of Span
             CstNode::Ternary(TernaryNode(node))
-                if node.op == TernaryOperator::Span =>
+                if node.getOp() == TernaryOperator::Span =>
             {
                 true
             },
