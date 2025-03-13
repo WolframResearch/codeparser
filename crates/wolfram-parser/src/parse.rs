@@ -1,55 +1,40 @@
-//! Parser types and customization.
+//! Parser implementation.
 //!
-//! This module providesj:
+//! # Parser Design
 //!
-//! * The enums of the [`operators`] module
-//! * The [`ParseBuilder`] trait, used to implement custom parsing output.
+//! Each parse of a Wolfram input is managed by a [`ParserSession`] instance.
 //!
-//! ###### General Terminology
+//! Parsing logic is structured into individual "modules" calls *parselets*.
 //!
-//! * **token** — any atomic piece of input
+//! There are two kinds of parselet:
 //!
-//!   The [`TokenKind`] enum defines the set of tokens used by this parser.
+//! * [`PrefixParselet`] — invoked when there is no previous expression in the
+//!   current context.
+//! * [`InfixParselet`] — invoked when there is a previous expression in the
+//!   current context.
 //!
-//!   Tokens are further broken down into three classes:
+//! Every token is associated with one [`PrefixParselet`] instance
+//! ([`TokenKind::prefix_parselet()`]) and one
+//! [`InfixParselet`] instance ([`TokenKind::infix_parselet()`]), which are
+//! invoked, respectively, when that token is encountered in "prefix" or "infix"
+//! position.
 //!
-//!   - **trivia token** — any token that doesn't semantically effect parsing.
+//! Parselet implementations will typically read the current or next token,
+//! do a bit of logic, optionally push a node onto the node stack, and then
+//! either:
 //!
-//!     Examples: ` ` (whitespace), `(* comments *)`
-//!
-//!   - **syntax token** — any token whose presence semantically affects
-//!     parsing, but which does not have a meaningful intrinsic value.
-//!
-//!     Examples: `{`, `&`, `+`, `->`, `#` in `#2`, ...
-//!
-//!   - **operand token** — any token that on its own can be an operand to
-//!     a parsed expression (including error tokens, and implicit tokens).
-//!
-//!     *Examples:* `3`, `4.2`, `foo`, `"hello"`, `2` in `#2`, ...
-//!
-//! ###### Parser Implementation Documentation
-//!
-//! To view the internal parser implementation documentation, build the
-//! documentation locally with:
-//!
-//! ```shell
-//! $ cargo doc -p wolfram-parser --document-private-items --open
-//! ```
-//!
-//! and navigate to the [`wolfram_parser::parse::parser_docs`][self::parser_docs] module.
-
-//
-// Main internal parser documentation.
-//
-// Build with `cargo doc --document-private-items` to view this documentation.
-//
-pub(crate) mod parser_docs;
+//! 1. Call [`parse_prefix()`][ParserSession::parse_prefix] on the next token in the input
+//! 2. Call [`parse_infix()`][ParserSession::parse_infix] on the next token in the input
+//! 3. Call a `reduce_XXX()` method to push a completed parsed subexpression
+//!    onto the node stack followed by [`parse_climb()`][ParserSession::parse_climb]
+//!    to parse the next token using `parse_infix()`.
+//! 4. Call [`try_continue()`][ParserSession::try_continue] to invoke the
+//!    continuation function from the top context on the context stack.
 
 pub mod operators;
 
 pub(crate) mod parselet;
 pub(crate) mod token_parselets;
-
 
 #[cfg(test)]
 mod parse_tests {
@@ -72,10 +57,6 @@ use crate::{
     },
     ParseOptions, ParseResult, QuirkSettings,
 };
-
-// Import types used only in doc comments in this module.
-#[allow(unused_imports)]
-use crate::cst::Cst;
 
 use self::{
     operators::{
@@ -190,18 +171,13 @@ pub(crate) struct ParserSession<'i, B: ParseBuilder<'i> + 'i> {
 
     builder: B,
 
-    context_stack: Vec<Context<B::ContextData>>,
+    context_stack: Vec<Context>,
 
     quirk_settings: QuirkSettings,
 }
 
-#[derive(Debug)]
-pub(crate) struct Context<D> {
+pub(crate) struct Context {
     pub(crate) prec: Option<Precedence>,
-
-    /// Data stored in this context by the current [`ParseBuilder`]
-    /// implementation.
-    builder_data: D,
 }
 
 //
@@ -217,12 +193,6 @@ pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 /// some representation of the parsed input, typically a [`Cst`] or Wolfram
 /// Language expression.
 ///
-/// **None of the methods on this trait should ever be called directly by code
-/// outside of wolfram-parser.** To initiate parsing using a [`ParseBuilder`]
-/// implementation, call [`wolfram_parser::parse::parse()`][crate::parse::parse].
-///
-/// # Background
-///
 /// Prior to the introduction of this trait, the parser could only produce
 /// [`Cst`] values as output. However, that limited the utility of this parser
 /// for the performant construction of Wolfram Language expressions, because
@@ -233,174 +203,6 @@ pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 /// This abstraction allows `Input &str => Expr` with no intermediate stage,
 /// while also preserving the ability to do `Input &str => Cst`, or any other
 /// type buildable from parsing.
-///
-/// # API Design
-///
-/// ## Method Overview
-///
-/// * **Node Construction:** [Push and Reduce Methods](#push-and-reduce-methods)
-///   - [`push_leaf()`][ParseBuilder::push_leaf]
-///   - [`push_compound_blank()`][ParseBuilder::push_compound_blank]
-///   - [`push_compound_pattern_blank()`][ParseBuilder::push_compound_pattern_blank]
-///   - [`push_compound_pattern_optional()`][ParseBuilder::push_compound_pattern_optional]
-///   - [`push_compound_slot()`][ParseBuilder::push_compound_slot]
-///   - [`push_compound_out()`][ParseBuilder::push_compound_out]
-///   - [`reduce_prefix()`][ParseBuilder::reduce_prefix]
-///   - [`reduce_prefix_get()`][ParseBuilder::reduce_prefix_get]
-///   - [`reduce_postfix()`][ParseBuilder::reduce_postfix]
-///   - [`reduce_binary()`][ParseBuilder::reduce_binary]
-///   - [`reduce_binary_unset()`][ParseBuilder::reduce_binary_unset]
-///   - [`reduce_ternary()`][ParseBuilder::reduce_ternary]
-///   - [`reduce_ternary_tag_unset()`][ParseBuilder::reduce_ternary_tag_unset]
-///   - [`reduce_infix()`][ParseBuilder::reduce_infix]
-///   - [`reduce_group()`][ParseBuilder::reduce_group]
-///   - [`reduce_call()`][ParseBuilder::reduce_call]
-///
-///   Errors:
-///
-///   - [`reduce_syntax_error()`][ParseBuilder::reduce_syntax_error]
-///   - [`reduce_unterminated_group()`][ParseBuilder::reduce_unterminated_group]
-///   - [`reduce_group_missing_closer()`][ParseBuilder::reduce_group_missing_closer]
-///
-/// * **Trivia token management:**
-///
-///   - [`resettable_trivia_begin()`][ParseBuilder::resettable_trivia_begin]
-///   - [`resettable_trivia_push()`][ParseBuilder::resettable_trivia_push]
-///   - [`resettable_trivia_end()`][ParseBuilder::resettable_trivia_end]
-///   - [`reset_trivia()`][ParseBuilder::reset_trivia_seq]
-///   - [`push_trivia_seq()`][ParseBuilder::push_trivia_seq]
-///
-///
-/// ## Push and Reduce Methods
-///
-/// This section describes the `push_*()` and `reduce_*()` methods of the
-/// [`ParseBuilder`] trait. These methods are the primary way the parser
-/// transforms parsed input into specific output types like [`Cst`] or an
-/// expression.
-///
-///
-///
-/// ### Push Methods
-///
-/// This parser is designed for producing tree-like parsed output. At the leaves
-/// of those parse trees are the nodes created by the `push_*()` family of
-/// methods. A **`push_*()` method** is called by a parselet when it finishes
-/// parsing some "atomic" piece of input.
-///
-/// Examples of parser "atomic" input include literally AtomQ input like `foo` or
-/// `3.78`, as well as simple compound forms like `head_` or `#7`. These forms
-/// are considered parser atomic because their parsing is not affected by
-/// precedence, and they cannot contain interior whitespace.
-///
-/// | Sample Input     | Push method                                    | Comment
-/// |------------------|------------------------------------------------|------------
-/// | `foo`, `3.7`     | [`ParseBuilder::push_leaf`]                    |
-/// | `_Integer`       | [`ParseBuilder::push_compound_blank`]          | Unnamed Blank pattern
-/// | `expr_`, `f_Foo` | [`ParseBuilder::push_compound_pattern_blank`]  | Named Blank pattern
-///
-/// ### Reduce Methods
-///
-/// Reduce methods are closely linked with parser contexts: a parser context
-/// ends when a `reduce_*()` method call is made, combining the nodes "owned" by
-/// the top-most parser context into a single new node. This means that the
-/// context begun by a call to [`begin_context()`][ParseBuilder::begin_context]
-/// always ends with a corresponding call to a `reduce_*()` method.
-///
-/// Typically an individual parser context is managed by a single parselet
-/// implementation, which recursively parses any expected arguments or
-/// additional required syntax. Once all required arguments and syntax are
-/// accounted for, the typical parselet implementation then ends by calling a
-/// `reduce_*()` method to emit a new node.
-///
-/// In this way parsed subexpressions are composed into higher-level parent
-/// expressions by the interaction of parser contexts and reduce methods.
-///
-/// | Sample Input | Reduce method                   | Comment
-/// |--------------|---------------------------------|--------
-/// | `!x`         | [`ParseBuilder::reduce_prefix`] | Takes three args: `!` token, whitespace, and `x` node
-/// | `a -> b`     | [`ParseBuilder::reduce_binary`] |
-/// | `a + b + c`  | [`ParseBuilder::reduce_infix`]  | Takes arbitrary number of args; see also [`ParseBuilder::begin_infix`]
-/// | `f[...]`     | [`ParseBuilder::reduce_call`]   |
-/// | `{...}`      | [`ParseBuilder::reduce_group`]  |
-///
-///
-///
-/// ## Optimizing parsing
-///
-/// [`ParseBuilder`] is designed to allow the implementor very fine-grained
-/// control what information made available by the parser is used, and what is
-/// otherwise optimized way. This flexibilty allows this parser to efficiently
-/// support a variety of use-cases, including:
-///
-/// | Use case        | Operand nodes               | [*Trivia token*][term] info | [*Syntax token*][term] info | line:column positions |
-/// |-----------------|-----------------------------|-----------------------------|-----------------------------|-----------------------|
-/// | Code formatting | Yes                         | Yes                         | Yes                         | Yes                   |
-/// | Code linting    | Yes                         | No                          | Yes                         | Yes                   |
-/// | Parsing exprs   | Yes                         | No                          | No                          | No                    |
-/// | SyntaxQ         | No                          | No                          | No                          | No                    |
-///
-/// For each use-case, the relevant feature of the parser can be enabled or
-/// disabled by setting appropriate values for the [`ParseBuilder`] associated
-/// types.
-///
-///
-///
-/// ### Guarantees
-///
-/// The wolfram-parser implementation makes several important guarantees
-/// regarding its invocation of `push_*()` methods:
-///
-/// * Every token appearing in the input will be passed to a push method exactly one
-/// * Tokens will be passed to push methods in order
-///
-/// These guarantees allow more optimized [`ParseBuilder`] implementations to
-/// avoid separate intermediate allocations for every node and trivia sequence,
-/// and instead use a single flat intermediate buffer for staging node
-/// construction (an optimization used by [`parse_cst()`][crate::parse_cst()]).
-/// Implementations optimized in this way can then set their
-/// [`ParseBuilder::Node`] and [`ParseBuilder::TriviaHandle`] types to [`()`] or
-/// some equivalent zero-sized type, minimizing the amount of data the parser
-/// moves around on the stack.
-///
-/// Alternatively, other [`ParseBuilder`] implementations can opt for easier
-/// but slightly less efficient implementation strategy and choose to pass
-/// values through the `Node` and `TriviaHandle` associated types, and
-/// consequently through the parser implementation itself.
-///
-///
-/// ### Controlling trivia tokens
-///
-/// When e.g. parsing input into expressions, it is valid and efficient to ignore
-/// [*trivia tokens*][term]. But if the original arrangement of trivia is
-/// important to know (e.g. when implementing a formatter), [`ParseBuilder`]
-/// makes trivia information available.
-///
-/// The [`ParseBuilder`] trivia API is designed with the following constraints
-/// in mind:
-///
-/// * There are two
-///       different situations in which the parser might process trivia:
-///       when it knows the current parselet is going to process the
-///       next syntax token, and when it is merely peeking the next
-///       syntax token to decide if it should process it or not.
-///       In the former case, trivia is pushed immediately (i.e.
-///       non-resettable). In the latter case, the consumption of that
-///       might need to be undone.
-///
-/// TODO: Document that it is possible to have multiple resettable
-///       trivia sequences active at one time. See e.g. SemiSemiParselet.
-///
-/// TODO: Document that there are two outcomes for resettable trivia:
-///       pushing it ([`push_trivia_seq()`][ParseBuilder::push_trivia_seq]), and resetting it
-///      ([`trivia_reset()`][ParseBuilder::reset_trivia_seq]).
-///
-
-///
-/// ### Controlling syntax tokens
-///
-/// TODO
-///
-/// [term]: crate::parse#general-terminology
 pub(crate) trait ParseBuilder<'i>: Sized + Debug
 where
     Self: 'i,
@@ -411,13 +213,7 @@ where
     /// Nodes are typically sub-expressions of the parsed input, but may also
     /// represent e.g. syntax errors.
     type Node;
-
     type Output;
-
-    /// Extra data returned by [`Self::begin_context()`] when a new context
-    /// starts, and passed to the `reduce_*()` method call made when a parsing
-    /// context completes.
-    type ContextData: Debug;
 
     type InfixParseState: Debug;
 
@@ -426,9 +222,6 @@ where
     //==================================
 
     fn new_builder() -> Self;
-
-    /// Complete the parse and return the parsed output.
-    fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output;
 
     /// Apply the [`PrefixParselet`] implementation associated with the given
     /// [`TokenKind`].
@@ -443,62 +236,42 @@ where
         callback: F,
     ) -> R;
 
+    /// Complete the parse and return the parsed output.
+    fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output;
+
     //==================================
     // Trivia handling
     //==================================
 
-    // TODO(cleanup): Add default impls for these trivia methods?
-
-    type ResettableTriviaAccumulator;
-    type ResettableTriviaHandle;
-
+    type TriviaAccumulator;
     type TriviaHandle;
 
-    fn empty_trivia() -> Self::TriviaHandle;
+    fn trivia_begin(&mut self) -> Self::TriviaAccumulator;
 
-    fn resettable_trivia_begin(&mut self) -> Self::ResettableTriviaAccumulator;
-
-    fn resettable_trivia_push(
+    fn trivia_push(
         &mut self,
-        accum: &mut Self::ResettableTriviaAccumulator,
+        accum: &mut Self::TriviaAccumulator,
         trivia: TokenRef<'i>,
     );
 
-    fn resettable_trivia_end(
+    fn trivia_end(
         &mut self,
-        accum: Self::ResettableTriviaAccumulator,
-    ) -> Self::ResettableTriviaHandle;
+        accum: Self::TriviaAccumulator,
+    ) -> Self::TriviaHandle;
+
+    fn empty_trivia() -> Self::TriviaHandle;
 
     /// Get the first piece of trivia in a set of trivia.
     ///
-    /// Used to reset the position of the underlying
-    /// [`Reader`][crate::read::Reader] when a potential parse fails.
-    fn reset_trivia_seq(
-        &mut self,
-        handle: Self::ResettableTriviaHandle,
-    ) -> Option<TokenRef<'i>>;
-
-    fn push_trivia_seq(
-        &mut self,
-        trivia: Self::ResettableTriviaHandle,
-    ) -> Self::TriviaHandle;
+    /// Used to reset the position of the underlying [`Reader`] when a
+    /// potential parse fails.
+    fn trivia_first(&self, trivia: Self::TriviaHandle) -> Option<TokenRef<'i>>;
 
     //==================================
     // Context management
     //==================================
 
-    /// Called when the parser begins parsing a new subexpression.
-    ///
-    /// The [`ContextData`][Self::ContextData] value returned from this
-    /// method is passed back into the
-    /// [`reduce_*()` method][Self#reduce-methods] called when this context is
-    /// finished parsing.
-    ///
-    /// Every `begin_context()` call must have a corresponding call to
-    /// a `reduce_*()` method. However that is the responsibility of the
-    /// wolfram-parser implementation, and not implementors of the
-    /// [`ParseBuilder`] trait.
-    fn begin_context(&mut self) -> Self::ContextData;
+    fn begin_context(&mut self);
 
     //==================================
     // Push
@@ -543,6 +316,16 @@ where
         integer: TokenRef<'i>,
     ) -> Self::Node;
 
+    // TODO(cleanup): Better name
+    fn push_prefix_get(
+        &mut self,
+        // TODO(cleanup): Can this only ever have one value?
+        op: PrefixOperator,
+        op_token: TokenRef<'i>,
+        trivia: Self::TriviaHandle,
+        stringify_token: TokenRef<'i>,
+    ) -> Self::Node;
+
     //==================================
     // Reduce
     //==================================
@@ -553,27 +336,14 @@ where
 
     fn reduce_prefix(
         &mut self,
-        ctx_data: Self::ContextData,
         op: PrefixOperator,
         op_token: TokenRef<'i>,
         trivia: Self::TriviaHandle,
         operand: Self::Node,
     ) -> Self::Node;
 
-    // TODO(cleanup): Better name
-    fn reduce_prefix_get(
-        &mut self,
-        ctx_data: Self::ContextData,
-        // TODO(cleanup): Can this only ever have one value?
-        op: PrefixOperator,
-        op_token: TokenRef<'i>,
-        trivia: Self::TriviaHandle,
-        stringify_token: TokenRef<'i>,
-    ) -> Self::Node;
-
     fn reduce_postfix(
         &mut self,
-        ctx_data: Self::ContextData,
         op: PostfixOperator,
         operand: Self::Node,
         trivia: Self::TriviaHandle,
@@ -582,7 +352,6 @@ where
 
     fn reduce_binary(
         &mut self,
-        ctx_data: Self::ContextData,
         op: BinaryOperator,
         lhs_node: Self::Node,
         trivia1: Self::TriviaHandle,
@@ -593,7 +362,6 @@ where
 
     fn reduce_binary_unset(
         &mut self,
-        ctx_data: Self::ContextData,
         op: BinaryOperator,
         lhs_node: Self::Node,
         trivia1: Self::TriviaHandle,
@@ -604,7 +372,6 @@ where
 
     fn reduce_ternary(
         &mut self,
-        ctx_data: Self::ContextData,
         op: TernaryOperator,
         lhs_node: Self::Node,
         trivia1: Self::TriviaHandle,
@@ -619,7 +386,6 @@ where
 
     fn reduce_ternary_tag_unset(
         &mut self,
-        ctx_data: Self::ContextData,
         // TODO(cleanup): Always the same operator?
         op: TernaryOperator,
         lhs_node: Self::Node,
@@ -635,7 +401,6 @@ where
 
     fn reduce_prefix_binary(
         &mut self,
-        ctx_data: Self::ContextData,
         op: PrefixBinaryOperator,
         prefix_op_token: TokenRef<'i>,
         trivia1: Self::TriviaHandle,
@@ -665,17 +430,25 @@ where
         operand: Self::Node,
     );
 
+    /// Get the last parsed node contained in this infix expression.
+    ///
+    /// Needed specially to support custom context-dependent
+    /// [`SemiSemiParselet::process_implicit_times()`][self::parselet::SemiSemiParselet::process_implicit_times]
+    /// implementation.
+    fn infix_last_node<'s>(
+        &self,
+        infix_state: &'s Self::InfixParseState,
+    ) -> &'s Self::Node;
+
     /// Parselet implementations should not call this method directly, and
     /// instead call [`ParserSession::reduce_infix()`].
-    fn reduce_infix(
+    fn infix_finish(
         &mut self,
-        ctx_data: Self::ContextData,
         infix_state: Self::InfixParseState,
     ) -> Self::Node;
 
     fn reduce_group(
         &mut self,
-        ctx_data: Self::ContextData,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
@@ -685,7 +458,6 @@ where
 
     fn reduce_call(
         &mut self,
-        ctx_data: Self::ContextData,
         head: Self::Node,
         head_trivia: Self::TriviaHandle,
         group: Self::Node,
@@ -697,13 +469,11 @@ where
 
     fn reduce_syntax_error(
         &mut self,
-        ctx_data: Self::ContextData,
         data: SyntaxErrorData<'i, Self::Node, Self::TriviaHandle>,
     ) -> Self::Node;
 
     fn reduce_unterminated_group(
         &mut self,
-        ctx_data: Self::ContextData,
         input: &'i str,
         tab_width: usize,
         op: GroupOperator,
@@ -714,7 +484,6 @@ where
 
     fn reduce_group_missing_closer(
         &mut self,
-        ctx_data: Self::ContextData,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
@@ -739,7 +508,7 @@ where
 
     fn check_colon_lhs(&self, lhs: &Self::Node) -> ColonLHS;
 
-    fn top_node_is_span(&self) -> bool;
+    fn top_node_is_span(&self, top_node: &Self::Node) -> bool;
 }
 
 pub(crate) enum UnderParseData<'i> {
@@ -870,9 +639,9 @@ pub(crate) enum ColonLHS {
     Error,
 }
 
-impl<D> Context<D> {
-    pub fn new(prec: Option<Precedence>, builder_data: D) -> Self {
-        Context { prec, builder_data }
+impl Context {
+    pub fn new(prec: Option<Precedence>) -> Self {
+        Context { prec }
     }
 
     pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(
@@ -941,10 +710,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     fn do_process_implicit_times(
         &mut self,
+        prev_node: &B::Node,
         token: TokenRef<'i>,
     ) -> TokenRef<'i> {
         B::with_infix_parselet(token.tok, |parselet| {
-            parselet.process_implicit_times(self, token)
+            parselet.process_implicit_times(self, prev_node, token)
         })
     }
 
@@ -969,7 +739,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         let (trivia1, mut token) =
             self.current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-        token = self.do_process_implicit_times(token);
+        token = self.do_process_implicit_times(&finished, token);
 
         let TokenPrecedence = B::with_infix_parselet(token.tok, |parselet| {
             parselet.getPrecedence(self)
@@ -990,61 +760,30 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
         self.push_context(TokenPrecedence);
 
-        let trivia1 = self.builder.push_trivia_seq(trivia1);
-
         // MUSTTAIL
         return self.parse_infix(finished, trivia1, token);
     }
 
-    //==================================
-    // Node and trivia management
-    //==================================
+    //======================================
+    // Get current token after eating trivia
+    //======================================
 
-    // TODO(cleanup): Rename
-    #[must_use]
-    pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) -> B::Node {
-        self.builder.push_leaf(token)
-    }
-
-    // TODO(cleanup): Rename
-    #[must_use]
-    pub(crate) fn push_leaf_and_next(
-        &mut self,
-        token: TokenRef<'i>,
-    ) -> B::Node {
-        let node = self.push_leaf(token);
-
-        token.skip(&mut self.tokenizer);
-
-        node
-    }
-
-    /// Consume the resettable trivia in `trivia` and advance the read cursor
-    /// past `token`.
-    pub(crate) fn commit_and_next(
-        &mut self,
-        trivia: B::ResettableTriviaHandle,
-        token: TokenRef<'i>,
-    ) -> B::TriviaHandle {
-        let trivia = self.builder.push_trivia_seq(trivia);
-
-        self.push_leaf_and_next(token);
-
-        trivia
+    pub(crate) fn skip(&mut self, token: TokenRef<'i>) {
+        token.skip(&mut self.tokenizer)
     }
 
     /// Move the underlying [`Reader`][crate::read::Reader] cursor to before
     /// `trivia`.
-    fn trivia_reset(&mut self, trivia: B::ResettableTriviaHandle) {
+    fn trivia_reset(&mut self, trivia: B::TriviaHandle) {
         //
         // Just need to reset the global buffer to the buffer of the first token in the sequence
         //
-        if let Some(first) = self.builder.reset_trivia_seq(trivia) {
+        if let Some(first) = self.builder.trivia_first(trivia) {
             first.reset(&mut self.tokenizer)
         }
     }
 
-    /// Get the next non-trivia token, eating trivia tokens.
+    /// Get the current token, eating trivia tokens.
     ///
     /// If the current token is already a non-trivia token, it will be returned.
     ///
@@ -1053,40 +792,22 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     ///
     /// This function always returns a non-trivia token
     /// ([`TokenKind::isTrivia()`] is false).
-    pub(crate) fn current_token_eat_trivia(
+    pub(crate) fn current_token_eat_trivia_into(
         &mut self,
     ) -> (B::TriviaHandle, TokenRef<'i>) {
-        let (trivia, tok) = self.current_token();
-
-        // Commit this trivia.
-        let trivia = self.builder.push_trivia_seq(trivia);
-
-        (trivia, tok)
-    }
-
-    /// Get the next non-trivia token in the input, with the option to reset
-    /// the read head.
-    ///
-    /// To reset the read head to its former position, use
-    /// [`trivia_reset`][ParserSession::trivia_reset].
-    //
-    // TODO(cleanup): Make this return a special type, e.g. PeekedToken?
-    pub(crate) fn current_token(
-        &mut self,
-    ) -> (B::ResettableTriviaHandle, TokenRef<'i>) {
         let mut tok = self.tokenizer.peek_token();
 
-        let mut trivia = self.builder.resettable_trivia_begin();
+        let mut trivia = self.builder.trivia_begin();
 
         while tok.tok.isTrivia() {
-            self.builder.resettable_trivia_push(&mut trivia, tok);
+            self.builder.trivia_push(&mut trivia, tok);
 
             tok.skip(&mut self.tokenizer);
 
             tok = self.tokenizer.peek_token();
         }
 
-        let trivia = self.builder.resettable_trivia_end(trivia);
+        let trivia = self.builder.trivia_end(trivia);
 
         debug_assert!(!tok.tok.isTrivia());
 
@@ -1099,10 +820,10 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         let mut token =
             Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
 
-        let mut trivia = self.builder.resettable_trivia_begin();
+        let mut trivia = self.builder.trivia_begin();
 
         while token.tok.isTrivia() {
-            self.builder.resettable_trivia_push(&mut trivia, token);
+            self.builder.trivia_push(&mut trivia, token);
 
             token.skip(&mut self.tokenizer);
 
@@ -1111,45 +832,28 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
         debug_assert!(!token.tok.isTrivia());
 
-        let trivia = self.builder.resettable_trivia_end(trivia);
-
-        // Commit this trivia.
-        let trivia = self.builder.push_trivia_seq(trivia);
-
-        (trivia, token)
-    }
-
-    pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines(
-        &mut self,
-    ) -> (B::TriviaHandle, TokenRef<'i>) {
-        let (trivia, tok) =
-            self.current_token_eat_trivia_but_not_toplevel_newlines_into();
-
-        // Commit this trivia.
-        let trivia = self.builder.push_trivia_seq(trivia);
-
-        (trivia, tok)
+        (self.builder.trivia_end(trivia), token)
     }
 
     pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines_into(
         &mut self,
-    ) -> (B::ResettableTriviaHandle, TokenRef<'i>) {
+    ) -> (B::TriviaHandle, TokenRef<'i>) {
         let mut tok = self.tokenizer.peek_token();
 
         //
         // CompoundExpression should not cross toplevel newlines
         //
-        let mut trivia = self.builder.resettable_trivia_begin();
+        let mut trivia = self.builder.trivia_begin();
 
         while tok.tok.isTriviaButNotToplevelNewline() {
-            self.builder.resettable_trivia_push(&mut trivia, tok);
+            self.builder.trivia_push(&mut trivia, tok);
 
             tok.skip(&mut self.tokenizer);
 
             tok = self.tokenizer.peek_token();
         }
 
-        (self.builder.resettable_trivia_end(trivia), tok)
+        (self.builder.trivia_end(trivia), tok)
     }
 
     //==================================
@@ -1163,30 +867,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia: B::TriviaHandle,
         operand: B::Node,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
-        self.builder
-            .reduce_prefix(ctx_data, op, op_token, trivia, operand)
-    }
-
-    // TODO(cleanup): Better name
-    fn reduce_prefix_get(
-        &mut self,
-        // TODO(cleanup): Can this only ever have one value?
-        op: PrefixOperator,
-        op_token: TokenRef<'i>,
-        trivia: B::TriviaHandle,
-        stringify_token: TokenRef<'i>,
-    ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
-
-        self.builder.reduce_prefix_get(
-            ctx_data,
-            op,
-            op_token,
-            trivia,
-            stringify_token,
-        )
+        self.builder.reduce_prefix(op, op_token, trivia, operand)
     }
 
     fn begin_infix(
@@ -1198,9 +881,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     }
 
     fn reduce_infix(&mut self, state: B::InfixParseState) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_infix(ctx_data, state)
+        self.builder.infix_finish(state)
     }
 
     fn reduce_postfix(
@@ -1210,10 +893,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia: B::TriviaHandle,
         op_tok: TokenRef<'i>,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
-        self.builder
-            .reduce_postfix(ctx_data, op, operand, trivia, op_tok)
+        self.builder.reduce_postfix(op, operand, trivia, op_tok)
     }
 
     fn reduce_binary(
@@ -1225,11 +907,10 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia2: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_binary(
-            ctx_data, op, lhs_node, trivia1, op_token, trivia2, rhs_node,
-        )
+        self.builder
+            .reduce_binary(op, lhs_node, trivia1, op_token, trivia2, rhs_node)
     }
 
     fn reduce_binary_unset(
@@ -1244,10 +925,10 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         debug_assert_eq!(op, BinaryOperator::Unset);
         debug_assert_eq!(dot_token.tok, TokenKind::Dot);
 
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
         self.builder.reduce_binary_unset(
-            ctx_data, op, lhs_node, trivia1, op_token, trivia2, dot_token,
+            op, lhs_node, trivia1, op_token, trivia2, dot_token,
         )
     }
 
@@ -1265,10 +946,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia4: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
         self.builder.reduce_ternary(
-            ctx_data,
             op,
             lhs_node,
             trivia1,
@@ -1295,12 +975,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia4: B::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
         debug_assert_eq!(op, TernaryOperator::TagUnset);
 
         self.builder.reduce_ternary_tag_unset(
-            ctx_data,
             op,
             lhs_node,
             trivia1,
@@ -1323,10 +1002,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trivia2: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
         self.builder.reduce_prefix_binary(
-            ctx_data,
             op,
             prefix_op_token,
             trivia1,
@@ -1344,12 +1022,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         trailing_trivia: B::TriviaHandle,
         closer_tok: TokenRef<'i>,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
         self.pop_group();
 
         self.builder.reduce_group(
-            ctx_data,
             op,
             opener_tok,
             group_children,
@@ -1364,9 +1041,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         head_trivia: B::TriviaHandle,
         group: B::Node,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_call(ctx_data, head, head_trivia, group)
+        self.builder.reduce_call(head, head_trivia, group)
     }
 
     //----------------------------------
@@ -1377,9 +1054,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         data: SyntaxErrorData<'i, B::Node, B::TriviaHandle>,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_syntax_error(ctx_data, data)
+        self.builder.reduce_syntax_error(data)
     }
 
     fn reduce_unterminated_group(
@@ -1389,7 +1066,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         group_children: Vec<(B::TriviaHandle, B::Node)>,
         trailing_trivia: B::TriviaHandle,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
         self.pop_group();
 
@@ -1402,9 +1079,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
         let tab_width = self.tokenizer.tab_width as usize;
 
-
         self.builder.reduce_unterminated_group(
-            ctx_data,
             input,
             tab_width,
             op,
@@ -1420,16 +1095,12 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         opener_tok: TokenRef<'i>,
         group_children: Vec<(B::TriviaHandle, B::Node)>,
     ) -> B::Node {
-        let ctx_data = self.context_stack.pop().unwrap().builder_data;
+        let _ = self.context_stack.pop().unwrap();
 
         self.pop_group();
 
-        self.builder.reduce_group_missing_closer(
-            ctx_data,
-            op,
-            opener_tok,
-            group_children,
-        )
+        self.builder
+            .reduce_group_missing_closer(op, opener_tok, group_children)
     }
 
     //----------------------------------
@@ -1446,21 +1117,22 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     /// Push a new context with associated precedence value.
     ///
-    /// The most recently emitted node is included in the new context.
+    /// The top node in the [`node_stack`][ParserSession::node_stack] is included
+    /// in the new context.
     pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
         &'s mut self,
         prec: P,
-    ) -> &'s mut Context<B::ContextData> {
+    ) -> &'s mut Context {
         let prec = prec.into();
 
-        let data = self.builder.begin_context();
+        let () = self.builder.begin_context();
 
-        self.context_stack.push(Context::new(prec, data));
+        self.context_stack.push(Context::new(prec));
 
         return self.context_stack.last_mut().unwrap();
     }
 
-    fn top_context<'s>(&'s mut self) -> &'s mut Context<B::ContextData> {
+    fn top_context<'s>(&'s mut self) -> &'s mut Context {
         return self
             .context_stack
             .last_mut()
@@ -1485,6 +1157,29 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         let prec = prec.into();
 
         self.top_context().prec = prec;
+    }
+
+    //==================================
+    // Node stack management
+    //==================================
+
+    // TODO(cleanup): Rename
+    #[must_use]
+    pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) -> B::Node {
+        self.builder.push_leaf(token)
+    }
+
+    // TODO(cleanup): Rename
+    #[must_use]
+    pub(crate) fn push_leaf_and_next(
+        &mut self,
+        token: TokenRef<'i>,
+    ) -> B::Node {
+        let node = self.push_leaf(token);
+
+        token.skip(&mut self.tokenizer);
+
+        node
     }
 
     //==================================
@@ -1548,5 +1243,16 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;
+    }
+}
+
+//======================================
+// Format Impls
+//======================================
+
+impl Debug for Context {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Context { prec } = self;
+        f.debug_struct("Context").field("prec", prec).finish()
     }
 }

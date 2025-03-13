@@ -75,6 +75,7 @@ pub(crate) trait InfixParselet<'i, B: ParseBuilder<'i> + 'i>:
     fn process_implicit_times(
         &self,
         _session: &mut ParserSession<'i, B>,
+        _prev_node: &B::Node,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         return tok_in;
@@ -785,12 +786,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B>
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
+
+        let (trivia, tok) = session.current_token_eat_trivia_into();
 
         let _ = session.push_context(self.getPrecedence());
-
-        let (trivia, tok) = session.current_token_eat_trivia();
-
 
         let operand = session.parse_prefix(tok);
 
@@ -828,6 +828,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
     fn process_implicit_times(
         &self,
         _session: &mut ParserSession<'i, B>,
+        _prev_node: &B::Node,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         return Token::at_start(TokenKind::Fake_ImplicitTimes, tok_in);
@@ -905,9 +906,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let (trivia2, tok) = session.current_token_eat_trivia();
+        let (trivia2, tok) = session.current_token_eat_trivia_into();
 
         // MUSTTAIL
         let rhs_node = session.parse_prefix(tok);
@@ -953,7 +954,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
         let mut infix_state = session.begin_infix(self.Op, first_operand);
 
@@ -961,7 +962,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         // Unroll 1 iteration of the loop because we know that tok_in has already been read
         //
 
-        let (trivia2, tok2) = session.current_token_eat_trivia();
+        let (trivia2, tok2) = session.current_token_eat_trivia_into();
 
         let second_operand = session.parse_prefix(tok2);
 
@@ -998,7 +999,7 @@ impl InfixOperatorParselet {
             panic_if_aborted!();
 
 
-            let (trivia1, tok1) = session.current_token();
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             //
             // Cannot just compare tokens
@@ -1031,9 +1032,9 @@ impl InfixOperatorParselet {
                 return session.parse_climb(node);
             }
 
-            let trivia1 = session.commit_and_next(trivia1, tok1);
+            session.skip(tok1);
 
-            let (trivia2, tok2) = session.current_token_eat_trivia();
+            let (trivia2, tok2) = session.current_token_eat_trivia_into();
 
             let operand = session.parse_prefix(tok2);
 
@@ -1071,7 +1072,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         trivia1: B::TriviaHandle,
         tok_in: TokenRef<'i>,
     ) -> B::Node {
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
         let node = session.reduce_postfix(self.Op, finished, trivia1, tok_in);
 
@@ -1112,7 +1113,8 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+
+        session.skip(tok_in);
 
         session.push_group(GroupOpenerToCloser(tok_in.tok));
 
@@ -1140,14 +1142,14 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
             // e.g. {1\\2}
             //
 
-            let (trivia1, tok) = session.current_token();
+            let (trivia1, tok) = session.current_token_eat_trivia_into();
 
             if TokenToCloser(tok.tok) == self.closer {
                 //
                 // Everything is good
                 //
 
-                let trivia1 = session.commit_and_next(trivia1, tok);
+                session.skip(tok);
 
                 let node = session.reduce_group(
                     self.Op,
@@ -1192,8 +1194,6 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
                 //                   ^
                 //
 
-                let trivia1 = session.builder.push_trivia_seq(trivia1);
-
                 let node = (PrefixToplevelCloserParselet {})
                     .parse_prefix(session, tok);
 
@@ -1201,8 +1201,6 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
 
                 continue;
             }
-
-            let trivia1 = session.builder.push_trivia_seq(trivia1);
 
             if tok.tok == TokenKind::EndOfFile {
                 //
@@ -1297,13 +1295,13 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TildeParselet {
 
         debug_assert_eq!(tok_in.tok, TokenKind::Tilde);
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let (trivia2, first_tok) = session.current_token_eat_trivia();
+        let (trivia2, first_tok) = session.current_token_eat_trivia_into();
 
         let middle_node = session.parse_prefix(first_tok);
 
-        let (trivia3, tok1) = session.current_token();
+        let (trivia3, tok1) = session.current_token_eat_trivia_into();
 
         if tok1.tok != TokenKind::Tilde {
             //
@@ -1327,9 +1325,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TildeParselet {
             return session.parse_climb(node);
         }
 
-        let trivia3 = session.commit_and_next(trivia3, tok1);
+        session.skip(tok1);
 
-        let (trivia4, tok2) = session.current_token_eat_trivia();
+        let (trivia4, tok2) = session.current_token_eat_trivia_into();
 
         let rhs_node = session.parse_prefix(tok2);
 
@@ -1378,9 +1376,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonParselet {
 
         let colonLHS = session.check_colon_lhs(&lhs_node);
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let (trivia2, tok) = session.current_token_eat_trivia();
+        let (trivia2, tok) = session.current_token_eat_trivia_into();
 
         match colonLHS {
             ColonLHS::Pattern => {
@@ -1484,19 +1482,17 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SlashColonParselet {
         panic_if_aborted!();
 
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let (trivia2, tok) = session.current_token_eat_trivia();
+        let (trivia2, tok) = session.current_token_eat_trivia_into();
 
         let middle_node = session.parse_prefix(tok);
 
-        let (trivia3, tok) = session.current_token();
+        let (trivia3, tok) = session.current_token_eat_trivia_into();
 
         match tok.tok {
             TokenKind::Equal => {
                 session.set_precedence(Precedence::EQUAL);
-
-                let trivia3 = session.builder.push_trivia_seq(trivia3);
 
                 // MUSTTAIl
                 return EqualParselet::parse_infix_tag(
@@ -1512,8 +1508,6 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SlashColonParselet {
             },
             TokenKind::ColonEqual => {
                 session.set_precedence(Precedence::COLONEQUAL);
-
-                let trivia3 = session.builder.push_trivia_seq(trivia3);
 
                 // MUSTTAIl
                 return ColonEqualParselet::parse_infix_tag(
@@ -1578,10 +1572,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for EqualParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
+        session.skip(tok_in);
 
-        session.push_leaf_and_next(tok_in);
-
-        let (trivia2, tok) = session.current_token_eat_trivia();
+        let (trivia2, tok) = session.current_token_eat_trivia_into();
 
         if tok.tok == TokenKind::Dot {
             //
@@ -1591,7 +1584,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for EqualParselet {
             // Spaces to Avoid
             //
 
-            session.push_leaf_and_next(tok);
+            session.skip(tok);
 
             let node = session.reduce_binary_unset(
                 BinaryOperator::Unset,
@@ -1647,9 +1640,9 @@ impl EqualParselet {
 
         debug_assert!(tok_in.tok == TokenKind::Equal);
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let (trivia4, tok) = session.current_token_eat_trivia();
+        let (trivia4, tok) = session.current_token_eat_trivia_into();
 
         if tok.tok == TokenKind::Dot {
             //
@@ -1661,7 +1654,7 @@ impl EqualParselet {
             // TID:231105/1: Typical TagUnset ("=.")
             // TID:231105/2: TagUnset with interior trivia ("= .")
 
-            session.push_leaf_and_next(tok);
+            session.skip(tok);
 
             let node = session.reduce_ternary_tag_unset(
                 TernaryOperator::TagUnset,
@@ -1727,9 +1720,9 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonEqualParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let (trivia2, tok) = session.current_token_eat_trivia();
+        let (trivia2, tok) = session.current_token_eat_trivia_into();
 
         let rhs_node = session.parse_prefix(tok);
 
@@ -1769,9 +1762,9 @@ impl ColonEqualParselet {
 
         debug_assert!(tok_in.tok == TokenKind::ColonEqual);
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
-        let (trivia4, tok) = session.current_token_eat_trivia();
+        let (trivia4, tok) = session.current_token_eat_trivia_into();
 
         let rhs_node = session.parse_prefix(tok);
 
@@ -1808,7 +1801,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for CommaParselet {
 
         debug_assert_eq!(tok_in.tok, TokenKind::Comma);
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
         let mut infix_state =
             session.begin_infix(InfixOperator::CodeParser_Comma, first_operand);
@@ -1817,7 +1810,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for CommaParselet {
         // Unroll 1 iteration of the loop because we know that tok_in has already been read
         //
 
-        let (trivia2, tok2) = session.current_token_eat_trivia();
+        let (trivia2, tok2) = session.current_token_eat_trivia_into();
 
         let second_operand = if matches!(
             tok2.tok,
@@ -1867,7 +1860,7 @@ impl CommaParselet {
             panic_if_aborted!();
 
 
-            let (trivia1, tok1) = session.current_token();
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             if !matches!(
                 tok1.tok,
@@ -1885,9 +1878,9 @@ impl CommaParselet {
             // Something like  a,b
             //
 
-            let trivia1 = session.commit_and_next(trivia1, tok1);
+            session.skip(tok1);
 
-            let (trivia2, tok2) = session.current_token_eat_trivia();
+            let (trivia2, tok2) = session.current_token_eat_trivia_into();
 
             let operand = if matches!(
                 tok2.tok,
@@ -1949,7 +1942,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
         let mut infix_state = session
             .begin_infix(InfixOperator::CompoundExpression, first_operand);
@@ -1962,7 +1955,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiParselet {
         // CompoundExpression should not cross toplevel newlines
         //
         let (trivia2, tok2) =
-            session.current_token_eat_trivia_but_not_toplevel_newlines();
+            session.current_token_eat_trivia_but_not_toplevel_newlines_into();
 
         if tok2.tok == TokenKind::Semi {
             //
@@ -2047,7 +2040,7 @@ impl SemiParselet {
             panic_if_aborted!();
 
 
-            let (trivia1, tok1) = session.current_token();
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             if tok1.tok != TokenKind::Semi {
                 //
@@ -2067,13 +2060,13 @@ impl SemiParselet {
             // Something like  a;b
             //
 
-            let trivia1 = session.commit_and_next(trivia1, tok1);
+            session.skip(tok1);
 
             //
             // CompoundExpression should not cross toplevel newlines
             //
-            let (trivia2, tok2) =
-                session.current_token_eat_trivia_but_not_toplevel_newlines();
+            let (trivia2, tok2) = session
+                .current_token_eat_trivia_but_not_toplevel_newlines_into();
 
             if tok2.tok == TokenKind::Semi {
                 //
@@ -2175,7 +2168,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for ColonColonParselet {
 
         panic_if_aborted!();
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
         let mut infix_state =
             session.begin_infix(InfixOperator::MessageName, head_node);
@@ -2222,7 +2215,7 @@ impl ColonColonParselet {
         loop {
             panic_if_aborted!();
 
-            let (trivia1, tok1) = session.current_token();
+            let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
             if tok1.tok != TokenKind::ColonColon {
                 session.trivia_reset(trivia1);
@@ -2233,7 +2226,7 @@ impl ColonColonParselet {
                 return session.parse_climb(node);
             }
 
-            let trivia1 = session.commit_and_next(trivia1, tok1);
+            session.skip(tok1);
 
             //
             // Special tokenization, so must do parsing here
@@ -2280,7 +2273,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         // Special tokenization, so must do parsing here
         //
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
         let (trivia2, token) = session.current_syntax_token_stringify_as_file();
 
@@ -2332,7 +2325,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B>
         // Special tokenization, so must do parsing here
         //
 
-        session.push_leaf_and_next(tok_in);
+        session.skip(tok_in);
 
         let (trivia2, tok) = session.current_syntax_token_stringify_as_file();
 
@@ -2380,16 +2373,18 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for LessLessParselet {
         // Special tokenization, so must do parsing here
         //
 
-        session.push_leaf_and_next(tok_in);
-
-        session.push_context(Precedence::HIGHEST);
+        tok_in.skip(&mut session.tokenizer);
 
         let (trivia, tok) = session.current_syntax_token_stringify_as_file();
 
-        session.push_leaf_and_next(tok);
+        tok.skip(&mut session.tokenizer);
 
-        let node =
-            session.reduce_prefix_get(PrefixOperator::Get, tok_in, trivia, tok);
+        let node = session.builder.push_prefix_get(
+            PrefixOperator::Get,
+            tok_in,
+            trivia,
+            tok,
+        );
 
         // MUSTTAIL
         return session.parse_climb(node);

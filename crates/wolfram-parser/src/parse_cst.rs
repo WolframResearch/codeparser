@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::{
     cst::{
         BinaryNode, CallBody, CallNode, CompoundNode, Cst, CstSeq,
@@ -25,79 +27,62 @@ use crate::{
 
 #[derive(Debug)]
 pub(crate) struct ParseCst<'i> {
-    node_stack: Vec<Cst<TokenStr<'i>>>,
+    trivia_stack: Vec<TokenRef<'i>>,
 
     finished: Vec<Cst<TokenStr<'i>>>,
 }
 
 #[derive(Debug)]
-pub(crate) struct Context {
-    /// Index in [`ParseCst::node_stack`] at which nodes associated with the
-    /// current context begin.
-    start_index: usize,
-}
-
-#[derive(Debug)]
-pub(crate) struct InfixParseCst {
+pub(crate) struct InfixParseCst<'i> {
     op: InfixOperator,
+    children: Vec<Cst<TokenStr<'i>>>,
 }
 
 impl<'i> ParseBuilder<'i> for ParseCst<'i> {
-    type Node = ();
+    type Node = Cst<TokenStr<'i>>;
 
     type Output = CstSeq<TokenStr<'i>>;
 
-    type ContextData = Context;
+    type InfixParseState = InfixParseCst<'i>;
 
-    type InfixParseState = InfixParseCst;
+    // PRECOMMIT: Use a newtype?
+    // PRECOMMIT: Broken, because trivia is never removed from trivia_stack.
+    type TriviaAccumulator = usize;
+    type TriviaHandle = Range<usize>;
 
     //==================================
     // Trivia handling
     //==================================
 
-    type ResettableTriviaAccumulator = Vec<TokenRef<'i>>;
-    type ResettableTriviaHandle = TriviaSeqRef<'i>;
-
-    type TriviaHandle = ();
-
-    fn resettable_trivia_begin(&mut self) -> Self::ResettableTriviaAccumulator {
-        Vec::new()
+    fn trivia_begin(&mut self) -> Self::TriviaAccumulator {
+        self.trivia_stack.len()
     }
 
-    fn resettable_trivia_push(
-        &mut self,
-        state: &mut Self::ResettableTriviaAccumulator,
-        trivia: TokenRef<'i>,
-    ) {
-        state.push(trivia);
+    fn trivia_push(&mut self, _start: &mut usize, trivia: TokenRef<'i>) {
+        self.trivia_stack.push(trivia);
     }
 
-    fn resettable_trivia_end(
-        &mut self,
-        state: Self::ResettableTriviaAccumulator,
-    ) -> Self::ResettableTriviaHandle {
-        TriviaSeq(state)
+    fn trivia_end(&mut self, start: usize) -> Self::TriviaHandle {
+        Range {
+            start,
+            end: self.trivia_stack.len(),
+        }
+        // PRECOMMIT
+        // let trivia = self.trivia_stack.drain(start_index..).collect();
     }
 
-    fn empty_trivia() -> Self::TriviaHandle {}
-
-    fn reset_trivia_seq(
-        &mut self,
-        trivia: Self::ResettableTriviaHandle,
-    ) -> Option<TokenRef<'i>> {
-        trivia.0.first().copied()
+    fn empty_trivia() -> Self::TriviaHandle {
+        // PRECOMMIT
+        0..0
     }
 
-    fn push_trivia_seq(
-        &mut self,
-        seq: Self::ResettableTriviaHandle,
-    ) -> Self::TriviaHandle {
-        //
-        // Move all trivia from `seq` to back of `node_stack`
-        //
-        let TriviaSeq(vec) = seq;
+    fn trivia_first(&self, trivia: Self::TriviaHandle) -> Option<TokenRef<'i>> {
+        // PRECOMMIT
+        self.trivia_stack.get(trivia.start).copied()
 
-        self.node_stack.extend(vec.into_iter().map(Cst::Token));
+        // let TriviaSeq(vec) = trivia;
+
+        // vec.first().copied()
     }
 
     //==================================
@@ -106,7 +91,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn new_builder() -> Self {
         ParseCst {
-            node_stack: Vec::new(),
+            trivia_stack: Vec::new(),
             finished: Vec::new(),
         }
     }
@@ -161,14 +146,11 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output {
         let ParseCst {
-            node_stack,
+            trivia_stack,
             finished,
         } = self;
 
-        debug_assert!(
-            node_stack.is_empty(),
-            "expected empty node stack, got: {node_stack:#?}"
-        );
+        // debug_assert_eq!(trivia_stack.len(), 0);
 
         let mut exprs = NodeSeq(finished);
 
@@ -187,22 +169,18 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     // Context management
     //==================================
 
-    fn begin_context<'s>(&'s mut self) -> Self::ContextData {
-        debug_assert!(!self.node_stack.is_empty(),);
-
-        let ctx = Context {
-            start_index: self.node_stack.len() - 1,
-        };
-
-        ctx
+    fn begin_context<'s>(&'s mut self) {
+        // Do nothing.
     }
 
     fn is_quiescent(&self) -> bool {
         let ParseCst {
-            node_stack: _,
+            trivia_stack,
             finished: _,
         } = self;
 
+        // PRECOMMIT
+        // trivia_stack.is_empty()
         true
     }
 
@@ -213,7 +191,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     fn push_leaf(&mut self, token: TokenRef<'i>) -> Self::Node {
         debug_assert!(!token.tok.isTrivia());
 
-        self.push_node(Cst::Token(token))
+        Cst::Token(token)
     }
 
     fn push_compound_pattern_blank(
@@ -229,13 +207,13 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         let node = CompoundNode::new3(op, symbol, under);
 
-        self.push_node(Cst::Compound(node))
+        Cst::Compound(node)
     }
 
     fn push_compound_blank(&mut self, under: UnderParseData<'i>) -> Self::Node {
         let cst: Cst<_> = under.into_cst();
 
-        self.push_node(cst)
+        cst
     }
 
     fn push_compound_pattern_optional(
@@ -249,7 +227,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         let node = CompoundNode::new2(op, symbol, under_dot);
 
-        self.push_node(Cst::Compound(node))
+        Cst::Compound(node)
     }
 
     fn push_compound_slot(
@@ -267,7 +245,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         let node = CompoundNode::new2(op, hash, arg);
 
-        self.push_node(Cst::Compound(node))
+        Cst::Compound(node)
     }
 
     fn push_compound_out(
@@ -282,7 +260,27 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         let node = CompoundNode::new2(op, percent, integer);
 
-        self.push_node(Cst::Compound(node))
+        Cst::Compound(node)
+    }
+
+    fn push_prefix_get(
+        &mut self,
+        op: PrefixOperator,
+        tok1: TokenRef<'i>,
+        trivia: Self::TriviaHandle,
+        tok2: TokenRef<'i>,
+    ) -> Self::Node {
+        debug_assert_eq!(op, PrefixOperator::Get);
+
+
+        let trivia = self.get_trivia(trivia);
+
+        let mut children = Vec::with_capacity(trivia.0.len() + 2);
+        children.push(Cst::Token(tok1));
+        children.extend(trivia.0.into_iter().map(Cst::Token));
+        children.push(Cst::Token(tok2));
+
+        Cst::Prefix(PrefixNode::new(op, NodeSeq(children)))
     }
 
     //==================================
@@ -291,67 +289,64 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn reduce_prefix(
         &mut self,
-        ctx_data: Self::ContextData,
         op: PrefixOperator,
         op_token: TokenRef<'i>,
-        _trivia: Self::TriviaHandle,
-        _operand: Self::Node,
+        trivia: Self::TriviaHandle,
+        operand: Self::Node,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = trivia.start;
 
-        let node = PrefixNode::new(op, children);
+        let mut children = Vec::with_capacity(1 + trivia.len() + 1);
+        children.push(Cst::Token(op_token));
+        children.extend(self.get_trivia_as_cst(trivia));
+        children.push(operand);
 
-        self.push_node(Cst::Prefix(node))
+        self.trivia_stack.truncate(start);
+
+        Cst::Prefix(PrefixNode::new(op, NodeSeq(children)))
     }
-
-    fn reduce_prefix_get(
-        &mut self,
-        ctx_data: Self::ContextData,
-        op: PrefixOperator,
-        tok1: TokenRef<'i>,
-        _trivia: Self::TriviaHandle,
-        tok2: TokenRef<'i>,
-    ) -> Self::Node {
-        debug_assert_eq!(op, PrefixOperator::Get);
-
-        let children = self.reduce(ctx_data);
-
-        let node = PrefixNode::new(op, children);
-
-        self.push_node(Cst::Prefix(node))
-    }
-
 
     fn reduce_postfix(
         &mut self,
-        ctx_data: Self::ContextData,
         op: PostfixOperator,
         operand: Self::Node,
         trivia: Self::TriviaHandle,
         op_tok: TokenRef<'i>,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = trivia.start;
 
-        let node = PostfixNode::new(op, children);
+        let mut children = Vec::with_capacity(1 + trivia.len() + 1);
+        children.push(operand);
+        children.extend(self.get_trivia_as_cst(trivia));
+        children.push(Cst::Token(op_tok));
 
-        self.push_node(Cst::Postfix(node))
+        self.trivia_stack.truncate(start);
+
+        Cst::Postfix(PostfixNode::new(op, NodeSeq(children)))
     }
 
     fn reduce_binary(
         &mut self,
-        ctx_data: Self::ContextData,
         op: BinaryOperator,
-        _lhs_node: Self::Node,
-        _trivia1: Self::TriviaHandle,
+        lhs_node: Self::Node,
+        trivia1: Self::TriviaHandle,
         op_token: TokenRef<'i>,
-        _trivia2: Self::TriviaHandle,
-        _rhs_node: Self::Node,
+        trivia2: Self::TriviaHandle,
+        rhs_node: Self::Node,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = trivia1.start;
 
-        let node = BinaryNode::new(op, children);
+        let mut children =
+            Vec::with_capacity(1 + trivia1.len() + 1 + trivia2.len() + 1);
+        children.push(lhs_node);
+        children.extend(self.get_trivia_as_cst(trivia1));
+        children.push(Cst::Token(op_token));
+        children.extend(self.get_trivia_as_cst(trivia2));
+        children.push(rhs_node);
 
-        self.push_node(Cst::Binary(node))
+        self.trivia_stack.truncate(start);
+
+        Cst::Binary(BinaryNode::new(op, NodeSeq(children)))
     }
 
     /// Special-case alternative to [`reduce_binary()`][ParseBuilder] for
@@ -361,40 +356,62 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     /// not a normal arbitrary expression operand.
     fn reduce_binary_unset(
         &mut self,
-        ctx_data: Self::ContextData,
         op: BinaryOperator,
-        _lhs_node: Self::Node,
-        _trivia1: Self::TriviaHandle,
+        lhs_node: Self::Node,
+        trivia1: Self::TriviaHandle,
         op_token: TokenRef<'i>,
-        _trivia2: Self::TriviaHandle,
+        trivia2: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = trivia1.start;
 
-        let node = BinaryNode::new(op, children);
+        debug_assert_eq!(op, BinaryOperator::Unset);
+        debug_assert_eq!(dot_token.tok, TokenKind::Dot);
 
-        self.push_node(Cst::Binary(node))
+        let mut children =
+            Vec::with_capacity(1 + trivia1.len() + 1 + trivia2.len() + 1);
+        children.push(lhs_node);
+        children.extend(self.get_trivia_as_cst(trivia1));
+        children.push(Cst::Token(op_token));
+        children.extend(self.get_trivia_as_cst(trivia2));
+        children.push(Cst::Token(dot_token));
+
+        self.trivia_stack.truncate(start);
+
+        Cst::Binary(BinaryNode::new(op, NodeSeq(children)))
     }
 
     fn reduce_ternary(
         &mut self,
-        ctx_data: Self::ContextData,
         op: TernaryOperator,
-        _lhs_node: Self::Node,
-        _trivia1: Self::TriviaHandle,
+        lhs_node: Self::Node,
+        trivia1: Self::TriviaHandle,
         first_op_token: TokenRef<'i>,
-        _trivia2: Self::TriviaHandle,
-        _middle_node: Self::Node,
-        _trivia3: Self::TriviaHandle,
+        trivia2: Self::TriviaHandle,
+        middle_node: Self::Node,
+        trivia3: Self::TriviaHandle,
         second_op_token: TokenRef<'i>,
-        _trivia4: Self::TriviaHandle,
-        _rhs_node: Self::Node,
+        trivia4: Self::TriviaHandle,
+        rhs_node: Self::Node,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = trivia1.start;
 
-        let node = TernaryNode::new(op, children);
+        let mut children = Vec::with_capacity(
+            5 + trivia1.len() + trivia2.len() + trivia3.len() + trivia4.len(),
+        );
+        children.push(lhs_node);
+        children.extend(self.get_trivia_as_cst(trivia1));
+        children.push(Cst::Token(first_op_token));
+        children.extend(self.get_trivia_as_cst(trivia2));
+        children.push(middle_node);
+        children.extend(self.get_trivia_as_cst(trivia3));
+        children.push(Cst::Token(second_op_token));
+        children.extend(self.get_trivia_as_cst(trivia4));
+        children.push(rhs_node);
 
-        self.push_node(Cst::Ternary(node))
+        self.trivia_stack.truncate(start);
+
+        Cst::Ternary(TernaryNode::new(op, NodeSeq(children)))
     }
 
     /// Special-case alternative to [`reduce_ternary()`][ParseBuilder] for
@@ -404,41 +421,64 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     /// not a normal arbitrary expression operand.
     fn reduce_ternary_tag_unset(
         &mut self,
-        ctx_data: Self::ContextData,
         // TODO(cleanup): Always the same operator?
         op: TernaryOperator,
-        _lhs_node: Self::Node,
-        _trivia1: Self::TriviaHandle,
+        lhs_node: Self::Node,
+        trivia1: Self::TriviaHandle,
         slash_colon_token: TokenRef<'i>,
-        _trivia2: Self::TriviaHandle,
-        _middle_node: Self::Node,
-        _trivia3: Self::TriviaHandle,
+        trivia2: Self::TriviaHandle,
+        middle_node: Self::Node,
+        trivia3: Self::TriviaHandle,
         equal_token: TokenRef<'i>,
-        _trivia4: Self::TriviaHandle,
+        trivia4: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = trivia1.start;
 
-        let node = TernaryNode::new(op, children);
+        debug_assert_eq!(slash_colon_token.tok, TokenKind::SlashColon);
+        debug_assert_eq!(equal_token.tok, TokenKind::Equal);
+        debug_assert_eq!(dot_token.tok, TokenKind::Dot);
 
-        self.push_node(Cst::Ternary(node))
+        let mut children = Vec::with_capacity(
+            5 + trivia1.len() + trivia2.len() + trivia3.len() + trivia4.len(),
+        );
+        children.push(lhs_node);
+        children.extend(self.get_trivia_as_cst(trivia1));
+        children.push(Cst::Token(slash_colon_token));
+        children.extend(self.get_trivia_as_cst(trivia2));
+        children.push(middle_node);
+        children.extend(self.get_trivia_as_cst(trivia3));
+        children.push(Cst::Token(equal_token));
+        children.extend(self.get_trivia_as_cst(trivia4));
+        children.push(Cst::Token(dot_token));
+
+        self.trivia_stack.truncate(start);
+
+        Cst::Ternary(TernaryNode::new(op, NodeSeq(children)))
     }
 
     fn reduce_prefix_binary(
         &mut self,
-        ctx_data: Self::ContextData,
         op: PrefixBinaryOperator,
         prefix_op_token: TokenRef<'i>,
-        _trivia1: Self::TriviaHandle,
-        _lhs_node: Self::Node,
-        _trivia2: Self::TriviaHandle,
-        _rhs_node: Self::Node,
+        trivia1: Self::TriviaHandle,
+        lhs_node: Self::Node,
+        trivia2: Self::TriviaHandle,
+        rhs_node: Self::Node,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = trivia1.start;
 
-        let node = PrefixBinaryNode::new(op, children);
+        let mut children =
+            Vec::with_capacity(3 + trivia1.len() + trivia2.len());
+        children.push(Cst::Token(prefix_op_token));
+        children.extend(self.get_trivia_as_cst(trivia1));
+        children.push(lhs_node);
+        children.extend(self.get_trivia_as_cst(trivia2));
+        children.push(rhs_node);
 
-        self.push_node(Cst::PrefixBinary(node))
+        self.trivia_stack.truncate(start);
+
+        Cst::PrefixBinary(PrefixBinaryNode::new(op, NodeSeq(children)))
     }
 
     //----------------------------------
@@ -448,66 +488,86 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     fn begin_infix(
         &mut self,
         op: InfixOperator,
-        _first_node: Self::Node,
+        first_node: Self::Node,
     ) -> Self::InfixParseState {
-        // `first_node` will already have been pushed to `node_stack`
-
-        InfixParseCst { op }
+        // TODO(optimize): Use a single Vec allocation for efficiency?
+        InfixParseCst {
+            op,
+            children: vec![first_node],
+        }
     }
 
     fn infix_add(
         &mut self,
-        _infix_state: &mut Self::InfixParseState,
-        _trivia1: Self::TriviaHandle,
+        infix_state: &mut Self::InfixParseState,
+        trivia1: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
         op_token: TokenRef<'i>,
-        _trivia2: Self::TriviaHandle,
-        _operand: Self::Node,
+        trivia2: <ParseCst<'i> as ParseBuilder<'i>>::TriviaHandle,
+        operand: Cst<TokenStr<'i>>,
     ) {
-        // Do nothing, because all the arguments should already have been
-        // added to `node_stack` when they were originally processed.
+        let InfixParseCst { op: _, children } = infix_state;
+
+        children.extend(self.get_trivia_as_cst(trivia1));
+        children.push(Cst::Token(op_token));
+        children.extend(self.get_trivia_as_cst(trivia2));
+        children.push(operand)
     }
 
-    fn reduce_infix(
+    fn infix_last_node<'s>(
+        &self,
+        infix_state: &'s Self::InfixParseState,
+    ) -> &'s Cst<TokenStr<'i>> {
+        let InfixParseCst { op: _, children } = infix_state;
+
+        children
+            .last()
+            .expect("InfixParseCst::last_node: node list is empty")
+    }
+
+    fn infix_finish(
         &mut self,
-        ctx_data: Self::ContextData,
-        state: Self::InfixParseState,
-    ) -> Self::Node {
-        let InfixParseCst { op } = state;
+        builder: Self::InfixParseState,
+    ) -> Cst<TokenStr<'i>> {
+        let InfixParseCst { op, children } = builder;
 
-        let children = self.reduce(ctx_data);
-
-        let node = InfixNode::new(op, children);
-
-        self.push_node(Cst::Infix(node))
+        Cst::Infix(InfixNode::new(op, NodeSeq(children)))
     }
 
     fn reduce_group(
         &mut self,
-        ctx_data: Self::ContextData,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
-        _trailing_trivia: Self::TriviaHandle,
+        trailing_trivia: Self::TriviaHandle,
         closer_tok: TokenRef<'i>,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = group_children
+            .first()
+            .map(|child| child.0.start)
+            .unwrap_or(trailing_trivia.start);
 
-        let node = GroupNode::new(op, children);
+        let mut children = Vec::with_capacity(
+            2 + trailing_trivia.len() + 4 * group_children.len(),
+        );
+        children.push(Cst::Token(opener_tok));
+        for (trivia, node) in group_children {
+            children.extend(self.get_trivia_as_cst(trivia));
+            children.push(node);
+        }
+        children.extend(self.get_trivia_as_cst(trailing_trivia));
+        children.push(Cst::Token(closer_tok));
 
-        self.push_node(Cst::Group(node))
+        self.trivia_stack.truncate(start);
+
+        Cst::Group(GroupNode::new(op, NodeSeq(children)))
     }
 
     fn reduce_call(
         &mut self,
-        ctx_data: Self::ContextData,
-        _head: Self::Node,
-        _head_trivia: Self::TriviaHandle,
-        _body: Self::Node,
+        head: Self::Node,
+        head_trivia: Self::TriviaHandle,
+        body: Self::Node,
     ) -> Self::Node {
-        let body = self.pop_node();
-
-        let head_children = self.reduce(ctx_data);
-
         let body: CallBody<_> = match body {
             Cst::Group(group) => {
                 let GroupNode(OperatorNode { op, children}) = group;
@@ -537,9 +597,13 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             ),
         };
 
-        let node = CallNode::concrete(head_children, body);
+        let start = head_trivia.start;
 
-        self.push_node(Cst::Call(node))
+        let head_trivia = self.get_trivia(head_trivia);
+
+        self.trivia_stack.truncate(start);
+
+        Cst::Call(CallNode::concrete(head, head_trivia, body))
     }
 
     //----------------------------------
@@ -548,67 +612,113 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn reduce_syntax_error(
         &mut self,
-        ctx_data: Self::ContextData,
         data: SyntaxErrorData<'i, Self::Node, Self::TriviaHandle>,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
-
-        let kind = match data {
+        let (kind, children) = match data {
             SyntaxErrorData::ExpectedSymbol {
-                lhs_node: _,
-                trivia1: _,
+                lhs_node,
+                trivia1,
                 tok_in,
-                trivia2: _,
-                rhs_node: _,
-            } => SyntaxErrorKind::ExpectedSymbol,
-            SyntaxErrorData::ExpectedSet => SyntaxErrorKind::ExpectedSet,
+                trivia2,
+                rhs_node,
+            } => {
+                let start = trivia1.start;
+
+                let mut children = Vec::with_capacity(8);
+                children.push(lhs_node);
+                children.extend(self.get_trivia_as_cst(trivia1));
+                children.push(Cst::Token(tok_in));
+                children.extend(self.get_trivia_as_cst(trivia2));
+                children.push(rhs_node);
+
+                self.trivia_stack.truncate(start);
+
+                (SyntaxErrorKind::ExpectedSymbol, children)
+            },
+            SyntaxErrorData::ExpectedSet => {
+                (SyntaxErrorKind::ExpectedSet, Vec::new())
+            },
             SyntaxErrorData::ExpectedTilde {
-                lhs_node: _,
-                trivia1: _,
+                lhs_node,
+                trivia1,
                 first_op_token,
-                trivia2: _,
-                middle_node: _,
-            } => SyntaxErrorKind::ExpectedTilde,
+                trivia2,
+                middle_node,
+            } => {
+                let start = trivia1.start;
+
+                let mut children = Vec::with_capacity(8);
+                children.push(lhs_node);
+                children.extend(self.get_trivia_as_cst(trivia1));
+                children.push(Cst::Token(first_op_token));
+                children.extend(self.get_trivia_as_cst(trivia2));
+                children.push(middle_node);
+
+                self.trivia_stack.truncate(start);
+
+                (SyntaxErrorKind::ExpectedTilde, children)
+            },
         };
 
-        let node = SyntaxErrorNode::new(kind, children);
-
-        self.push_node(Cst::SyntaxError(node))
+        Cst::SyntaxError(SyntaxErrorNode::new(kind, NodeSeq(children)))
     }
 
     fn reduce_unterminated_group(
         &mut self,
-        ctx_data: Self::ContextData,
         input: &'i str,
         tab_width: usize,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
-        _trailing_trivia: Self::TriviaHandle,
+        trailing_trivia: Self::TriviaHandle,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = group_children
+            .first()
+            .map(|child| child.0.start)
+            .unwrap_or(trailing_trivia.start);
+
+        let mut children = Vec::with_capacity(8);
+        children.push(Cst::Token(opener_tok));
+        for (trivia, node) in group_children {
+            children.extend(self.get_trivia_as_cst(trivia));
+            children.push(node);
+        }
+        children.extend(self.get_trivia_as_cst(trailing_trivia));
+
+        self.trivia_stack.truncate(start);
 
         let node = crate::error::reparse_unterminated_group_node(
-            (op, children),
+            (op, NodeSeq(children)),
             input,
             tab_width,
         );
 
-        self.push_node(Cst::GroupMissingCloser(node))
+        Cst::GroupMissingCloser(node)
     }
 
     fn reduce_group_missing_closer(
         &mut self,
-        ctx_data: Self::ContextData,
         op: GroupOperator,
         opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node {
-        let children = self.reduce(ctx_data);
+        let start = group_children.first().map(|child| child.0.start);
 
-        let node = GroupMissingCloserNode::new(op, children);
+        let mut children = Vec::with_capacity(8);
+        children.push(Cst::Token(opener_tok));
+        for (trivia, node) in group_children {
+            children.extend(self.get_trivia_as_cst(trivia));
+            children.push(node);
+        }
 
-        self.push_node(Cst::GroupMissingCloser(node))
+        if let Some(start) = start {
+            self.trivia_stack.truncate(start);
+        }
+
+        Cst::GroupMissingCloser(GroupMissingCloserNode::new(
+            op,
+            NodeSeq(children),
+        ))
     }
 
     //==================================
@@ -622,11 +732,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     }
 
     fn finish_top_level_expr(&mut self, node: Self::Node) {
-        let () = node;
-
         debug_assert!(self.is_quiescent());
-
-        let node = self.pop_node();
 
         self.finished.push(node);
     }
@@ -636,22 +742,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     //==================================
 
     fn check_colon_lhs(&self, lhs: &Self::Node) -> ColonLHS {
-        let () = lhs;
-
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        let top_node = self
-            .node_stack
-            .iter()
-            .rev()
-            .find(
-                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
-            )
-            .expect(
-                "unable to check colon LHS: no non-trivia token in top context",
-            );
-
-        match top_node {
+        match lhs {
             Cst::Binary(BinaryNode(op)) => {
                 //
                 // Something like  a:b:c
@@ -726,20 +817,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         }
     }
 
-    fn top_node_is_span(&self) -> bool {
-        // Of the nodes owned by `ctxt`, get the top (last) one that
-        // is not trivia.
-        let top_node = self
-            .node_stack
-            .iter()
-            .rev()
-            .find(
-                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
-            )
-            .expect(
-                "unable to check colon LHS: no non-trivia token in top context",
-            );
-
+    fn top_node_is_span(&self, top_node: &Self::Node) -> bool {
         // Note: This method should only be called in process_implicit_times(),
         //       which itself should only be called after non-newline trivia has
         //       been eaten.
@@ -766,27 +844,18 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 }
 
 impl<'i> ParseCst<'i> {
-    fn push_node(&mut self, node: Cst<TokenStr<'i>>) {
-        self.node_stack.push(node)
+    fn get_trivia_as_cst<'s>(
+        &'s self,
+        range: Range<usize>,
+    ) -> impl ExactSizeIterator<Item = Cst<TokenStr<'i>>> + 's {
+        self.trivia_stack[range]
+            .into_iter()
+            .cloned()
+            .map(Cst::Token)
     }
 
-    fn pop_node(&mut self) -> Cst<TokenStr<'i>> {
-        self.node_stack.pop().unwrap()
-    }
-
-    #[cfg(test)]
-    pub(crate) fn top_node<'s>(&'s mut self) -> &'s mut Cst<TokenStr<'i>> {
-        assert!(!self.node_stack.is_empty());
-
-        return self.node_stack.last_mut().unwrap();
-    }
-
-    fn reduce(&mut self, ctx_data: Context) -> CstSeq<TokenStr<'i>> {
-        let Context { start_index } = ctx_data;
-
-        let children = self.node_stack.drain(start_index..).collect();
-
-        NodeSeq(children)
+    fn get_trivia(&self, range: Range<usize>) -> TriviaSeqRef<'i> {
+        TriviaSeq(self.trivia_stack[range].to_vec())
     }
 }
 

@@ -735,11 +735,19 @@ impl<I, S: TokenSource> CompoundNode<I, S> {
 //======================================
 
 impl<I> CallNode<I> {
-    pub(crate) fn concrete(head_seq: CstSeq<I>, body: CallBody<I>) -> Self {
+    pub(crate) fn concrete(
+        head: Cst<I>,
+        TriviaSeq(head_trivia): TriviaSeq<I>,
+        body: CallBody<I>,
+    ) -> Self {
+        let mut head_seq = Vec::with_capacity(1 + head_trivia.len());
+        head_seq.push(head);
+        head_seq.extend(head_trivia.into_iter().map(Cst::Token));
+
         incr_diagnostic!(Node_CallNodeCount);
 
         CallNode {
-            head: CallHead::Concrete(head_seq),
+            head: CallHead::Concrete(NodeSeq(head_seq)),
             body,
         }
     }
