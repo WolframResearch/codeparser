@@ -81,7 +81,7 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines(&mut SecondTok);
+    session.eat_trivia_but_not_toplevel_newlines(&mut SecondTok, TOPLEVEL);
 
     //
     // a;;
@@ -140,7 +140,11 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines_2(&mut ThirdTok, &mut Trivia1.borrow_mut());
+    session.eat_trivia_but_not_toplevel_newlines_2(
+        &mut ThirdTok,
+        TOPLEVEL,
+        &mut Trivia1.borrow_mut(),
+    );
 
     if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok == TokenKind::SemiSemi {
         //
@@ -192,7 +196,11 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines_2(&mut ThirdTok, &mut Trivia1.borrow_mut());
+    session.eat_trivia_but_not_toplevel_newlines_2(
+        &mut ThirdTok,
+        TOPLEVEL,
+        &mut Trivia1.borrow_mut(),
+    );
 
     if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok != TokenKind::SemiSemi {
         //
@@ -225,7 +233,11 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
     //
     // Span should not cross toplevel newlines
     //
-    session.eat_trivia_but_not_toplevel_newlines_2(&mut FourthTok, &mut Trivia2.borrow_mut());
+    session.eat_trivia_but_not_toplevel_newlines_2(
+        &mut FourthTok,
+        TOPLEVEL,
+        &mut Trivia2.borrow_mut(),
+    );
 
     if !FourthTok.tok.isPossibleBeginning() || FourthTok.tok == TokenKind::SemiSemi {
         //
