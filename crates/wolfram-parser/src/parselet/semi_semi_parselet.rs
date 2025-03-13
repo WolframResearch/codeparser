@@ -2,7 +2,7 @@ use crate::{
     cst::{BinaryNode, TernaryNode},
     panic_if_aborted,
     parselet::*,
-    parser::ParserSession,
+    parser_session::ParserSession,
     precedence::*,
     source::TOPLEVEL,
     token::{Token, TokenKind, TokenRef},

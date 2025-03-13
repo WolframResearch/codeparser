@@ -20,7 +20,7 @@ use crate::{
         OperatorNode,
     },
     parse_bytes_to_cst,
-    parser::ParserSession,
+    parser_session::ParserSession,
     source::{GeneralSource, SourceConvention},
     test_utils::{src, token},
     token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
