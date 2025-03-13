@@ -8,8 +8,8 @@ use std::any::Any;
 
 use crate::{
     node::{
-        BinaryNode, CallBody, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode,
-        Operator, PostfixNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        BinaryNode, CallNode, CompoundNode, GroupMissingCloserNode, GroupNode, InfixNode, Operator,
+        PostfixNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         UnterminatedGroupNeedsReparseNode,
     },
     panic_if_aborted,
@@ -1458,18 +1458,9 @@ fn CallParselet_parseInfix<'i>(
 
 fn CallParselet_reduceCall(session: &mut ParserSession) {
     {
-        let body = Parser_popNode(session);
+        let Body = Parser_popNode(session);
 
-        let body: CallBody<_> = match body {
-            crate::cst::CstNode::Group(group) => CallBody::Group(group),
-            crate::cst::CstNode::GroupMissingCloser(group) => CallBody::GroupMissingCloser(group),
-            other => panic!(
-                "expected CallParselet body to reduce to a Group or GroupMissingCloser node; got: {:#?}",
-                other
-            ),
-        };
-
-        let node = CallNode::concrete(Parser_popContext(session), body);
+        let node = CallNode::concrete(Parser_popContext(session), Body);
         Parser_pushNode(session, node);
     }
 

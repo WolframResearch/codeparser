@@ -8,8 +8,8 @@ use crate::{
     cst::CstNodeSeq,
     issue::{Issue, IssueTag, Severity},
     node::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, Node, NodeSeq,
+        BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
+        GroupMissingOpenerNode, GroupNode, InfixNode, Node, NodeSeq,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode,
         TernaryNode,
@@ -82,13 +82,14 @@ fn aggregate_replace<I: Debug, S: Debug>(node: Node<I, S>) -> Option<Node<I, S>>
             is_concrete,
         }) => {
             let head = Aggregate(head);
-            let body = body.map_op(aggregate_op);
+            let body = aggregate_replace(*body)
+                .expect("expected CallNode body to aggregate to a real value");
 
             debug_assert!(is_concrete);
 
             Node::Call(CallNode {
                 head,
-                body,
+                body: Box::new(body),
                 src,
                 is_concrete: false,
             })
@@ -1616,7 +1617,7 @@ fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node
     */
     Node::Call(CallNode {
         head: NodeSeq(vec![agg::WL!(ToNode[Power])]),
-        body: CallBody::Group(GroupNode(OperatorNode {
+        body: Box::new(Node::Group(GroupNode(OperatorNode {
             op: Op::CodeParser_GroupSquare,
             children: NodeSeq(vec![
                 agg::WL!(LeafNode[OpenSquare, "[", <||>]),
@@ -1632,7 +1633,7 @@ fn reciprocate<I: TokenInput, S: TokenSource>(node: Node<I, S>, data: S) -> Node
                 agg::WL!(LeafNode[CloseSquare, "]", <||>]),
             ]),
             src: S::unknown(),
-        })),
+        }))),
         src: data,
         is_concrete: false,
     })

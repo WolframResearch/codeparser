@@ -5,10 +5,9 @@ use wolfram_parser::{
     cst::CstNodeSeq,
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     node::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
-        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Node,
-        Operator, OperatorNode, PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode,
+        BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
+        GroupMissingOpenerNode, GroupNode, InfixNode, LeafNode, Node, Operator, OperatorNode,
+        PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     quirks::QuirkSettings,
     source::GeneralSource,
@@ -227,9 +226,9 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
             (NodeSeq(vec![Node::from_expr(&elements[0])?]), false)
         };
         let body = if let Ok(group) = GroupNode::from_expr(&elements[1]) {
-            CallBody::Group(group)
+            Node::Group(group)
         } else if let Ok(group) = GroupMissingCloserNode::from_expr(&elements[1]) {
-            CallBody::GroupMissingCloser(group)
+            Node::GroupMissingCloser(group)
         } else {
             todo!("unexpected CallNode body: {}", elements[1])
         };
@@ -238,7 +237,7 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
 
         Ok(CallNode {
             head,
-            body,
+            body: Box::new(body),
             src,
             is_concrete,
         })
