@@ -4,8 +4,8 @@ use crate::{
     agg::AggNodeSeq,
     cst::{
         Cst, GroupMissingCloserNode, OperatorNode,
+        UnterminatedGroupNeedsReparseNode,
     },
-    parse::operators::GroupOperator,
     source::{
         BufferAndLength, CharacterSpan, LineColumn, LineColumnSpan, Location,
         Span, SpanKind,
@@ -55,7 +55,7 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
 }
 
 //==========================================================
-// Handle reparse of unterminated group nodes
+// Handle UnterminatedGroupNeedsReparse nodes
 //==========================================================
 
 // return: better UnterminatedGroupNode
@@ -64,11 +64,14 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
 //
 // But return the opener to make ToString stuff easier
 pub(crate) fn reparse_unterminated_group_node<'i>(
-    (tag, children): (GroupOperator, NodeSeq<Cst<TokenStr<'i>>>),
+    group: UnterminatedGroupNeedsReparseNode<TokenStr<'i>>,
     str: &'i str,
     tab_width: usize,
 ) -> GroupMissingCloserNode<TokenStr<'i>> {
-    let src = children.get_source();
+    let src = group.0.get_source();
+
+    let UnterminatedGroupNeedsReparseNode(OperatorNode { op: tag, children }) =
+        group;
 
     // TODO(cleanup): Change function parameter to take tab width as u32.
     let tab_width = u32::try_from(tab_width).unwrap();
@@ -122,7 +125,7 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
 }
 
 //==========================================================
-// Handle reparse of unterminated tokens
+// Handle UnterminatedGroupNeedsReparse nodes
 //==========================================================
 
 // return: better ErrorNode
