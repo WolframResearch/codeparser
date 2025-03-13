@@ -52,8 +52,7 @@ impl PrefixParselet for UnderParselet {
             SymbolParselet::parse_infix_context_sensitive(session, tok);
 
             // MUSTTAIL
-            return session
-                .reduce_and_climb(|ctx| CompoundNode::new(self.getBOp(), ctx));
+            return self.reduce_Blank(session);
         }
 
         if tok.tok == TokenKind::Error_ExpectedLetterlike {
@@ -68,8 +67,7 @@ impl PrefixParselet for UnderParselet {
             session.push_leaf_and_next(tok);
 
             // MUSTTAIL
-            return session
-                .reduce_and_climb(|ctx| CompoundNode::new(self.getBOp(), ctx));
+            return self.reduce_Blank(session);
         }
 
         // MUSTTAIL
@@ -112,7 +110,7 @@ impl UnderParselet {
             SymbolParselet::parse_infix_context_sensitive(session, tok);
 
             // MUSTTAIL
-            return session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
+            return self.reduce_Blank_context_sensitive(session);
         }
 
         if tok.tok == TokenKind::Error_ExpectedLetterlike {
@@ -127,11 +125,22 @@ impl UnderParselet {
             session.push_leaf_and_next(tok);
 
             // MUSTTAIL
-            return session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
+            return self.reduce_Blank_context_sensitive(session);
         }
 
         // no call needed here
         return;
+    }
+
+    fn reduce_Blank(&self, session: &mut ParserSession) {
+        session.reduce_and_climb(|ctx| CompoundNode::new(self.getBOp(), ctx))
+    }
+
+    //
+    // Called from other parselets
+    //
+    fn reduce_Blank_context_sensitive(&self, session: &mut ParserSession) {
+        session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
     }
 }
 
