@@ -16,8 +16,6 @@ use crate::{
     wl_character::{EscapeStyle, WLCharacter},
 };
 
-use super::InputMark;
-
 //
 // CharacterDecoder is given a stream of integers that represent Unicode code points and decodes
 // sequences of Source Characters such as \[Alpha] into a single WL character
@@ -25,7 +23,8 @@ use super::InputMark;
 
 type HandlerFunction = for<'i, 's> fn(
     session: &'s mut Reader<'i>,
-    start: InputMark,
+    startBuf: usize,
+    startLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter;
 
@@ -136,7 +135,8 @@ pub(crate) fn CharacterDecoder_nextWLCharacter(
     // There was a \
     //
 
-    let escaped = session.mark();
+    let escaped_offset = session.offset;
+    let escapedLoc = session.SrcLoc;
 
     curSource = ByteDecoder_currentSourceCharacter(session, policy);
 
@@ -144,13 +144,18 @@ pub(crate) fn CharacterDecoder_nextWLCharacter(
 
     if !(0x20 <= point.as_i32() && point.as_i32() <= 0x7e) {
         // MUSTTAIL
-        return CharacterDecoder_handleUncommon(session, escaped, policy);
+        return CharacterDecoder_handleUncommon(session, escaped_offset, escapedLoc, policy);
     }
 
     let point_u8 =
         u8::try_from(point.as_i32()).expect("unable to convert digit character to u8 value");
 
-    return CHARACTER_DECODER_HANDLER_TABLE[usize::from(point_u8)](session, escaped, policy);
+    return CHARACTER_DECODER_HANDLER_TABLE[usize::from(point_u8)](
+        session,
+        escaped_offset,
+        escapedLoc,
+        policy,
+    );
 }
 
 #[allow(dead_code)]
@@ -169,7 +174,8 @@ pub(crate) fn CharacterDecoder_currentWLCharacter(
 
 fn CharacterDecoder_handleStringMetaDoubleQuote(
     session: &mut Reader,
-    _: InputMark,
+    _: usize,
+    _: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaDoubleQuoteCount);
@@ -189,7 +195,8 @@ fn CharacterDecoder_handleStringMetaDoubleQuote(
 //
 fn CharacterDecoder_handleStringMetaOpen(
     session: &mut Reader,
-    escaped: InputMark,
+    _escapedBuf: usize,
+    escapedLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaOpenCount);
@@ -201,7 +208,7 @@ fn CharacterDecoder_handleStringMetaOpen(
     if feature::CHECK_ISSUES {
         let graphicalStr = c.graphicalString();
 
-        let currentWLCharacterStartLoc = escaped.src_loc.previous();
+        let currentWLCharacterStartLoc = escapedLoc.previous();
 
         let currentWLCharacterEndLoc = session.SrcLoc;
 
@@ -231,7 +238,8 @@ fn CharacterDecoder_handleStringMetaOpen(
 
 fn CharacterDecoder_handleStringMetaClose(
     session: &mut Reader,
-    escaped: InputMark,
+    _escapedBuf: usize,
+    escapedLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaCloseCount);
@@ -243,7 +251,7 @@ fn CharacterDecoder_handleStringMetaClose(
     if feature::CHECK_ISSUES {
         let graphicalStr = c.graphicalString();
 
-        let currentWLCharacterStartLoc = escaped.src_loc.previous();
+        let currentWLCharacterStartLoc = escapedLoc.previous();
 
         let currentWLCharacterEndLoc = session.SrcLoc;
 
@@ -273,7 +281,8 @@ fn CharacterDecoder_handleStringMetaClose(
 
 fn CharacterDecoder_handleStringMetaBackslash(
     session: &mut Reader,
-    _: InputMark,
+    _: usize,
+    _: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
     incr_diagnostic!(CharacterDecoder_StringMetaBackslashCount);
@@ -286,11 +295,12 @@ fn CharacterDecoder_handleStringMetaBackslash(
 
 fn CharacterDecoder_handleLongName(
     session: &mut Reader,
-    open_square: InputMark,
+    openSquareBuf: usize,
+    openSquareLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
     // assert!(openSquareBuf[0] == b'[');
-    assert!(session.input[open_square.offset] == b'[');
+    assert!(session.input[openSquareBuf] == b'[');
 
     incr_diagnostic!(CharacterDecoder_LongNameCount);
 
@@ -352,7 +362,7 @@ fn CharacterDecoder_handleLongName(
         if feature::CHECK_ISSUES
             && (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES
         {
-            let currentWLCharacterStartLoc = open_square.src_loc.previous();
+            let currentWLCharacterStartLoc = openSquareLoc.previous();
 
             let currentWLCharacterEndBuf = session.buffer();
             let currentWLCharacterEndLoc = session.SrcLoc;
@@ -427,7 +437,8 @@ fn CharacterDecoder_handleLongName(
             }
         }
 
-        session.seek(open_square);
+        session.offset = openSquareBuf;
+        session.SrcLoc = openSquareLoc;
 
         return WLCharacter::new('\\');
     }
@@ -466,7 +477,7 @@ fn CharacterDecoder_handleLongName(
         {
             let longNameEndLoc = session.SrcLoc;
 
-            let currentWLCharacterStartLoc = open_square.src_loc.previous();
+            let currentWLCharacterStartLoc = openSquareLoc.previous();
 
             //
             // Accomodate the ] character
@@ -545,7 +556,8 @@ fn CharacterDecoder_handleLongName(
             }
         }
 
-        session.seek(open_square);
+        session.offset = openSquareBuf;
+        session.SrcLoc = openSquareLoc;
 
         return WLCharacter::new('\\');
     }
@@ -571,7 +583,7 @@ fn CharacterDecoder_handleLongName(
             session,
             policy,
             point,
-            open_square.src_loc,
+            openSquareLoc,
             if LongNames::isRaw(longNameStr) {
                 EscapeStyle::Raw
             } else {
@@ -589,10 +601,11 @@ fn CharacterDecoder_handleLongName(
 
 fn CharacterDecoder_handle4Hex(
     session: &mut Reader,
-    colon: InputMark,
+    colon_offset: usize,
+    colonLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
-    assert!(session.input[colon.offset] == b':');
+    assert!(session.input[colon_offset] == b':');
 
     incr_diagnostic!(CharacterDecoder_4HexCount);
 
@@ -613,7 +626,7 @@ fn CharacterDecoder_handle4Hex(
             if feature::CHECK_ISSUES
                 && (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES
             {
-                let currentWLCharacterStartLoc = colon.src_loc.previous();
+                let currentWLCharacterStartLoc = colonLoc.previous();
 
                 let currentWLCharacterEndBuf = session.buffer();
                 let currentWLCharacterEndLoc = session.SrcLoc;
@@ -645,7 +658,8 @@ fn CharacterDecoder_handle4Hex(
                 session.addIssue(I);
             }
 
-            session.seek(colon);
+            session.offset = colon_offset;
+            session.SrcLoc = colonLoc;
 
             return WLCharacter::new('\\');
         }
@@ -673,17 +687,18 @@ fn CharacterDecoder_handle4Hex(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    check_strange_syntax_issue(session, policy, point, colon.src_loc, EscapeStyle::Hex4);
+    check_strange_syntax_issue(session, policy, point, colonLoc, EscapeStyle::Hex4);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Hex4);
 }
 
 fn CharacterDecoder_handle2Hex(
     session: &mut Reader,
-    dot: InputMark,
+    dot_offset: usize,
+    dotLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
-    assert!(session.input[dot.offset] == b'.');
+    assert!(session.input[dot_offset] == b'.');
 
     incr_diagnostic!(CharacterDecoder_2HexCount);
 
@@ -704,7 +719,7 @@ fn CharacterDecoder_handle2Hex(
             if feature::CHECK_ISSUES
                 && (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES
             {
-                let currentWLCharacterStartLoc = dot.src_loc.previous();
+                let currentWLCharacterStartLoc = dotLoc.previous();
 
                 let currentWLCharacterEndBuf = session.buffer();
                 let currentWLCharacterEndLoc = session.SrcLoc;
@@ -736,7 +751,8 @@ fn CharacterDecoder_handle2Hex(
                 session.addIssue(I);
             }
 
-            session.seek(dot);
+            session.offset = dot_offset;
+            session.SrcLoc = dotLoc;
 
             return WLCharacter::new('\\');
         }
@@ -761,21 +777,22 @@ fn CharacterDecoder_handle2Hex(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    check_strange_syntax_issue(session, policy, point, dot.src_loc, EscapeStyle::Hex2);
+    check_strange_syntax_issue(session, policy, point, dotLoc, EscapeStyle::Hex2);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Hex2);
 }
 
 fn CharacterDecoder_handleOctal(
     session: &mut Reader,
-    first_octal: InputMark,
+    firstOctalBuf: usize,
+    firstOctalLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
-    assert!(SourceCharacter::from(char::from(session.input[first_octal.offset])).isOctal());
+    assert!(SourceCharacter::from(char::from(session.input[firstOctalBuf])).isOctal());
 
     incr_diagnostic!(CharacterDecoder_OctalCount);
 
-    let octalStartBuf = session.buffer_at(first_octal.offset);
+    let octalStartBuf = session.buffer_at(firstOctalBuf);
 
     for _ in 0..3 - 1 {
         let curSource = ByteDecoder_currentSourceCharacter(session, policy);
@@ -792,7 +809,7 @@ fn CharacterDecoder_handleOctal(
             if feature::CHECK_ISSUES
                 && (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES
             {
-                let currentWLCharacterStartLoc = first_octal.src_loc.previous();
+                let currentWLCharacterStartLoc = firstOctalLoc.previous();
 
                 let currentWLCharacterEndBuf = session.buffer();
                 let currentWLCharacterEndLoc = session.SrcLoc;
@@ -824,7 +841,8 @@ fn CharacterDecoder_handleOctal(
                 session.addIssue(I);
             }
 
-            session.seek(first_octal);
+            session.offset = firstOctalBuf;
+            session.SrcLoc = firstOctalLoc;
 
             // FIXME: Why return a backslash if the character is not well-formed?
             return WLCharacter::new('\\');
@@ -855,23 +873,18 @@ fn CharacterDecoder_handleOctal(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    check_strange_syntax_issue(
-        session,
-        policy,
-        point,
-        first_octal.src_loc,
-        EscapeStyle::Octal,
-    );
+    check_strange_syntax_issue(session, policy, point, firstOctalLoc, EscapeStyle::Octal);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Octal);
 }
 
 fn CharacterDecoder_handle6Hex(
     session: &mut Reader,
-    bar: InputMark,
+    bar_offset: usize,
+    barLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
-    assert!(session.input[bar.offset] == b'|');
+    assert!(session.input[bar_offset] == b'|');
 
     incr_diagnostic!(CharacterDecoder_6HexCount);
 
@@ -892,7 +905,7 @@ fn CharacterDecoder_handle6Hex(
             if feature::CHECK_ISSUES
                 && (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES
             {
-                let currentWLCharacterStartLoc = bar.src_loc.previous();
+                let currentWLCharacterStartLoc = barLoc.previous();
 
                 let currentWLCharacterEndBuf = session.buffer();
                 let currentWLCharacterEndLoc = session.SrcLoc;
@@ -924,7 +937,8 @@ fn CharacterDecoder_handle6Hex(
                 session.addIssue(I);
             }
 
-            session.seek(bar);
+            session.offset = bar_offset;
+            session.SrcLoc = barLoc;
 
             return WLCharacter::new('\\');
         }
@@ -946,7 +960,8 @@ fn CharacterDecoder_handle6Hex(
     // TODO: Is this logic here correct? Why always return a \ if point is out
     //       of range?
     if point > 0x10ffff {
-        session.seek(bar);
+        session.offset = bar_offset;
+        session.SrcLoc = barLoc;
 
         return WLCharacter::new('\\');
     }
@@ -968,7 +983,7 @@ fn CharacterDecoder_handle6Hex(
     }
 
     #[cfg(feature = "CHECK_ISSUES")]
-    check_strange_syntax_issue(session, policy, point, bar.src_loc, EscapeStyle::Hex6);
+    check_strange_syntax_issue(session, policy, point, barLoc, EscapeStyle::Hex6);
 
     return WLCharacter::new_with_escape(point, EscapeStyle::Hex6);
 }
@@ -980,7 +995,8 @@ fn CharacterDecoder_handleBackslash(session: &mut Reader, policy: NextPolicy) ->
     // when dealing with "\\[Alpa]"
     //
     if feature::CHECK_ISSUES {
-        let reset_mark = session.mark();
+        let resetBuf = session.offset;
+        let resetLoc = session.SrcLoc;
 
         //
         // will be resetting any way, so just use nextSourceCharacter here
@@ -1028,11 +1044,12 @@ fn CharacterDecoder_handleBackslash(session: &mut Reader, policy: NextPolicy) ->
                 session.offset = longNameStartBuf;
                 session.SrcLoc = longNameStartLoc;
 
-                CharacterDecoder_handleLongName(session, reset_mark, tmpPolicy);
+                CharacterDecoder_handleLongName(session, resetBuf, resetLoc, tmpPolicy);
             }
         }
 
-        session.seek(reset_mark);
+        session.offset = resetBuf;
+        session.SrcLoc = resetLoc;
     }
 
     return WLCharacter::new_with_escape(StringMeta_Backslash, EscapeStyle::Single);
@@ -1040,7 +1057,8 @@ fn CharacterDecoder_handleBackslash(session: &mut Reader, policy: NextPolicy) ->
 
 fn CharacterDecoder_handleUnhandledEscape(
     session: &mut Reader,
-    unhandled: InputMark,
+    unhandled_offset: usize,
+    unhandledLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
     //
@@ -1060,7 +1078,7 @@ fn CharacterDecoder_handleUnhandledEscape(
     if feature::CHECK_ISSUES
         && (policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES
     {
-        let currentWLCharacterStartLoc = unhandled.src_loc.previous();
+        let currentWLCharacterStartLoc = unhandledLoc.previous();
 
         let mut currentWLCharacterEndLoc = session.SrcLoc;
 
@@ -1287,14 +1305,16 @@ fn CharacterDecoder_handleUnhandledEscape(
     // The tokenizer will use the bad character to decide what to do
     //
 
-    session.seek(unhandled);
+    session.offset = unhandled_offset;
+    session.SrcLoc = unhandledLoc;
 
     return WLCharacter::new('\\');
 }
 
 fn CharacterDecoder_handleAssertFalse(
     _session: &mut Reader,
-    _escaped: InputMark,
+    _escapedBuf: usize,
+    _escapedLoc: SourceLocation,
     _policy: NextPolicy,
 ) -> WLCharacter {
     panic!();
@@ -1302,7 +1322,8 @@ fn CharacterDecoder_handleAssertFalse(
 
 fn CharacterDecoder_handleUncommon<'i, 's>(
     session: &'s mut Reader<'i>,
-    escaped: InputMark,
+    escapedBuf: usize,
+    escapedLoc: SourceLocation,
     policy: NextPolicy,
 ) -> WLCharacter {
     let curSource = ByteDecoder_currentSourceCharacter(session, policy);
@@ -1330,31 +1351,31 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
             ByteDecoder_nextSourceCharacter(session, policy);
 
             //            MUSTTAIL
-            return CharacterDecoder_handleLongName(session, escaped, policy);
+            return CharacterDecoder_handleLongName(session, escapedBuf, escapedLoc, policy);
         },
         Char(':') => {
             ByteDecoder_nextSourceCharacter(session, policy);
 
             //            MUSTTAIL
-            return CharacterDecoder_handle4Hex(session, escaped, policy);
+            return CharacterDecoder_handle4Hex(session, escapedBuf, escapedLoc, policy);
         },
         Char('.') => {
             ByteDecoder_nextSourceCharacter(session, policy);
 
             //            MUSTTAIL
-            return CharacterDecoder_handle2Hex(session, escaped, policy);
+            return CharacterDecoder_handle2Hex(session, escapedBuf, escapedLoc, policy);
         },
         Char('|') => {
             ByteDecoder_nextSourceCharacter(session, policy);
 
             //            MUSTTAIL
-            return CharacterDecoder_handle6Hex(session, escaped, policy);
+            return CharacterDecoder_handle6Hex(session, escapedBuf, escapedLoc, policy);
         },
         Char('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7') => {
             ByteDecoder_nextSourceCharacter(session, policy);
 
             //            MUSTTAIL
-            return CharacterDecoder_handleOctal(session, escaped, policy);
+            return CharacterDecoder_handleOctal(session, escapedBuf, escapedLoc, policy);
         },
 
         //
@@ -1371,7 +1392,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
             if feature::CHECK_ISSUES {
                 let graphicalStr = c.graphicalString();
 
-                let currentWLCharacterStartLoc = escaped.src_loc.previous();
+                let currentWLCharacterStartLoc = escapedLoc.previous();
 
                 let currentWLCharacterEndLoc = session.SrcLoc;
 
@@ -1411,7 +1432,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
             if feature::CHECK_ISSUES {
                 let graphicalStr = c.graphicalString();
 
-                let currentWLCharacterStartLoc = escaped.src_loc.previous();
+                let currentWLCharacterStartLoc = escapedLoc.previous();
 
                 let currentWLCharacterEndLoc = session.SrcLoc;
 
@@ -1590,7 +1611,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
     incr_diagnostic!(CharacterDecoder_UnhandledCount);
 
     //    MUSTTAIL
-    return CharacterDecoder_handleUnhandledEscape(session, escaped, policy);
+    return CharacterDecoder_handleUnhandledEscape(session, escapedBuf, escapedLoc, policy);
 }
 
 //
