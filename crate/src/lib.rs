@@ -1,7 +1,7 @@
 //
 // Lints
 //
-#![allow(unused_assignments, non_snake_case)]
+#![allow(unused_assignments, non_snake_case)] // PRE_COMMIT: Remove these allows
 
 macro_rules! incr_diagnostic {
     ($name:ident) => {
