@@ -1114,16 +1114,19 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
 
         session.push_group(GroupOpenerToCloser(tok_in.tok));
 
+        let tok_in = session.push_syntax_and_next(tok_in);
+
+        let _ = session.push_context(None);
 
         //------------------------------
         // Parse loop
         //------------------------------
 
-        let tok_in = session.push_syntax_and_next(tok_in);
-
-        let mut group_state = session.builder.begin_group(tok_in);
-
-        let _ = session.push_context(None);
+        // FIXME(cleanup):
+        //     Add a ParseBuilder::GroupBuilder associated type
+        //     to avoid the intermediate GroupChildren allocation.
+        let mut group_children: Vec<(B::TriviaHandle, B::Node)> =
+            Vec::with_capacity(1);
 
         loop {
             panic_if_aborted!();
@@ -1147,8 +1150,13 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
                 let (trivia1, tok) =
                     session.commit_syntax_and_next(trivia1, tok);
 
-                let node =
-                    session.reduce_group(self.Op, group_state, trivia1, tok);
+                let node = session.reduce_group(
+                    self.Op,
+                    tok_in,
+                    group_children,
+                    trivia1,
+                    tok,
+                );
 
                 // MUSTTAIL
                 return session.parse_climb(node);
@@ -1171,8 +1179,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
 
                     session.trivia_reset(trivia1);
 
-                    let node = session
-                        .reduce_group_missing_closer(self.Op, group_state);
+                    let node = session.reduce_group_missing_closer(
+                        self.Op,
+                        tok_in,
+                        group_children,
+                    );
 
                     return node;
                 }
@@ -1187,7 +1198,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
                 let node = (PrefixToplevelCloserParselet {})
                     .parse_prefix(session, tok);
 
-                session.builder.group_add(&mut group_state, trivia1, node);
+                group_children.push((trivia1, node));
 
                 continue;
             }
@@ -1202,7 +1213,8 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
                 // MUSTTAIL
                 let node = session.reduce_unterminated_group(
                     self.Op,
-                    group_state,
+                    tok_in,
+                    group_children,
                     trivia1,
                 );
 
@@ -1215,7 +1227,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> PrefixParselet<'i, B> for GroupParselet {
 
             let node = session.parse_prefix(tok);
 
-            session.builder.group_add(&mut group_state, trivia1, node);
+            group_children.push((trivia1, node));
         } // loop
     }
 }

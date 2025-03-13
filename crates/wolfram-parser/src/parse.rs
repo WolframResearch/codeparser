@@ -254,11 +254,7 @@ pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 ///   - [`reduce_ternary()`][ParseBuilder::reduce_ternary]
 ///   - [`reduce_ternary_tag_unset()`][ParseBuilder::reduce_ternary_tag_unset]
 ///   - [`reduce_infix()`][ParseBuilder::reduce_infix]
-///     * [`begin_infix()`][ParseBuilder::begin_infix]
-///     * [`infix_add()`][ParseBuilder::infix_add]
 ///   - [`reduce_group()`][ParseBuilder::reduce_group]
-///     * [`begin_group()`][ParseBuilder::begin_group]
-///     * [`group_add()`][ParseBuilder::group_add]
 ///   - [`reduce_call()`][ParseBuilder::reduce_call]
 ///
 ///   Errors:
@@ -455,7 +451,6 @@ where
     type ContextData: Debug;
 
     type InfixParseState: Debug;
-    type GroupParseState: Debug;
 
     //==================================
     // Lifecycle
@@ -718,26 +713,12 @@ where
         infix_state: Self::InfixParseState,
     ) -> Self::Node;
 
-    /// Build up an group parse.
-    ///
-    /// TODO: Will only have multiple elems if there's an error?
-    fn begin_group(
-        &mut self,
-        opener_tok: Self::SyntaxTokenNode,
-    ) -> Self::GroupParseState;
-
-    fn group_add(
-        &mut self,
-        group_state: &mut Self::GroupParseState,
-        trivia: Self::TriviaHandle,
-        operand: Self::Node,
-    );
-
     fn reduce_group(
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        group_state: Self::GroupParseState,
+        opener_tok: Self::SyntaxTokenNode,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         trailing_trivia: Self::TriviaHandle,
         closer_tok: Self::SyntaxTokenNode,
     ) -> Self::Node;
@@ -770,7 +751,8 @@ where
         input: &'i str,
         tab_width: usize,
         op: GroupOperator,
-        group_state: Self::GroupParseState,
+        opener_tok: Self::SyntaxTokenNode,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         trailing_trivia: Self::TriviaHandle,
     ) -> Self::Node;
 
@@ -778,7 +760,8 @@ where
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        group_state: Self::GroupParseState,
+        opener_tok: Self::SyntaxTokenNode,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node;
 
     //==================================
@@ -1421,7 +1404,8 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_group(
         &mut self,
         op: GroupOperator,
-        group_state: B::GroupParseState,
+        opener_tok: B::SyntaxTokenNode,
+        group_children: Vec<(B::TriviaHandle, B::Node)>,
         trailing_trivia: B::TriviaHandle,
         closer_tok: B::SyntaxTokenNode,
     ) -> B::Node {
@@ -1432,7 +1416,8 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         self.builder.reduce_group(
             ctx_data,
             op,
-            group_state,
+            opener_tok,
+            group_children,
             trailing_trivia,
             closer_tok,
         )
@@ -1465,7 +1450,8 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_unterminated_group(
         &mut self,
         op: GroupOperator,
-        group_state: B::GroupParseState,
+        opener_tok: B::SyntaxTokenNode,
+        group_children: Vec<(B::TriviaHandle, B::Node)>,
         trailing_trivia: B::TriviaHandle,
     ) -> B::Node {
         let ctx_data = self.context_stack.pop().unwrap().builder_data;
@@ -1481,12 +1467,14 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
         let tab_width = self.tokenizer.tab_width as usize;
 
+
         self.builder.reduce_unterminated_group(
             ctx_data,
             input,
             tab_width,
             op,
-            group_state,
+            opener_tok,
+            group_children,
             trailing_trivia,
         )
     }
@@ -1494,14 +1482,19 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_group_missing_closer(
         &mut self,
         op: GroupOperator,
-        group_state: B::GroupParseState,
+        opener_tok: B::SyntaxTokenNode,
+        group_children: Vec<(B::TriviaHandle, B::Node)>,
     ) -> B::Node {
         let ctx_data = self.context_stack.pop().unwrap().builder_data;
 
         self.pop_group();
 
-        self.builder
-            .reduce_group_missing_closer(ctx_data, op, group_state)
+        self.builder.reduce_group_missing_closer(
+            ctx_data,
+            op,
+            opener_tok,
+            group_children,
+        )
     }
 
     //----------------------------------

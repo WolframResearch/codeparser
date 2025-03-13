@@ -42,9 +42,6 @@ pub(crate) struct InfixParseCst {
     op: InfixOperator,
 }
 
-#[derive(Debug)]
-pub(crate) struct InfixParseGroup {}
-
 impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     type Node = ();
     type SyntaxTokenNode = ();
@@ -54,7 +51,6 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     type ContextData = Context;
 
     type InfixParseState = InfixParseCst;
-    type GroupParseState = InfixParseGroup;
 
     //==================================
     // Trivia handling
@@ -458,8 +454,6 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn begin_infix(
         &mut self,
-        // TODO(cleanup): Add this at the end, to avoid having to
-        //                pass it around?
         op: InfixOperator,
         _first_node: Self::Node,
     ) -> Self::InfixParseState {
@@ -494,30 +488,12 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         self.push_node(Cst::Infix(node))
     }
 
-    fn begin_group(
-        &mut self,
-        _opener_tok: Self::SyntaxTokenNode,
-    ) -> Self::GroupParseState {
-        // Do nothing, because all the arguments should already have been
-        // added to `node_stack` when they were originally processed.
-        InfixParseGroup {}
-    }
-
-    fn group_add(
-        &mut self,
-        _infix_state: &mut Self::GroupParseState,
-        _trivia: Self::TriviaHandle,
-        _operand: Self::Node,
-    ) {
-        // Do nothing, because all the arguments should already have been
-        // added to `node_stack` when they were originally processed.
-    }
-
     fn reduce_group(
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        _group_state: Self::GroupParseState,
+        _opener_tok: Self::SyntaxTokenNode,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         _trailing_trivia: Self::TriviaHandle,
         _closer_tok: Self::SyntaxTokenNode,
     ) -> Self::Node {
@@ -617,7 +593,8 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         input: &'i str,
         tab_width: usize,
         op: GroupOperator,
-        _state: Self::GroupParseState,
+        _opener_tok: Self::SyntaxTokenNode,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         _trailing_trivia: Self::TriviaHandle,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);
@@ -635,7 +612,8 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        _state: Self::GroupParseState,
+        _opener_tok: Self::SyntaxTokenNode,
+        group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node {
         let children = self.reduce(ctx_data);
 
