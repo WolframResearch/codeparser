@@ -139,7 +139,7 @@ struct NumberTokenizationContext {
 
     Real: bool,
 
-    NonZeroExponentDigitCount: u32,
+    NonZeroExponentDigitCount: c_int,
     //
     // Use the convention that base of 0 means the default, unspecified base
     //
@@ -1962,6 +1962,8 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
     } // loop
 }
 
+const BAILOUT: i32 = -1;
+
 //
 //digits                  integer
 //digits.digits           approximate number
@@ -1995,7 +1997,7 @@ fn Tokenizer_handleNumber<'i>(
 
     let mut Ctxt = NumberTokenizationContext::new();
 
-    let mut leadingDigitsCount: u32 = 0;
+    let mut leadingDigitsCount = 0;
 
     //
     // leadingDigitsEnd will point to the first character after all leading digits and ^^
@@ -2034,9 +2036,15 @@ fn Tokenizer_handleNumber<'i>(
         let mut nonZeroStartBuf = tokenStartBuf;
 
         if c.to_point() == '0' {
-            let mut leadingZeroCount: u32 = 0;
-            (leadingZeroCount, c) =
-                Tokenizer_handleZeros(session, tokenStartBuf, tokenStartLoc, policy, c);
+            let mut leadingZeroCount: c_int = 0;
+            c = Tokenizer_handleZeros(
+                session,
+                tokenStartBuf,
+                tokenStartLoc,
+                policy,
+                c,
+                &mut leadingZeroCount,
+            );
 
             leadingDigitsCount += leadingZeroCount;
 
@@ -2051,8 +2059,15 @@ fn Tokenizer_handleNumber<'i>(
         leadingDigitsEndLoc = session.SrcLoc;
 
         if c.isDigit() {
-            let mut count: u32 = 0;
-            (count, c) = Tokenizer_handleDigits(session, tokenStartBuf, tokenStartLoc, policy, c);
+            let mut count: c_int = 0;
+            c = Tokenizer_handleDigits(
+                session,
+                tokenStartBuf,
+                tokenStartLoc,
+                policy,
+                c,
+                &mut count,
+            );
 
             leadingDigitsCount += count;
 
@@ -2232,15 +2247,21 @@ fn Tokenizer_handleNumber<'i>(
                     // Something like  16^^A
                     //
 
-                    (leadingDigitsCount, c) = Tokenizer_handleAlphaOrDigits(
+                    c = Tokenizer_handleAlphaOrDigits(
                         session,
                         tokenStartBuf,
                         tokenStartLoc,
                         c,
                         Ctxt.Base,
                         policy,
+                        &mut leadingDigitsCount,
                         &mut Ctxt,
                     );
+
+                    match leadingDigitsCount {
+                        BAILOUT => unreachable!(),
+                        _ => (),
+                    }
 
                     leadingDigitsEndOffset = session.offset;
                     leadingDigitsEndLoc = session.SrcLoc;
@@ -2340,8 +2361,8 @@ fn Tokenizer_handleNumber<'i>(
         // PRE_COMMIT: Rename this assert
         // assert!(utils::ifASCIIWLCharacter(*(session.buffer - 1), b'.'));
 
-        let handled: HandledFractionalPart;
-        (handled, c) = Tokenizer_handlePossibleFractionalPart(
+        let mut handled: c_int = 0;
+        c = Tokenizer_handlePossibleFractionalPart(
             session,
             tokenStartBuf,
             tokenStartLoc,
@@ -2350,11 +2371,12 @@ fn Tokenizer_handleNumber<'i>(
             c,
             Ctxt.Base,
             policy,
+            &mut handled,
             &mut Ctxt,
         );
 
         match handled {
-            HandledFractionalPart::Bailout => {
+            BAILOUT => {
                 if leadingDigitsCount == 0 {
                     //
                     // Something like  2^^..
@@ -2382,7 +2404,7 @@ fn Tokenizer_handleNumber<'i>(
                     Tokenizer_getTokenSource(session, tokenStartLoc),
                 );
             },
-            HandledFractionalPart::Count(0) => {
+            0 => {
                 if leadingDigitsCount == 0 {
                     //
                     // Something like  2^^.
@@ -2438,7 +2460,7 @@ fn Tokenizer_handleNumber<'i>(
                     },
                 }
             },
-            HandledFractionalPart::Count(_) => {
+            _ => {
                 //
                 // Something like  123.456
                 //
@@ -2645,10 +2667,16 @@ fn Tokenizer_handleNumber<'i>(
 
         match c.to_point() {
             Char('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9') => {
-                let mut count: u32 = 0;
+                let mut count: c_int = 0;
 
-                (count, c) =
-                    Tokenizer_handleDigits(session, tokenStartBuf, tokenStartLoc, policy, c);
+                c = Tokenizer_handleDigits(
+                    session,
+                    tokenStartBuf,
+                    tokenStartLoc,
+                    policy,
+                    c,
+                    &mut count,
+                );
 
                 if count > 0 {
                     precOrAccSupplied = true;
@@ -2789,13 +2817,13 @@ fn Tokenizer_handleNumber<'i>(
                 // actual decimal point
                 //
 
-                let handled: HandledFractionalPart;
+                let mut handled: c_int = 0;
                 //
                 // The base to use inside of precision/accuracy processing is 0, i.e., implied 10
                 //
                 let baseToUse: i32 = 0;
 
-                (handled, c) = Tokenizer_handlePossibleFractionalPartPastDot(
+                c = Tokenizer_handlePossibleFractionalPartPastDot(
                     session,
                     tokenStartBuf,
                     tokenStartLoc,
@@ -2804,11 +2832,12 @@ fn Tokenizer_handleNumber<'i>(
                     c,
                     baseToUse,
                     policy,
+                    &mut handled,
                     &mut Ctxt,
                 );
 
                 match handled {
-                    HandledFractionalPart::Bailout => {
+                    BAILOUT => {
                         if precOrAccSupplied {
                             //
                             // Something like  6`5..
@@ -2849,8 +2878,8 @@ fn Tokenizer_handleNumber<'i>(
 
                         assert!(false);
                     },
-                    HandledFractionalPart::Count(0) => {},
-                    HandledFractionalPart::Count(_) => {
+                    0 => {},
+                    _ => {
                         precOrAccSupplied = true;
                     },
                 }
@@ -2999,15 +3028,27 @@ fn Tokenizer_handleNumber<'i>(
     // Count leading zeros in exponent
     //
     if c.to_point() == '0' {
-        let _exponentLeadingZeroCount: u32;
+        let mut exponentLeadingZeroCount: c_int = 0;
 
-        (_exponentLeadingZeroCount, c) =
-            Tokenizer_handleZeros(session, tokenStartBuf, tokenStartLoc, policy, c);
+        c = Tokenizer_handleZeros(
+            session,
+            tokenStartBuf,
+            tokenStartLoc,
+            policy,
+            c,
+            &mut exponentLeadingZeroCount,
+        );
     }
 
     if c.isDigit() {
-        (Ctxt.NonZeroExponentDigitCount, c) =
-            Tokenizer_handleDigits(session, tokenStartBuf, tokenStartLoc, policy, c);
+        c = Tokenizer_handleDigits(
+            session,
+            tokenStartBuf,
+            tokenStartLoc,
+            policy,
+            c,
+            &mut Ctxt.NonZeroExponentDigitCount,
+        );
     }
 
     if c.to_point() != '.' {
@@ -3034,8 +3075,8 @@ fn Tokenizer_handleNumber<'i>(
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-    let handled: HandledFractionalPart;
-    (handled, c) = Tokenizer_handlePossibleFractionalPartPastDot(
+    let mut handled: c_int = 0;
+    c = Tokenizer_handlePossibleFractionalPartPastDot(
         session,
         tokenStartBuf,
         tokenStartLoc,
@@ -3044,11 +3085,12 @@ fn Tokenizer_handleNumber<'i>(
         c,
         Ctxt.Base,
         policy,
+        &mut handled,
         &mut Ctxt,
     );
 
     match handled {
-        HandledFractionalPart::Bailout => {
+        BAILOUT => {
             //
             // Something like  123*^2..
             //
@@ -3065,7 +3107,7 @@ fn Tokenizer_handleNumber<'i>(
                 Tokenizer_getTokenSource(session, tokenStartLoc),
             );
         },
-        HandledFractionalPart::Count(_) => {
+        _ => {
             //
             // Something like  123*^0.5
             //
@@ -3116,16 +3158,6 @@ impl NumberTokenizationContext {
     }
 }
 
-/// Outcome from attempting to handle the fractional part (i.e. the digits after
-/// the decimal point) of a number.
-enum HandledFractionalPart {
-    Count(u32),
-    /// Bailed out from handling the fractional part because the first dot
-    /// was followed by a second, e.g. the input was `0..`.
-    Bailout,
-}
-
-
 //
 // Precondition: currentWLCharacter is NOT in String
 //
@@ -3140,8 +3172,9 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
     mut c: WLCharacter,
     base: i32,
     policy: NextPolicy,
+    handled: &mut c_int,
     Ctxt: &mut NumberTokenizationContext,
-) -> (HandledFractionalPart, WLCharacter) {
+) -> WLCharacter {
     assert!(c.to_point() == '.');
 
     c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -3156,18 +3189,18 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
         c,
         base,
         policy,
+        handled,
         Ctxt,
     );
 }
 
-/// Precondition: currentWLCharacter is NOT in String
-///
-/// Returns:
-///
-/// * number of digits handled after ., possibly 0
-/// * UNRECOGNIZED_DIGIT if base error
-/// * [`Handled::Bailout`] if not a radix point (and also backup before dot)
-///
+//
+// Precondition: currentWLCharacter is NOT in String
+//
+// Return: number of digits handled after ., possibly 0
+//         UNRECOGNIZED_DIGIT if base error
+//         BAILOUT if not a radix point (and also backup before dot)
+//
 fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
     session: &mut Tokenizer<'i>,
     tokenStartBuf: Buffer<'i>,
@@ -3177,8 +3210,9 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
     mut c: WLCharacter,
     base: i32,
     policy: NextPolicy,
+    handled: &mut c_int,
     Ctxt: &mut NumberTokenizationContext,
-) -> (HandledFractionalPart, WLCharacter) {
+) -> WLCharacter {
     //
     // Nothing to assert
     //
@@ -3196,54 +3230,66 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
 
         c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
-        return (HandledFractionalPart::Bailout, c);
+        *handled = BAILOUT;
+
+        return c;
     }
 
     if c.isAlphaOrDigit() {
-        let handled: u32;
-        (handled, c) = Tokenizer_handleAlphaOrDigits(
+        c = Tokenizer_handleAlphaOrDigits(
             session,
             tokenStartBuf,
             tokenStartLoc,
             c,
             base,
             policy,
+            handled,
             Ctxt,
         );
 
-        if handled > 0 {
-            #[cfg(feature = "CHECK_ISSUES")]
-            if c.to_point() == '.' {
-                //
-                // Something like  1.2.3
-                //
+        match *handled {
+            BAILOUT => {
+                unreachable!()
+            },
+            0 => {
+                return c;
+            },
+            _ => {
+                #[cfg(feature = "CHECK_ISSUES")]
+                if c.to_point() == '.' {
+                    //
+                    // Something like  1.2.3
+                    //
 
-                let mut Actions = Vec::new();
+                    let mut Actions = Vec::new();
 
-                Actions.push(CodeAction::insert_text(
-                    "Insert ``*``".into(),
-                    Source::from_location(dotLoc),
-                    "*".into(),
-                ));
+                    Actions.push(CodeAction::insert_text(
+                        "Insert ``*``".into(),
+                        Source::from_location(dotLoc),
+                        "*".into(),
+                    ));
 
-                let I = SyntaxIssue(
-                    IssueTag::UnexpectedImplicitTimes,
-                    format!("Suspicious syntax."),
-                    Severity::Error,
-                    Source::from_location(dotLoc),
-                    0.99,
-                    Actions,
-                    vec![],
-                );
+                    let I = SyntaxIssue(
+                        IssueTag::UnexpectedImplicitTimes,
+                        format!("Suspicious syntax."),
+                        Severity::Error,
+                        Source::from_location(dotLoc),
+                        0.99,
+                        Actions,
+                        vec![],
+                    );
 
-                session.addIssue(I);
-            }
+                    session.addIssue(I);
+                }
+
+                return c;
+            },
         }
-
-        return (HandledFractionalPart::Count(handled), c);
     }
 
-    return (HandledFractionalPart::Count(0), c);
+    *handled = 0;
+
+    return c;
 }
 
 fn Tokenizer_backupAndWarn<'i>(
@@ -3289,7 +3335,8 @@ fn Tokenizer_handleZeros<'i>(
     tokenStartLoc: SourceLocation,
     policy: NextPolicy,
     mut c: WLCharacter,
-) -> (u32, WLCharacter) {
+    countP: &mut c_int,
+) -> WLCharacter {
     assert!(c.to_point() == '0');
 
     let mut count = 1;
@@ -3308,7 +3355,9 @@ fn Tokenizer_handleZeros<'i>(
         count += 1;
     } // while
 
-    return (count, c);
+    *countP = count;
+
+    return c;
 }
 
 //
@@ -3323,7 +3372,8 @@ fn Tokenizer_handleDigits<'i>(
     tokenStartLoc: SourceLocation,
     policy: NextPolicy,
     mut c: WLCharacter,
-) -> (u32, WLCharacter) {
+    countP: &mut c_int,
+) -> WLCharacter {
     assert!(c.isDigit());
 
     let mut count = 1;
@@ -3342,7 +3392,9 @@ fn Tokenizer_handleDigits<'i>(
         count += 1;
     } // while
 
-    return (count, c);
+    *countP = count;
+
+    return c;
 }
 
 //
@@ -3358,8 +3410,9 @@ fn Tokenizer_handleAlphaOrDigits<'i>(
     mut c: WLCharacter,
     base: i32,
     policy: NextPolicy,
+    handled: &mut c_int,
     Ctxt: &mut NumberTokenizationContext,
-) -> (u32, WLCharacter) {
+) -> WLCharacter {
     assert!(c.isAlphaOrDigit());
 
     let mut count = 0;
@@ -3392,7 +3445,9 @@ fn Tokenizer_handleAlphaOrDigits<'i>(
         count += 1;
     } // while
 
-    return (count, c);
+    *handled = count;
+
+    return c;
 }
 
 fn Tokenizer_handleColon<'i>(
