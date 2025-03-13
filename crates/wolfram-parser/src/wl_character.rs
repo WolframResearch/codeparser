@@ -359,8 +359,10 @@ impl WLCharacter {
         // Except for BEL and DEL: those are uninterpretable
         //
         match self.to_point() {
-            #[rustfmt::skip]
-            Char('A' ..='Z' | 'a'..='z' |
+            Char('A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' |
+            'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' |
+            'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' |
+            'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' |
             '$' |
             '\x00' |'\x01' | '\x02' | '\x03' | '\x04' | '\x05' | '\x06' | /*    \x07*/
             '\x08' | /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ '\x0e' | '\x0f' |
@@ -369,7 +371,7 @@ impl WLCharacter {
             /* \x7f*/
                 true
             },
-            _ => false,
+            _ => false
         }
     }
 
@@ -409,35 +411,52 @@ impl WLCharacter {
 
     pub(crate) fn isUpper(&self) -> bool {
         match self.to_point() {
-            Char('A'..='Z') => true,
+            Char(
+                'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N'
+                | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z',
+            ) => true,
             _ => false,
         }
     }
 
     pub(crate) fn isAlpha(&self) -> bool {
         match self.to_point() {
-            Char('A'..='Z' | 'a'..='z') => true,
+            Char(
+                'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N'
+                | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | 'a' | 'b'
+                | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p'
+                | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z',
+            ) => true,
             _ => false,
         }
     }
 
     pub(crate) fn isDigit(&self) -> bool {
         match self.to_point() {
-            Char('0'..='9') => true,
+            Char('0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9') => true,
             _ => false,
         }
     }
 
     pub(crate) fn isAlphaOrDigit(&self) -> bool {
         match self.to_point() {
-            Char('A'..='Z' | 'a'..='z' | '0'..='9') => true,
+            Char(
+                'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N'
+                | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | 'a' | 'b'
+                | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p'
+                | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '0' | '1' | '2' | '3'
+                | '4' | '5' | '6' | '7' | '8' | '9',
+            ) => true,
             _ => false,
         }
     }
 
     pub(crate) fn isHex(&self) -> bool {
         match self.to_point() {
-            Char('A'..='F' | 'a'..='f' | '0'..='9') => true,
+            Char(
+                'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | '0' | '1'
+                | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9',
+            ) => true,
             _ => false,
         }
     }
