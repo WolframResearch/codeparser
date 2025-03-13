@@ -47,6 +47,9 @@ pub trait TokenInput: Clone {
     }
 
     fn into_owned(self) -> TokenString;
+
+    #[doc(hidden)]
+    fn fake(input: &'static str) -> Self;
 }
 
 pub trait TokenSource: Clone {
@@ -119,6 +122,14 @@ impl<'i> TokenInput for TokenStr<'i> {
             buf: buf.as_bytes().to_vec(),
         }
     }
+
+    fn fake(input: &'static str) -> Self {
+        TokenStr {
+            buf: BufferAndLength {
+                buf: input.as_bytes(),
+            },
+        }
+    }
 }
 
 impl TokenInput for TokenString {
@@ -131,13 +142,17 @@ impl TokenInput for TokenString {
     fn into_owned(self) -> TokenString {
         self
     }
+
+    fn fake(input: &'static str) -> Self {
+        TokenString {
+            buf: input.as_bytes().to_vec(),
+        }
+    }
 }
 
 impl TokenString {
     pub fn new(s: &'static str) -> Self {
-        TokenString {
-            buf: s.as_bytes().to_vec(),
-        }
+        Self::fake(s)
     }
 
     pub(crate) fn from_string(string: String) -> Self {
