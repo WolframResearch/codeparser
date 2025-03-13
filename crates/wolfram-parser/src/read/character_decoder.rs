@@ -311,7 +311,8 @@ fn CharacterDecoder_handleLongName(
         //
 
         if feature::CHECK_ISSUES
-            && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+            && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+                == ENABLE_CHARACTER_DECODING_ISSUES
         {
             let currentWLCharacterStartLoc = open_square.src_loc.previous();
 
@@ -435,7 +436,8 @@ fn CharacterDecoder_handleLongName(
         //
 
         if feature::CHECK_ISSUES
-            && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+            && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+                == ENABLE_CHARACTER_DECODING_ISSUES
         {
             let longNameEndLoc = session.SrcLoc;
 
@@ -473,7 +475,9 @@ fn CharacterDecoder_handleLongName(
 
             // session.addIssue(I);
 
-            if policy.contains(SCAN_FOR_UNRECOGNIZEDLONGNAMES) {
+            if (policy & SCAN_FOR_UNRECOGNIZEDLONGNAMES)
+                == SCAN_FOR_UNRECOGNIZEDLONGNAMES
+            {
                 let currentUnrecognizedStartLoc =
                     currentWLCharacterStartLoc.previous();
 
@@ -551,7 +555,8 @@ fn CharacterDecoder_handleLongName(
     let point: CodePoint = LONGNAME_TO_CODE_POINT_MAP__POINTS[found];
 
     if feature::CHECK_ISSUES
-        && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+        && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+            == ENABLE_CHARACTER_DECODING_ISSUES
     {
         // let longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
         let longNameBufAndLen =
@@ -602,7 +607,8 @@ fn CharacterDecoder_handle4Hex(
             //
 
             if feature::CHECK_ISSUES
-                && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+                && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+                    == ENABLE_CHARACTER_DECODING_ISSUES
             {
                 let currentWLCharacterStartLoc = colon.src_loc.previous();
 
@@ -706,7 +712,8 @@ fn CharacterDecoder_handle2Hex(
             //
 
             if feature::CHECK_ISSUES
-                && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+                && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+                    == ENABLE_CHARACTER_DECODING_ISSUES
             {
                 let currentWLCharacterStartLoc = dot.src_loc.previous();
 
@@ -810,7 +817,8 @@ fn CharacterDecoder_handleOctal(
             //
 
             if feature::CHECK_ISSUES
-                && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+                && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+                    == ENABLE_CHARACTER_DECODING_ISSUES
             {
                 let currentWLCharacterStartLoc = first_octal.src_loc.previous();
 
@@ -917,7 +925,8 @@ fn CharacterDecoder_handle6Hex(
             //
 
             if feature::CHECK_ISSUES
-                && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+                && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+                    == ENABLE_CHARACTER_DECODING_ISSUES
             {
                 let currentWLCharacterStartLoc = bar.src_loc.previous();
 
@@ -1102,7 +1111,8 @@ fn CharacterDecoder_handleUnhandledEscape(
     //
 
     if feature::CHECK_ISSUES
-        && policy.contains(ENABLE_CHARACTER_DECODING_ISSUES)
+        && (policy & ENABLE_CHARACTER_DECODING_ISSUES)
+            == ENABLE_CHARACTER_DECODING_ISSUES
     {
         let currentWLCharacterStartLoc = unhandled.src_loc.previous();
 
@@ -1852,7 +1862,7 @@ pub(crate) fn check_strange_syntax_issue(
     //
     // reduce severity of unexpected characters inside strings or comments
     //
-    let severity = if policy.contains(STRING_OR_COMMENT) {
+    let severity = if (policy & STRING_OR_COMMENT) == STRING_OR_COMMENT {
         Severity::Remark
     } else {
         Severity::Warning
