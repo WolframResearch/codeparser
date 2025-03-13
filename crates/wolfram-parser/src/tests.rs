@@ -17,15 +17,12 @@ use pretty_assertions::assert_eq;
 use crate::{
     ast::{Ast, AstMetadata},
     cst::{
-        BinaryNode, CallBody, CallHead, CallNode, CompoundNode, Cst,
-        Cst::Token as NVToken, GroupMissingCloserNode, GroupNode, InfixNode,
-        OperatorNode, PostfixNode, TriviaSeq,
+        BinaryNode, BinaryOperator, CallBody, CallHead, CallNode, CallOperator,
+        CompoundNode, CompoundOperator, Cst, Cst::Token as NVToken,
+        GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode,
+        InfixOperator, OperatorNode, PostfixNode, PostfixOperator,
     },
     macros::{src, token},
-    parse::operators::{
-        BinaryOperator, CallOperator, CompoundOperator, GroupOperator,
-        InfixOperator, PostfixOperator,
-    },
     parse_bytes_cst, parse_cst,
     source::{Source, SourceConvention},
     tokenize,

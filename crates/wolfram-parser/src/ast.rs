@@ -3,9 +3,8 @@
 use std::fmt::Debug;
 
 use crate::{
-    cst::{BoxKind, CodeNode},
+    cst::{BoxKind, CodeNode, GroupOperator, SyntaxErrorKind},
     issue::Issue,
-    parse::{operators::GroupOperator, SyntaxErrorKind},
     source::{BoxPosition, LineColumnSpan, Source, Span},
     tokenize::{TokenKind, TokenSource, TokenString},
 };

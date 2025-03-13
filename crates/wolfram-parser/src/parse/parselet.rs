@@ -5,16 +5,14 @@ mod under_parselet;
 
 
 use crate::{
-    panic_if_aborted,
-    parse::{
-        operators::{
-            BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
-            PostfixOperator, PrefixBinaryOperator, PrefixOperator,
-            TernaryOperator,
-        },
-        token_parselets::{under1Parselet, under2Parselet, under3Parselet},
-        ColonLHS, ParseBuilder, ParserSession, SyntaxErrorKind,
+    cst::{
+        BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
+        PostfixOperator, PrefixBinaryOperator, PrefixOperator, SyntaxErrorKind,
+        TernaryOperator,
     },
+    panic_if_aborted,
+    parse::token_parselets::{under1Parselet, under2Parselet, under3Parselet},
+    parse::{ColonLHS, ParseBuilder, ParserSession},
     precedence::Precedence,
     source::*,
     tokenize::{

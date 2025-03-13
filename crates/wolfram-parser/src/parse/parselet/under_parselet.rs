@@ -1,8 +1,7 @@
 use crate::{
+    cst::CompoundOperator,
     panic_if_aborted,
-    parse::{
-        operators::CompoundOperator, parselet::*, ParserSession, UnderParseData,
-    },
+    parse::{parselet::*, ParserSession, UnderParseData},
     tokenize::{TokenKind, TokenRef},
 };
 

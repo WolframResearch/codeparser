@@ -73,7 +73,7 @@ pub mod symbol;
 
 pub mod read;
 pub mod tokenize;
-pub mod parse;
+mod parse;
 
 pub mod iter;
 
@@ -439,8 +439,7 @@ pub fn tokenize_bytes<'i>(
 /// # use pretty_assertions::assert_eq;
 /// use wolfram_parser::{
 ///     parse_cst, ParseOptions, NodeSeq,
-///     cst::{Cst, InfixNode, OperatorNode},
-///     parse::operators::InfixOperator,
+///     cst::{Cst, InfixNode, InfixOperator, OperatorNode},
 ///     macros::{token, src},
 /// };
 ///

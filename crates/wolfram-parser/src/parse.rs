@@ -31,9 +31,9 @@
 //! 4. Call [`try_continue()`][ParserSession::try_continue] to invoke the
 //!    continuation function from the top context on the context stack.
 
-pub mod operators;
 
 pub(crate) mod parselet;
+pub(crate) mod operators;
 pub(crate) mod token_parselets;
 
 #[cfg(test)]
@@ -46,7 +46,10 @@ use std::fmt::Debug;
 
 use crate::{
     create_parse_result,
-    cst::TriviaSeq,
+    cst::{
+        BinaryOperator, CompoundOperator, SyntaxErrorKind, TernaryOperator,
+        TriviaSeq,
+    },
     feature, panic_if_aborted,
     parse::parselet::PrefixToplevelCloserParselet,
     precedence::Precedence,
@@ -60,8 +63,8 @@ use crate::{
 
 use self::{
     operators::{
-        BinaryOperator, CompoundOperator, GroupOperator, InfixOperator,
-        PostfixOperator, PrefixBinaryOperator, PrefixOperator, TernaryOperator,
+        GroupOperator, InfixOperator, PostfixOperator, PrefixBinaryOperator,
+        PrefixOperator,
     },
     parselet::{InfixParselet, PrefixParselet},
 };
@@ -381,13 +384,6 @@ pub(crate) enum UnderParseData<'i> {
         under: TokenRef<'i>,
         symbol: TokenRef<'i>,
     },
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum SyntaxErrorKind {
-    ExpectedSymbol,
-    ExpectedSet,
-    ExpectedTilde,
 }
 
 pub(crate) enum ColonLHS {

@@ -5,20 +5,15 @@ use wolfram_library_link::{expr::Expr, wstp};
 use wolfram_parser::{
     ast::{AbstractSyntaxError, Ast, AstMetadata},
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode, CodeNode,
-        CompoundNode, Cst, GroupMissingCloserNode, GroupMissingOpenerNode,
-        GroupNode, InfixNode, OperatorNode, PostfixNode, PrefixBinaryNode,
-        PrefixNode, SyntaxErrorNode, TernaryNode,
+        BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
+        CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator, Cst,
+        GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
+        GroupOperator, InfixNode, InfixOperator, Operator, OperatorNode,
+        PostfixNode, PostfixOperator, PrefixBinaryNode, PrefixBinaryOperator,
+        PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
+        TernaryNode, TernaryOperator,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
-    parse::{
-        operators::{
-            BinaryOperator, CallOperator, CompoundOperator, GroupOperator,
-            InfixOperator, Operator, PostfixOperator, PrefixBinaryOperator,
-            PrefixOperator, TernaryOperator,
-        },
-        SyntaxErrorKind,
-    },
     source::{
         BoxPosition, CharacterSpan, LineColumn, Location, Source, Span,
         SpanKind,

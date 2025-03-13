@@ -1,14 +1,12 @@
 use crate::{
     cst::{
-        BinaryNode, CallBody, CallHead, CallNode,
+        BinaryNode, BinaryOperator as BinaryOp, CallBody, CallHead, CallNode,
+        CallOperator as CallOp,
         Cst::{Binary, Call, Group, Ternary, Token},
-        GroupNode, OperatorNode, TernaryNode,
+        GroupNode, GroupOperator as GroupOp, OperatorNode, TernaryNode,
+        TernaryOperator as TernaryOp,
     },
     macros::{src, token},
-    parse::operators::{
-        BinaryOperator as BinaryOp, CallOperator as CallOp,
-        GroupOperator as GroupOp, TernaryOperator as TernaryOp,
-    },
     parse_cst,
     tests::assert_src,
     NodeSeq,

@@ -1,7 +1,9 @@
 use crate::{
-    cst::{BinaryNode, CompoundNode, Cst, OperatorNode},
+    cst::{
+        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, Cst,
+        OperatorNode,
+    },
     macros::{src, token},
-    parse::operators::{BinaryOperator, CompoundOperator},
     parse_cst,
     source::Span,
     tests::assert_src,
