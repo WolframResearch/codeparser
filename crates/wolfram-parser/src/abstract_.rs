@@ -11,7 +11,7 @@ use crate::{
         InfixNode, Node,
         Operator::{self, self as Op},
         OperatorNode, PostfixNode, PrefixBinaryNode, PrefixBinaryOperator, PrefixNode,
-        SyntaxErrorKind, SyntaxErrorNode, TernaryNode, TernaryOperator,
+        SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     issue::{Issue, IssueTag, Severity},
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
@@ -817,7 +817,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
             let [left, _, middle, middle_right, right] = expect_children(children);
 
             match op {
-                TernaryOperator::CodeParser_TernaryTilde => {
+                Operator::CodeParser_TernaryTilde => {
                     // handle  a ~f,~ b
                     //
                     // Cannot have  (f,)[a, b]
@@ -852,16 +852,16 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                     }
                 },
                 // Allow non-Symbols for left; not a syntax error
-                TernaryOperator::TagSet => {
+                Operator::TagSet => {
                     WL!( CallNode[ToNode[TagSet], {abstract_(left), abstract_(middle), abstract_(right)}, data] )
                 },
                 // Allow non-Symbols for left; not a syntax error
-                TernaryOperator::TagSetDelayed => {
+                Operator::TagSetDelayed => {
                     WL!( CallNode[ToNode[TagSetDelayed], {abstract_(left), abstract_(middle), abstract_(right)}, data])
                 },
                 // Allow non-Symbols for left; not a syntax error
                 // TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]
-                TernaryOperator::TagUnset => {
+                Operator::TagUnset => {
                     if !matches!(middle_right, Node::Token(Token { tok: TK::Equal, .. })) {
                         unhandled()
                     }
@@ -872,11 +872,11 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
 
                     WL!( CallNode[ToNode[TagUnset], {abstract_(left), abstract_(middle)}, data])
                 },
-                TernaryOperator::Span => WL!(
+                Operator::Span => WL!(
                     CallNode[ToNode[Span], {abstract_(left), abstract_(middle), abstract_(right)}, data]
                 ),
                 // TernaryOptionalPattern comes from boxes
-                TernaryOperator::CodeParser_TernaryOptionalPattern => WL!(
+                Operator::CodeParser_TernaryOptionalPattern => WL!(
                     CallNode[
                         ToNode[Optional],
                         {
@@ -886,6 +886,7 @@ pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>
                         data
                     ]
                 ),
+                _ => unhandled(),
             }
         },
 
