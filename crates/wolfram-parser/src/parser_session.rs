@@ -12,7 +12,7 @@ use crate::{
     cst::{CstNode, CstNodeSeq},
     feature,
     issue::Issue,
-    parselet::PrefixToplevelCloserParselet_parsePrefix,
+    parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine},
     quirks::{self, QuirkSettings},
     read::{ByteDecoder_nextSourceCharacter, Reader},
@@ -217,7 +217,9 @@ impl<'i> ParserSession<'i> {
                 continue;
             }
 
-            self.parse_prefix(peek);
+            let P = prefix_parselet(peek.tok);
+
+            P.parse_prefix(self, peek);
 
             exprs.push(self.pop_node());
 

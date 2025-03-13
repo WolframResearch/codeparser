@@ -43,7 +43,9 @@ fn TimesParselet_parseInfix<'i>(session: &mut ParserSession<'i>, TokIn: TokenRef
     assert!(Ctxt.f.is_none());
     Ctxt.f = Some(Parser_identity);
 
-    session.parse_prefix(Tok2);
+    let P2 = prefix_parselet(Tok2.tok);
+
+    P2.parse_prefix(session, Tok2);
 
     return TimesParselet_parseLoop(session);
     // #else
@@ -130,7 +132,9 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
         let Ctxt = session.top_context();
         assert!(Ctxt.f.unwrap() as usize == Parser_identity as usize);
 
-        session.parse_prefix(Tok2);
+        let P2 = prefix_parselet(Tok2.tok);
+
+        P2.parse_prefix(session, Tok2);
     } // while (true)
       // #else
       //     auto& Ctxt = session.top_context(;
