@@ -115,7 +115,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
         SymbolParselet_parseInfixContextSensitive(session, Tok);
 
         // MUSTTAIL
-        return UnderParselet_reduceBlankContextSensitive(session, P);
+        return UnderParselet_reduceBlankContextSensitive(session, P, TokIn /*ignored*/);
     }
 
     if Tok.tok == TOKEN_ERROR_EXPECTEDLETTERLIKE {
@@ -130,7 +130,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
         Parser_pushLeafAndNext(session, Tok);
 
         // MUSTTAIL
-        return UnderParselet_reduceBlankContextSensitive(session, P);
+        return UnderParselet_reduceBlankContextSensitive(session, P, TokIn /*ignored*/);
     }
 
     // no call needed here
@@ -150,7 +150,11 @@ fn UnderParselet_reduceBlank(session: &mut ParserSession, P: &UnderParselet) {
 //
 // Called from other parselets
 //
-fn UnderParselet_reduceBlankContextSensitive(session: &mut ParserSession, P: &UnderParselet) {
+fn UnderParselet_reduceBlankContextSensitive(
+    session: &mut ParserSession,
+    P: &UnderParselet,
+    _: Token,
+) {
     let BOp = P.getBOp();
 
     let context = Parser_popContext(session);
