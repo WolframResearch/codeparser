@@ -40,20 +40,23 @@ fn main() {
 
         let arg = &args[i];
 
-        match &**arg {
-            "-file" => {
-                i += 1;
-                file_input = Some(args[i].clone());
-            },
-            "-tokenize" => api_mode = ApiMode::Tokenize,
-            "-leaf" => api_mode = ApiMode::Leaf,
-            "-safestring" => api_mode = ApiMode::SafeString,
-            "--ast" => api_mode = ApiMode::Ast,
-            "-n" => output_mode = OutputMode::None,
-            "-check" | "-syntaxq" | "-syntaxQ" => {
-                output_mode = OutputMode::SyntaxQ;
-            },
-            _ => panic!(),
+        if arg == "-file" {
+            i += 1;
+            file_input = Some(args[i].clone());
+        } else if arg == "-tokenize" {
+            api_mode = ApiMode::Tokenize;
+        } else if arg == "-leaf" {
+            api_mode = ApiMode::Leaf;
+        } else if arg == "-safestring" {
+            api_mode = ApiMode::SafeString;
+        } else if arg == "--ast" {
+            api_mode = ApiMode::Ast;
+        } else if arg == "-n" {
+            output_mode = OutputMode::None;
+        } else if arg == "-check" || arg == "-syntaxq" || arg == "-syntaxQ" {
+            output_mode = OutputMode::SyntaxQ;
+        } else {
+            panic!()
         }
 
         i += 1;
