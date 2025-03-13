@@ -1,5 +1,5 @@
 use crate::{
-    node::{CompoundNode, Operator},
+    node::CompoundNode,
     panic_if_aborted,
     parselet::*,
     parser::{
@@ -9,16 +9,17 @@ use crate::{
     parser_session::ParserSession,
     precedence::*,
     source::*,
+    symbol::Symbol,
     token::{TokenKind, TokenRef},
     tokenizer::Tokenizer_currentToken,
 };
 
 impl UnderParselet {
-    pub(crate) const fn new(BOp: Operator, PBOp: Operator) -> Self {
+    pub(crate) const fn new(BOp: Symbol, PBOp: Symbol) -> Self {
         Self { BOp, PBOp }
     }
 
-    fn getBOp(&self) -> Operator {
+    fn getBOp(&self) -> Symbol {
         return self.BOp;
     }
 }

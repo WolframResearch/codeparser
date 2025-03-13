@@ -126,7 +126,7 @@ impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
 
         callLink.put_function(op_head.name, 3).unwrap();
 
-        op.to_symbol().put(callLink);
+        op.put(callLink);
 
         children.put(callLink);
 

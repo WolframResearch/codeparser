@@ -15,11 +15,13 @@ use pretty_assertions::assert_eq;
 use crate::{
     node::{
         CallNode, GroupNode, InfixNode, Node, Node::Token as NVToken, NodeContainer, NodeSeq,
-        Operator, OperatorNode,
+        OperatorNode,
     },
     parser_session::ParserSession,
     source::SourceConvention,
-    src, token,
+    src,
+    symbol_registration::SYMBOL_CODEPARSER_GROUPSQUARE,
+    token,
     token::BorrowedTokenInput,
     EncodingMode, FirstLineBehavior, DEFAULT_TAB_WIDTH,
 };
@@ -101,7 +103,8 @@ fn test_something() {
     assert_eq!(
         nodes("2 + 2"),
         vec![Node::Infix(InfixNode(OperatorNode {
-            op: Operator::Plus,
+            // Op: Symbol { name: "Plus", id: 514 },
+            op: crate::symbol_registration::SYMBOL_PLUS,
             children: NodeSeq(vec![
                 NVToken(token![Integer, "2" @ 0, src!(1:1-1:2)]),
                 NVToken(token![Whitespace, " " @ 1, src!(1:2-1:3)]),
@@ -122,7 +125,7 @@ fn test_something() {
                 src!(1:1-1:2)
             ])]),
             body: Box::new(Node::Group(GroupNode(OperatorNode {
-                op: Operator::CodeParser_GroupSquare,
+                op: SYMBOL_CODEPARSER_GROUPSQUARE,
                 children: NodeSeq(vec![
                     NVToken(token![OpenSquare, "[" @ 1, src!(1:2-1:3)]),
                     NVToken(token![Symbol, "x" @ 2, src!(1:3-1:4)]),
