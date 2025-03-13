@@ -79,8 +79,6 @@ mod token_enum;
 mod tokenizer;
 mod wl_character;
 
-mod read;
-
 mod error;
 mod parser;
 mod parser_session;

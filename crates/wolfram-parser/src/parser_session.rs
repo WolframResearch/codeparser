@@ -16,7 +16,6 @@ use crate::{
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     quirks::{self, QuirkSettings},
-    read::Reader,
     source::{SourceConvention, TOPLEVEL},
     token::{BorrowedTokenInput, Token, TokenKind, TokenRef},
     tokenizer::{
@@ -102,17 +101,16 @@ impl<'i> ParserSession<'i> {
     ) -> ParserSession {
         let mut session = ParserSession {
             tokenizer: Tokenizer {
-                reader: Reader {
-                    input,
-                    offset: 0,
-                    wasEOF: false,
-                    SrcLoc: srcConvention.newSourceLocation(),
-                },
+                input,
+                offset: 0,
+                wasEOF: false,
 
                 tabWidth,
                 firstLineBehavior,
 
                 encodingMode,
+
+                SrcLoc: srcConvention.newSourceLocation(),
 
                 GroupStack: Vec::new(),
 
