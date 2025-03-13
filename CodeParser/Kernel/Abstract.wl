@@ -144,32 +144,60 @@ Module[{ast, batchMode},
 ]]
 
 
+abstract[leaf_LeafNode] :=
+	abstractFunc[leaf]
 
 
 abstract[n_ErrorNode] :=
   n
 
 
-abstract[
-	expr:(
-		_LeafNode
-		| _CompoundNode
-		| _PrefixNode
-		| _PostfixNode
-		| _BinaryNode
-		| _InfixNode
-		| _TernaryNode
-		| _CallNode
-		| _GroupNode
-		| _PrefixBinaryNode
-		| _CodeNode
-		| _BoxNode
-		| _SyntaxErrorNode
-		| _GroupMissingCloserNode
-		| _GroupMissingOpenerNode
-	)
-] :=
-	libraryFunctionWrapper[abstractFunc, expr, $Quirks]
+
+abstract[expr_CompoundNode] :=
+	abstractFunc[expr]
+
+abstract[expr_PrefixNode] :=
+	abstractFunc[expr]
+
+abstract[expr_PostfixNode] :=
+	abstractFunc[expr]
+
+abstract[expr_BinaryNode] :=
+	abstractFunc[expr]
+
+abstract[expr_InfixNode] :=
+	abstractFunc[expr]
+
+abstract[expr_TernaryNode] :=
+	abstractFunc[expr]
+
+abstract[expr_CallNode] :=
+	abstractFunc[expr]
+
+abstract[expr_GroupNode] :=
+	abstractFunc[expr]
+
+abstract[expr_PrefixBinaryNode] :=
+	abstractFunc[expr]
+
+abstract[expr_CodeNode] :=
+	abstractFunc[expr]
+
+abstract[expr_BoxNode] :=
+	abstractFunc[expr]
+
+abstract[expr_SyntaxErrorNode] :=
+	abstractFunc[expr]
+
+abstract[expr_GroupMissingCloserNode] :=
+	abstractFunc[expr]
+
+abstract[expr_GroupMissingOpenerNode] :=
+	abstractFunc[expr]
+
+
+
+
 
 
 abstract[ContainerNode[tag_, childrenIn_, dataIn_]] :=
