@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 
 use crate::{
     abstract_::expect_children,
-    cst::{BinaryNode, CstNode, Operator, OperatorNode},
+    node::{BinaryNode, Node, Operator, OperatorNode},
     token::{Token, TokenInput, TokenKind as TK, TokenSource},
 };
 
@@ -124,11 +124,11 @@ pub(crate) fn is_quirk_enabled(quirk: Quirk) -> bool {
 }
 
 pub(crate) fn processInfixBinaryAtQuirk<I: TokenInput + Debug, S: TokenSource + Debug>(
-    node: CstNode<I, S>,
+    node: Node<I, S>,
     symName: &str,
-) -> CstNode<I, S> {
+) -> Node<I, S> {
     match node {
-        CstNode::Binary(BinaryNode(OperatorNode {
+        Node::Binary(BinaryNode(OperatorNode {
             op: Operator::CodeParser_BinaryAt,
             ref children,
             src: _,
@@ -137,7 +137,7 @@ pub(crate) fn processInfixBinaryAtQuirk<I: TokenInput + Debug, S: TokenSource + 
 
             if !matches!(
                 left,
-                CstNode::Token(Token {
+                Node::Token(Token {
                     tok: TK::Symbol,
                     input,
                     ..
@@ -146,7 +146,7 @@ pub(crate) fn processInfixBinaryAtQuirk<I: TokenInput + Debug, S: TokenSource + 
                 return node;
             }
 
-            if !matches!(middle, CstNode::Token(Token { tok: TK::At, .. })) {
+            if !matches!(middle, Node::Token(Token { tok: TK::At, .. })) {
                 todo!()
             }
 
