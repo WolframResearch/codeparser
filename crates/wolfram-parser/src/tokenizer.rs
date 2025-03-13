@@ -11,7 +11,7 @@ use crate::{
     issue::{CodeAction, FormatIssue, IssueTag, Severity, SyntaxIssue},
     read::{
         ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter,
-        CharacterDecoder_nextWLCharacter, InputMark, Reader,
+        CharacterDecoder_nextWLCharacter, Reader,
     },
     source::{
         Buffer, BufferAndLength, NextPolicy, Source, SourceCharacter, SourceLocation, INSIDE_SLOT,
@@ -1998,24 +1998,27 @@ fn Tokenizer_handleNumber<'i>(
     let mut leadingDigitsCount: u32 = 0;
 
     //
-    // leading_digits_end_mark will point to the first character after all leading digits and ^^
+    // leadingDigitsEnd will point to the first character after all leading digits and ^^
     //
     // 16^^0.F
-    //      ^leading_digits_end_mark
+    //      ^leadingDigitsEnd
     //
     // 16^^.F
-    //     ^leading_digits_end_mark
+    //     ^leadingDigitsEnd
     //
     // 0.123
-    //  ^leading_digits_end_mark
+    //  ^leadingDigitsEnd
     //
-    let mut leading_digits_end_mark = InputMark::new(tokenStartBuf.offset, tokenStartLoc);
+    let mut leadingDigitsEndOffset: usize = tokenStartBuf.offset;
+    let mut leadingDigitsEndLoc = tokenStartLoc;
 
     let mut caret1Buf: Option<Buffer> = None;
-    let mut caret_1_mark: Option<InputMark> = None;
+    let mut caret_1_offset: Option<usize> = None;
+    let mut caret1Loc: Option<SourceLocation> = None;
 
     let mut starBuf: Option<Buffer> = None;
-    let mut star_mark: Option<InputMark> = None;
+    let mut star_offset: Option<usize> = None;
+    let mut starLoc: Option<SourceLocation> = None;
 
     if c.isDigit() {
         //        leadingDigitsCount++;
@@ -2044,7 +2047,8 @@ fn Tokenizer_handleNumber<'i>(
         // Count the rest of the leading digits
         //
 
-        leading_digits_end_mark = session.mark();
+        leadingDigitsEndOffset = session.offset;
+        leadingDigitsEndLoc = session.SrcLoc;
 
         if c.isDigit() {
             let mut count: u32 = 0;
@@ -2052,7 +2056,8 @@ fn Tokenizer_handleNumber<'i>(
 
             leadingDigitsCount += count;
 
-            leading_digits_end_mark = session.mark();
+            leadingDigitsEndOffset = session.offset;
+            leadingDigitsEndLoc = session.SrcLoc;
         }
 
         if (policy & INTEGER_SHORT_CIRCUIT) == INTEGER_SHORT_CIRCUIT {
@@ -2103,12 +2108,14 @@ fn Tokenizer_handleNumber<'i>(
             Char('^' | '*' | '.' | '`') => {
                 if c.to_point() == '^' {
                     caret1Buf = Some(session.buffer());
-                    caret_1_mark = Some(session.mark());
+                    caret_1_offset = Some(session.offset);
+                    caret1Loc = Some(session.SrcLoc);
 
                     assert!(utils::ifASCIIWLCharacter(caret1Buf.unwrap()[0], b'^'));
                 } else if c.to_point() == '*' {
                     starBuf = Some(session.buffer());
-                    star_mark = Some(session.mark());
+                    star_offset = Some(session.offset);
+                    starLoc = Some(session.SrcLoc);
 
                     assert!(utils::ifASCIIWLCharacter(starBuf.unwrap()[0], b'*'));
                 }
@@ -2150,7 +2157,8 @@ fn Tokenizer_handleNumber<'i>(
                 // Must now do surgery and back up
                 //
 
-                session.seek(caret_1_mark.unwrap());
+                session.offset = caret_1_offset.unwrap();
+                session.SrcLoc = caret1Loc.unwrap();
 
                 //
                 // Success!
@@ -2234,7 +2242,8 @@ fn Tokenizer_handleNumber<'i>(
                         &mut Ctxt,
                     );
 
-                    leading_digits_end_mark = session.mark();
+                    leadingDigitsEndOffset = session.offset;
+                    leadingDigitsEndLoc = session.SrcLoc;
 
                     match c.to_point() {
                         //
@@ -2243,7 +2252,8 @@ fn Tokenizer_handleNumber<'i>(
                         Char('*' | '.' | '`') => {
                             if c.to_point() == '*' {
                                 starBuf = Some(session.buffer());
-                                star_mark = Some(session.mark());
+                                star_offset = Some(session.offset);
+                                starLoc = Some(session.SrcLoc);
 
                                 assert!(utils::ifASCIIWLCharacter(starBuf.unwrap()[0], b'*'));
                             }
@@ -2281,7 +2291,8 @@ fn Tokenizer_handleNumber<'i>(
                     // Something like  2^^.0
                     //
 
-                    leading_digits_end_mark = session.mark();
+                    leadingDigitsEndOffset = session.offset;
+                    leadingDigitsEndLoc = session.SrcLoc;
 
                     //
                     // Preserve c, but advance buffer to next character
@@ -2334,7 +2345,8 @@ fn Tokenizer_handleNumber<'i>(
             session,
             tokenStartBuf,
             tokenStartLoc,
-            leading_digits_end_mark,
+            leadingDigitsEndOffset,
+            leadingDigitsEndLoc,
             c,
             Ctxt.Base,
             policy,
@@ -2397,7 +2409,8 @@ fn Tokenizer_handleNumber<'i>(
                     Char('`' | '*') => {
                         if c.to_point() == '*' {
                             starBuf = Some(session.buffer());
-                            star_mark = Some(session.mark());
+                            star_offset = Some(session.offset);
+                            starLoc = Some(session.SrcLoc);
 
                             assert!(utils::ifASCIIWLCharacter(starBuf.unwrap()[0], b'*'));
                         }
@@ -2439,7 +2452,8 @@ fn Tokenizer_handleNumber<'i>(
                     Char('`' | '*') => {
                         if c.to_point() == '*' {
                             starBuf = Some(session.buffer());
-                            star_mark = Some(session.mark());
+                            star_offset = Some(session.offset);
+                            starLoc = Some(session.SrcLoc);
 
                             assert!(utils::ifASCIIWLCharacter(starBuf.unwrap()[0], b'*'));
                         }
@@ -2489,7 +2503,8 @@ fn Tokenizer_handleNumber<'i>(
         let mut precOrAccSupplied = false;
 
         let signBuf: BufferAndLength;
-        let mut sign_mark: Option<InputMark> = None;
+        let mut sign_offset: Option<usize> = None;
+        let mut signLoc: Option<SourceLocation> = None;
 
         if c.to_point() == '`' {
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
@@ -2508,7 +2523,8 @@ fn Tokenizer_handleNumber<'i>(
                 // Take one character so we can display this
                 signBuf = BufferAndLength::from_buffer_with_len(session.buffer(), 1);
 
-                sign_mark = Some(session.mark());
+                sign_offset = Some(session.offset);
+                signLoc = Some(session.SrcLoc);
 
                 assert!(
                     utils::ifASCIIWLCharacter(signBuf.buf[0], b'-')
@@ -2547,7 +2563,7 @@ fn Tokenizer_handleNumber<'i>(
                                         signBuf.as_str()
                                     ),
                                     Severity::Warning,
-                                    Source::from_location(sign_mark.unwrap().src_loc),
+                                    Source::from_location(signLoc.unwrap()),
                                     0.95,
                                     vec![],
                                     vec!["This is usually unintentional.".into()],
@@ -2577,7 +2593,7 @@ fn Tokenizer_handleNumber<'i>(
                                         signBuf.as_str()
                                     ),
                                     Severity::Warning,
-                                    Source::from_location(sign_mark.unwrap().src_loc),
+                                    Source::from_location(signLoc.unwrap()),
                                     0.95,
                                     vec![],
                                     vec!["This is usually unintentional.".into()],
@@ -2610,7 +2626,7 @@ fn Tokenizer_handleNumber<'i>(
                         //
                         // Must now do surgery and back up
                         //
-                        Tokenizer_backupAndWarn(session, sign_mark.unwrap());
+                        Tokenizer_backupAndWarn(session, sign_offset.unwrap(), signLoc.unwrap());
 
                         //
                         // Success!
@@ -2662,8 +2678,9 @@ fn Tokenizer_handleNumber<'i>(
 
         match c.to_point() {
             Char('.') => {
+                let dot_offset = session.offset;
                 let dotBuf = session.buffer();
-                let dot_mark = session.mark();
+                let dotLoc = session.SrcLoc;
 
                 assert!(utils::ifASCIIWLCharacter(dotBuf[0], b'.'));
 
@@ -2740,7 +2757,7 @@ fn Tokenizer_handleNumber<'i>(
                         // Must now do surgery and back up
                         //
 
-                        Tokenizer_backupAndWarn(session, dot_mark);
+                        Tokenizer_backupAndWarn(session, dot_offset, dotLoc);
 
                         //
                         // Success!
@@ -2782,7 +2799,8 @@ fn Tokenizer_handleNumber<'i>(
                     session,
                     tokenStartBuf,
                     tokenStartLoc,
-                    dot_mark,
+                    dot_offset,
+                    dotLoc,
                     c,
                     baseToUse,
                     policy,
@@ -2812,7 +2830,11 @@ fn Tokenizer_handleNumber<'i>(
                             // Something like  1`+..
                             //
 
-                            Tokenizer_backupAndWarn(session, sign_mark.unwrap());
+                            Tokenizer_backupAndWarn(
+                                session,
+                                sign_offset.unwrap(),
+                                signLoc.unwrap(),
+                            );
 
                             //
                             // Success!
@@ -2870,7 +2892,8 @@ fn Tokenizer_handleNumber<'i>(
                 }
 
                 starBuf = Some(session.buffer());
-                star_mark = Some(session.mark());
+                star_offset = Some(session.offset);
+                starLoc = Some(session.SrcLoc);
 
                 assert!(utils::ifASCIIWLCharacter(starBuf.unwrap()[0], b'*'));
 
@@ -2922,7 +2945,8 @@ fn Tokenizer_handleNumber<'i>(
         // Must now do surgery and back up
         //
 
-        session.seek(star_mark.unwrap());
+        session.offset = star_offset.unwrap();
+        session.SrcLoc = starLoc.unwrap();
 
         //
         // Success!
@@ -3000,8 +3024,9 @@ fn Tokenizer_handleNumber<'i>(
 
     assert!(c.to_point() == '.');
 
+    let dot_offset = session.offset;
     let dotBuf = session.buffer();
-    let dot_mark = session.mark();
+    let dotLoc = session.SrcLoc;
 
     assert!(utils::ifASCIIWLCharacter(dotBuf[0], b'.'));
 
@@ -3014,7 +3039,8 @@ fn Tokenizer_handleNumber<'i>(
         session,
         tokenStartBuf,
         tokenStartLoc,
-        dot_mark,
+        dot_offset,
+        dotLoc,
         c,
         Ctxt.Base,
         policy,
@@ -3109,7 +3135,8 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
     session: &mut Tokenizer<'i>,
     tokenStartBuf: Buffer<'i>,
     tokenStartLoc: SourceLocation,
-    dot_mark: InputMark,
+    dot_offset: usize,
+    dotLoc: SourceLocation,
     mut c: WLCharacter,
     base: i32,
     policy: NextPolicy,
@@ -3124,7 +3151,8 @@ fn Tokenizer_handlePossibleFractionalPart<'i>(
         session,
         tokenStartBuf,
         tokenStartLoc,
-        dot_mark,
+        dot_offset,
+        dotLoc,
         c,
         base,
         policy,
@@ -3144,7 +3172,8 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
     session: &mut Tokenizer<'i>,
     tokenStartBuf: Buffer<'i>,
     tokenStartLoc: SourceLocation,
-    dot_mark: InputMark,
+    dot_offset: usize,
+    dotLoc: SourceLocation,
     mut c: WLCharacter,
     base: i32,
     policy: NextPolicy,
@@ -3163,7 +3192,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
         // Must now do surgery and back up
         //
 
-        Tokenizer_backupAndWarn(session, dot_mark);
+        Tokenizer_backupAndWarn(session, dot_offset, dotLoc);
 
         c = Tokenizer_currentWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
@@ -3193,7 +3222,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
 
                 Actions.push(CodeAction::insert_text(
                     "Insert ``*``".into(),
-                    Source::from_location(dot_mark.src_loc),
+                    Source::from_location(dotLoc),
                     "*".into(),
                 ));
 
@@ -3201,7 +3230,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
                     IssueTag::UnexpectedImplicitTimes,
                     format!("Suspicious syntax."),
                     Severity::Error,
-                    Source::from_location(dot_mark.src_loc),
+                    Source::from_location(dotLoc),
                     0.99,
                     Actions,
                     vec![],
@@ -3217,13 +3246,17 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
     return (HandledFractionalPart::Count(0), c);
 }
 
-fn Tokenizer_backupAndWarn<'i>(session: &mut Tokenizer<'i>, reset: InputMark) {
+fn Tokenizer_backupAndWarn<'i>(
+    session: &mut Tokenizer<'i>,
+    resetBuf: usize,
+    resetLoc: SourceLocation,
+) {
     if feature::CHECK_ISSUES {
         let mut Actions: Vec<CodeAction> = Vec::new();
 
         Actions.push(CodeAction::insert_text(
             "Insert space".into(),
-            Source::from_location(reset.src_loc),
+            Source::from_location(resetLoc),
             " ".into(),
         ));
 
@@ -3231,7 +3264,7 @@ fn Tokenizer_backupAndWarn<'i>(session: &mut Tokenizer<'i>, reset: InputMark) {
             IssueTag::Ambiguous,
             "Ambiguous syntax.".into(),
             Severity::Formatting,
-            Source::from_location(reset.src_loc),
+            Source::from_location(resetLoc),
             1.0,
             Actions,
             vec![],
@@ -3240,7 +3273,8 @@ fn Tokenizer_backupAndWarn<'i>(session: &mut Tokenizer<'i>, reset: InputMark) {
         session.addIssue(I);
     }
 
-    session.seek(reset);
+    session.offset = resetBuf;
+    session.SrcLoc = resetLoc;
 }
 
 //
@@ -3586,7 +3620,8 @@ fn Tokenizer_handleEqual<'i>(
             );
         },
         Char('!') => {
-            let bang_mark = session.mark();
+            let bang_offset = session.offset;
+            let bangLoc = session.SrcLoc;
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
@@ -3612,7 +3647,7 @@ fn Tokenizer_handleEqual<'i>(
             // Must now do surgery and back up
             //
 
-            Tokenizer_backupAndWarn(session, bang_mark);
+            Tokenizer_backupAndWarn(session, bang_offset, bangLoc);
 
             return Token(
                 TokenKind::Equal,
@@ -3807,7 +3842,8 @@ fn Tokenizer_handleLess<'i>(
             );
         },
         Char('-') => {
-            let minus_mark = session.mark();
+            let minus_offset = session.offset;
+            let minusLoc = session.SrcLoc;
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
@@ -3833,7 +3869,7 @@ fn Tokenizer_handleLess<'i>(
             // Must now do surgery and back up
             //
 
-            Tokenizer_backupAndWarn(session, minus_mark);
+            Tokenizer_backupAndWarn(session, minus_offset, minusLoc);
 
             return Token(
                 TokenKind::Less,
@@ -4153,7 +4189,8 @@ fn Tokenizer_handleBar<'i>(
             );
         },
         Char('-') => {
-            let bar_mark = session.mark();
+            let bar_offset = session.offset;
+            let barLoc = session.SrcLoc;
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
@@ -4179,7 +4216,7 @@ fn Tokenizer_handleBar<'i>(
             // Must now do surgery and back up
             //
 
-            Tokenizer_backupAndWarn(session, bar_mark);
+            Tokenizer_backupAndWarn(session, bar_offset, barLoc);
 
             return Token(
                 TokenKind::Bar,
@@ -4450,7 +4487,8 @@ fn Tokenizer_handleSlash<'i>(
             );
         },
         Char('.') => {
-            let dot_mark = session.mark();
+            let dot_offset = session.offset;
+            let dotLoc = session.SrcLoc;
 
             Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
@@ -4474,7 +4512,7 @@ fn Tokenizer_handleSlash<'i>(
             // Must now do surgery and back up
             //
 
-            Tokenizer_backupAndWarn(session, dot_mark);
+            Tokenizer_backupAndWarn(session, dot_offset, dotLoc);
 
             return Token(
                 TokenKind::Slash,
@@ -4982,20 +5020,23 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             // Try to reconstruct \[XXX]
             //
 
-            let mut reset_mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetLoc = session.SrcLoc;
 
             c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             let mut wellFormed = false;
 
             if c.isUpper() {
-                reset_mark = session.mark();
+                resetBuf = session.offset;
+                resetLoc = session.SrcLoc;
 
                 c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                 loop {
                     if c.isAlphaOrDigit() {
-                        reset_mark = session.mark();
+                        resetBuf = session.offset;
+                        resetLoc = session.SrcLoc;
 
                         c = Tokenizer_nextWLCharacter(
                             session,
@@ -5010,7 +5051,8 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
                     if c.to_point() == ']' {
                         wellFormed = true;
                     } else {
-                        session.seek(reset_mark);
+                        session.offset = resetBuf;
+                        session.SrcLoc = resetLoc;
                     }
 
                     break;
@@ -5036,20 +5078,23 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             // Try to reconstruct \:XXXX
             //
 
-            let mut reset_mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetLoc = session.SrcLoc;
 
             c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..4 {
                 if c.isHex() {
-                    reset_mark = session.mark();
+                    resetBuf = session.offset;
+                    resetLoc = session.SrcLoc;
 
                     c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
 
-                session.seek(reset_mark);
+                session.offset = resetBuf;
+                session.SrcLoc = resetLoc;
 
                 break;
             }
@@ -5065,20 +5110,23 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             // Try to reconstruct \.XX
             //
 
-            let mut reset_mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetLoc = session.SrcLoc;
 
             c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..2 {
                 if c.isHex() {
-                    reset_mark = session.mark();
+                    resetBuf = session.offset;
+                    resetLoc = session.SrcLoc;
 
                     c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
 
-                session.seek(reset_mark);
+                session.offset = resetBuf;
+                session.SrcLoc = resetLoc;
 
                 break;
             }
@@ -5094,20 +5142,23 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             // Try to reconstruct \XXX
             //
 
-            let mut reset_mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetLoc = session.SrcLoc;
 
             c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..3 {
                 if c.isOctal() {
-                    reset_mark = session.mark();
+                    resetBuf = session.offset;
+                    resetLoc = session.SrcLoc;
 
                     c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
 
-                session.seek(reset_mark);
+                session.offset = resetBuf;
+                session.SrcLoc = resetLoc;
 
                 break;
             }
@@ -5123,19 +5174,23 @@ fn Tokenizer_handleUnhandledBackslash<'i>(
             // Try to reconstruct \|XXXXXX
             //
 
-            let mut reset_mark = session.mark();
+            let mut resetBuf = session.offset;
+            let mut resetLoc = session.SrcLoc;
+
             c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
             for _ in 0..6 {
                 if c.isHex() {
-                    reset_mark = session.mark();
+                    resetBuf = session.offset;
+                    resetLoc = session.SrcLoc;
 
                     c = Tokenizer_nextWLCharacter(session, tokenStartBuf, tokenStartLoc, policy);
 
                     continue;
                 }
 
-                session.seek(reset_mark);
+                session.offset = resetBuf;
+                session.SrcLoc = resetLoc;
 
                 break;
             }
