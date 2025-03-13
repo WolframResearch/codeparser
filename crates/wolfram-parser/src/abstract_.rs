@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 use crate::{
     agg::{self, AggNodeSeq, LHS},
-    ast::{AbstractSyntaxError, Ast, AstCall, AstMetadata, WL},
+    ast::{Ast, AstCall, AstMetadata, WL},
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallHead,
         CallNode, CallOperator, CodeNode, CompoundNode, CompoundOperator, Cst,
@@ -809,7 +809,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         Some(TokenKind::Tilde),
                     );
 
-                    abstractInfixTilde(children, AstMetadata::from_src(data))
+                    abstractInfixTilde(children, data)
                 },
 
                 // abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] :=
@@ -1612,6 +1612,7 @@ impl<I: TokenInput, S> Negated<I, S> {
             },
             Negated::RealNegated(input) => {
                 let str = input.as_str();
+
 
                 agg::WL!( LeafNode[Real, format!("-{str}"), data] )
             },
@@ -2567,7 +2568,7 @@ fn vectorInequalityAffinity(op: Symbol) -> Option<bool> {
 
 fn abstractInfixTilde<I: TokenInput + Debug, S: TokenSource + Debug>(
     children: Vec<Cst<I, S>>,
-    data: AstMetadata,
+    data: S,
 ) -> Ast {
     // TODO:
     match children.as_slice() {
@@ -2577,11 +2578,7 @@ fn abstractInfixTilde<I: TokenInput + Debug, S: TokenSource + Debug>(
             let left = abstract_(left);
             let middle = abstract_(middle);
 
-            Ast::AbstractSyntaxError {
-                kind: AbstractSyntaxError::ExpectedTilde,
-                args: vec![left, middle],
-                data,
-            }
+            WL!(AbstractSyntaxErrorNode[ExpectedTilde, {left, middle}, data])
         },
         [_, _, _] => {
             let [left, middle, right] = expect_children(NodeSeq(children));
@@ -2592,6 +2589,8 @@ fn abstractInfixTilde<I: TokenInput + Debug, S: TokenSource + Debug>(
                 data,
             )
         },
+        // abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_, right_, rest___}, dataIn_]] :=
+        //     abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTilde[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
         [left, middle, right, rest @ ..] => {
             // TODO(optimization): Refactor to remove these clone()'s/to_vec().
             let left = left.clone();
@@ -2600,10 +2599,7 @@ fn abstractInfixTilde<I: TokenInput + Debug, S: TokenSource + Debug>(
             let rest = rest.to_vec();
 
             abstractInfixTildeLeftAlreadyAbstracted(
-                abstractInfixTilde(
-                    vec![left, middle, right],
-                    AstMetadata::empty(),
-                ),
+                abstractInfixTilde(vec![left, middle, right], S::unknown()),
                 rest,
                 data,
             )
@@ -2620,18 +2616,13 @@ fn abstractInfixTildeLeftAlreadyAbstracted<
 >(
     left: Ast,
     rest: Vec<Cst<I, S>>,
-    data: AstMetadata,
+    data: S,
 ) -> Ast {
     match rest.as_slice() {
         [_] => {
             let [middle] = expect_children(NodeSeq(rest));
             let middle = abstract_(middle);
-
-            Ast::AbstractSyntaxError {
-                kind: AbstractSyntaxError::ExpectedTilde,
-                args: vec![left, middle],
-                data
-            }
+            WL!(AbstractSyntaxErrorNode[ExpectedTilde, {left, middle}, data])
         },
         [_, _] => {
             let [middle, right] = expect_children(NodeSeq(rest));
@@ -2644,7 +2635,7 @@ fn abstractInfixTildeLeftAlreadyAbstracted<
             let rest = rest.to_vec();
 
             abstractInfixTildeLeftAlreadyAbstracted(
-                abstractInfixTildeLeftAlreadyAbstracted(left, vec![middle, right], AstMetadata::empty()),
+                abstractInfixTildeLeftAlreadyAbstracted(left, vec![middle, right], S::unknown()),
                 rest,
                 data,
             )
