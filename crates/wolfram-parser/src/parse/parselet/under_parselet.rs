@@ -75,15 +75,11 @@ impl UnderParselet {
 
                 session.push_context(Precedence::HIGHEST);
 
-                // Context-sensitive infix parse of Symbol token
                 //
-                // Something like  _b
-                //                  ^
-                // We know we are already in the middle of parsing _
+                // Context-sensitive and OK to build stack
                 //
-                // Just push this symbol
-                //
-                session.push_leaf_and_next(tok);
+
+                SymbolParselet::parse_infix_context_sensitive(session, tok);
 
                 session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
             },
