@@ -301,7 +301,6 @@ pub struct Issue {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(strum::IntoStaticStr)]
 pub enum IssueTag {
     Ambiguous,
     UnhandledCharacter,
@@ -322,7 +321,6 @@ pub enum IssueTag {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-#[derive(strum::IntoStaticStr)]
 pub enum Severity {
     Formatting,
     Remark,
