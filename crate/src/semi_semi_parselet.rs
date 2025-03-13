@@ -10,6 +10,7 @@ use crate::{
     },
     parser_session::ParserSession,
     precedence::*,
+    source::Source,
     source::TOPLEVEL,
     symbol_registration::SYMBOL_SPAN,
     token::{Token, TokenKind},
@@ -36,7 +37,11 @@ impl InfixParselet for SemiSemiParselet {
         //
 
         if Parser_checkSpan(session) {
-            return Token::error_at_start(TokenKind::Fake_ImplicitTimes, TokIn);
+            return Token::new2(
+                TokenKind::Fake_ImplicitTimes,
+                TokIn.span,
+                Source::from_location(TokIn.src.start),
+            );
         }
 
         return TokIn;
@@ -55,7 +60,11 @@ fn SemiSemiParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
 
     Parser_pushLeaf(
         session,
-        Token::error_at_start(TokenKind::Fake_ImplicitOne, TokIn),
+        Token::new2(
+            TokenKind::Fake_ImplicitOne,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        ),
     );
 
     Parser_pushContext(session, PRECEDENCE_SEMISEMI);
@@ -102,7 +111,11 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
 
         Parser_pushLeaf(
             session,
-            Token::error_at_start(TokenKind::Fake_ImplicitAll, SecondTok),
+            Token::new2(
+                TokenKind::Fake_ImplicitAll,
+                SecondTok.span,
+                Source::from_location(SecondTok.src.start),
+            ),
         );
 
         //
@@ -136,7 +149,11 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
 
     Parser_pushLeaf(
         session,
-        Token::error_at_start(TokenKind::Fake_ImplicitAll, SecondTok),
+        Token::new2(
+            TokenKind::Fake_ImplicitAll,
+            SecondTok.span,
+            Source::from_location(SecondTok.src.start),
+        ),
     );
 
     SecondTok.skip(&mut session.tokenizer);

@@ -18,6 +18,7 @@ use crate::{
     },
     parser_session::ParserSession,
     precedence::{Precedence, *},
+    source::Source,
     source::*,
     symbol::Symbol,
     symbol_registration::*,
@@ -423,9 +424,17 @@ fn PrefixCloserParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     let createdToken: Token;
 
     if Parser_topPrecedence(session) == PRECEDENCE_COMMA {
-        createdToken = Token::error_at_start(TokenKind::Error_InfixImplicitNull, TokIn);
+        createdToken = Token::new2(
+            TokenKind::Error_InfixImplicitNull,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        );
     } else {
-        createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, TokIn);
+        createdToken = Token::new2(
+            TokenKind::Error_ExpectedOperand,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        );
     }
 
     Parser_pushLeaf(session, createdToken);
@@ -462,7 +471,7 @@ pub(crate) fn PrefixToplevelCloserParselet_parsePrefix(session: &mut ParserSessi
 
     Parser_pushLeaf(
         session,
-        Token::error_at(TokenKind::Error_UnexpectedCloser, TokIn),
+        Token::new2(TokenKind::Error_UnexpectedCloser, TokIn.span, TokIn.src),
     );
 
     TokIn.skip(&mut session.tokenizer);
@@ -492,9 +501,17 @@ fn PrefixEndOfFileParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
     let createdToken: Token;
 
     if Parser_topPrecedence(session) == PRECEDENCE_COMMA {
-        createdToken = Token::error_at_start(TokenKind::Error_InfixImplicitNull, TokIn);
+        createdToken = Token::new2(
+            TokenKind::Error_InfixImplicitNull,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        );
     } else {
-        createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, TokIn);
+        createdToken = Token::new2(
+            TokenKind::Error_ExpectedOperand,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        );
     }
 
     Parser_pushLeaf(session, createdToken);
@@ -519,7 +536,7 @@ fn PrefixUnsupportedTokenParselet_parsePrefix(session: &mut ParserSession, TokIn
 
     Parser_pushLeaf(
         session,
-        Token::error_at(TokenKind::Error_UnsupportedToken, TokIn),
+        Token::new2(TokenKind::Error_UnsupportedToken, TokIn.span, TokIn.src),
     );
 
     TokIn.skip(&mut session.tokenizer);
@@ -551,9 +568,17 @@ fn PrefixCommaParselet_parsePrefix(session: &mut ParserSession, TokIn: Token) {
     let createdToken: Token;
 
     if Parser_topPrecedence(session) == PRECEDENCE_LOWEST {
-        createdToken = Token::error_at_start(TokenKind::Error_PrefixImplicitNull, TokIn);
+        createdToken = Token::new2(
+            TokenKind::Error_PrefixImplicitNull,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        );
     } else {
-        createdToken = Token::error_at_start(TokenKind::Error_ExpectedOperand, TokIn);
+        createdToken = Token::new2(
+            TokenKind::Error_ExpectedOperand,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        );
     }
 
     Parser_pushLeaf(session, createdToken);
@@ -580,7 +605,11 @@ fn PrefixUnhandledParselet_parsePrefix(session: &mut ParserSession, TokIn: Token
 
     Parser_pushLeaf(
         session,
-        Token::error_at_start(TokenKind::Error_ExpectedOperand, TokIn),
+        Token::new2(
+            TokenKind::Error_ExpectedOperand,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        ),
     );
 
     //
@@ -875,7 +904,11 @@ impl InfixParselet for InfixImplicitTimesParselet {
 
 
     fn processImplicitTimes(&self, _session: &mut ParserSession, TokIn: Token) -> Token {
-        return Token::error_at_start(TokenKind::Fake_ImplicitTimes, TokIn);
+        return Token::new2(
+            TokenKind::Fake_ImplicitTimes,
+            TokIn.span,
+            Source::from_location(TokIn.src.start),
+        );
     }
 }
 
@@ -1983,7 +2016,11 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
         Parser_pushLeaf(
             session,
-            Token::error_at_start(TokenKind::Error_InfixImplicitNull, Tok2),
+            Token::new2(
+                TokenKind::Error_InfixImplicitNull,
+                Tok2.span,
+                Source::from_location(Tok2.src.start),
+            ),
         );
 
         // #if !USE_MUSTTAIL
@@ -2064,7 +2101,11 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
 
             Parser_pushLeaf(
                 session,
-                Token::error_at_start(TokenKind::Error_InfixImplicitNull, Tok2),
+                Token::new2(
+                    TokenKind::Error_InfixImplicitNull,
+                    Tok2.span,
+                    Source::from_location(Tok2.src.start),
+                ),
             );
 
             // #if !USE_MUSTTAIL
@@ -2153,7 +2194,11 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
         Parser_pushLeaf(
             session,
-            Token::error_at_start(TokenKind::Fake_ImplicitNull, Tok2),
+            Token::new2(
+                TokenKind::Fake_ImplicitNull,
+                Tok2.span,
+                Source::from_location(Tok2.src.start),
+            ),
         );
 
         //
@@ -2211,7 +2256,11 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, TokIn: Token) {
 
     Parser_pushLeaf(
         session,
-        Token::error_at_start(TokenKind::Fake_ImplicitNull, Tok2),
+        Token::new2(
+            TokenKind::Fake_ImplicitNull,
+            Tok2.span,
+            Source::from_location(Tok2.src.start),
+        ),
     );
 
     //
@@ -2269,7 +2318,11 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
 
             Parser_pushLeaf(
                 session,
-                Token::error_at_start(TokenKind::Fake_ImplicitNull, Tok2),
+                Token::new2(
+                    TokenKind::Fake_ImplicitNull,
+                    Tok2.span,
+                    Source::from_location(Tok2.src.start),
+                ),
             );
 
             //
@@ -2317,7 +2370,11 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
 
         Parser_pushLeaf(
             session,
-            Token::error_at_start(TokenKind::Fake_ImplicitNull, Tok2),
+            Token::new2(
+                TokenKind::Fake_ImplicitNull,
+                Tok2.span,
+                Source::from_location(Tok2.src.start),
+            ),
         );
 
         //

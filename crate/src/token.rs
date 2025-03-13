@@ -99,21 +99,14 @@ impl Token {
         token
     }
 
-    pub(crate) fn error_at_start(error_tok: TokenKind, mut token: Token) -> Self {
-        // The error is at the start of this token.
-        token.src = Source::from_location(token.src.start);
-
-        Token::error_at(error_tok, token)
-    }
-
-    pub(crate) fn error_at(error_tok: TokenKind, token: Token) -> Self {
+    // TODO: Rename. THis is only used for cosntructing error tokens, so
+    // the span length should be zero, to mark the first byte where the error
+    // occurrs.
+    // Names: error_at? note that the structure of arguments passed to this function
+    //        is very similar, perhaps it could take a (error: TokenKind, prev: Token)
+    //        and do the ByteSpan/Source massaging automatically.
+    pub(crate) fn new2(tok: TokenKind, mut span: ByteSpan, src: Source) -> Self {
         // Note: Same as BufferAndLength(Buffer Buf), which inits the Len to 0
-
-        let Token {
-            tok: _,
-            mut span,
-            src,
-        } = token;
 
         fn is_len_zero(tok: TokenKind) -> bool {
             match tok {
@@ -128,15 +121,11 @@ impl Token {
             }
         }
 
-        if is_len_zero(error_tok) {
+        if is_len_zero(tok) {
             span.len = 0;
         }
 
-        Token {
-            tok: error_tok,
-            src,
-            span,
-        }
+        Token { src, span, tok }
     }
 
     /// Used in testing code.
