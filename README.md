@@ -60,12 +60,7 @@ $ cargo build --features=USE_MATHLINK,CHECK_ABORT
 > or when the `wolfram-code-parser` is used as a dependency from other Rust
 > crates.
 
-## Testing
-
-CodeParser has two test suites: tests written in Rust, and tests written in
-Wolfram Language.
-
-#### Run the compiled tests
+## Run the compiled tests
 
 Rust's `cargo` build tool has support for running tests built in, so the test
 suite can be run by doing:
@@ -73,15 +68,6 @@ suite can be run by doing:
 ```shell
 $ cd crate
 $ cargo test
-```
-
-#### Run the Wolfram Language tests
-
-The Wolfram Language tests can be run from the command line using the
-[`wolfram-cli paclet test`](https://github.com/ConnorGray/wolfram-cli) tool:
-
-```
-$ wolfram-cli paclet test build/paclet/CodeParser Tests/TestSuite.mt
 ```
 
 #### Run the Wolfram Language tests
