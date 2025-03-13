@@ -1961,7 +1961,7 @@ where
             children: NodeSeq(children),
             src: _,
         })) => {
-            let children = part_span_even_children(children, Some(TK::Star));
+            let children = part_span_even_children(children, Some(TK::Plus));
 
             flattenTimes(children, data.clone())
         },
