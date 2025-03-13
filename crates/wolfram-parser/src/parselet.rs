@@ -55,9 +55,7 @@ pub(crate) trait InfixParselet: Parselet {
         return InfixParseletOperator::Infix(InfixOperator::CodeParser_InternalInvalid);
     }
 
-    /// Should always return either `tok_in` or a new
-    /// [`TokenKind::Fake_ImplicitTimes`] token.
-    fn process_implicit_times<'i>(
+    fn processImplicitTimes<'i>(
         &self,
         _session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
@@ -832,7 +830,7 @@ impl InfixParselet for InfixImplicitTimesParselet {
     }
 
 
-    fn process_implicit_times<'i>(
+    fn processImplicitTimes<'i>(
         &self,
         _session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,

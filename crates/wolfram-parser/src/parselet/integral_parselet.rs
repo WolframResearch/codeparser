@@ -108,7 +108,7 @@ impl InfixParselet for InfixDifferentialDParselet {
         return Some(Precedence::FAKE_IMPLICITTIMES);
     }
 
-    fn process_implicit_times<'i>(
+    fn processImplicitTimes<'i>(
         &self,
         session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
