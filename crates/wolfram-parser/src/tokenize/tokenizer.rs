@@ -29,7 +29,9 @@ use crate::source::NextPolicyBits::*;
 pub(crate) struct Tokenizer<'i> {
     reader: Reader<'i>,
 
-    first_line_behavior: FirstLineBehavior,
+    // TODO(cleanup): Move first line behavior handling out of parse.rs and into
+    //                tokenizer.rs, and then make this field private.
+    pub(crate) first_line_behavior: FirstLineBehavior,
 
     pub(crate) GroupStack: Vec<Closer>,
 
@@ -125,7 +127,7 @@ impl<'i> Tokenizer<'i> {
             quirk_settings: _,
         } = *opts;
 
-        let mut tokenizer = Tokenizer {
+        Tokenizer {
             reader: Reader {
                 input,
                 offset: 0,
@@ -150,121 +152,6 @@ impl<'i> Tokenizer<'i> {
                 complex_line_continuations: HashSet::new(),
                 embedded_newlines: HashSet::new(),
                 embedded_tabs: HashSet::new(),
-            },
-        };
-
-        tokenizer.handle_first_line();
-
-        tokenizer
-    }
-
-    fn handle_first_line(&mut self) {
-        match self.first_line_behavior {
-            FirstLineBehavior::NotScript => {
-                return;
-            },
-            FirstLineBehavior::Check => {
-                //
-                // Handle the optional #! shebang
-                //
-
-                let mut peek = self.peek_token();
-
-                if peek.tok != TokenKind::Hash {
-                    // not #!
-
-                    return;
-                }
-
-                peek.skip(self);
-
-                peek = self.peek_token();
-
-                if peek.tok != TokenKind::Bang {
-                    // not #!
-
-                    return;
-                }
-
-                //
-                // Definitely a shebang
-                //
-
-                peek.skip(self);
-
-                loop {
-                    if feature::CHECK_ABORT && crate::abortQ() {
-                        break;
-                    }
-
-                    let peek = self.peek_token();
-
-                    if peek.tok == TokenKind::EndOfFile {
-                        break;
-                    }
-
-                    if peek.tok == TokenKind::ToplevelNewline {
-                        peek.skip(self);
-
-                        break;
-                    }
-
-                    peek.skip(self);
-                } // while (true)
-
-                //
-                // TODO: if anyone ever asks, then consider providing the shebang as a token
-                // but only after BIGCODEMERGE!!
-                //
-            },
-            FirstLineBehavior::Script => {
-                //
-                // Handle the #! shebang
-                //
-
-                let mut peek = self.peek_token();
-
-                if peek.tok != TokenKind::Hash {
-                    //
-                    // TODO: add to Issues
-                    //
-
-                    return;
-                }
-
-                peek.skip(self);
-
-                peek = self.peek_token();
-
-                if peek.tok != TokenKind::Bang {
-                    //
-                    // TODO: add to Issues
-                    //
-
-                    return;
-                }
-
-                peek.skip(self);
-
-                loop {
-                    if feature::CHECK_ABORT && crate::abortQ() {
-                        break;
-                    }
-
-                    let peek = self.peek_token();
-
-                    if peek.tok == TokenKind::EndOfFile {
-                        break;
-                    }
-
-                    if peek.tok == TokenKind::ToplevelNewline {
-                        peek.skip(self);
-
-                        break;
-                    }
-
-                    peek.skip(self);
-                } // while (true)
             },
         }
     }
