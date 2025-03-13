@@ -66,7 +66,7 @@ impl PrefixParselet for SemiSemiParselet {
         //
 
         // MUSTTAIL
-        return self.parse_infix(session, tok_in);
+        return SemiSemiParselet {}.parse_infix(session, tok_in);
     }
 }
 
