@@ -240,7 +240,6 @@ pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 ///
 /// * **Node Construction:** [Push and Reduce Methods](#push-and-reduce-methods)
 ///   - [`push_leaf()`][ParseBuilder::push_leaf]
-///   - [`push_syntax()`][ParseBuilder::push_syntax]
 ///   - [`push_compound_blank()`][ParseBuilder::push_compound_blank]
 ///   - [`push_compound_pattern_blank()`][ParseBuilder::push_compound_pattern_blank]
 ///   - [`push_compound_pattern_optional()`][ParseBuilder::push_compound_pattern_optional]
@@ -399,19 +398,7 @@ pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 ///
 /// ### Controlling syntax tokens
 ///
-/// To enable syntax tokens, set [`ParseBuilder::SyntaxTokenNode`] to:
-///
-/// ```ignore
-/// type SyntaxTokenNode = TokenRef<'i>;
-/// ```
-///
-/// to disable them, set:
-///
-/// ```ignore
-/// type SyntaxTokenNode = ();
-/// ```
-///
-/// and define [`ParseBuilder::push_syntax()`] to be empty.
+/// TODO
 ///
 /// [term]: crate::parse#general-terminology
 pub(crate) trait ParseBuilder<'i>: Sized + Debug
@@ -424,24 +411,6 @@ where
     /// Nodes are typically sub-expressions of the parsed input, but may also
     /// represent e.g. syntax errors.
     type Node;
-
-    /// A node constructed from a [*syntax token*][term] by
-    /// [`push_syntax()`][ParseBuilder::push_syntax].
-    ///
-    /// Should typically either by:
-    ///
-    /// ```ignore
-    /// type SyntaxTokenNode = TokenRef<'i>;
-    /// ```
-    ///
-    /// or:
-    ///
-    /// ```ignore
-    /// type SyntaxTokenNode = ();
-    /// ```
-    ///
-    /// [term]: crate::parse#general-terminology
-    type SyntaxTokenNode;
 
     type Output;
 
@@ -537,14 +506,6 @@ where
 
     fn push_leaf(&mut self, token: TokenRef<'i>) -> Self::Node;
 
-    /// Push a [*syntax token*][term].
-    ///
-    /// Parser implementations that want to locate non-value tokens like e.g.
-    /// `[` or `+` should capture them with this method.
-    ///
-    /// [term]: crate::parse#general-terminology
-    fn push_syntax(&mut self, token: TokenRef<'i>) -> Self::SyntaxTokenNode;
-
     /// `name_` or `name_head`
     fn push_compound_pattern_blank(
         &mut self,
@@ -561,7 +522,6 @@ where
         // TODO(cleanup): Can this only ever have one value?
         op: CompoundOperator,
         symbol: TokenRef<'i>,
-        // TODO(cleanup): SyntaxTokenNode here and related push_compound methods?
         under_dot: TokenRef<'i>,
     ) -> Self::Node;
 
@@ -595,7 +555,7 @@ where
         &mut self,
         ctx_data: Self::ContextData,
         op: PrefixOperator,
-        op_token: Self::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia: Self::TriviaHandle,
         operand: Self::Node,
     ) -> Self::Node;
@@ -606,7 +566,7 @@ where
         ctx_data: Self::ContextData,
         // TODO(cleanup): Can this only ever have one value?
         op: PrefixOperator,
-        op_token: Self::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia: Self::TriviaHandle,
         stringify_token: TokenRef<'i>,
     ) -> Self::Node;
@@ -617,7 +577,7 @@ where
         op: PostfixOperator,
         operand: Self::Node,
         trivia: Self::TriviaHandle,
-        op_token: Self::SyntaxTokenNode,
+        op_tok: TokenRef<'i>,
     ) -> Self::Node;
 
     fn reduce_binary(
@@ -626,7 +586,7 @@ where
         op: BinaryOperator,
         lhs_node: Self::Node,
         trivia1: Self::TriviaHandle,
-        op_token: Self::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia2: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node;
@@ -637,7 +597,7 @@ where
         op: BinaryOperator,
         lhs_node: Self::Node,
         trivia1: Self::TriviaHandle,
-        op_token: Self::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia2: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node;
@@ -648,11 +608,11 @@ where
         op: TernaryOperator,
         lhs_node: Self::Node,
         trivia1: Self::TriviaHandle,
-        first_op_token: Self::SyntaxTokenNode,
+        first_op_token: TokenRef<'i>,
         trivia2: Self::TriviaHandle,
         middle_node: Self::Node,
         trivia3: Self::TriviaHandle,
-        second_op_token: Self::SyntaxTokenNode,
+        second_op_token: TokenRef<'i>,
         trivia4: Self::TriviaHandle,
         rhs_node: Self::Node,
     ) -> Self::Node;
@@ -664,11 +624,11 @@ where
         op: TernaryOperator,
         lhs_node: Self::Node,
         trivia1: Self::TriviaHandle,
-        slash_colon_token: Self::SyntaxTokenNode,
+        slash_colon_token: TokenRef<'i>,
         trivia2: Self::TriviaHandle,
         middle_node: Self::Node,
         trivia3: Self::TriviaHandle,
-        equal_token: Self::SyntaxTokenNode,
+        equal_token: TokenRef<'i>,
         trivia4: Self::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> Self::Node;
@@ -677,7 +637,7 @@ where
         &mut self,
         ctx_data: Self::ContextData,
         op: PrefixBinaryOperator,
-        prefix_op_token: Self::SyntaxTokenNode,
+        prefix_op_token: TokenRef<'i>,
         trivia1: Self::TriviaHandle,
         lhs_node: Self::Node,
         trivia2: Self::TriviaHandle,
@@ -700,7 +660,7 @@ where
         &mut self,
         infix_state: &mut Self::InfixParseState,
         trivia1: Self::TriviaHandle,
-        op_token: Self::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia2: Self::TriviaHandle,
         operand: Self::Node,
     );
@@ -717,10 +677,10 @@ where
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        opener_tok: Self::SyntaxTokenNode,
+        opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         trailing_trivia: Self::TriviaHandle,
-        closer_tok: Self::SyntaxTokenNode,
+        closer_tok: TokenRef<'i>,
     ) -> Self::Node;
 
     fn reduce_call(
@@ -738,11 +698,7 @@ where
     fn reduce_syntax_error(
         &mut self,
         ctx_data: Self::ContextData,
-        data: SyntaxErrorData<
-            Self::Node,
-            Self::TriviaHandle,
-            Self::SyntaxTokenNode,
-        >,
+        data: SyntaxErrorData<'i, Self::Node, Self::TriviaHandle>,
     ) -> Self::Node;
 
     fn reduce_unterminated_group(
@@ -751,7 +707,7 @@ where
         input: &'i str,
         tab_width: usize,
         op: GroupOperator,
-        opener_tok: Self::SyntaxTokenNode,
+        opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
         trailing_trivia: Self::TriviaHandle,
     ) -> Self::Node;
@@ -760,7 +716,7 @@ where
         &mut self,
         ctx_data: Self::ContextData,
         op: GroupOperator,
-        opener_tok: Self::SyntaxTokenNode,
+        opener_tok: TokenRef<'i>,
         group_children: Vec<(Self::TriviaHandle, Self::Node)>,
     ) -> Self::Node;
 
@@ -802,7 +758,7 @@ pub(crate) enum UnderParseData<'i> {
 /// Values of this type are passed to [`ParseBuilder::reduce_syntax_error()`]
 /// by the parser.
 #[derive(Debug)]
-pub(crate) enum SyntaxErrorData<N, TRV, STN> {
+pub(crate) enum SyntaxErrorData<'i, N, TRV> {
     /// E.g. `5:_` -- occurs when a symbol is required to appear as the
     /// left-hand operand of Pattern (`:`).
     ///
@@ -830,7 +786,7 @@ pub(crate) enum SyntaxErrorData<N, TRV, STN> {
     ExpectedSymbol {
         lhs_node: N,
         trivia1: TRV,
-        tok_in: STN,
+        tok_in: TokenRef<'i>,
         trivia2: TRV,
         rhs_node: N,
     },
@@ -894,7 +850,7 @@ pub(crate) enum SyntaxErrorData<N, TRV, STN> {
     ExpectedTilde {
         lhs_node: N,
         trivia1: TRV,
-        first_op_token: STN,
+        first_op_token: TokenRef<'i>,
         trivia2: TRV,
         middle_node: N,
     },
@@ -1044,18 +1000,12 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     // Node and trivia management
     //==================================
 
-    /// Push an [*operand token][term].
-    ///
-    /// [term]: crate::parse#general-terminology
     // TODO(cleanup): Rename
     #[must_use]
     pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) -> B::Node {
         self.builder.push_leaf(token)
     }
 
-    /// Push an [*operand token][term].
-    ///
-    /// [term]: crate::parse#general-terminology
     // TODO(cleanup): Rename
     #[must_use]
     pub(crate) fn push_leaf_and_next(
@@ -1069,33 +1019,18 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         node
     }
 
-    /// Push a [*syntax token*][term].
-    ///
-    /// [term]: crate::parse#general-terminology
-    #[must_use]
-    pub(crate) fn push_syntax_and_next(
-        &mut self,
-        token: TokenRef<'i>,
-    ) -> B::SyntaxTokenNode {
-        let node = self.builder.push_syntax(token);
-
-        token.skip(&mut self.tokenizer);
-
-        node
-    }
-
     /// Consume the resettable trivia in `trivia` and advance the read cursor
     /// past `token`.
-    fn commit_syntax_and_next(
+    pub(crate) fn commit_and_next(
         &mut self,
         trivia: B::ResettableTriviaHandle,
         token: TokenRef<'i>,
-    ) -> (B::TriviaHandle, B::SyntaxTokenNode) {
+    ) -> B::TriviaHandle {
         let trivia = self.builder.push_trivia_seq(trivia);
 
-        let token = self.push_syntax_and_next(token);
+        self.push_leaf_and_next(token);
 
-        (trivia, token)
+        trivia
     }
 
     /// Move the underlying [`Reader`][crate::read::Reader] cursor to before
@@ -1224,7 +1159,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_prefix(
         &mut self,
         op: PrefixOperator,
-        op_token: B::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia: B::TriviaHandle,
         operand: B::Node,
     ) -> B::Node {
@@ -1239,7 +1174,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         &mut self,
         // TODO(cleanup): Can this only ever have one value?
         op: PrefixOperator,
-        op_token: B::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia: B::TriviaHandle,
         stringify_token: TokenRef<'i>,
     ) -> B::Node {
@@ -1273,12 +1208,12 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         op: PostfixOperator,
         operand: B::Node,
         trivia: B::TriviaHandle,
-        op_token: B::SyntaxTokenNode,
+        op_tok: TokenRef<'i>,
     ) -> B::Node {
         let ctx_data = self.context_stack.pop().unwrap().builder_data;
 
         self.builder
-            .reduce_postfix(ctx_data, op, operand, trivia, op_token)
+            .reduce_postfix(ctx_data, op, operand, trivia, op_tok)
     }
 
     fn reduce_binary(
@@ -1286,7 +1221,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         op: BinaryOperator,
         lhs_node: B::Node,
         trivia1: B::TriviaHandle,
-        op_token: B::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia2: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
@@ -1302,7 +1237,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         op: BinaryOperator,
         lhs_node: B::Node,
         trivia1: B::TriviaHandle,
-        op_token: B::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia2: B::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> B::Node {
@@ -1322,11 +1257,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         op: TernaryOperator,
         lhs_node: B::Node,
         trivia1: B::TriviaHandle,
-        first_op_token: B::SyntaxTokenNode,
+        first_op_token: TokenRef<'i>,
         trivia2: B::TriviaHandle,
         middle_node: B::Node,
         trivia3: B::TriviaHandle,
-        second_op_token: B::SyntaxTokenNode,
+        second_op_token: TokenRef<'i>,
         trivia4: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
@@ -1352,11 +1287,11 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         op: TernaryOperator,
         lhs_node: B::Node,
         trivia1: B::TriviaHandle,
-        slash_colon_token: B::SyntaxTokenNode,
+        slash_colon_token: TokenRef<'i>,
         trivia2: B::TriviaHandle,
         middle_node: B::Node,
         trivia3: B::TriviaHandle,
-        equal_token: B::SyntaxTokenNode,
+        equal_token: TokenRef<'i>,
         trivia4: B::TriviaHandle,
         dot_token: TokenRef<'i>,
     ) -> B::Node {
@@ -1382,7 +1317,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_prefix_binary(
         &mut self,
         op: PrefixBinaryOperator,
-        prefix_op_token: B::SyntaxTokenNode,
+        prefix_op_token: TokenRef<'i>,
         trivia1: B::TriviaHandle,
         lhs_node: B::Node,
         trivia2: B::TriviaHandle,
@@ -1404,10 +1339,10 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_group(
         &mut self,
         op: GroupOperator,
-        opener_tok: B::SyntaxTokenNode,
+        opener_tok: TokenRef<'i>,
         group_children: Vec<(B::TriviaHandle, B::Node)>,
         trailing_trivia: B::TriviaHandle,
-        closer_tok: B::SyntaxTokenNode,
+        closer_tok: TokenRef<'i>,
     ) -> B::Node {
         let ctx_data = self.context_stack.pop().unwrap().builder_data;
 
@@ -1440,7 +1375,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     fn reduce_syntax_error(
         &mut self,
-        data: SyntaxErrorData<B::Node, B::TriviaHandle, B::SyntaxTokenNode>,
+        data: SyntaxErrorData<'i, B::Node, B::TriviaHandle>,
     ) -> B::Node {
         let ctx_data = self.context_stack.pop().unwrap().builder_data;
 
@@ -1450,7 +1385,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_unterminated_group(
         &mut self,
         op: GroupOperator,
-        opener_tok: B::SyntaxTokenNode,
+        opener_tok: TokenRef<'i>,
         group_children: Vec<(B::TriviaHandle, B::Node)>,
         trailing_trivia: B::TriviaHandle,
     ) -> B::Node {
@@ -1482,7 +1417,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     fn reduce_group_missing_closer(
         &mut self,
         op: GroupOperator,
-        opener_tok: B::SyntaxTokenNode,
+        opener_tok: TokenRef<'i>,
         group_children: Vec<(B::TriviaHandle, B::Node)>,
     ) -> B::Node {
         let ctx_data = self.context_stack.pop().unwrap().builder_data;

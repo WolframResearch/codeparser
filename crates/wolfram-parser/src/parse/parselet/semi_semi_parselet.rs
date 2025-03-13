@@ -20,7 +20,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for SemiSemiParselet {
     ) -> B::Node {
         panic_if_aborted!();
 
-        let tok_in = session.push_syntax_and_next(tok_in);
+        session.push_leaf_and_next(tok_in);
 
         // MUSTTAIL
         return SemiSemiParselet::parse1(session, lhs_node, trivia1, tok_in);
@@ -81,7 +81,7 @@ impl SemiSemiParselet {
         session: &mut ParserSession<'i, B>,
         first_operand: B::Node,
         trivia1: B::TriviaHandle,
-        first_op_token: B::SyntaxTokenNode,
+        first_op_token: TokenRef<'i>,
     ) -> B::Node {
         panic_if_aborted!();
 
@@ -197,7 +197,7 @@ impl SemiSemiParselet {
         //      ^ThirdTok
         //
 
-        let SecondTok = session.builder.push_syntax(SecondTok);
+        session.push_leaf(SecondTok);
 
         //
         // nextToken() already handled above
@@ -226,7 +226,7 @@ impl SemiSemiParselet {
         session: &mut ParserSession<'i, B>,
         first_operand: B::Node,
         trivia1: B::TriviaHandle,
-        first_op_token: B::SyntaxTokenNode,
+        first_op_token: TokenRef<'i>,
         trivia2: B::TriviaHandle,
         second_operand: B::Node,
     ) -> B::Node {
@@ -318,7 +318,7 @@ impl SemiSemiParselet {
 
         let trivia3 = session.builder.push_trivia_seq(trivia3);
 
-        let ThirdTok = session.builder.push_syntax(ThirdTok);
+        session.push_leaf(ThirdTok);
 
         //
         // nextToken() already handled above
@@ -348,7 +348,7 @@ impl SemiSemiParselet {
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
         trivia1: B::TriviaHandle,
-        op_token: B::SyntaxTokenNode,
+        op_token: TokenRef<'i>,
         trivia2: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
@@ -368,11 +368,11 @@ impl SemiSemiParselet {
         session: &mut ParserSession<'i, B>,
         lhs_node: B::Node,
         trivia1: B::TriviaHandle,
-        first_op_token: B::SyntaxTokenNode,
+        first_op_token: TokenRef<'i>,
         trivia2: B::TriviaHandle,
         middle_node: B::Node,
         trivia3: B::TriviaHandle,
-        second_op_token: B::SyntaxTokenNode,
+        second_op_token: TokenRef<'i>,
         trivia4: B::TriviaHandle,
         rhs_node: B::Node,
     ) -> B::Node {
