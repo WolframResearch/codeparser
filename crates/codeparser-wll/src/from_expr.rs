@@ -10,7 +10,7 @@ use wolfram_parser::{
     },
     quirks::QuirkSettings,
     source::{CodeAction, CodeActionKind, GeneralSource, Issue, IssueTag, Severity},
-    symbol_registration as sym,
+    symbol_registration::*,
     token::{OwnedTokenInput, Token, TokenKind},
     token_enum_registration::SymbolToToken,
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, Source, SourceLocation,
@@ -73,7 +73,7 @@ impl FromExpr for ContainerKind {
 
 impl FromExpr for ContainerBody<Node<OwnedTokenInput, GeneralSource>> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        if let Ok(elements) = try_normal_with_head(expr, sym::List) {
+        if let Ok(elements) = try_normal_with_head(expr, SYMBOL_LIST) {
             if elements.len() == 1 {
                 if let Ok(node) = UnsafeCharacterEncoding::from_expr(&elements[0]) {
                     return Ok(ContainerBody::Missing(node));
@@ -89,7 +89,7 @@ impl FromExpr for ContainerBody<Node<OwnedTokenInput, GeneralSource>> {
 
 impl<N: FromExpr> FromExpr for NodeSeq<N> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::List)?;
+        let elements = try_normal_with_head(expr, SYMBOL_LIST)?;
 
         let nodes = elements
             .into_iter()
@@ -210,7 +210,7 @@ impl FromExpr for LeafNode {
 
 impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_CallNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_CALLNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -245,7 +245,7 @@ impl FromExpr for CallNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for PrefixNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_PrefixNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_PREFIXNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -264,7 +264,7 @@ impl FromExpr for PrefixNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for InfixNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_InfixNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_INFIXNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -283,7 +283,7 @@ impl FromExpr for InfixNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for PrefixBinaryNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_PrefixBinaryNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_PREFIXBINARYNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -299,7 +299,7 @@ impl FromExpr for PrefixBinaryNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for BinaryNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_BinaryNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_BINARYNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -315,7 +315,7 @@ impl FromExpr for BinaryNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for TernaryNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_TernaryNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_TERNARYNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -331,7 +331,7 @@ impl FromExpr for TernaryNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for PostfixNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_PostfixNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_POSTFIXNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -347,7 +347,7 @@ impl FromExpr for PostfixNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for GroupNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_GroupNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_GROUPNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -363,7 +363,7 @@ impl FromExpr for GroupNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for BoxNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_BoxNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_BOXNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -408,7 +408,7 @@ impl FromExpr for BoxKind {
 
 impl FromExpr for CodeNode<GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_CodeNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_CODENODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -424,7 +424,7 @@ impl FromExpr for CodeNode<GeneralSource> {
 
 impl FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_GroupMissingCloserNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -440,7 +440,7 @@ impl FromExpr for GroupMissingCloserNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_GroupMissingOpenerNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_GROUPMISSINGOPENERNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -456,7 +456,7 @@ impl FromExpr for GroupMissingOpenerNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for CompoundNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_CompoundNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_COMPOUNDNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -472,7 +472,7 @@ impl FromExpr for CompoundNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for SyntaxErrorNode<OwnedTokenInput, GeneralSource> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::CodeParser_SyntaxErrorNode)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_SYNTAXERRORNODE)?;
 
         if elements.len() != 3 {
             todo!()
@@ -503,7 +503,7 @@ impl FromExpr for SyntaxErrorNode<OwnedTokenInput, GeneralSource> {
 
 impl FromExpr for UnsafeCharacterEncoding {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::Missing)?;
+        let elements = try_normal_with_head(expr, SYMBOL_MISSING)?;
 
         if elements.len() != 1 {
             todo!()
@@ -636,7 +636,7 @@ impl FromExpr for GeneralSource {
             return Ok(GeneralSource::After(expr.clone()));
         }
 
-        let elements = try_normal_with_head(expr, sym::List)?;
+        let elements = try_normal_with_head(expr, SYMBOL_LIST)?;
 
         if elements.len() != 2 {
             let mut indexes = Vec::new();
@@ -679,8 +679,8 @@ impl FromExpr for GeneralSource {
             )));
         }
 
-        let start = try_normal_with_head(&elements[0], sym::List)?;
-        let end = try_normal_with_head(&elements[1], sym::List)?;
+        let start = try_normal_with_head(&elements[0], SYMBOL_LIST)?;
+        let end = try_normal_with_head(&elements[1], SYMBOL_LIST)?;
 
         if start.len() != 2 || end.len() != 2 {
             todo!()
@@ -762,9 +762,9 @@ impl FromExpr for Issue {
         let head = head.try_as_symbol().expect("PRE_COMMIT");
 
         const HEADS: &[SymbolRef] = &[
-            sym::CodeParser_SyntaxIssue,
-            sym::CodeParser_EncodingIssue,
-            sym::CodeParser_FormatIssue,
+            SYMBOL_CODEPARSER_SYNTAXISSUE,
+            SYMBOL_CODEPARSER_ENCODINGISSUE,
+            SYMBOL_CODEPARSER_FORMATISSUE,
         ];
 
         let make_sym = *HEADS
@@ -838,7 +838,7 @@ impl FromExpr for Issue {
 impl FromExpr for CodeAction {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
         // FIXME: What about the other Issue `make_sym` values?
-        let elements = try_normal_with_head(expr, sym::CodeParser_CodeAction)?;
+        let elements = try_normal_with_head(expr, SYMBOL_CODEPARSER_CODEACTION)?;
 
         if elements.len() != 3 {
             todo!()
@@ -946,7 +946,7 @@ struct Association(pub Vec<Rule>);
 
 impl FromExpr for Association {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::Association)?;
+        let elements = try_normal_with_head(expr, SYMBOL_ASSOCIATION)?;
 
         let rules: Vec<Rule> = elements
             .into_iter()
@@ -972,7 +972,7 @@ pub(crate) struct List<T>(pub Vec<T>);
 
 impl<T: FromExpr> FromExpr for List<T> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(&expr, sym::List)?;
+        let elements = try_normal_with_head(&expr, SYMBOL_LIST)?;
 
         let elements: Vec<T> = elements
             .into_iter()
@@ -985,7 +985,7 @@ impl<T: FromExpr> FromExpr for List<T> {
 
 impl FromExpr for List<String> {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(&expr, sym::List)?;
+        let elements = try_normal_with_head(&expr, SYMBOL_LIST)?;
 
         let elements: Vec<String> = elements
             .into_iter()
@@ -1006,7 +1006,7 @@ struct Rule {
 
 impl FromExpr for Rule {
     fn from_expr(expr: &Expr) -> Result<Self, String> {
-        let elements = try_normal_with_head(expr, sym::Rule)?;
+        let elements = try_normal_with_head(expr, SYMBOL_RULE)?;
 
         if elements.len() != 2 {
             todo!()

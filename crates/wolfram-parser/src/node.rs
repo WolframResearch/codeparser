@@ -922,12 +922,12 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
 impl SyntaxErrorKind {
     #[doc(hidden)]
     pub fn to_symbol(&self) -> crate::symbol::Symbol {
-        use crate::symbol_registration as sym;
+        use crate::symbol_registration::*;
 
         match self {
-            SyntaxErrorKind::ExpectedSymbol => sym::SyntaxError_ExpectedSymbol,
-            SyntaxErrorKind::ExpectedSet => sym::SyntaxError_ExpectedSet,
-            SyntaxErrorKind::ExpectedTilde => sym::SyntaxError_ExpectedTilde,
+            SyntaxErrorKind::ExpectedSymbol => SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL,
+            SyntaxErrorKind::ExpectedSet => SYMBOL_SYNTAXERROR_EXPECTEDSET,
+            SyntaxErrorKind::ExpectedTilde => SYMBOL_SYNTAXERROR_EXPECTEDTILDE,
         }
     }
 

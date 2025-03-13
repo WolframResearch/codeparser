@@ -233,7 +233,7 @@ use wolfram_expr::symbol::SymbolRef;
 use crate::{
 	token::TokenKind,
 	symbol::Symbol,
-	symbol_registration as sym,
+	symbol_registration::*,
 	precedence::*,
 	parselet::*
 };
@@ -326,7 +326,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		KeyValueMap[
 			{k, v} |-> Replace[{k, v}, {
 				{operator_Symbol, symbol_Symbol} :>
-					"            Operator::" <> toGlobal[operator, "UpperCamelCase"] <> " => sym::" <> toGlobal[symbol, "UpperCamelCase"] <> ",\n",
+					"            Operator::" <> toGlobal[operator, "UpperCamelCase"] <> " => SYMBOL_" <> toGlobal[symbol] <> ",\n",
 				other_ :> FatalError["Unexpected operator: ", other]
 			}],
 			$Operators
@@ -340,7 +340,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		KeyValueMap[
 			{k, v} |-> Replace[{k, v}, {
 				{operator_Symbol, symbol_Symbol} :>
-					"            sym::" <> toGlobal[symbol, "UpperCamelCase"] <> " => Operator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
+					"            SYMBOL_" <> toGlobal[symbol] <> " => Operator::" <> toGlobal[operator, "UpperCamelCase"] <> ",\n",
 				other_ :> FatalError["Unexpected operator: ", other]
 			}],
 			$Operators
