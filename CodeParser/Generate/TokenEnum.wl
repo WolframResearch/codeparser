@@ -379,6 +379,10 @@ Which[
 
 
 
+
+tokenIsEmptyCases = Row[{"tokenIsEmpty", "[", ToString[#], "]", " ", "=", " ", "True"}]& /@ $isEmptyTokens
+
+
 generate[] := (
 
 Print["Generating TokenEnum..."];
@@ -519,6 +523,43 @@ If[FailureQ[res],
   Quit[1]
 ];
 
+tokenEnumWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+
+BeginPackage[\"CodeParser`TokenEnum`\"]
+
+tokenIsEmpty
+
+Begin[\"`Private`\"]
+
+Needs[\"CodeParser`\"]
+Needs[\"CodeParser`Utils`\"]
+"} ~Join~
+
+tokenIsEmptyCases ~Join~
+
+{"
+tokenIsEmpty[_] = False
+
+End[]
+
+EndPackage[]
+"};
+
+Print["exporting TokenEnum.wl"];
+res = Export[FileNameJoin[{buildDir, "paclet", "CodeParser", "Kernel", "TokenEnum.wl"}], Column[tokenEnumWL], "String"];
+
+Print[res];
+
+If[FailureQ[res],
+  Quit[1]
+];
+
+Print["Done TokenEnum"]
 )
 
 If[!StringQ[script],

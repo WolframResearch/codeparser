@@ -22,8 +22,6 @@ safeStringFunc
 aggregateFunc
 abstractFunc
 
-tokenIsEmptyFunc
-
 
 
 (*
@@ -287,11 +285,6 @@ Which[
 	abstractFunc := abstractFunc = (
 		If[$Debug, Print["memoizing abstractFunc"]];
 		loadFunc["Abstract_LibraryLink", LinkObject, LinkObject]
-	);
-
-	tokenIsEmptyFunc := tokenIsEmptyFunc = (
-		If[$Debug, Print["memoizing tokenIsEmptyFunc"]];
-		loadFunc["TokenIsEmpty_LibraryLink", LinkObject, LinkObject]
 	);
   ,
   True,

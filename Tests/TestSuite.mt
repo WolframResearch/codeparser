@@ -29,7 +29,6 @@ TestSuite[{
 	"SyntaxErrorNodes.mt",
 	"SyntaxIssues.mt",
 	"TokenErrors.mt",
-	"TokenEnum.mt",
 	"Tokenize.mt",
 	"ToNode.mt",
 	"TopLevel.mt",
