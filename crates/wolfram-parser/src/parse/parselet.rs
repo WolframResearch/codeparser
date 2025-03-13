@@ -8,16 +8,13 @@ use std::any::Any;
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CallBody, CallNode, CompoundNode,
-        CompoundOperator, GroupMissingCloserNode, GroupNode, GroupOperator,
-        InfixNode, InfixOperator, OperatorNode, PostfixNode, PostfixOperator,
-        PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
-        SyntaxErrorNode, TernaryNode, TernaryOperator,
+        BinaryNode, CallBody, CallNode, CompoundNode, CompoundOperator,
+        GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode,
+        InfixOperator, OperatorNode, PostfixNode, PrefixBinaryOperator,
+        PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         UnterminatedGroupNeedsReparseNode,
     },
-    generated::parselet_registration::{
-        under1Parselet, under2Parselet, under3Parselet,
-    },
+    generated::parselet_registration::{INFIX_PARSELETS, *},
     panic_if_aborted,
     parse::{ColonLHS, ParserSession, Parser_identity},
     precedence::Precedence,
@@ -586,7 +583,7 @@ impl PrefixParselet for PrefixUnhandledParselet {
         // TODO(cleanup): This call does nothing? Add test and remove.
         let _ = session.tokenizer.peek_token();
 
-        let I = tok_in.tok.infix_parselet();
+        let I = INFIX_PARSELETS[usize::from(tok_in.tok.value())];
 
         let TokenPrecedence = I.getPrecedence(session);
 
@@ -615,7 +612,7 @@ impl PrefixParselet for PrefixUnhandledParselet {
 
         session.push_context(TokenPrecedence);
 
-        let P2 = tok_in.tok.infix_parselet();
+        let P2 = INFIX_PARSELETS[usize::from(tok_in.tok.value())];
 
         // MUSTTAIL
         return P2.parse_infix(session, tok_in);
@@ -1047,7 +1044,7 @@ impl InfixOperatorParselet {
 
             let (trivia1, tok1) = session.current_token_eat_trivia_into();
 
-            let I = tok1.tok.infix_parselet();
+            let I = INFIX_PARSELETS[usize::from(tok1.tok.value())];
 
             //
             // Cannot just compare tokens
@@ -1158,6 +1155,10 @@ impl GroupParselet {
             closer: GroupOpenerToCloser(Opener),
         }
     }
+
+    fn getCloser(&self) -> Closer {
+        return self.closer;
+    }
 }
 
 impl PrefixParselet for GroupParselet {
@@ -1208,9 +1209,11 @@ impl GroupParselet {
             // e.g. {1\\2}
             //
 
+            let Closr = self.getCloser();
+
             let (trivia1, tok) = session.current_token_eat_trivia_into();
 
-            if TokenToCloser(tok.tok) == self.closer {
+            if TokenToCloser(tok.tok) == Closr {
                 //
                 // Everything is good
                 //

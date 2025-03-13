@@ -219,29 +219,18 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
     }
 }
 
-impl TokenKind {
-    /// Get the [`PrefixParselet`] implementation associated with this token.
-    fn prefix_parselet(&self) -> &'static dyn PrefixParselet {
-        let index = usize::from(self.value());
-
-        PREFIX_PARSELETS[index]
-    }
-
-    /// Get the [`InfixParselet`] implementation associated with this token.
-    fn infix_parselet(&self) -> &'static dyn InfixParselet {
-        let index = usize::from(self.value());
-
-        INFIX_PARSELETS[index]
-    }
-}
-
 impl<'i> ParserSession<'i> {
     /// Lookup and apply the [`PrefixParselet`] implementation associated
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
     pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
+        let index = usize::from(token.tok.value());
+
+        // Get the [`PrefixParselet`] implementation associated with this token.
+        let parselet: &dyn PrefixParselet = PREFIX_PARSELETS[index];
+
         // MUSTTAIL
-        token.tok.prefix_parselet().parse_prefix(self, token)
+        parselet.parse_prefix(self, token)
     }
 
     /// Pop the top context and push a new node constructed by `func`, then
@@ -282,11 +271,12 @@ impl<'i> ParserSession<'i> {
         let (trivia1, mut token) =
             self.current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-        let mut I: &dyn InfixParselet = token.tok.infix_parselet();
+        let mut I: &dyn InfixParselet =
+            INFIX_PARSELETS[usize::from(token.tok.value())];
 
         token = I.process_implicit_times(self, token);
 
-        I = token.tok.infix_parselet();
+        I = INFIX_PARSELETS[usize::from(token.tok.value())];
 
         let TokenPrecedence = I.getPrecedence(self);
 
