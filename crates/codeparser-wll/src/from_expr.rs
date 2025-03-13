@@ -408,7 +408,7 @@ impl FromExpr for BoxKind {
         }
 
         if !symbol_name.ends_with("Box") {
-            todo!("unexpected box name: {symbol_name}")
+            todo!()
         }
 
         let kind = match BoxKind::from_str(symbol_name) {
