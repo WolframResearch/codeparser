@@ -32,8 +32,25 @@ pub trait WstpPut {
 // Container
 //======================================
 
-impl<N: WstpPut> WstpPut for Container<N> {
-    fn put(&self, link: &mut wstp::Link) {
+// TODO(cleanup): Combine with impl Container<Source>
+impl Container<GeneralSource> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
+        let Container {
+            kind,
+            body,
+            metadata,
+        } = self;
+
+        link.put_function("CodeParser`ContainerNode", 3).unwrap();
+
+        kind.put(link);
+        body.put(link);
+        metadata.put(link);
+    }
+}
+
+impl Container<Source> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let Container {
             kind,
             body,
@@ -495,8 +512,8 @@ impl<I: TokenInput, S: WstpPut> Token<I, S> {
 // Node types
 //======================================
 
-impl<I: TokenInput, S: WstpPut> WstpPut for Node<I, S> {
-    fn put(&self, link: &mut wstp::Link) {
+impl<I: TokenInput, S: WstpPut> Node<I, S> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         match self {
             Node::Token(token) => token.put(link),
             Node::Call(node) => node.put(link),
@@ -523,7 +540,7 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Node<I, S> {
     }
 }
 
-impl<N: WstpPut> NodeSeq<N> {
+impl<I: TokenInput, S: WstpPut> NodeSeq<I, S> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let NodeSeq(vec) = self;
 

@@ -3,9 +3,8 @@ mod abstract_call_node;
 use std::fmt::Debug;
 
 use crate::{
-    agg::{self, AggNodeSeq, LHS},
+    agg::{self, LHS},
     ast::{AstCall, AstMetadata, AstNode, WL},
-    cst::CstNodeSeq,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
         GroupNode, InfixNode, Node, NodeSeq,
@@ -28,7 +27,7 @@ use crate::{
 // Aggregate
 //==========================================================
 
-pub(crate) fn Aggregate<I: Debug, S: Debug>(agg: CstNodeSeq<I, S>) -> AggNodeSeq<I, S> {
+pub(crate) fn Aggregate<I: Debug, S: Debug>(agg: NodeSeq<I, S>) -> NodeSeq<I, S> {
     let NodeSeq(agg) = agg;
 
     let agg_children = agg.into_iter().flat_map(aggregate_replace).collect();
@@ -271,7 +270,7 @@ macro_rules! expect_children {
 //--------------------------------------
 
 pub(crate) fn Abstract<I: TokenInput + Debug, S: TokenSource + Debug>(
-    agg: AggNodeSeq<I, S>,
+    agg: NodeSeq<I, S>,
 ) -> Vec<AstNode> {
     let NodeSeq(agg) = agg;
 
@@ -1169,7 +1168,7 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(token: Token<I, S>) -> 
 //======================================
 
 pub(crate) fn expect_children<I: Debug, S: Debug, const N: usize>(
-    children: AggNodeSeq<I, S>,
+    children: NodeSeq<I, S>,
 ) -> [Node<I, S>; N] {
     let NodeSeq(children) = children;
 

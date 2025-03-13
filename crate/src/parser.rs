@@ -1,7 +1,6 @@
 use std::fmt::{self, Debug};
 
 use crate::{
-    cst::CstNodeSeq,
     feature,
     node::{BinaryNode, CompoundNode, Node, NodeSeq, Operator, TernaryNode, TriviaSeq},
     panic_if_aborted,
@@ -370,7 +369,7 @@ pub(crate) fn Parser_pushContext_transparent<'c>(
 
 pub(crate) fn Parser_popContext<'i>(
     session: &mut ParserSession<'i>,
-) -> CstNodeSeq<BorrowedTokenInput<'i>> {
+) -> NodeSeq<BorrowedTokenInput<'i>> {
     assert!(!session.ContextStack.is_empty());
 
     //
