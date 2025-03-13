@@ -359,14 +359,13 @@ fn Tokenizer_nextToken<'i>(session: &mut Tokenizer<'i>, policy: NextPolicy) -> T
     let c = Tokenizer_nextWLCharacter(session, token_start, policy);
 
     let point: CodePoint = c.to_point();
+    let point = point.as_i32();
 
-    if !point.is_ascii() {
+    if !(0x00 <= point && point <= 0x7f) {
         return Tokenizer_nextToken_uncommon(session, token_start, c, policy);
     }
 
-    let index = usize::try_from(point.as_i32()).unwrap();
-
-    let func = TOKENIZER_HANDLER_TABLE[index];
+    let func = TOKENIZER_HANDLER_TABLE[usize::try_from(point).unwrap()];
     return func(session, token_start, c, policy);
 }
 

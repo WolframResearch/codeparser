@@ -130,12 +130,6 @@ impl CodePoint {
         }
     }
 
-    pub(crate) fn is_ascii(&self) -> bool {
-        let val = self.as_i32();
-
-        0x00 <= val && val <= 0x7f
-    }
-
     // TODO(cleanup): Remove this function?
     pub(crate) fn as_i32(self) -> i32 {
         use self::CodePoint::*;
