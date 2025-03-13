@@ -142,7 +142,7 @@ impl<'i> ParserSession<'i> {
         return session;
     }
 
-    /// Returns the complete input [`Buffer`][crate::source::Buffer].
+    /// Returns the complete input [`Buffer`].
     pub fn input(&self) -> &'i [u8] {
         self.tokenizer.input
     }
