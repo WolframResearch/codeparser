@@ -3,7 +3,7 @@ use wolfram_library_link::{self as wll, sys::mint, wstp};
 use crate::{
     node::{
         CollectedExpressionsNode, CollectedIssuesNode, MissingBecauseUnsafeCharacterEncodingNode,
-        Node, NodeSeq, SafeStringNode,
+        Node, NodeContainer, NodeSeq, SafeStringNode,
     },
     symbol_registration::SYMBOL_NULL,
     token::BorrowedTokenInput,
@@ -329,7 +329,7 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
 
     let result = session.concrete_parse_expressions();
 
-    result.into_nodes().put(link);
+    result.into_node_container().put(link);
 
     drop(session);
 }
@@ -443,7 +443,7 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
 
     let C = session.concrete_parse_expressions();
 
-    C.into_nodes().put(link);
+    C.into_node_container().put(link);
 
     drop(session);
 }
@@ -805,7 +805,8 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
         StringifyMode::try_from(stringifyMode).expect("invalid StringifyMode value"),
     );
 
-    result.into_nodes().put(link);
+    result.into_node_container().put(link);
+
 
     drop(session);
 }
@@ -1103,7 +1104,7 @@ fn validatePath(path: &str) -> bool {
 //==========================================================
 
 impl<'i> ParseResult<BorrowedTokenInput<'i>> {
-    pub(crate) fn into_nodes(self) -> NodeSeq<BorrowedTokenInput<'i>> {
+    pub(crate) fn into_node_container(self) -> NodeContainer<BorrowedTokenInput<'i>> {
         let ParseResult {
             nodes: outer_exprs,
             unsafe_character_encoding,
@@ -1146,6 +1147,6 @@ impl<'i> ParseResult<BorrowedTokenInput<'i>> {
             nodes.push(node);
         }
 
-        nodes
+        NodeContainer::new(nodes)
     }
 }
