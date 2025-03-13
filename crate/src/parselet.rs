@@ -1546,7 +1546,6 @@ fn TildeParselet_parse1(session: &mut ParserSession) {
     //
 
     let ref mut Ctxt = Parser_topContext(session);
-    // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == TildeParselet_parse1 as usize);
     Ctxt.f = Some(|s, _| TildeParselet_reduceTilde(s));
     Ctxt.prec = PRECEDENCE_TILDE;
@@ -1858,7 +1857,6 @@ fn EqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
     }
 
     let ref mut Ctxt = Parser_topContext(session);
-    // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
     Ctxt.f = Some(|s, _| EqualParselet_reduceTagSet(s));
 
@@ -1955,7 +1953,6 @@ fn ColonEqualParselet_parseInfixTag(session: &mut ParserSession, TokIn: Token) {
     Parser_eatTrivia(session, &mut Tok, TOPLEVEL);
 
     let ref mut Ctxt = Parser_topContext(session);
-    // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == SlashColonParselet_parse1 as usize);
     Ctxt.f = Some(|s, _| ColonEqualParselet_reduceTagSetDelayed(s));
 
