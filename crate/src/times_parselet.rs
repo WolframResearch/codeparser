@@ -13,7 +13,8 @@ use crate::{
     source::TOPLEVEL,
     symbol::Symbol,
     symbol_registration::SYMBOL_TIMES,
-    token::{Token, TokenKind},
+    token::Token,
+    token_enum_registration::TokenEnum::TOKEN_FAKE_IMPLICITTIMES,
     tokenizer::Tokenizer_currentToken,
 };
 
@@ -85,7 +86,7 @@ fn TimesParselet_parseLoop(session: &mut ParserSession) {
 
         Tok1 = I.processImplicitTimes(session, Tok1);
 
-        if Tok1.tok == TokenKind::Fake_ImplicitTimes {
+        if Tok1.tok == TOKEN_FAKE_IMPLICITTIMES {
             //
             // implicit Times should not cross toplevel newlines
             //

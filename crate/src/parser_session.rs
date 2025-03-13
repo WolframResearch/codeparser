@@ -16,7 +16,7 @@ use crate::{
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
-    token::TokenKind,
+    token_enum_registration::TokenEnum::TOKEN_ENDOFFILE,
     tokenizer::{
         Tokenizer, Tokenizer_currentToken, Tokenizer_nextToken,
         Tokenizer_nextToken_stringifyAsFile, Tokenizer_nextToken_stringifyAsTag,
@@ -127,7 +127,7 @@ impl<'i> ParserSession<'i> {
 
             let peek = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
 
-            if peek.tok == TokenKind::EndOfFile {
+            if peek.tok == TOKEN_ENDOFFILE {
                 break;
             }
 
@@ -180,7 +180,7 @@ impl<'i> ParserSession<'i> {
 
             let Tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
 
-            if Tok.tok == TokenKind::EndOfFile {
+            if Tok.tok == TOKEN_ENDOFFILE {
                 break;
             }
 

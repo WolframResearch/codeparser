@@ -11,7 +11,8 @@ use crate::{
     precedence::*,
     source::{Source, TOPLEVEL},
     symbol::Symbol,
-    token::{Token, TokenKind},
+    token::Token,
+    token_enum_registration::TokenEnum::*,
     tokenizer::Tokenizer_currentToken,
 };
 
@@ -51,9 +52,7 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
         TOPLEVEL,
     );
 
-    if Tok.tok == TokenKind::LongName_DifferentialD
-        || Tok.tok == TokenKind::LongName_CapitalDifferentialD
-    {
+    if Tok.tok == TOKEN_LONGNAME_DIFFERENTIALD || Tok.tok == TOKEN_LONGNAME_CAPITALDIFFERENTIALD {
         //
         // \[Integral] \[DifferentialD] x
         //
@@ -61,7 +60,7 @@ fn IntegralParselet_parsePrefix(session: &mut ParserSession, P: ParseletPtr, Tok
         Parser_pushLeaf(
             session,
             Token::new2(
-                TokenKind::Fake_ImplicitOne,
+                TOKEN_FAKE_IMPLICITONE,
                 Tok.span,
                 Source::from_location(Tok.src.start),
             ),
@@ -91,8 +90,7 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
 
     Parser_eatTrivia_2(session, &mut Tok, TOPLEVEL, &mut Trivia1.borrow_mut());
 
-    if !(Tok.tok == TokenKind::LongName_DifferentialD
-        || Tok.tok == TokenKind::LongName_CapitalDifferentialD)
+    if !(Tok.tok == TOKEN_LONGNAME_DIFFERENTIALD || Tok.tok == TOKEN_LONGNAME_CAPITALDIFFERENTIALD)
     {
         Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
@@ -169,7 +167,7 @@ impl InfixParselet for InfixDifferentialDParselet {
         }
 
         return Token::new2(
-            TokenKind::Fake_ImplicitTimes,
+            TOKEN_FAKE_IMPLICITTIMES,
             TokIn.span,
             Source::from_location(TokIn.src.start),
         );

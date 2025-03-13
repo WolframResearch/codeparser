@@ -18,7 +18,11 @@ use crate::{
     source::{ByteSpan, SourceConvention},
     src,
     symbol::Symbol,
-    token::{Token, TokenKind},
+    token::Token,
+    token_enum::TokenEnum,
+    token_enum_registration::TokenEnum::{
+        TOKEN_BANG, TOKEN_INTEGER, TOKEN_PLUS, TOKEN_SYMBOL, TOKEN_WHITESPACE,
+    },
     EncodingMode, FirstLineBehavior, Source, DEFAULT_TAB_WIDTH,
 };
 
@@ -59,7 +63,7 @@ fn test_something() {
     assert_eq!(
         tokens("123"),
         vec![NVToken(Token {
-            tok: TokenKind::Integer,
+            tok: TOKEN_INTEGER,
             src: src!(1:1-1:4),
             span: ByteSpan::new(0, 3)
         })]
@@ -68,7 +72,7 @@ fn test_something() {
     assert_eq!(
         nodes("foo"),
         vec![NVToken(Token {
-            tok: TokenKind::Symbol,
+            tok: TOKEN_SYMBOL,
             src: src!(1:1-1:4),
             span: ByteSpan::new(0, 3)
         })]
@@ -78,17 +82,17 @@ fn test_something() {
         tokens("a+b"),
         vec![
             NVToken(Token {
-                tok: TokenKind::Symbol,
+                tok: TOKEN_SYMBOL,
                 src: src!(1:1-1:2),
                 span: ByteSpan::new(0, 1),
             }),
             NVToken(Token {
-                tok: TokenKind::Plus,
+                tok: TOKEN_PLUS,
                 src: src!(1:2-1:3),
                 span: ByteSpan::new(1, 1),
             }),
             NVToken(Token {
-                tok: TokenKind::Symbol,
+                tok: TOKEN_SYMBOL,
                 src: src!(1:3-1:4),
                 span: ByteSpan::new(2, 1),
             }),
@@ -99,12 +103,12 @@ fn test_something() {
         tokens("!a"),
         vec![
             NVToken(Token {
-                tok: TokenKind::Bang,
+                tok: TOKEN_BANG,
                 src: src!(1:1-1:2),
                 span: ByteSpan { offset: 0, len: 1 },
             },),
             NVToken(Token {
-                tok: TokenKind::Symbol,
+                tok: TOKEN_SYMBOL,
                 src: src!(1:2-1:3),
                 span: ByteSpan::new(1, 1)
             },),
@@ -115,27 +119,27 @@ fn test_something() {
         tokens("2 + 2"),
         vec![
             NVToken(Token {
-                tok: TokenKind::Integer,
+                tok: TOKEN_INTEGER,
                 src: src!(1:1-1:2),
                 span: ByteSpan::new(0, 1)
             },),
             NVToken(Token {
-                tok: TokenKind::Whitespace,
+                tok: TOKEN_WHITESPACE,
                 src: src!(1:2-1:3),
                 span: ByteSpan::new(1, 1)
             },),
             NVToken(Token {
-                tok: TokenKind::Plus,
+                tok: TOKEN_PLUS,
                 src: src!(1:3-1:4),
                 span: ByteSpan::new(2, 1)
             },),
             NVToken(Token {
-                tok: TokenKind::Whitespace,
+                tok: TOKEN_WHITESPACE,
                 src: src!(1:4-1:5),
                 span: ByteSpan::new(3, 1)
             },),
             NVToken(Token {
-                tok: TokenKind::Integer,
+                tok: TOKEN_INTEGER,
                 src: src!(1:5-1:6),
                 span: ByteSpan::new(4, 1)
             },),
@@ -151,30 +155,30 @@ fn test_something() {
                 MakeSym: crate::symbol_registration::SYMBOL_CODEPARSER_INFIXNODE,
                 Children: NodeSeq(vec![
                     NVToken(Token {
-                        tok: TokenKind::Integer,
+                        tok: TOKEN_INTEGER,
                         src: src!(1:1-1:2),
                         span: ByteSpan::new(0, 1),
                     },),
                     NVToken(Token {
-                        tok: TokenKind::Whitespace,
+                        tok: TOKEN_WHITESPACE,
                         src: src!(1:2-1:3),
                         span: ByteSpan::new(1, 1)
                     },),
                     NVToken(Token {
-                        tok: TokenKind::Plus,
+                        tok: TOKEN_PLUS,
                         src: src!(1:3-1:4),
                         span: ByteSpan::new(2, 1),
                     },),
                     NVToken(Token {
-                        tok: TokenKind::Whitespace,
+                        tok: TOKEN_WHITESPACE,
                         src: src!(1:4-1:5),
                         span: ByteSpan::new(3, 1),
                     },),
                     NVToken(Token {
-                        tok: TokenKind::Integer,
+                        tok: TOKEN_INTEGER,
                         src: src!(1:5-1:6),
                         span: ByteSpan::new(4, 1),
-                    }),
+                    },),
                 ]),
                 Src: src!(1:1-1:6),
             },
@@ -182,7 +186,7 @@ fn test_something() {
     );
 }
 
-fn token(kind: TokenKind, src: Source, span: ByteSpan) -> Node {
+fn token(kind: TokenEnum, src: Source, span: ByteSpan) -> Node {
     Node::Token(Token {
         tok: kind,
         src,
@@ -203,9 +207,9 @@ pub fn test_tokenize_is_not_idempotent() {
     assert_eq!(
         session.tokenize().nodes.0,
         vec![
-            token(TokenKind::Integer, src!(0:1-0:2), ByteSpan::new(0, 1)),
-            token(TokenKind::Plus, src!(0:2-0:3), ByteSpan::new(1, 1)),
-            token(TokenKind::Integer, src!(0:3-0:4), ByteSpan::new(2, 1))
+            token(TOKEN_INTEGER, src!(0:1-0:2), ByteSpan::new(0, 1)),
+            token(TOKEN_PLUS, src!(0:2-0:3), ByteSpan::new(1, 1)),
+            token(TOKEN_INTEGER, src!(0:3-0:4), ByteSpan::new(2, 1))
         ]
     );
 

@@ -1,7 +1,8 @@
 use crate::{
     source::{ByteSpan, NextPolicyBits::RETURN_TOPLEVELNEWLINE, SourceLocation, TOPLEVEL},
     src,
-    token::{Token, TokenKind},
+    token::Token,
+    token_enum::TokenEnum::*,
     tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
     EncodingMode, FirstLineBehavior, ParserSession, SourceConvention, DEFAULT_TAB_WIDTH,
 };
@@ -116,7 +117,7 @@ fn TokenizerTest_IntegerRealMixup() {
 
     assert_eq!(
         Tok1,
-        Token::new3(TokenKind::Integer, ByteSpan::new(0, 1), src!(1:1-1:2))
+        Token::new3(TOKEN_INTEGER, ByteSpan::new(0, 1), src!(1:1-1:2))
     );
 
     Tok1.skip(&mut session.tokenizer);
@@ -125,7 +126,7 @@ fn TokenizerTest_IntegerRealMixup() {
 
     assert_eq!(
         Tok2,
-        Token::new3(TokenKind::DotDot, ByteSpan::new(1, 2), src!(1:2-1:4))
+        Token::new3(TOKEN_DOTDOT, ByteSpan::new(1, 2), src!(1:2-1:4))
     );
 
     Tok2.skip(&mut session.tokenizer);
@@ -134,7 +135,7 @@ fn TokenizerTest_IntegerRealMixup() {
 
     assert_eq!(
         Tok3,
-        Token::new3(TokenKind::EndOfFile, ByteSpan::new(3, 0), src!(1:4-1:4))
+        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(3, 0), src!(1:4-1:4))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 1);
@@ -157,7 +158,7 @@ fn TokenizerTest_Basic2() {
 
     assert_eq!(
         Tok1,
-        Token::new3(TokenKind::Symbol, ByteSpan::new(0, 10), src!(1:1-1:11))
+        Token::new3(TOKEN_SYMBOL, ByteSpan::new(0, 10), src!(1:1-1:11))
     );
 
     Tok1.skip(&mut session.tokenizer);
@@ -166,7 +167,7 @@ fn TokenizerTest_Basic2() {
 
     assert_eq!(
         Tok2,
-        Token::new3(TokenKind::Plus, ByteSpan::new(10, 1), src!(1:11-1:12))
+        Token::new3(TOKEN_PLUS, ByteSpan::new(10, 1), src!(1:11-1:12))
     );
 
     Tok2.skip(&mut session.tokenizer);
@@ -175,7 +176,7 @@ fn TokenizerTest_Basic2() {
 
     assert_eq!(
         Tok3,
-        Token::new3(TokenKind::Integer, ByteSpan::new(11, 1), src!(1:12-1:13))
+        Token::new3(TOKEN_INTEGER, ByteSpan::new(11, 1), src!(1:12-1:13))
     );
 
     Tok3.skip(&mut session.tokenizer);
@@ -184,7 +185,7 @@ fn TokenizerTest_Basic2() {
 
     assert_eq!(
         Tok4,
-        Token::new3(TokenKind::EndOfFile, ByteSpan::new(12, 0), src!(1:13-1:13))
+        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(12, 0), src!(1:13-1:13))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -207,7 +208,7 @@ fn TokenizerTest_OldAssert1() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::Integer, ByteSpan::new(0, 1), src!(1:1-1:2))
+        Token::new3(TOKEN_INTEGER, ByteSpan::new(0, 1), src!(1:1-1:2))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -230,7 +231,7 @@ fn TokenizerTest_Basic3() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::OpenCurly, ByteSpan::new(0, 1), src!(1:1-1:2))
+        Token::new3(TOKEN_OPENCURLY, ByteSpan::new(0, 1), src!(1:1-1:2))
     );
 
     Tok.skip(&mut session.tokenizer);
@@ -242,11 +243,7 @@ fn TokenizerTest_Basic3() {
 
     assert_eq!(
         Tok,
-        Token::new3(
-            TokenKind::InternalNewline,
-            ByteSpan::new(1, 1),
-            src!(1:2-2:1)
-        )
+        Token::new3(TOKEN_INTERNALNEWLINE, ByteSpan::new(1, 1), src!(1:2-2:1))
     );
 
     Tok.skip(&mut session.tokenizer);
@@ -255,7 +252,7 @@ fn TokenizerTest_Basic3() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::CloseCurly, ByteSpan::new(2, 1), src!(2:1-2:2))
+        Token::new3(TOKEN_CLOSECURLY, ByteSpan::new(2, 1), src!(2:1-2:2))
     );
 
     Tok.skip(&mut session.tokenizer);
@@ -285,7 +282,7 @@ fn TokenizerTest_Basic4() {
     assert_eq!(
         Tok,
         Token::new3(
-            TokenKind::Error_UnsafeCharacterEncoding,
+            TOKEN_ERROR_UNSAFECHARACTERENCODING,
             ByteSpan::new(0, 1),
             src!(1:1-1:2)
         )
@@ -301,7 +298,7 @@ fn TokenizerTest_Basic4() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::EndOfFile, ByteSpan::new(1, 0), src!(1:2-1:2))
+        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(1, 0), src!(1:2-1:2))
     );
 
     Tok.skip(&mut session.tokenizer);
@@ -348,7 +345,7 @@ fn TokenizerTest_LineContinuation1() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::Symbol, ByteSpan::new(0, 6), src!(1:1-2:3))
+        Token::new3(TOKEN_SYMBOL, ByteSpan::new(0, 6), src!(1:1-2:3))
     );
 
     Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
@@ -357,7 +354,7 @@ fn TokenizerTest_LineContinuation1() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::EndOfFile, ByteSpan::new(6, 0), src!(2:3-2:3))
+        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(6, 0), src!(2:3-2:3))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -380,7 +377,7 @@ fn TokenizerTest_LineContinuation2() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::Symbol, ByteSpan::new(0, 7), src!(1:1-2:3))
+        Token::new3(TOKEN_SYMBOL, ByteSpan::new(0, 7), src!(1:1-2:3))
     );
 
     Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
@@ -389,7 +386,7 @@ fn TokenizerTest_LineContinuation2() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::EndOfFile, ByteSpan::new(7, 0), src!(2:3-2:3))
+        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(7, 0), src!(2:3-2:3))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);
@@ -412,7 +409,7 @@ fn TokenizerTest_LineContinuation3() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::Symbol, ByteSpan::new(0, 6), src!(1:1-2:3))
+        Token::new3(TOKEN_SYMBOL, ByteSpan::new(0, 6), src!(1:1-2:3))
     );
 
     Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
@@ -421,7 +418,7 @@ fn TokenizerTest_LineContinuation3() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::EndOfFile, ByteSpan::new(6, 0), src!(2:3-2:3))
+        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(6, 0), src!(2:3-2:3))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 1);
@@ -444,7 +441,7 @@ fn TokenizerTest_LineContinuation4() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::Integer, ByteSpan::new(0, 1), src!(1:1-1:2))
+        Token::new3(TOKEN_INTEGER, ByteSpan::new(0, 1), src!(1:1-1:2))
     );
 
     Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
@@ -453,7 +450,7 @@ fn TokenizerTest_LineContinuation4() {
 
     assert_eq!(
         Tok,
-        Token::new3(TokenKind::EndOfFile, ByteSpan::new(1, 2), src!(1:2-2:1))
+        Token::new3(TOKEN_ENDOFFILE, ByteSpan::new(1, 2), src!(1:2-2:1))
     );
 
     assert_eq!(session.nonFatalIssues().len(), 0);

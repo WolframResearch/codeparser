@@ -10,7 +10,8 @@ use crate::{
     precedence::*,
     source::*,
     symbol::Symbol,
-    token::{Token, TokenKind},
+    token::Token,
+    token_enum_registration::TokenEnum::*,
     tokenizer::Tokenizer_currentToken,
 };
 
@@ -44,7 +45,7 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, Tok
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    if Tok.tok == TokenKind::Symbol {
+    if Tok.tok == TOKEN_SYMBOL {
         //
         // Something like  _b
         //
@@ -61,7 +62,7 @@ fn UnderParselet_parsePrefix(session: &mut ParserSession, P: &UnderParselet, Tok
         return UnderParselet_reduceBlank(session, P);
     }
 
-    if Tok.tok == TokenKind::Error_ExpectedLetterlike {
+    if Tok.tok == TOKEN_ERROR_EXPECTEDLETTERLIKE {
         //
         // Something like  _a`
         //
@@ -100,7 +101,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
 
     let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    if Tok.tok == TokenKind::Symbol {
+    if Tok.tok == TOKEN_SYMBOL {
         //
         // Something like  a_b
         //
@@ -117,7 +118,7 @@ pub(crate) fn UnderParselet_parseInfixContextSensitive(
         return UnderParselet_reduceBlankContextSensitive(session, P);
     }
 
-    if Tok.tok == TokenKind::Error_ExpectedLetterlike {
+    if Tok.tok == TOKEN_ERROR_EXPECTEDLETTERLIKE {
         //
         // Something like  a_b`
         //

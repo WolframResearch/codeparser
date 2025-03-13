@@ -1,7 +1,6 @@
 BeginPackage["CodeParser`Generate`Common`"]
 
 toGlobal
-toTokenEnumVariant
 
 generatedCPPDir
 generatedCPPIncludeDir
@@ -38,15 +37,6 @@ uppercases and replaces ` with _
 *)
 toGlobal[n_] :=
   StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
-
-toGlobal[n_, "UpperCamelCase"] :=
-  StringReplace[ToString[n], {"`" -> "_", "$" -> "_"}]
-
-toTokenEnumVariant[name_] :=
-	StringReplace[
-		toGlobal[name, "UpperCamelCase"],
-		StartOfString ~~ "Token_" -> ""
-	]
 
 (* generatedCPPDir = FileNameJoin[{buildDir, "generated", "rust"}] *)
 generatedCPPDir = FileNameJoin[{srcDir, "crate", "src", "generated"}]
