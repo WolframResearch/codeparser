@@ -51,7 +51,7 @@ use crate::{
     precedence::Precedence,
 
     tokenize::{
-        token_kind::Closer,
+        token_enum::Closer,
         tokenizer::{Tokenizer, Tokenizer_currentToken_stringifyAsFile},
         BorrowedTokenInput, TokenKind, TokenRef,
     },

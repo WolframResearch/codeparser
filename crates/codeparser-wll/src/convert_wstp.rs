@@ -13,14 +13,12 @@ use wolfram_parser::{
         PrefixNode, PrefixOperator, SyntaxErrorKind, SyntaxErrorNode,
         TernaryNode, TernaryOperator,
     },
+    generated::token_enum_registration::TokenToSymbol,
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
     source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbols as sym,
-    tokenize::{
-        token_kind::TokenToSymbol, BorrowedTokenInput, Token, TokenInput,
-        TokenKind,
-    },
+    tokenize::{BorrowedTokenInput, Token, TokenInput, TokenKind},
     Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult,
     Tokens, UnsafeCharacterEncoding,
 };
