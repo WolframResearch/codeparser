@@ -1065,8 +1065,7 @@ impl InfixOperatorParselet {
                 trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
-                return session
-                    .reduce_and_climb(|ctx| InfixNode::new(self.Op, ctx));
+                return self.reduce_infix_operator(session);
             }
 
             session.push_trivia_seq(trivia1);
@@ -1092,6 +1091,12 @@ impl InfixOperatorParselet {
         //     return P2.parse_prefix(session, Tok2);
         // #endif // !USE_MUSTTAIL
     }
+
+    fn reduce_infix_operator(&self, session: &mut ParserSession) {
+        let Op = self.Op;
+
+        session.reduce_and_climb(|ctx| InfixNode::new(Op, ctx))
+    }
 }
 
 //======================================
@@ -1116,7 +1121,7 @@ impl InfixParselet for PostfixOperatorParselet {
         session.push_leaf_and_next(tok_in);
 
         // MUSTTAIL
-        return session.reduce_and_climb(|ctx| PostfixNode::new(self.Op, ctx));
+        return self.reduce_postfix_operator(session);
     }
 
     fn getPrecedence(
@@ -1128,6 +1133,12 @@ impl InfixParselet for PostfixOperatorParselet {
 
     fn getOp(&self) -> InfixParseletOperator {
         InfixParseletOperator::Postfix(self.Op)
+    }
+}
+
+impl PostfixOperatorParselet {
+    fn reduce_postfix_operator(&self, session: &mut ParserSession) {
+        session.reduce_and_climb(|ctx| PostfixNode::new(self.Op, ctx))
     }
 }
 
@@ -2295,9 +2306,7 @@ impl ColonColonParselet {
                 trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
-                return session.reduce_and_climb(|ctx| {
-                    InfixNode::new(InfixOperator::MessageName, ctx)
-                });
+                return ColonColonParselet::reduce_MessageName(session);
             }
 
             session.push_trivia_seq(trivia1);
@@ -2319,6 +2328,12 @@ impl ColonColonParselet {
           //     // MUSTTAIL
           //     return ColonColonParselet_parseLoop(session, ignored, ignored2);
           // #endif // !USE_MUSTTAIL
+    }
+
+    fn reduce_MessageName(session: &mut ParserSession) {
+        session.reduce_and_climb(|ctx| {
+            InfixNode::new(InfixOperator::MessageName, ctx)
+        })
     }
 }
 
@@ -2350,8 +2365,7 @@ impl InfixParselet for GreaterGreaterParselet {
         session.push_leaf_and_next(token);
 
         // MUSTTAIL
-        return session
-            .reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Put, ctx));
+        return GreaterGreaterParselet::reduce_Put(session);
     }
 
     fn getPrecedence(
@@ -2359,6 +2373,13 @@ impl InfixParselet for GreaterGreaterParselet {
         _session: &mut ParserSession,
     ) -> Option<Precedence> {
         Some(Precedence::GREATERGREATER)
+    }
+}
+
+impl GreaterGreaterParselet {
+    fn reduce_Put(session: &mut ParserSession) {
+        session
+            .reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Put, ctx))
     }
 }
 
@@ -2390,9 +2411,7 @@ impl InfixParselet for GreaterGreaterGreaterParselet {
         session.push_leaf_and_next(tok);
 
         // MUSTTAIL
-        return session.reduce_and_climb(|ctx| {
-            BinaryNode::new(BinaryOperator::PutAppend, ctx)
-        });
+        return GreaterGreaterGreaterParselet::reduce_PutAppend(session);
     }
 
     fn getPrecedence(
@@ -2400,6 +2419,14 @@ impl InfixParselet for GreaterGreaterGreaterParselet {
         _session: &mut ParserSession,
     ) -> Option<Precedence> {
         Some(Precedence::GREATERGREATERGREATER)
+    }
+}
+
+impl GreaterGreaterGreaterParselet {
+    fn reduce_PutAppend(session: &mut ParserSession) {
+        session.reduce_and_climb(|ctx| {
+            BinaryNode::new(BinaryOperator::PutAppend, ctx)
+        })
     }
 }
 
@@ -2433,8 +2460,14 @@ impl PrefixParselet for LessLessParselet {
         session.push_leaf_and_next(tok);
 
         // MUSTTAIL
-        return session
-            .reduce_and_climb(|ctx| PrefixNode::new(PrefixOperator::Get, ctx));
+        return LessLessParselet::reduce_Get(session);
+    }
+}
+
+impl LessLessParselet {
+    fn reduce_Get(session: &mut ParserSession) {
+        session
+            .reduce_and_climb(|ctx| PrefixNode::new(PrefixOperator::Get, ctx))
     }
 }
 
@@ -2476,15 +2509,21 @@ impl PrefixParselet for HashParselet {
                 session.push_leaf_and_next(tok);
 
                 // MUSTTAIl
-                return session.reduce_and_climb(|ctx| {
-                    CompoundNode::new(CompoundOperator::Slot, ctx)
-                });
+                return HashParselet::reduce_Slot(session);
             },
             _ => (),
         }
 
         // MUSTTAIL
         return session.parse_climb();
+    }
+}
+
+impl HashParselet {
+    fn reduce_Slot(session: &mut ParserSession) {
+        session.reduce_and_climb(|ctx| {
+            CompoundNode::new(CompoundOperator::Slot, ctx)
+        })
     }
 }
 
@@ -2516,15 +2555,21 @@ impl PrefixParselet for HashHashParselet {
                 session.push_leaf_and_next(tok);
 
                 // MUSTTAIl
-                return session.reduce_and_climb(|ctx| {
-                    CompoundNode::new(CompoundOperator::SlotSequence, ctx)
-                });
+                return HashHashParselet::reduce_SlotSequence(session);
             },
             _ => (),
         }
 
         // MUSTTAIL
         return session.parse_climb();
+    }
+}
+
+impl HashHashParselet {
+    fn reduce_SlotSequence(session: &mut ParserSession) {
+        session.reduce_and_climb(|ctx| {
+            CompoundNode::new(CompoundOperator::SlotSequence, ctx)
+        })
     }
 }
 
@@ -2556,14 +2601,20 @@ impl PrefixParselet for PercentParselet {
                 session.push_leaf_and_next(tok);
 
                 // MUSTTAIl
-                return session.reduce_and_climb(|ctx| {
-                    CompoundNode::new(CompoundOperator::Out, ctx)
-                });
+                return PercentParselet::reduce_Out(session);
             },
             _ => (),
         }
 
         // MUSTTAIL
         return session.parse_climb();
+    }
+}
+
+impl PercentParselet {
+    fn reduce_Out(session: &mut ParserSession) {
+        session.reduce_and_climb(|ctx| {
+            CompoundNode::new(CompoundOperator::Out, ctx)
+        })
     }
 }

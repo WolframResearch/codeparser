@@ -96,9 +96,7 @@ impl TimesParselet {
                 trivia1.reset(&mut session.tokenizer);
 
                 // MUSTTAIL
-                return session.reduce_and_climb(|ctx| {
-                    InfixNode::new(InfixOperator::Times, ctx)
-                });
+                return TimesParselet::reduce_Times(session);
             }
 
             session.push_trivia_seq(trivia1);
@@ -122,5 +120,10 @@ impl TimesParselet {
         //     // MUSTTAIL
         //     return P2.parse_prefix(session, Tok2);
         // #endif // !USE_MUSTTAIL
+    }
+
+    fn reduce_Times(session: &mut ParserSession) {
+        session
+            .reduce_and_climb(|ctx| InfixNode::new(InfixOperator::Times, ctx))
     }
 }
