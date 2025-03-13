@@ -1,9 +1,3 @@
-mod integral_parselet;
-mod semi_semi_parselet;
-mod times_parselet;
-mod under_parselet;
-
-
 use std::any::Any;
 
 use crate::{
@@ -32,10 +26,9 @@ use crate::{
         Tokenizer_currentToken, Tokenizer_currentToken_stringifyAsFile,
         Tokenizer_currentToken_stringifyAsTag,
     },
-};
-
-use self::under_parselet::{
-    UnderDotParselet_parseInfixContextSensitive, UnderParselet_parseInfixContextSensitive,
+    under_parselet::{
+        UnderDotParselet_parseInfixContextSensitive, UnderParselet_parseInfixContextSensitive,
+    },
 };
 
 pub(crate) type ParseletPtr = &'static dyn Parselet;
