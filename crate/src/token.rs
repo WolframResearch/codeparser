@@ -1,4 +1,5 @@
 use crate::{
+    feature,
     source::{Buffer, BufferAndLength, ByteSpan, Source},
     tokenizer::Tokenizer,
 };
@@ -115,7 +116,7 @@ impl<'i> TokenRef<'i> {
             // And other newlines like \[IndentingNewLine] have size > 1
             //
             TokenKind::ToplevelNewline | TokenKind::InternalNewline => {},
-            _ if crate::feature::COMPUTE_SOURCE => {
+            _ if feature::COMPUTE_SOURCE => {
                 use crate::source::SourceCharacter;
 
                 if tok.isEmpty() {

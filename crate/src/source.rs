@@ -436,7 +436,6 @@ impl<'i> BufferAndLength<'i> {
 
     // TODO: Remove this method? Currently only used in token.rs for debug
     //       assertion.
-    #[allow(dead_code)]
     pub(crate) fn length(&self) -> usize {
         let BufferAndLength { buf } = self;
 
@@ -940,7 +939,6 @@ impl Source {
 
     // PRE_COMMIT: Rename; this function will panic depending on the source
     //             convention used.
-    #[allow(dead_code)]
     pub(crate) fn len(&self) -> usize {
         let Source { start, end } = self;
         assert!(start.first == end.first);
