@@ -204,6 +204,35 @@ fn aggregate_op<I: Debug, S: Debug, O>(
 // Abstract
 //==========================================================
 
+//--------------------------------------
+// WL Syntax Macros
+//--------------------------------------
+
+/// Returns a `LeafNode[Symbol, ..]`
+fn ToNode<O: Operator>(op: O) -> Ast {
+    let s: wolfram_expr::symbol::SymbolRef = op.to_symbol();
+    Ast::symbol(s)
+}
+
+/// Returns a `LeafNode[String, ..]`
+#[allow(dead_code)]
+fn ToNode_String(s: &str) -> Ast {
+    // FIXME: In the WL source this was escapeString(s);
+    WL!( LeafNode[String, s, <||>])
+}
+
+/// Returns a `LeafNode[Integer, ..]`
+// ToNode[i_Integer] := LeafNode[Integer, ToString[i], <||>]
+fn ToNode_Integer(int: i64) -> Ast {
+    WL!( LeafNode[Integer, int.to_string(), <||>] )
+}
+
+fn ToNode_Integer_usize(int: usize) -> Ast {
+    WL!( LeafNode[Integer, int.to_string(), <||>] )
+}
+
+//======================================
+
 macro_rules! expect_children {
     ($children:ident, {_, $name:ident:_}) => {
         let [_, $name] = expect_children($children);
@@ -365,12 +394,9 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             } = arg;
                             Ast::call(
                                 st::Slot,
-                                vec![Ast::string(
-                                    escapeString_of_abstractSymbolString(
-                                        s.as_str(),
-                                    ),
-                                    data1,
-                                )],
+                                vec![
+                                    WL!( LeafNode[String, escapeString_of_abstractSymbolString(s.as_str()), data1]),
+                                ],
                                 data,
                             )
                         },
@@ -382,12 +408,9 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             } = arg;
                             Ast::call(
                                 st::Slot,
-                                vec![Ast::string(
-                                    escapeString_of_abstractSymbolString(
-                                        s.as_str(),
-                                    ),
-                                    data1,
-                                )],
+                                vec![
+                                    WL!( LeafNode[String, escapeString_of_abstractSymbolString(s.as_str()), data1] ),
+                                ],
                                 data,
                             )
                         },
@@ -490,10 +513,9 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         src: data1,
                     }) => Ast::call(
                         st::Get,
-                        vec![Ast::string(
-                            escapeString_of_abstractFileString(str.as_str()),
-                            data1,
-                        )],
+                        vec![
+                            WL!(LeafNode[String, escapeString_of_abstractFileString(str.as_str()), data1]),
+                        ],
                         data,
                     ),
                     _ => unhandled(),
@@ -541,7 +563,9 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             Ast::call2(
                                 Ast::call(
                                     st::Derivative,
-                                    vec![Ast::usize(order + 1)],
+                                    vec![
+                                        WL!(LeafNode[Integer, (order + 1).to_string(), <||>]),
+                                    ],
                                     AstMetadata::empty(),
                                 ),
                                 vec![abstractedBody],
@@ -559,7 +583,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                             Ast::call2(
                                 Ast::call(
                                     st::Derivative,
-                                    vec![Ast::usize(order)],
+                                    vec![ToNode_Integer_usize(order)],
                                     AstMetadata::empty(),
                                 ),
                                 vec![abstract_(operand)],
@@ -599,7 +623,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                     if quirks::is_quirk_enabled(Quirk::OldAtAtAt) {
                         let level = Ast::call(
                             st::List,
-                            vec![Ast::i64(1)],
+                            vec![ToNode_Integer(1)],
                             AstMetadata::empty(),
                         );
 
@@ -638,10 +662,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                         op.to_symbol(),
                         vec![
                             abstract_(left),
-                            Ast::string(
-                                escapeString_of_abstractFileString(str),
-                                data1,
-                            ),
+                            WL!( LeafNode[String, escapeString_of_abstractFileString(str), data1] ),
                         ],
                         data,
                     )
@@ -781,7 +802,7 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                                 tok: TK::Fake_ImplicitNull,
                                 input: _,
                                 src: data,
-                            }) => Ast::symbol_with_data(st::Null, data.clone()),
+                            }) => WL!( LeafNode[Symbol, "Null", data.clone()] ),
                             node => abstract_(node),
                         })
                         .collect();
@@ -1305,7 +1326,7 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(
 
             Ast::call(
                 CompoundOperator::Out.to_symbol(),
-                vec![Ast::i64(-count)],
+                vec![ToNode_Integer(-count)],
                 data,
             )
         },
@@ -1319,20 +1340,20 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(
             vec![Ast::call(st::Blank, vec![], data.clone())],
             data,
         ),
-        TokenKind::Hash => Ast::call(st::Slot, vec![Ast::i64(1)], data),
+        TokenKind::Hash => Ast::call(st::Slot, vec![ToNode_Integer(1)], data),
         TokenKind::HashHash => {
-            Ast::call(st::SlotSequence, vec![Ast::i64(1)], data)
+            Ast::call(st::SlotSequence, vec![ToNode_Integer(1)], data)
         },
         TokenKind::Percent => Ast::call(st::Out, vec![], data),
 
-        TokenKind::Fake_ImplicitOne => Ast::i64_with_data(1, data),
+        TokenKind::Fake_ImplicitOne => WL!( LeafNode[Integer, "1", data] ),
         // FIXME: This should be "System`All", so that "All" doesn't resolve
         //        into the wrong context if System` is not on $ContextPath?
-        TokenKind::Fake_ImplicitAll => Ast::symbol_with_data(st::All, data),
+        TokenKind::Fake_ImplicitAll => WL!( LeafNode[Symbol, "All", data] ),
 
         TokenKind::Error_PrefixImplicitNull
         | TokenKind::Error_InfixImplicitNull => {
-            Ast::symbol_with_data(st::Null, data)
+            WL!( LeafNode[Symbol, "Null", data] )
         },
 
         kind if kind.isError() => Ast::Error {
@@ -1345,26 +1366,28 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(
             match input.as_str() {
                 // "\[Pi]"
                 "\u{03c0}" | "\\[Pi]" | "\\:03c0" | "\\|0003c0" => {
-                    Ast::symbol_with_data(st::Pi, data)
+                    WL!( LeafNode[Symbol, "Pi", data] )
                 },
 
                 // "\[Degree]"
                 "\u{00b0}" | "\\[Degree]" | "\\:00b0" | "\\.b0" | "\\260"
-                | "\\|0000b0" => Ast::symbol_with_data(st::Degree, data),
+                | "\\|0000b0" => {
+                    WL!( LeafNode[Symbol, "Degree", data] )
+                },
 
                 // "\[Infinity]"
                 "\u{221e}" | "\\[Infinity]" | "\\:221e" | "\\|00221e" => {
-                    Ast::symbol_with_data(st::Infinity, data)
+                    WL!( LeafNode[Symbol, "Infinity", data] )
                 },
 
                 // "\[ExponentialE]"
                 "\u{f74d}" | "\\[ExponentialE]" | "\\:f74d" | "\\|00f74d" => {
-                    Ast::symbol_with_data(st::E, data)
+                    WL!( LeafNode[Symbol, "E", data] )
                 },
 
                 // "\[ImaginaryI]"
                 "\u{f74e}" | "\\[ImaginaryI]" | "\\:f74e" | "\\|00f74e" => {
-                    Ast::symbol_with_data(st::I, data)
+                    WL!( LeafNode[Symbol, "I", data] )
                 },
 
                 // NOTE: It is NOT a bug that \[ImaginaryJ] turns into the same
@@ -1372,7 +1395,7 @@ fn abstract_replace_token<I: TokenInput, S: TokenSource>(
                 //       bug so old its not going to change now.)
                 // "\[ImaginaryJ]"
                 "\u{f74f}" | "\\[ImaginaryJ]" | "\\:f74f" | "\\|00f74f" => {
-                    Ast::symbol_with_data(st::I, data)
+                    WL!( LeafNode[Symbol, "I", data] )
                 },
 
                 _ => Ast::Leaf {
@@ -1829,7 +1852,7 @@ impl<I: TokenInput + Debug, S: TokenSource + Debug> Reciprocate<I, S> {
         // Power[node, -1]
         Ast::Call {
             head: Box::new(Ast::symbol(crate::symbols::Power)),
-            args: vec![abstract_(node), Ast::i64(-1)],
+            args: vec![abstract_(node), ToNode_Integer(-1)],
             data: AstMetadata::from_src(data),
         }
     }
@@ -2268,9 +2291,8 @@ fn abstractMessageName<I: TokenInput + Debug, S: TokenSource + Debug>(
             tok: TK::String,
             input: str,
             src: data,
-        }) => Ast::string(
-            escapeString_of_abstractSymbolString(str.as_str()),
-            data,
+        }) => WL!(
+            LeafNode[String, escapeString_of_abstractSymbolString(str.as_str()), data]
         ),
         // FIXME: The original WL here didn't call abstract[..] here. Is that
         //        because it is not possible for `children` to contain anything
@@ -2788,7 +2810,7 @@ fn abstractGroupNode<
         //              abstractGroupNode()? I don't think so, since the
         //              ToNode_Op(tag) where tag is CodeParser`* are not valid
         //              abstract syntax nodes anyway.
-        head: Box::new(Ast::symbol(tag.to_symbol())),
+        head: Box::new(ToNode(tag)),
         args: abstracted_children,
         data: data.into_general(),
     }

@@ -20,13 +20,6 @@ use crate::symbol::Symbol;
 //======================================
 
 crate::symbol::symbol! {
-    All;
-    Degree;
-    Pi;
-    Infinity;
-    E;
-    I;
-
     Inequality;
 
     Equal;
