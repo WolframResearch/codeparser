@@ -861,7 +861,11 @@ fn Tokenizer_nextWLCharacter<'i>(
             return c;
         }
 
-        c = session.peek_wolfram_char(policy);
+        let mark = session.mark();
+
+        c = session.next_wolfram_char(policy);
+
+        session.seek(mark);
 
         point = c.to_point();
 
@@ -894,7 +898,11 @@ fn Tokenizer_nextWLCharacter<'i>(
 
             session.next_wolfram_char(policy);
 
-            c = session.peek_wolfram_char(policy);
+            let mark = session.mark();
+
+            c = session.next_wolfram_char(policy);
+
+            session.seek(mark);
 
             point = c.to_point();
         }
