@@ -89,7 +89,9 @@ pub(super) fn CharacterDecoder_nextWLCharacter(
     session: &mut Reader,
     policy: NextPolicy,
 ) -> WLCharacter {
-    let mut point = session.next_source_char(policy);
+    let mut curSource = session.next_source_char(policy);
+
+    let mut point = curSource;
 
     if point != '\\' {
         incr_diagnostic!(CharacterDecoder_UnescapedCount);
@@ -109,16 +111,17 @@ pub(super) fn CharacterDecoder_nextWLCharacter(
 
     let escaped = session.mark();
 
-    point = session.peek_source_char(policy);
+    curSource = session.peek_source_char(policy);
 
-    let point_i32 = point.as_i32();
+    point = curSource;
 
-    if !(0x20 <= point_i32 && point_i32 <= 0x7e) {
+    if !(0x20 <= point.as_i32() && point.as_i32() <= 0x7e) {
         // MUSTTAIL
         return CharacterDecoder_handleUncommon(session, escaped, policy);
     }
 
-    let point_u8 = u8::try_from(point_i32).expect("unable to convert digit character to u8 value");
+    let point_u8 =
+        u8::try_from(point.as_i32()).expect("unable to convert digit character to u8 value");
 
     return CHARACTER_DECODER_HANDLER_TABLE[usize::from(point_u8)](session, escaped, policy);
 }
