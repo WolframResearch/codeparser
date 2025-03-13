@@ -53,7 +53,7 @@ InfixOperatorToParselet[_] = Parselet`InfixImplicitTimesParselet[]
 
 
 
-tokensSansCount = tokens;
+tokensSansCount = DeleteCases[tokens, Token`Count]
 
 (*-----------------*)
 (* Operators Enums *)
@@ -529,7 +529,7 @@ pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 //
 //
 
-pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::COUNT] = ["} ~Join~
+pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::Count.value() as usize] = ["} ~Join~
 
 (Row[{"    ", formatPrefix[PrefixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
@@ -538,7 +538,7 @@ pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::COUNT] = ["}
 //
 //
 //
-pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::COUNT] = ["} ~Join~
+pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::Count.value() as usize] = ["} ~Join~
 
 (Row[{"    ", formatInfix[InfixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 

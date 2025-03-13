@@ -418,9 +418,6 @@ KeyValueMap[(
   ,
   KeyDrop[enumMap, Token`Error`First]
 ] ~Join~ {
-	"}\n",
-	"impl TokenKind {",
-	"	pub const COUNT: usize = " <> ToString[Length[enumMap] - 3] <> ";",
 	"}"
 };
 
