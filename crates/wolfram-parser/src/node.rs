@@ -76,9 +76,9 @@ pub enum BoxKind {
 /// Any kind of prefix, postfix, binary, or infix operator
 #[derive(Debug, Clone, PartialEq)]
 pub struct OperatorNode<I = OwnedTokenInput, S = Source> {
-    pub op: Operator,
-    pub children: CstNodeSeq<I, S>,
-    pub src: S,
+    pub(crate) op: Operator,
+    pub(crate) children: CstNodeSeq<I, S>,
+    pub(crate) src: S,
 }
 
 /// `-a`
@@ -920,19 +920,7 @@ impl<I, S: TokenSource> SyntaxErrorNode<I, S> {
 //======================================
 
 impl SyntaxErrorKind {
-    #[doc(hidden)]
-    pub fn to_symbol(&self) -> crate::symbol::Symbol {
-        use crate::symbol_registration::*;
-
-        match self {
-            SyntaxErrorKind::ExpectedSymbol => SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL,
-            SyntaxErrorKind::ExpectedSet => SYMBOL_SYNTAXERROR_EXPECTEDSET,
-            SyntaxErrorKind::ExpectedTilde => SYMBOL_SYNTAXERROR_EXPECTEDTILDE,
-        }
-    }
-
-    #[doc(hidden)]
-    pub fn from_str(string: &str) -> Option<Self> {
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
         let value = match string {
             "ExpectedSymbol" => SyntaxErrorKind::ExpectedSymbol,
             "ExpectedSet" => SyntaxErrorKind::ExpectedSet,
@@ -945,7 +933,7 @@ impl SyntaxErrorKind {
 }
 
 impl BoxKind {
-    pub fn as_str(&self) -> &'static str {
+    pub(crate) fn as_str(&self) -> &'static str {
         match self {
             BoxKind::TagBox => "TagBox",
             BoxKind::SuperscriptBox => "SuperscriptBox",
@@ -962,8 +950,7 @@ impl BoxKind {
         }
     }
 
-    #[doc(hidden)]
-    pub fn from_str(string: &str) -> Option<Self> {
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
         let value = match string {
             "TagBox" => BoxKind::TagBox,
             "SuperscriptBox" => BoxKind::SuperscriptBox,

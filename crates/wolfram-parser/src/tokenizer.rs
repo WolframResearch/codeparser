@@ -54,9 +54,8 @@ pub struct Tokenizer<'i> {
     pub(crate) unsafe_character_encoding_flag: Option<UnsafeCharacterEncoding>,
 }
 
-#[doc(hidden)]
 #[derive(Debug, Clone)]
-pub struct TrackedSourceLocations {
+pub(crate) struct TrackedSourceLocations {
     pub simple_line_continuations: HashSet<SourceLocation>,
     pub complex_line_continuations: HashSet<SourceLocation>,
     pub embedded_newlines: HashSet<SourceLocation>,
@@ -86,7 +85,7 @@ pub enum UnsafeCharacterEncoding {
 }
 
 impl UnsafeCharacterEncoding {
-    pub fn as_str(&self) -> &'static str {
+    pub(crate) fn as_str(&self) -> &'static str {
         match self {
             UnsafeCharacterEncoding::IncompleteUTF8Sequence => "IncompleteUTF8Sequence",
             UnsafeCharacterEncoding::StraySurrogate => "StraySurrogate",
@@ -95,8 +94,7 @@ impl UnsafeCharacterEncoding {
         }
     }
 
-    #[doc(hidden)]
-    pub fn from_str(string: &str) -> Option<Self> {
+    pub(crate) fn from_str(string: &str) -> Option<Self> {
         let value = match string {
             "IncompleteUTF8Sequence" => UnsafeCharacterEncoding::IncompleteUTF8Sequence,
             "StraySurrogate" => UnsafeCharacterEncoding::StraySurrogate,
@@ -208,8 +206,7 @@ impl<'i> Tokenizer<'i> {
 
 impl TrackedSourceLocations {
     #[allow(dead_code)]
-    #[doc(hidden)]
-    pub fn to_nodes(&self) -> [HashSet<SourceLocation>; 4] {
+    pub(crate) fn to_nodes(&self) -> [HashSet<SourceLocation>; 4] {
         let TrackedSourceLocations {
             simple_line_continuations,
             complex_line_continuations,

@@ -2,29 +2,28 @@ use std::collections::HashSet;
 
 use wolfram_library_link::{expr::Expr, wstp};
 
-use wolfram_parser::{
+use crate::{
     ast::{AbstractSyntaxError, AstMetadata, AstNode},
     cst::CstNode,
+    from_expr::List,
     my_string::MyString,
     my_string_registration::*,
     node::{
         BinaryNode, BoxKind, BoxNode, CallNode, CodeNode, CompoundNode, GroupMissingCloserNode,
-        GroupMissingOpenerNode, GroupNode, InfixNode, Node, Operator, OperatorNode, PostfixNode,
-        PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
+        GroupMissingOpenerNode, GroupNode, InfixNode, Node, NodeSeq, Operator, OperatorNode,
+        PostfixNode, PrefixBinaryNode, PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
     },
     source::{
-        CharacterRange, CodeAction, CodeActionKind, GeneralSource, Issue, IssueTag, Severity,
-        Source, SourceLocation, StringSourceKind,
+        BufferAndLength, CharacterRange, CodeAction, CodeActionKind, GeneralSource, Issue,
+        IssueTag, Severity, Source, SourceLocation, StringSourceKind,
     },
     symbol::Symbol,
     symbol_registration::{self as sym, *},
     token::{BorrowedTokenInput, Token, TokenInput, TokenKind},
     token_enum_registration::TokenToSymbol,
-    Container, ContainerBody, ContainerKind, Metadata, NodeSeq, ParseResult, Tokens,
+    Container, ContainerBody, ContainerKind, Metadata, ParseResult, Tokens,
     UnsafeCharacterEncoding,
 };
-
-use crate::from_expr::List;
 
 pub trait WstpPut {
     fn put(&self, link: &mut wstp::Link);
@@ -50,8 +49,8 @@ impl<N: WstpPut> WstpPut for Container<N> {
     }
 }
 
-impl WstpPut for ContainerKind {
-    fn put(&self, link: &mut wstp::Link) {
+impl ContainerKind {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let symbol = match self {
             ContainerKind::String => Symbol::try_new("System`String").unwrap(),
             ContainerKind::File => Symbol::try_new("System`File").unwrap(),
@@ -76,8 +75,8 @@ impl<S: WstpPut> WstpPut for ContainerBody<S> {
     }
 }
 
-impl WstpPut for Metadata {
-    fn put(&self, link: &mut wstp::Link) {
+impl Metadata {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let Metadata {
             source,
             syntax_issues,
@@ -516,8 +515,8 @@ impl WstpPut for TokenKind {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for Token<I, S> {
-    fn put(&self, callLink: &mut wstp::Link) {
+impl<I: TokenInput, S: WstpPut> Token<I, S> {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Token { tok, src, input } = self;
 
         if tok.isError() {
@@ -557,21 +556,21 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Node<I, S> {
             Node::Token(token) => token.put(link),
             Node::Call(node) => node.put(link),
             Node::SyntaxError(node) => node.put(link),
-            Node::Infix(InfixNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_INFIXNODE),
-            Node::Prefix(PrefixNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_PREFIXNODE),
-            Node::Postfix(PostfixNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_POSTFIXNODE),
-            Node::Binary(BinaryNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_BINARYNODE),
-            Node::Ternary(TernaryNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_TERNARYNODE),
+            Node::Infix(InfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_INFIXNODE),
+            Node::Prefix(PrefixNode(op)) => op.put(link, SYMBOL_CODEPARSER_PREFIXNODE),
+            Node::Postfix(PostfixNode(op)) => op.put(link, SYMBOL_CODEPARSER_POSTFIXNODE),
+            Node::Binary(BinaryNode(op)) => op.put(link, SYMBOL_CODEPARSER_BINARYNODE),
+            Node::Ternary(TernaryNode(op)) => op.put(link, SYMBOL_CODEPARSER_TERNARYNODE),
             Node::PrefixBinary(PrefixBinaryNode(op)) => {
-                put_op(link, op, SYMBOL_CODEPARSER_PREFIXBINARYNODE)
+                op.put(link, SYMBOL_CODEPARSER_PREFIXBINARYNODE)
             },
-            Node::Compound(CompoundNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_COMPOUNDNODE),
-            Node::Group(GroupNode(op)) => put_op(link, op, SYMBOL_CODEPARSER_GROUPNODE),
+            Node::Compound(CompoundNode(op)) => op.put(link, SYMBOL_CODEPARSER_COMPOUNDNODE),
+            Node::Group(GroupNode(op)) => op.put(link, SYMBOL_CODEPARSER_GROUPNODE),
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
-                put_op(link, op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
+                op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
             },
             Node::GroupMissingOpener(GroupMissingOpenerNode(op)) => {
-                put_op(link, op, SYMBOL_CODEPARSER_GROUPMISSINGOPENERNODE)
+                op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGOPENERNODE)
             },
             Node::Box(box_node) => box_node.put(link),
             Node::Code(node) => node.put(link),
@@ -579,8 +578,8 @@ impl<I: TokenInput, S: WstpPut> WstpPut for Node<I, S> {
     }
 }
 
-impl<N: WstpPut> WstpPut for NodeSeq<N> {
-    fn put(&self, callLink: &mut wstp::Link) {
+impl<N: WstpPut> NodeSeq<N> {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let NodeSeq(vec) = self;
 
         callLink
@@ -598,8 +597,8 @@ impl<N: WstpPut> WstpPut for NodeSeq<N> {
     }
 }
 
-impl<'i> WstpPut for Tokens<BorrowedTokenInput<'i>> {
-    fn put(&self, link: &mut wstp::Link) {
+impl<'i> Tokens<BorrowedTokenInput<'i>> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let Tokens(tokens) = self;
 
         link.put_function(SYMBOL_LIST.as_str(), tokens.len())
@@ -616,8 +615,8 @@ impl<'i> WstpPut for Tokens<BorrowedTokenInput<'i>> {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for BoxNode<I, S> {
-    fn put(&self, link: &mut wstp::Link) {
+impl<I: TokenInput, S: WstpPut> BoxNode<I, S> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let BoxNode {
             kind,
             children,
@@ -643,8 +642,8 @@ impl WstpPut for BoxKind {
     }
 }
 
-impl<S: WstpPut> WstpPut for CodeNode<S> {
-    fn put(&self, link: &mut wstp::Link) {
+impl<S: WstpPut> CodeNode<S> {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let CodeNode { first, second, src } = self;
 
         link.put_function(SYMBOL_CODEPARSER_CODENODE.as_str(), 3)
@@ -655,20 +654,18 @@ impl<S: WstpPut> WstpPut for CodeNode<S> {
     }
 }
 
-fn put_op<I: TokenInput, S: WstpPut>(
-    link: &mut wstp::Link,
-    node: &OperatorNode<I, S>,
-    op_head: Symbol,
-) {
-    let OperatorNode { op, children, src } = node;
+impl<I: TokenInput, S: WstpPut> OperatorNode<I, S> {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link, op_head: Symbol) {
+        let OperatorNode { op, children, src } = self;
 
-    link.put_function(op_head.as_str(), 3).unwrap();
+        callLink.put_function(op_head.as_str(), 3).unwrap();
 
-    op.put(link);
+        op.put(callLink);
 
-    children.put(link);
+        children.put(callLink);
 
-    src.put(link);
+        src.put(callLink);
+    }
 }
 
 impl WstpPut for Operator {
@@ -677,8 +674,8 @@ impl WstpPut for Operator {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
-    fn put(&self, callLink: &mut wstp::Link) {
+impl<I: TokenInput, S: WstpPut> CallNode<I, S> {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CallNode {
             head,
             body,
@@ -712,8 +709,8 @@ impl<I: TokenInput, S: WstpPut> WstpPut for CallNode<I, S> {
     }
 }
 
-impl<I: TokenInput, S: WstpPut> WstpPut for SyntaxErrorNode<I, S> {
-    fn put(&self, callLink: &mut wstp::Link) {
+impl<I: TokenInput, S: WstpPut> SyntaxErrorNode<I, S> {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SyntaxErrorNode { err, children, src } = self;
 
 
@@ -737,8 +734,8 @@ impl WstpPut for SyntaxErrorKind {
     }
 }
 
-impl WstpPut for UnsafeCharacterEncoding {
-    fn put(&self, link: &mut wstp::Link) {
+impl UnsafeCharacterEncoding {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         link.put_function(SYMBOL_MISSING.as_str(), 1).unwrap();
 
         let variant_name: &'static str = self.as_str();
@@ -753,8 +750,15 @@ impl WstpPut for UnsafeCharacterEncoding {
 // Source types
 //======================================
 
-impl WstpPut for Issue {
-    fn put(&self, callLink: &mut wstp::Link) {
+impl<'i> BufferAndLength<'i> {
+    #[allow(dead_code)]
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
+        callLink.put_str(self.as_str()).unwrap();
+    }
+}
+
+impl Issue {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Issue {
             make_sym,
             tag,
@@ -844,8 +848,8 @@ impl WstpPut for Issue {
     }
 }
 
-impl WstpPut for CodeAction {
-    fn put(&self, callLink: &mut wstp::Link) {
+impl CodeAction {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CodeAction {
             label: Label,
             src: Src,
@@ -920,8 +924,8 @@ impl WstpPut for CodeAction {
     }
 }
 
-impl WstpPut for SourceLocation {
-    fn put(&self, callLink: &mut wstp::Link) {
+impl SourceLocation {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SourceLocation { first, second } = *self;
 
         callLink.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
@@ -935,7 +939,7 @@ impl WstpPut for SourceLocation {
 fn put_source_rhs(link: &mut wstp::Link, source: Source) {
     match source.kind() {
         StringSourceKind::LineColumnRange { .. } => {
-            let (start, end) = source.start_end();
+            let Source { start, end } = source;
 
             link.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
 
@@ -1019,8 +1023,8 @@ fn put_source_locations(link: &mut wstp::Link, source_locs: HashSet<SourceLocati
 // Result types
 //======================================
 
-impl<'i> WstpPut for ParseResult<CstNode<BorrowedTokenInput<'i>>> {
-    fn put(&self, link: &mut wstp::Link) {
+impl<'i> ParseResult<CstNode<BorrowedTokenInput<'i>>> {
+    pub(crate) fn put(self, link: &mut wstp::Link) {
         let ParseResult {
             nodes: outer_exprs,
             unsafe_character_encoding,
@@ -1075,8 +1079,8 @@ impl<'i> WstpPut for ParseResult<CstNode<BorrowedTokenInput<'i>>> {
 // Other
 //======================================
 
-impl WstpPut for MyString {
-    fn put(&self, link: &mut wstp::Link) {
+impl MyString {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let MyString(val) = self;
 
         link.put_str(val).unwrap()
@@ -1090,16 +1094,16 @@ pub(crate) fn Symbol_put(self_: Symbol, callLink: &mut wstp::Link) {
     callLink.put_symbol(self_.as_str()).unwrap();
 }
 
-impl WstpPut for Severity {
-    fn put(&self, link: &mut wstp::Link) {
+impl Severity {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let string: &'static str = self.as_str();
 
         link.put_str(string).unwrap();
     }
 }
 
-impl WstpPut for IssueTag {
-    fn put(&self, link: &mut wstp::Link) {
+impl IssueTag {
+    pub(crate) fn put(&self, link: &mut wstp::Link) {
         let string: &'static str = self.as_str();
 
         link.put_str(string).unwrap();

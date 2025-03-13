@@ -53,30 +53,36 @@ mod byte_decoder;
 mod byte_encoder;
 mod code_point;
 mod long_names;
-#[doc(hidden)]
-pub mod my_string;
+mod my_string;
 mod parselet;
-#[doc(hidden)]
-pub mod quirks;
-#[doc(hidden)]
-pub mod source;
-#[doc(hidden)]
-pub mod symbol;
+mod quirks;
+mod source;
+mod symbol;
 mod token_enum;
 mod tokenizer;
 mod wl_character;
 
 mod error;
 mod parser;
-#[doc(hidden)]
-pub mod parser_session;
+mod parser_session;
 
 mod agg;
-pub mod ast;
-pub mod cst;
+mod ast;
+mod cst;
 
-#[doc(hidden)]
-pub mod abstract_;
+mod abstract_;
+
+#[cfg(feature = "USE_MATHLINK")]
+mod convert_wstp;
+
+#[cfg(feature = "USE_EXPR_LIB")]
+mod convert_expr;
+
+#[cfg(feature = "USE_MATHLINK")]
+mod from_expr;
+
+#[cfg(feature = "USE_MATHLINK")]
+mod wll_api;
 
 mod feature;
 
@@ -87,20 +93,17 @@ pub mod token;
 // Generated sources
 //===================
 
-#[doc(hidden)]
 #[path = "generated/symbol_registration.rs"]
-pub mod symbol_registration;
+mod symbol_registration;
 
-#[doc(hidden)]
 #[path = "generated/token_enum_registration.rs"]
-pub mod token_enum_registration;
+mod token_enum_registration;
 
 #[path = "generated/long_names_registration.rs"]
 mod long_names_registration;
 
-#[doc(hidden)]
 #[path = "generated/my_string_registration.rs"]
-pub mod my_string_registration;
+mod my_string_registration;
 
 #[path = "generated/parselet_registration.rs"]
 mod parselet_registration;
@@ -146,7 +149,7 @@ pub mod test_utils {
     /// **Usage:**
     ///
     /// ```
-    /// # use wolfram_parser::test_utils::{src, token};
+    /// # use wolfram_code_parse::test_utils::{src, token};
     /// token!(Integer, "5" @ 0, src!(1:1-1:2));
     /// //     ^^^^^^^  ... ###  *************
     /// ```
@@ -160,7 +163,7 @@ pub mod test_utils {
     ///
     /// ```
     /// # use pretty_assertions::assert_eq;
-    /// use wolfram_parser::{
+    /// use wolfram_code_parse::{
     ///     tokenize_bytes,
     ///     ParseOptions,
     ///     Tokens,
@@ -290,8 +293,7 @@ pub enum EncodingMode {
 }
 
 /// The modes that stringifying could happen in
-#[doc(hidden)]
-pub enum StringifyMode {
+pub(crate) enum StringifyMode {
     /// Tokens are treated normally
     Normal = 0,
 
@@ -360,7 +362,7 @@ use crate::parser_session::ParserSession;
 /// Tokenize `2 + 2`:
 ///
 /// ```
-/// use wolfram_parser::{
+/// use wolfram_code_parse::{
 ///     tokenize_bytes, ParseOptions, Tokens,
 ///     test_utils::{token, src}
 /// };
@@ -411,7 +413,7 @@ pub fn tokenize_bytes<'i>(
 /// Parse `2 + 2`:
 ///
 /// ```
-/// use wolfram_parser::{parse_concrete, ParseOptions};
+/// use wolfram_code_parse::{parse_concrete, ParseOptions};
 ///
 /// let result = parse_concrete("2 + 2", &ParseOptions::default());
 ///
@@ -479,9 +481,9 @@ pub fn parse_ast_bytes<'i>(bytes: &'i [u8], opts: &ParseOptions) -> ParseResult<
     session.abstract_parse_expressions()
 }
 
-//==========================================================
+//======================================
 // LibraryLink
-//==========================================================
+//======================================
 
 // TODO(cleanup): This doesn't need to be a method on ParserSession.
 pub(crate) fn abortQ() -> bool {
@@ -501,64 +503,6 @@ pub(crate) fn abortQ() -> bool {
     return false;
 }
 
-//======================================
-// Magic number conversions
-//======================================
-
-impl TryFrom<i32> for FirstLineBehavior {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => FirstLineBehavior::NotScript,
-            1 => FirstLineBehavior::Check,
-            2 => FirstLineBehavior::Script,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
-impl TryFrom<i32> for EncodingMode {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => EncodingMode::Normal,
-            1 => EncodingMode::Box,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
-impl TryFrom<i32> for StringifyMode {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => StringifyMode::Normal,
-            1 => StringifyMode::Tag,
-            2 => StringifyMode::File,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
-impl TryFrom<i32> for SourceConvention {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        let variant = match value {
-            0 => SourceConvention::LineColumn,
-            1 => SourceConvention::CharacterIndex,
-            _ => return Err(()),
-        };
-        Ok(variant)
-    }
-}
-
 //--------------------------------------
 // Macros
 //--------------------------------------
@@ -576,6 +520,5 @@ use cst::CstNode;
 pub(crate) use panic_if_aborted;
 use source::{CodeAction, GeneralSource, Issue};
 use token::{BorrowedTokenInput, OwnedTokenInput, Token};
-#[doc(hidden)]
-pub use tokenizer::UnsafeCharacterEncoding;
+use tokenizer::UnsafeCharacterEncoding;
 use wolfram_expr::{Expr, Number};

@@ -1271,8 +1271,7 @@ pub enum Operator {
 
 impl Operator {
     #[allow(dead_code)]
-    #[doc(hidden)]
-    pub fn to_symbol(self) -> Symbol {
+    pub(crate) fn to_symbol(self) -> Symbol {
         match self {
             Operator::Times => SYMBOL_TIMES,
             Operator::Span => SYMBOL_SPAN,
@@ -1591,8 +1590,7 @@ impl Operator {
         }
     }
 
-    #[doc(hidden)]
-    pub fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
+    pub(crate) fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             SYMBOL_TIMES => Operator::Times,
             SYMBOL_SPAN => Operator::Span,

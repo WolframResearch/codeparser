@@ -28,7 +28,7 @@ use crate::{
 // Aggregate
 //==========================================================
 
-pub fn Aggregate<I: Debug, S: Debug>(agg: CstNodeSeq<I, S>) -> AggNodeSeq<I, S> {
+pub(crate) fn Aggregate<I: Debug, S: Debug>(agg: CstNodeSeq<I, S>) -> AggNodeSeq<I, S> {
     let NodeSeq(agg) = agg;
 
     let agg_children = agg.into_iter().flat_map(aggregate_replace).collect();
@@ -282,7 +282,9 @@ pub(crate) fn Abstract<I: TokenInput + Debug, S: TokenSource + Debug>(
 
 // TODO(cleanup): Make this private again. Abstract(..) is the crate-public
 //                interface.
-pub fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(node: Node<I, S>) -> AstNode {
+pub(crate) fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
+    node: Node<I, S>,
+) -> AstNode {
     match node {
         Node::Token(token) => return abstract_replace_token(token),
         Node::Compound(CompoundNode(OperatorNode {

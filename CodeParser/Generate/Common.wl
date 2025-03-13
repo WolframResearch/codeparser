@@ -51,7 +51,7 @@ toTokenEnumVariant[name_] :=
 	]
 
 (* generatedCPPDir = FileNameJoin[{buildDir, "generated", "rust"}] *)
-generatedCPPDir = FileNameJoin[{srcDir, "crates", "wolfram-parser", "src", "generated"}]
+generatedCPPDir = FileNameJoin[{srcDir, "crate", "src", "generated"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir}]
 generatedCPPSrcDir = FileNameJoin[{generatedCPPDir}]
 
