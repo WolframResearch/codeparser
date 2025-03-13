@@ -17,7 +17,7 @@ use crate::{
     },
     panic_if_aborted,
     parse::token_parselets::{under1Parselet, under2Parselet, under3Parselet},
-    parse::{ColonLHS, ParserSession},
+    parse::{ColonLHS, ParserSession, Parser_identity},
     precedence::Precedence,
     source::*,
     tokenize::{
@@ -1000,7 +1000,7 @@ impl InfixParselet for InfixOperatorParselet {
 
         // #if !USE_MUSTTAIL
         let ctxt = session.top_context();
-        ctxt.init_identity();
+        ctxt.init_callback(Parser_identity, None);
 
         session.parse_prefix(tok2);
 
@@ -1156,7 +1156,7 @@ impl PrefixParselet for GroupParselet {
         session.push_group(GroupOpenerToCloser(tok_in.tok));
 
         let ctxt = session.push_context(None);
-        ctxt.init_identity();
+        ctxt.init_callback(Parser_identity, None);
 
         // #if !USE_MUSTTAIL
 
@@ -1901,7 +1901,7 @@ impl InfixParselet for CommaParselet {
 
             // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
-            ctxt.init_identity();
+            ctxt.init_callback(Parser_identity, None);
 
             return CommaParselet::parse_loop(session);
             // #else
@@ -1916,7 +1916,7 @@ impl InfixParselet for CommaParselet {
 
         // #if !USE_MUSTTAIL
         let ctxt = session.top_context();
-        ctxt.init_identity();
+        ctxt.init_callback(Parser_identity, None);
 
         session.parse_prefix(tok2);
 
@@ -2067,7 +2067,7 @@ impl InfixParselet for SemiParselet {
 
             // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
-            ctxt.init_identity();
+            ctxt.init_callback(Parser_identity, None);
 
             return SemiParselet::parse_loop(session);
             // #else
@@ -2087,7 +2087,7 @@ impl InfixParselet for SemiParselet {
 
             // #if !USE_MUSTTAIL
             let ctxt = session.top_context();
-            ctxt.init_identity();
+            ctxt.init_callback(Parser_identity, None);
 
             session.parse_prefix(tok2);
 
