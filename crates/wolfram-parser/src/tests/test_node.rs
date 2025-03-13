@@ -4,6 +4,7 @@ use crate::{
         OperatorNode,
     },
     macros::{src, token},
+    source::Location,
     tests::nodes,
     NodeSeq, ParseOptions, ParserSession, Span,
 };

@@ -11,7 +11,6 @@ use crate::{
         Span, SpanKind,
     },
     tokenize::{Token, TokenKind, TokenStr},
-    utils::{non_zero_u32_add, non_zero_u32_incr},
     NodeSeq, Tokens,
 };
 
@@ -354,8 +353,7 @@ fn first_chunk_and_last_good_line(
                             u32::try_from(last_good_line_index).unwrap(),
                         )
                         .expect("source line overflow u32"),
-                    NonZeroU32::new(last_good_line.column_width(tab_width) + 1)
-                        .expect("better source column is zero"),
+                    last_good_line.column_width(tab_width) + 1,
                 ),
             })
         },
@@ -419,7 +417,7 @@ fn is_new_statement_line(line: &str) -> bool {
             // Remove whitespace that isn't at the very start of the line.
             if tok.tok.isTrivia() {
                 match tok.src.start() {
-                    Location::LineColumn(LineColumn(_, NonZeroU32::MIN))
+                    Location::LineColumn(LineColumn(_, 1))
                     | Location::CharacterIndex(0) => return true,
                     _ => return false,
                 }
@@ -725,13 +723,13 @@ impl<'i> Line<'i> {
     fn index_columns(
         &self,
         tab_width: u32,
-        range: std::ops::RangeFrom<NonZeroU32>,
+        range: std::ops::RangeFrom<u32>,
     ) -> &str {
         // Get the first character whose column range includes the
         // specified range start position.
         let index = self.char_indices_and_column_ranges(tab_width).find_map(
             |(_, index, column_range)| {
-                if column_range.contains(range.start.get()) {
+                if column_range.contains(range.start) {
                     Some(index)
                 } else {
                     None
@@ -769,7 +767,7 @@ impl<'i> Line<'i> {
         &self,
         tab_width: u32,
     ) -> impl Iterator<Item = (char, usize, ColumnRange)> + 'i {
-        let mut column: NonZeroU32 = NonZeroU32::MIN;
+        let mut column: u32 = 1;
 
         self.content
             .char_indices()
@@ -788,31 +786,16 @@ impl<'i> Line<'i> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct ColumnRange(std::ops::Range<NonZeroU32>);
+struct ColumnRange(std::ops::Range<u32>);
 
 impl ColumnRange {
     #[allow(dead_code)]
-    /// Column range including only the specified column.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `column` is 0.
     fn at(column: u32) -> Self {
-        let column = NonZeroU32::new(column).expect(
-            "unable to construct ColumnRange from invalid column value 0",
-        );
-
-        ColumnRange(
-            column..column.checked_add(1).expect("Column overflows u32"),
-        )
+        ColumnRange(column..column + 1)
     }
 
     fn contains(&self, column: u32) -> bool {
         let ColumnRange(range) = self;
-
-        let Some(column) = NonZeroU32::new(column) else {
-            return false;
-        };
 
         range.contains(&column)
     }
@@ -881,32 +864,29 @@ fn split_lines_keep_sep<'i>(input: &'i str) -> Vec<(&'i str, &'i str)> {
 fn line_column_width(line: &str, tab_width: u32) -> u32 {
     debug_assert!(!line.contains(&['\n', '\r']));
 
-    let mut column = NonZeroU32::MIN;
+    let mut column = 1;
 
     for char in line.chars() {
         column = next_column(column, tab_width, char)
     }
 
     // -1 because `column` is ordinal, and width is a cardinal number.
-    column.get() - 1
+    column - 1
 }
 
-fn next_column(column: NonZeroU32, tab_width: u32, char: char) -> NonZeroU32 {
+fn next_column(column: u32, tab_width: u32, char: char) -> u32 {
     match char {
         '\t' => tab_next_column(column, tab_width),
-        _ => non_zero_u32_incr(column),
+        _ => column + 1,
     }
 }
 
-fn tab_next_column(column: NonZeroU32, tab_width: u32) -> NonZeroU32 {
-    assert_ne!(tab_width, 0);
+fn tab_next_column(column: u32, tab_width: u32) -> u32 {
+    assert!(column != 0);
 
-    let column = column.get();
+    let current_tab_stop = tab_width * ((column - 1) / tab_width) + 1;
 
-    let current_tab_stop =
-        NonZeroU32::new(tab_width * ((column - 1) / tab_width) + 1).unwrap();
-
-    non_zero_u32_add(current_tab_stop, tab_width)
+    current_tab_stop + tab_width
 }
 
 //--------------------------------------
@@ -1094,15 +1074,15 @@ fn test_line_column_width() {
 
 #[test]
 fn test_tab_next_column() {
-    assert_eq!(tab_next_column(nz(1), 4), nz(5));
-    assert_eq!(tab_next_column(nz(2), 4), nz(5));
-    assert_eq!(tab_next_column(nz(3), 4), nz(5));
-    assert_eq!(tab_next_column(nz(4), 4), nz(5));
-    assert_eq!(tab_next_column(nz(5), 4), nz(9));
+    assert_eq!(tab_next_column(1, 4), 5);
+    assert_eq!(tab_next_column(2, 4), 5);
+    assert_eq!(tab_next_column(3, 4), 5);
+    assert_eq!(tab_next_column(4, 4), 5);
+    assert_eq!(tab_next_column(5, 4), 9);
 
-    assert_eq!(tab_next_column(nz(1), 1), nz(2));
-    assert_eq!(tab_next_column(nz(2), 1), nz(3));
-    assert_eq!(tab_next_column(nz(3), 1), nz(4));
+    assert_eq!(tab_next_column(1, 1), 2);
+    assert_eq!(tab_next_column(2, 1), 3);
+    assert_eq!(tab_next_column(3, 1), 4);
 }
 
 #[test]
@@ -1124,7 +1104,7 @@ fn test_char_indices_and_columns() {
             .char_indices_and_column_ranges(4)
             .collect::<Vec<_>>(),
         vec![
-            ('\t', 0, ColumnRange(nz(1)..nz(5))),
+            ('\t', 0, ColumnRange(1..5)),
             ('f', 1, ColumnRange::at(5)),
             ('[', 2, ColumnRange::at(6)),
             ('x', 3, ColumnRange::at(7)),
@@ -1148,19 +1128,13 @@ fn test_char_indices_and_columns() {
 
 #[test]
 fn test_index_line_by_column() {
-    assert_eq!(Line::new("\tf[x]", "").index_columns(4, nz(1)..), "\tf[x]");
-    assert_eq!(Line::new("\tf[x]", "").index_columns(4, nz(2)..), "\tf[x]");
-    assert_eq!(Line::new("\tf[x]", "").index_columns(4, nz(3)..), "\tf[x]");
-    assert_eq!(Line::new("\tf[x]", "").index_columns(4, nz(4)..), "\tf[x]");
-    assert_eq!(Line::new("\tf[x]", "").index_columns(4, nz(5)..), "f[x]");
-    assert_eq!(Line::new("\tf[x]", "").index_columns(4, nz(6)..), "[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 1..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 2..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 3..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 4..), "\tf[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 5..), "f[x]");
+    assert_eq!(Line::new("\tf[x]", "").index_columns(4, 6..), "[x]");
 }
-
-#[cfg(test)]
-fn nz(value: u32) -> NonZeroU32 {
-    NonZeroU32::new(value).unwrap()
-}
-
 
 struct CollectMultiple<A, B>(Vec<A>, Vec<B>);
 
