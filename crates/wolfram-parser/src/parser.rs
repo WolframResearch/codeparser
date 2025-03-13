@@ -510,10 +510,11 @@ impl<'i> ParserSession<'i> {
     //==================================
 
     pub(crate) fn top_precedence(&mut self) -> Precedence {
-        match self.ContextStack.last() {
-            Some(ctxt) => ctxt.prec,
-            None => PRECEDENCE_LOWEST,
+        if self.ContextStack.is_empty() {
+            return PRECEDENCE_LOWEST;
         }
+
+        return self.ContextStack.last().unwrap().prec;
     }
 
     pub(crate) fn set_precedence(&mut self, prec: Precedence) {
