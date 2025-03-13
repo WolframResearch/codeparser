@@ -25,8 +25,8 @@ checkBuildDir[]
 (*
 Map into string meta characters
 *)
-longNameToHexDigits["RawDoubleQuote"] := "CodePoint::StringMeta_DoubleQuote"
-longNameToHexDigits["RawBackslash"] := "CodePoint::StringMeta_Backslash"
+longNameToHexDigits["RawDoubleQuote"] := "CODEPOINT_STRINGMETA_DOUBLEQUOTE"
+longNameToHexDigits["RawBackslash"] := "CODEPOINT_STRINGMETA_BACKSLASH"
 
 
 (*
@@ -34,7 +34,7 @@ longNameToHexDigits["Alpha"] is "0x03b1"
 *)
 longNameToHexDigits[longName_String] :=
 	With[{code = longNameToCharacterCode[longName]},
-		"'\\u{" <> IntegerString[code, 16, If[code > 16^^FFFF, 6, 4]] <> "}'"
+		"CodePoint::Char('\\u{" <> IntegerString[code, 16, If[code > 16^^FFFF, 6, 4]] <> "}')"
 	]
 
 
@@ -189,18 +189,7 @@ importedRawLongNames = Keys[Select[importedLongNames, (#[[1]] === RawCharacter)&
 
 
 Check[
-	longNameDefines = Map[
-		longName |-> Module[{name, value, type},
-			name = toGlobal["CodePoint`LongName`" <> longName];
-			value = longNameToHexDigits[longName];
-			type = If[StringStartsQ[value, "CodePoint::StringMeta"],
-				"CodePoint",
-				"char"
-			];
-			"pub const " <> name <> ": " <> type <> " = " <> value <> ";"
-		],
-		Keys[importedLongNames]
-	]
+longNameDefines = ("pub const " <> toGlobal["CodePoint`LongName`" <> #] <> ": CodePoint = " <> longNameToHexDigits[#] <> ";")& /@ Keys[importedLongNames]
 ,
 Print["Message while generating LongNames"];
 Quit[1]
@@ -228,14 +217,7 @@ $lexSortedImportedLongNames = lexSort[Keys[importedLongNames]];
 
 Put CodePoint`CRLF before actual code points
 *)
-mbNewlines = Map[
-	point |-> toGlobal[point, "CodePoint"],
-	(
-		{ CodePoint`CRLF } ~Join~ (
-			("CodePoint`LongName`"<>#)& /@ SortBy[importedNewlineLongNames, longNameToCharacterCode]
-		)
-	)
-];
+mbNewlines = toGlobal /@ ( { CodePoint`CRLF } ~Join~ ( ("CodePoint`LongName`"<>#)& /@ SortBy[importedNewlineLongNames, longNameToCharacterCode]));
 
 
 
@@ -261,7 +243,7 @@ longNameToCodePointMapPoints = {
   "//",
   "//",
   "pub const LONGNAME_TO_CODE_POINT_MAP__POINTS: [CodePoint; LONGNAMES_COUNT] = ["} ~Join~
-  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#, "CodePoint"], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
   {"];",
   ""}
 
@@ -270,7 +252,7 @@ codePointToLongNameMapPoints = {
   "//",
   "//",
   "pub const CODE_POINT_TO_LONGNAME_MAP__POINTS: [CodePoint; LONGNAMES_COUNT] = ["} ~Join~
-  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#, "CodePoint"], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
   {"];",
   ""}
 
@@ -296,7 +278,7 @@ notStrangeLetterlikeSource = {
   "//",
   "//",
   "//",
-  "pub const MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS: [char; MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT] = ["} ~Join~
+  "pub const MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS: [CodePoint; MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT] = ["} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedNotStrangeLetterlikeLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
   {"];",
   ""}
@@ -305,7 +287,7 @@ asciiReplacementsSource = {
   "//",
   "//",
   "//",
-  "pub static ASCII_REPLACEMENTS_MAP: Lazy<HashMap<char, &[&str]>> = Lazy::new(|| HashMap::from_iter(["} ~Join~
+  "pub static ASCII_REPLACEMENTS_MAP: Lazy<HashMap<CodePoint, &[&str]>> = Lazy::new(|| HashMap::from_iter(["} ~Join~
   (
 	Map[
 		Row[{#}]&,
@@ -336,7 +318,7 @@ punctuationSource = {
   "//",
   "//",
   "//",
-  "pub const MB_PUNCTUATION_CODE_POINTS: [char; MBPUNCTUATIONCODEPOINTS_COUNT] = ["} ~Join~
+  "pub const MB_PUNCTUATION_CODE_POINTS: [CodePoint; MBPUNCTUATIONCODEPOINTS_COUNT] = ["} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedPunctuationLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
   {"];",
   ""};
@@ -345,7 +327,7 @@ whitespaceSource = {
   "//",
   "//",
   "//",
-  "pub const MB_WHITESPACE_CODE_POINTS: [char; MBWHITESPACECODEPOINTS_COUNT] = ["} ~Join~
+  "pub const MB_WHITESPACE_CODE_POINTS: [CodePoint; MBWHITESPACECODEPOINTS_COUNT] = ["} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedWhitespaceLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
   {"];",
   ""};
@@ -363,7 +345,7 @@ uninterpretableSource = {
   "//",
   "//",
   "//",
-  "pub const MB_UNINTERPRETABLE_CODE_POINTS: [char; MBUNINTERPRETABLECODEPOINTS_COUNT] = ["} ~Join~
+  "pub const MB_UNINTERPRETABLE_CODE_POINTS: [CodePoint; MBUNINTERPRETABLECODEPOINTS_COUNT] = ["} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedUninterpretableLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
   {"];",
   ""};
@@ -372,7 +354,7 @@ LongNameCodePointToOperatorSource = {
   "//",
   "//",
   "//",
-  "pub(crate) fn LongNameCodePointToOperator(c: char) -> TokenKind {",
+  "pub(crate) fn LongNameCodePointToOperator(c: CodePoint) -> TokenKind {",
   "    match c {"} ~Join~
   (Row[{"        ", toGlobal["CodePoint`LongName`"<>#], " => ", "return", " ", toTokenEnumVariant["Token`LongName`"<>#], ","}]& /@ importedPunctuationLongNames) ~Join~
   {"        _ => panic!(\"Need to add operator\"),"} ~Join~
