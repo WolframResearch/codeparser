@@ -369,7 +369,10 @@ fn first_chunk_and_last_good_line(
     // Find first "useful" chunk
     //--------------------------
 
-    let mut chunks = split_into_chunks(&lines);
+    let mut chunks = lines.split_inclusive(|line: &Line| {
+        let chunk_pat = &CHUNK_PAT;
+        !chunk_pat.is_match(line.content)
+    });
 
     let first_chunk: &[Line] = chunks
         .next()
@@ -442,12 +445,6 @@ fn first_chunk_and_last_good_line(
 
     // TODO(optimization): Refactor to avoid this to_vec() call.
     (first_chunk.to_vec(), last_good_line_index, better_src)
-}
-
-fn split_into_chunks<'s, 'i>(
-    lines: &'s [Line<'i>],
-) -> impl Iterator<Item = &'s [Line<'i>]> {
-    lines.split_inclusive(|line: &Line| !CHUNK_PAT.is_match(line.content))
 }
 
 fn to_lines_and_expand_tabs(input: &str, _tab_width: usize) -> Vec<Line> {
