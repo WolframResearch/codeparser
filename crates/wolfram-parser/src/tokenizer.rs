@@ -948,7 +948,9 @@ fn Tokenizer_nextWLCharacter<'i>(
         //
         // this is a negative range, so remember to test with >=
         //
-        if !point.is_line_continuation() {
+        if !(LineContinuation_LineFeed.as_i32() >= point.as_i32()
+            && point.as_i32() >= LineContinuation_CRLF.as_i32())
+        {
             return c;
         }
 
