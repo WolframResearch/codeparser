@@ -15,7 +15,6 @@ use crate::{
         TokenKind::{self as TK},
         TokenSource,
     },
-    utils::prepend,
 };
 
 use super::{
@@ -280,7 +279,11 @@ pub(super) fn abstract_call_node<
             let part = abstractGroupNode(part);
 
             // {head} ~Join~ part[[2]]
-            let args = prepend(part.args, head);
+            let args = {
+                let mut args = part.args;
+                args.insert(0, head);
+                args
+            };
 
             Ast::call(st::Part, args, data)
         },
@@ -775,7 +778,11 @@ pub(super) fn abstract_call_node<
             let part = abstractGroupNode(part);
 
             // {head} ~Join~ (part[[2]])
-            let args = prepend(part.args, head);
+            let args = {
+                let mut args = part.args;
+                args.insert(0, head);
+                args
+            };
 
             Ast::call(st::Part, args, data)
         },
@@ -842,7 +849,7 @@ pub(super) fn abstract_call_node<
         ]) => {
             let head = abstract_(head);
 
-            let (_, children, _) =
+            let (_, mut children, _) =
                 abstractGroupNode_GroupMissingCloserNode(part);
 
             /* TODO: Port this issue joining logic
@@ -858,7 +865,7 @@ pub(super) fn abstract_call_node<
             */
 
             // {head} ~Join~ part[[2]]
-            let children = prepend(children, head);
+            children.insert(0, head);
 
             Ast::call_missing_closer(Ast::symbol(st::Part), children, data)
         },
