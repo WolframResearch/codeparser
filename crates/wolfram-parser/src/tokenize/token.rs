@@ -386,6 +386,10 @@ impl<'i> TokenRef<'i> {
 }
 
 impl<I, S> Token<I, S> {
+    pub(crate) fn check(&self) -> bool {
+        return !self.tok.isError();
+    }
+
     // TODO: impl Display
     // fn print(std::ostream& s) const {
 
