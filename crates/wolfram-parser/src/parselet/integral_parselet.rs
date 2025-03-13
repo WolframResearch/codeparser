@@ -15,7 +15,7 @@ use crate::{
 };
 
 impl IntegralParselet {
-    pub(crate) const fn new(Op1: PrefixBinaryOperator, Op2: Operator) -> Self {
+    pub(crate) const fn new(Op1: Operator, Op2: Operator) -> Self {
         IntegralParselet { Op1, Op2 }
     }
 }
@@ -112,12 +112,14 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
 }
 
 fn IntegralParselet_reduceIntegrate(session: &mut ParserSession, P: ParseletPtr) {
-    let P: &IntegralParselet = P
+    let P = P
         .as_any()
         .downcast_ref::<IntegralParselet>()
         .expect("unable to downcast to IntegralParselet");
 
-    let node = PrefixBinaryNode::new(P.Op1, Parser_popContext(session));
+    let Op1 = P.Op1;
+
+    let node = PrefixBinaryNode::new(Op1, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
