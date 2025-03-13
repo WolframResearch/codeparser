@@ -53,6 +53,8 @@ mod byte_decoder;
 mod byte_encoder;
 mod code_point;
 mod long_names;
+#[doc(hidden)]
+pub mod my_string;
 mod parselet;
 #[doc(hidden)]
 pub mod quirks;
@@ -95,6 +97,10 @@ pub mod token_enum_registration;
 
 #[path = "generated/long_names_registration.rs"]
 mod long_names_registration;
+
+#[doc(hidden)]
+#[path = "generated/my_string_registration.rs"]
+pub mod my_string_registration;
 
 #[path = "generated/parselet_registration.rs"]
 mod parselet_registration;
