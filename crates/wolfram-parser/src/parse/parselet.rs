@@ -1312,9 +1312,7 @@ impl GroupParselet {
         session.reduce(|ctx| {
             let node = UnterminatedGroupNeedsReparseNode::new(op, ctx);
 
-            crate::error::reparse_unterminated_group_node(
-                node, input, tab_width,
-            )
+            crate::error::reparseUnterminatedGroupNode(node, input, tab_width)
         });
 
         // MUSTTAIL

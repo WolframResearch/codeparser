@@ -86,7 +86,7 @@ pub(crate) fn reparse_unterminated<'i>(
             if token.tok.isError() && token.tok.isUnterminated() =>
         {
             let token =
-                reparse_unterminated_token_error_node(token, input, tab_width);
+                reparseUnterminatedTokenErrorNode(token, input, tab_width);
 
             Node::Token(token)
         },
@@ -105,9 +105,8 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
         .into_iter()
         .map(&mut |token: Token<_>| {
             if token.tok.isError() && token.tok.isUnterminated() {
-                let token = reparse_unterminated_token_error_node(
-                    token, input, tab_width,
-                );
+                let token =
+                    reparseUnterminatedTokenErrorNode(token, input, tab_width);
 
                 token
             } else {
@@ -128,7 +127,7 @@ pub(crate) fn reparse_unterminated_tokens<'i>(
 // Do not return the previous children, because they are useless any way.
 //
 // But return the opener to make ToString stuff easier
-pub(crate) fn reparse_unterminated_group_node<'i>(
+pub(crate) fn reparseUnterminatedGroupNode<'i>(
     group: UnterminatedGroupNeedsReparseNode<BorrowedTokenInput<'i>>,
     str: &'i str,
     tab_width: usize,
@@ -215,7 +214,7 @@ pub(crate) fn reparse_unterminated_group_node<'i>(
 // return: better ErrorNode
 //
 // Do not return the previous children, because they are useless any way.
-fn reparse_unterminated_token_error_node<'i>(
+fn reparseUnterminatedTokenErrorNode<'i>(
     error: Token<BorrowedTokenInput<'i>>,
     str: &'i str,
     tab_width: usize,
