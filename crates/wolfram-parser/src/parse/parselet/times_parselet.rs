@@ -7,9 +7,9 @@ use crate::{
 
 
 impl InfixParselet for TimesParselet {
-    fn parse_infix<'i, 'b>(
+    fn parse_infix<'i>(
         &'static self,
-        session: &mut ParserSession<'i, 'b>,
+        session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();

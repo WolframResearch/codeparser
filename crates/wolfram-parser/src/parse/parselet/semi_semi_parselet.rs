@@ -11,9 +11,9 @@ use crate::{
 //
 
 impl InfixParselet for SemiSemiParselet {
-    fn parse_infix<'i, 'b>(
+    fn parse_infix<'i>(
         &'static self,
-        session: &mut ParserSession<'i, 'b>,
+        session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();
@@ -29,9 +29,9 @@ impl InfixParselet for SemiSemiParselet {
         return Some(Precedence::SEMISEMI);
     }
 
-    fn process_implicit_times<'i, 'b>(
+    fn process_implicit_times<'i>(
         &self,
-        session: &mut ParserSession<'i, 'b>,
+        session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
     ) -> TokenRef<'i> {
         //
@@ -47,9 +47,9 @@ impl InfixParselet for SemiSemiParselet {
 }
 
 impl PrefixParselet for SemiSemiParselet {
-    fn parse_prefix<'i, 'b>(
+    fn parse_prefix<'i>(
         &'static self,
-        session: &mut ParserSession<'i, 'b>,
+        session: &mut ParserSession<'i>,
         tok_in: TokenRef<'i>,
     ) {
         panic_if_aborted!();

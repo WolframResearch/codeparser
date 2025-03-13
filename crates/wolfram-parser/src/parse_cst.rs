@@ -7,19 +7,16 @@ use crate::{
         PrefixOperator, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         TernaryOperator, TriviaSeq,
     },
-    parse::{
-        ColonLHS, DynParseBuilder, ParseBuilder, TriviaSeqRef, UnderParseData,
-    },
+    parse::{ColonLHS, ParseBuilder, TriviaSeqRef, UnderParseData},
     tokenize::{TokenKind, TokenRef, TokenStr},
     utils::debug_assert_matches,
-    NodeSeq, ParseOptions,
+    NodeSeq,
 };
 
 #[derive(Debug)]
 pub(crate) struct ParseCst<'i> {
     node_stack: Vec<Cst<TokenStr<'i>>>,
     context_stack_mirror: Vec<ParseCstContext>,
-    finished: Vec<Cst<TokenStr<'i>>>,
 }
 
 #[derive(Debug)]
@@ -30,6 +27,13 @@ struct ParseCstContext {
 }
 
 impl<'i> ParseCst<'i> {
+    pub(crate) fn new() -> Self {
+        ParseCst {
+            node_stack: Vec::new(),
+            context_stack_mirror: Vec::new(),
+        }
+    }
+
     /// Pop the top context and push a new node constructed by `func`.
     fn reduce<N, F>(&mut self, func: F)
     where
@@ -95,42 +99,8 @@ impl<'i> ParseCst<'i> {
 }
 
 impl<'i> ParseBuilder<'i> for ParseCst<'i> {
-    type Output = CstSeq<TokenStr<'i>>;
+    type Output = Cst<TokenStr<'i>>;
 
-    fn new_builder() -> Self {
-        ParseCst {
-            node_stack: Vec::new(),
-            context_stack_mirror: Vec::new(),
-            finished: Vec::new(),
-        }
-    }
-
-    fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output {
-        let ParseCst {
-            node_stack,
-            context_stack_mirror,
-            finished,
-        } = self;
-
-        debug_assert_eq!(node_stack, Vec::new());
-        debug_assert!(context_stack_mirror.is_empty());
-
-        let mut exprs = NodeSeq(finished);
-
-        if let Ok(input) = std::str::from_utf8(input) {
-            exprs = crate::error::reparse_unterminated(
-                exprs,
-                input,
-                usize::try_from(opts.tab_width).unwrap(),
-            );
-        }
-
-        exprs
-    }
-}
-
-
-impl<'i> DynParseBuilder<'i> for ParseCst<'i> {
     //==================================
     // Context management
     //==================================
@@ -359,12 +329,12 @@ impl<'i> DynParseBuilder<'i> for ParseCst<'i> {
     // Pop
     //==================================
 
-    fn finish_top_level_expr(&mut self) {
+    fn pop_finished_expr(&mut self) -> Self::Output {
         let node = self.pop_node();
 
         debug_assert!(self.is_quiescent());
 
-        self.finished.push(node);
+        node
     }
 
     //==================================
