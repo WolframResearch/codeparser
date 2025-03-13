@@ -564,11 +564,7 @@ impl Display for Source {
 
 impl Debug for Span {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if f.alternate() {
-            write!(f, "src!({})", self)
-        } else {
-            write!(f, "{}", self)
-        }
+        write!(f, "{}", self)
     }
 }
 

@@ -111,8 +111,6 @@ pub mod macros;
 // API
 //==========================================================
 
-use std::fmt::Debug;
-
 use abstract_cst::{abstract_cst, aggregate_cst_seq};
 use cst::CstSeq;
 use source::TOPLEVEL;
@@ -123,7 +121,6 @@ use tokenize::{
     },
     TokenKind, Tokenizer,
 };
-
 use wolfram_expr::{Expr, Number};
 
 use crate::{
@@ -177,7 +174,7 @@ pub enum ContainerMissingReason {
 }
 
 /// A sequence of Nodes
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NodeSeq<N>(pub Vec<N>);
 
 #[derive(Debug)]
@@ -816,20 +813,4 @@ fn create_parse_result<N>(
     };
 
     result
-}
-
-//======================================
-// Formatting Impls
-//======================================
-
-impl<N: Debug> Debug for NodeSeq<N> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let NodeSeq(list) = self;
-
-        if cfg!(test) {
-            write!(f, "NodeSeq(vec!{:#?})", list)
-        } else {
-            f.debug_tuple("NodeSeq").field(&self.0).finish()
-        }
-    }
 }

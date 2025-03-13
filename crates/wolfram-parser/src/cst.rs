@@ -4,8 +4,6 @@
 
 mod visit;
 
-use std::fmt::Debug;
-
 use wolfram_expr::{symbol::SymbolRef, Expr};
 
 use crate::{
@@ -97,7 +95,7 @@ pub enum BoxKind {
 }
 
 /// Any kind of prefix, postfix, binary, or infix operator
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct OperatorNode<I = TokenString, S = Span, O = InfixOperator> {
     pub op: O,
     pub children: CstSeq<I, S>,
@@ -884,29 +882,5 @@ impl BoxKind {
             BoxKind::from_str(symbol_name)
                 .unwrap_or_else(|| BoxKind::Other(symbol.to_symbol())),
         )
-    }
-}
-
-//======================================
-// Formatting Impls
-//======================================
-
-impl<I: Debug, S: Debug, O: Debug> Debug for OperatorNode<I, S, O> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("OperatorNode")
-            .field("op", &self.op)
-            .field("children", &self.children)
-            .field("src", &FmtAlternate(&self.src))
-            .finish()
-    }
-}
-
-struct FmtAlternate<'a, T: Debug>(&'a T);
-
-impl<'a, T: Debug> Debug for FmtAlternate<'a, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let FmtAlternate(value) = self;
-
-        write!(f, "{:#?}.into()", value)
     }
 }
