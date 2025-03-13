@@ -165,12 +165,7 @@ pub enum ContainerKind {
 
 pub enum ContainerBody<N> {
     Nodes(NodeSeq<N>),
-    Missing(ContainerMissingReason),
-}
-
-pub enum ContainerMissingReason {
-    EmptyInput,
-    UnsafeCharacterEncoding(UnsafeCharacterEncoding),
+    Missing(UnsafeCharacterEncoding),
 }
 
 /// A sequence of Nodes

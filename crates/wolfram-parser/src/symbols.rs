@@ -27,8 +27,6 @@ crate::symbol::symbol! {
     E;
     I;
 
-    Information;
-
     Inequality;
 
     Equal;
@@ -80,12 +78,6 @@ crate::symbol::symbol! {
 crate::symbol::nested_symbol! {
     Developer::{
         VectorInequality
-    }
-}
-
-crate::symbol::nested_symbol! {
-    CodeParser::{
-        Comment
     }
 }
 

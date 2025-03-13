@@ -22,8 +22,6 @@ safeStringFunc
 aggregateFunc
 abstractFunc
 
-roundTripFunc
-
 tokenIsEmptyFunc
 
 
@@ -32,7 +30,6 @@ tokenIsEmptyFunc
 library functions coming FROM lib
 *)
 LongNameSuggestion
-RoundTripCst
 (*
 SetConcreteParseProgress
 *)
@@ -292,11 +289,6 @@ Which[
 		loadFunc["Abstract_LibraryLink", LinkObject, LinkObject]
 	);
 
-	roundTripFunc := roundTripFunc = (
-		If[$Debug, Print["memoizing abstractFunc"]];
-		loadFunc["RoundTripTest_LibraryLink", LinkObject, LinkObject]
-	);
-
 	tokenIsEmptyFunc := tokenIsEmptyFunc = (
 		If[$Debug, Print["memoizing tokenIsEmptyFunc"]];
 		loadFunc["TokenIsEmpty_LibraryLink", LinkObject, LinkObject]
@@ -433,7 +425,6 @@ Module[{res},
 ]]
 
 
-(*====================================*)
 
 (*
 SetConcreteParseProgress[prog_] := (
@@ -482,20 +473,6 @@ Module[{nearest, longNamesFile},
   nearest[[1]]
 ]]
 
-
-
-
-
-RoundTripCst[expr_] := Module[{result},
-	result = roundTripFunc[expr];
-
-	(* CodeNode is HoldAll, so force evaluation of the Association 3rd argument. *)
-	result = ReplaceAll[result, {
-		CodeNode[a_, b_, c0_] :> With[{c = c0}, CodeNode[a, b, c]]
-	}];
-
-	result
-]
 
 
 End[]

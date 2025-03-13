@@ -230,8 +230,6 @@ pub enum InfixOperator {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PrefixOperator {
-    /// Prefix '?' on its own line, currently created only during box parsing.
-    Information,
     Get,
     Minus,
     Plus,
@@ -379,8 +377,6 @@ pub enum CompoundOperator {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum GroupOperator {
     Token_Comment,
-    /// Created when parsing boxes.
-    CodeParser_Comment,
     CodeParser_GroupParen,
     CodeParser_GroupSquare,
     List,
@@ -814,7 +810,6 @@ impl Operator for PrefixOperator {
     #[allow(dead_code)]
     fn to_symbol(&self) -> Symbol {
         match self {
-            PrefixOperator::Information => sym::Information,
             PrefixOperator::Get => sym::Get,
             PrefixOperator::Minus => sym::Minus,
             PrefixOperator::Plus => sym::Plus,
@@ -853,7 +848,6 @@ impl Operator for PrefixOperator {
 
     fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
-            sym::Information => PrefixOperator::Information,
             sym::Get => PrefixOperator::Get,
             sym::Minus => PrefixOperator::Minus,
             sym::Plus => PrefixOperator::Plus,
@@ -1145,7 +1139,6 @@ impl Operator for GroupOperator {
     fn to_symbol(&self) -> Symbol {
         match self {
             GroupOperator::Token_Comment => sym::Token::Comment,
-            GroupOperator::CodeParser_Comment => sym::CodeParser::Comment,
             GroupOperator::CodeParser_GroupParen => sym::CodeParser_GroupParen,
             GroupOperator::CodeParser_GroupSquare => sym::CodeParser_GroupSquare,
             GroupOperator::List => sym::List,
@@ -1165,7 +1158,6 @@ impl Operator for GroupOperator {
     fn try_from_symbol(symbol: SymbolRef) -> Option<Self> {
         let operator = match symbol {
             sym::Token::Comment => GroupOperator::Token_Comment,
-            sym::CodeParser::Comment => GroupOperator::CodeParser_Comment,
             sym::CodeParser_GroupParen => GroupOperator::CodeParser_GroupParen,
             sym::CodeParser_GroupSquare => GroupOperator::CodeParser_GroupSquare,
             sym::List => GroupOperator::List,
