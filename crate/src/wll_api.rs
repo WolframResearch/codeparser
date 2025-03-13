@@ -227,14 +227,6 @@ pub fn DestroyParserSession_LibraryLink(link: &mut wstp::Link) {
     link.put_symbol(SYMBOL_NULL.name).unwrap();
 }
 
-//==========================================================
-// Concrete Parsing
-//==========================================================
-
-//======================================
-// ConcreteParseBytes
-//======================================
-
 #[cfg(feature = "USE_EXPR_LIB")]
 #[no_mangle]
 pub fn ConcreteParseBytes_LibraryLink(
@@ -338,9 +330,6 @@ pub fn ConcreteParseBytes_LibraryLink(link: &mut wstp::Link) {
     drop(session);
 }
 
-//======================================
-// ConcreteParseFile
-//======================================
 
 /*
 #[cfg(feature = "USE_EXPR_LIB")]
@@ -452,13 +441,6 @@ fn ConcreteParseFile_LibraryLink(link: &mut wstp::Link) {
     drop(session);
 }
 
-//==========================================================
-// Tokenize Parsing
-//==========================================================
-
-//======================================
-// TokenizeBytes
-//======================================
 
 #[cfg(feature = "USE_EXPR_LIB")]
 fn TokenizeBytes_LibraryLink(
@@ -561,9 +543,6 @@ fn TokenizeBytes_LibraryLink(link: &mut wstp::Link) {
     drop(session);
 }
 
-//======================================
-// TokenizeFile
-//======================================
 
 /*
 #[cfg(feature = "USE_EXPR_LIB")]
@@ -676,13 +655,6 @@ fn TokenizeFile_LibraryLink(link: &mut wstp::Link) {
     drop(session);
 }
 
-//==========================================================
-// Concrete Leaf Parsing
-//==========================================================
-
-//======================================
-// ConcreteParseLeaf
-//======================================
 
 #[cfg(feature = "USE_EXPR_LIB")]
 fn ConcreteParseLeaf_LibraryLink(
@@ -800,10 +772,6 @@ fn ConcreteParseLeaf_LibraryLink(link: &mut wstp::Link) {
 
     drop(session);
 }
-
-//======================================
-// SafeString
-//======================================
 
 #[cfg(feature = "USE_EXPR_LIB")]
 fn SafeString_LibraryLink(
