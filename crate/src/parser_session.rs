@@ -164,7 +164,7 @@ impl<'i> ParserSession<'i> {
 
             let P = prefix_parselet(peek.tok);
 
-            P.parse_prefix(self, peek);
+            (P.parsePrefix())(self, P, peek);
 
             exprs.push(Parser_popNode(self));
 

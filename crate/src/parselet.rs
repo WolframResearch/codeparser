@@ -54,7 +54,8 @@ pub(crate) trait Parselet: Any + std::fmt::Debug {
 //======================================
 
 pub(crate) trait PrefixParselet: Parselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token);
+    // fn parsePrefix(&self) -> ParseFunction<PrefixParseletPtr>;
+    fn parsePrefix(&self) -> ParseFunction;
 }
 
 
@@ -375,8 +376,8 @@ pub(crate) struct UnderDotParselet /* : PrefixParselet */ {}
 //======================================
 
 impl PrefixParselet for LeafParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        LeafParselet_reduceLeaf(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        LeafParselet_reduceLeaf
     }
 }
 
@@ -392,8 +393,8 @@ fn LeafParselet_reduceLeaf(session: &mut ParserSession, ignored: ParseletPtr, To
 //======================================
 
 impl PrefixParselet for PrefixErrorParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixErrorParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixErrorParselet_parsePrefix
     }
 }
 
@@ -415,8 +416,8 @@ fn PrefixErrorParselet_parsePrefix(
 //======================================
 
 impl PrefixParselet for PrefixCloserParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixCloserParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixCloserParselet_parsePrefix
     }
 }
 
@@ -467,8 +468,8 @@ fn PrefixCloserParselet_parsePrefix(
 //======================================
 
 impl PrefixParselet for PrefixToplevelCloserParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixToplevelCloserParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixToplevelCloserParselet_parsePrefix
     }
 }
 
@@ -502,8 +503,8 @@ pub(crate) fn PrefixToplevelCloserParselet_parsePrefix(
 //======================================
 
 impl PrefixParselet for PrefixEndOfFileParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixEndOfFileParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixEndOfFileParselet_parsePrefix
     }
 }
 
@@ -546,8 +547,8 @@ fn PrefixEndOfFileParselet_parsePrefix(
 //======================================
 
 impl PrefixParselet for PrefixUnsupportedTokenParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixUnsupportedTokenParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixUnsupportedTokenParselet_parsePrefix
     }
 }
 
@@ -575,8 +576,8 @@ fn PrefixUnsupportedTokenParselet_parsePrefix(
 //======================================
 
 impl PrefixParselet for PrefixCommaParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixCommaParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixCommaParselet_parsePrefix
     }
 }
 
@@ -621,8 +622,8 @@ fn PrefixCommaParselet_parsePrefix(
 //======================================
 
 impl PrefixParselet for PrefixUnhandledParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixUnhandledParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixUnhandledParselet_parsePrefix
     }
 }
 
@@ -720,8 +721,8 @@ fn InfixToplevelNewlineParselet_parseInfix(
 //======================================
 
 impl PrefixParselet for SymbolParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        SymbolParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        SymbolParselet_parsePrefix
     }
 }
 
@@ -907,8 +908,8 @@ impl PrefixOperatorParselet {
 }
 
 impl PrefixParselet for PrefixOperatorParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PrefixOperatorParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PrefixOperatorParselet_parsePrefix
     }
 }
 
@@ -946,7 +947,7 @@ fn PrefixOperatorParselet_parsePrefix(session: &mut ParserSession, P: ParseletPt
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return (P2.parsePrefix())(session, P2, Tok);
 }
 
 fn PrefixOperatorParselet_reducePrefixOperator(
@@ -1008,9 +1009,21 @@ impl PrefixParselet for PrefixAssertFalseParselet {
     //     PRECEDENCE_LOWEST
     // }
 
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
+    fn parsePrefix(&self) -> ParseFunction {
         assert!(false);
+
+        return PrefixAssertFalseParselet_parseInfix;
     }
+}
+
+fn PrefixAssertFalseParselet_parseInfix(
+    _session: &mut ParserSession,
+    _: ParseletPtr,
+    _firstTok: Token,
+) {
+    assert!(false);
+
+    return;
 }
 
 
@@ -1084,7 +1097,7 @@ fn BinaryOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return (P2.parsePrefix())(session, P2, Tok);
 }
 
 fn BinaryOperatorParselet_reduceBinaryOperator(
@@ -1152,7 +1165,7 @@ fn InfixOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr,
 
     let P2 = prefix_parselet(Tok2.tok);
 
-    P2.parse_prefix(session, Tok2);
+    (P2.parsePrefix())(session, P2, Tok2);
 
     return InfixOperatorParselet_parseLoop(session, P, TokIn /*ignored*/);
     // #else
@@ -1165,7 +1178,7 @@ fn InfixOperatorParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr,
     //     let P2 = prefixParselets[Tok2.tok.value()];
 
     //     // MUSTTAIL
-    //     return P2.parse_prefix(session, Tok2);
+    //     return (P2.parsePrefix())(session, P2, Tok2);
     // #endif // !USE_MUSTTAIL
 }
 
@@ -1230,7 +1243,7 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, 
 
         let P2 = prefix_parselet(Tok2.tok);
 
-        P2.parse_prefix(session, Tok2);
+        (P2.parsePrefix())(session, P2, Tok2);
     } // loop
       // #else
       //     let ref mut Ctxt = Parser_topContext(session);
@@ -1240,7 +1253,7 @@ fn InfixOperatorParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, 
     //     let P2 = prefixParselets[Tok2.tok.value()];
 
     //     // MUSTTAIL
-    //     return P2.parse_prefix(session, Tok2);
+    //     return (P2.parsePrefix())(session, P2, Tok2);
     // #endif // !USE_MUSTTAIL
 }
 
@@ -1336,8 +1349,8 @@ impl GroupParselet {
 }
 
 impl PrefixParselet for GroupParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        GroupParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        GroupParselet_parsePrefix
     }
 }
 
@@ -1471,7 +1484,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, ignored:
 
         let P2 = prefix_parselet(Tok.tok);
 
-        P2.parse_prefix(session, Tok);
+        (P2.parsePrefix())(session, P2, Tok);
     } // loop
       // #else
       //     let ref mut Ctxt = Parser_topContext(session);
@@ -1481,7 +1494,7 @@ fn GroupParselet_parseLoop(session: &mut ParserSession, P: ParseletPtr, ignored:
     //     let P2 = prefix_parselet(Tok.tok);
 
     //     // MUSTTAIL
-    //     return P2.parse_prefix(session, Tok);
+    //     return (P2.parsePrefix())(session, P2, Tok);
     // #endif // !USE_MUSTTAIL
 }
 
@@ -1586,7 +1599,7 @@ fn CallParselet_parseInfix(session: &mut ParserSession, P: ParseletPtr, TokIn: T
     let GP = P.getGP();
 
     // MUSTTAIL
-    return GP.parse_prefix(session, TokIn);
+    return (GP.parsePrefix())(session, GP, TokIn);
 }
 
 fn CallParselet_reduceCall(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -1643,7 +1656,7 @@ fn TildeParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
     let P2 = prefix_parselet(FirstTok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, FirstTok);
+    return (P2.parsePrefix())(session, P2, FirstTok);
 }
 
 fn TildeParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -1689,7 +1702,7 @@ fn TildeParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ignor
     let P2 = prefix_parselet(Tok2.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok2);
+    return (P2.parsePrefix())(session, P2, Tok2);
 }
 
 fn TildeParselet_reduceTilde(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -1752,7 +1765,7 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
             let P2 = prefix_parselet(Tok.tok);
 
             // MUSTTAIl
-            return P2.parse_prefix(session, Tok);
+            return (P2.parsePrefix())(session, P2, Tok);
         },
         ColonLHS::Optional => {
             let ref mut Ctxt = Parser_topContext(session);
@@ -1763,7 +1776,7 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
             let P2 = prefix_parselet(Tok.tok);
 
             // MUSTTAIl
-            return P2.parse_prefix(session, Tok);
+            return (P2.parsePrefix())(session, P2, Tok);
         },
         ColonLHS::Error => {
             let ref mut Ctxt = Parser_topContext(session);
@@ -1774,7 +1787,7 @@ fn ColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
             let P2 = prefix_parselet(Tok.tok);
 
             // MUSTTAIl
-            return P2.parse_prefix(session, Tok);
+            return (P2.parsePrefix())(session, P2, Tok);
         },
     }
 }
@@ -1858,7 +1871,7 @@ fn SlashColonParselet_parseInfix(session: &mut ParserSession, ignored: ParseletP
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return (P2.parsePrefix())(session, P2, Tok);
 }
 
 fn SlashColonParselet_parse1(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -1969,7 +1982,7 @@ fn EqualParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return (P2.parsePrefix())(session, P2, Tok);
 }
 
 fn EqualParselet_parseInfixTag(session: &mut ParserSession, ignored: ParseletPtr, TokIn: Token) {
@@ -2007,7 +2020,7 @@ fn EqualParselet_parseInfixTag(session: &mut ParserSession, ignored: ParseletPtr
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return (P2.parsePrefix())(session, P2, Tok);
 }
 
 fn EqualParselet_reduceSet(session: &mut ParserSession, ignored: ParseletPtr, ignored2: Token) {
@@ -2087,7 +2100,7 @@ fn ColonEqualParselet_parseInfix(session: &mut ParserSession, ignored: ParseletP
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return (P2.parsePrefix())(session, P2, Tok);
 }
 
 fn ColonEqualParselet_parseInfixTag(
@@ -2111,7 +2124,7 @@ fn ColonEqualParselet_parseInfixTag(
     let P2 = prefix_parselet(Tok.tok);
 
     // MUSTTAIL
-    return P2.parse_prefix(session, Tok);
+    return (P2.parsePrefix())(session, P2, Tok);
 }
 
 fn ColonEqualParselet_reduceSetDelayed(
@@ -2204,7 +2217,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
 
     let P2 = prefix_parselet(Tok2.tok);
 
-    P2.parse_prefix(session, Tok2);
+    (P2.parsePrefix())(session, P2, Tok2);
 
     return CommaParselet_parseLoop(session, ignored, TokIn /*ignored*/);
     // #else
@@ -2215,7 +2228,7 @@ fn CommaParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, T
     //     let P2 = prefixParselets[Tok2.tok.value()];
 
     //     // MUSTTAIL
-    //     return P2.parse_prefix(session, Tok2);
+    //     return (P2.parsePrefix())(session, P2, Tok2);
     // #endif // !USE_MUSTTAIL
 }
 
@@ -2280,7 +2293,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
 
         let P2 = prefix_parselet(Tok2.tok);
 
-        P2.parse_prefix(session, Tok2);
+        (P2.parsePrefix())(session, P2, Tok2);
     } // loop
       // #else
       //     let ref mut Ctxt = Parser_topContext(session);
@@ -2289,7 +2302,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ig
     //     let P2 = prefixParselets[Tok2.tok.value()];
 
     //     // MUSTTAIL
-    //     return P2.parse_prefix(session, Tok2);
+    //     return (P2.parsePrefix())(session, P2, Tok2);
     // #endif // !USE_MUSTTAIL
 }
 
@@ -2391,7 +2404,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, To
 
         let P2 = prefix_parselet(Tok2.tok);
 
-        P2.parse_prefix(session, Tok2);
+        (P2.parsePrefix())(session, P2, Tok2);
 
         return SemiParselet_parseLoop(session, ignored, TokIn /*ignored*/);
         // #else
@@ -2402,7 +2415,7 @@ fn SemiParselet_parseInfix(session: &mut ParserSession, ignored: ParseletPtr, To
         //         let P2 = prefixParselets[Tok2.tok.value()];
 
         //         // MUSTTAIL
-        //         return P2.parse_prefix(session, Tok2);
+        //         return (P2.parsePrefix())(session, P2, Tok2);
         // #endif // !USE_MUSTTAIL
     }
 
@@ -2506,7 +2519,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ign
 
             let P2 = prefix_parselet(Tok2.tok);
 
-            P2.parse_prefix(session, Tok2);
+            (P2.parsePrefix())(session, P2, Tok2);
 
             continue;
             // #else
@@ -2516,7 +2529,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession, ignored: ParseletPtr, ign
             //         let P2 = prefixParselets[Tok2.tok.value()];
 
             //         // MUSTTAIL
-            //         return P2.parse_prefix(session, Tok2);
+            //         return (P2.parsePrefix())(session, P2, Tok2);
             // #endif // !USE_MUSTTAIL
         }
 
@@ -2769,8 +2782,8 @@ fn GreaterGreaterGreaterParselet_reducePutAppend(
 //======================================
 
 impl PrefixParselet for LessLessParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        LessLessParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        LessLessParselet_parsePrefix
     }
 }
 
@@ -2813,8 +2826,8 @@ fn LessLessParselet_reduceGet(session: &mut ParserSession, ignored: ParseletPtr,
 //======================================
 
 impl PrefixParselet for HashParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        HashParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        HashParselet_parsePrefix
     }
 }
 
@@ -2869,8 +2882,8 @@ fn HashParselet_reduceSlot(session: &mut ParserSession, ignored: ParseletPtr, ig
 //======================================
 
 impl PrefixParselet for HashHashParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        HashHashParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        HashHashParselet_parsePrefix
     }
 }
 
@@ -2919,8 +2932,8 @@ fn HashHashParselet_reduceSlotSequence(
 //======================================
 
 impl PrefixParselet for PercentParselet {
-    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
-        PercentParselet_parsePrefix(session, self, token)
+    fn parsePrefix(&self) -> ParseFunction {
+        PercentParselet_parsePrefix
     }
 }
 
