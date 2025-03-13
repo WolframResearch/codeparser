@@ -980,9 +980,9 @@ impl Display for SourceCharacter {
         // WLCharacter's formatting implementation to check.
         debug_assert!(graphicalFlag);
 
-        let val: CodePoint = c;
+        let val = c;
 
-        let val: char = match c {
+        match val {
             CodePoint::EndOfFile => {
                 panic!()
             }
@@ -1109,13 +1109,15 @@ impl Display for SourceCharacter {
             ) => {
                 return write!(stream, "{:#}", WLCharacter::new_with_escape(val, EscapeStyle::Hex2))
             }
-            Char(char) => char,
+            Char(_) => (),
             _ => panic!("unable to format special char: {val:?}"),
-        };
+        }
 
-        let val: char = val;
+        let val_i32 = val.as_i32();
 
-        if val > '\u{ffff}' {
+        assert!(val_i32 >= 0);
+
+        if val_i32 > 0xffff {
             if code_point_has_long_name(val) {
                 //
                 // Use LongName if available
@@ -1135,7 +1137,7 @@ impl Display for SourceCharacter {
             );
         }
 
-        if val > '\u{ff}' {
+        if val_i32 > 0xff {
             if code_point_has_long_name(val) {
                 //
                 // Use LongName if available
@@ -1155,7 +1157,7 @@ impl Display for SourceCharacter {
             );
         }
 
-        if val > '\u{7f}' {
+        if val_i32 > 0x7f {
             if code_point_has_long_name(val) {
                 //
                 // Use LongName if available
@@ -1180,7 +1182,7 @@ impl Display for SourceCharacter {
         // Do not use CodePointToLongNameMap to find Raw names
         //
 
-        crate::byte_encoder::encodeBytes(stream, CodePoint::Char(val))?;
+        crate::byte_encoder::encodeBytes(stream, val)?;
 
         return Ok(());
     }
