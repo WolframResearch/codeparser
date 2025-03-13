@@ -1,4 +1,3 @@
-Print["\n===== Start ToNode.mt =====\n"]
 
 Needs["CodeParser`"]
 

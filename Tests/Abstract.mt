@@ -1,4 +1,3 @@
-Print["\n===== Start Abstract.mt =====\n"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Scoping`"]

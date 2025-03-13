@@ -1,4 +1,3 @@
-Print["\n===== Start Concretify.mt =====\n"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Concretify`"]

@@ -1,4 +1,3 @@
-Print["\n===== Start Characters.mt =====\n"]
 
 path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]

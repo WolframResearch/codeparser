@@ -1,4 +1,3 @@
-Print["\n===== Start AbstractCallNode.mt =====\n"]
 
 path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]

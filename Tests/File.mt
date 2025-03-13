@@ -1,4 +1,3 @@
-Print["\n===== Start File.mt =====\n"]
 
 
 path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]

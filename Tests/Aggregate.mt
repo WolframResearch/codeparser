@@ -1,5 +1,3 @@
-Print["\n===== Start Aggregate.mt =====\n"]
-
 Needs["CodeParser`"]
 Needs["CodeParser`Folds`"] (* For aggregate *)
 

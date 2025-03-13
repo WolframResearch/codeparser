@@ -1,4 +1,3 @@
-Print["\n===== Start TopLevel.mt =====\n"]
 
 Needs["CodeParser`"]
 

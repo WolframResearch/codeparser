@@ -1,4 +1,3 @@
-Print["\n===== Start SafeString.mt =====\n"]
 
 Needs["CodeParser`"]
 

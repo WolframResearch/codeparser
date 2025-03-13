@@ -1,5 +1,3 @@
-Print["\n===== Start TokenEnum.mt =====\n"]
-
 Needs["CodeParser`TokenEnum`"]
 
 Test @ tokenIsEmpty[EndOfFile]

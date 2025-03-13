@@ -1,4 +1,3 @@
-Print["\n===== Start Unsafe.mt =====\n"]
 
 Needs["CodeParser`"]
 

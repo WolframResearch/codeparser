@@ -1,4 +1,3 @@
-Print["\n===== Start Boxes.mt =====\n"]
 
 Needs["CodeParser`"]
 

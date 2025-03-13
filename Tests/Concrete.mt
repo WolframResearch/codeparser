@@ -1,4 +1,3 @@
-Print["\n===== Start Concrete.mt =====\n"]
 
 Needs["CodeParser`"]
 
