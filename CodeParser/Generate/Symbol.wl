@@ -142,8 +142,7 @@ symbols = Union[Flatten[Join[
   tokens
 ]]]
 
-(* Sort symbols, so that reading symbol_registration.rs is easier. *)
-symbols = SortBy[symbols, sym |-> Context[sym] <> SymbolName[sym]];
+
 
 generate[] := (
 
@@ -176,9 +175,11 @@ use crate::symbol::Symbol;
 			Row[{
 				"pub const ",
 				toGlobal["Symbol`"<>ToString[#1]],
-				": Symbol = unsafe { Symbol::unchecked_new(",
-				"\"", Context[#1] <> SymbolName[#1], "\"",
-				") };"
+				": Symbol = Symbol::new(",
+				"\"", stringifyForTransmitting[#1], "\"",
+				",", " ",
+				ToString[#2[[1]]-1],
+				")", ";"
 			}]
 		]&,
 		symbols

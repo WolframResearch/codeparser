@@ -32,13 +32,13 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
             if tok.isUnterminated() {
                 callLink
                     .put_function(
-                        SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.as_str(),
+                        SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.name,
                         3,
                     )
                     .unwrap();
             } else {
                 callLink
-                    .put_function(SYMBOL_CODEPARSER_ERRORNODE.as_str(), 3)
+                    .put_function(SYMBOL_CODEPARSER_ERRORNODE.name, 3)
                     .unwrap();
             }
         } else {
@@ -47,13 +47,13 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
             //
 
             callLink
-                .put_function(SYMBOL_CODEPARSER_LEAFNODE.as_str(), 3)
+                .put_function(SYMBOL_CODEPARSER_LEAFNODE.name, 3)
                 .unwrap();
         }
 
         let sym = TokenToSymbol(*tok);
 
-        Symbol_put(sym, callLink);
+        sym.put(callLink);
 
         // bufLen().put(callLink);
         // let source: &[u8] = &session.tokenizer.input[span.offset..span.offset + span.len];
@@ -62,9 +62,7 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
         let source = std::str::from_utf8(source).expect("token source span is not valid UTF-8");
         callLink.put_str(source).unwrap();
 
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
+        callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
         src.put(callLink);
     }
@@ -109,13 +107,11 @@ impl<'i> NodeSeq<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let NodeSeq(vec) = self;
 
-        callLink
-            .put_function(SYMBOL_LIST.as_str(), vec.len())
-            .unwrap();
+        callLink.put_function(SYMBOL_LIST.name, vec.len()).unwrap();
 
         for C in vec {
             if crate::feature::CHECK_ABORT && crate::abortQ() {
-                Symbol_put(SYMBOL__ABORTED, callLink);
+                SYMBOL__ABORTED.put(callLink);
                 continue;
             }
 
@@ -128,15 +124,13 @@ impl<'i> OperatorNode<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link, op_head: Symbol) {
         let OperatorNode { op, children, src } = self;
 
-        callLink.put_function(op_head.as_str(), 3).unwrap();
+        callLink.put_function(op_head.name, 3).unwrap();
 
-        Symbol_put(op.to_symbol(), callLink);
+        op.to_symbol().put(callLink);
 
         children.put(callLink);
 
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
+        callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
         src.put(callLink);
     }
@@ -146,16 +140,14 @@ impl<'i> CallNode<BorrowedTokenInput<'i>> {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let CallNode { head, body, src } = self;
         callLink
-            .put_function(SYMBOL_CODEPARSER_CALLNODE.as_str(), 3)
+            .put_function(SYMBOL_CODEPARSER_CALLNODE.name, 3)
             .unwrap();
 
         head.put(callLink);
 
         body.put(callLink);
 
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
+        callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
         src.put(callLink);
     }
@@ -166,16 +158,14 @@ impl<'i> SyntaxErrorNode<BorrowedTokenInput<'i>> {
         let SyntaxErrorNode { err, children, src } = self;
 
         callLink
-            .put_function(SYMBOL_CODEPARSER_SYNTAXERRORNODE.as_str(), 3)
+            .put_function(SYMBOL_CODEPARSER_SYNTAXERRORNODE.name, 3)
             .unwrap();
 
-        Symbol_put(*err, callLink);
+        err.put(callLink);
 
         children.put(callLink);
 
-        callLink
-            .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-            .unwrap();
+        callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
         src.put(callLink);
     }
@@ -194,7 +184,7 @@ impl CollectedIssuesNode {
         let CollectedIssuesNode(issues) = self;
 
         callLink
-            .put_function(SYMBOL_LIST.as_str(), issues.len())
+            .put_function(SYMBOL_LIST.name, issues.len())
             .unwrap();
 
         for issue in issues {
@@ -208,7 +198,7 @@ impl CollectedSourceLocationsNode {
         let CollectedSourceLocationsNode { source_locs } = self;
 
         callLink
-            .put_function(SYMBOL_LIST.as_str(), source_locs.len())
+            .put_function(SYMBOL_LIST.name, source_locs.len())
             .unwrap();
 
         for loc in source_locs {
@@ -221,7 +211,7 @@ impl MissingBecauseUnsafeCharacterEncodingNode {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let MissingBecauseUnsafeCharacterEncodingNode { flag } = *self;
 
-        callLink.put_function(SYMBOL_MISSING.as_str(), 1).unwrap();
+        callLink.put_function(SYMBOL_MISSING.name, 1).unwrap();
 
         let reason = unsafeCharacterEncodingReason(flag);
 
@@ -271,7 +261,7 @@ impl Issue {
             additional_descriptions,
         } = self;
 
-        callLink.put_function(make_sym.as_str(), 4).unwrap();
+        callLink.put_function(make_sym.name, 4).unwrap();
 
         tag.put(callLink);
 
@@ -282,7 +272,7 @@ impl Issue {
         {
             callLink
                 .put_function(
-                    SYMBOL_ASSOCIATION.as_str(),
+                    SYMBOL_ASSOCIATION.name,
                     2 + (if actions.is_empty() { 0 } else { 1 })
                         + (if additional_descriptions.is_empty() {
                             0
@@ -295,20 +285,20 @@ impl Issue {
             src.put(callLink);
 
             {
-                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-                Symbol_put(SYMBOL_CONFIDENCELEVEL, callLink);
+                SYMBOL_CONFIDENCELEVEL.put(callLink);
 
                 callLink.put_f64(**val).unwrap();
             }
 
             if !actions.is_empty() {
-                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_CODEACTIONS, callLink);
+                SYMBOL_CODEPARSER_CODEACTIONS.put(callLink);
 
                 callLink
-                    .put_function(SYMBOL_LIST.as_str(), actions.len())
+                    .put_function(SYMBOL_LIST.name, actions.len())
                     .unwrap();
 
                 for A in actions {
@@ -317,12 +307,12 @@ impl Issue {
             }
 
             if !additional_descriptions.is_empty() {
-                callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
                 STRING_ADDITIONALDESCRIPTIONS.put(callLink);
 
                 callLink
-                    .put_function(SYMBOL_LIST.as_str(), additional_descriptions.len())
+                    .put_function(SYMBOL_LIST.name, additional_descriptions.len())
                     .unwrap();
 
                 for D in additional_descriptions {
@@ -344,21 +334,19 @@ impl CodeAction {
         match kind {
             CodeActionKind::ReplaceText { replacement_text } => {
                 callLink
-                    .put_function(SYMBOL_CODEPARSER_CODEACTION.as_str(), 3)
+                    .put_function(SYMBOL_CODEPARSER_CODEACTION.name, 3)
                     .unwrap();
 
                 callLink.put_str(Label).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_REPLACETEXT, callLink);
+                SYMBOL_CODEPARSER_REPLACETEXT.put(callLink);
 
                 {
-                    callLink
-                        .put_function(SYMBOL_ASSOCIATION.as_str(), 2)
-                        .unwrap();
+                    callLink.put_function(SYMBOL_ASSOCIATION.name, 2).unwrap();
 
                     Src.put(callLink);
 
-                    callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                    callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
                     STRING_REPLACEMENTTEXT.put(callLink);
 
@@ -367,21 +355,19 @@ impl CodeAction {
             },
             CodeActionKind::InsertText { insertion_text } => {
                 callLink
-                    .put_function(SYMBOL_CODEPARSER_CODEACTION.as_str(), 3)
+                    .put_function(SYMBOL_CODEPARSER_CODEACTION.name, 3)
                     .unwrap();
 
                 callLink.put_str(Label).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_INSERTTEXT, callLink);
+                SYMBOL_CODEPARSER_INSERTTEXT.put(callLink);
 
                 {
-                    callLink
-                        .put_function(SYMBOL_ASSOCIATION.as_str(), 2)
-                        .unwrap();
+                    callLink.put_function(SYMBOL_ASSOCIATION.name, 2).unwrap();
 
                     Src.put(callLink);
 
-                    callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+                    callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
                     STRING_INSERTIONTEXT.put(callLink);
 
@@ -390,17 +376,15 @@ impl CodeAction {
             },
             CodeActionKind::DeleteText => {
                 callLink
-                    .put_function(SYMBOL_CODEPARSER_CODEACTION.as_str(), 3)
+                    .put_function(SYMBOL_CODEPARSER_CODEACTION.name, 3)
                     .unwrap();
 
                 callLink.put_str(Label).unwrap();
 
-                Symbol_put(SYMBOL_CODEPARSER_DELETETEXT, callLink);
+                SYMBOL_CODEPARSER_DELETETEXT.put(callLink);
 
                 {
-                    callLink
-                        .put_function(SYMBOL_ASSOCIATION.as_str(), 1)
-                        .unwrap();
+                    callLink.put_function(SYMBOL_ASSOCIATION.name, 1).unwrap();
 
                     Src.put(callLink);
                 }
@@ -413,7 +397,7 @@ impl SourceLocation {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let SourceLocation { first, second } = *self;
 
-        callLink.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+        callLink.put_function(SYMBOL_LIST.name, 2).unwrap();
 
         callLink.put_i64(first.into()).unwrap();
 
@@ -425,21 +409,21 @@ impl Source {
     pub(crate) fn put(&self, callLink: &mut wstp::Link) {
         let Source { start, end } = self;
 
-        callLink.put_function(SYMBOL_RULE.as_str(), 2).unwrap();
+        callLink.put_function(SYMBOL_RULE.name, 2).unwrap();
 
-        Symbol_put(SYMBOL_CODEPARSER_SOURCE, callLink);
+        SYMBOL_CODEPARSER_SOURCE.put(callLink);
 
         debug_assert_eq!(start.convention(), end.convention());
 
         match start.convention() {
             SourceConvention::LineColumn => {
-                callLink.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+                callLink.put_function(SYMBOL_LIST.name, 2).unwrap();
 
                 start.put(callLink);
                 end.put(callLink);
             },
             SourceConvention::CharacterIndex => {
-                callLink.put_function(SYMBOL_LIST.as_str(), 2).unwrap();
+                callLink.put_function(SYMBOL_LIST.name, 2).unwrap();
 
                 callLink.put_i64(start.second.into()).unwrap();
 
@@ -463,9 +447,10 @@ impl MyString {
     }
 }
 
-// Note: This function can't be a method on Symbol because Symbol (currently) is
-//       a type alias to a type from wolfram_expr, and its not legal in Rust
-//       to implement methods on types that aren't part of the current crate.
-pub(crate) fn Symbol_put(self_: Symbol, callLink: &mut wstp::Link) {
-    callLink.put_symbol(self_.as_str()).unwrap();
+impl Symbol {
+    pub(crate) fn put(&self, callLink: &mut wstp::Link) {
+        let Symbol { name, id: _ } = self;
+
+        callLink.put_symbol(name).unwrap();
+    }
 }
