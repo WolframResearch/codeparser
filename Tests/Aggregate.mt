@@ -25,11 +25,7 @@ Test[
 	}, <|Source -> {{1, 1}, {1, 6}}|>]
 ]
 
-(*-------------------------------------------*)
 (* Test aggregate[..] of a non-ContainerNode *)
-(*-------------------------------------------*)
-
-(* aggregate[..] of nodes with line:column positions *)
 Test[
 	aggregate @ InfixNode[Plus, {
 		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
