@@ -1459,6 +1459,8 @@ fn Tokenizer_handleString_stringifyAsTag<'i>(
     );
 }
 
+const UNTERMINATED_FILESTRING: c_int = -1;
+
 //
 // Use SourceCharacters here, not WLCharacters
 //
@@ -1492,11 +1494,16 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
         Char('[') => {
             // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
 
-            match Tokenizer_handleFileOpsBrackets(session, token_start, c, policy) {
-                HandledFileOpsBracket::Finished(char) => c = char,
-                HandledFileOpsBracket::UnterminatedFileString => {
+            // TODO: Make this a return value of the function below
+            let mut handled: c_int = 0;
+
+            c = Tokenizer_handleFileOpsBrackets(session, token_start, c, policy, &mut handled);
+
+            match handled {
+                UNTERMINATED_FILESTRING => {
                     return session.token(TokenKind::Error_UnterminatedFileString, token_start);
                 },
+                _ => (),
             }
         },
         _ => {
@@ -1542,13 +1549,16 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
 
                 session.next_source_char(policy);
 
-                match Tokenizer_handleFileOpsBrackets(session, token_start, c, policy) {
-                    HandledFileOpsBracket::Finished(char) => {
-                        c = char;
-                    },
-                    HandledFileOpsBracket::UnterminatedFileString => {
+                // TODO: Make this a return value of the func below
+                let mut handled: c_int = 0;
+
+                c = Tokenizer_handleFileOpsBrackets(session, token_start, c, policy, &mut handled);
+
+                match handled {
+                    UNTERMINATED_FILESTRING => {
                         return session.token(TokenKind::Error_UnterminatedFileString, token_start);
                     },
+                    _ => (),
                 }
             },
             _ => {
@@ -1557,13 +1567,6 @@ fn Tokenizer_handleString_stringifyAsFile<'i>(
         }
     } // while
 }
-
-/// Outcome from [`Tokenizer_handleFileOpsBrackets()`].
-enum HandledFileOpsBracket {
-    Finished(SourceCharacter),
-    UnterminatedFileString,
-}
-
 
 //
 // Handle parsing the brackets in:
@@ -1582,7 +1585,8 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
     _token_start: &TokenStart<'i>,
     mut c: SourceCharacter,
     policy: NextPolicy,
-) -> HandledFileOpsBracket {
+    handled: &mut c_int,
+) -> SourceCharacter {
     assert!(c == '[');
 
     //
@@ -1603,10 +1607,14 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
                 // Cannot have spaces in the string here, so bail out
                 //
 
-                return HandledFileOpsBracket::UnterminatedFileString;
+                *handled = UNTERMINATED_FILESTRING;
+
+                return c;
             },
             EndOfFile => {
-                return HandledFileOpsBracket::UnterminatedFileString;
+                *handled = UNTERMINATED_FILESTRING;
+
+                return c;
             },
             Char('[') => {
                 depth = depth + 1;
@@ -1623,12 +1631,16 @@ fn Tokenizer_handleFileOpsBrackets<'i>(
                 c = session.peek_source_char(policy);
 
                 if depth == 0 {
-                    return HandledFileOpsBracket::Finished(c);
+                    *handled = 0;
+
+                    return c;
                 }
             },
             _ => {
                 if c.isMBWhitespace() || c.isMBNewline() {
-                    return HandledFileOpsBracket::UnterminatedFileString;
+                    *handled = UNTERMINATED_FILESTRING;
+
+                    return c;
                 }
 
                 session.next_source_char(policy);
@@ -2650,6 +2662,7 @@ enum HandledFractionalPart {
     /// was followed by a second, e.g. the input was `0..`.
     Bailout,
 }
+
 
 //
 // Precondition: currentWLCharacter is NOT in String
