@@ -5,9 +5,9 @@ use crate::{
     long_names_registration::{
         LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
     },
+    my_string_registration::{STRING_UNEXPECTEDCHARACTER, *},
     source::{
-        BufferAndLength, CodeAction, IssueTag, NextPolicy,
-        NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
+        BufferAndLength, CodeAction, NextPolicy, NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
         Severity, Source, SourceCharacter, SourceLocation, SyntaxIssue, STRING_OR_COMMENT,
     },
     tokenizer::Tokenizer,
@@ -222,7 +222,7 @@ fn CharacterDecoder_handleStringMetaOpen(
         //
 
         let I = SyntaxIssue(
-            IssueTag::UnexpectedCharacter,
+            STRING_UNEXPECTEDCHARACTER,
             format!("Unexpected string meta character: ``{}``.", graphicalStr),
             Severity::Remark,
             Src,
@@ -265,7 +265,7 @@ fn CharacterDecoder_handleStringMetaClose(
         //
 
         let I = SyntaxIssue(
-            IssueTag::UnexpectedCharacter,
+            STRING_UNEXPECTEDCHARACTER,
             format!("Unexpected string meta character: ``{graphicalStr}``."),
             Severity::Remark,
             Src,
@@ -400,7 +400,7 @@ fn CharacterDecoder_handleLongName(
                 }
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\[{longNameStr}``."),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -427,7 +427,7 @@ fn CharacterDecoder_handleLongName(
                 ));
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\[{}``.", longNameStr),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -515,48 +515,51 @@ fn CharacterDecoder_handleLongName(
             // session.addIssue(I);
 
             if (policy & SCAN_FOR_UNRECOGNIZEDLONGNAMES) == SCAN_FOR_UNRECOGNIZEDLONGNAMES {
+
                 let currentUnrecognizedStartLoc = currentWLCharacterStartLoc.previous();
 
                 if !suggestion.is_empty() {
                     Actions.push(CodeAction::replace_text(
                         format!("Replace with ``\\\\[{suggestion}]``"),
                         Source::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
-                        format!("\\\\[{suggestion}]"),
+                        format!("\\\\[{suggestion}]")
                     ));
                 }
 
                 let I = SyntaxIssue(
-                    IssueTag::UnrecognizedLongName,
+                    STRING_UNRECOGNIZEDLONGNAME,
                     format!("Unrecognized longname: ``\\\\[{longNameStr}]``."),
                     Severity::Error,
                     Source::new(currentUnrecognizedStartLoc, currentWLCharacterEndLoc),
                     0.75,
                     Actions,
-                    vec![format!("``{longNameStr}`` is not a valid long name.")],
+                    vec![format!("``{longNameStr}`` is not a valid long name.")]
                 );
 
                 session.addIssue(I);
+
             } else {
                 if !suggestion.is_empty() {
                     Actions.push(CodeAction::replace_text(
                         format!("Replace with ``\\[{suggestion}]``"),
                         Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
-                        format!("\\[{suggestion}]"),
+                        format!("\\[{suggestion}]")
                     ));
                 }
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\[{longNameStr}]``."),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
                     1.0,
                     Actions,
-                    vec![format!("``{longNameStr}`` is not a valid long name.")],
+                    vec![format!("``{longNameStr}`` is not a valid long name.")]
                 );
 
                 session.addIssue(I);
             }
+
         }
 
         session.offset = openSquareBuf;
@@ -633,7 +636,7 @@ fn CharacterDecoder_handleLongName(
                 //
 
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
+                    STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
                     Severity::Remark,
                     Src,
@@ -648,7 +651,7 @@ fn CharacterDecoder_handleLongName(
                 // Do nothing.
             } else {
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
+                    STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
                     Severity::Warning,
                     Src,
@@ -710,7 +713,7 @@ fn CharacterDecoder_handleLongName(
                 //
 
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
+                    STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
                     Severity::Remark,
                     Src,
@@ -725,7 +728,7 @@ fn CharacterDecoder_handleLongName(
                 // Do nothing.
             } else {
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
+                    STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
                     Severity::Warning,
                     Src,
@@ -793,7 +796,7 @@ fn CharacterDecoder_handle4Hex(
                 ));
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\:{hexStr}``."),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -879,7 +882,7 @@ fn CharacterDecoder_handle4Hex(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -892,7 +895,7 @@ fn CharacterDecoder_handle4Hex(
         } else if c.isStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -948,7 +951,7 @@ fn CharacterDecoder_handle4Hex(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -961,7 +964,7 @@ fn CharacterDecoder_handle4Hex(
         } else if c.isMBStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -1024,7 +1027,7 @@ fn CharacterDecoder_handle2Hex(
                 ));
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\.{hexStr}``."),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1107,7 +1110,7 @@ fn CharacterDecoder_handle2Hex(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -1120,7 +1123,7 @@ fn CharacterDecoder_handle2Hex(
         } else if c.isStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -1176,7 +1179,7 @@ fn CharacterDecoder_handle2Hex(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -1189,7 +1192,7 @@ fn CharacterDecoder_handle2Hex(
         } else if c.isMBStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -1252,7 +1255,7 @@ fn CharacterDecoder_handleOctal(
                 ));
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\{octalStr}``."),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1341,7 +1344,7 @@ fn CharacterDecoder_handleOctal(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -1354,7 +1357,7 @@ fn CharacterDecoder_handleOctal(
         } else if c.isStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -1410,7 +1413,7 @@ fn CharacterDecoder_handleOctal(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -1423,7 +1426,7 @@ fn CharacterDecoder_handleOctal(
         } else if c.isMBStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -1486,7 +1489,7 @@ fn CharacterDecoder_handle6Hex(
                 ));
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character: ``\\|{hexStr}``."),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1590,7 +1593,7 @@ fn CharacterDecoder_handle6Hex(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -1603,7 +1606,7 @@ fn CharacterDecoder_handle6Hex(
         } else if c.isStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -1659,7 +1662,7 @@ fn CharacterDecoder_handle6Hex(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Remark,
                 Src,
@@ -1672,7 +1675,7 @@ fn CharacterDecoder_handle6Hex(
         } else if c.isMBStrangeWhitespace() {
         } else {
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 format!("Unexpected character: ``{graphicalStr}``."),
                 Severity::Warning,
                 Src,
@@ -1845,7 +1848,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                 ));
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character ``\\{curSourceGraphicalStr}``."),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1874,7 +1877,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                     ));
 
                     let I = SyntaxIssue(
-                        IssueTag::UnhandledCharacter,
+                        STRING_UNHANDLEDCHARACTER,
                         format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                         Severity::Fatal,
                         Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1896,7 +1899,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                     ));
 
                     let I = SyntaxIssue(
-                        IssueTag::UnhandledCharacter,
+                        STRING_UNHANDLEDCHARACTER,
                         format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                         Severity::Fatal,
                         Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1920,7 +1923,7 @@ fn CharacterDecoder_handleUnhandledEscape(
             ));
 
             let I = SyntaxIssue(
-                IssueTag::UnhandledCharacter,
+                STRING_UNHANDLEDCHARACTER,
                 format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                 Severity::Fatal,
                 Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1960,7 +1963,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                 //
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character ``\\\\{}``.", curSourceGraphicalStr),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -1980,7 +1983,7 @@ fn CharacterDecoder_handleUnhandledEscape(
                 ));
 
                 let I = SyntaxIssue(
-                    IssueTag::UnhandledCharacter,
+                    STRING_UNHANDLEDCHARACTER,
                     format!("Unhandled character ``\\{}``.", curSourceGraphicalStr),
                     Severity::Fatal,
                     Source::new(currentWLCharacterStartLoc, currentWLCharacterEndLoc),
@@ -2103,7 +2106,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
                 //
 
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
+                    STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
                     Severity::Remark,
                     Src,
@@ -2143,7 +2146,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
                 //
 
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedCharacter,
+                    STRING_UNEXPECTEDCHARACTER,
                     format!("Unexpected character: ``{graphicalStr}``."),
                     Severity::Remark,
                     Src,

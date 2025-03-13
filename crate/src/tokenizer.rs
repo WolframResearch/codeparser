@@ -10,11 +10,12 @@ use crate::{
         *,
     },
     feature,
+    my_string_registration::*,
     node::CollectedSourceLocationsNode,
     source::{
-        Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssuePtrSet, IssueTag, NextPolicy,
-        Severity, Source, SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_SLOT,
-        INSIDE_STRINGIFY_AS_FILE, INSIDE_STRINGIFY_AS_TAG,
+        Buffer, BufferAndLength, CodeAction, FormatIssue, Issue, IssuePtrSet, NextPolicy, Severity,
+        Source, SourceCharacter, SourceLocation, SyntaxIssue, INSIDE_STRINGIFY_AS_FILE, INSIDE_SLOT,
+        INSIDE_STRINGIFY_AS_TAG,
     },
     token::{Token, TokenKind, TokenRef},
     token_enum::Closer,
@@ -1144,7 +1145,7 @@ fn Tokenizer_handleStrangeWhitespace<'i>(
         }
 
         let I = SyntaxIssue(
-            IssueTag::UnexpectedSpaceCharacter,
+            STRING_UNEXPECTEDSPACECHARACTER,
             format!(
                 "Unexpected space character: ``{}``.",
                 c.safeAndGraphicalString()
@@ -1350,7 +1351,7 @@ fn Tokenizer_handleSymbol<'i>(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UndocumentedSlotSyntax,
+                STRING_UNDOCUMENTEDSLOTSYNTAX,
                 "The name following ``#`` is not documented to allow the **`** character.".into(),
                 Severity::Warning,
                 Tokenizer_getTokenSource(session, tokenStartLoc),
@@ -1428,7 +1429,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UndocumentedSlotSyntax,
+                STRING_UNDOCUMENTEDSLOTSYNTAX,
                 "The name following ``#`` is not documented to allow the ``$`` character."
                     .to_owned(),
                 Severity::Warning,
@@ -1450,7 +1451,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
         }
 
         let I = SyntaxIssue(
-            IssueTag::UnexpectedLetterlikeCharacter,
+            STRING_UNEXPECTEDLETTERLIKECHARACTER,
             format!(
                 "Unexpected letterlike character: ``{}``.",
                 c.safeAndGraphicalString()
@@ -1473,7 +1474,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
         }
 
         let I = SyntaxIssue(
-            IssueTag::UnexpectedLetterlikeCharacter,
+            STRING_UNEXPECTEDLETTERLIKECHARACTER,
             format!(
                 "Unexpected letterlike character: ``{}``.",
                 c.safeAndGraphicalString()
@@ -1493,7 +1494,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
             //
 
             let I = SyntaxIssue(
-                IssueTag::UnexpectedCharacter,
+                STRING_UNEXPECTEDCHARACTER,
                 "The tag has non-alphanumeric source characters.".to_owned(),
                 Severity::Warning,
                 Source::new(charLoc, session.SrcLoc),
@@ -1528,7 +1529,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                     //
 
                     let I = SyntaxIssue(
-                        IssueTag::UndocumentedSlotSyntax,
+                        STRING_UNDOCUMENTEDSLOTSYNTAX,
                         format!("The name following ``#`` is not documented to allow the ``$`` character."),
                         Severity::Warning,
                         Tokenizer_getTokenSource(session, charLoc),
@@ -1549,7 +1550,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                 }
 
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedLetterlikeCharacter,
+                    STRING_UNEXPECTEDLETTERLIKECHARACTER,
                     format!(
                         "Unexpected letterlike character: ``{}``.",
                         c.safeAndGraphicalString()
@@ -1572,7 +1573,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                 }
 
                 let I = SyntaxIssue(
-                    IssueTag::UnexpectedLetterlikeCharacter,
+                    STRING_UNEXPECTEDLETTERLIKECHARACTER,
                     format!(
                         "Unexpected letterlike character: ``{}``.",
                         c.safeAndGraphicalString()
@@ -1592,7 +1593,7 @@ fn Tokenizer_handleSymbolSegment<'i>(
                     //
 
                     let I = SyntaxIssue(
-                        IssueTag::UnexpectedCharacter,
+                        STRING_UNEXPECTEDCHARACTER,
                         "The tag has non-alphanumeric source characters.".to_owned(),
                         Severity::Warning,
                         Source::new(charLoc, session.SrcLoc),
@@ -1639,7 +1640,7 @@ fn Tokenizer_handleString<'i>(
         //
 
         let I = SyntaxIssue(
-            IssueTag::UndocumentedSlotSyntax,
+            STRING_UNDOCUMENTEDSLOTSYNTAX,
             format!("The name following ``#`` is not documented to allow the ``\"`` character."),
             Severity::Warning,
             Tokenizer_getTokenSource(session, tokenStartLoc),
@@ -2186,7 +2187,7 @@ fn Tokenizer_handleNumber<'i>(
                 ));
 
                 let I = FormatIssue(
-                    IssueTag::Ambiguous,
+                    STRING_AMBIGUOUS,
                     format!("Ambiguous syntax."),
                     Severity::Formatting,
                     Tokenizer_getTokenSource(session, dotLoc),
@@ -2672,7 +2673,7 @@ fn Tokenizer_handleNumber<'i>(
                                 //
                             } else {
                                 let I = SyntaxIssue(
-                                    IssueTag::UnexpectedSign,
+                                    STRING_UNEXPECTEDSIGN,
                                     format!(
                                         "The real number has a ``{}`` sign in its precision specification.",
                                         signBuf.as_str()
@@ -2702,7 +2703,7 @@ fn Tokenizer_handleNumber<'i>(
                                 //
                             } else {
                                 let I = SyntaxIssue(
-                                    IssueTag::UnexpectedSign,
+                                    STRING_UNEXPECTEDSIGN,
                                     format!(
                                         "The real number has a ``{}`` sign in its precision specification.",
                                         signBuf.as_str()
@@ -3363,7 +3364,7 @@ fn Tokenizer_handlePossibleFractionalPartPastDot<'i>(
                     ));
 
                     let I = SyntaxIssue(
-                        IssueTag::UnexpectedImplicitTimes,
+                        STRING_UNEXPECTEDIMPLICITTIMES,
                         format!("Suspicious syntax."),
                         Severity::Error,
                         Source::from_location(dotLoc),
@@ -3400,7 +3401,7 @@ fn Tokenizer_backupAndWarn<'i>(
         ));
 
         let I = FormatIssue(
-            IssueTag::Ambiguous,
+            STRING_AMBIGUOUS,
             "Ambiguous syntax.".into(),
             Severity::Formatting,
             Source::from_location(resetLoc),
@@ -3892,7 +3893,7 @@ fn Tokenizer_handleUnder<'i>(
                     ));
 
                     let I = SyntaxIssue(
-                        IssueTag::UnexpectedDot,
+                        STRING_UNEXPECTEDDOT,
                         "Suspicious syntax.".into(),
                         Severity::Error,
                         Source::from_location(dotLoc),
@@ -4190,7 +4191,7 @@ fn Tokenizer_handleMinus<'i>(
                     ));
 
                     let I = SyntaxIssue(
-                        IssueTag::Ambiguous,
+                        STRING_AMBIGUOUS,
                         "``-->`` is ambiguous syntax.".into(),
                         Severity::Error,
                         Source::new(tokenStartLoc, afterLoc),
@@ -4216,7 +4217,7 @@ fn Tokenizer_handleMinus<'i>(
                     ));
 
                     let I = FormatIssue(
-                        IssueTag::Ambiguous,
+                        STRING_AMBIGUOUS,
                         "Put a space between ``--`` and ``=`` to reduce ambiguity".into(),
                         Severity::Formatting,
                         Source::from_location(equalLoc),
@@ -4304,7 +4305,7 @@ fn Tokenizer_handleBar<'i>(
                     ));
 
                     let I = FormatIssue(
-                        IssueTag::Ambiguous,
+                        STRING_AMBIGUOUS,
                         "Put a space between ``|>`` and ``=`` to reduce ambiguity".into(),
                         Severity::Formatting,
                         Source::from_location(equalLoc),
@@ -4889,7 +4890,7 @@ fn Tokenizer_handlePlus<'i>(
                     ));
 
                     let I = FormatIssue(
-                        IssueTag::Ambiguous,
+                        STRING_AMBIGUOUS,
                         "Put a space between ``++`` and ``=`` to reduce ambiguity".into(),
                         Severity::Formatting,
                         Source::from_location(loc),
@@ -5389,7 +5390,7 @@ fn Tokenizer_handleMBStrangeNewline<'i>(
         }
 
         let I = SyntaxIssue(
-            IssueTag::UnexpectedNewlineCharacter,
+            STRING_UNEXPECTEDNEWLINECHARACTER,
             format!("Unexpected newline character: ``{}``.", c.graphicalString()),
             Severity::Warning,
             Src,
@@ -5430,7 +5431,7 @@ fn Tokenizer_handleMBStrangeWhitespace<'i>(
         }
 
         let I = SyntaxIssue(
-            IssueTag::UnexpectedSpaceCharacter,
+            STRING_UNEXPECTEDSPACECHARACTER,
             format!(
                 "Unexpected space character: ``{}``.",
                 c.safeAndGraphicalString()

@@ -12,6 +12,7 @@ use crate::{
     },
     feature,
     long_names::{self as LongNames, code_point_has_long_name},
+    my_string::MyString,
     symbol::Symbol,
     symbol_registration::{
         SYMBOL_CODEPARSER_ENCODINGISSUE, SYMBOL_CODEPARSER_FORMATISSUE,
@@ -291,33 +292,13 @@ fn PrintTo(src: &Source, s: &mut std::ostream);
 #[derive(Debug, Clone, Hash)]
 pub struct Issue {
     pub make_sym: Symbol,
-    pub tag: IssueTag,
+    pub tag: MyString,
     pub msg: String,
     pub sev: Severity,
     pub src: Source,
     pub val: NotNan<f64>,
     pub actions: Vec<CodeAction>,
     pub additional_descriptions: AdditionalDescriptionVector,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum IssueTag {
-    Ambiguous,
-    UnhandledCharacter,
-    UnexpectedCharacter,
-    UnexpectedCarriageReturn,
-    UnexpectedSpaceCharacter,
-    UnexpectedNewlineCharacter,
-    UnexpectedDot,
-    UnexpectedSign,
-    UnexpectedImplicitTimes,
-    UnexpectedLetterlikeCharacter,
-    UnrecognizedLongName,
-    UndocumentedSlotSyntax,
-    NonASCIICharacter,
-    IncompleteUTF8Sequence,
-    StraySurrogate,
-    BOM,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -539,7 +520,7 @@ impl Eq for Issue {}
 impl Issue {
     pub fn new(
         make_sym: Symbol,
-        tag: IssueTag,
+        tag: MyString,
         msg: String,
         sev: Severity,
         src: Source,
@@ -601,7 +582,7 @@ impl Issue {
 }
 
 pub fn SyntaxIssue(
-    tag: IssueTag,
+    tag: MyString,
     msg: String,
     sev: Severity,
     src: Source,
@@ -622,7 +603,7 @@ pub fn SyntaxIssue(
 }
 
 pub(crate) fn FormatIssue(
-    tag: IssueTag,
+    tag: MyString,
     msg: String,
     sev: Severity,
     src: Source,
@@ -643,7 +624,7 @@ pub(crate) fn FormatIssue(
 }
 
 pub fn EncodingIssue(
-    tag: IssueTag,
+    tag: MyString,
     msg: String,
     sev: Severity,
     src: Source,
