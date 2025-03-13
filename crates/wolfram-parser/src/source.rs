@@ -182,7 +182,10 @@ pub const INSIDE_OUT: NextPolicy =
 // TODO(cleanup): remove CodePoint, just have SourceCharacter?
 pub type SourceCharacter = CodePoint;
 
-const _: () = assert!(std::mem::size_of::<SourceCharacter>() == 4);
+const _: () = assert!(
+    std::mem::size_of::<SourceCharacter>() == 4,
+    "Check your assumptions"
+);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum SourceConvention {
@@ -210,7 +213,10 @@ pub enum SourceLocation {
 //     discriminant.
 //
 //     See also: https://github.com/rust-lang/rust/pull/94075
-const _: () = assert!(std::mem::size_of::<SourceLocation>() == 8);
+const _: () = assert!(
+    std::mem::size_of::<SourceLocation>() == 8,
+    "Check your assumptions"
+);
 
 impl Display for SourceLocation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -253,7 +259,10 @@ pub struct Source {
     pub(crate) end: SourceLocation,
 }
 
-const _: () = assert!(std::mem::size_of::<Source>() == 16);
+const _: () = assert!(
+    std::mem::size_of::<Source>() == 16,
+    "Check your assumptions"
+);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum StringSourceKind {
