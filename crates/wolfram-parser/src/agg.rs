@@ -183,7 +183,7 @@ macro_rules! LHS {
 
     (BinaryNode[$($op_kind:ident)|*, _, _]) => {
         Node::Binary(BinaryNode(OperatorNode {
-            op: $($crate::cst::BinaryOperator::$op_kind)|*,
+            op: $(Op::$op_kind)|*,
             ..
         }))
     };

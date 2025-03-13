@@ -2,7 +2,7 @@ use std::fmt::{self, Debug};
 
 use crate::{
     cst::{
-        BinaryNode, BinaryOperator, CompoundNode, CompoundOperator, CstNodeSeq, Node, TernaryNode,
+        BinaryNode, CompoundNode, CompoundOperator, CstNodeSeq, Node, Operator, TernaryNode,
         TernaryOperator,
     },
     feature,
@@ -560,7 +560,7 @@ pub(crate) fn Parser_checkColonLHS<'i>(session: &mut ParserSession<'i>) -> Colon
 
             let op = op.getOp();
 
-            if op == BinaryOperator::Pattern {
+            if op == Operator::Pattern {
                 return ColonLHS::Optional;
             }
 
@@ -689,7 +689,7 @@ pub(crate) fn Parser_checkSpan<'i>(session: &mut ParserSession<'i>) -> bool {
         if let Node::Binary(BinaryNode(B)) = NN {
             let op = B.getOp();
 
-            if op == BinaryOperator::Span {
+            if op == Operator::Span {
                 return true;
             }
 
