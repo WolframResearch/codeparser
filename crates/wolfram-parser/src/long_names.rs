@@ -74,21 +74,13 @@ pub fn asciiReplacements(point: CodePoint) -> Vec<String> {
         return Vec::new();
     };
 
-    debug_assert!(utils::is_sorted(ASCII_REPLACEMENTS_MAP));
-
-    let Some(index): Option<usize> = ASCII_REPLACEMENTS_MAP
-        .binary_search_by(|(cp, _)| cp.cmp(&char))
-        .ok()
-    else {
-        return Vec::new();
-    };
-
-    let (_, replacements) = ASCII_REPLACEMENTS_MAP[index];
-
-    replacements
-        .into_iter()
-        .map(|&s: &&str| s.to_owned())
-        .collect()
+    match ASCII_REPLACEMENTS_MAP.get(&char) {
+        Some(replacements) => replacements
+            .into_iter()
+            .map(|&s: &&str| s.to_owned())
+            .collect(),
+        None => Vec::new(),
+    }
 }
 
 pub fn replacementGraphical(replacement: String) -> String {

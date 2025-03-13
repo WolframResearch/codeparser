@@ -931,6 +931,7 @@ dependencies = [
  "criterion",
  "edit-distance",
  "memchr",
+ "once_cell",
  "pretty_assertions",
  "wolfram-expr",
  "wolfram-library-link",
