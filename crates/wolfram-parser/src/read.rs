@@ -2,7 +2,6 @@
 
 mod byte_buffer;
 mod byte_decoder;
-mod character_decoder;
 
 
 use crate::{
@@ -11,13 +10,9 @@ use crate::{
     EncodingMode, UnsafeCharacterEncoding,
 };
 
-pub(crate) use self::{
-    byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
-    character_decoder::CharacterDecoder_nextWLCharacter,
+pub(crate) use self::byte_decoder::{
+    ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter,
 };
-
-#[cfg(test)]
-pub(crate) use self::character_decoder::CharacterDecoder_currentWLCharacter;
 
 //==========================================================
 // Types

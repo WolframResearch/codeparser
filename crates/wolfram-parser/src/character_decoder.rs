@@ -6,12 +6,13 @@ use crate::{
     long_names_registration::{
         LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
     },
-    read::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter, Reader},
+    read::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     source::{
         BufferAndLength, NextPolicy,
         NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},
         Source, SourceCharacter, SourceLocation, STRING_OR_COMMENT,
     },
+    tokenizer::Tokenizer,
     utils,
     wl_character::{EscapeStyle, WLCharacter},
 };
@@ -22,7 +23,7 @@ use crate::{
 //
 
 type HandlerFunction = for<'i, 's> fn(
-    session: &'s mut Reader<'i>,
+    session: &'s mut Tokenizer<'i>,
     startBuf: usize,
     startLoc: SourceLocation,
     policy: NextPolicy,
@@ -112,7 +113,7 @@ const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = [
 /// return \[Alpha]
 ///
 pub(crate) fn CharacterDecoder_nextWLCharacter(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     policy: NextPolicy,
 ) -> WLCharacter {
     let mut curSource = ByteDecoder_nextSourceCharacter(session, policy);
@@ -160,7 +161,7 @@ pub(crate) fn CharacterDecoder_nextWLCharacter(
 
 #[allow(dead_code)]
 pub(crate) fn CharacterDecoder_currentWLCharacter(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     policy: NextPolicy,
 ) -> WLCharacter {
     let mark = session.mark();
@@ -173,7 +174,7 @@ pub(crate) fn CharacterDecoder_currentWLCharacter(
 }
 
 fn CharacterDecoder_handleStringMetaDoubleQuote(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     _: usize,
     _: SourceLocation,
     policy: NextPolicy,
@@ -194,7 +195,7 @@ fn CharacterDecoder_handleStringMetaDoubleQuote(
 // https://stackoverflow.com/q/6065887
 //
 fn CharacterDecoder_handleStringMetaOpen(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     _escapedBuf: usize,
     escapedLoc: SourceLocation,
     policy: NextPolicy,
@@ -237,7 +238,7 @@ fn CharacterDecoder_handleStringMetaOpen(
 }
 
 fn CharacterDecoder_handleStringMetaClose(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     _escapedBuf: usize,
     escapedLoc: SourceLocation,
     policy: NextPolicy,
@@ -280,7 +281,7 @@ fn CharacterDecoder_handleStringMetaClose(
 }
 
 fn CharacterDecoder_handleStringMetaBackslash(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     _: usize,
     _: SourceLocation,
     policy: NextPolicy,
@@ -294,7 +295,7 @@ fn CharacterDecoder_handleStringMetaBackslash(
 }
 
 fn CharacterDecoder_handleLongName(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     openSquareBuf: usize,
     openSquareLoc: SourceLocation,
     policy: NextPolicy,
@@ -600,7 +601,7 @@ fn CharacterDecoder_handleLongName(
 }
 
 fn CharacterDecoder_handle4Hex(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     colon_offset: usize,
     colonLoc: SourceLocation,
     policy: NextPolicy,
@@ -693,7 +694,7 @@ fn CharacterDecoder_handle4Hex(
 }
 
 fn CharacterDecoder_handle2Hex(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     dot_offset: usize,
     dotLoc: SourceLocation,
     policy: NextPolicy,
@@ -783,7 +784,7 @@ fn CharacterDecoder_handle2Hex(
 }
 
 fn CharacterDecoder_handleOctal(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     firstOctalBuf: usize,
     firstOctalLoc: SourceLocation,
     policy: NextPolicy,
@@ -879,7 +880,7 @@ fn CharacterDecoder_handleOctal(
 }
 
 fn CharacterDecoder_handle6Hex(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     bar_offset: usize,
     barLoc: SourceLocation,
     policy: NextPolicy,
@@ -988,7 +989,7 @@ fn CharacterDecoder_handle6Hex(
     return WLCharacter::new_with_escape(point, EscapeStyle::Hex6);
 }
 
-fn CharacterDecoder_handleBackslash(session: &mut Reader, policy: NextPolicy) -> WLCharacter {
+fn CharacterDecoder_handleBackslash(session: &mut Tokenizer, policy: NextPolicy) -> WLCharacter {
     //
     // test whether this \ is the result of the "feature" of
     // converting "\[Alpa]" into "\\[Alpa]", copying that, and then never giving any further warnings
@@ -1056,7 +1057,7 @@ fn CharacterDecoder_handleBackslash(session: &mut Reader, policy: NextPolicy) ->
 }
 
 fn CharacterDecoder_handleUnhandledEscape(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     unhandled_offset: usize,
     unhandledLoc: SourceLocation,
     policy: NextPolicy,
@@ -1312,7 +1313,7 @@ fn CharacterDecoder_handleUnhandledEscape(
 }
 
 fn CharacterDecoder_handleAssertFalse(
-    _session: &mut Reader,
+    _session: &mut Tokenizer,
     _escapedBuf: usize,
     _escapedLoc: SourceLocation,
     _policy: NextPolicy,
@@ -1321,7 +1322,7 @@ fn CharacterDecoder_handleAssertFalse(
 }
 
 fn CharacterDecoder_handleUncommon<'i, 's>(
-    session: &'s mut Reader<'i>,
+    session: &'s mut Tokenizer<'i>,
     escapedBuf: usize,
     escapedLoc: SourceLocation,
     policy: NextPolicy,
@@ -1666,7 +1667,7 @@ fn CharacterDecoder_longNameSuggestion(input: &str) -> String {
 /// Add an [`Issue`][crate::issue::Issue] if the specified [`CodePoint`] is
 /// a "strange" character.
 pub(crate) fn check_strange_syntax_issue(
-    session: &mut Reader,
+    session: &mut Tokenizer,
     policy: NextPolicy,
     point: CodePoint,
     start_loc: SourceLocation,
