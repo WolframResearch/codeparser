@@ -3,7 +3,7 @@ use wolfram_library_link::{self as wll, sys::mint, wstp};
 use crate::{
     node::{
         CollectedExpressionsNode, CollectedIssuesNode, MissingBecauseUnsafeCharacterEncodingNode,
-        Node, NodeContainer, NodeSeq, SafeStringNode,
+        NodeContainer, NodeSeq,
     },
     symbol_registration::SYMBOL_NULL,
     token::BorrowedTokenInput,
@@ -891,12 +891,9 @@ fn SafeString_LibraryLink(link: &mut wstp::Link) {
     //     return LIBRARY_FUNCTION_ERROR;
     // }
 
-    let node = match session.safe_string() {
-        Ok(str) => Node::from(SafeStringNode::new(str.to_owned())),
-        Err(flag) => Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(flag)),
-    };
+    let C = session.safeString();
 
-    NodeSeq(vec![node]).put(link);
+    NodeContainerPut(&C, link);
 
     drop(session);
 }

@@ -9,7 +9,10 @@ use Diagnostics::*;
 use crate::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
     feature,
-    node::{MissingBecauseUnsafeCharacterEncodingNode, Node, NodeContainer, NodeSeq, TriviaSeq},
+    node::{
+        MissingBecauseUnsafeCharacterEncodingNode, Node, NodeContainer, NodeSeq, SafeStringNode,
+        TriviaSeq,
+    },
     parselet::{prefix_parselet, PrefixToplevelCloserParselet_parsePrefix},
     parser::{Context, Parser_handleFirstLine, Parser_isQuiescent, Parser_popNode},
     source::{Issue, IssuePtrSet, SourceConvention, TOPLEVEL},
@@ -227,8 +230,9 @@ impl<'i> ParserSession<'i> {
 
     // TODO(cleanup): What is this used for? Perhaps ultimately this is just
     //                std::str::from_utf8()?
+    // TODO(cleanup): Make this return a SafeStringNode directly?
     #[allow(dead_code)]
-    pub(crate) fn safe_string(&mut self) -> Result<&str, UnsafeCharacterEncoding> {
+    pub fn safeString(&mut self) -> NodeContainer<BorrowedTokenInput<'i>> {
         //
         // read all characters, just to set unsafeCharacterEncoding flag if necessary
         //
@@ -240,13 +244,14 @@ impl<'i> ParserSession<'i> {
             }
         } // while (true)
 
-        match self.tokenizer.unsafe_character_encoding_flag {
+        let node = match self.tokenizer.unsafe_character_encoding_flag {
             None => {
                 // let N = SafeStringNode::new(BufferAndLength::new(self.start, self.end - self.start));
-                let str = std::str::from_utf8(self.input())
-                    .expect("safeString: unable to convert source input into safe string");
-
-                Ok(str)
+                Node::from(SafeStringNode::new(
+                    std::str::from_utf8(self.input())
+                        .expect("safeString: unable to convert source input into safe string")
+                        .to_owned(),
+                ))
             },
             Some(flag) => {
                 debug_assert!(
@@ -254,9 +259,14 @@ impl<'i> ParserSession<'i> {
                         || flag == UnsafeCharacterEncoding::BOM
                 );
 
-                Err(flag)
+                Node::from(MissingBecauseUnsafeCharacterEncodingNode::new(flag))
             },
-        }
+        };
+
+        let mut nodes = NodeSeq::new();
+        nodes.push(node);
+
+        return NodeContainer::new(nodes);
     }
 
     fn create_parse_result(
