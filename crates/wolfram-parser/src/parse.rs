@@ -122,7 +122,9 @@ fn do_parse<'i, B: ParseBuilder<'i> + 'i>(
         }
 
         if peek.tok.isTrivia() {
-            session.builder.finish_top_level_trivia(peek);
+            session.builder.push_trivia(peek);
+
+            session.builder.finish_top_level_expr();
 
             peek.skip(&mut session.tokenizer);
 
@@ -133,19 +135,18 @@ fn do_parse<'i, B: ParseBuilder<'i> + 'i>(
         // special top-level handling of stray closers
         //
         if peek.tok.isCloser() {
-            let node = (PrefixToplevelCloserParselet {})
-                .parse_prefix(&mut session, peek);
+            (PrefixToplevelCloserParselet {}).parse_prefix(&mut session, peek);
 
-            session.builder.finish_top_level_expr(node);
+            session.builder.finish_top_level_expr();
 
             assert!(session.is_quiescent());
 
             continue;
         }
 
-        let node = session.parse_prefix(peek);
+        session.parse_prefix(peek);
 
-        session.builder.finish_top_level_expr(node);
+        session.builder.finish_top_level_expr();
 
         assert!(session.is_quiescent());
     } // while (true)
@@ -166,17 +167,19 @@ fn do_parse<'i, B: ParseBuilder<'i> + 'i>(
 
 /// A parser session
 #[derive(Debug)]
-pub(crate) struct ParserSession<'i, B: ParseBuilder<'i> + 'i> {
+pub(crate) struct ParserSession<'i, B> {
     tokenizer: Tokenizer<'i>,
 
     builder: B,
 
-    context_stack: Vec<Context>,
+    context_stack: Vec<Context<'i, B>>,
 
     quirk_settings: QuirkSettings,
 }
 
-pub(crate) struct Context {
+pub(crate) struct Context<'i, B> {
+    continue_parse: Option<Box<dyn FnOnce(&mut ParserSession<'i, B>) + 'i>>,
+
     pub(crate) prec: Option<Precedence>,
 }
 
@@ -203,19 +206,8 @@ pub(crate) type TriviaSeqRef<'i> = TriviaSeq<TokenStr<'i>>;
 /// This abstraction allows `Input &str => Expr` with no intermediate stage,
 /// while also preserving the ability to do `Input &str => Cst`, or any other
 /// type buildable from parsing.
-pub(crate) trait ParseBuilder<'i>: Sized + Debug
-where
-    Self: 'i,
-{
-    /// An intermediate node in the parse tree structure constructed by the
-    /// parser.
-    ///
-    /// Nodes are typically sub-expressions of the parsed input, but may also
-    /// represent e.g. syntax errors.
-    type Node;
+pub(crate) trait ParseBuilder<'i>: Debug {
     type Output;
-
-    type InfixParseBuilder: InfixParseBuilder<'i, Self> + Debug;
 
     //==================================
     // Lifecycle
@@ -225,9 +217,10 @@ where
 
     /// Apply the [`PrefixParselet`] implementation associated with the given
     /// [`TokenKind`].
-    fn with_prefix_parselet<R, F>(kind: TokenKind, callback: F) -> R
-    where
-        F: FnOnce(&dyn PrefixParselet<'i, Self>) -> R;
+    fn with_prefix_parselet<F: FnOnce(&dyn PrefixParselet<'i, Self>)>(
+        kind: TokenKind,
+        callback: F,
+    );
 
     /// Apply the [`InfixParselet`] implementation associated with the given
     /// [`TokenKind`].
@@ -249,7 +242,11 @@ where
     // Push
     //==================================
 
-    fn push_leaf(&mut self, token: TokenRef<'i>) -> Self::Node;
+    fn push_leaf(&mut self, token: TokenRef<'i>);
+
+    fn push_trivia(&mut self, trivia: TokenRef<'i>);
+
+    fn push_trivia_seq(&mut self, seq: TriviaSeqRef<'i>);
 
     /// `name_` or `name_head`
     fn push_compound_pattern_blank(
@@ -257,10 +254,10 @@ where
         op: CompoundOperator,
         symbol: TokenRef<'i>,
         under: UnderParseData<'i>,
-    ) -> Self::Node;
+    );
 
     /// `_` or `_head`
-    fn push_compound_blank(&mut self, under: UnderParseData<'i>) -> Self::Node;
+    fn push_compound_blank(&mut self, under: UnderParseData<'i>);
 
     fn push_compound_pattern_optional(
         &mut self,
@@ -268,7 +265,7 @@ where
         op: CompoundOperator,
         symbol: TokenRef<'i>,
         under_dot: TokenRef<'i>,
-    ) -> Self::Node;
+    );
 
     // TODO(cleanup): Same signature as push_compound_pattern_optional?
     fn push_compound_slot(
@@ -277,7 +274,7 @@ where
         op: CompoundOperator,
         hash: TokenRef<'i>,
         arg: TokenRef<'i>,
-    ) -> Self::Node;
+    );
 
     // TODO(cleanup): Same signature as push_compound_pattern_optional and push_compound_slot?
     fn push_compound_out(
@@ -286,7 +283,7 @@ where
         op: CompoundOperator,
         percent: TokenRef<'i>,
         integer: TokenRef<'i>,
-    ) -> Self::Node;
+    );
 
     // TODO(cleanup): Better name
     fn push_prefix_get(
@@ -296,7 +293,7 @@ where
         op_token: TokenRef<'i>,
         trivia: TriviaSeqRef<'i>,
         stringify_token: TokenRef<'i>,
-    ) -> Self::Node;
+    );
 
     //==================================
     // Reduce
@@ -306,136 +303,58 @@ where
     // Reduce normal
     //----------------------------------
 
-    fn reduce_prefix(
-        &mut self,
-        op: PrefixOperator,
-        op_token: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
-        operand: Self::Node,
-    ) -> Self::Node;
+    fn reduce_prefix(&mut self, op: PrefixOperator);
 
-    fn begin_infix(
-        &mut self,
-        op: InfixOperator,
-        first_node: Self::Node,
-    ) -> Self::InfixParseBuilder;
+    fn reduce_infix(&mut self, op: InfixOperator);
 
-    fn reduce_postfix(
-        &mut self,
-        op: PostfixOperator,
-        operand: Self::Node,
-        trivia: TriviaSeqRef<'i>,
-        op_tok: TokenRef<'i>,
-    ) -> Self::Node;
+    fn reduce_postfix(&mut self, op: PostfixOperator, op_tok: TokenRef<'i>);
 
-    fn reduce_binary(
-        &mut self,
-        op: BinaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        rhs_node: Self::Node,
-    ) -> Self::Node;
+    fn reduce_binary(&mut self, op: BinaryOperator);
 
-    fn reduce_binary_unset(
-        &mut self,
-        op: BinaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        dot_token: TokenRef<'i>,
-    ) -> Self::Node;
+    fn reduce_ternary(&mut self, op: TernaryOperator);
 
-    fn reduce_ternary(
+    fn reduce_ternary_tag_set(
         &mut self,
         op: TernaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
-        second_op_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
-        rhs_node: Self::Node,
-    ) -> Self::Node;
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+    );
 
     fn reduce_ternary_tag_unset(
         &mut self,
         // TODO(cleanup): Always the same operator?
         op: TernaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        slash_colon_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
-        equal_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
-        dot_token: TokenRef<'i>,
-    ) -> Self::Node;
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+        tok_dot: TokenRef<'i>,
+    );
 
-    fn reduce_prefix_binary(
-        &mut self,
-        op: PrefixBinaryOperator,
-        prefix_op_token: TokenRef<'i>,
-        trivia1: TriviaSeqRef<'i>,
-        lhs_node: Self::Node,
-        trivia2: TriviaSeqRef<'i>,
-        rhs_node: Self::Node,
-    ) -> Self::Node;
+    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator);
 
-    fn reduce_group(
-        &mut self,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
-        closer_tok: TokenRef<'i>,
-    ) -> Self::Node;
+    fn reduce_group(&mut self, op: GroupOperator);
 
-    fn reduce_call(
-        &mut self,
-        head: Self::Node,
-        head_trivia: TriviaSeqRef<'i>,
-        group: Self::Node,
-    ) -> Self::Node;
+    fn reduce_call(&mut self);
 
     //----------------------------------
     // Reduce errors
     //----------------------------------
 
-    fn reduce_syntax_error(
-        &mut self,
-        data: SyntaxErrorData<'i, Self::Node>,
-    ) -> Self::Node;
+    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind);
 
     fn reduce_unterminated_group(
         &mut self,
+        op: GroupOperator,
         input: &'i str,
         tab_width: usize,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
-    ) -> Self::Node;
+    );
 
-    fn reduce_group_missing_closer(
-        &mut self,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-    ) -> Self::Node;
+    fn reduce_group_missing_closer(&mut self, op: GroupOperator);
 
     //==================================
     // Pop
     //==================================
 
-    fn finish_top_level_trivia(&mut self, trivia: TokenRef<'i>);
-
-    fn finish_top_level_expr(&mut self, node: Self::Node);
+    fn finish_top_level_expr(&mut self);
 
     //==================================
     // Properties
@@ -446,37 +365,9 @@ where
 
     fn is_quiescent(&self) -> bool;
 
-    fn check_colon_lhs(&self, lhs: &Self::Node) -> ColonLHS;
+    fn check_colon_lhs(&self) -> ColonLHS;
 
-    fn top_node_is_span(&self, top_node: &Self::Node) -> bool;
-}
-
-/// Build up an infix parse.
-///
-/// ```text
-/// a + b + c
-/// a[ + b][ + c]
-/// [a +][ b +] c
-/// ```
-pub(crate) trait InfixParseBuilder<'i, B: ParseBuilder<'i> + 'i> {
-    fn add(
-        &mut self,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        operand: B::Node,
-    );
-
-    /// Get the last parsed node contained in this infix expression.
-    ///
-    /// Needed specially to support custom context-dependent
-    /// [`SemiSemiParselet::process_implicit_times()`][self::parselet::SemiSemiParselet::process_implicit_times]
-    /// implementation.
-    fn last_node(&self) -> &B::Node;
-
-    /// Parselet implementations should not call this method directly, and
-    /// instead call [`ParserSession::reduce_infix()`].
-    fn finish(self) -> B::Node;
+    fn top_node_is_span(&self) -> bool;
 }
 
 pub(crate) enum UnderParseData<'i> {
@@ -490,109 +381,6 @@ pub(crate) enum UnderParseData<'i> {
     },
 }
 
-/// A syntax error encountered during parsing.
-///
-/// Values of this type are passed to [`ParseBuilder::reduce_syntax_error()`]
-/// by the parser.
-#[derive(Debug)]
-pub(crate) enum SyntaxErrorData<'i, N> {
-    /// E.g. `5:_` -- occurs when a symbol is required to appear as the
-    /// left-hand operand of Pattern (`:`).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use wolfram_parser::{
-    /// #     parse_cst, NodeSeq,
-    /// #     parse::SyntaxErrorKind,
-    /// #     cst::{Cst, SyntaxErrorNode},
-    /// #     macros::token
-    /// # };
-    /// assert_eq!(
-    ///     parse_cst("5:_", &Default::default()).syntax,
-    ///     Cst::SyntaxError(SyntaxErrorNode {
-    ///         err: SyntaxErrorKind::ExpectedSymbol,
-    ///         children: NodeSeq(vec![
-    ///             Cst::Token(token!(Integer, "5", 1:1-2)),
-    ///             Cst::Token(token!(Colon, ":", 1:2-3)),
-    ///             Cst::Token(token!(Under, "_", 1:3-4))
-    ///         ])
-    ///     })
-    /// );
-    /// ```
-    ExpectedSymbol {
-        lhs_node: N,
-        trivia1: TriviaSeqRef<'i>,
-        tok_in: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        rhs_node: N,
-    },
-
-    /// E.g. `a /: b ;` -- occurs when a `=`, `:=`, or `=.` was expected after
-    /// the 2nd operand in a `/:` ternary expression.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use wolfram_parser::{
-    /// #     parse_cst, NodeSeq,
-    /// #     parse::{SyntaxErrorKind, operators::InfixOperator},
-    /// #     cst::{Cst, SyntaxErrorNode, OperatorNode, InfixNode},
-    /// #     macros::token
-    /// # };
-    /// assert_eq!(
-    ///     parse_cst("a /: b ;", &Default::default()).syntax,
-    ///     Cst::Infix(InfixNode(OperatorNode {
-    ///         op: InfixOperator::CompoundExpression,
-    ///         children: NodeSeq(vec![
-    ///             Cst::SyntaxError(SyntaxErrorNode {
-    ///                 err: SyntaxErrorKind::ExpectedSet,
-    ///                 // FIXME: This should include the "a /: b" portion
-    ///                 //        of the input.
-    ///                 children: NodeSeq(vec![])
-    ///             }),
-    ///             Cst::Token(token!(Whitespace, " ", 1:7-8)),
-    ///             Cst::Token(token!(Semi, ";", 1:8-9)),
-    ///             Cst::Token(token!(Fake_ImplicitNull, "", 1:9-9)),
-    ///         ])
-    ///     }))
-    /// );
-    /// ```
-    ExpectedSet,
-
-    /// E.g. `a~f` -- occurs when a second `~` was expected after the 2nd
-    /// operand in a ternary Infix expression.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use wolfram_parser::{
-    /// #     parse_cst, NodeSeq,
-    /// #     parse::SyntaxErrorKind,
-    /// #     cst::{Cst, SyntaxErrorNode},
-    /// #     macros::token
-    /// # };
-    /// assert_eq!(
-    ///     parse_cst("a~f", &Default::default()).syntax,
-    ///     Cst::SyntaxError(SyntaxErrorNode {
-    ///         err: SyntaxErrorKind::ExpectedTilde,
-    ///         children: NodeSeq(vec![
-    ///             Cst::Token(token!(Symbol, "a", 1:1-2)),
-    ///             Cst::Token(token!(Tilde, "~", 1:2-3)),
-    ///             Cst::Token(token!(Symbol, "f", 1:3-4))
-    ///         ])
-    ///      })
-    /// );
-    /// ```
-    ExpectedTilde {
-        lhs_node: N,
-        trivia1: TriviaSeqRef<'i>,
-        first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        middle_node: N,
-    },
-}
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum SyntaxErrorKind {
     ExpectedSymbol,
@@ -600,16 +388,55 @@ pub enum SyntaxErrorKind {
     ExpectedTilde,
 }
 
-#[derive(Debug)]
 pub(crate) enum ColonLHS {
     Pattern,
     Optional,
     Error,
 }
 
-impl Context {
+impl<'i, B: 'i> Context<'i, B> {
     pub fn new(prec: Option<Precedence>) -> Self {
-        Context { prec }
+        Context {
+            continue_parse: None,
+            prec,
+        }
+    }
+
+    fn init_callback(&mut self, func: fn(&mut ParserSession<'i, B>)) {
+        debug_assert!(matches!(self.continue_parse, None));
+
+        self.continue_parse = Some(Box::new(func));
+    }
+
+    fn init_callback_with_state<F: FnOnce(&mut ParserSession<'i, B>) + 'i>(
+        &mut self,
+        func: F,
+    ) {
+        debug_assert!(matches!(self.continue_parse, None));
+
+        self.continue_parse = Some(Box::new(func))
+    }
+
+    pub(crate) fn init_identity(&mut self) {
+        debug_assert!(matches!(self.continue_parse, None));
+
+        self.continue_parse = None;
+    }
+
+    fn set_callback(&mut self, func: fn(&mut ParserSession<'i, B>)) {
+        self.continue_parse = Some(Box::new(func));
+    }
+
+    fn set_callback_with_state<F: FnOnce(&mut ParserSession<'i, B>) + 'i>(
+        &mut self,
+        func: F,
+    ) {
+        // TODO: Should `f` already have some value in this case?
+        self.continue_parse = Some(Box::new(func));
+    }
+
+    pub(crate) fn is_identity(&self) -> bool {
+        self.continue_parse.is_none()
     }
 
     pub(crate) fn set_precedence<P: Into<Option<Precedence>>>(
@@ -652,50 +479,40 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     /// Lookup and apply the [`PrefixParselet`] implementation associated
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
-    pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) -> B::Node {
+    pub(crate) fn parse_prefix(&mut self, token: TokenRef<'i>) {
         B::with_prefix_parselet(token.tok, |parselet| {
             // MUSTTAIL
-            parselet.parse_prefix(self, token)
-        })
+            parselet.parse_prefix(self, token);
+        });
     }
 
     /// Lookup and apply the [`InfixParselet`] implementation associated
     /// with the [`TokenKind`] of `token`.
     // TODO(cleanup): Rename to avoid ambiguity with PrefixParselet::parse_prefix()?
-    ///
-    /// `node` is the previous node that just finished parsing.
-    fn parse_infix(
-        &mut self,
-        finished: B::Node,
-        trivia1: TriviaSeqRef<'i>,
-        token: TokenRef<'i>,
-    ) -> B::Node {
+    fn parse_infix(&mut self, token: TokenRef<'i>) {
         B::with_infix_parselet(token.tok, |parselet| {
             // MUSTTAIL
-            parselet.parse_infix(self, finished, trivia1, token)
-        })
+            parselet.parse_infix(self, token)
+        });
     }
 
     fn do_process_implicit_times(
         &mut self,
-        prev_node: &B::Node,
         token: TokenRef<'i>,
     ) -> TokenRef<'i> {
         B::with_infix_parselet(token.tok, |parselet| {
-            parselet.process_implicit_times(self, prev_node, token)
+            parselet.process_implicit_times(self, token)
         })
     }
 
-    pub(crate) fn push_and_climb(&mut self, leaf: TokenRef<'i>) -> B::Node {
-        let node = self.push_leaf(leaf);
-
-        self.parse_climb(node)
+    pub(crate) fn push_and_climb(&mut self, leaf: TokenRef<'i>) {
+        self.builder.push_leaf(leaf);
+        self.parse_climb();
     }
 
     /// A complete sub-expression was just finished being parsed, so "climb" up
     /// by parsing the next "infix" token in the input.
-    #[must_use]
-    pub(crate) fn parse_climb(&mut self, finished: B::Node) -> B::Node {
+    pub(crate) fn parse_climb(&mut self) {
         //
         // Check isAbort() inside loops
         //
@@ -707,7 +524,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         let (trivia1, mut token) =
             self.current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-        token = self.do_process_implicit_times(&finished, token);
+        token = self.do_process_implicit_times(token);
 
         let TokenPrecedence = B::with_infix_parselet(token.tok, |parselet| {
             parselet.getPrecedence(self)
@@ -723,13 +540,35 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         if Precedence::greater(self.top_precedence(), TokenPrecedence) {
             trivia1.reset(&mut self.tokenizer);
 
-            return finished;
+            // MUSTTAIL
+            return self.try_continue();
         }
 
         self.push_context(TokenPrecedence);
 
+        self.push_trivia_seq(trivia1);
+
         // MUSTTAIL
-        return self.parse_infix(finished, trivia1, token);
+        return self.parse_infix(token);
+    }
+
+    /// Apply the continuation function from the top context to
+    /// attempt to continue parsing.
+    pub(crate) fn try_continue(&mut self) {
+        if self.context_stack.is_empty() {
+            // no call needed here
+            return;
+        }
+
+        let ctxt: &mut Context<_> = self.top_context();
+
+        let Some(continue_parse) =
+            std::mem::replace(&mut ctxt.continue_parse, None)
+        else {
+            return;
+        };
+
+        (continue_parse)(self)
     }
 
     //======================================
@@ -738,6 +577,26 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     pub(crate) fn skip(&mut self, token: TokenRef<'i>) {
         token.skip(&mut self.tokenizer)
+    }
+
+    /// Get the current token, eating trivia tokens.
+    ///
+    /// If the current token is already a non-trivia token, it will be returned.
+    ///
+    /// Otherwise, repeatedly eat the current token and append it to
+    /// [`ParserSession::node_stack`] until the current token is no longer a
+    /// trivia token.
+    ///
+    /// This function always returns a non-trivia token
+    /// ([`TokenKind::isTrivia()`] is false).
+    pub(crate) fn current_token_eat_trivia(&mut self) -> TokenRef<'i> {
+        let mut tok = self.tokenizer.peek_token();
+
+        self.eat_trivia(&mut tok);
+
+        debug_assert!(!tok.tok.isTrivia());
+
+        tok
     }
 
     /// Get the current token, eating trivia tokens.
@@ -789,6 +648,32 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         (TriviaSeq(trivia), token)
     }
 
+    pub(crate) fn current_token_stringify_as_file_eat_trivia(
+        &mut self,
+    ) -> TokenRef<'i> {
+        let mut tok =
+            Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
+
+        self.eat_trivia_stringify_as_file(&mut tok);
+
+        debug_assert!(!tok.tok.isTrivia());
+
+        tok
+    }
+
+    pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines(
+        &mut self,
+    ) -> TokenRef<'i> {
+        let mut tok = self.tokenizer.peek_token();
+
+        //
+        // CompoundExpression should not cross toplevel newlines
+        //
+        self.eat_trivia_but_not_toplevel_newlines(&mut tok);
+
+        tok
+    }
+
     pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines_into(
         &mut self,
     ) -> (TriviaSeqRef<'i>, TokenRef<'i>) {
@@ -810,259 +695,154 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         (trivia, tok)
     }
 
+    //----------------------------------
+    // Eat trivia helpers
+    //----------------------------------
+    // TODO(cleanup): Inline these functions into their currently only callsite?
+
+    fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
+        while token.tok.isTrivia() {
+            self.builder.push_trivia(*token);
+
+            token.skip(&mut self.tokenizer);
+
+            *token = self.tokenizer.peek_token();
+        }
+    }
+
+    fn eat_trivia_stringify_as_file(&mut self, token: &mut TokenRef<'i>) {
+        while token.tok.isTrivia() {
+            self.builder.push_trivia(*token);
+
+            token.skip(&mut self.tokenizer);
+
+            *token =
+                Tokenizer_currentToken_stringifyAsFile(&mut self.tokenizer);
+        }
+    }
+
+    fn eat_trivia_but_not_toplevel_newlines(
+        &mut self,
+        token: &mut TokenRef<'i>,
+    ) {
+        while token.tok.isTriviaButNotToplevelNewline() {
+            self.builder.push_trivia(*token);
+
+            token.skip(&mut self.tokenizer);
+
+            *token = self.tokenizer.peek_token();
+        }
+    }
+
     //==================================
     // ParseBuilder method wrappers
     //==================================
 
-    fn reduce_prefix(
-        &mut self,
-        op: PrefixOperator,
-        op_token: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
-        operand: B::Node,
-    ) -> B::Node {
+    fn reduce_prefix(&mut self, op: PrefixOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_prefix(op, op_token, trivia, operand)
+        self.builder.reduce_prefix(op);
     }
 
-    fn begin_infix(
-        &mut self,
-        op: InfixOperator,
-        first_node: B::Node,
-    ) -> B::InfixParseBuilder {
-        self.builder.begin_infix(op, first_node)
-    }
-
-    fn reduce_infix(&mut self, builder: B::InfixParseBuilder) -> B::Node {
+    fn reduce_infix(&mut self, op: InfixOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        builder.finish()
+        self.builder.reduce_infix(op);
     }
 
-    fn reduce_postfix(
-        &mut self,
-        op: PostfixOperator,
-        operand: B::Node,
-        trivia: TriviaSeqRef<'i>,
-        op_tok: TokenRef<'i>,
-    ) -> B::Node {
+    fn reduce_postfix(&mut self, op: PostfixOperator, op_tok: TokenRef<'i>) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_postfix(op, operand, trivia, op_tok)
+        self.builder.reduce_postfix(op, op_tok);
     }
 
-    fn reduce_binary(
-        &mut self,
-        op: BinaryOperator,
-        lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        rhs_node: B::Node,
-    ) -> B::Node {
+    fn reduce_binary(&mut self, op: BinaryOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder
-            .reduce_binary(op, lhs_node, trivia1, op_token, trivia2, rhs_node)
+        self.builder.reduce_binary(op);
     }
 
-    fn reduce_binary_unset(
-        &mut self,
-        op: BinaryOperator,
-        lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        dot_token: TokenRef<'i>,
-    ) -> B::Node {
-        debug_assert_eq!(op, BinaryOperator::Unset);
-        debug_assert_eq!(dot_token.tok, TokenKind::Dot);
-
+    fn reduce_ternary(&mut self, op: TernaryOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_binary_unset(
-            op, lhs_node, trivia1, op_token, trivia2, dot_token,
-        )
+        self.builder.reduce_ternary(op);
     }
 
-    // a /: b := c
-    fn reduce_ternary(
+    fn reduce_ternary_tag_set(
         &mut self,
         op: TernaryOperator,
-        lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
-        first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        middle_node: B::Node,
-        trivia3: TriviaSeqRef<'i>,
-        second_op_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
-        rhs_node: B::Node,
-    ) -> B::Node {
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+    ) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_ternary(
-            op,
-            lhs_node,
-            trivia1,
-            first_op_token,
-            trivia2,
-            middle_node,
-            trivia3,
-            second_op_token,
-            trivia4,
-            rhs_node,
-        )
+        self.builder.reduce_ternary_tag_set(op, tok_equal, trivia)
     }
 
     fn reduce_ternary_tag_unset(
         &mut self,
         op: TernaryOperator,
-        lhs_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
-        slash_colon_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        middle_node: B::Node,
-        trivia3: TriviaSeqRef<'i>,
-        equal_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
-        dot_token: TokenRef<'i>,
-    ) -> B::Node {
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+        tok_dot: TokenRef<'i>,
+    ) {
         let _ = self.context_stack.pop().unwrap();
 
-        debug_assert_eq!(op, TernaryOperator::TagUnset);
-
-        self.builder.reduce_ternary_tag_unset(
-            op,
-            lhs_node,
-            trivia1,
-            slash_colon_token,
-            trivia2,
-            middle_node,
-            trivia3,
-            equal_token,
-            trivia4,
-            dot_token,
-        )
+        self.builder
+            .reduce_ternary_tag_unset(op, tok_equal, trivia, tok_dot)
     }
 
-    fn reduce_prefix_binary(
-        &mut self,
-        op: PrefixBinaryOperator,
-        prefix_op_token: TokenRef<'i>,
-        trivia1: TriviaSeqRef<'i>,
-        lhs_node: B::Node,
-        trivia2: TriviaSeqRef<'i>,
-        rhs_node: B::Node,
-    ) -> B::Node {
+    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_prefix_binary(
-            op,
-            prefix_op_token,
-            trivia1,
-            lhs_node,
-            trivia2,
-            rhs_node,
-        )
+        self.builder.reduce_prefix_binary(op);
     }
 
-    fn reduce_group(
-        &mut self,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, B::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
-        closer_tok: TokenRef<'i>,
-    ) -> B::Node {
+    fn reduce_group(&mut self, op: GroupOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.pop_group();
-
-        self.builder.reduce_group(
-            op,
-            opener_tok,
-            group_children,
-            trailing_trivia,
-            closer_tok,
-        )
+        self.builder.reduce_group(op);
     }
 
-    fn reduce_call(
-        &mut self,
-        head: B::Node,
-        head_trivia: TriviaSeqRef<'i>,
-        group: B::Node,
-    ) -> B::Node {
+    fn reduce_call(&mut self) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_call(head, head_trivia, group)
+        self.builder.reduce_call();
     }
 
     //----------------------------------
     // Reduce errors
     //----------------------------------
 
-    fn reduce_syntax_error(
-        &mut self,
-        data: SyntaxErrorData<'i, B::Node>,
-    ) -> B::Node {
+    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.builder.reduce_syntax_error(data)
+        self.builder.reduce_syntax_error(kind);
     }
 
     fn reduce_unterminated_group(
         &mut self,
         op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, B::Node)>,
-        trailing_trivia: TriviaSeqRef<'i>,
-    ) -> B::Node {
+        input: &'i str,
+        tab_width: usize,
+    ) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.pop_group();
-
-        // The input MUST be valid UTF-8, because we only reduce an *unterminated*
-        // group node if we've read an EOF (which is how we know it must be
-        // unterminated: we've read all the input).
-        let input = std::str::from_utf8(self.input()).expect(
-            "cannot reparse unterminated group node: input is not valid UTF-8",
-        );
-
-        let tab_width = self.tokenizer.tab_width as usize;
-
-        self.builder.reduce_unterminated_group(
-            input,
-            tab_width,
-            op,
-            opener_tok,
-            group_children,
-            trailing_trivia,
-        )
+        self.builder.reduce_unterminated_group(op, input, tab_width);
     }
 
-    fn reduce_group_missing_closer(
-        &mut self,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, B::Node)>,
-    ) -> B::Node {
+    fn reduce_group_missing_closer(&mut self, op: GroupOperator) {
         let _ = self.context_stack.pop().unwrap();
 
-        self.pop_group();
-
-        self.builder
-            .reduce_group_missing_closer(op, opener_tok, group_children)
+        self.builder.reduce_group_missing_closer(op);
     }
 
     //----------------------------------
     // Properties
     //----------------------------------
 
-    fn check_colon_lhs(&self, lhs: &B::Node) -> ColonLHS {
-        self.builder.check_colon_lhs(lhs)
+    fn check_colon_lhs(&self) -> ColonLHS {
+        self.builder.check_colon_lhs()
     }
 
     //==================================
@@ -1076,7 +856,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     pub(crate) fn push_context<'s, P: Into<Option<Precedence>>>(
         &'s mut self,
         prec: P,
-    ) -> &'s mut Context {
+    ) -> &'s mut Context<'i, B> {
         let prec = prec.into();
 
         let () = self.builder.begin_context();
@@ -1086,7 +866,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
         return self.context_stack.last_mut().unwrap();
     }
 
-    fn top_context<'s>(&'s mut self) -> &'s mut Context {
+    fn top_context<'s>(&'s mut self) -> &'s mut Context<'i, B> {
         return self
             .context_stack
             .last_mut()
@@ -1117,23 +897,18 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
     // Node stack management
     //==================================
 
-    // TODO(cleanup): Rename
-    #[must_use]
-    pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) -> B::Node {
-        self.builder.push_leaf(token)
+    pub(crate) fn push_leaf(&mut self, token: TokenRef<'i>) {
+        self.builder.push_leaf(token);
     }
 
-    // TODO(cleanup): Rename
-    #[must_use]
-    pub(crate) fn push_leaf_and_next(
-        &mut self,
-        token: TokenRef<'i>,
-    ) -> B::Node {
-        let node = self.push_leaf(token);
+    pub(crate) fn push_leaf_and_next(&mut self, token: TokenRef<'i>) {
+        self.builder.push_leaf(token);
 
         token.skip(&mut self.tokenizer);
+    }
 
-        node
+    pub(crate) fn push_trivia_seq(&mut self, seq: TriviaSeqRef<'i>) {
+        self.builder.push_trivia_seq(seq);
     }
 
     //==================================
@@ -1189,11 +964,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> ParserSession<'i, B> {
 
     pub fn is_quiescent(&mut self) -> bool {
         assert!(self.builder.is_quiescent());
-        assert!(
-            self.context_stack.is_empty(),
-            "expected empty context stack, got: {:#?}",
-            self.context_stack
-        );
+        assert!(self.context_stack.is_empty());
         assert!(self.tokenizer.GroupStack.is_empty());
 
         return true;
@@ -1235,9 +1006,11 @@ impl<'i> TriviaSeq<TokenStr<'i>> {
 // Format Impls
 //======================================
 
-impl Debug for Context {
+impl<'i, B> Debug for Context<'i, B> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Context { prec } = self;
-        f.debug_struct("Context").field("prec", prec).finish()
+        f.debug_struct("Context")
+            .field("continue_parse", &"<continuation function>")
+            .field("prec", &self.prec)
+            .finish()
     }
 }

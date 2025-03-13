@@ -625,7 +625,6 @@ pub(crate) fn most_slice<T>(list: &[T]) -> Option<&[T]> {
     Some(&list[..list.len() - 1])
 }
 
-#[allow(dead_code)]
 pub(crate) fn insert_before_last<T>(
     mut list: Vec<T>,
     elems: impl Iterator<Item = T>,

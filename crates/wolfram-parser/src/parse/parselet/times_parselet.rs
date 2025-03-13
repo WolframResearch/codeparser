@@ -10,28 +10,24 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TimesParselet {
     fn parse_infix(
         &self,
         session: &mut ParserSession<'i, B>,
-        first_node: B::Node,
-        trivia1: TriviaSeqRef<'i>,
         tok_in: TokenRef<'i>,
-    ) -> B::Node {
+    ) {
         panic_if_aborted!();
 
-        let mut infix_builder =
-            session.begin_infix(InfixOperator::Times, first_node);
-
-        session.skip(tok_in);
+        session.push_leaf_and_next(tok_in);
 
         //
         // Unroll 1 iteration of the loop because we know that tok_in has already been read
         //
 
-        let (trivia2, tok2) = session.current_token_eat_trivia_into();
+        let tok2 = session.current_token_eat_trivia();
 
-        let second_node = session.parse_prefix(tok2);
+        let ctxt = session.top_context();
+        ctxt.init_identity();
 
-        infix_builder.add(trivia1, tok_in, trivia2, second_node);
+        session.parse_prefix(tok2);
 
-        return TimesParselet::parse_loop(session, infix_builder);
+        return TimesParselet::parse_loop(session);
     }
 
     fn getOp(&self) -> InfixParseletOperator {
@@ -46,8 +42,7 @@ impl<'i, B: ParseBuilder<'i> + 'i> InfixParselet<'i, B> for TimesParselet {
 impl TimesParselet {
     fn parse_loop<'i, B: ParseBuilder<'i> + 'i>(
         session: &mut ParserSession<'i, B>,
-        mut infix_builder: B::InfixParseBuilder,
-    ) -> B::Node {
+    ) {
         loop {
             panic_if_aborted!();
 
@@ -55,8 +50,7 @@ impl TimesParselet {
             let (mut trivia1, mut tok1) =
                 session.current_token_eat_trivia_into();
 
-            tok1 = session
-                .do_process_implicit_times(infix_builder.last_node(), tok1);
+            tok1 = session.do_process_implicit_times(tok1);
 
             if tok1.tok == TokenKind::Fake_ImplicitTimes {
                 //
@@ -70,8 +64,7 @@ impl TimesParselet {
                 (trivia1, tok1) = session
                     .current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-                tok1 = session
-                    .do_process_implicit_times(infix_builder.last_node(), tok1)
+                tok1 = session.do_process_implicit_times(tok1)
             }
 
             //
@@ -94,19 +87,22 @@ impl TimesParselet {
 
                 trivia1.reset(&mut session.tokenizer);
 
-                let node = session.reduce_infix(infix_builder);
+                session.reduce_infix(InfixOperator::Times);
 
                 // MUSTTAIL
-                return session.parse_climb(node);
+                return session.parse_climb();
             }
 
-            session.skip(tok1);
+            session.push_trivia_seq(trivia1);
 
-            let (trivia2, Tok2) = session.current_token_eat_trivia_into();
+            session.push_leaf_and_next(tok1);
 
-            let operand = session.parse_prefix(Tok2);
+            let Tok2 = session.current_token_eat_trivia();
 
-            infix_builder.add(trivia1, tok1, trivia2, operand);
+            let ctxt = session.top_context();
+            assert!(ctxt.is_identity());
+
+            session.parse_prefix(Tok2);
         } // loop
     }
 }

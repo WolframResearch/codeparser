@@ -519,6 +519,20 @@ impl<I> PrefixNode<I> {
 
         PrefixNode(OperatorNode::new(op, args))
     }
+
+    pub(crate) fn new2(
+        op: PrefixOperator,
+        tok1: Token<I>,
+        TriviaSeq(trivia): TriviaSeq<I>,
+        tok2: Token<I>,
+    ) -> Self {
+        let mut args: Vec<Cst<I>> = Vec::with_capacity(trivia.len() + 2);
+        args.push(Cst::Token(tok1));
+        args.extend(trivia.into_iter().map(Cst::Token));
+        args.push(Cst::Token(tok2));
+
+        PrefixNode(OperatorNode::new(op, NodeSeq(args)))
+    }
 }
 
 impl<I, S: TokenSource> PrefixNode<I, S> {
@@ -607,8 +621,14 @@ impl<I, S: TokenSource> TernaryNode<I, S> {
 //======================================
 
 impl<I> PostfixNode<I> {
-    pub(crate) fn new(op: PostfixOperator, args: CstSeq<I>) -> Self {
+    pub(crate) fn new(
+        op: PostfixOperator,
+        mut args: CstSeq<I>,
+        op_tok: Token<I>,
+    ) -> Self {
         incr_diagnostic!(Node_PostfixNodeCount);
+
+        args.push(Cst::Token(op_tok));
 
         PostfixNode(OperatorNode::new(op, args))
     }
@@ -735,19 +755,13 @@ impl<I, S: TokenSource> CompoundNode<I, S> {
 //======================================
 
 impl<I> CallNode<I> {
-    pub(crate) fn concrete(
-        head: Cst<I>,
-        TriviaSeq(head_trivia): TriviaSeq<I>,
-        body: CallBody<I>,
-    ) -> Self {
-        let mut head_seq = Vec::with_capacity(1 + head_trivia.len());
-        head_seq.push(head);
-        head_seq.extend(head_trivia.into_iter().map(Cst::Token));
+    pub(crate) fn concrete(head: CstSeq<I>, body: CallBody<I>) -> Self {
+        debug_assert!(!head.is_empty());
 
         incr_diagnostic!(Node_CallNodeCount);
 
         CallNode {
-            head: CallHead::Concrete(NodeSeq(head_seq)),
+            head: CallHead::Concrete(head),
             body,
         }
     }
@@ -890,7 +904,7 @@ impl BoxKind {
                 if name.context().as_str() == "System`" {
                     name.symbol_name().as_str()
                 } else {
-                    panic!("BoxKind::Other(_) must be a System` symbol, but was: {name}");
+                    todo!("PRECOMMIT")
                 }
             }, // NOTE: When adding a case here, also update from_str().
         }

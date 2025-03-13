@@ -15,25 +15,94 @@ use crate::{
         token_parselets::{
             token_kind_to_infix_parselet, token_kind_to_prefix_parselet,
         },
-        ColonLHS, InfixParseBuilder, ParseBuilder, ParserSession,
-        SyntaxErrorData, SyntaxErrorKind, TriviaSeqRef, UnderParseData,
+        ColonLHS, ParseBuilder, SyntaxErrorKind, TriviaSeqRef, UnderParseData,
     },
     tokenize::{TokenKind, TokenRef, TokenStr},
-    utils::debug_assert_matches,
+    utils::{self, debug_assert_matches},
     NodeSeq, ParseOptions,
 };
 
 #[derive(Debug)]
 pub(crate) struct ParseCst<'i> {
+    node_stack: Vec<Cst<TokenStr<'i>>>,
+    context_stack_mirror: Vec<ParseCstContext>,
     finished: Vec<Cst<TokenStr<'i>>>,
 }
 
+#[derive(Debug)]
+struct ParseCstContext {
+    /// The position in [`ParseCst.node_stack`][ParseCst::node_stack]
+    /// that marks the first node associated with this context.
+    index: usize,
+}
+
+impl<'i> ParseCst<'i> {
+    /// Pop the top context and push a new node constructed by `func`.
+    fn reduce<N, F>(&mut self, func: F)
+    where
+        N: Into<Cst<TokenStr<'i>>>,
+        F: FnOnce(CstSeq<TokenStr<'i>>) -> N,
+    {
+        let ctxt = self
+            .context_stack_mirror
+            .pop()
+            .expect("reduce: context stack is empty");
+
+        // Remove nodes associated with `ctxt` from back of node_stack
+        let nodes = Vec::from_iter(self.node_stack.drain(ctxt.index..));
+
+        debug_assert_eq!(self.node_stack.len(), ctxt.index);
+
+        // "Reduce" the nodes associated with the popped context using
+        // the provided callback.
+        let node = func(NodeSeq(nodes));
+
+        let node = node.into();
+
+        self.node_stack.push(node);
+    }
+
+    fn push_node<N>(&mut self, node: N)
+    where
+        N: Into<Cst<TokenStr<'i>>>,
+    {
+        let node = node.into();
+        self.node_stack.push(node);
+    }
+
+    fn pop_node(&mut self) -> Cst<TokenStr<'i>> {
+        debug_assert!(!self.node_stack.is_empty());
+
+        let top = self.node_stack.pop().unwrap();
+
+        return top;
+    }
+
+    #[cfg(test)]
+    pub(crate) fn top_node<'s>(&'s mut self) -> &'s mut Cst<TokenStr<'i>> {
+        assert!(!self.node_stack.is_empty());
+
+        return self.node_stack.last_mut().unwrap();
+    }
+
+    /// Returns a last-in first-out iterator over nodes in the top
+    /// context.
+    fn top_context_nodes(&self) -> impl Iterator<Item = &Cst<TokenStr<'i>>> {
+        let ctxt = self
+            .context_stack_mirror
+            .last()
+            .expect("top_context_nodes: empty context stack");
+
+        let index = ctxt.index;
+
+        // Of the nodes owned by `ctxt`, get the top (last) one that
+        // is not trivia.
+        (&self.node_stack[index..]).iter().rev()
+    }
+}
+
 impl<'i> ParseBuilder<'i> for ParseCst<'i> {
-    type Node = Cst<TokenStr<'i>>;
-
     type Output = CstSeq<TokenStr<'i>>;
-
-    type InfixParseBuilder = InfixParseCst<'i>;
 
     //==================================
     // Lifecycle
@@ -41,14 +110,16 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
     fn new_builder() -> Self {
         ParseCst {
+            node_stack: Vec::new(),
+            context_stack_mirror: Vec::new(),
             finished: Vec::new(),
         }
     }
 
-    fn with_prefix_parselet<R, F>(kind: TokenKind, callback: F) -> R
-    where
-        F: FnOnce(&dyn PrefixParselet<'i, Self>) -> R,
-    {
+    fn with_prefix_parselet<F: FnOnce(&dyn PrefixParselet<'i, Self>)>(
+        kind: TokenKind,
+        callback: F,
+    ) {
         const PREFIX_PARSELETS: [&dyn for<'ii> PrefixParselet<
             'ii,
             ParseCst<'ii>,
@@ -66,7 +137,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         let parselet = &*PREFIX_PARSELETS[usize::from(kind.id())];
 
-        callback(parselet)
+        callback(parselet);
     }
 
     fn with_infix_parselet<R, F: FnOnce(&dyn InfixParselet<'i, Self>) -> R>(
@@ -94,7 +165,14 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     }
 
     fn finish(self, input: &'i [u8], opts: &ParseOptions) -> Self::Output {
-        let ParseCst { finished } = self;
+        let ParseCst {
+            node_stack,
+            context_stack_mirror,
+            finished,
+        } = self;
+
+        debug_assert_eq!(node_stack, Vec::new());
+        debug_assert!(context_stack_mirror.is_empty());
 
         let mut exprs = NodeSeq(finished);
 
@@ -113,24 +191,47 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     // Context management
     //==================================
 
+    /// Push a new context with associated precedence value.
+    ///
+    /// The top node in the [`node_stack`][ParserSession::node_stack] is included
+    /// in the new context.
     fn begin_context<'s>(&'s mut self) {
-        // Do nothing.
+        assert!(!self.node_stack.is_empty());
+
+        let data = ParseCstContext {
+            index: self.node_stack.len() - 1,
+        };
+
+        self.context_stack_mirror.push(data);
     }
 
     fn is_quiescent(&self) -> bool {
-        let ParseCst { finished: _ } = self;
-
-        true
+        self.node_stack.is_empty()
     }
 
     //==================================
     // Push
     //==================================
 
-    fn push_leaf(&mut self, token: TokenRef<'i>) -> Self::Node {
+    fn push_leaf(&mut self, token: TokenRef<'i>) {
         debug_assert!(!token.tok.isTrivia());
 
-        Cst::Token(token)
+        self.node_stack.push(Cst::Token(token))
+    }
+
+    fn push_trivia(&mut self, token: TokenRef<'i>) {
+        debug_assert!(token.tok.isTrivia());
+
+        self.node_stack.push(Cst::Token(token))
+    }
+
+    fn push_trivia_seq(&mut self, seq: TriviaSeqRef<'i>) {
+        //
+        // Move all trivia from Seq to back of ArgsStack
+        //
+        let TriviaSeq(vec) = seq;
+
+        self.node_stack.extend(vec.into_iter().map(Cst::Token));
     }
 
     fn push_compound_pattern_blank(
@@ -138,7 +239,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: CompoundOperator,
         symbol: TokenRef<'i>,
         under: UnderParseData<'i>,
-    ) -> Self::Node {
+    ) {
         debug_assert_eq!(symbol.tok, TokenKind::Symbol);
         // debug_assert!(matches!(under.tok, TokenKind::Under | TokenKind::UnderUnder | TokenKind::UnderUnderUnder));
 
@@ -146,13 +247,13 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         let node = CompoundNode::new3(op, symbol, under);
 
-        Cst::Compound(node)
+        self.node_stack.push(Cst::Compound(node))
     }
 
-    fn push_compound_blank(&mut self, under: UnderParseData<'i>) -> Self::Node {
+    fn push_compound_blank(&mut self, under: UnderParseData<'i>) {
         let cst: Cst<_> = under.into_cst();
 
-        cst
+        self.push_node(cst);
     }
 
     fn push_compound_pattern_optional(
@@ -160,13 +261,13 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: CompoundOperator,
         symbol: TokenRef<'i>,
         under_dot: TokenRef<'i>,
-    ) -> Self::Node {
+    ) {
         debug_assert_eq!(symbol.tok, TokenKind::Symbol);
         debug_assert_eq!(under_dot.tok, TokenKind::UnderDot);
 
         let node = CompoundNode::new2(op, symbol, under_dot);
 
-        Cst::Compound(node)
+        self.node_stack.push(Cst::Compound(node));
     }
 
     fn push_compound_slot(
@@ -174,7 +275,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: CompoundOperator,
         hash: TokenRef<'i>,
         arg: TokenRef<'i>,
-    ) -> Self::Node {
+    ) {
         debug_assert_matches!(
             op,
             CompoundOperator::Slot | CompoundOperator::SlotSequence
@@ -184,7 +285,7 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
 
         let node = CompoundNode::new2(op, hash, arg);
 
-        Cst::Compound(node)
+        self.node_stack.push(Cst::Compound(node));
     }
 
     fn push_compound_out(
@@ -192,14 +293,14 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         op: CompoundOperator,
         percent: TokenRef<'i>,
         integer: TokenRef<'i>,
-    ) -> Self::Node {
+    ) {
         debug_assert_eq!(op, CompoundOperator::Out);
         debug_assert_eq!(percent.tok, TokenKind::Percent);
         debug_assert_matches!(integer.tok, TokenKind::Integer);
 
         let node = CompoundNode::new2(op, percent, integer);
 
-        Cst::Compound(node)
+        self.node_stack.push(Cst::Compound(node));
     }
 
     fn push_prefix_get(
@@ -208,218 +309,86 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         tok1: TokenRef<'i>,
         trivia: TriviaSeqRef<'i>,
         tok2: TokenRef<'i>,
-    ) -> Self::Node {
+    ) {
         debug_assert_eq!(op, PrefixOperator::Get);
 
-        let mut children = Vec::with_capacity(trivia.0.len() + 2);
-        children.push(Cst::Token(tok1));
-        children.extend(trivia.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(tok2));
+        let node = PrefixNode::new2(op, tok1, trivia, tok2);
 
-        Cst::Prefix(PrefixNode::new(op, NodeSeq(children)))
+        self.node_stack.push(Cst::Prefix(node));
     }
 
     //==================================
     // Reduce
     //==================================
 
-    fn reduce_prefix(
-        &mut self,
-        op: PrefixOperator,
-        op_token: TokenRef<'i>,
-        trivia: TriviaSeqRef<'i>,
-        operand: Self::Node,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(Cst::Token(op_token));
-        children.extend(trivia.0.into_iter().map(Cst::Token));
-        children.push(operand);
-
-        Cst::Prefix(PrefixNode::new(op, NodeSeq(children)))
+    fn reduce_prefix(&mut self, op: PrefixOperator) {
+        self.reduce(|ctx| PrefixNode::new(op, ctx))
     }
 
-    fn begin_infix(
-        &mut self,
-        op: InfixOperator,
-        first_node: Self::Node,
-    ) -> Self::InfixParseBuilder {
-        // TODO(optimize): Use a single Vec allocation for efficiency?
-        InfixParseCst {
-            op,
-            children: vec![first_node],
-        }
+    fn reduce_infix(&mut self, op: InfixOperator) {
+        self.reduce(|ctx| InfixNode::new(op, ctx));
     }
 
-    fn reduce_postfix(
-        &mut self,
-        op: PostfixOperator,
-        operand: Self::Node,
-        trivia: TriviaSeqRef<'i>,
-        op_tok: TokenRef<'i>,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(operand);
-        children.extend(trivia.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(op_tok));
-
-        Cst::Postfix(PostfixNode::new(op, NodeSeq(children)))
+    fn reduce_postfix(&mut self, op: PostfixOperator, op_tok: TokenRef<'i>) {
+        self.reduce(|ctx| PostfixNode::new(op, ctx, op_tok));
     }
 
-    fn reduce_binary(
-        &mut self,
-        op: BinaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        rhs_node: Self::Node,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
-        children.push(rhs_node);
-
-        Cst::Binary(BinaryNode::new(op, NodeSeq(children)))
+    fn reduce_binary(&mut self, op: BinaryOperator) {
+        self.reduce(|ctx| BinaryNode::new(op, ctx))
     }
 
-    /// Special-case alternative to [`reduce_binary()`][ParseBuilder] for
-    /// `Unset`.
-    ///
-    /// `foo[bar] =.` is binary-like, but the RHS is the syntax `.`,
-    /// not a normal arbitrary expression operand.
-    fn reduce_binary_unset(
-        &mut self,
-        op: BinaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        dot_token: TokenRef<'i>,
-    ) -> Self::Node {
-        debug_assert_eq!(op, BinaryOperator::Unset);
-        debug_assert_eq!(dot_token.tok, TokenKind::Dot);
-
-        let mut children = Vec::new();
-        children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(dot_token));
-
-        Cst::Binary(BinaryNode::new(op, NodeSeq(children)))
+    fn reduce_ternary(&mut self, op: TernaryOperator) {
+        self.reduce(|ctx| TernaryNode::new(op, ctx))
     }
 
-    fn reduce_ternary(
+    fn reduce_ternary_tag_set(
         &mut self,
         op: TernaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        first_op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
-        second_op_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
-        rhs_node: Self::Node,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(first_op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
-        children.push(middle_node);
-        children.extend(trivia3.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(second_op_token));
-        children.extend(trivia4.0.into_iter().map(Cst::Token));
-        children.push(rhs_node);
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+    ) {
+        debug_assert_eq!(tok_equal.tok, TokenKind::Equal);
 
-        Cst::Ternary(TernaryNode::new(op, NodeSeq(children)))
+        self.reduce(|NodeSeq(mut ctx)| {
+            ctx = utils::insert_before_last(
+                ctx,
+                std::iter::once(Cst::Token(tok_equal))
+                    .chain(trivia.0.into_iter().map(Cst::Token)),
+            );
+            TernaryNode::new(op, NodeSeq(ctx))
+        })
     }
 
-    /// Special-case alternative to [`reduce_ternary()`][ParseBuilder] for
-    /// `TagUnset`.
-    ///
-    /// `bar /: foo[bar] =.` is ternary-like, but the RHS is the syntax `.`,
-    /// not a normal arbitrary expression operand.
     fn reduce_ternary_tag_unset(
         &mut self,
         // TODO(cleanup): Always the same operator?
         op: TernaryOperator,
-        lhs_node: Self::Node,
-        trivia1: TriviaSeqRef<'i>,
-        slash_colon_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        middle_node: Self::Node,
-        trivia3: TriviaSeqRef<'i>,
-        equal_token: TokenRef<'i>,
-        trivia4: TriviaSeqRef<'i>,
-        dot_token: TokenRef<'i>,
-    ) -> Self::Node {
-        debug_assert_eq!(slash_colon_token.tok, TokenKind::SlashColon);
-        debug_assert_eq!(equal_token.tok, TokenKind::Equal);
-        debug_assert_eq!(dot_token.tok, TokenKind::Dot);
+        tok_equal: TokenRef<'i>,
+        trivia: TriviaSeqRef<'i>,
+        tok_dot: TokenRef<'i>,
+    ) {
+        debug_assert_eq!(tok_equal.tok, TokenKind::Equal);
+        debug_assert_eq!(tok_dot.tok, TokenKind::Dot);
 
-        let mut children = Vec::new();
-        children.push(lhs_node);
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(slash_colon_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
-        children.push(middle_node);
-        children.extend(trivia3.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(equal_token));
-        children.extend(trivia4.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(dot_token));
-
-        Cst::Ternary(TernaryNode::new(op, NodeSeq(children)))
+        self.reduce(|mut ctx| {
+            ctx.push(Cst::Token(tok_equal));
+            ctx.0.extend(trivia.0.into_iter().map(Cst::Token));
+            ctx.push(Cst::Token(tok_dot));
+            TernaryNode::new(op, ctx)
+        })
     }
 
-    fn reduce_prefix_binary(
-        &mut self,
-        op: PrefixBinaryOperator,
-        prefix_op_token: TokenRef<'i>,
-        trivia1: TriviaSeqRef<'i>,
-        lhs_node: Self::Node,
-        trivia2: TriviaSeqRef<'i>,
-        rhs_node: Self::Node,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(Cst::Token(prefix_op_token));
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
-        children.push(lhs_node);
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
-        children.push(rhs_node);
-
-        Cst::PrefixBinary(PrefixBinaryNode::new(op, NodeSeq(children)))
+    fn reduce_prefix_binary(&mut self, op: PrefixBinaryOperator) {
+        self.reduce(|ctx| PrefixBinaryNode::new(op, ctx))
     }
 
-    fn reduce_group(
-        &mut self,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        TriviaSeq(trailing_trivia): TriviaSeqRef<'i>,
-        closer_tok: TokenRef<'i>,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(Cst::Token(opener_tok));
-        for (TriviaSeq(trivia), node) in group_children {
-            children.extend(trivia.into_iter().map(Cst::Token));
-            children.push(node);
-        }
-        children.extend(trailing_trivia.into_iter().map(Cst::Token));
-        children.push(Cst::Token(closer_tok));
-
-        Cst::Group(GroupNode::new(op, NodeSeq(children)))
+    fn reduce_group(&mut self, op: GroupOperator) {
+        self.reduce(|ctx| GroupNode::new(op, ctx))
     }
 
-    fn reduce_call(
-        &mut self,
-        head: Self::Node,
-        head_trivia: TriviaSeqRef<'i>,
-        body: Self::Node,
-    ) -> Self::Node {
+    fn reduce_call(&mut self) {
+        let body = self.pop_node();
+
         let body: CallBody<_> = match body {
             Cst::Group(group) => {
                 let GroupNode(OperatorNode { op, children}) = group;
@@ -449,114 +418,43 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             ),
         };
 
-        Cst::Call(CallNode::concrete(head, head_trivia, body))
+        self.reduce(|ctx| CallNode::concrete(ctx, body))
     }
 
     //----------------------------------
     // Reduce errors
     //----------------------------------
 
-    fn reduce_syntax_error(
-        &mut self,
-        data: SyntaxErrorData<'i, Self::Node>,
-    ) -> Self::Node {
-        let (kind, children) = match data {
-            SyntaxErrorData::ExpectedSymbol {
-                lhs_node,
-                trivia1: TriviaSeq(trivia1),
-                tok_in,
-                trivia2: TriviaSeq(trivia2),
-                rhs_node,
-            } => {
-                let mut children = Vec::new();
-                children.push(lhs_node);
-                children.extend(trivia1.into_iter().map(Cst::Token));
-                children.push(Cst::Token(tok_in));
-                children.extend(trivia2.into_iter().map(Cst::Token));
-                children.push(rhs_node);
-
-                (SyntaxErrorKind::ExpectedSymbol, children)
-            },
-            SyntaxErrorData::ExpectedSet => {
-                (SyntaxErrorKind::ExpectedSet, Vec::new())
-            },
-            SyntaxErrorData::ExpectedTilde {
-                lhs_node,
-                trivia1: TriviaSeq(trivia1),
-                first_op_token,
-                trivia2: TriviaSeq(trivia2),
-                middle_node,
-            } => {
-                let mut children = Vec::new();
-                children.push(lhs_node);
-                children.extend(trivia1.into_iter().map(Cst::Token));
-                children.push(Cst::Token(first_op_token));
-                children.extend(trivia2.into_iter().map(Cst::Token));
-                children.push(middle_node);
-
-                (SyntaxErrorKind::ExpectedTilde, children)
-            },
-        };
-
-        Cst::SyntaxError(SyntaxErrorNode::new(kind, NodeSeq(children)))
+    fn reduce_syntax_error(&mut self, kind: SyntaxErrorKind) {
+        self.reduce(|ctx| SyntaxErrorNode::new(kind, ctx));
     }
 
     fn reduce_unterminated_group(
         &mut self,
+        op: GroupOperator,
         input: &'i str,
         tab_width: usize,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-        TriviaSeq(trailing_trivia): TriviaSeqRef<'i>,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(Cst::Token(opener_tok));
-        for (TriviaSeq(trivia), node) in group_children {
-            children.extend(trivia.into_iter().map(Cst::Token));
-            children.push(node);
-        }
-        children.extend(trailing_trivia.into_iter().map(Cst::Token));
-
-        let node = crate::error::reparse_unterminated_group_node(
-            (op, NodeSeq(children)),
-            input,
-            tab_width,
-        );
-
-        Cst::GroupMissingCloser(node)
+    ) {
+        self.reduce(|ctx| {
+            crate::error::reparse_unterminated_group_node(
+                (op, ctx),
+                input,
+                tab_width,
+            )
+        });
     }
 
-    fn reduce_group_missing_closer(
-        &mut self,
-        op: GroupOperator,
-        opener_tok: TokenRef<'i>,
-        group_children: Vec<(TriviaSeqRef<'i>, Self::Node)>,
-    ) -> Self::Node {
-        let mut children = Vec::new();
-        children.push(Cst::Token(opener_tok));
-        for (TriviaSeq(trivia), node) in group_children {
-            children.extend(trivia.into_iter().map(Cst::Token));
-            children.push(node);
-        }
-
-        Cst::GroupMissingCloser(GroupMissingCloserNode::new(
-            op,
-            NodeSeq(children),
-        ))
+    fn reduce_group_missing_closer(&mut self, op: GroupOperator) {
+        self.reduce(|ctx| GroupMissingCloserNode::new(op, ctx));
     }
 
     //==================================
     // Pop
     //==================================
 
-    fn finish_top_level_trivia(&mut self, token: TokenRef<'i>) {
-        debug_assert!(token.tok.isTrivia());
+    fn finish_top_level_expr(&mut self) {
+        let node = self.pop_node();
 
-        self.finished.push(Cst::Token(token));
-    }
-
-    fn finish_top_level_expr(&mut self, node: Self::Node) {
         debug_assert!(self.is_quiescent());
 
         self.finished.push(node);
@@ -566,8 +464,25 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
     // Properties
     //==================================
 
-    fn check_colon_lhs(&self, lhs: &Self::Node) -> ColonLHS {
-        match lhs {
+    fn check_colon_lhs(&self) -> ColonLHS {
+        //
+        // work backwards, looking for a symbol or something that is a pattern
+        //
+        // skip any trivia
+        //
+
+        // Of the nodes owned by `ctxt`, get the top (last) one that
+        // is not trivia.
+        let top_non_trivia_in_context = self
+            .top_context_nodes()
+            .find(
+                |cst| !matches!(cst, Cst::Token(token) if token.tok.isTrivia()),
+            )
+            .expect(
+                "unable to check colon LHS: no non-trivia token in top context",
+            );
+
+        match top_non_trivia_in_context {
             Cst::Binary(BinaryNode(op)) => {
                 //
                 // Something like  a:b:c
@@ -642,7 +557,11 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
         }
     }
 
-    fn top_node_is_span(&self, top_node: &Self::Node) -> bool {
+    fn top_node_is_span(&self) -> bool {
+        assert!(!self.node_stack.is_empty());
+
+        let top_node: &Cst<_> = self.node_stack.last().unwrap();
+
         // Note: This method should only be called in process_implicit_times(),
         //       which itself should only be called after non-newline trivia has
         //       been eaten.
@@ -665,46 +584,6 @@ impl<'i> ParseBuilder<'i> for ParseCst<'i> {
             },
             _ => false,
         }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct InfixParseCst<'i> {
-    op: InfixOperator,
-    children: Vec<Cst<TokenStr<'i>>>,
-}
-
-impl<'i> InfixParseBuilder<'i, ParseCst<'i>> for InfixParseCst<'i>
-where
-    ParseCst<'i>: ParseBuilder<'i, Node = Cst<TokenStr<'i>>>,
-{
-    fn add(
-        &mut self,
-        trivia1: TriviaSeqRef<'i>,
-        op_token: TokenRef<'i>,
-        trivia2: TriviaSeqRef<'i>,
-        operand: Cst<TokenStr<'i>>,
-    ) {
-        let InfixParseCst { op: _, children } = self;
-
-        children.extend(trivia1.0.into_iter().map(Cst::Token));
-        children.push(Cst::Token(op_token));
-        children.extend(trivia2.0.into_iter().map(Cst::Token));
-        children.push(operand)
-    }
-
-    fn last_node(&self) -> &Cst<TokenStr<'i>> {
-        let InfixParseCst { op: _, children } = self;
-
-        children
-            .last()
-            .expect("InfixParseCst::last_node: node list is empty")
-    }
-
-    fn finish(self) -> Cst<TokenStr<'i>> {
-        let InfixParseCst { op, children } = self;
-
-        Cst::Infix(InfixNode::new(op, NodeSeq(children)))
     }
 }
 
