@@ -108,8 +108,9 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
         //    ^SecondTok
         //
 
-        let ctxt = session.top_context();
-        ctxt.init_callback(|s, _| SemiSemiParselet_parse2(s), None);
+        let Ctxt = session.top_context();
+        assert!(Ctxt.f.is_none());
+        Ctxt.f = Some(|s, _| SemiSemiParselet_parse2(s));
 
         // MUSTTAIL
         return session.parse_prefix(SecondTok);
@@ -166,8 +167,9 @@ fn SemiSemiParselet_parse1(session: &mut ParserSession) {
 
     session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-    let ctxt = session.top_context();
-    ctxt.init_callback(|s, _| SemiSemiParselet_reduceTernary(s), None);
+    let Ctxt = session.top_context();
+    assert!(Ctxt.f.is_none());
+    Ctxt.f = Some(|s, _| SemiSemiParselet_reduceTernary(s));
 
     // MUSTTAIL
     return session.parse_prefix(ThirdTok);
@@ -251,10 +253,11 @@ fn SemiSemiParselet_parse2(session: &mut ParserSession) {
 
     session.push_trivia_seq(&mut Trivia2.borrow_mut());
 
-    let ctxt = session.top_context();
+    let Ctxt = session.top_context();
+
     // TODO: Figure out how to express this logic and re-enable this assertion.
     // assert!(Ctxt.f.unwrap() as usize == SemiSemiParselet_parse2 as usize);
-    ctxt.set_callback(|s, _| SemiSemiParselet_reduceTernary(s));
+    Ctxt.f = Some(|s, _| SemiSemiParselet_reduceTernary(s));
 
     // MUSTTAIL
     return session.parse_prefix(FourthTok);

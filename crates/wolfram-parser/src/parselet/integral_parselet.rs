@@ -32,8 +32,12 @@ fn IntegralParselet_parsePrefix<'i>(
 
     session.push_leaf_and_next(TokIn);
 
-    let ctxt = session.push_context(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
-    ctxt.init_callback(IntegralParselet_parse1, Some(P));
+    let Ctxt = session.push_context(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
+
+    assert!(Ctxt.f.is_none());
+    assert!(Ctxt.p.is_none());
+    Ctxt.f = Some(IntegralParselet_parse1);
+    Ctxt.p = Some(P);
 
     let Tok = session.current_token_eat_trivia();
 
@@ -72,8 +76,9 @@ fn IntegralParselet_parse1(session: &mut ParserSession, P: ParseletPtr) {
 
     session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
-    let ctxt = session.top_context();
-    ctxt.set_callback_2(IntegralParselet_reduceIntegrate, P);
+    let Ctxt = session.top_context();
+    Ctxt.f = Some(IntegralParselet_reduceIntegrate);
+    Ctxt.p = Some(P);
 
     // MUSTTAIL
     return session.parse_prefix(tok);
