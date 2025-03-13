@@ -9,7 +9,7 @@ pub type Symbol = SymbolRef<'static>;
 // Symbol constant declarations
 //==========================================================
 
-macro_rules! symbol {
+macro_rules! Symbol {
     ($name:ident) => {
         pub const $name: Symbol =
             unsafe { Symbol::unchecked_new(concat!("System`", stringify!($name))) };
@@ -17,12 +17,12 @@ macro_rules! symbol {
 
     ($($name:ident);* $(;)?) => {
         $(
-            $crate::symbol::symbol!($name);
+            Symbol!($name);
         )*
     };
 }
 
-macro_rules! nested_symbol {
+macro_rules! Symbol2 {
     ($context:ident :: { $($name:ident),* }) => {
         pub mod $context {
         $(
@@ -39,10 +39,75 @@ macro_rules! nested_symbol {
 
     ($($($context:ident ::)+ $name:ident);* $(;)?) => {
         $(
-            symbol!($($context ::)* $name);
+            Symbol!($($context ::)* $name);
         )*
     };
 }
 
+//======================================
+// Constants
+//======================================
 
-pub(crate) use {nested_symbol, symbol};
+Symbol! {
+    Inequality;
+
+    Equal;
+    Unequal;
+    Less;
+    Greater;
+    LessEqual;
+    GreaterEqual;
+    GreaterEqualLess;
+    GreaterFullEqual;
+    GreaterGreater;
+    GreaterLess;
+    GreaterSlantEqual;
+    LessSlantEqual;
+    //
+    // GreaterSlantEqual parses to GreaterEqual
+    // Related bugs: 78439
+    //
+    GreaterTilde;
+    LessEqualGreater;
+    LessFullEqual;
+    LessGreater;
+    LessLess;
+    //
+    // LessSlantEqual parses to LessEqual
+    // Related bugs: 78439
+    //
+    LessTilde;
+    NestedGreaterGreater;
+    NestedLessLess;
+    NotGreater;
+    NotGreaterEqual;
+    NotGreaterFullEqual;
+    NotGreaterGreater;
+    NotGreaterLess;
+    NotGreaterSlantEqual;
+    NotGreaterTilde;
+    NotLess;
+    NotLessEqual;
+    NotLessFullEqual;
+    NotLessGreater;
+    NotLessLess;
+    NotLessSlantEqual;
+    NotLessTilde;
+    NotNestedGreaterGreater;
+    NotNestedLessLess;
+
+    VectorLess;
+    VectorGreater;
+    VectorLessEqual;
+    VectorGreaterEqual;
+
+    Part;
+    TypeSpecifier;
+}
+
+
+Symbol2! {
+    Developer::{
+        VectorInequality
+    }
+}
