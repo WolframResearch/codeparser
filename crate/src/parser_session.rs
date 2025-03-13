@@ -63,10 +63,10 @@ impl<'i> ParserSession<'i> {
                 GroupStack: Vec::new(),
 
                 tracked: TrackedSourceLocations {
-                    simple_line_continuations: HashSet::new(),
-                    complex_line_continuations: HashSet::new(),
-                    embedded_newlines: HashSet::new(),
-                    embedded_tabs: HashSet::new(),
+                    SimpleLineContinuations: HashSet::new(),
+                    ComplexLineContinuations: HashSet::new(),
+                    EmbeddedNewlines: HashSet::new(),
+                    EmbeddedTabs: HashSet::new(),
                 },
 
                 fatalIssues: Vec::new(),
@@ -199,9 +199,18 @@ impl<'i> ParserSession<'i> {
             nodes.push(CollectedIssuesNode(self.nonFatalIssues().clone()));
         }
 
-        for node in self.tokenizer.tracked.to_nodes() {
-            nodes.push(node);
-        }
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.SimpleLineContinuations.clone(),
+        ));
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.ComplexLineContinuations.clone(),
+        ));
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.EmbeddedNewlines.clone(),
+        ));
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.EmbeddedTabs.clone(),
+        ));
 
         let C = NodeContainer::new(nodes);
 
@@ -299,9 +308,18 @@ impl<'i> ParserSession<'i> {
             nodes.push(CollectedIssuesNode(self.nonFatalIssues().clone()));
         }
 
-        for node in self.tokenizer.tracked.to_nodes() {
-            nodes.push(node);
-        }
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.SimpleLineContinuations.clone(),
+        ));
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.ComplexLineContinuations.clone(),
+        ));
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.EmbeddedNewlines.clone(),
+        ));
+        nodes.push(CollectedSourceLocationsNode::new(
+            self.tokenizer.tracked.EmbeddedTabs.clone(),
+        ));
 
         return NodeContainer::new(nodes);
     }
