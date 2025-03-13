@@ -8,7 +8,7 @@ use crate::{
     long_names as LongNames,
     read::{
         code_point::{CodePoint::*, *},
-        wl_character::{Escape, WLCharacter},
+        wl_character::{EscapeStyle, WLCharacter},
         Reader,
     },
     source::{
@@ -134,7 +134,7 @@ fn CharacterDecoder_handleStringMetaDoubleQuote(
 
     return WLCharacter::new_with_escape(
         StringMeta_DoubleQuote,
-        Escape::Single,
+        EscapeStyle::Single,
     );
 }
 
@@ -155,7 +155,7 @@ fn CharacterDecoder_handleStringMetaOpen(
 
     session.next_source_char(policy);
 
-    let c = WLCharacter::new_with_escape(StringMeta_Open, Escape::Single);
+    let c = WLCharacter::new_with_escape(StringMeta_Open, EscapeStyle::Single);
 
     if feature::CHECK_ISSUES {
         let graphicalStr = c.graphicalString();
@@ -198,7 +198,7 @@ fn CharacterDecoder_handleStringMetaClose(
 
     session.next_source_char(policy);
 
-    let c = WLCharacter::new_with_escape(StringMeta_Close, Escape::Single);
+    let c = WLCharacter::new_with_escape(StringMeta_Close, EscapeStyle::Single);
 
     if feature::CHECK_ISSUES {
         let graphicalStr = c.graphicalString();
@@ -569,18 +569,18 @@ fn CharacterDecoder_handleLongName(
             point,
             open_square.src_loc,
             if LongNames::isRaw(longNameStr) {
-                Escape::Raw
+                EscapeStyle::Raw
             } else {
-                Escape::LongName
+                EscapeStyle::LongName
             },
         );
     }
 
     if LongNames::isRaw(longNameStr) {
-        return WLCharacter::new_with_escape(point, Escape::Raw);
+        return WLCharacter::new_with_escape(point, EscapeStyle::Raw);
     }
 
-    return WLCharacter::new_with_escape(point, Escape::LongName);
+    return WLCharacter::new_with_escape(point, EscapeStyle::LongName);
 }
 
 fn CharacterDecoder_handle4Hex(
@@ -682,10 +682,10 @@ fn CharacterDecoder_handle4Hex(
         policy,
         point,
         colon.src_loc,
-        Escape::Hex4,
+        EscapeStyle::Hex4,
     );
 
-    return WLCharacter::new_with_escape(point, Escape::Hex4);
+    return WLCharacter::new_with_escape(point, EscapeStyle::Hex4);
 }
 
 fn CharacterDecoder_handle2Hex(
@@ -784,10 +784,10 @@ fn CharacterDecoder_handle2Hex(
         policy,
         point,
         dot.src_loc,
-        Escape::Hex2,
+        EscapeStyle::Hex2,
     );
 
-    return WLCharacter::new_with_escape(point, Escape::Hex2);
+    return WLCharacter::new_with_escape(point, EscapeStyle::Hex2);
 }
 
 fn CharacterDecoder_handleOctal(
@@ -895,10 +895,10 @@ fn CharacterDecoder_handleOctal(
         policy,
         point,
         first_octal.src_loc,
-        Escape::Octal,
+        EscapeStyle::Octal,
     );
 
-    return WLCharacter::new_with_escape(point, Escape::Octal);
+    return WLCharacter::new_with_escape(point, EscapeStyle::Octal);
 }
 
 fn CharacterDecoder_handle6Hex(
@@ -1017,10 +1017,10 @@ fn CharacterDecoder_handle6Hex(
         policy,
         point,
         bar.src_loc,
-        Escape::Hex6,
+        EscapeStyle::Hex6,
     );
 
-    return WLCharacter::new_with_escape(point, Escape::Hex6);
+    return WLCharacter::new_with_escape(point, EscapeStyle::Hex6);
 }
 
 fn CharacterDecoder_handleBackslash(
@@ -1088,7 +1088,10 @@ fn CharacterDecoder_handleBackslash(
         session.seek(reset_mark);
     }
 
-    return WLCharacter::new_with_escape(StringMeta_Backslash, Escape::Single);
+    return WLCharacter::new_with_escape(
+        StringMeta_Backslash,
+        EscapeStyle::Single,
+    );
 }
 
 fn CharacterDecoder_handleUnhandledEscape(
@@ -1413,7 +1416,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 LineContinuation_LineFeed,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('\r') => {
@@ -1421,7 +1424,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 LineContinuation_CarriageReturn,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         CodePoint::CRLF => {
@@ -1429,7 +1432,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 LineContinuation_CRLF,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('[') => {
@@ -1474,7 +1477,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             let c = WLCharacter::new_with_escape(
                 StringMeta_Backspace,
-                Escape::Single,
+                EscapeStyle::Single,
             );
 
             if feature::CHECK_ISSUES {
@@ -1520,7 +1523,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             let c = WLCharacter::new_with_escape(
                 StringMeta_FormFeed,
-                Escape::Single,
+                EscapeStyle::Single,
             );
 
             if feature::CHECK_ISSUES {
@@ -1566,7 +1569,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 StringMeta_LineFeed,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
 
@@ -1581,7 +1584,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 StringMeta_CarriageReturn,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
 
@@ -1596,7 +1599,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 StringMeta_Tab,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         //
@@ -1610,7 +1613,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_BANG,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('%') => {
@@ -1620,7 +1623,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_PERCENT,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('&') => {
@@ -1630,7 +1633,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_AMP,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('(') => {
@@ -1640,7 +1643,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_OPENPAREN,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char(')') => {
@@ -1650,7 +1653,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_CLOSEPAREN,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('*') => {
@@ -1660,7 +1663,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_STAR,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('+') => {
@@ -1670,7 +1673,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_PLUS,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('/') => {
@@ -1680,7 +1683,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_SLASH,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('@') => {
@@ -1690,7 +1693,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_AT,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('^') => {
@@ -1700,7 +1703,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_CARET,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('_') => {
@@ -1710,7 +1713,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_UNDER,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char('`') => {
@@ -1720,7 +1723,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 CODEPOINT_LINEARSYNTAX_BACKTICK,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         Char(' ') => {
@@ -1730,7 +1733,7 @@ fn CharacterDecoder_handleUncommon<'i, 's>(
 
             return WLCharacter::new_with_escape(
                 LinearSyntax_Space,
-                Escape::Single,
+                EscapeStyle::Single,
             );
         },
         _ => (),
@@ -1802,7 +1805,7 @@ pub(crate) fn check_strange_syntax_issue(
     policy: NextPolicy,
     point: CodePoint,
     start_loc: Location,
-    escape_style: Escape,
+    escape_style: EscapeStyle,
 ) {
     let c = WLCharacter::new_with_escape(point, escape_style);
 

@@ -16,7 +16,7 @@ use crate::{
             CodePoint::{self, Char, *},
             CODEPOINT_DEL, CODEPOINT_ESC, *,
         },
-        wl_character::{Escape, WLCharacter},
+        wl_character::{EscapeStyle, WLCharacter},
     },
     tokenize::tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
 };
@@ -1001,26 +1001,26 @@ impl Display for SourceCharacter {
             }
             Char('\x08') /* ASCII backspace */ => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_Backspace, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_Backspace, EscapeStyle::Single))
             }
             Char(ASCII_FORM_FEED) => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_FormFeed, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_FormFeed, EscapeStyle::Single))
             }
                 //
                 // whitespace and newline characters
                 //
             Char('\t') => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_Tab, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_Tab, EscapeStyle::Single))
             }
             Char('\n') => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_LineFeed, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_LineFeed, EscapeStyle::Single))
             }
             Char('\r') => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_CarriageReturn, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_CarriageReturn, EscapeStyle::Single))
             }
             StringMeta_LineFeed => {
 
@@ -1049,7 +1049,7 @@ impl Display for SourceCharacter {
                 // Coming from \[RawDoubleQuote]
                 //
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_DoubleQuote, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_DoubleQuote, EscapeStyle::Single))
             }
             StringMeta_Backslash => {
 
@@ -1057,12 +1057,12 @@ impl Display for SourceCharacter {
                 // Coming from \[RawBackslash]
                 //
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_Backslash, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_Backslash, EscapeStyle::Single))
             }
             CRLF => {
 
-                write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_CarriageReturn, Escape::Single))?;
-                write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_LineFeed, Escape::Single))?;
+                write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_CarriageReturn, EscapeStyle::Single))?;
+                write!(stream, "{:#}", WLCharacter::new_with_escape(StringMeta_LineFeed, EscapeStyle::Single))?;
 
                 return Ok(())
             }
@@ -1081,7 +1081,7 @@ impl Display for SourceCharacter {
                 | ls @ CODEPOINT_LINEARSYNTAX_BACKTICK
             ) => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(ls, Escape::Single))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(ls, EscapeStyle::Single))
             }
             LinearSyntax_Space => {
 
@@ -1095,7 +1095,7 @@ impl Display for SourceCharacter {
                 //
             Char('\x1b') => {
 
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_ESC, Escape::LongName))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(CODEPOINT_ESC, EscapeStyle::LongName))
             }
                 //
                 // C0 control characters
@@ -1120,7 +1120,7 @@ impl Display for SourceCharacter {
                 '\u{90}' | '\u{91}' | '\u{92}' | '\u{93}' | '\u{94}' | '\u{95}' | '\u{96}' | '\u{97}' |
                 '\u{98}' | '\u{99}' | '\u{9a}' | '\u{9b}' | '\u{9c}' | '\u{9d}' | '\u{9e}' | '\u{9f}'
             ) => {
-                return write!(stream, "{:#}", WLCharacter::new_with_escape(val, Escape::Hex2))
+                return write!(stream, "{:#}", WLCharacter::new_with_escape(val, EscapeStyle::Hex2))
             }
             Char(char) => char,
             _ => panic!("unable to format special char: {val:?}"),
@@ -1137,14 +1137,14 @@ impl Display for SourceCharacter {
                 return write!(
                     stream,
                     "{:#}",
-                    WLCharacter::new_with_escape(val, Escape::LongName)
+                    WLCharacter::new_with_escape(val, EscapeStyle::LongName)
                 );
             }
 
             return write!(
                 stream,
                 "{:#}",
-                WLCharacter::new_with_escape(val, Escape::Hex6)
+                WLCharacter::new_with_escape(val, EscapeStyle::Hex6)
             );
         }
 
@@ -1157,14 +1157,14 @@ impl Display for SourceCharacter {
                 return write!(
                     stream,
                     "{:#}",
-                    WLCharacter::new_with_escape(val, Escape::LongName)
+                    WLCharacter::new_with_escape(val, EscapeStyle::LongName)
                 );
             }
 
             return write!(
                 stream,
                 "{:#}",
-                WLCharacter::new_with_escape(val, Escape::Hex4)
+                WLCharacter::new_with_escape(val, EscapeStyle::Hex4)
             );
         }
 
@@ -1177,14 +1177,14 @@ impl Display for SourceCharacter {
                 return write!(
                     stream,
                     "{:#}",
-                    WLCharacter::new_with_escape(val, Escape::LongName)
+                    WLCharacter::new_with_escape(val, EscapeStyle::LongName)
                 );
             }
 
             return write!(
                 stream,
                 "{:#}",
-                WLCharacter::new_with_escape(val, Escape::Hex2)
+                WLCharacter::new_with_escape(val, EscapeStyle::Hex2)
             );
         }
 

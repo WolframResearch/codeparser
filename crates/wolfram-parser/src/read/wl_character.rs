@@ -21,8 +21,12 @@ use crate::{
 /// * Hex6: `\|xxxxxx` style
 /// * Octal: `\xxx` style
 /// * LongName: Using `\[XX]` style: `\[Alpha]`, `\[Beta]`, etc.
+//
+// Used to just be Escape, but this was observed:
+// c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\CharacterDecoder.h(37): error C2061: syntax error: identifier 'Escape'
+//
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub(crate) enum Escape {
+pub(crate) enum EscapeStyle {
     None,
     Raw,
     Single,
@@ -39,7 +43,7 @@ pub(crate) enum Escape {
 #[derive(Copy, Clone, PartialEq)]
 pub struct WLCharacter {
     pub(crate) point: CodePoint,
-    escape: Escape,
+    escape: EscapeStyle,
     //
     // valBits: i32, // uint32_t valBits : 21;
     // signBit: bool, // uint8_t signBit : 1;
@@ -57,14 +61,14 @@ impl Debug for WLCharacter {
         let WLCharacter { point, escape } = *self;
 
         match escape {
-            Escape::None => write!(f, "WLCharacter({point:?})"),
-            Escape::Raw
-            | Escape::Single
-            | Escape::Hex2
-            | Escape::Hex4
-            | Escape::Hex6
-            | Escape::Octal
-            | Escape::LongName => {
+            EscapeStyle::None => write!(f, "WLCharacter({point:?})"),
+            EscapeStyle::Raw
+            | EscapeStyle::Single
+            | EscapeStyle::Hex2
+            | EscapeStyle::Hex4
+            | EscapeStyle::Hex6
+            | EscapeStyle::Octal
+            | EscapeStyle::LongName => {
                 write!(f, "WLCharacter({point:?}, {escape:?})")
             },
         }
@@ -73,12 +77,12 @@ impl Debug for WLCharacter {
 
 impl WLCharacter {
     pub(crate) fn new<T: Into<CodePoint>>(val: T) -> Self {
-        WLCharacter::new_with_escape(val.into(), Escape::None)
+        WLCharacter::new_with_escape(val.into(), EscapeStyle::None)
     }
 
     pub(crate) fn new_with_escape<T: Into<CodePoint>>(
         val: T,
-        escape: Escape,
+        escape: EscapeStyle,
     ) -> Self {
         Self {
             point: val.into(),
@@ -114,8 +118,8 @@ impl WLCharacter {
     //     char::from_u32(val).expect("unable to convert SourceCharacter u32 to char")
     // }
 
-    pub(crate) fn escape(&self) -> Escape {
-        // self.escapeBits as Escape
+    pub(crate) fn escape(&self) -> EscapeStyle {
+        // self.escapeBits as EscapeStyle
         self.escape
     }
 }
@@ -146,10 +150,10 @@ impl Display for WLCharacter {
         };
 
         match self.escape() {
-            Escape::None | Escape::Raw => {
+            EscapeStyle::None | EscapeStyle::Raw => {
                 return format_char(SourceCharacter::from(i));
             },
-            Escape::Single => {
+            EscapeStyle::Single => {
                 format_char(SourceCharacter::from('\\'))?;
 
                 let source_char: char = match i {
@@ -199,7 +203,7 @@ impl Display for WLCharacter {
                     return write!(s, "{}", source_char);
                 }
             },
-            Escape::LongName => {
+            EscapeStyle::LongName => {
                 let LongName: &str = code_point_to_long_name(i);
 
                 format_char(SourceCharacter::from('\\'))?;
@@ -216,7 +220,7 @@ impl Display for WLCharacter {
 
                 return Ok(());
             },
-            Escape::Octal => {
+            EscapeStyle::Octal => {
                 i = match i {
                     CodePoint::StringMeta_DoubleQuote => {
                         Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
@@ -242,7 +246,7 @@ impl Display for WLCharacter {
 
                 return Ok(());
             },
-            Escape::Hex2 => {
+            EscapeStyle::Hex2 => {
                 i = match i {
                     CodePoint::StringMeta_DoubleQuote => {
                         Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
@@ -266,7 +270,7 @@ impl Display for WLCharacter {
 
                 return Ok(());
             },
-            Escape::Hex4 => {
+            EscapeStyle::Hex4 => {
                 i = match i {
                     CodePoint::StringMeta_DoubleQuote => {
                         Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
@@ -296,7 +300,7 @@ impl Display for WLCharacter {
 
                 return Ok(());
             },
-            Escape::Hex6 => {
+            EscapeStyle::Hex6 => {
                 i = match i {
                     CodePoint::StringMeta_DoubleQuote => {
                         Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
@@ -351,14 +355,14 @@ impl WLCharacter {
     pub(crate) fn safeAndGraphicalString(&self) -> String {
         let WLCharacter { point: _, escape } = *self;
 
-        if escape == Escape::None {
+        if escape == EscapeStyle::None {
             return format!("\"{}\" ({:#})", self, self);
         } else {
             return format!("{}", self);
         }
 
         // std::ostringstream String;
-        // if (escape() == Escape::None) {
+        // if (escape() == EscapeStyle::None) {
         //     String << "\"" << *this << "\" (" << set_graphical << *this << clear_graphical << ")";
         //     return String.str();
         // }
