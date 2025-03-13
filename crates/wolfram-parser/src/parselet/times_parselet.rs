@@ -21,8 +21,8 @@ impl InfixParselet for TimesParselet {
         TimesParselet_parseInfix(session, token)
     }
 
-    fn getOp(&self) -> InfixParseletOperator {
-        return Operator::Times.into();
+    fn getOp(&self) -> Operator {
+        return Operator::Times;
     }
 
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {

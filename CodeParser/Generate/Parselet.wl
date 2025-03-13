@@ -92,30 +92,11 @@ $Operators = Join[
 			Parselet`PrefixOperatorParselet[precedence_, op_] :> (op -> op),
 			Parselet`BinaryOperatorParselet[precedence_, op_] :> (op -> op),
 			Parselet`InfixOperatorParselet[precedence_, op_] :> (op -> op),
-			(* These are part of $PostfixOperators. *)
-			Parselet`PostfixOperatorParselet[precedence_, op_] -> Nothing,
+			Parselet`PostfixOperatorParselet[precedence_, op_] :> (op -> op),
 			(* NOTE: Ignore op2, which is part of $PrefixBinaryOperators. *)
 			Parselet`IntegralParselet[op1_, op2_] -> (op2 -> op2),
 			(* These are part of $GroupOperators. *)
 			Parselet`GroupParselet[tok_, op_] -> Nothing,
-			_ -> Nothing
-		},
-		{1}
-	]
-]
-
-$PostfixOperators = Association @ Map[
-	Replace[{
-		sym_Symbol :> (sym -> sym),
-		other_ :> FatalError["Invalid operator spec: ", InputForm[other]]
-	}],
-	Replace[
-		Join[
-			Values[importedPrefixParselets],
-			Values[importedInfixParselets]
-		],
-		{
-			Parselet`PostfixOperatorParselet[precedence_, op_] -> op,
 			_ -> Nothing
 		},
 		{1}
@@ -272,7 +253,7 @@ formatInfix[Parselet`BinaryOperatorParselet[precedence_, op_]] := "&BinaryOperat
 
 formatInfix[Parselet`InfixOperatorParselet[precedence_, op_]] := "&InfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "Operator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
-formatInfix[Parselet`PostfixOperatorParselet[precedence_, op_]] := "&PostfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "PostfixOperator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
+formatInfix[Parselet`PostfixOperatorParselet[precedence_, op_]] := "&PostfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "Operator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
 formatInfix[Parselet`ColonParselet[]] := "&colonParselet"
 
@@ -457,22 +438,20 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		(*============================*)
 
 		formatOperatorEnumDef["Operator", $Operators],
-		formatOperatorEnumDef["PostfixOperator", $PostfixOperators],
-		formatOperatorEnumDef["TernaryOperator", $TernaryOperators],
 		formatOperatorEnumDef["PrefixBinaryOperator", $PrefixBinaryOperators],
-		formatOperatorEnumDef["CompoundOperator", $CompoundOperators],
 		formatOperatorEnumDef["GroupOperator", $GroupOperators],
+		formatOperatorEnumDef["CompoundOperator", $CompoundOperators],
+		formatOperatorEnumDef["TernaryOperator", $TernaryOperators],
 
 		(*============================*)
 		(* Define Impls               *)
 		(*============================*)
 
 		formatOperatorEnumImpl["Operator", $Operators],
-		formatOperatorEnumImpl["PostfixOperator", $PostfixOperators],
-		formatOperatorEnumImpl["TernaryOperator", $TernaryOperators],
 		formatOperatorEnumImpl["PrefixBinaryOperator", $PrefixBinaryOperators],
+		formatOperatorEnumImpl["GroupOperator", $GroupOperators],
 		formatOperatorEnumImpl["CompoundOperator", $CompoundOperators],
-		formatOperatorEnumImpl["GroupOperator", $GroupOperators]
+		formatOperatorEnumImpl["TernaryOperator", $TernaryOperators]
 	]
 };
 
