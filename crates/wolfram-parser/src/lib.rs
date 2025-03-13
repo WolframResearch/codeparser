@@ -109,7 +109,6 @@ pub mod macros;
 // API
 //==========================================================
 
-use abstract_::{abstract_cst, aggregate_cst_seq};
 use cst::CstSeq;
 use wolfram_expr::{Expr, Number};
 
@@ -490,8 +489,10 @@ pub fn parse_bytes_ast<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<Ast> {
+    let mut session = ParserSession::new(bytes, opts);
+
     expect_single_item(
-        parse_bytes_ast_seq(bytes, opts),
+        session.abstract_parse_expressions(),
         "parse_bytes_ast",
         "Ast",
     )
@@ -514,28 +515,7 @@ pub fn parse_bytes_ast_seq<'i>(
 ) -> ParseResult<NodeSeq<Ast>> {
     let mut session = ParserSession::new(bytes, opts);
 
-    let ParseResult {
-        syntax: nodes,
-        unsafe_character_encoding,
-        fatal_issues,
-        non_fatal_issues,
-        tracked,
-    } = session.concrete_parse_expressions();
-
-    let NodeSeq(nodes) = aggregate_cst_seq(nodes);
-
-    let nodes = nodes
-        .into_iter()
-        .map(|cst| abstract_cst(cst, opts.quirk_settings))
-        .collect();
-
-    ParseResult {
-        syntax: NodeSeq(nodes),
-        unsafe_character_encoding,
-        fatal_issues,
-        non_fatal_issues,
-        tracked,
-    }
+    session.abstract_parse_expressions()
 }
 
 //==========================================================
