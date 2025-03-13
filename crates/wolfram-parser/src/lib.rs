@@ -132,6 +132,7 @@ use crate::{
     ast::Ast,
     cst::Cst,
     issue::{CodeAction, Issue},
+    parse::ParserSession,
     source::{Source, SourceConvention, DEFAULT_TAB_WIDTH},
     tokenize::{Token, TokenStr},
 };
@@ -494,7 +495,9 @@ pub fn parse_bytes_cst_seq<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<CstSeq<TokenStr<'i>>> {
-    parse::parse_concrete(bytes, opts)
+    let mut session = ParserSession::new(bytes, opts);
+
+    session.concrete_parse_expressions()
 }
 
 //======================================
@@ -582,7 +585,7 @@ pub fn parse_bytes_ast_seq<'i>(
     bytes: &'i [u8],
     opts: &ParseOptions,
 ) -> ParseResult<NodeSeq<Ast>> {
-    let result = parse::parse_concrete(bytes, opts);
+    let mut session = ParserSession::new(bytes, opts);
 
     let ParseResult {
         syntax: nodes,
@@ -590,7 +593,7 @@ pub fn parse_bytes_ast_seq<'i>(
         fatal_issues,
         non_fatal_issues,
         tracked,
-    } = result;
+    } = session.concrete_parse_expressions();
 
     let NodeSeq(nodes) = aggregate_cst_seq(nodes);
 

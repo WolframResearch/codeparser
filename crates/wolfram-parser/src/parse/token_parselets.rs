@@ -13,8 +13,7 @@ use crate::{
     utils::from_fn,
 };
 
-pub(in crate::parse) const PREFIX_PARSELETS: [&dyn PrefixParselet;
-    TokenKind::COUNT] = from_fn!(
+pub(crate) const PREFIX_PARSELETS: [&dyn PrefixParselet; TokenKind::COUNT] = from_fn!(
     [&'static dyn PrefixParselet, TokenKind::COUNT],
     |index: usize| {
         let kind = TokenKind::VARIANTS[index];
@@ -23,8 +22,7 @@ pub(in crate::parse) const PREFIX_PARSELETS: [&dyn PrefixParselet;
     }
 );
 
-pub(in crate::parse) const INFIX_PARSELETS: [&dyn InfixParselet;
-    TokenKind::COUNT] = from_fn!(
+pub(crate) const INFIX_PARSELETS: [&dyn InfixParselet; TokenKind::COUNT] = from_fn!(
     [&'static dyn InfixParselet, TokenKind::COUNT],
     |index: usize| {
         let kind = TokenKind::VARIANTS[index];
