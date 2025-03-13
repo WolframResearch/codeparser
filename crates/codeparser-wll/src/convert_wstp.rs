@@ -14,10 +14,7 @@ use wolfram_parser::{
         TernaryNode, TernaryOperator,
     },
     issue::{CodeAction, CodeActionKind, Issue, IssueTag, Severity},
-    source::{
-        BoxPosition, CharacterSpan, LineColumn, Location, Source, Span,
-        SpanKind,
-    },
+    source::{CharacterSpan, LineColumn, Location, Source, Span, SpanKind},
     symbol::Symbol,
     symbols as sym,
     tokenize::{Token, TokenInput, TokenKind, TokenSource},
@@ -95,7 +92,7 @@ impl WstpPut for Metadata {
 
         let mut len = 0;
 
-        if include_source(source) {
+        if !source.is_unknown() {
             len += 1;
         }
 
@@ -170,7 +167,7 @@ impl WstpPut for Metadata {
             link.put_expr(complex_line_continuations).unwrap();
         }
 
-        if include_source(source) {
+        if !source.is_unknown() {
             link.put_function("System`Rule", 2).unwrap();
             link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
             put_source_rhs(link, source);
@@ -213,7 +210,7 @@ impl WstpPut for AstMetadata {
 
         let mut len = 0;
 
-        if include_source(source) {
+        if !source.is_unknown() {
             len += 1;
         }
 
@@ -221,7 +218,7 @@ impl WstpPut for AstMetadata {
 
         link.put_function(sym::Association.as_str(), len).unwrap();
 
-        if include_source(source) {
+        if !source.is_unknown() {
             link.put_function("System`Rule", 2).unwrap();
             link.put_symbol(sym::CodeParser_Source.as_str()).unwrap();
             put_source_rhs(link, source);
@@ -976,30 +973,10 @@ impl WstpPut for Location {
     }
 }
 
-/// Returns `true` if a `Source -> <source>` field should be included in
-/// the node metadata `<| ... |>` being constructed by the caller.
-fn include_source(source: &Source) -> bool {
-    match source {
-        Source::Unknown => false,
-        Source::Box(BoxPosition::Spanning { .. })
-            if crate::compatibility_mode() =>
-        {
-            // NOTE: Avoid outputing box positions like {1, 2, 3 ;; 4} that
-            //       end in a Span if compatibility mode is active (the default).
-            //       This is avoided Span box positions are a new feature, and
-            //       not all uses of CodeParser Source data will be expecting
-            //       them. For compatibility, better to treat the Source value
-            //       as missing entirely.
-            false
-        },
-        _ => true,
-    }
-}
-
 fn put_source_rhs(link: &mut wstp::Link, source: &Source) {
     match source {
         Source::Span(span) => put_span_rhs(link, *span),
-        Source::Box(box_pos) => put_box_position(link, box_pos),
+        Source::BoxPosition(other) => put_box_position(link, other),
         Source::After(expr) => link.put_expr(expr).unwrap(),
         // `{}`
         // TODO: What representation should `<| Source -> <unknown> |>`
@@ -1036,41 +1013,14 @@ fn put_span_rhs(link: &mut wstp::Link, source: Span) {
     }
 }
 
-fn put_box_position(link: &mut wstp::Link, box_pos: &BoxPosition) {
-    match box_pos {
-        BoxPosition::At(indexes) => {
-            link.put_function(sym::List.as_str(), indexes.len())
-                .unwrap();
+fn put_box_position(link: &mut wstp::Link, indexes: &Vec<usize>) {
+    link.put_function(sym::List.as_str(), indexes.len())
+        .unwrap();
 
-            for elem in indexes {
-                let elem = i64::try_from(*elem)
-                    .expect("box position usize index overflows i64");
-                link.put_i64(elem).unwrap();
-            }
-        },
-        BoxPosition::Spanning {
-            index,
-            span: (span_start, span_end),
-        } => {
-            let span_start =
-                i64::try_from(*span_start).expect("Span start overflows i64");
-            let span_end =
-                i64::try_from(*span_end).expect("Span end overflows i64");
-
-            link.put_function(sym::List.as_str(), index.len() + 1)
-                .unwrap();
-
-            for elem in index {
-                let elem = i64::try_from(*elem)
-                    .expect("box position usize index overflows i64");
-                link.put_i64(elem).unwrap();
-            }
-
-            link.put_function(sym::Span.as_str(), 2).unwrap();
-
-            link.put_i64(span_start).unwrap();
-            link.put_i64(span_end).unwrap();
-        },
+    for elem in indexes {
+        let elem = i64::try_from(*elem)
+            .expect("box position usize index overflows i64");
+        link.put_i64(elem).unwrap();
     }
 }
 
@@ -1087,7 +1037,7 @@ impl WstpPut for Span {
 
 impl WstpPut for Source {
     fn put(&self, link: &mut wstp::Link) {
-        if !include_source(self) {
+        if self.is_unknown() {
             // Put: <||>
             link.put_function(sym::Association.as_str(), 0).unwrap();
             return;

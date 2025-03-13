@@ -31,7 +31,7 @@
 ///
 /// ## Boxes
 ///
-/// Construct a [`Source::Box`][crate::source::Source::Box]:
+/// Construct a [`Source::BoxPosition`][crate::source::Source::BoxPosition]:
 ///
 /// ```
 /// # use wolfram_parser::{macros::src, source::Source};
@@ -86,9 +86,7 @@ macro_rules! __src {
     //==================================
 
     ({$($value:literal),*}) => {
-        $crate::source::Source::Box(
-            $crate::source::BoxPosition::At(vec![$($value),*])
-        )
+        $crate::source::Source::BoxPosition(vec![$($value),*])
     };
 }
 
