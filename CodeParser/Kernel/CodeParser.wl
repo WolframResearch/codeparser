@@ -289,6 +289,7 @@ Needs["CodeParser`Abstract`"]
 Needs["CodeParser`Boxes`"]
 Needs["CodeParser`CodeAction`"]
 Needs["CodeParser`Definitions`"]
+Needs["CodeParser`Error`"]
 Needs["CodeParser`Library`"]
 Needs["CodeParser`Quirks`"]
 Needs["CodeParser`Scoping`"]
@@ -384,6 +385,19 @@ Module[{cst, bytes, encoding, fileFormat, firstLineBehavior},
     Throw[cst]
   ];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+  
   cst
 ]]
 
@@ -544,6 +558,27 @@ Module[{cst, encoding, full, bytes, fileFormat, firstLineBehavior,
 
   cst = Insert[cst, "FileName" -> full, {3, -1}];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    (*
+    Was:
+    bytes = Import[full, "Byte"];
+
+    but this is slow
+    *)
+    bytes = ReadByteArray[full];
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   cst
 ]]
 
@@ -672,6 +707,19 @@ Module[{cst, encoding, fileFormat, firstLineBehavior, bytes},
 
   If[FailureQ[cst],
     Throw[cst]
+  ];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
   ];
 
   cst
@@ -861,6 +909,19 @@ Module[{toks, encoding, bytes},
     Throw[toks]
   ];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   toks
 ]]
 
@@ -948,6 +1009,21 @@ Module[{toks, encoding, full, bytes, fileFormat, firstLineBehavior,
     Throw[toks]
   ];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    bytes = ReadByteArray[full];
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   toks
 ]]
 
@@ -991,6 +1067,19 @@ Module[{toks, encoding, bytes},
 
   If[FailureQ[toks],
     Throw[toks]
+  ];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
   ];
 
   toks
@@ -1081,6 +1170,19 @@ Module[{res, leaf, data, exprs, bytes},
   ];
 
   leaf = exprs[[1]];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    leaf = leaf
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
 
   If[!empty[res[[2]]],
     data = leaf[[3]];

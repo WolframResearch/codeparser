@@ -30,9 +30,18 @@ impl<'i> Token<BorrowedTokenInput<'i>> {
         let Token { tok, src, input } = self;
 
         if tok.isError() {
-            callLink
-                .put_function(SYMBOL_CODEPARSER_ERRORNODE.as_str(), 3)
-                .unwrap();
+            if tok.isUnterminated() {
+                callLink
+                    .put_function(
+                        SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.as_str(),
+                        3,
+                    )
+                    .unwrap();
+            } else {
+                callLink
+                    .put_function(SYMBOL_CODEPARSER_ERRORNODE.as_str(), 3)
+                    .unwrap();
+            }
         } else {
             //
             // These are Symbols, Strings, Integers, Reals, Rationals.
@@ -88,13 +97,8 @@ impl<'i> Node<BorrowedTokenInput<'i>> {
             Node::GroupMissingCloser(GroupMissingCloserNode(op)) => {
                 op.put(link, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE)
             },
-            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(_)) => {
-                // Note: These nodes should never be returned to the WL. They
-                //       exist only temporarily, and are cleaned up before
-                //       concrete parsing is complete.
-                // TODO(cleanup): Remove this variant from the public `Node`
-                //                type(s).
-                panic!("unexpected UnterminatedGroupNeedsReparse node")
+            Node::UnterminatedGroupNeedsReparse(UnterminatedGroupNeedsReparseNode(op)) => {
+                op.put(link, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE)
             },
         }
     }
