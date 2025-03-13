@@ -127,11 +127,15 @@ impl SemiSemiParselet {
 
         SecondTok.skip(&mut session.tokenizer);
 
+        let Trivia1 = session.trivia1.clone();
+
         //
         // Span should not cross toplevel newlines
         //
-        let (trivia1, ThirdTok) =
-            session.current_token_eat_trivia_but_not_toplevel_newlines_into();
+        let ThirdTok = session
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(
+                &mut Trivia1.borrow_mut(),
+            );
 
         if !ThirdTok.tok.isPossibleBeginning()
             || ThirdTok.tok == TokenKind::SemiSemi
@@ -146,7 +150,7 @@ impl SemiSemiParselet {
             //      ^~ThirdTok
             //
 
-            trivia1.reset(&mut session.tokenizer);
+            Trivia1.borrow_mut().reset(&mut session.tokenizer);
             SecondTok.reset(&mut session.tokenizer);
 
             // MUSTTAIL
@@ -164,7 +168,7 @@ impl SemiSemiParselet {
         // nextToken() already handled above
         //
 
-        session.push_trivia_seq(trivia1);
+        session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
         let ctxt = session.top_context();
         ctxt.init_callback(|s, _| SemiSemiParselet::reduce_ternary(s), None);
@@ -177,11 +181,15 @@ impl SemiSemiParselet {
         panic_if_aborted!();
 
 
+        let Trivia1 = session.trivia1.clone();
+
         //
         // Span should not cross toplevel newlines
         //
-        let (trivia1, ThirdTok) =
-            session.current_token_eat_trivia_but_not_toplevel_newlines_into();
+        let ThirdTok = session
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(
+                &mut Trivia1.borrow_mut(),
+            );
 
         if !ThirdTok.tok.isPossibleBeginning()
             || ThirdTok.tok != TokenKind::SemiSemi
@@ -196,7 +204,7 @@ impl SemiSemiParselet {
             //               ^~~~~~~~~~~~~~~~ThirdTok
             //
 
-            trivia1.reset(&mut session.tokenizer);
+            Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
             return SemiSemiParselet::reduce_binary(session);
@@ -209,11 +217,15 @@ impl SemiSemiParselet {
 
         ThirdTok.skip(&mut session.tokenizer);
 
+        let Trivia2 = session.trivia2.clone();
+
         //
         // Span should not cross toplevel newlines
         //
-        let (trivia2, FourthTok) =
-            session.current_token_eat_trivia_but_not_toplevel_newlines_into();
+        let FourthTok = session
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(
+                &mut Trivia2.borrow_mut(),
+            );
 
         if !FourthTok.tok.isPossibleBeginning()
             || FourthTok.tok == TokenKind::SemiSemi
@@ -228,9 +240,9 @@ impl SemiSemiParselet {
             //       ^~FourthTok
             //
 
-            trivia2.reset(&mut session.tokenizer);
+            Trivia2.borrow_mut().reset(&mut session.tokenizer);
             ThirdTok.reset(&mut session.tokenizer);
-            trivia1.reset(&mut session.tokenizer);
+            Trivia1.borrow_mut().reset(&mut session.tokenizer);
 
             // MUSTTAIL
             return SemiSemiParselet::reduce_binary(session);
@@ -241,7 +253,7 @@ impl SemiSemiParselet {
         //       ^FourthTok
         //
 
-        session.push_trivia_seq(trivia1);
+        session.push_trivia_seq(&mut Trivia1.borrow_mut());
 
         session.push_leaf(ThirdTok);
 
@@ -249,7 +261,7 @@ impl SemiSemiParselet {
         // nextToken() already handled above
         //
 
-        session.push_trivia_seq(trivia2);
+        session.push_trivia_seq(&mut Trivia2.borrow_mut());
 
         let ctxt = session.top_context();
         // TODO: Figure out how to express this logic and re-enable this assertion.

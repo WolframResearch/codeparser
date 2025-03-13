@@ -275,11 +275,15 @@ impl<'i> ParserSession<'i> {
         //
         panic_if_aborted!();
 
+        let Trivia1 = self.trivia1.clone();
+
         //
         // not in the middle of parsing anything, so toplevel newlines will delimit
         //
-        let (trivia1, mut token) =
-            self.current_token_eat_trivia_but_not_toplevel_newlines_into();
+        let mut token = self
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(
+                &mut Trivia1.borrow_mut(),
+            );
 
         let mut I: &dyn InfixParselet =
             INFIX_PARSELETS[usize::from(token.tok.value())];
@@ -298,7 +302,7 @@ impl<'i> ParserSession<'i> {
         //
 
         if Precedence::greater(self.top_precedence(), TokenPrecedence) {
-            trivia1.reset(&mut self.tokenizer);
+            Trivia1.borrow_mut().reset(&mut self.tokenizer);
 
             // MUSTTAIL
             return self.try_continue();
@@ -306,7 +310,7 @@ impl<'i> ParserSession<'i> {
 
         self.push_context(TokenPrecedence);
 
-        self.push_trivia_seq(trivia1);
+        self.push_trivia_seq(&mut Trivia1.borrow_mut());
 
         // MUSTTAIL
         return I.parse_infix(self, token);
@@ -366,21 +370,15 @@ impl<'i> ParserSession<'i> {
     /// ([`TokenKind::isTrivia()`] is false).
     pub(crate) fn current_token_eat_trivia_into(
         &mut self,
-    ) -> (TriviaSeq<'i>, TokenRef<'i>) {
-        let mut trivia = TriviaSeq::new();
+        container: &mut TriviaSeq<'i>,
+    ) -> TokenRef<'i> {
         let mut tok = self.tokenizer.peek_token();
 
-        while tok.tok.isTrivia() {
-            trivia.push(tok.clone());
-
-            tok.skip(&mut self.tokenizer);
-
-            tok = self.tokenizer.peek_token();
-        }
+        self.eat_trivia_into(&mut tok, container);
 
         debug_assert!(!tok.tok.isTrivia());
 
-        (trivia, tok)
+        tok
     }
 
     pub(crate) fn current_token_stringify_as_file_eat_trivia(
@@ -411,23 +409,16 @@ impl<'i> ParserSession<'i> {
 
     pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines_into(
         &mut self,
-    ) -> (TriviaSeq<'i>, TokenRef<'i>) {
+        container: &mut TriviaSeq<'i>,
+    ) -> TokenRef<'i> {
         let mut tok = self.tokenizer.peek_token();
 
         //
         // CompoundExpression should not cross toplevel newlines
         //
-        let mut trivia = TriviaSeq::new();
+        self.eat_trivia_but_not_toplevel_newlines_into(&mut tok, container);
 
-        while tok.tok.isTriviaButNotToplevelNewline() {
-            trivia.push(tok.clone().into());
-
-            tok.skip(&mut self.tokenizer);
-
-            tok = self.tokenizer.peek_token();
-        }
-
-        (trivia, tok)
+        tok
     }
 
     //----------------------------------
@@ -438,6 +429,20 @@ impl<'i> ParserSession<'i> {
     fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
         while token.tok.isTrivia() {
             self.NodeStack.push(Node::Token(token.clone()));
+
+            token.skip(&mut self.tokenizer);
+
+            *token = self.tokenizer.peek_token();
+        }
+    }
+
+    fn eat_trivia_into(
+        &mut self,
+        token: &mut TokenRef<'i>,
+        Args: &mut TriviaSeq<'i>,
+    ) {
+        while token.tok.isTrivia() {
+            Args.push(token.clone());
 
             token.skip(&mut self.tokenizer);
 
@@ -462,6 +467,20 @@ impl<'i> ParserSession<'i> {
     ) {
         while token.tok.isTriviaButNotToplevelNewline() {
             self.NodeStack.push(Node::Token(token.clone()));
+
+            token.skip(&mut self.tokenizer);
+
+            *token = self.tokenizer.peek_token();
+        }
+    }
+
+    fn eat_trivia_but_not_toplevel_newlines_into(
+        &mut self,
+        token: &mut TokenRef<'i>,
+        Args: &mut TriviaSeq<'i>,
+    ) {
+        while token.tok.isTriviaButNotToplevelNewline() {
+            Args.push(token.clone().into());
 
             token.skip(&mut self.tokenizer);
 
@@ -558,13 +577,19 @@ impl<'i> ParserSession<'i> {
         token.skip(&mut self.tokenizer);
     }
 
-    pub(crate) fn push_trivia_seq(&mut self, seq: TriviaSeq<'i>) {
+    pub(crate) fn push_trivia_seq(&mut self, seq: &mut TriviaSeq<'i>) {
         //
         // Move all trivia from Seq to back of ArgsStack
         //
         let TriviaSeq { vec } = seq;
 
-        self.NodeStack.extend(vec.into_iter().map(Node::Token));
+        self.NodeStack.extend(vec.drain(0..).map(Node::Token));
+
+        //
+        // Forget about Seq
+        //
+
+        seq.clear();
     }
 
     pub(crate) fn push_node<N>(&mut self, node: N)
@@ -798,6 +823,8 @@ impl<'i> ParserSession<'i> {
         assert!(self.NodeStack.is_empty());
         assert!(self.ContextStack.is_empty());
         assert!(self.tokenizer.GroupStack.is_empty());
+        assert!(self.trivia1.borrow().is_empty());
+        assert!(self.trivia2.borrow().is_empty());
 
         return true;
     }

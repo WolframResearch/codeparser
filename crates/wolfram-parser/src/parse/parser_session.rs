@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 #[cfg(feature = "USE_MATHLINK")]
 use wolfram_library_link::sys::WolframLibraryData;
@@ -40,6 +40,9 @@ pub(crate) struct ParserSession<'i> {
     pub(super) NodeStack: NodeStack<'i>,
     pub(super) ContextStack: Vec<Context>,
 
+    pub(crate) trivia1: Rc<RefCell<TriviaSeq<'i>>>,
+    pub(crate) trivia2: Rc<RefCell<TriviaSeq<'i>>>,
+
     pub(crate) quirk_settings: QuirkSettings,
 }
 
@@ -50,7 +53,7 @@ pub(crate) type NodeStack<'i> = Vec<CstNode<BorrowedTokenInput<'i>>>;
 //
 #[derive(Debug)]
 pub(crate) struct TriviaSeq<'i> {
-    pub(crate) vec: Vec<Token<BorrowedTokenInput<'i>>>,
+    pub vec: Vec<Token<BorrowedTokenInput<'i>>>,
 }
 
 pub struct ParseResult<N> {
@@ -133,6 +136,9 @@ impl<'i> ParserSession<'i> {
 
             NodeStack: Vec::new(),
             ContextStack: Vec::new(),
+
+            trivia1: Rc::new(RefCell::new(TriviaSeq::new())),
+            trivia2: Rc::new(RefCell::new(TriviaSeq::new())),
 
             quirk_settings,
         };
@@ -396,7 +402,7 @@ impl<'i> TriviaSeq<'i> {
         TriviaSeq { vec: Vec::new() }
     }
 
-    pub fn reset(self, session: &mut Tokenizer) {
+    pub fn reset(&mut self, session: &mut Tokenizer) {
         let TriviaSeq { vec } = self;
 
         //
@@ -410,10 +416,22 @@ impl<'i> TriviaSeq<'i> {
         let T = &vec[0];
 
         T.reset(session);
+
+        vec.clear();
     }
 
     pub fn push(&mut self, token: TokenRef<'i>) {
         self.vec.push(token);
+    }
+
+    pub fn is_empty(&self) -> bool {
+        return self.vec.is_empty();
+    }
+
+    pub fn clear(&mut self) {
+        let TriviaSeq { vec } = self;
+
+        vec.clear();
     }
 }
 
