@@ -12,7 +12,7 @@ use crate::{
     cst::{CstNode, CstNodeSeq},
     feature,
     issue::Issue,
-    parselet::{PrefixParselet, PrefixToplevelCloserParselet},
+    parselet::PrefixToplevelCloserParselet_parsePrefix,
     parser::{Context, Parser_handleFirstLine},
     quirks::{self, QuirkSettings},
     read::{ByteDecoder_nextSourceCharacter, Reader},
@@ -208,7 +208,7 @@ impl<'i> ParserSession<'i> {
             // special top-level handling of stray closers
             //
             if peek.tok.isCloser() {
-                (PrefixToplevelCloserParselet {}).parse_prefix(self, peek);
+                PrefixToplevelCloserParselet_parsePrefix(self, peek);
 
                 exprs.push(self.pop_node());
 
