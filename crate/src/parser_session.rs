@@ -121,7 +121,7 @@ impl<'i> ParserSession<'i> {
         let mut exprs = NodeSeq::new();
 
         loop {
-            if feature::CHECK_ABORT && crate::abortQ() {
+            if feature::CHECK_ABORT && self.abortQ() {
                 break;
             }
 
@@ -174,7 +174,7 @@ impl<'i> ParserSession<'i> {
         let mut nodes = NodeSeq::new();
 
         loop {
-            if feature::CHECK_ABORT && crate::abortQ() {
+            if feature::CHECK_ABORT && self.abortQ() {
                 break;
             }
 
@@ -273,6 +273,11 @@ impl<'i> ParserSession<'i> {
         };
 
         result
+    }
+
+    // TODO(cleanup): This doesn't need to be a method on ParserSession.
+    pub(crate) fn abortQ(&self) -> bool {
+        crate::abortQ()
     }
 
     pub(crate) fn fatalIssues(&self) -> &IssuePtrSet {
