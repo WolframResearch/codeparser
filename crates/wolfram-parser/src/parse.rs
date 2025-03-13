@@ -251,16 +251,6 @@ impl<'i> ParserSession<'i> {
         token.tok.infix_parselet().parse_infix(self, token)
     }
 
-    fn do_process_implicit_times(
-        &mut self,
-        token: TokenRef<'i>,
-    ) -> TokenRef<'i> {
-        token
-            .tok
-            .infix_parselet()
-            .process_implicit_times(self, token)
-    }
-
     /// Pop the top context and push a new node constructed by `func`, then
     /// call [`ParserSession::parse_climb()`].
     pub(crate) fn reduce_and_climb<N, F>(&mut self, func: F)
@@ -312,7 +302,10 @@ impl<'i> ParserSession<'i> {
         let (trivia1, mut token) =
             self.current_token_eat_trivia_but_not_toplevel_newlines_into();
 
-        token = self.do_process_implicit_times(token);
+        token = token
+            .tok
+            .infix_parselet()
+            .process_implicit_times(self, token);
 
         let TokenPrecedence = token.tok.infix_parselet().getPrecedence(self);
 
