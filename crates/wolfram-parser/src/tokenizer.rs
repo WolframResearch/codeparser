@@ -29,6 +29,7 @@ use crate::source::NextPolicyBits::*;
 pub(crate) struct Tokenizer<'i> {
     pub(crate) reader: Reader<'i>,
 
+    pub tabWidth: u32,
     pub(crate) firstLineBehavior: FirstLineBehavior,
 
     pub encodingMode: EncodingMode,
@@ -50,6 +51,14 @@ pub struct TrackedSourceLocations {
     pub complex_line_continuations: HashSet<SourceLocation>,
     pub embedded_newlines: HashSet<SourceLocation>,
     pub embedded_tabs: HashSet<SourceLocation>,
+}
+
+/// A set of fields of [`Tokenizer`] used to update the current
+/// [`SourceLocation`].
+pub(crate) struct SourceManager<'t> {
+    pub(crate) loc: &'t mut SourceLocation,
+
+    pub(crate) tab_width: u32,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -133,6 +142,14 @@ impl<'i> Tokenizer<'i> {
                 //
                 self.nonFatalIssues.push(issue);
             }
+        }
+    }
+
+    /// Access a set of fields related to updating the current source location.
+    pub(crate) fn src(&mut self) -> SourceManager {
+        SourceManager {
+            tab_width: self.tabWidth,
+            loc: &mut self.SrcLoc,
         }
     }
 

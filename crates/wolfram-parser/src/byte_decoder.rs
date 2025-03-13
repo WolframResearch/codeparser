@@ -31,12 +31,11 @@ use crate::{
     },
     feature,
     issue::{CodeAction, EncodingIssue, IssueTag, Severity},
-    read::SourceManager,
     source::{
         LineColumn, NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention,
         SourceLocation,
     },
-    tokenizer::{Tokenizer, UnsafeCharacterEncoding},
+    tokenizer::{SourceManager, Tokenizer, UnsafeCharacterEncoding},
     utils,
     wl_character::{EscapeStyle, WLCharacter},
     EncodingMode,
