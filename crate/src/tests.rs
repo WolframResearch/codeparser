@@ -16,7 +16,6 @@ mod test_api;
 mod test_byte_decoder;
 mod test_character_decoder;
 mod test_crashers;
-mod test_ffi;
 mod test_node;
 mod test_parselet;
 mod test_source_character;

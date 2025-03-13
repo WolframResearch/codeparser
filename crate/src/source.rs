@@ -205,12 +205,12 @@ const _: () = assert!(
 pub enum SourceConvention {
     /// Handle next (non-newline) SourceLocation by incrementing column.
     /// Handle next newline by incrementing line.
-    LineColumn = 0,
+    LineColumn,
     // TODO: Clarify, is this the index by unicode character(?), or the byte
     //  offset, or something else?
     /// Handle next (non-newline) SourceLocation by incrementing index.
     /// Handle next newline by incrementing index.
-    CharacterIndex = 1,
+    CharacterIndex,
 }
 
 pub const DEFAULT_TAB_WIDTH: u32 = 4;
