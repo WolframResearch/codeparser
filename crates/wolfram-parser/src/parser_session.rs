@@ -108,16 +108,11 @@ impl<'i> ParserSession<'i> {
                     wasEOF: false,
                     SrcLoc: srcConvention.newSourceLocation(),
                     tabWidth,
-
-                    encodingMode,
-
-                    fatalIssues: Vec::new(),
-                    nonFatalIssues: Vec::new(),
-
-                    unsafe_character_encoding_flag: None,
                 },
 
                 firstLineBehavior,
+
+                encodingMode,
 
                 GroupStack: Vec::new(),
 
@@ -127,6 +122,11 @@ impl<'i> ParserSession<'i> {
                     embedded_newlines: HashSet::new(),
                     embedded_tabs: HashSet::new(),
                 },
+
+                fatalIssues: Vec::new(),
+                nonFatalIssues: Vec::new(),
+
+                unsafe_character_encoding_flag: None,
             },
 
             NodeStack: Vec::new(),
