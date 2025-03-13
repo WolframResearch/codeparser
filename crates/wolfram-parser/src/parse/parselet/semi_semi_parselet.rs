@@ -12,11 +12,7 @@ use crate::{
 //
 
 impl InfixParselet for SemiSemiParselet {
-    fn parse_infix<'i>(
-        &'static self,
-        session: &mut ParserSession<'i>,
-        tok_in: TokenRef<'i>,
-    ) {
+    fn parse_infix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
         panic_if_aborted!();
 
 
@@ -48,11 +44,7 @@ impl InfixParselet for SemiSemiParselet {
 }
 
 impl PrefixParselet for SemiSemiParselet {
-    fn parse_prefix<'i>(
-        &'static self,
-        session: &mut ParserSession<'i>,
-        tok_in: TokenRef<'i>,
-    ) {
+    fn parse_prefix<'i>(&'static self, session: &mut ParserSession<'i>, tok_in: TokenRef<'i>) {
         panic_if_aborted!();
 
         debug_assert_eq!(tok_in.tok, TokenKind::SemiSemi);
@@ -77,8 +69,7 @@ impl SemiSemiParselet {
         //
         // Span should not cross toplevel newlines
         //
-        let SecondTok =
-            session.current_token_eat_trivia_but_not_toplevel_newlines();
+        let SecondTok = session.current_token_eat_trivia_but_not_toplevel_newlines();
 
         //
         // a;;
@@ -91,10 +82,7 @@ impl SemiSemiParselet {
             //    ^SecondTok
             //
 
-            session.push_leaf(Token::at_start(
-                TokenKind::Fake_ImplicitAll,
-                SecondTok,
-            ));
+            session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitAll, SecondTok));
 
             //
             // nextToken() is not needed after an implicit token
@@ -122,8 +110,7 @@ impl SemiSemiParselet {
         //    ^~SecondTok
         //
 
-        session
-            .push_leaf(Token::at_start(TokenKind::Fake_ImplicitAll, SecondTok));
+        session.push_leaf(Token::at_start(TokenKind::Fake_ImplicitAll, SecondTok));
 
         SecondTok.skip(&mut session.tokenizer);
 
@@ -133,13 +120,9 @@ impl SemiSemiParselet {
         // Span should not cross toplevel newlines
         //
         let ThirdTok = session
-            .current_token_eat_trivia_but_not_toplevel_newlines_into(
-                &mut Trivia1.borrow_mut(),
-            );
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia1.borrow_mut());
 
-        if !ThirdTok.tok.isPossibleBeginning()
-            || ThirdTok.tok == TokenKind::SemiSemi
-        {
+        if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok == TokenKind::SemiSemi {
             //
             // a;;;;&
             //      ^ThirdTok
@@ -187,13 +170,9 @@ impl SemiSemiParselet {
         // Span should not cross toplevel newlines
         //
         let ThirdTok = session
-            .current_token_eat_trivia_but_not_toplevel_newlines_into(
-                &mut Trivia1.borrow_mut(),
-            );
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia1.borrow_mut());
 
-        if !ThirdTok.tok.isPossibleBeginning()
-            || ThirdTok.tok != TokenKind::SemiSemi
-        {
+        if !ThirdTok.tok.isPossibleBeginning() || ThirdTok.tok != TokenKind::SemiSemi {
             //
             // a;;b&
             //     ^ThirdTok
@@ -223,13 +202,9 @@ impl SemiSemiParselet {
         // Span should not cross toplevel newlines
         //
         let FourthTok = session
-            .current_token_eat_trivia_but_not_toplevel_newlines_into(
-                &mut Trivia2.borrow_mut(),
-            );
+            .current_token_eat_trivia_but_not_toplevel_newlines_into(&mut Trivia2.borrow_mut());
 
-        if !FourthTok.tok.isPossibleBeginning()
-            || FourthTok.tok == TokenKind::SemiSemi
-        {
+        if !FourthTok.tok.isPossibleBeginning() || FourthTok.tok == TokenKind::SemiSemi {
             //
             // a;;b;;&
             //       ^FourthTok
@@ -273,13 +248,10 @@ impl SemiSemiParselet {
     }
 
     fn reduce_binary(session: &mut ParserSession) {
-        session
-            .reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Span, ctx))
+        session.reduce_and_climb(|ctx| BinaryNode::new(BinaryOperator::Span, ctx))
     }
 
     fn reduce_ternary(session: &mut ParserSession) {
-        session.reduce_and_climb(|ctx| {
-            TernaryNode::new(TernaryOperator::Span, ctx)
-        })
+        session.reduce_and_climb(|ctx| TernaryNode::new(TernaryOperator::Span, ctx))
     }
 }

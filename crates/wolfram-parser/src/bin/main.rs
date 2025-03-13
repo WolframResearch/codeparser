@@ -97,9 +97,7 @@ fn read_file(file: &str, mode: ApiMode, output_mode: OutputMode) {
 fn handle(input: &[u8], mode: ApiMode, output_mode: OutputMode) {
     match mode {
         ApiMode::Tokenize => {
-            let result =
-                wolfram_parser::tokenize_bytes(input, &ParseOptions::default())
-                    .unwrap();
+            let result = wolfram_parser::tokenize_bytes(input, &ParseOptions::default()).unwrap();
             output(output_mode, FmtAsExpr(&result));
         },
         ApiMode::Leaf => {
@@ -111,16 +109,11 @@ fn handle(input: &[u8], mode: ApiMode, output_mode: OutputMode) {
             output(output_mode, FmtAsExpr(result.node_seq()));
         },
         ApiMode::SafeString => {
-            let result =
-                wolfram_parser::safe_string(input, &ParseOptions::default())
-                    .unwrap();
+            let result = wolfram_parser::safe_string(input, &ParseOptions::default()).unwrap();
             output(output_mode, result);
         },
         ApiMode::Expression => {
-            let result = wolfram_parser::parse_bytes_to_cst(
-                input,
-                &ParseOptions::default(),
-            );
+            let result = wolfram_parser::parse_bytes_to_cst(input, &ParseOptions::default());
             output(output_mode, FmtAsExpr(result.node_seq()));
         },
     }

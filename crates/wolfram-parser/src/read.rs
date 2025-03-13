@@ -16,8 +16,7 @@ use crate::{
 
 use self::{
     byte_decoder::ByteDecoder_nextSourceCharacter,
-    character_decoder::CharacterDecoder_nextWLCharacter,
-    wl_character::WLCharacter,
+    character_decoder::CharacterDecoder_nextWLCharacter, wl_character::WLCharacter,
 };
 
 //==========================================================
@@ -109,10 +108,7 @@ impl<'i> Reader<'i> {
 
     /// Returns the next [`SourceCharacter`] in the input without advancing.
     #[must_use]
-    pub(crate) fn peek_source_char(
-        &mut self,
-        policy: NextPolicy,
-    ) -> SourceCharacter {
+    pub(crate) fn peek_source_char(&mut self, policy: NextPolicy) -> SourceCharacter {
         let mark = self.mark();
 
         let c = self.next_source_char(policy);
@@ -122,10 +118,7 @@ impl<'i> Reader<'i> {
         c
     }
 
-    pub(crate) fn next_source_char(
-        &mut self,
-        policy: NextPolicy,
-    ) -> SourceCharacter {
+    pub(crate) fn next_source_char(&mut self, policy: NextPolicy) -> SourceCharacter {
         ByteDecoder_nextSourceCharacter(self, policy)
     }
 
@@ -134,10 +127,7 @@ impl<'i> Reader<'i> {
     //==================================
 
     #[must_use]
-    pub(crate) fn peek_wolfram_char(
-        &mut self,
-        policy: NextPolicy,
-    ) -> WLCharacter {
+    pub(crate) fn peek_wolfram_char(&mut self, policy: NextPolicy) -> WLCharacter {
         let mark = self.mark();
 
         let c = self.next_wolfram_char(policy);
@@ -147,10 +137,7 @@ impl<'i> Reader<'i> {
         c
     }
 
-    pub(crate) fn next_wolfram_char(
-        &mut self,
-        policy: NextPolicy,
-    ) -> WLCharacter {
+    pub(crate) fn next_wolfram_char(&mut self, policy: NextPolicy) -> WLCharacter {
         CharacterDecoder_nextWLCharacter(self, policy)
     }
 
@@ -201,10 +188,7 @@ impl<'i> Reader<'i> {
     // Issue tracking
     //==================================
 
-    pub(crate) fn setUnsafeCharacterEncodingFlag(
-        &mut self,
-        flag: UnsafeCharacterEncoding,
-    ) {
+    pub(crate) fn setUnsafeCharacterEncodingFlag(&mut self, flag: UnsafeCharacterEncoding) {
         self.unsafe_character_encoding_flag = Some(flag);
     }
 

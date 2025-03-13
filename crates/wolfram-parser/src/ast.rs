@@ -259,9 +259,7 @@ impl AbstractSyntaxError {
             AbstractSyntaxError::OpenSquare => "OpenSquare",
             AbstractSyntaxError::ColonColonOpenSquare => "ColonColonOpenSquare",
             AbstractSyntaxError::LeftDoubleBracket => "LeftDoubleBracket",
-            AbstractSyntaxError::NonAssociativePatternTest => {
-                "NonAssociativePatternTest"
-            },
+            AbstractSyntaxError::NonAssociativePatternTest => "NonAssociativePatternTest",
             AbstractSyntaxError::LinearSyntaxBang => "LinearSyntaxBang",
             AbstractSyntaxError::ExpectedTilde => "ExpectedTilde",
             // NOTE: When adding a case here, also update from_str().

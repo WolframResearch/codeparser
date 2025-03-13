@@ -68,9 +68,7 @@ impl Debug for WLCharacter {
             | EscapeStyle::Hex4
             | EscapeStyle::Hex6
             | EscapeStyle::Octal
-            | EscapeStyle::LongName => {
-                write!(f, "WLCharacter({point:?}, {escape:?})")
-            },
+            | EscapeStyle::LongName => write!(f, "WLCharacter({point:?}, {escape:?})"),
         }
     }
 }
@@ -80,10 +78,7 @@ impl WLCharacter {
         WLCharacter::new_with_escape(val.into(), EscapeStyle::None)
     }
 
-    pub(crate) fn new_with_escape<T: Into<CodePoint>>(
-        val: T,
-        escape: EscapeStyle,
-    ) -> Self {
+    pub(crate) fn new_with_escape<T: Into<CodePoint>>(val: T, escape: EscapeStyle) -> Self {
         Self {
             point: val.into(),
             // signBit: val < 0,
@@ -157,33 +152,17 @@ impl Display for WLCharacter {
                 format_char(SourceCharacter::from('\\'))?;
 
                 let source_char: SourceCharacter = match i {
-                    CodePoint::StringMeta_Backspace => {
-                        SourceCharacter::from('b')
-                    },
-                    CodePoint::StringMeta_FormFeed => {
-                        SourceCharacter::from('f')
-                    },
-                    CodePoint::StringMeta_LineFeed => {
-                        SourceCharacter::from('n')
-                    },
-                    CodePoint::StringMeta_CarriageReturn => {
-                        SourceCharacter::from('r')
-                    },
+                    CodePoint::StringMeta_Backspace => SourceCharacter::from('b'),
+                    CodePoint::StringMeta_FormFeed => SourceCharacter::from('f'),
+                    CodePoint::StringMeta_LineFeed => SourceCharacter::from('n'),
+                    CodePoint::StringMeta_CarriageReturn => SourceCharacter::from('r'),
                     CodePoint::StringMeta_Tab => SourceCharacter::from('t'),
                     CodePoint::StringMeta_Open => SourceCharacter::from('<'),
                     CodePoint::StringMeta_Close => SourceCharacter::from('>'),
-                    CodePoint::StringMeta_DoubleQuote => {
-                        SourceCharacter::from('"')
-                    },
-                    CodePoint::StringMeta_Backslash => {
-                        SourceCharacter::from('\\')
-                    },
-                    CodePoint::LineContinuation_LineFeed => {
-                        SourceCharacter::from('\n')
-                    },
-                    CodePoint::LineContinuation_CarriageReturn => {
-                        SourceCharacter::from('\r')
-                    },
+                    CodePoint::StringMeta_DoubleQuote => SourceCharacter::from('"'),
+                    CodePoint::StringMeta_Backslash => SourceCharacter::from('\\'),
+                    CodePoint::LineContinuation_LineFeed => SourceCharacter::from('\n'),
+                    CodePoint::LineContinuation_CarriageReturn => SourceCharacter::from('\r'),
                     CodePoint::LineContinuation_CRLF => {
                         if graphical_flag {
                             write!(s, "{:#}", SourceCharacter::from('\r'))?;
@@ -195,42 +174,18 @@ impl Display for WLCharacter {
 
                         return Ok(());
                     },
-                    Char(CODEPOINT_LINEARSYNTAX_BANG) => {
-                        SourceCharacter::from('!')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_PERCENT) => {
-                        SourceCharacter::from('%')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_AMP) => {
-                        SourceCharacter::from('&')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => {
-                        SourceCharacter::from('(')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => {
-                        SourceCharacter::from(')')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_STAR) => {
-                        SourceCharacter::from('*')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_PLUS) => {
-                        SourceCharacter::from('+')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_SLASH) => {
-                        SourceCharacter::from('/')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_AT) => {
-                        SourceCharacter::from('@')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_CARET) => {
-                        SourceCharacter::from('^')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_UNDER) => {
-                        SourceCharacter::from('_')
-                    },
-                    Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => {
-                        SourceCharacter::from('`')
-                    },
+                    Char(CODEPOINT_LINEARSYNTAX_BANG) => SourceCharacter::from('!'),
+                    Char(CODEPOINT_LINEARSYNTAX_PERCENT) => SourceCharacter::from('%'),
+                    Char(CODEPOINT_LINEARSYNTAX_AMP) => SourceCharacter::from('&'),
+                    Char(CODEPOINT_LINEARSYNTAX_OPENPAREN) => SourceCharacter::from('('),
+                    Char(CODEPOINT_LINEARSYNTAX_CLOSEPAREN) => SourceCharacter::from(')'),
+                    Char(CODEPOINT_LINEARSYNTAX_STAR) => SourceCharacter::from('*'),
+                    Char(CODEPOINT_LINEARSYNTAX_PLUS) => SourceCharacter::from('+'),
+                    Char(CODEPOINT_LINEARSYNTAX_SLASH) => SourceCharacter::from('/'),
+                    Char(CODEPOINT_LINEARSYNTAX_AT) => SourceCharacter::from('@'),
+                    Char(CODEPOINT_LINEARSYNTAX_CARET) => SourceCharacter::from('^'),
+                    Char(CODEPOINT_LINEARSYNTAX_UNDER) => SourceCharacter::from('_'),
+                    Char(CODEPOINT_LINEARSYNTAX_BACKTICK) => SourceCharacter::from('`'),
                     CodePoint::LinearSyntax_Space => SourceCharacter::from(' '),
                     _ => todo!(),
                 };
@@ -260,12 +215,8 @@ impl Display for WLCharacter {
             },
             EscapeStyle::Octal => {
                 i = match i {
-                    CodePoint::StringMeta_DoubleQuote => {
-                        Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
-                    },
-                    CodePoint::StringMeta_Backslash => {
-                        Char(CODEPOINT_ACTUAL_BACKSLASH)
-                    },
+                    CodePoint::StringMeta_DoubleQuote => Char(CODEPOINT_ACTUAL_DOUBLEQUOTE),
+                    CodePoint::StringMeta_Backslash => Char(CODEPOINT_ACTUAL_BACKSLASH),
                     _ => i,
                 };
 
@@ -286,12 +237,8 @@ impl Display for WLCharacter {
             },
             EscapeStyle::Hex2 => {
                 i = match i {
-                    CodePoint::StringMeta_DoubleQuote => {
-                        Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
-                    },
-                    CodePoint::StringMeta_Backslash => {
-                        Char(CODEPOINT_ACTUAL_BACKSLASH)
-                    },
+                    CodePoint::StringMeta_DoubleQuote => Char(CODEPOINT_ACTUAL_DOUBLEQUOTE),
+                    CodePoint::StringMeta_Backslash => Char(CODEPOINT_ACTUAL_BACKSLASH),
                     _ => i,
                 };
 
@@ -310,12 +257,8 @@ impl Display for WLCharacter {
             },
             EscapeStyle::Hex4 => {
                 i = match i {
-                    CodePoint::StringMeta_DoubleQuote => {
-                        Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
-                    },
-                    CodePoint::StringMeta_Backslash => {
-                        Char(CODEPOINT_ACTUAL_BACKSLASH)
-                    },
+                    CodePoint::StringMeta_DoubleQuote => Char(CODEPOINT_ACTUAL_DOUBLEQUOTE),
+                    CodePoint::StringMeta_Backslash => Char(CODEPOINT_ACTUAL_BACKSLASH),
                     _ => i,
                 };
 
@@ -340,12 +283,8 @@ impl Display for WLCharacter {
             },
             EscapeStyle::Hex6 => {
                 i = match i {
-                    CodePoint::StringMeta_DoubleQuote => {
-                        Char(CODEPOINT_ACTUAL_DOUBLEQUOTE)
-                    },
-                    CodePoint::StringMeta_Backslash => {
-                        Char(CODEPOINT_ACTUAL_BACKSLASH)
-                    },
+                    CodePoint::StringMeta_DoubleQuote => Char(CODEPOINT_ACTUAL_DOUBLEQUOTE),
+                    CodePoint::StringMeta_Backslash => Char(CODEPOINT_ACTUAL_BACKSLASH),
                     _ => i,
                 };
 
@@ -725,42 +664,36 @@ impl WLCharacter {
 
     pub(crate) fn isMBLineContinuation(&self) -> bool {
         match self.to_point() {
-            LineContinuation_LineFeed
-            | LineContinuation_CarriageReturn
-            | LineContinuation_CRLF => true,
+            LineContinuation_LineFeed | LineContinuation_CarriageReturn | LineContinuation_CRLF => {
+                true
+            },
             _ => false,
         }
     }
 
     pub(crate) fn isMBUnsafeUTF8Sequence(&self) -> bool {
         match self.to_point() {
-            Unsafe1ByteUtf8Sequence
-            | Unsafe2ByteUtf8Sequence
-            | Unsafe3ByteUtf8Sequence => true,
+            Unsafe1ByteUtf8Sequence | Unsafe2ByteUtf8Sequence | Unsafe3ByteUtf8Sequence => true,
             _ => false,
         }
     }
 }
 
 const FROM_DIGIT_LOOKUP: [char; 256] = [
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
-    'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-    'u', 'v', 'w', 'x', 'y', 'z', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
-    '!',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!', '!',
+    '!', '!', '!', '!', '!', '!', '!', '!', '!',
 ];
 
 fn fromDigit(d: u8) -> char {

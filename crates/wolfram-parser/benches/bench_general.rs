@@ -16,9 +16,7 @@ fn benchmark(c: &mut Criterion) {
     c.bench_function("tokenize 2 + 2", |b| b.iter(|| parse_tokens("2 + 2")));
 
     let boxes_wl = include_str!("../../../CodeParser/Kernel/Boxes.wl");
-    c.bench_function("tokenize Boxes.wl", |b| {
-        b.iter(|| parse_tokens(boxes_wl))
-    });
+    c.bench_function("tokenize Boxes.wl", |b| b.iter(|| parse_tokens(boxes_wl)));
 
     benchmark_large_files(c);
 }
@@ -32,8 +30,7 @@ fn benchmark_large_files(c: &mut Criterion) {
     // Large files
     //------------
 
-    let relief_plot =
-        fs::read(Path::new("../../Tests/files/large/ReliefPlot.nb")).unwrap();
+    let relief_plot = fs::read(Path::new("../../Tests/files/large/ReliefPlot.nb")).unwrap();
     group.bench_function("tokenize ReliefPlot.nb", |b| {
         b.iter(|| parse_tokens_u8(&relief_plot))
     });
@@ -54,8 +51,7 @@ fn benchmark_large_files(c: &mut Criterion) {
     group.sample_size(30);
 
     let geomagnetic_models =
-        fs::read(Path::new("../../Tests/files/large/geomagneticmodels.m"))
-            .unwrap();
+        fs::read(Path::new("../../Tests/files/large/geomagneticmodels.m")).unwrap();
     group.bench_function("tokenize geomagneticmodels.m", |b| {
         b.iter(|| parse_tokens_u8(&geomagnetic_models))
     });

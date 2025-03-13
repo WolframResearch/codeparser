@@ -5,8 +5,7 @@ use crate::{cst::CstNode, ParseOptions, ParserSession};
 fn ParseletTest_Bug1() {
     let strIn = "a /: b := c";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let tok = session.tokenizer.peek_token();
 
@@ -28,8 +27,7 @@ fn ParseletTest_Bug2() {
     //
     let strIn = "a<b ";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let tok = session.tokenizer.peek_token();
 
@@ -46,8 +44,7 @@ fn ParseletTest_Bug2() {
 fn ParseletTest_Bug3() {
     let strIn = "a\\[Integral]b\\[Integral]c ";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let tok = session.tokenizer.peek_token();
 
@@ -64,8 +61,7 @@ fn ParseletTest_Bug3() {
 fn ParseletTest_Bug4() {
     let strIn = "\\[RawLeftBrace]*\\[RawRightBrace]";
 
-    let mut session =
-        ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
+    let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
     let tok = session.tokenizer.peek_token();
 

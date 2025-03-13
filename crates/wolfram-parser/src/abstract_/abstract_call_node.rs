@@ -5,9 +5,8 @@ use crate::{
     ast::WL,
     ast::{AstMetadata, AstNode},
     cst::{
-        BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode,
-        CallOperator, CompoundNode, CstNode, GroupNode, GroupOperator,
-        InfixNode, Node, OperatorNode, PostfixNode, PrefixNode,
+        BinaryNode, BoxKind, BoxNode, CallBody, CallHead, CallNode, CallOperator, CompoundNode,
+        CstNode, GroupNode, GroupOperator, InfixNode, Node, OperatorNode, PostfixNode, PrefixNode,
     },
     issue::{Issue, IssueTag, Severity},
     symbol as sym,
@@ -19,8 +18,8 @@ use crate::{
 };
 
 use super::{
-    abstractGroupNode, abstractGroupNode_GroupMissingCloserNode, abstract_,
-    expect_children, AstCall, ToNode_Symbol,
+    abstractGroupNode, abstractGroupNode_GroupMissingCloserNode, abstract_, expect_children,
+    AstCall, ToNode_Symbol,
 };
 
 /// These boxes are ok to have as head of calls
@@ -39,10 +38,7 @@ const OK_CALL_BOX_KINDS: &[BoxKind] = &[
     BoxKind::SubsuperscriptBox,
 ];
 
-pub(super) fn abstract_call_node<
-    I: TokenInput + Debug,
-    S: TokenSource + Debug,
->(
+pub(super) fn abstract_call_node<I: TokenInput + Debug, S: TokenSource + Debug>(
     call: CallNode<I, S>,
 ) -> AstNode {
     match AggCallNode::from_cst(call) {
@@ -111,19 +107,18 @@ pub(super) fn abstract_call_node<
             match head {
                 // feel strongly about ##2[[arg]]
                 // ##2 represents a sequence of arguments, so it is wrong to call
-                LHS!(LeafNode[HashHash, _, _])
-                | LHS!(CompoundNode[SlotSequence, _, _]) => data.issues.push(
-                    Issue::syntax(
-                        IssueTag::StrangeCallSlotSequence,
-                        "Unexpected ``Part`` call.".to_owned(),
-                        Severity::Error,
-                        first.source().into_general(),
-                        1.0,
+                LHS!(LeafNode[HashHash, _, _]) | LHS!(CompoundNode[SlotSequence, _, _]) => {
+                    data.issues.push(
+                        Issue::syntax(
+                            IssueTag::StrangeCallSlotSequence,
+                            "Unexpected ``Part`` call.".to_owned(),
+                            Severity::Error,
+                            first.source().into_general(),
+                            1.0,
+                        )
+                        .with_additional_sources(vec![last.source().into_general()]),
                     )
-                    .with_additional_sources(vec![last
-                        .source()
-                        .into_general()]),
-                ),
+                },
                 LHS!(LeafNode[Symbol /* | String */ | Hash | Under | UnderUnder | UnderUnderUnder, _, _])
                 | LHS!(CallNode[_, _, _])
                 | LHS!(CompoundNode[
@@ -135,8 +130,7 @@ pub(super) fn abstract_call_node<
                 ]) => {
                     // these are fine
                 },
-                LHS!(LeafNode[Percent | PercentPercent, _, _])
-                | LHS!(CompoundNode[Out, _, _]) => {
+                LHS!(LeafNode[Percent | PercentPercent, _, _]) | LHS!(CompoundNode[Out, _, _]) => {
                     /*
                     was:
 
@@ -163,9 +157,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 LHS!(PrefixNode[CodeParser_PrefixLinearSyntaxBang, _, _]) => {
@@ -177,9 +169,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 LHS!(InfixNode[CompoundExpression, _, _]) => {
@@ -191,9 +181,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 // (*
@@ -201,8 +189,7 @@ pub(super) fn abstract_call_node<
                 //     (* these are fine *)
                 //     Null
                 // ,*)
-                LHS!(GroupNode[CodeParser_GroupParen | List | Association, _, _]) =>
-                {
+                LHS!(GroupNode[CodeParser_GroupParen | List | Association, _, _]) => {
                     // these are fine
                 },
                 LHS!(GroupNode[_, _, _]) => {
@@ -214,9 +201,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 LHS!(PostfixNode[Transpose, _, _]) => {
@@ -227,9 +212,7 @@ pub(super) fn abstract_call_node<
                 //
                 // Now handle boxes
                 //
-                LHS!(BoxNode[box_kind:_, _, _])
-                    if OK_CALL_BOX_KINDS.contains(&box_kind) =>
-                {
+                LHS!(BoxNode[box_kind:_, _, _]) if OK_CALL_BOX_KINDS.contains(&box_kind) => {
                     // (* this is fine *)
                     // Null
                 },
@@ -239,17 +222,12 @@ pub(super) fn abstract_call_node<
                             IssueTag::StrangeCall,
                             // FIXME: This should format `head` using a pretty
                             //        display form, not Debug.
-                            format!(
-                                "Unexpected ``Part`` call: ``{:?}``.",
-                                head
-                            ),
+                            format!("Unexpected ``Part`` call: ``{:?}``.", head),
                             Severity::Error,
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 _ => {
@@ -265,9 +243,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
             };
@@ -569,8 +545,7 @@ pub(super) fn abstract_call_node<
         //
         // warn about anything else
         //
-        LHS!(CallNode[head:_, part:GroupNode[CodeParser_GroupTypeSpecifier, _, _], data:_]) =>
-        {
+        LHS!(CallNode[head:_, part:GroupNode[CodeParser_GroupTypeSpecifier, _, _], data:_]) => {
             let mut data = AstMetadata::from_src(data);
 
             data.issues.push(
@@ -582,8 +557,7 @@ pub(super) fn abstract_call_node<
                     0.95,
                 )
                 .with_additional_descriptions(vec![
-                    "The head of ``::[]`` syntax is usually a string."
-                        .to_owned(),
+                    "The head of ``::[]`` syntax is usually a string.".to_owned(),
                 ]),
             );
 
@@ -617,8 +591,7 @@ pub(super) fn abstract_call_node<
             match head {
                 // feel strongly about ##2[arg]
                 // ##2 represents a sequence of arguments, so it is wrong to call
-                LHS!(LeafNode[HashHash, _, _])
-                | LHS!(CompoundNode[SlotSequence, _, _]) => {
+                LHS!(LeafNode[HashHash, _, _]) | LHS!(CompoundNode[SlotSequence, _, _]) => {
                     data.issues.push(
                         Issue::syntax(
                             IssueTag::StrangeCallSlotSequence,
@@ -627,9 +600,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             1.0,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 LHS!(LeafNode[Symbol /* | String */ | Hash | Under | UnderUnder | UnderUnderUnder, _, _])
@@ -643,8 +614,7 @@ pub(super) fn abstract_call_node<
                 ]) => {
                     // these are fine
                 },
-                LHS!(LeafNode[Percent | PercentPercent, _, _])
-                | LHS!(CompoundNode[Out, _, _]) => {
+                LHS!(LeafNode[Percent | PercentPercent, _, _]) | LHS!(CompoundNode[Out, _, _]) => {
                     // was:
                     //
                     // AppendTo[issues,
@@ -668,9 +638,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 LHS!(PrefixNode[CodeParser_PrefixLinearSyntaxBang, _, _]) => {
@@ -682,9 +650,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 /*
@@ -701,13 +667,10 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
-                LHS!(GroupNode[CodeParser_GroupParen | List | Association, _, _]) =>
-                {
+                LHS!(GroupNode[CodeParser_GroupParen | List | Association, _, _]) => {
                     // these are fine
                 },
                 LHS!(GroupNode[_, _, _]) => {
@@ -719,9 +682,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
 
@@ -731,9 +692,7 @@ pub(super) fn abstract_call_node<
                 //
                 // Now handle boxes
                 //
-                LHS!(BoxNode[box_kind:_, _, _])
-                    if OK_CALL_BOX_KINDS.contains(&box_kind) =>
-                {
+                LHS!(BoxNode[box_kind:_, _, _]) if OK_CALL_BOX_KINDS.contains(&box_kind) => {
                     // this is fine
                 },
                 LHS!(BoxNode[_, _, _]) => {
@@ -747,9 +706,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
                 //
@@ -764,9 +721,7 @@ pub(super) fn abstract_call_node<
                             first.source().into_general(),
                             0.95,
                         )
-                        .with_additional_sources(vec![
-                            last.source().into_general(),
-                        ]),
+                        .with_additional_sources(vec![last.source().into_general()]),
                     );
                 },
             };
@@ -810,8 +765,7 @@ pub(super) fn abstract_call_node<
         ]) => {
             let head = abstract_(head);
 
-            let (_, children, _) =
-                abstractGroupNode_GroupMissingCloserNode(part);
+            let (_, children, _) = abstractGroupNode_GroupMissingCloserNode(part);
 
             WL!(CallMissingCloserNode[head, children, data])
         },
@@ -822,8 +776,7 @@ pub(super) fn abstract_call_node<
         ]) => {
             let head = abstract_(head);
 
-            let (_, children, _) =
-                abstractGroupNode_GroupMissingCloserNode(part);
+            let (_, children, _) = abstractGroupNode_GroupMissingCloserNode(part);
 
             /* TODO: Port this issue joining logic
                 part = abstractGroupNode[part];
@@ -852,8 +805,7 @@ pub(super) fn abstract_call_node<
         ]) => {
             let head = abstract_(head);
 
-            let (_, mut children, _) =
-                abstractGroupNode_GroupMissingCloserNode(part);
+            let (_, mut children, _) = abstractGroupNode_GroupMissingCloserNode(part);
 
             /* TODO: Port this issue joining logic
                 part = abstractGroupNode[part];
