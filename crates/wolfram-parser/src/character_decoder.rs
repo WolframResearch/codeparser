@@ -1,4 +1,5 @@
 use crate::{
+    byte_decoder::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     code_point::{CodePoint::*, *},
     feature,
     issue::{CodeAction, IssueTag, Severity, SyntaxIssue},
@@ -6,7 +7,6 @@ use crate::{
     long_names_registration::{
         LONGNAME_TO_CODE_POINT_MAP__NAMES, LONGNAME_TO_CODE_POINT_MAP__POINTS,
     },
-    read::{ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter},
     source::{
         BufferAndLength, NextPolicy,
         NextPolicyBits::{ENABLE_CHARACTER_DECODING_ISSUES, SCAN_FOR_UNRECOGNIZEDLONGNAMES},

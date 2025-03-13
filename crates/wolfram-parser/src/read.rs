@@ -1,17 +1,9 @@
 //! Reading Wolfram source files.
 
-mod byte_buffer;
-mod byte_decoder;
-
-
 use crate::{
     issue::{Issue, Severity},
     source::{Buffer, SourceLocation},
     EncodingMode, UnsafeCharacterEncoding,
-};
-
-pub(crate) use self::byte_decoder::{
-    ByteDecoder_currentSourceCharacter, ByteDecoder_nextSourceCharacter,
 };
 
 //==========================================================

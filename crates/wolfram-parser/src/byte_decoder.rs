@@ -24,16 +24,14 @@
 //
 
 use crate::{
+    byte_buffer::{ByteBuffer_currentByte, ByteBuffer_nextByte},
     code_point::{
         CodePoint::{self, *},
         CODEPOINT_BOM,
     },
     feature,
     issue::{CodeAction, EncodingIssue, IssueTag, Severity},
-    read::{
-        byte_buffer::{ByteBuffer_currentByte, ByteBuffer_nextByte},
-        Reader, SourceManager,
-    },
+    read::{Reader, SourceManager},
     source::{
         LineColumn, NextPolicy, NextPolicyBits::*, Source, SourceCharacter, SourceConvention,
         SourceLocation,
