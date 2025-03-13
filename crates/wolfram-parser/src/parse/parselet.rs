@@ -733,12 +733,7 @@ impl PrefixParselet for SymbolParselet {
                 // Context-sensitive and OK to build stack
                 //
 
-                //
-                // infix
-                //
-                // Something like  a_.
-
-                session.push_leaf_and_next(tok);
+                UnderDotParselet::parse_infix_context_sensitive(session, tok);
 
                 // MUSTTAIl
                 return SymbolParselet::reducePatternOptionalDefault(session);
