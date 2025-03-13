@@ -14,10 +14,11 @@ use crate::{
     parselet_registration::INFIX_PARSELETS,
     // parselet::Parselet,
     precedence::{Precedence, *},
+    source::TOPLEVEL,
 
     token::{BorrowedTokenInput, TokenKind, TokenRef},
     token_enum::Closer,
-    tokenizer::{Tokenizer, Tokenizer_currentToken_stringifyAsFile},
+    tokenizer::{Tokenizer, Tokenizer_currentToken, Tokenizer_currentToken_stringifyAsFile},
     FirstLineBehavior,
     NodeSeq,
 };
@@ -115,7 +116,7 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
             // Handle the optional #! shebang
             //
 
-            let mut peek = session.peek_token();
+            let mut peek = Tokenizer_currentToken(session, TOPLEVEL);
 
             if peek.tok != TokenKind::Hash {
                 // not #!
@@ -130,7 +131,7 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
             peek.skip(session);
 
-            peek = session.peek_token();
+            peek = Tokenizer_currentToken(session, TOPLEVEL);
 
             if peek.tok != TokenKind::Bang {
                 // not #!
@@ -154,7 +155,7 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
                     break;
                 }
 
-                let peek = session.peek_token();
+                let peek = Tokenizer_currentToken(session, TOPLEVEL);
 
                 if peek.tok == TokenKind::EndOfFile {
                     break;
@@ -179,7 +180,7 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
             // Handle the #! shebang
             //
 
-            let mut peek = session.peek_token();
+            let mut peek = Tokenizer_currentToken(session, TOPLEVEL);
 
             if peek.tok != TokenKind::Hash {
                 //
@@ -191,7 +192,7 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
 
             peek.skip(session);
 
-            peek = session.peek_token();
+            peek = Tokenizer_currentToken(session, TOPLEVEL);
 
             if peek.tok != TokenKind::Bang {
                 //
@@ -208,7 +209,7 @@ pub(crate) fn Parser_handleFirstLine<'i>(session: &mut Tokenizer<'i>) {
                     break;
                 }
 
-                let peek = session.peek_token();
+                let peek = Tokenizer_currentToken(session, TOPLEVEL);
 
                 if peek.tok == TokenKind::EndOfFile {
                     break;
@@ -327,7 +328,7 @@ impl<'i> ParserSession<'i> {
     /// This function always returns a non-trivia token
     /// ([`TokenKind::isTrivia()`] is false).
     pub(crate) fn current_token_eat_trivia(&mut self) -> TokenRef<'i> {
-        let mut tok = self.tokenizer.peek_token();
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
 
         self.eat_trivia(&mut tok);
 
@@ -349,7 +350,7 @@ impl<'i> ParserSession<'i> {
         &mut self,
         container: &mut TriviaSeq<'i>,
     ) -> TokenRef<'i> {
-        let mut tok = self.tokenizer.peek_token();
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
 
         self.eat_trivia_into(&mut tok, container);
 
@@ -369,7 +370,7 @@ impl<'i> ParserSession<'i> {
     }
 
     pub(crate) fn current_token_eat_trivia_but_not_toplevel_newlines(&mut self) -> TokenRef<'i> {
-        let mut tok = self.tokenizer.peek_token();
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
 
         //
         // CompoundExpression should not cross toplevel newlines
@@ -383,7 +384,7 @@ impl<'i> ParserSession<'i> {
         &mut self,
         container: &mut TriviaSeq<'i>,
     ) -> TokenRef<'i> {
-        let mut tok = self.tokenizer.peek_token();
+        let mut tok = Tokenizer_currentToken(&mut self.tokenizer, TOPLEVEL);
 
         //
         // CompoundExpression should not cross toplevel newlines
@@ -399,22 +400,26 @@ impl<'i> ParserSession<'i> {
     // TODO(cleanup): Inline these functions into their currently only callsite?
 
     fn eat_trivia(&mut self, token: &mut TokenRef<'i>) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTrivia() {
             self.NodeStack.push(Node::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
-            *token = self.tokenizer.peek_token();
+            *token = Tokenizer_currentToken(&mut self.tokenizer, policy);
         }
     }
 
     fn eat_trivia_into(&mut self, token: &mut TokenRef<'i>, Args: &mut TriviaSeq<'i>) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTrivia() {
             Args.push(token.clone());
 
             token.skip(&mut self.tokenizer);
 
-            *token = self.tokenizer.peek_token();
+            *token = Tokenizer_currentToken(&mut self.tokenizer, policy);
         }
     }
 
@@ -429,12 +434,14 @@ impl<'i> ParserSession<'i> {
     }
 
     fn eat_trivia_but_not_toplevel_newlines(&mut self, token: &mut TokenRef<'i>) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTriviaButNotToplevelNewline() {
             self.NodeStack.push(Node::Token(token.clone()));
 
             token.skip(&mut self.tokenizer);
 
-            *token = self.tokenizer.peek_token();
+            *token = Tokenizer_currentToken(&mut self.tokenizer, policy);
         }
     }
 
@@ -443,12 +450,14 @@ impl<'i> ParserSession<'i> {
         token: &mut TokenRef<'i>,
         Args: &mut TriviaSeq<'i>,
     ) {
+        let policy = TOPLEVEL;
+
         while token.tok.isTriviaButNotToplevelNewline() {
             Args.push(token.clone().into());
 
             token.skip(&mut self.tokenizer);
 
-            *token = self.tokenizer.peek_token();
+            *token = Tokenizer_currentToken(&mut self.tokenizer, policy);
         }
     }
 

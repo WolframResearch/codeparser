@@ -1,4 +1,9 @@
-use crate::{src, token, ParseOptions, ParserSession, SourceConvention};
+use crate::{
+    source::TOPLEVEL,
+    src, token,
+    tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
+    ParseOptions, ParserSession, SourceConvention,
+};
 
 use pretty_assertions::assert_eq;
 
@@ -9,15 +14,17 @@ fn CrashTest_Crash0_tokens() {
 
     let mut session = ParserSession::new(bufAndLen, &ParseOptions::default());
 
-    let mut tok = session.tokenizer.peek_token();
+    let policy = TOPLEVEL;
 
-    assert_eq!(tok, token!(Integer, "1" @ 0, src!(1:1-1:2)));
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, policy);
 
-    let _ = session.tokenizer.next_token();
+    assert_eq!(Tok, token!(Integer, "1" @ 0, src!(1:1-1:2)));
 
-    tok = session.tokenizer.peek_token();
+    Tokenizer_nextToken(&mut session.tokenizer, policy);
 
-    assert_eq!(tok, token!(EndOfFile, "\\\n" @ 1, src!(1:2-2:1)));
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, policy);
+
+    assert_eq!(Tok, token!(EndOfFile, "\\\n" @ 1, src!(1:2-2:1)));
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

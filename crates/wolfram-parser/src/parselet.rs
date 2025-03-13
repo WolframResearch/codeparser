@@ -20,7 +20,7 @@ use crate::{
     source::*,
     token::{Token, TokenKind, TokenRef},
     token_enum::{Closer, GroupOpenerToCloser, TokenToCloser},
-    tokenizer::Tokenizer_currentToken_stringifyAsTag,
+    tokenizer::{Tokenizer_currentToken, Tokenizer_currentToken_stringifyAsTag},
 };
 
 pub(crate) type ParseletPtr = &'static dyn Parselet;
@@ -461,8 +461,7 @@ impl PrefixParselet for PrefixCloserParselet {
         // Do not take the closer.
         // Delay taking the closer until necessary. This allows  { 1 + }  to be parsed as a GroupNode
         //
-        // TODO(cleanup): This call does nothing? Add test and remove.
-        let _ = session.tokenizer.peek_token();
+        Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
         // MUSTTAIL
         return session.try_continue();
@@ -588,8 +587,7 @@ impl PrefixParselet for PrefixUnhandledParselet {
         //
         // Do not take next token
         //
-        // TODO(cleanup): This call does nothing? Add test and remove.
-        let _ = session.tokenizer.peek_token();
+        Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
         let I = INFIX_PARSELETS[usize::from(tok_in.tok.value())];
 
@@ -660,13 +658,13 @@ impl PrefixParselet for SymbolParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let tok = session.tokenizer.peek_token();
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
         //
         // if we are here, then we know that Sym could bind to _
         //
 
-        match tok.tok {
+        match Tok.tok {
             TokenKind::Under => {
                 //
                 // Something like  a_
@@ -678,7 +676,7 @@ impl PrefixParselet for SymbolParselet {
                 // Context-sensitive and OK to build stack
                 //
 
-                under1Parselet.parse_infix_context_sensitive(session, tok);
+                under1Parselet.parse_infix_context_sensitive(session, Tok);
 
                 // MUSTTAIl
                 return SymbolParselet::reducePatternBlank(session, &under1Parselet);
@@ -694,7 +692,7 @@ impl PrefixParselet for SymbolParselet {
                 // Context-sensitive and OK to build stack
                 //
 
-                under2Parselet.parse_infix_context_sensitive(session, tok);
+                under2Parselet.parse_infix_context_sensitive(session, Tok);
 
                 // MUSTTAIl
                 return SymbolParselet::reducePatternBlank(session, &under2Parselet);
@@ -710,7 +708,7 @@ impl PrefixParselet for SymbolParselet {
                 // Context-sensitive and OK to build stack
                 //
 
-                under3Parselet.parse_infix_context_sensitive(session, tok);
+                under3Parselet.parse_infix_context_sensitive(session, Tok);
 
                 // MUSTTAIl
                 return SymbolParselet::reducePatternBlank(session, &under3Parselet);
@@ -726,7 +724,7 @@ impl PrefixParselet for SymbolParselet {
                 // Context-sensitive and OK to build stack
                 //
 
-                UnderDotParselet::parse_infix_context_sensitive(session, tok);
+                UnderDotParselet::parse_infix_context_sensitive(session, Tok);
 
                 // MUSTTAIl
                 return SymbolParselet::reducePatternOptionalDefault(session);
@@ -2335,13 +2333,13 @@ impl PrefixParselet for HashParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let tok = session.tokenizer.peek_token_with(INSIDE_SLOT);
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, INSIDE_SLOT);
 
-        match tok.tok {
+        match Tok.tok {
             TokenKind::Integer | TokenKind::String => {
                 session.push_context(PRECEDENCE_HIGHEST);
 
-                session.push_leaf_and_next(tok);
+                session.push_leaf_and_next(Tok);
 
                 // MUSTTAIl
                 return HashParselet::reduce_Slot(session);
@@ -2375,13 +2373,13 @@ impl PrefixParselet for HashHashParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let tok = session.tokenizer.peek_token_with(INSIDE_SLOTSEQUENCE);
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, INSIDE_SLOTSEQUENCE);
 
-        match tok.tok {
+        match Tok.tok {
             TokenKind::Integer => {
                 session.push_context(PRECEDENCE_HIGHEST);
 
-                session.push_leaf_and_next(tok);
+                session.push_leaf_and_next(Tok);
 
                 // MUSTTAIl
                 return HashHashParselet::reduce_SlotSequence(session);
@@ -2415,13 +2413,13 @@ impl PrefixParselet for PercentParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let tok = session.tokenizer.peek_token_with(INSIDE_OUT);
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, INSIDE_OUT);
 
-        match tok.tok {
+        match Tok.tok {
             TokenKind::Integer => {
                 session.push_context(PRECEDENCE_HIGHEST);
 
-                session.push_leaf_and_next(tok);
+                session.push_leaf_and_next(Tok);
 
                 // MUSTTAIl
                 return PercentParselet::reduce_Out(session);

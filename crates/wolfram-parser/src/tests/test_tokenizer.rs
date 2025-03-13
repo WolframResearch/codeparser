@@ -1,6 +1,8 @@
 use crate::{
     source::{NextPolicyBits::RETURN_TOPLEVELNEWLINE, SourceLocation, TOPLEVEL},
-    src, token, ParseOptions, ParserSession,
+    src, token,
+    tokenizer::{Tokenizer_currentToken, Tokenizer_nextToken},
+    ParseOptions, ParserSession,
 };
 
 use pretty_assertions::assert_eq;
@@ -28,7 +30,7 @@ fn TokenizerTest_Bug2() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let Tok = session.tokenizer.peek_token();
+    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     Tok.skip(&mut session.tokenizer);
 
@@ -75,19 +77,19 @@ fn TokenizerTest_IntegerRealMixup() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let Tok1 = session.tokenizer.peek_token();
+    let Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok1, token!(Integer, "0" @ 0, src!(1:1-1:2)));
 
     Tok1.skip(&mut session.tokenizer);
 
-    let Tok2 = session.tokenizer.peek_token();
+    let Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok2, token!(DotDot, ".." @ 1, src!(1:2-1:4)));
 
     Tok2.skip(&mut session.tokenizer);
 
-    let Tok3 = session.tokenizer.peek_token();
+    let Tok3 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok3, token!(EndOfFile, "" @ 3, src!(1:4-1:4)));
 
@@ -101,25 +103,25 @@ fn TokenizerTest_Basic2() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let Tok1 = session.tokenizer.peek_token();
+    let Tok1 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok1, token!(Symbol, "\\[Alpha]bc" @ 0, src!(1:1-1:11)));
 
     Tok1.skip(&mut session.tokenizer);
 
-    let Tok2 = session.tokenizer.peek_token();
+    let Tok2 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok2, token!(Plus, "+" @ 10, src!(1:11-1:12)));
 
     Tok2.skip(&mut session.tokenizer);
 
-    let Tok3 = session.tokenizer.peek_token();
+    let Tok3 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok3, token!(Integer, "1" @ 11, src!(1:12-1:13)));
 
     Tok3.skip(&mut session.tokenizer);
 
-    let Tok4 = session.tokenizer.peek_token();
+    let Tok4 = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok4, token!(EndOfFile, "" @ 12, src!(1:13-1:13)));
 
@@ -133,7 +135,7 @@ fn TokenizerTest_OldAssert1() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let Tok = session.tokenizer.peek_token();
+    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(Integer, "8" @ 0, src!(1:1-1:2)));
 
@@ -147,7 +149,7 @@ fn TokenizerTest_Basic3() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut Tok = session.tokenizer.peek_token();
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(OpenCurly, "{" @ 0, src!(1:1-1:2)));
 
@@ -156,15 +158,13 @@ fn TokenizerTest_Basic3() {
     //
     // Clear 0x100 because we are inside a group now
     //
-    Tok = session
-        .tokenizer
-        .peek_token_with(TOPLEVEL & !(RETURN_TOPLEVELNEWLINE));
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL & !(RETURN_TOPLEVELNEWLINE));
 
     assert_eq!(Tok, token!(InternalNewline, "\n" @ 1, src!(1:2-2:1)));
 
     Tok.skip(&mut session.tokenizer);
 
-    Tok = session.tokenizer.peek_token();
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(CloseCurly, "}" @ 2, src!(2:1-2:2)));
 
@@ -184,7 +184,7 @@ fn TokenizerTest_Basic4() {
 
     assert_eq!(session.tokenizer.wasEOF, false);
 
-    let mut Tok = session.tokenizer.peek_token();
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(
         Tok,
@@ -197,7 +197,7 @@ fn TokenizerTest_Basic4() {
 
     Tok.skip(&mut session.tokenizer);
 
-    Tok = session.tokenizer.peek_token();
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(EndOfFile, "" @ 1, src!(1:2-1:2)));
 
@@ -217,7 +217,7 @@ fn TokenizerTest_Crash1() {
 
     let mut session = ParserSession::new(arr, &ParseOptions::default());
 
-    let _ = session.tokenizer.peek_token();
+    Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(session.nonFatalIssues().len(), 1);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -229,13 +229,13 @@ fn TokenizerTest_LineContinuation1() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut Tok = session.tokenizer.peek_token();
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(Symbol, "ab\\\ncd" @ 0, src!(1:1-2:3)));
 
-    let _ = session.tokenizer.next_token();
+    Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
 
-    Tok = session.tokenizer.peek_token();
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(EndOfFile, "" @ 6, src!(2:3-2:3)));
 
@@ -249,13 +249,13 @@ fn TokenizerTest_LineContinuation2() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut Tok = session.tokenizer.peek_token();
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(Symbol, "ab\\\r\ncd" @ 0, src!(1:1-2:3)));
 
-    let _ = session.tokenizer.next_token();
+    Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
 
-    Tok = session.tokenizer.peek_token();
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(EndOfFile, "" @ 7, src!(2:3-2:3)));
 
@@ -269,13 +269,13 @@ fn TokenizerTest_LineContinuation3() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut Tok = session.tokenizer.peek_token();
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(Symbol, "ab\\\rcd" @ 0, src!(1:1-2:3)));
 
-    let _ = session.tokenizer.next_token();
+    Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
 
-    Tok = session.tokenizer.peek_token();
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(EndOfFile, "" @ 6, src!(2:3-2:3)));
 
@@ -289,13 +289,13 @@ fn TokenizerTest_LineContinuation4() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let mut Tok = session.tokenizer.peek_token();
+    let mut Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(Integer, "1" @ 0, src!(1:1-1:2)));
 
-    let _ = session.tokenizer.next_token();
+    Tokenizer_nextToken(&mut session.tokenizer, TOPLEVEL);
 
-    Tok = session.tokenizer.peek_token();
+    Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
     assert_eq!(Tok, token!(EndOfFile, "\\\n" @ 1, src!(1:2-2:1)));
 

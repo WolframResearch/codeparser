@@ -1,4 +1,6 @@
-use crate::{cst::CstNode, ParseOptions, ParserSession};
+use crate::{
+    cst::CstNode, source::TOPLEVEL, tokenizer::Tokenizer_currentToken, ParseOptions, ParserSession,
+};
 
 
 #[test]
@@ -7,9 +9,9 @@ fn ParseletTest_Bug1() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let tok = session.tokenizer.peek_token();
+    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.parse_prefix(tok);
+    session.parse_prefix(Tok);
 
     let P: &mut CstNode<_> = session.top_node();
 
@@ -29,9 +31,9 @@ fn ParseletTest_Bug2() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let tok = session.tokenizer.peek_token();
+    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.parse_prefix(tok);
+    session.parse_prefix(Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -46,9 +48,9 @@ fn ParseletTest_Bug3() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let tok = session.tokenizer.peek_token();
+    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.parse_prefix(tok);
+    session.parse_prefix(Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);
@@ -63,9 +65,9 @@ fn ParseletTest_Bug4() {
 
     let mut session = ParserSession::new(strIn.as_bytes(), &ParseOptions::default());
 
-    let tok = session.tokenizer.peek_token();
+    let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-    session.parse_prefix(tok);
+    session.parse_prefix(Tok);
 
     assert_eq!(session.nonFatalIssues().len(), 0);
     assert_eq!(session.fatalIssues().len(), 0);

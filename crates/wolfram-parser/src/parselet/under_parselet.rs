@@ -4,7 +4,9 @@ use crate::{
     parselet::*,
     parser::ParserSession,
     precedence::*,
+    source::*,
     token::{TokenKind, TokenRef},
+    tokenizer::Tokenizer_currentToken,
 };
 
 impl UnderParselet {
@@ -30,9 +32,9 @@ impl PrefixParselet for UnderParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let tok = session.tokenizer.peek_token();
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        if tok.tok == TokenKind::Symbol {
+        if Tok.tok == TokenKind::Symbol {
             //
             // Something like  _b
             //
@@ -43,13 +45,13 @@ impl PrefixParselet for UnderParselet {
             // Context-sensitive and OK to build stack
             //
 
-            SymbolParselet::parse_infix_context_sensitive(session, tok);
+            SymbolParselet::parse_infix_context_sensitive(session, Tok);
 
             // MUSTTAIL
             return self.reduce_Blank(session);
         }
 
-        if tok.tok == TokenKind::Error_ExpectedLetterlike {
+        if Tok.tok == TokenKind::Error_ExpectedLetterlike {
             //
             // Something like  _a`
             //
@@ -58,7 +60,7 @@ impl PrefixParselet for UnderParselet {
 
             session.push_context(PRECEDENCE_HIGHEST);
 
-            session.push_leaf_and_next(tok);
+            session.push_leaf_and_next(Tok);
 
             // MUSTTAIL
             return self.reduce_Blank(session);
@@ -88,9 +90,9 @@ impl UnderParselet {
 
         session.push_leaf_and_next(tok_in);
 
-        let tok = session.tokenizer.peek_token();
+        let Tok = Tokenizer_currentToken(&mut session.tokenizer, TOPLEVEL);
 
-        if tok.tok == TokenKind::Symbol {
+        if Tok.tok == TokenKind::Symbol {
             //
             // Something like  a_b
             //
@@ -101,13 +103,13 @@ impl UnderParselet {
             // Context-sensitive and OK to build stack
             //
 
-            SymbolParselet::parse_infix_context_sensitive(session, tok);
+            SymbolParselet::parse_infix_context_sensitive(session, Tok);
 
             // MUSTTAIL
             return self.reduce_Blank_context_sensitive(session);
         }
 
-        if tok.tok == TokenKind::Error_ExpectedLetterlike {
+        if Tok.tok == TokenKind::Error_ExpectedLetterlike {
             //
             // Something like  a_b`
             //
@@ -116,7 +118,7 @@ impl UnderParselet {
 
             session.push_context(PRECEDENCE_HIGHEST);
 
-            session.push_leaf_and_next(tok);
+            session.push_leaf_and_next(Tok);
 
             // MUSTTAIL
             return self.reduce_Blank_context_sensitive(session);
