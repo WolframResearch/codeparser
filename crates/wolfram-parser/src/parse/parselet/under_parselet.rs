@@ -13,6 +13,10 @@ impl UnderParselet {
     ) -> Self {
         Self { BOp, PBOp }
     }
+
+    fn getBOp(&self) -> CompoundOperator {
+        return self.BOp;
+    }
 }
 
 impl PrefixParselet for UnderParselet {
@@ -81,7 +85,7 @@ impl UnderParselet {
                 //
                 session.push_leaf_and_next(tok);
 
-                session.reduce(|ctx| CompoundNode::new(self.BOp, ctx));
+                session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
             },
 
             TokenKind::Error_ExpectedLetterlike => {
@@ -97,7 +101,7 @@ impl UnderParselet {
 
                 session.push_leaf_and_next(tok);
 
-                session.reduce(|ctx| CompoundNode::new(self.BOp, ctx));
+                session.reduce(|ctx| CompoundNode::new(self.getBOp(), ctx));
             },
 
             _ => (),
