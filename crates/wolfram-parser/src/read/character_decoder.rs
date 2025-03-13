@@ -40,12 +40,12 @@ type HandlerFunction = for<'i, 's> fn(
 /// However, the lookup table-based implementation performs ~10-15% better than
 /// the `match` statement version on some of the large benchmarks.
 const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = {
-    let mut table: [HandlerFunction; 128] = [|_, _, _| unimplemented!(); 128];
+    let mut table: [HandlerFunction; 128] = [CharacterDecoder_handleAssertFalse; 128];
 
     let mut i: u8 = 0;
     loop {
         table[i as usize] = match i {
-            00..=31 => CharacterDecoder_handleUncommon,
+            00..=31 => CharacterDecoder_handleAssertFalse,
             32 => CharacterDecoder_handleUncommon,
             33 => CharacterDecoder_handleUncommon,
             34 => CharacterDecoder_handleStringMetaDoubleQuote,
@@ -55,7 +55,8 @@ const CHARACTER_DECODER_HANDLER_TABLE: [HandlerFunction; 128] = {
             62 => CharacterDecoder_handleStringMetaClose,
             63..=91 => CharacterDecoder_handleUncommon,
             92 => CharacterDecoder_handleStringMetaBackslash,
-            93..=127 => CharacterDecoder_handleUncommon,
+            93..=126 => CharacterDecoder_handleUncommon,
+            127 => CharacterDecoder_handleAssertFalse,
             // "invalid ASCII byte value: {i}"
             128..=255 => panic!(),
         };
@@ -110,14 +111,16 @@ pub(super) fn CharacterDecoder_nextWLCharacter(
 
     point = session.peek_source_char(policy);
 
-    if !point.is_ascii() {
+    let point_i32 = point.as_i32();
+
+    if !(0x20 <= point_i32 && point_i32 <= 0x7e) {
         // MUSTTAIL
         return CharacterDecoder_handleUncommon(session, escaped, policy);
     }
 
-    let index = usize::try_from(point.as_i32()).unwrap();
+    let point_u8 = u8::try_from(point_i32).expect("unable to convert digit character to u8 value");
 
-    return CHARACTER_DECODER_HANDLER_TABLE[index](session, escaped, policy);
+    return CHARACTER_DECODER_HANDLER_TABLE[usize::from(point_u8)](session, escaped, policy);
 }
 
 fn CharacterDecoder_handleStringMetaDoubleQuote(
@@ -1243,6 +1246,14 @@ fn CharacterDecoder_handleUnhandledEscape(
     session.seek(unhandled);
 
     return WLCharacter::new('\\');
+}
+
+fn CharacterDecoder_handleAssertFalse(
+    _session: &mut Reader,
+    _escaped: InputMark,
+    _policy: NextPolicy,
+) -> WLCharacter {
+    panic!();
 }
 
 fn CharacterDecoder_handleUncommon<'i, 's>(
