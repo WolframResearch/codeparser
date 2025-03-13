@@ -160,8 +160,6 @@ parseletRegistrationCPPSource = {
 // DO NOT MODIFY
 //
 
-#![allow(non_upper_case_globals)]
-
 use crate::{
 	token_enum_registration::TokenEnum::*,
 	symbol_registration::*,
@@ -221,7 +219,7 @@ pub(crate) const timesParselet: TimesParselet = TimesParselet {};
 //
 //
 
-pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
+pub(crate) const prefixParselets: [PrefixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
 
 (Row[{"  ", formatPrefix[PrefixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
@@ -230,7 +228,7 @@ pub(crate) const PREFIX_PARSELETS: [PrefixParseletPtr; TOKEN_COUNT.value() as us
 //
 //
 //
-pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
+pub(crate) const infixParselets: [InfixParseletPtr; TOKEN_COUNT.value() as usize] = ["} ~Join~
 
 (Row[{"  ", formatInfix[InfixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
