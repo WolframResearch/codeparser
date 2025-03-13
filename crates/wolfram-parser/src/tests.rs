@@ -27,7 +27,7 @@ use crate::{
     NodeSeq, ParseOptions, ParseResult, Tokens,
 };
 
-pub(crate) fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
+fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
     let mut session = ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
     let result = session.concrete_parse_expressions();
@@ -37,7 +37,7 @@ pub(crate) fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {
     nodes
 }
 
-pub(crate) fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
+fn tokens(input: &str) -> Vec<Token<BorrowedTokenInput>> {
     let mut session = ParserSession::new(input.as_bytes(), &ParseOptions::default());
 
     let tokens: Tokens<BorrowedTokenInput> = session.tokenize().unwrap();
