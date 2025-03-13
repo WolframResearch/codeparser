@@ -41,6 +41,9 @@ fn benchmark_large_files(c: &mut Criterion) {
 
     let relief_plot =
         fs::read(Path::new("../../Tests/files/large/ReliefPlot.nb")).unwrap();
+    group.bench_function("tokenize ReliefPlot.nb", |b| {
+        b.iter(|| tokenize_bytes(&relief_plot))
+    });
     group.bench_function("parse CST of ReliefPlot.nb", |b| {
         b.iter(|| parse_bytes(&relief_plot))
     });
@@ -49,6 +52,9 @@ fn benchmark_large_files(c: &mut Criterion) {
         "../../Tests/files/large/expandedCompanyDataNew1.m",
     ))
     .unwrap();
+    group.bench_function("tokenize expandedCompanyDataNew1.m", |b| {
+        b.iter(|| tokenize_bytes(&expanded_company_data_new))
+    });
     group.bench_function("parse CST of expandedCompanyDataNew1.m", |b| {
         b.iter(|| parse_bytes(&expanded_company_data_new))
     });
@@ -63,6 +69,9 @@ fn benchmark_large_files(c: &mut Criterion) {
     let geomagnetic_models =
         fs::read(Path::new("../../Tests/files/large/geomagneticmodels.m"))
             .unwrap();
+    group.bench_function("tokenize geomagneticmodels.m", |b| {
+        b.iter(|| tokenize_bytes(&geomagnetic_models))
+    });
     group.bench_function("parse CST of geomagneticmodels.m", |b| {
         b.iter(|| parse_bytes(&geomagnetic_models))
     });
