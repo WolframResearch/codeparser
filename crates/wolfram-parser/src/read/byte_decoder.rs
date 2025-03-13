@@ -31,7 +31,10 @@ use crate::{
         Reader, SourceManager,
     },
     read::{
-        code_point::{CodePoint, CODEPOINT_BOM},
+        code_point::{
+            CodePoint::{self, *},
+            CODEPOINT_BOM,
+        },
         wl_character::{EscapeStyle, WLCharacter},
     },
     source::{
@@ -772,7 +775,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Do not increment Column
                 //
 
-                return SourceCharacter::from(CodePoint::EndOfFile);
+                return SourceCharacter::from(EndOfFile);
             }
 
             //
@@ -1063,7 +1066,7 @@ fn ByteDecoder_straySurrogate(
 
     session.setUnsafeCharacterEncodingFlag(UnsafeCharacterEncoding::StraySurrogate);
 
-    return CodePoint::from(CodePoint::Unsafe3ByteUtf8Sequence);
+    return CodePoint::from(Unsafe3ByteUtf8Sequence);
 }
 
 fn ByteDecoder_bom(
@@ -1095,7 +1098,7 @@ fn ByteDecoder_bom(
 
     session.setUnsafeCharacterEncodingFlag(UnsafeCharacterEncoding::BOM);
 
-    return SourceCharacter::from(CodePoint::Unsafe3ByteUtf8Sequence);
+    return SourceCharacter::from(Unsafe3ByteUtf8Sequence);
 }
 
 impl SourceConvention {
