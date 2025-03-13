@@ -19,13 +19,12 @@ use crate::{
         GroupMissingCloserNode, GroupNode, GroupOperator, InfixNode, InfixOperator, Node,
         OperatorNode,
     },
-    parse::ParserSession,
     parse_bytes_to_cst,
+    parser::ParserSession,
     source::{GeneralSource, SourceConvention},
     test_utils::{src, token},
-    tokenize,
-    tokenize::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
-    FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
+    token::{BorrowedTokenInput, OwnedTokenInput, Token, TokenInput, TokenKind as TK},
+    tokenize, FirstLineBehavior, NodeSeq, ParseOptions, ParseResult, Tokens,
 };
 
 pub(crate) fn nodes(input: &str) -> Vec<Node<BorrowedTokenInput>> {

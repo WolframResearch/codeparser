@@ -1,4 +1,4 @@
-use crate::tokenize::TokenKind;
+use crate::token::TokenKind;
 
 
 #[test]

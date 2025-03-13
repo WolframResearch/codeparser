@@ -1,10 +1,11 @@
 use crate::{
     cst::InfixNode,
     panic_if_aborted,
-    parse::{parselet::*, ParserSession},
+    parselet::*,
     parselet_registration::*,
+    parser::ParserSession,
     precedence::Precedence,
-    tokenize::{TokenKind, TokenRef},
+    token::{TokenKind, TokenRef},
 };
 
 

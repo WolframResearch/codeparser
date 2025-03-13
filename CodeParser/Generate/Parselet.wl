@@ -470,11 +470,11 @@ use wolfram_expr::symbol::SymbolRef;
 
 use crate::{
 	cst::Operator,
-	tokenize::TokenKind,
+	token::TokenKind,
 	symbol::Symbol,
 	symbol_registration as sym,
 	precedence::Precedence,
-	parse::parselet::*
+	parselet::*
 };
 
 pub(crate) const symbolParselet: SymbolParselet = SymbolParselet {};

@@ -1,9 +1,10 @@
 use crate::{
     cst::{BinaryNode, TernaryNode},
     panic_if_aborted,
-    parse::{parselet::*, ParserSession},
+    parselet::*,
+    parser::ParserSession,
     precedence::Precedence,
-    tokenize::{Token, TokenKind, TokenRef},
+    token::{Token, TokenKind, TokenRef},
 };
 
 //

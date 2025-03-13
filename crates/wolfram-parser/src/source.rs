@@ -7,16 +7,14 @@ use std::{
 };
 
 use crate::{
+    code_point::{
+        CodePoint::{self, Char, *},
+        CODEPOINT_DEL, CODEPOINT_ESC, *,
+    },
     feature,
     long_names::{self as LongNames, code_point_has_long_name},
-    read::{
-        code_point::{
-            CodePoint::{self, Char, *},
-            CODEPOINT_DEL, CODEPOINT_ESC, *,
-        },
-        wl_character::{EscapeStyle, WLCharacter},
-    },
-    tokenize::tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
+    tokenizer::{ASCII_FORM_FEED, ASCII_VTAB},
+    wl_character::{EscapeStyle, WLCharacter},
 };
 
 use wolfram_expr::Expr;

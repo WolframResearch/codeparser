@@ -18,7 +18,7 @@ use crate::{
     quirks::{self, processInfixBinaryAtQuirk, Quirk},
     source::GeneralSource,
     symbol::{self as sym, Symbol},
-    tokenize::{
+    token::{
         OwnedTokenInput, Token, TokenInput,
         TokenKind::{self, self as TK},
         TokenSource,

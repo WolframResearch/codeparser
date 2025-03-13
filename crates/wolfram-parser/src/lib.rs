@@ -61,21 +61,25 @@ mod utils;
 
 
 mod byte_encoder;
+mod code_point;
 #[doc(hidden)]
 pub mod issue;
 mod long_names;
+mod parselet;
 #[doc(hidden)]
 pub mod quirks;
 #[doc(hidden)]
 pub mod source;
 #[doc(hidden)]
 pub mod symbol;
+mod token_enum;
+mod tokenizer;
+mod wl_character;
 
 mod read;
-pub mod tokenize;
-mod parse;
 
 mod error;
+mod parser;
 
 mod agg;
 pub mod ast;
@@ -88,6 +92,8 @@ pub mod abstract_;
 pub mod fmt_as_expr;
 
 mod feature;
+
+pub mod token;
 
 //===================
 // Generated sources
@@ -223,10 +229,10 @@ pub mod test_utils {
     /// ```
     macro_rules! token {
         ($kind:ident, $input:tt @ $offset:literal, $src:expr) => {
-            $crate::tokenize::Token {
-                tok: $crate::tokenize::TokenKind::$kind,
+            $crate::token::Token {
+                tok: $crate::token::TokenKind::$kind,
                 src: $crate::Source::from($src),
-                input: $crate::tokenize::BorrowedTokenInput::new($input.as_ref(), $offset),
+                input: $crate::token::BorrowedTokenInput::new($input.as_ref(), $offset),
             }
         };
     }
@@ -238,25 +244,14 @@ pub mod test_utils {
 // API
 //==========================================================
 
-use wolfram_expr::{Expr, Number};
-
-use crate::{
-    ast::AstNode,
-    cst::CstNode,
-    issue::{CodeAction, Issue},
-    parse::ParserSession,
-    source::GeneralSource,
-    tokenize::{BorrowedTokenInput, OwnedTokenInput, Token},
-};
-
-
+use crate::parser::ParserSession;
 
 //-----------
 // Re-exports
 //-----------
 
 pub use crate::{
-    parse::ParseResult,
+    parser::ParseResult,
     quirks::QuirkSettings,
     source::{
         ByteSpan,
@@ -270,9 +265,6 @@ pub use crate::{
         DEFAULT_TAB_WIDTH,
     },
 };
-
-#[doc(hidden)]
-pub use crate::tokenize::tokenizer::UnsafeCharacterEncoding;
 
 //======================================
 // Types
@@ -647,4 +639,12 @@ macro_rules! panic_if_aborted {
     };
 }
 
+use ast::AstNode;
+use cst::CstNode;
+use issue::{CodeAction, Issue};
 pub(crate) use panic_if_aborted;
+use source::GeneralSource;
+use token::{BorrowedTokenInput, OwnedTokenInput, Token};
+#[doc(hidden)]
+pub use tokenizer::UnsafeCharacterEncoding;
+use wolfram_expr::{Expr, Number};
