@@ -9,7 +9,7 @@ use std::any::Any;
 use crate::{
     cst::{
         BinaryNode, CallBody, CallNode, CompoundNode, CompoundOperator, GroupMissingCloserNode,
-        GroupNode, GroupOperator, InfixNode, InfixOperator, PostfixNode, PrefixBinaryOperator,
+        GroupNode, GroupOperator, InfixNode, Operator, PostfixNode, PrefixBinaryOperator,
         PrefixNode, SyntaxErrorKind, SyntaxErrorNode, TernaryNode,
         UnterminatedGroupNeedsReparseNode,
     },
@@ -68,7 +68,7 @@ pub(crate) trait InfixParselet: Parselet {
 
     fn getOp(&self) -> InfixParseletOperator {
         // TODO: Make this sentinel value unnecessary?
-        return InfixParseletOperator::Infix(InfixOperator::CodeParser_InternalInvalid);
+        return InfixParseletOperator::Infix(Operator::CodeParser_InternalInvalid);
     }
 
     fn processImplicitTimes<'i>(
@@ -83,13 +83,13 @@ pub(crate) trait InfixParselet: Parselet {
 #[derive(Debug, PartialEq)]
 pub(crate) enum InfixParseletOperator {
     Prefix(PrefixOperator),
-    Infix(InfixOperator),
+    Infix(Operator),
     Postfix(PostfixOperator),
     Binary(BinaryOperator),
 }
 
-impl From<InfixOperator> for InfixParseletOperator {
-    fn from(op: InfixOperator) -> Self {
+impl From<Operator> for InfixParseletOperator {
+    fn from(op: Operator) -> Self {
         Self::Infix(op)
     }
 }
@@ -107,7 +107,7 @@ impl From<BinaryOperator> for InfixParseletOperator {
 }
 
 impl InfixParseletOperator {
-    fn unwrap_op(self) -> InfixOperator {
+    fn unwrap_op(self) -> Operator {
         match self {
             InfixParseletOperator::Infix(op) => op,
             InfixParseletOperator::Prefix(_)
@@ -288,7 +288,7 @@ pub(crate) struct BinaryOperatorParselet /* : InfixParselet */ {
 #[derive(Debug)]
 pub(crate) struct InfixOperatorParselet /* : InfixParselet */ {
     precedence: Precedence,
-    Op: InfixOperator,
+    Op: Operator,
 }
 
 
@@ -1042,7 +1042,7 @@ fn BinaryOperatorParselet_reduceBinaryOperator(session: &mut ParserSession, P: P
 //======================================
 
 impl InfixOperatorParselet {
-    pub(crate) const fn new(precedence: Precedence, Op: InfixOperator) -> Self {
+    pub(crate) const fn new(precedence: Precedence, Op: Operator) -> Self {
         Self { precedence, Op }
     }
 }
@@ -2189,7 +2189,7 @@ fn CommaParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn CommaParselet_reduceComma(session: &mut ParserSession) {
-    let node = InfixNode::new(InfixOperator::CodeParser_Comma, Parser_popContext(session));
+    let node = InfixNode::new(Operator::CodeParser_Comma, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     //
@@ -2427,10 +2427,7 @@ fn SemiParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn SemiParselet_reduceCompoundExpression(session: &mut ParserSession) {
-    let node = InfixNode::new(
-        InfixOperator::CompoundExpression,
-        Parser_popContext(session),
-    );
+    let node = InfixNode::new(Operator::CompoundExpression, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL
@@ -2519,7 +2516,7 @@ fn ColonColonParselet_parseLoop(session: &mut ParserSession) {
 }
 
 fn ColonColonParselet_reduceMessageName(session: &mut ParserSession) {
-    let node = InfixNode::new(InfixOperator::MessageName, Parser_popContext(session));
+    let node = InfixNode::new(Operator::MessageName, Parser_popContext(session));
     Parser_pushNode(session, node);
 
     // MUSTTAIL

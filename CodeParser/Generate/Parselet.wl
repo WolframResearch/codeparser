@@ -55,17 +55,17 @@ InfixOperatorToParselet[_] = Parselet`InfixImplicitTimesParselet[]
 
 tokensSansCount = DeleteCases[tokens, Token`Count]
 
-(*-----------------*)
-(* Operators Enums *)
-(*-----------------*)
+(*------------*)
+(* $Operators *)
+(*------------*)
 
 $multiOperators = <|
 	Span -> {"Binary", "Ternary"}
 |>
 
 
-(* Variants of `enum InfixOperator { ... }` *)
-$InfixOperators = Join[
+(* Variants of `enum Operator { ... }` *)
+$Operators = Join[
 	AssociationMap[Identity, {
 		Times,
 		Span,
@@ -230,8 +230,8 @@ $CompoundOperators = Join[
 	}]
 ]
 
-If[!MatchQ[$InfixOperators, <| (_Symbol -> _Symbol) ... |>],
-	FatalError["Bad $InfixOperators: ", $InfixOperators];
+If[!MatchQ[$Operators, <| (_Symbol -> _Symbol) ... |>],
+	FatalError["Bad $Operators: ", $Operators];
 ]
 
 If[!MatchQ[$PrefixOperators, <| (_Symbol -> _Symbol) ... |>],
@@ -325,7 +325,7 @@ formatInfix[Parselet`InfixImplicitTimesParselet[]] := "&infixImplicitTimesParsel
 
 formatInfix[Parselet`BinaryOperatorParselet[precedence_, op_]] := "&BinaryOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "BinaryOperator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
-formatInfix[Parselet`InfixOperatorParselet[precedence_, op_]] := "&InfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "InfixOperator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
+formatInfix[Parselet`InfixOperatorParselet[precedence_, op_]] := "&InfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "Operator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
 formatInfix[Parselet`PostfixOperatorParselet[precedence_, op_]] := "&PostfixOperatorParselet::new(" <> toGlobal[precedence] <> ", " <> "PostfixOperator::" <> toGlobal[op, "UpperCamelCase"] <> ")"
 
@@ -511,7 +511,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		(* Define Enums               *)
 		(*============================*)
 
-		formatOperatorEnumDef["InfixOperator", $InfixOperators],
+		formatOperatorEnumDef["Operator", $Operators],
 		formatOperatorEnumDef["PrefixOperator", $PrefixOperators],
 		formatOperatorEnumDef["PostfixOperator", $PostfixOperators],
 		formatOperatorEnumDef["BinaryOperator", $BinaryOperators],
@@ -524,7 +524,7 @@ pub(crate) const INFIX_PARSELETS: [InfixParseletPtr; TokenKind::Count.value() as
 		(* Define Impls               *)
 		(*============================*)
 
-		formatOperatorEnumImpl["InfixOperator", $InfixOperators],
+		formatOperatorEnumImpl["Operator", $Operators],
 		formatOperatorEnumImpl["PrefixOperator", $PrefixOperators],
 		formatOperatorEnumImpl["PostfixOperator", $PostfixOperators],
 		formatOperatorEnumImpl["BinaryOperator", $BinaryOperators],

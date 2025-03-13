@@ -7,7 +7,7 @@ use wolfram_parser::{
     cst::{
         BinaryNode, BinaryOperator, BoxKind, BoxNode, CallBody, CallNode, CodeNode, CompoundNode,
         CompoundOperator, CstNode, GroupMissingCloserNode, GroupMissingOpenerNode, GroupNode,
-        GroupOperator, InfixNode, InfixOperator, OperatorNode, PostfixNode, PostfixOperator,
+        GroupOperator, InfixNode, Operator, OperatorNode, PostfixNode, PostfixOperator,
         PrefixBinaryNode, PrefixBinaryOperator, PrefixNode, PrefixOperator, SyntaxErrorKind,
         SyntaxErrorNode, TernaryNode, TernaryOperator,
     },
@@ -667,7 +667,7 @@ fn put_op<I: TokenInput, S: WstpPut, O: WstpPut>(
     src.put(link);
 }
 
-impl WstpPut for InfixOperator {
+impl WstpPut for Operator {
     fn put(&self, link: &mut wstp::Link) {
         Symbol_put(self.to_symbol(), link)
     }
