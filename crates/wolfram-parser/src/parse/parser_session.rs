@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 #[cfg(feature = "USE_MATHLINK")]
 use wolfram_library_link::sys::WolframLibraryData;
 
@@ -13,6 +15,7 @@ use crate::{
         Context, Parser_handleFirstLine,
     },
     quirks::{self, QuirkSettings},
+    read::Reader,
     source::TOPLEVEL,
     tokenize::{
         tokenizer::{
@@ -67,15 +70,41 @@ pub struct ParseResult<T> {
 impl<'i> ParserSession<'i> {
     pub fn new(input: &'i [u8], opts: &ParseOptions) -> ParserSession<'i> {
         let ParseOptions {
-            first_line_behavior: _,
-            src_convention: _,
-            encoding_mode: _,
-            tab_width: _,
+            first_line_behavior,
+            src_convention,
+            encoding_mode,
+            tab_width,
             quirk_settings,
         } = *opts;
 
         let mut session = ParserSession {
-            tokenizer: Tokenizer::new(input, opts),
+            tokenizer: Tokenizer {
+                reader: Reader {
+                    input,
+                    offset: 0,
+                    wasEOF: false,
+                    SrcLoc: src_convention.newSourceLocation(),
+                    tab_width,
+
+                    encoding_mode,
+
+                    fatalIssues: Vec::new(),
+                    nonFatalIssues: Vec::new(),
+
+                    unsafe_character_encoding_flag: None,
+                },
+
+                first_line_behavior,
+
+                GroupStack: Vec::new(),
+
+                tracked: TrackedSourceLocations {
+                    simple_line_continuations: HashSet::new(),
+                    complex_line_continuations: HashSet::new(),
+                    embedded_newlines: HashSet::new(),
+                    embedded_tabs: HashSet::new(),
+                },
+            },
 
             NodeStack: Vec::new(),
             ContextStack: Vec::new(),
