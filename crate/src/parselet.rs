@@ -59,7 +59,9 @@ pub(crate) trait PrefixParselet: Parselet {
 
 
 pub(crate) trait InfixParselet: Parselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token);
+    // PRE_COMMIT: Replace with an associated constant;
+    // fn parseInfix(&self) -> ParseFunction<InfixParseletPtr>;
+    fn parseInfix(&self) -> ParseFunction;
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence;
 
@@ -680,7 +682,7 @@ fn PrefixUnhandledParselet_parsePrefix(
     let P2 = infixParselets[usize::from(TokIn.tok.value())];
 
     // MUSTTAIL
-    return P2.parse_infix(session, TokIn);
+    return (P2.parseInfix())(session, P2, TokIn);
 }
 
 //======================================
@@ -688,18 +690,30 @@ fn PrefixUnhandledParselet_parsePrefix(
 //======================================
 
 impl InfixParselet for InfixToplevelNewlineParselet {
-    fn parse_infix(&'static self, _session: &mut ParserSession, _token: Token) {
-        assert!(false);
-    }
-
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
         //
         // Do not do Implicit Times across top-level newlines
         //
         return PRECEDENCE_LOWEST;
     }
+
+    fn parseInfix(&self) -> ParseFunction {
+        assert!(false);
+
+        return InfixToplevelNewlineParselet_parseInfix;
+    }
 }
 
+
+fn InfixToplevelNewlineParselet_parseInfix(
+    _: &mut ParserSession,
+    _: ParseletPtr,
+    _firstTok: Token,
+) {
+    assert!(false);
+
+    return;
+}
 
 //======================================
 // SymbolParselet
@@ -959,8 +973,10 @@ fn PrefixOperatorParselet_reducePrefixOperator(
 //======================================
 
 impl InfixParselet for InfixImplicitTimesParselet {
-    fn parse_infix(&'static self, _session: &mut ParserSession, _token: Token) {
+    fn parseInfix(&self) -> ParseFunction {
         assert!(false);
+
+        return InfixImplicitTimesParselet_parseInfix;
     }
 
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
@@ -977,6 +993,12 @@ impl InfixParselet for InfixImplicitTimesParselet {
     }
 }
 
+fn InfixImplicitTimesParselet_parseInfix(_session: &mut ParserSession, _: ParseletPtr, _: Token) {
+    assert!(false);
+
+    return;
+}
+
 //======================================
 // PrefixAssertFalseParselet
 //======================================
@@ -986,7 +1008,7 @@ impl PrefixParselet for PrefixAssertFalseParselet {
     //     PRECEDENCE_LOWEST
     // }
 
-    fn parse_prefix(&'static self, _session: &mut ParserSession, _token: Token) {
+    fn parse_prefix(&'static self, session: &mut ParserSession, token: Token) {
         assert!(false);
     }
 }
@@ -997,13 +1019,25 @@ impl PrefixParselet for PrefixAssertFalseParselet {
 //======================================
 
 impl InfixParselet for InfixAssertFalseParselet {
-    fn parse_infix(&'static self, _session: &mut ParserSession, _token: Token) {
-        assert!(false)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         PRECEDENCE_LOWEST
     }
+
+    fn parseInfix(&self) -> ParseFunction {
+        assert!(false);
+
+        return InfixAssertFalseParselet_parseInfix;
+    }
+}
+
+fn InfixAssertFalseParselet_parseInfix(
+    _session: &mut ParserSession,
+    _: ParseletPtr,
+    _firstTok: Token,
+) {
+    assert!(false);
+
+    return;
 }
 
 //======================================
@@ -1017,16 +1051,16 @@ impl BinaryOperatorParselet {
 }
 
 impl InfixParselet for BinaryOperatorParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        BinaryOperatorParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         self.precedence
     }
 
     fn getOp(&self) -> Symbol {
         self.Op
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return BinaryOperatorParselet_parseInfix;
     }
 }
 
@@ -1083,16 +1117,16 @@ impl InfixOperatorParselet {
 }
 
 impl InfixParselet for InfixOperatorParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        return InfixOperatorParselet_parseInfix(session, self, token);
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         self.precedence
     }
 
     fn getOp(&self) -> Symbol {
         self.Op
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return InfixOperatorParselet_parseInfix;
     }
 }
 
@@ -1240,16 +1274,16 @@ impl PostfixOperatorParselet {
 }
 
 impl InfixParselet for PostfixOperatorParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        PostfixOperatorParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         self.precedence
     }
 
     fn getOp(&self) -> Symbol {
         self.Op
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return PostfixOperatorParselet_parseInfix;
     }
 }
 
@@ -1521,12 +1555,12 @@ impl CallParselet {
 }
 
 impl InfixParselet for CallParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        CallParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
         PRECEDENCE_CALL
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return CallParselet_parseInfix;
     }
 }
 
@@ -1572,8 +1606,8 @@ fn CallParselet_reduceCall(session: &mut ParserSession, ignored: ParseletPtr, ig
 //======================================
 
 impl InfixParselet for TildeParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        TildeParselet_parseInfix(session, self, token)
+    fn parseInfix(&self) -> ParseFunction {
+        return TildeParselet_parseInfix;
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
@@ -1679,8 +1713,8 @@ fn TildeParselet_reduceError(session: &mut ParserSession, ignored: ParseletPtr, 
 //======================================
 
 impl InfixParselet for ColonParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        ColonParselet_parseInfix(session, self, token)
+    fn parseInfix(&self) -> ParseFunction {
+        return ColonParselet_parseInfix;
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
@@ -1781,12 +1815,12 @@ fn ColonParselet_reduceOptional(
 //======================================
 
 impl InfixParselet for SlashColonParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        SlashColonParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _: &mut ParserSession) -> Precedence {
         PRECEDENCE_SLASHCOLON
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return SlashColonParselet_parseInfix;
     }
 }
 
@@ -1895,8 +1929,8 @@ impl EqualParselet {
 }
 
 impl InfixParselet for EqualParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        EqualParselet_parseInfix(session, self, token)
+    fn parseInfix(&self) -> ParseFunction {
+        return EqualParselet_parseInfix;
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
@@ -2025,8 +2059,8 @@ impl ColonEqualParselet {
 }
 
 impl InfixParselet for ColonEqualParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        ColonEqualParselet_parseInfix(session, self, token)
+    fn parseInfix(&self) -> ParseFunction {
+        return ColonEqualParselet_parseInfix;
     }
 
     fn getPrecedence(&self, session: &mut ParserSession) -> Precedence {
@@ -2109,12 +2143,12 @@ fn ColonEqualParselet_reduceTagSetDelayed(
 //======================================
 
 impl InfixParselet for CommaParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        CommaParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         PRECEDENCE_COMMA
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return CommaParselet_parseInfix;
     }
 }
 
@@ -2284,12 +2318,12 @@ fn CommaParselet_reduceComma(session: &mut ParserSession, ignored: ParseletPtr, 
 //======================================
 
 impl InfixParselet for SemiParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        SemiParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         PRECEDENCE_SEMI
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return SemiParselet_parseInfix;
     }
 }
 
@@ -2530,12 +2564,12 @@ fn SemiParselet_reduceCompoundExpression(
 //======================================
 
 impl InfixParselet for ColonColonParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        ColonColonParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         PRECEDENCE_COLONCOLON
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return ColonColonParselet_parseInfix;
     }
 }
 
@@ -2627,12 +2661,12 @@ fn ColonColonParselet_reduceMessageName(
 //======================================
 
 impl InfixParselet for GreaterGreaterParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        GreaterGreaterParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         PRECEDENCE_GREATERGREATER
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return GreaterGreaterParselet_parseInfix;
     }
 }
 
@@ -2681,12 +2715,12 @@ fn GreaterGreaterParselet_reducePut(
 //======================================
 
 impl InfixParselet for GreaterGreaterGreaterParselet {
-    fn parse_infix(&'static self, session: &mut ParserSession, token: Token) {
-        GreaterGreaterGreaterParselet_parseInfix(session, self, token)
-    }
-
     fn getPrecedence(&self, _session: &mut ParserSession) -> Precedence {
         PRECEDENCE_GREATERGREATERGREATER
+    }
+
+    fn parseInfix(&self) -> ParseFunction {
+        return GreaterGreaterGreaterParselet_parseInfix;
     }
 }
 
