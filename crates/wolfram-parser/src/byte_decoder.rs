@@ -205,7 +205,9 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
             // Buffer is possibly already pointing to EOF
             //
 
-            let mark = session.mark();
+            let resetBuf = session.offset;
+            let resetEOF = session.wasEOF;
+            let resetLoc = session.SrcLoc;
 
             let tmp = ByteBuffer_nextByte(session);
 
@@ -215,7 +217,7 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // EOF
                 //
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
             // Continue
@@ -228,9 +230,11 @@ fn ByteDecoder_nextSourceCharacter_uncommon(
                 // Incomplete
                 //
 
-                session.seek(mark);
+                session.offset = resetBuf;
+                session.wasEOF = resetEOF;
+                session.SrcLoc = resetLoc;
 
-                return ByteDecoder_incomplete1ByteSequence(session, mark.src_loc, policy);
+                return ByteDecoder_incomplete1ByteSequence(session, resetLoc, policy);
             }
 
             //
@@ -873,11 +877,15 @@ pub fn ByteDecoder_currentSourceCharacter(
     session: &mut Tokenizer,
     policy: NextPolicy,
 ) -> SourceCharacter {
-    let mark = session.mark();
+    let resetBuf = session.offset;
+    let resetEOF = session.wasEOF;
+    let resetLoc = session.SrcLoc;
 
     let c = ByteDecoder_nextSourceCharacter(session, policy);
 
-    session.seek(mark);
+    session.offset = resetBuf;
+    session.wasEOF = resetEOF;
+    session.SrcLoc = resetLoc;
 
     return c;
 }
