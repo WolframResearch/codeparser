@@ -325,6 +325,7 @@ pub struct Issue {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(strum::IntoStaticStr)]
 pub enum IssueTag {
     Ambiguous,
     UnhandledCharacter,
@@ -345,6 +346,7 @@ pub enum IssueTag {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(strum::IntoStaticStr)]
 pub enum Severity {
     Formatting,
     Remark,
@@ -352,43 +354,6 @@ pub enum Severity {
     Error,
     Fatal,
 }
-
-impl IssueTag {
-    pub(crate) fn as_str(&self) -> &'static str {
-        match self {
-            IssueTag::Ambiguous => "Ambiguous",
-            IssueTag::UnhandledCharacter => "UnhandledCharacter",
-            IssueTag::UnexpectedCharacter => "UnexpectedCharacter",
-            IssueTag::UnexpectedCarriageReturn => "UnexpectedCarriageReturn",
-            IssueTag::UnexpectedSpaceCharacter => "UnexpectedSpaceCharacter",
-            IssueTag::UnexpectedNewlineCharacter => "UnexpectedNewlineCharacter",
-            IssueTag::UnexpectedDot => "UnexpectedDot",
-            IssueTag::UnexpectedSign => "UnexpectedSign",
-            IssueTag::UnexpectedImplicitTimes => "UnexpectedImplicitTimes",
-            IssueTag::UnexpectedLetterlikeCharacter => "UnexpectedLetterlikeCharacter",
-            IssueTag::UnrecognizedLongName => "UnrecognizedLongName",
-            IssueTag::UndocumentedSlotSyntax => "UndocumentedSlotSyntax",
-            IssueTag::NonASCIICharacter => "NonASCIICharacter",
-            IssueTag::IncompleteUTF8Sequence => "IncompleteUTF8Sequence",
-            IssueTag::StraySurrogate => "StraySurrogate",
-            IssueTag::BOM => "BOM",
-        }
-    }
-}
-
-impl Severity {
-    pub(crate) fn as_str(&self) -> &'static str {
-        match self {
-            Severity::Formatting => "Formatting",
-            Severity::Remark => "Remark",
-            Severity::Warning => "Warning",
-            Severity::Error => "Error",
-            Severity::Fatal => "Fatal",
-        }
-    }
-}
-
-//======================================
 
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct CodeAction {

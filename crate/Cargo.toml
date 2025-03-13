@@ -25,6 +25,7 @@ default = ["COMPUTE_SOURCE", "CHECK_ISSUES", "COMPUTE_OOB"]
 
 [dependencies]
 once_cell = "1.13.0"
+strum = { version = "0.24", features = ["derive"] }
 ordered-float = "3.0"
 edit-distance = "2.1.0"
 memchr = "2.5.0"
