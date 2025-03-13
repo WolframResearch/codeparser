@@ -609,7 +609,6 @@ fn abstract_<I: TokenInput + Debug, S: TokenSource + Debug>(
                 ),
 
                 BinaryOperator::MapApply => {
-                    // TID:231104/1: OldAtAtAt quirk cases
                     if quirks::is_quirk_enabled(Quirk::OldAtAtAt) {
                         let group = GroupNode(OperatorNode {
                             op: GroupOperator::List,
