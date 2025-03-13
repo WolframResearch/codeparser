@@ -10,32 +10,12 @@ pub use crate::token_enum_registration::TokenKind;
 pub(crate) type TokenRef<'i> = Token<BorrowedTokenInput<'i>>;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Token<I = OwnedTokenInput, S = Source> {
+pub struct Token<I = OwnedTokenInput> {
     pub tok: TokenKind,
 
-    pub src: S,
+    pub src: Source,
 
     pub input: I,
-}
-
-pub trait TokenInput: Clone {
-    fn as_bytes(&self) -> &[u8];
-}
-
-impl<'i> TokenInput for BorrowedTokenInput<'i> {
-    fn as_bytes(&self) -> &[u8] {
-        let BorrowedTokenInput { buf } = self;
-
-        buf.as_bytes()
-    }
-}
-
-impl TokenInput for OwnedTokenInput {
-    fn as_bytes(&self) -> &[u8] {
-        let OwnedTokenInput { buf } = self;
-
-        buf.as_slice()
-    }
 }
 
 /// Borrowed subslice of the input that is associated with a particular
