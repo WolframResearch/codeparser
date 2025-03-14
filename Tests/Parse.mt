@@ -3559,6 +3559,17 @@ Test[
 	TestID->"Parse-20221001-M7B3J3"
 ]
 
+VerificationTest[
+	CodeConcreteParse["x = \"str
+
+"]
+	,
+	_ContainerNode
+	,
+	TestID->"Parse-bug#452255",
+	SameTest -> MatchQ
+]
+
 
 
 
