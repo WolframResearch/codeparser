@@ -3559,6 +3559,7 @@ Test[
 	TestID->"Parse-20221001-M7B3J3"
 ]
 
+(* This test fails with the Rust based Codeparser - V1.10  *)
 VerificationTest[
 	CodeConcreteParse["x = \"str
 
