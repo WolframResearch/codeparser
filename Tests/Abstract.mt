@@ -2,6 +2,30 @@
 Needs["CodeParser`"]
 Needs["CodeParser`Scoping`"]
 
+(* bug 459016 *)
+
+Test[
+	CodeParser`Abstract`Abstract[
+	 CodeParser`InfixNode[
+	  Plus, {LeafNode[Integer, "1", <|Source -> {1, 1}|>], 
+	   LeafNode[Token`Plus, "+", <|Source -> {1, 2}|>], 
+	   LeafNode[Integer, "1", <|Source -> {1, 3}|>], 
+	   GroupNode[
+	    Comment, {LeafNode[Token`Boxes`OpenParenStar, 
+	      "(*", <|Source -> {1, 5, 1, 1}|>], 
+	     LeafNode[String, "something", <|Source -> {1, 5, 1, 2}|>], 
+	     LeafNode[Token`Boxes`StarCloseParen, 
+	      "*)", <|Source -> {1, 5, 1, 3}|>]}, <|Source -> {1, 
+	       5}|>]}, <|Source -> {}|>]]
+	       ,
+	CallNode[
+	 LeafNode[Symbol, 
+	  "Plus", <||>], {LeafNode[Integer, "1", <|Source -> {1, 1}|>], 
+	  LeafNode[Integer, "1", <|Source -> {1, 3}|>]}, <|Source -> {}|>]
+	,
+	TestID->"Abstract-20250801-3H23SH98-bug-459016"
+]
+
 
 agg =
 	ContainerNode[Box, {
