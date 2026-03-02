@@ -25,17 +25,15 @@ checkBuildDir[]
 (*
 Map into string meta characters
 *)
-longNameToHexDigits["RawDoubleQuote"] := "CodePoint::StringMeta_DoubleQuote"
-longNameToHexDigits["RawBackslash"] := "CodePoint::StringMeta_Backslash"
+longNameToHexDigits["RawDoubleQuote"] := "CODEPOINT_STRINGMETA_DOUBLEQUOTE"
+longNameToHexDigits["RawBackslash"] := "CODEPOINT_STRINGMETA_BACKSLASH"
 
 
 (*
 longNameToHexDigits["Alpha"] is "0x03b1"
 *)
 longNameToHexDigits[longName_String] :=
-	With[{code = longNameToCharacterCode[longName]},
-		"'\\u{" <> IntegerString[code, 16, If[code > 16^^FFFF, 6, 4]] <> "}'"
-	]
+  ("0x"<>IntegerString[#, 16, If[# > 16^^FFFF, 6, 4]])&[longNameToCharacterCode[longName]]
 
 
 longNameToCharacterCode[name_] := importedLongNames[name][[2]]
@@ -171,10 +169,7 @@ Quit[1]
 
 importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] === LetterlikeCharacter && MemberQ[Lookup[#[[3]], "Extra", {}], "NotStrangeLetterlike"]&]];
 
-importedASCIIReplacements = KeyValueMap[
-	Function[{k, v}, k -> v[[3, Key["ASCIIReplacements"]]]],
-	Select[importedLongNames, KeyExistsQ[#[[3]], "ASCIIReplacements"]&]
-];
+importedASCIIReplacements = KeyValueMap[Function[{k, v}, k -> v[[3, Key["ASCIIReplacements"]]]], Select[importedLongNames, KeyExistsQ[#[[3]], "ASCIIReplacements"]&]];
 
 importedPunctuationLongNames = Keys[Select[importedLongNames, (#[[1]] === PunctuationCharacter)&]];
 
@@ -189,18 +184,7 @@ importedRawLongNames = Keys[Select[importedLongNames, (#[[1]] === RawCharacter)&
 
 
 Check[
-	longNameDefines = Map[
-		longName |-> Module[{name, value, type},
-			name = toGlobal["CodePoint`LongName`" <> longName];
-			value = longNameToHexDigits[longName];
-			type = If[StringStartsQ[value, "CodePoint::StringMeta"],
-				"CodePoint",
-				"char"
-			];
-			"pub const " <> name <> ": " <> type <> " = " <> value <> ";"
-		],
-		Keys[importedLongNames]
-	]
+longNameDefines = ("constexpr codepoint " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
 ,
 Print["Message while generating LongNames"];
 Quit[1]
@@ -228,14 +212,7 @@ $lexSortedImportedLongNames = lexSort[Keys[importedLongNames]];
 
 Put CodePoint`CRLF before actual code points
 *)
-mbNewlines = Map[
-	point |-> toGlobal[point, "CodePoint"],
-	(
-		{ CodePoint`CRLF } ~Join~ (
-			("CodePoint`LongName`"<>#)& /@ SortBy[importedNewlineLongNames, longNameToCharacterCode]
-		)
-	)
-];
+mbNewlines = toGlobal /@ ( { CodePoint`CRLF } ~Join~ ( ("CodePoint`LongName`"<>#)& /@ SortBy[importedNewlineLongNames, longNameToCharacterCode]));
 
 
 
@@ -247,128 +224,115 @@ insertNewlines[strings_] :=
 
 
 
-longNameToCodePointMap = {StringJoin[
-	"\n\n",
-	"/// Sorted by the longname string value\n",
-	"pub const LONGNAME_TO_CODEPOINT_MAP: [(&str, CodePoint); LONGNAMES_COUNT] = [\n",
-	StringJoin @ Map[
-		longname |-> StringJoin[
-			"\t(",
-			escapeString[longname],
-			", ",
-			toGlobal["CodePoint`LongName`" <> longname, "CodePoint"],
-			"),\n"
-		],
-		$lexSortedImportedLongNames
-	],
-	"];\n"
-]}
+longNameToCodePointMapNames = {
+  "//",
+  "//",
+  "//",
+  "std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{escapeString[#], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
+  {"}};",
+  ""}
 
-codePointToLongNameMap = {StringJoin[
-	"\n\n",
-	"/// Sorted by the longname codepoint value\n",
-	"pub const CODEPOINT_TO_LONGNAME_MAP: [(CodePoint, &str); LONGNAMES_COUNT] = [\n",
-	StringJoin @ Map[
-		longname |-> StringJoin[
-			"\t(",
-			toGlobal["CodePoint`LongName`" <> longname, "CodePoint"],
-			", ",
-			escapeString[longname],
-			"),\n"
-		],
-		SortBy[Keys[importedLongNames], longNameToCharacterCode]
-	],
-	"];\n"
-]}
+longNameToCodePointMapPoints = {
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ $lexSortedImportedLongNames]]], "\n"]) ~Join~
+  {"}};",
+  ""}
+
+codePointToLongNameMapPoints = {
+  "//",
+  "//",
+  "//",
+  "std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
+  {"}};",
+  ""}
+
+codePointToLongNameMapNames = {
+  "//",
+  "//",
+  "//",
+  "std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{escapeString[#], ",", " "}& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]]]], "\n"]) ~Join~
+  {"}};",
+  ""}
 
 rawSet = {
   "//",
   "//",
   "//",
-  "pub const RAW_SET: [&str; RAWLONGNAMES_COUNT] = ["} ~Join~
-  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{"\""<>#<>"\"", ",", " "}& /@ lexSort[importedRawLongNames]]]], "\n"]) ~Join~
-  {"];",
+  "std::array<std::string, RAWLONGNAMES_COUNT> RawSet {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{"{", "\""<>#<>"\"", "}", ",", " "}& /@ lexSort[importedRawLongNames]]]], "\n"]) ~Join~
+  {"}};",
   ""}
 
 notStrangeLetterlikeSource = {
   "//",
   "//",
   "//",
-  "pub const MB_NOT_STRAGE_LETTERLIKE_CODE_POINTS: [char; MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT] = ["} ~Join~
+  "std::array<codepoint, MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT> mbNotStrangeLetterlikeCodePoints {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedNotStrangeLetterlikeLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"];",
+  {"}};",
   ""}
 
 asciiReplacementsSource = {
   "//",
   "//",
   "//",
-  "pub static ASCII_REPLACEMENTS_MAP: &[(char, &[&str])] = &["} ~Join~
-  (
-	{StringJoin @ Map[
-		data |-> StringJoin @ {
-			"\t(",
-			toGlobal["CodePoint`LongName`"<>data[[1]]],
-			", ",
-			(* escapeString[#[[2]]], *)
-			Replace[data[[2]], {
-				values:{___?StringQ} :> {"[", {escapeString[#], ", "}& /@ values, "].as_slice()"},
-				other_ :> Quit[3]
-			}],
-			")",
-			",\n"
-		},
-		SortBy[importedASCIIReplacements, longNameToCharacterCode[#[[1]]]&]
-	]}
-  ) ~Join~
-  {"];",
+  "std::map<codepoint, std::vector<std::string>> asciiReplacementsMap {{"} ~Join~
+  (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{"{", toGlobal["CodePoint`LongName`"<>#[[1]]], ", ", escapeString[#[[2]]], "}", ",", " "}& /@ SortBy[importedASCIIReplacements, longNameToCharacterCode[#[[1]]]&]]]], "\n"]) ~Join~
+  {"}};",
   ""}
 
 punctuationSource = {
   "//",
   "//",
   "//",
-  "pub const MB_PUNCTUATION_CODE_POINTS: [char; MBPUNCTUATIONCODEPOINTS_COUNT] = ["} ~Join~
+  "std::array<codepoint, MBPUNCTUATIONCODEPOINTS_COUNT> mbPunctuationCodePoints {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedPunctuationLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"];",
+  {"}};",
   ""};
 
 whitespaceSource = {
   "//",
   "//",
   "//",
-  "pub const MB_WHITESPACE_CODE_POINTS: [char; MBWHITESPACECODEPOINTS_COUNT] = ["} ~Join~
+  "std::array<codepoint, MBWHITESPACECODEPOINTS_COUNT> mbWhitespaceCodePoints {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedWhitespaceLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"];",
+  {"}};",
   ""};
 
 newlineSource = {
   "//",
   "//",
   "//",
-  "pub const MB_NEWLINE_CODE_POINTS: [CodePoint; MBNEWLINECODEPOINTS_COUNT] = ["} ~Join~
+  "std::array<codepoint, MBNEWLINECODEPOINTS_COUNT> mbNewlineCodePoints {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{#, ",", " "}& /@ mbNewlines]]], "\n"]) ~Join~
-  {"];",
+  {"}};",
   ""};
 
 uninterpretableSource = {
   "//",
   "//",
   "//",
-  "pub const MB_UNINTERPRETABLE_CODE_POINTS: [char; MBUNINTERPRETABLECODEPOINTS_COUNT] = ["} ~Join~
+  "std::array<codepoint, MBUNINTERPRETABLECODEPOINTS_COUNT> mbUninterpretableCodePoints {{"} ~Join~
   (Row[{#}]& /@ StringSplit[StringJoin[insertNewlines[Flatten[{toGlobal["CodePoint`LongName`"<>#], ",", " "}& /@ SortBy[importedUninterpretableLongNames, longNameToCharacterCode]]]], "\n"]) ~Join~
-  {"];",
+  {"}};",
   ""};
 
 LongNameCodePointToOperatorSource = {
   "//",
   "//",
   "//",
-  "pub(crate) fn LongNameCodePointToOperator(c: char) -> TokenKind {",
-  "    match c {"} ~Join~
-  (Row[{"        ", toGlobal["CodePoint`LongName`"<>#], " => ", "return", " ", toTokenEnumVariant["Token`LongName`"<>#], ","}]& /@ importedPunctuationLongNames) ~Join~
-  {"        _ => panic!(\"Need to add operator\"),"} ~Join~
-  {"    }",
+  "TokenEnum LongNameCodePointToOperator(codepoint c) {",
+  "switch (c) {"} ~Join~
+  (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
+  {"}",
+  "assert(false && \"Need to add operator\");",
+  "return TOKEN_UNKNOWN;",
   "}",
   ""};
 
@@ -379,20 +343,91 @@ Print["Generating LongNames..."];
 
 
 longNamesRegistrationCPPHeader = {
-"\
+"
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
 //
 
-const LONGNAMES_COUNT: usize = " <> ToString[Length[importedLongNames]] <> ";
-const RAWLONGNAMES_COUNT: usize = " <> ToString[Length[importedRawLongNames]] <> ";
+#pragma once
 
-const MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT: usize = " <> ToString[Length[importedNotStrangeLetterlikeLongNames]] <> ";
-const MBPUNCTUATIONCODEPOINTS_COUNT: usize = " <> ToString[Length[importedPunctuationLongNames]] <> ";
-const MBWHITESPACECODEPOINTS_COUNT: usize = " <> ToString[Length[importedWhitespaceLongNames]] <> ";
-const MBNEWLINECODEPOINTS_COUNT: usize = " <> ToString[Length[mbNewlines]] <> ";
-const MBUNINTERPRETABLECODEPOINTS_COUNT: usize = " <> ToString[Length[importedUninterpretableLongNames]] <> ";
+#include \"CodePoint.h\" // for codepoint, CODEPOINT_STRINGMETA_DOUBLEQUOTE, etc.
+
+#include <string>
+#include <array>
+#include <map>
+#include <vector>
+#include <cstddef> // for size_t
+
+
+constexpr size_t LONGNAMES_COUNT = " <> ToString[Length[importedLongNames]] <> ";
+constexpr size_t RAWLONGNAMES_COUNT = " <> ToString[Length[importedRawLongNames]] <> ";
+
+constexpr size_t MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT = " <> ToString[Length[importedNotStrangeLetterlikeLongNames]] <> ";
+constexpr size_t MBPUNCTUATIONCODEPOINTS_COUNT = " <> ToString[Length[importedPunctuationLongNames]] <> ";
+constexpr size_t MBWHITESPACECODEPOINTS_COUNT = " <> ToString[Length[importedWhitespaceLongNames]] <> ";
+constexpr size_t MBNEWLINECODEPOINTS_COUNT = " <> ToString[Length[mbNewlines]] <> ";
+constexpr size_t MBUNINTERPRETABLECODEPOINTS_COUNT = " <> ToString[Length[importedUninterpretableLongNames]] <> ";
+
+//
+//
+//
+extern std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names;
+
+//
+//
+//
+extern std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points;
+
+//
+//
+//
+extern std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points;
+
+//
+//
+//
+extern std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names;
+
+//
+//
+//
+extern std::array<std::string, RAWLONGNAMES_COUNT> RawSet;
+
+//
+//
+//
+extern std::array<codepoint, MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT> mbNotStrangeLetterlikeCodePoints;
+
+//
+//
+//
+extern std::map<codepoint, std::vector<std::string>> asciiReplacementsMap;
+
+//
+//
+//
+extern std::array<codepoint, MBPUNCTUATIONCODEPOINTS_COUNT> mbPunctuationCodePoints;
+
+//
+//
+//
+extern std::array<codepoint, MBWHITESPACECODEPOINTS_COUNT> mbWhitespaceCodePoints;
+
+//
+//
+//
+extern std::array<codepoint, MBNEWLINECODEPOINTS_COUNT> mbNewlineCodePoints;
+
+//
+//
+//
+extern std::array<codepoint, MBUNINTERPRETABLECODEPOINTS_COUNT> mbUninterpretableCodePoints;
+
+//
+//
+//
+TokenEnum LongNameCodePointToOperator(codepoint c);
 
 //
 // All long name code points
@@ -400,31 +435,35 @@ const MBUNINTERPRETABLECODEPOINTS_COUNT: usize = " <> ToString[Length[importedUn
 longNameDefines ~Join~
 {""};
 
-(* Print["exporting LongNamesRegistration.h"]; *)
-(* res = Export[FileNameJoin[{generatedCPPIncludeDir, "long_names_registration_data.rs"}], Column[longNamesRegistrationCPPHeader], "String"]; *)
+Print["exporting LongNamesRegistration.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNamesRegistration.h"}], Column[longNamesRegistrationCPPHeader], "String"];
 
-(* Print[res]; *)
+Print[res];
 
-(* If[FailureQ[res],
+If[FailureQ[res],
   Quit[1]
-]; *)
+];
 
 
-longNamesRegistrationCPPSource = longNamesRegistrationCPPHeader ~Join~ {
+longNamesRegistrationCPPSource = {
 "
 //
 // AUTO GENERATED FILE
 // DO NOT MODIFY
 //
 
-use crate::{
-	read::code_point::*,
-	tokenize::TokenKind::{self, *},
-};
+#include \"LongNamesRegistration.h\"
 
+#include \"TokenEnum.h\"
+#include \"TokenEnumRegistration.h\"
+
+#include <algorithm> // for lower_bound
+#include <cassert>
 "} ~Join~
-longNameToCodePointMap ~Join~
-codePointToLongNameMap ~Join~
+longNameToCodePointMapNames ~Join~
+longNameToCodePointMapPoints ~Join~
+codePointToLongNameMapPoints ~Join~
+codePointToLongNameMapNames ~Join~
 rawSet ~Join~
 notStrangeLetterlikeSource ~Join~
 asciiReplacementsSource ~Join~
@@ -435,7 +474,7 @@ uninterpretableSource ~Join~
 LongNameCodePointToOperatorSource;
 
 Print["exporting LongNamesRegistration.cpp"];
-res = Export[FileNameJoin[{generatedCPPSrcDir, "long_names_registration.rs"}], Column[longNamesRegistrationCPPSource], "String"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNamesRegistration.cpp"}], Column[longNamesRegistrationCPPSource], "String"];
 
 Print[res];
 

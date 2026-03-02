@@ -1,4 +1,3 @@
-Print["\n===== Start Tokenize.mt =====\n"]
 
 Needs["CodeParser`"]
 

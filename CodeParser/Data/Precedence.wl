@@ -20,12 +20,9 @@ With modifications based on empirical observations
 *)
 
 <|
-(* The lowest precedence value has been replace with Option<Precedence>, where
-   None represents the absence of a precedence value. *)
-(* Precedence`Lowest -> {0, Associativity`NonRight},
-Precedence`Comma -> {Next, Associativity`NonRight}, *)
+Precedence`Lowest -> {0, Associativity`NonRight},
 
-Precedence`Comma -> {1, Associativity`NonRight},
+Precedence`Comma -> {Next, Associativity`NonRight},
 Precedence`LongName`InvisibleComma -> Precedence`Comma,
 
 Precedence`Semi -> {Next, Associativity`NonRight}, (* Precedence[CompoundExpression] == 10 *)
@@ -389,5 +386,7 @@ Precedence`LongName`InvisiblePostfixScriptBase -> Precedence`LongName`InvisibleP
 Precedence`Highest -> {Next, Associativity`NonRight}, (* Precedence["foo"] == 1000 just an example of any atom *)
 (* Symbol and Under are needed because they have separate Parselets that have to know about precedence *)
 Precedence`Symbol -> Precedence`Highest,
-Precedence`Under -> Precedence`Highest
+Precedence`Under -> Precedence`Highest,
+
+Precedence`AssertFalse -> {Next, Associativity`NonRight}
 |>

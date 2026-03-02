@@ -19,19 +19,12 @@ tokenizeFileFunc
 concreteParseLeafFunc
 safeStringFunc
 
-abstractFunc
-
-roundTripFunc
-
-tokenIsEmptyFunc
-
 
 
 (*
 library functions coming FROM lib
 *)
 LongNameSuggestion
-RoundTripCst
 (*
 SetConcreteParseProgress
 *)
@@ -251,11 +244,11 @@ Which[
 
     destroyParserSessionFunc := destroyParserSessionFunc = fromPointerA @* (If[$Debug, Print["memoizing destroyParserSessionFunc"]]; $ExprLibCompiledLibFuns; loadFunc["DestroyParserSession_LibraryLink", { Integer }, Integer]);
 
-    concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer]);
+    concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, "Boolean" }, Integer]);
 
     concreteParseFileFunc := concreteParseFileFunc = fromPointerA @* (If[$Debug, Print["memoizing concreteParseFileFunc"]]; $ExprLibCompiledLibFuns; loadFunc["ConcreteParseFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer]);
 
-    tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer]);
+    tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeBytesFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeBytes_LibraryLink", { Integer, {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer, "Boolean" }, Integer]);
 
     tokenizeFileFunc := tokenizeFileFunc = fromPointerA @* (If[$Debug, Print["memoizing tokenizeFileFunc"]]; $ExprLibCompiledLibFuns; loadFunc["TokenizeFile_LibraryLink", { Integer, "UTF8String", Integer, Integer, Integer }, Integer]);
 
@@ -280,21 +273,6 @@ Which[
     concreteParseLeafFunc := concreteParseLeafFunc = (If[$Debug, Print["memoizing concreteParseLeafFunc"]]; loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject]);
 
     safeStringFunc := safeStringFunc = (If[$Debug, Print["memoizing safeStringFunc"]]; loadFunc["SafeString_LibraryLink", LinkObject, LinkObject]);
-
-	abstractFunc := abstractFunc = (
-		If[$Debug, Print["memoizing abstractFunc"]];
-		loadFunc["Abstract_LibraryLink", LinkObject, LinkObject]
-	);
-
-	roundTripFunc := roundTripFunc = (
-		If[$Debug, Print["memoizing abstractFunc"]];
-		loadFunc["RoundTripTest_LibraryLink", LinkObject, LinkObject]
-	);
-
-	tokenIsEmptyFunc := tokenIsEmptyFunc = (
-		If[$Debug, Print["memoizing tokenIsEmptyFunc"]];
-		loadFunc["TokenIsEmpty_LibraryLink", LinkObject, LinkObject]
-	);
   ,
   True,
     Message[CodeParser::notransport]
@@ -427,7 +405,6 @@ Module[{res},
 ]]
 
 
-(*====================================*)
 
 (*
 SetConcreteParseProgress[prog_] := (
@@ -442,9 +419,6 @@ SetConcreteParseProgress[prog_] := (
 
 $longNames
 
-(* TODO(cleanup): This has been replaced with a native implementation based on
-	edit-distance. Remove this definition and the ExprLib binding to it?
-	Also remove the generated LongNames.wl file? *)
 LongNameSuggestion[input_String] :=
 Catch[
 Module[{nearest, longNamesFile},
@@ -476,20 +450,6 @@ Module[{nearest, longNamesFile},
   nearest[[1]]
 ]]
 
-
-
-
-
-RoundTripCst[expr_] := Module[{result},
-	result = roundTripFunc[expr];
-
-	(* CodeNode is HoldAll, so force evaluation of the Association 3rd argument. *)
-	result = ReplaceAll[result, {
-		CodeNode[a_, b_, c0_] :> With[{c = c0}, CodeNode[a, b, c]]
-	}];
-
-	result
-]
 
 
 End[]

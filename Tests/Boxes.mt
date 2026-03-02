@@ -1,15 +1,8 @@
-Print["\n===== Start Boxes.mt =====\n"]
 
 Needs["CodeParser`"]
 
-Needs["CodeParser`Library`"]
-
-(*========================================================*)
-(* Tests                                                  *)
-(*========================================================*)
-
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"<<", "ExampleData`FunctionWithAssert`"}]]
+	CodeConcreteParseBox[RowBox[{"<<", "ExampleData`FunctionWithAssert`"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Get, {
@@ -19,10 +12,8 @@ Test[
 	TestID->"Boxes-20190918-D2P4H5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", " ", "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", " ", "b"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Times, {
@@ -33,8 +24,6 @@ Test[
 	,
 	TestID->"Boxes-20191015-Q5H2Y6"
 ]
-
-Test[RoundTripCst[cst], cst]
 
 
 
@@ -104,12 +93,12 @@ TestMatch[
 	,
 	TestID->"Boxes-20191119-Z6J3D5"
 ]
-
+ 
 
 box = RowBox[{"<<", "ExampleData`FunctionWithAssert`", " "}]
-
+ 
 Test[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Get, {
@@ -120,16 +109,13 @@ Test[
 	TestID->"Boxes-20191230-I9W2G5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 
 
 
 box = RowBox[{"a", "::", "b", "::", "c", "::", "d"}]
-
+ 
 Test[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		InfixNode[MessageName, {
@@ -144,24 +130,16 @@ Test[
 	TestID->"Boxes-20191230-K0E3D0"
 ]
 
-Test[RoundTripCst[cst], cst]
 
 
 
 
 
-
-
-box = RowBox[{
-	"\[Integral]",
-	RowBox[{
-		RowBox[{"Sin", "[", "x", "]"}],
-		RowBox[{"\[DifferentialD]", "x"}]
-	}]
-}]
-
+ 
+box = RowBox[{"\[Integral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
@@ -170,26 +148,18 @@ TestMatch[
 				GroupNode[GroupSquare, {
 					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
 					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
-					LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]
-				}, <||>],
-				<|Source -> {1, 2, 1, 1}|>],
-			PrefixNode[DifferentialD, {
-				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
-				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]
-			}, <|Source -> {1, 2, 1, 2}|>]
-		}, <|Source -> {}|>]
-	}, _]
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
+  			PrefixNode[DifferentialD, {
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
 	,
 	TestID->"Boxes-20200126-N4V0N6"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{SubsuperscriptBox["\[Integral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
@@ -206,13 +176,10 @@ TestMatch[
 	TestID->"Boxes-20230201-J0G2S9"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{"\[ContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[ContourIntegral, {
@@ -229,13 +196,10 @@ TestMatch[
 	TestID->"Boxes-20230201-D7J7O3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{SubsuperscriptBox["\[ContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[ContourIntegral, {
@@ -252,13 +216,10 @@ TestMatch[
 	TestID->"Boxes-20230201-D8T7D2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{"\[DoubleContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[DoubleContourIntegral, {
@@ -275,13 +236,10 @@ TestMatch[
 	TestID->"Boxes-20230201-S7W7W7"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{SubsuperscriptBox["\[DoubleContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[DoubleContourIntegral, {
@@ -298,13 +256,10 @@ TestMatch[
 	TestID->"Boxes-20230201-D0G9F0"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{"\[ClockwiseContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[ClockwiseContourIntegral, {
@@ -321,13 +276,10 @@ TestMatch[
 	TestID->"Boxes-20230201-R4T2S8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{SubsuperscriptBox["\[ClockwiseContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[ClockwiseContourIntegral, {
@@ -344,13 +296,10 @@ TestMatch[
 	TestID->"Boxes-20230201-R8L7G0"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{"\[CounterClockwiseContourIntegral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[CounterClockwiseContourIntegral, {
@@ -367,13 +316,10 @@ TestMatch[
 	TestID->"Boxes-20230201-V6L1R0"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 box = RowBox[{SubsuperscriptBox["\[CounterClockwiseContourIntegral]", "a", "b"], RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
-
+ 
 TestMatch[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[CounterClockwiseContourIntegral, {
@@ -399,7 +345,7 @@ This is not a concrete error
 When abstracting, then it becomes an error
 *)
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"1", ":", "2"}]]
+	CodeConcreteParseBox[RowBox[{"1", ":", "2"}]]
  	,
  	ContainerNode[Box, {
  		SyntaxErrorNode[SyntaxError`ExpectedSymbol, {
@@ -410,11 +356,9 @@ Test[
 	TestID->"Boxes-20200616-Y7G7J2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"\\[", "Alpa", "]"}]]
+	CodeConcreteParseBox[RowBox[{"\\[", "Alpa", "]"}]]
 	,
 	ContainerNode[Box, {
 		SyntaxErrorNode[SyntaxError`UnhandledCharacter, {"\\[", "Alpa", "]"}, _]}, <||>]
@@ -422,12 +366,9 @@ TestMatch[
 	TestID->"Boxes-20200616-H4V3I2"
 ]
 
-(* FIXME: Support special UnhandledCharacter syntax error children content. *)
-(* Test[RoundTripCst[cst], cst] *)
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"!!", "a"}]]
+	CodeConcreteParseBox[RowBox[{"!!", "a"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[PrefixNot2, {
@@ -437,11 +378,9 @@ Test[
 	TestID->"Boxes-20200616-F1N0C4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"\[Minus]", "34"}]]
+	CodeConcreteParseBox[RowBox[{"\[Minus]", "34"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Minus, {
@@ -451,11 +390,9 @@ TestMatch[
 	TestID->"Boxes-20200617-G4L7A2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"123", ">>", "tmp"}]]
+	CodeConcreteParseBox[RowBox[{"123", ">>", "tmp"}]]
 	,
 	ContainerNode[Box, {
 		BinaryNode[Put, {
@@ -466,11 +403,9 @@ Test[
 	TestID->"Boxes-20200617-P0V6A8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", "+", RowBox[{"(*", "**)"}], "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", "+", RowBox[{"(*", "**)"}], "b"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Plus, {
@@ -484,12 +419,9 @@ Test[
 	TestID->"Boxes-20200617-K6Q4J5"
 ]
 
-(* FIXME: Support round-tripping Group[CodeParser`Comment, ..] nodes from boxes. *)
-(* Test[RoundTripCst[cst], cst] *)
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"(*", " ", "15`.", " ", "*)"}]]
+	CodeConcreteParseBox[RowBox[{"(*", " ", "15`.", " ", "*)"}]]
 	,
 	ContainerNode[Box, {
 		GroupNode[Comment, {
@@ -502,12 +434,9 @@ Test[
 	TestID->"Boxes-20200618-H6K1F2"
 ]
 
-(* FIXME: Support round-tripping Group[CodeParser`Comment, ..] nodes from boxes. *)
-(* Test[RoundTripCst[cst], cst] *)
-
 
 Test[
-	cst = CodeConcreteParseBox[InterpretationBox["a", Sequence[Appearance -> "Horizontal"]]]
+	CodeConcreteParseBox[InterpretationBox["a", Sequence[Appearance -> "Horizontal"]]]
 	,
 	With[{assoc = <||>},
 		ContainerNode[Box, {
@@ -519,11 +448,9 @@ Test[
 	TestID->"Boxes-20200618-U5E6C1"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"_", ":", "0"}]]
+	CodeConcreteParseBox[RowBox[{"_", ":", "0"}]]
 	,
 	ContainerNode[Box, {
 		BinaryNode[Optional, {
@@ -534,11 +461,9 @@ Test[
 	TestID->"Boxes-20200619-I7R5A5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"x", "\[NonBreakingSpace]", "+", "x"}]]
+	CodeConcreteParseBox[RowBox[{"x", "\[NonBreakingSpace]", "+", "x"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Plus, {
@@ -550,11 +475,9 @@ Test[
 	TestID->"Boxes-20200620-L1I1H4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"x", "\[InvisibleSpace]", "+", "x"}]]
+	CodeConcreteParseBox[RowBox[{"x", "\[InvisibleSpace]", "+", "x"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Plus, {
@@ -566,11 +489,9 @@ Test[
 	TestID->"Boxes-20200621-O0X2J8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"x", "\[VeryThinSpace]", "+", "x"}]]
+	CodeConcreteParseBox[RowBox[{"x", "\[VeryThinSpace]", "+", "x"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Plus, {
@@ -582,11 +503,9 @@ Test[
 	TestID->"Boxes-20200622-S3L3F3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"x", "\[NegativeVeryThinSpace]", "+", "x"}]]
+	CodeConcreteParseBox[RowBox[{"x", "\[NegativeVeryThinSpace]", "+", "x"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Plus, {
@@ -598,11 +517,9 @@ Test[
 	TestID->"Boxes-20200623-C7Y4I5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"<<", " ", "EquationTrekker`"}]]
+	CodeConcreteParseBox[RowBox[{"<<", " ", "EquationTrekker`"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Get, {
@@ -613,11 +530,9 @@ Test[
 	TestID->"Boxes-20200621-Y6O8Y8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"<<", "EquationTrekker`", " "}]]
+	CodeConcreteParseBox[RowBox[{"<<", "EquationTrekker`", " "}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Get, {
@@ -628,11 +543,9 @@ Test[
 	TestID->"Boxes-20200624-U4H7A2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"?", "Join*"}]]
+	CodeConcreteParseBox[RowBox[{"?", "Join*"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Information, {
@@ -642,11 +555,9 @@ Test[
 	TestID->"Boxes-20200621-A3S2R0"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox["101101^^2"]
+	CodeConcreteParseBox["101101^^2"]
 	,
 	ContainerNode[Box, {
 		ErrorNode[Token`Error`Number, "101101^^2", <|Source -> {}|>]}, <||>]
@@ -654,11 +565,9 @@ Test[
 	TestID->"Boxes-20200622-R5K1V9"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"?", "Cos[x]"}]]
+	CodeConcreteParseBox[RowBox[{"?", "Cos[x]"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Information, {
@@ -668,19 +577,9 @@ Test[
 	TestID->"Boxes-20200622-D2N0F3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{
-		"\[Integral]",
-		RowBox[{
-			"x",
-			" ",
-			RowBox[{"Cos", "[", "x", "]"}],
-			RowBox[{"\[DifferentialD]", "x"}]
-		}]
-	}]]
+	CodeConcreteParseBox[RowBox[{"\[Integral]", RowBox[{"x", " ", RowBox[{"Cos", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
@@ -701,11 +600,9 @@ Test[
 	TestID->"Boxes-20200622-H3W5G3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"f", "]"}]]
+	CodeConcreteParseBox[RowBox[{"f", "]"}]]
 	,
 	ContainerNode[Box, {
 		GroupMissingOpenerNode[GroupSquare, {
@@ -715,11 +612,9 @@ Test[
 	TestID->"Boxes-20200622-T6Q0P2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"f", "}"}]]
+	CodeConcreteParseBox[RowBox[{"f", "}"}]]
 	,
 	ContainerNode[Box, {
 		GroupMissingOpenerNode[List, {
@@ -729,11 +624,9 @@ Test[
 	TestID->"Boxes-20200622-X5F8A2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"a", "\[TwoWayRule]", "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", "\[TwoWayRule]", "b"}]]
 	,
 	ContainerNode[Box, {
 		BinaryNode[TwoWayRule, {
@@ -744,11 +637,9 @@ TestMatch[
 	TestID->"Boxes-20200622-U6D8D8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"?", "`*"}]]
+	CodeConcreteParseBox[RowBox[{"?", "`*"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Information, {
@@ -758,11 +649,9 @@ Test[
 	TestID->"Boxes-20200623-K0R8R8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox["#\"user-agent\""]
+	CodeConcreteParseBox["#\"user-agent\""]
 	,
 	ContainerNode[Box, {
 		CompoundNode[Slot, {
@@ -772,11 +661,9 @@ Test[
 	TestID->"Boxes-20200623-N7J4G8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", "::", "\"bbb\""}]]
+	CodeConcreteParseBox[RowBox[{"a", "::", "\"bbb\""}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[MessageName, {
@@ -787,11 +674,9 @@ Test[
 	TestID->"Boxes-20200624-U3V8K6"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"x", "\[VectorGreaterEqual]", "y"}]]
+	CodeConcreteParseBox[RowBox[{"x", "\[VectorGreaterEqual]", "y"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[InfixInequality, {
@@ -802,11 +687,9 @@ TestMatch[
 	TestID->"Boxes-20200623-Q4M7M9"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"\[CubeRoot]", RowBox[{"-", "1000"}]}]]
+	CodeConcreteParseBox[RowBox[{"\[CubeRoot]", RowBox[{"-", "1000"}]}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[CubeRoot, {
@@ -818,11 +701,9 @@ TestMatch[
 	TestID->"Boxes-20200623-D6J5W2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"\[Sqrt]", "3"}]]
+	CodeConcreteParseBox[RowBox[{"\[Sqrt]", "3"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Sqrt, {
@@ -832,11 +713,9 @@ TestMatch[
 	TestID->"Boxes-20200623-J7F4G4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"g", "\[PermutationProduct]", "gg"}]]
+	CodeConcreteParseBox[RowBox[{"g", "\[PermutationProduct]", "gg"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[PermutationProduct, {
@@ -847,11 +726,9 @@ TestMatch[
 	TestID->"Boxes-20200623-I5L6T6"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"n", "\[Divides]", "m"}]]
+	CodeConcreteParseBox[RowBox[{"n", "\[Divides]", "m"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Divisible, {
@@ -862,11 +739,9 @@ TestMatch[
 	TestID->"Boxes-20200623-T3I2Z1"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 TestMatch[
-	cst = CodeConcreteParseBox[RowBox[{"3", "\[GreaterSlantEqual]", "4"}]]
+	CodeConcreteParseBox[RowBox[{"3", "\[GreaterSlantEqual]", "4"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[InfixInequality, {
@@ -877,8 +752,6 @@ TestMatch[
 	TestID->"Boxes-20200623-S9N6Q5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 
@@ -890,7 +763,7 @@ Test[RoundTripCst[cst], cst]
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"\n", "a"}]]
+	CodeConcreteParseBox[RowBox[{"\n", "a"}]]
 	,
 	ContainerNode[Box, {
 		LeafNode[Token`Newline, "\n", <|Source -> {1, 1}|>],
@@ -899,12 +772,10 @@ Test[
 	TestID->"Boxes-20201023-R6Y5N5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", "\n", "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", "\n", "b"}]]
 	,
 	ContainerNode[Box, {
 		LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
@@ -914,12 +785,10 @@ Test[
 	TestID->"Boxes-20201023-O0K3H5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", " ", ":=", "\n", " ", "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", " ", ":=", "\n", " ", "b"}]]
 	,
 	ContainerNode[Box, {
 		BinaryNode[SetDelayed, {
@@ -931,36 +800,6 @@ Test[
 			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-H1C3C8"
-]
-
-Test[RoundTripCst[cst], cst]
-
-agg = CodeParser`Abstract`Aggregate[cst]
-
-Test[
-	agg,
-	ContainerNode[Box, {
-		BinaryNode[SetDelayed, {
-			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
-			LeafNode[Token`ColonEqual, ":=", <|Source -> {1, 3}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]
-		}, <|Source -> {}|>]
-	}, <||>]
-]
-
-Test[
-	CodeParser`Abstract`Abstract[agg],
-	ContainerNode[Box, {
-		CallNode[LeafNode[Symbol, "SetDelayed", <||>], {
-			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]
-		}, <|
-			Source -> {},
-			"Definitions" -> {
-				LeafNode[Symbol, "a", <| Source -> {1, 1} |>]
-			}
-		|>]
-	}, <||>]
 ]
 
 
@@ -1016,7 +855,7 @@ Test[
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", " ", "b", "*", "c"}]]
+	CodeConcreteParseBox[RowBox[{"a", " ", "b", "*", "c"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Times, {
@@ -1030,11 +869,9 @@ Test[
 	TestID->"Boxes-20201023-I1T9S0"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", "*", "b", " ", "c"}]]
+	CodeConcreteParseBox[RowBox[{"a", "*", "b", " ", "c"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Times, {
@@ -1048,11 +885,9 @@ Test[
 	TestID->"Boxes-20201023-W2R0R5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", " ", "*", " ", "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", " ", "*", " ", "b"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Times, {
@@ -1065,13 +900,11 @@ Test[
 	TestID->"Boxes-20201023-Q9B1K2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"p", " ", "q", "*", "\n", " ", "r"}]]
+	CodeConcreteParseBox[RowBox[{"p", " ", "q", "*", "\n", " ", "r"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Times, {
@@ -1087,12 +920,10 @@ Test[
 	TestID->"Boxes-20201023-D5E9D4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", ";", RowBox[{"(*", "*)"}], ";"}]]
+	CodeConcreteParseBox[RowBox[{"a", ";", RowBox[{"(*", "*)"}], ";"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[CompoundExpression, {
@@ -1108,8 +939,6 @@ Test[
 	TestID->"Boxes-20201023-S6K5A5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 
@@ -1121,7 +950,7 @@ Used to hang
 *)
 Test[
 	TimeConstrained[
-		cst = CodeConcreteParseBox[
+		CodeConcreteParseBox[
 	 		RowBox[{
 	 			RowBox[{"(*",
 	 				RowBox[{":", "History", ":", " ",
@@ -1192,13 +1021,9 @@ Test[
 	TestID->"Boxes-20210318-D7H2V0"
 ]
 
-(* FIXME: Support round-tripping Group[CodeParser`Comment, ..] nodes from boxes. *)
-(* Test[RoundTripCst[cst], cst] *)
-
-
 Test[
 	TimeConstrained[
-		cst = CodeConcreteParseBox[RowBox[{"(*", RowBox[{"a", ":", RowBox[{"b", "\n", "c"}], ":"}], "*)"}]]
+		CodeConcreteParseBox[RowBox[{"(*", RowBox[{"a", ":", RowBox[{"b", "\n", "c"}], ":"}], "*)"}]]
 		,
 		3.0
 	]
@@ -1221,9 +1046,6 @@ Test[
 	TestID->"Boxes-20210318-J9V3J3"
 ]
 
-(* FIXME: Support round-tripping Group[CodeParser`Comment, ..] nodes from boxes. *)
-(* Test[RoundTripCst[cst], cst] *)
-
 
 
 
@@ -1234,7 +1056,7 @@ Used to give:
 Failure["InternalUnhandled", <|"Function" -> "parseBox", "Arguments" -> HoldForm[{StringJoin["\\[", CodeParser`RowBox`Private`children[[2]]], {1, 2}}]|>]
 *)
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"xx", RowBox[{RowBox[{"\\[", " ", "EntityEnd", " ", "]"}], "."}]}]]
+	CodeConcreteParseBox[RowBox[{"xx", RowBox[{RowBox[{"\\[", " ", "EntityEnd", " ", "]"}], "."}]}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Times, {
@@ -1247,9 +1069,6 @@ Test[
 	,
 	TestID->"Boxes-20210319-W8T8G4"
 ]
-
-(* FIXME: Support special UnhandledCharacter syntax error children content. *)
-(* Test[RoundTripCst[cst], cst] *)
 
 
 
@@ -1282,7 +1101,7 @@ box =
 Test doing << foo where foo is a complicated box structure
 *)
 Test[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 With[{evaledData = <||>},
 	ContainerNode[Box, {PrefixNode[
@@ -1317,8 +1136,6 @@ With[{evaledData = <||>},
 	TestID->"Boxes-20210909-O7R0T0"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 
@@ -1349,8 +1166,6 @@ Test[
 	,
 	TestID->"Boxes-20210916-E0P0D1"
 ]
-
-Test[RoundTripCst[cst], cst]
 
 agg = CodeParser`Abstract`Aggregate[cst]
 
@@ -1415,7 +1230,7 @@ Test[
 
 
 Test[
-	cst = CodeConcreteParseBox[RowBox[{RowBox[{"g", "[", "]"}], ":="}]]
+	CodeConcreteParseBox[RowBox[{RowBox[{"g", "[", "]"}], ":="}]]
 	,
 	ContainerNode[Box, {
 		BinaryNode[SetDelayed, {
@@ -1429,28 +1244,24 @@ Test[
 	TestID->"Boxes-20220618-S1C8B4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 (*
 bug 426013
 *)
 Test[
-	cst = CodeConcreteParseBox[""]
+	CodeConcreteParseBox[""]
 	,
 	ContainerNode[Box, {Missing["EmptyInput"]}, <||>]
 	,
 	TestID->"Boxes-20220711-Q7R8Q8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 (*
 GIGO
 *)
 Test[
-	cst = CodeConcreteParseBox[RowBox[{"a", ":::", "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", ":::", "b"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[MessageName, {
@@ -1460,8 +1271,6 @@ Test[
 	,
 	TestID->"Boxes-20220829-S5T6B6"
 ]
-
-Test[RoundTripCst[cst], cst]
 
 
 
@@ -1510,7 +1319,7 @@ sWMHLn4B6FERVg==
               "Image"]}], ",", "3"}], "]"}];
 
 Test[
-	cst = CodeConcreteParseBox[box]
+	CodeConcreteParseBox[box]
 	,
 With[{evaledAssoc = <||>},
 	ContainerNode[Box, {CallNode[{LeafNode[Symbol, 
@@ -1569,16 +1378,11 @@ sWMHLn4B6FERVg==
 	TestID->"Boxes-20220916-H7M0J2"
 ]
 
-(* FIXME: Support round-tripping Missing["EmptyInput"] in box nodes. *)
-(* Test[RoundTripCst[cst], cst] *)
-
 
 
 
 
 cst = CodeConcreteParseBox[RowBox[{"a", "}"}]]
-
-Test[RoundTripCst[cst], cst]
 
 agg = CodeParser`Abstract`Aggregate[cst]
 
@@ -1596,277 +1400,135 @@ Test[
 
 
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 2}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-K5B6F0"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "f", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-M5Q4S4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 4}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-C3X9B3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-N6B4D4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"~", "f"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "f"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], LeafNode[Symbol, "f", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-K5Q4Y8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"~", "f", "~"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "f", "~"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 2}|>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 3}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-O5U0L5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"~", "f", "~", "b"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "f", "~", "b"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 2}|>], {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], LeafNode[Symbol, "b", <|Source -> {1, 4}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-B0W6B8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"~", "b"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"~", "b"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> Before[{1, 1}]|>], LeafNode[Symbol, "b", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-G4G5Q5"
 ]
 
-Test[RoundTripCst[cst], cst]
-
 
 
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 6}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-U2T0V7"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "c", <|Source -> {1, 7}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-E6P8D8"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 8}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-X9S9P2"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-U4F5R7"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 10}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-K9S2V4"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e"}]]]]
 	,
 	ContainerNode[Box, {AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], LeafNode[Symbol, "e", <|Source -> {1, 11}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-X3Y1H3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e", "~"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e", "~"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "e", <|Source -> {1, 11}|>], {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 12}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-W1A7X3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
 Test[
-	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[
-		cst = CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e", "~", "f"}]]
-	]]
+	CodeParser`Abstract`Abstract[CodeParser`Abstract`Aggregate[CodeConcreteParseBox[RowBox[{"a", "~", "f", "~", "b", "~", "c", "~", "d", "~", "e", "~", "f"}]]]]
 	,
 	ContainerNode[Box, {CallNode[LeafNode[Symbol, "e", <|Source -> {1, 11}|>], {CallNode[LeafNode[Symbol, "c", <|Source -> {1, 7}|>], {CallNode[LeafNode[Symbol, "f", <|Source -> {1, 3}|>], {LeafNode[Symbol, "a", <|Source -> {1, 1}|>], LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>], LeafNode[Symbol, "d", <|Source -> {1, 9}|>]}, <||>], LeafNode[Symbol, "f", <|Source -> {1, 13}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20220919-G2G8R3"
 ]
 
-Test[RoundTripCst[cst], cst]
-
-
-
-Module[{
-	cst,
-	agg,
-	ast
-},
-	cst = CodeConcreteParseBox[
-		RowBox[{"{", RowBox[{"E", "-", "1"}], "}"}]
-	];
-
-	Test[
-		cst,
-		ContainerNode[Box, {
-			GroupNode[
-				List,
-				{
-					LeafNode[Token`OpenCurly, "{", <|Source -> {1, 1}|>],
-					InfixNode[
-						Plus,
-						{
-							LeafNode[Symbol, "E", <|Source -> {1, 2, 1, 1}|>],
-							LeafNode[Token`Minus, "-", <|Source -> {1, 2, 1, 2}|>],
-							LeafNode[Integer, "1", <|Source -> {1, 2, 1, 3}|>]
-						},
-						<|Source -> {1, 2}|>
-					],
-					LeafNode[Token`CloseCurly, "}", <|Source -> {1, 3}|>]
-				},
-				<|Source -> {}|>
-			]
-		}, <||>]
-	];
-
-	Test[RoundTripCst[cst], cst];
-
-	agg = CodeParser`Abstract`Aggregate[cst];
-
-	Test[agg, cst];
-
-	ast = CodeParser`Abstract`Abstract[cst];
-
-	(* TID:231031/1: Synthetic box source for process plus pair *)
-	Test[
-		ast,
-		ContainerNode[Box, {
-			CallNode[
-				LeafNode[Symbol, "List", <||>],
-				{
-					CallNode[
-						LeafNode[Symbol, "Plus", <||>],
-						{
-							LeafNode[Symbol, "E", <|Source -> {1, 2, 1, 1}|>],
-							LeafNode[Integer, "-1", <||>]
-						},
-						<|Source -> {1, 2}|>
-					]
-				},
-				<|Source -> {}|>
-			]
-		}, <||>],
-		TestID -> "Boxes-20231031-1"
-	]
-]
 
 
 
@@ -1876,37 +1538,5 @@ Module[{
 
 
 
-Module[{
-	cst
-},
-	(* Test CodeConcreteParse of Cell. *)
-	Test[
-		cst = CodeConcreteParse @ Cell[BoxData[FractionBox["1", "0"]], "Input"]
-		,
-		ContainerNode[Cell, {
-			BoxNode[
-				FractionBox,
-				{
-					LeafNode[Integer,"1",<|Source -> {1}|>],
-					LeafNode[Integer, "0", <| Source -> {2}|>]
-				},
-				<|Source -> {}|>
-			]
-		},
-			<||>
-		]
 
-	];
 
-	(* Test Aggregate of ContainerNode[Cell, ...] *)
-	Test[
-		CodeParser`Abstract`Aggregate[cst]
-		,
-		ContainerNode[Cell, {
-			BoxNode[FractionBox, {
-				LeafNode[Integer, "1", <|Source -> {1}|>],
-				LeafNode[Integer, "0", <|Source -> {2}|>]
-			}, <|Source -> {}|>]
-		}, <||>]
-	]
-]

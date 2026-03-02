@@ -40,9 +40,6 @@ FIXME: when a dependency on CodeFormatter is created, then use those functions a
 *)
 replaceTabs
 
-(* NOTE:
-	This function is called directly from CodeFormatter, so even though it is
-	unused in CodeParser, it cannot be deleted. See bug 442107. *)
 tabReplacementFunc
 
 

@@ -1,6 +1,5 @@
 BeginPackage["CodeParser`Folds`"]
 
-(* NOTE: This symbol is called directly by CodeInspector. *)
 aggregate
 
 deparen
@@ -16,42 +15,7 @@ Begin["`Private`"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
-Needs["CodeParser`Library`"]
 
-(*====================================*)
-(* aggregate    *)
-(*====================================*)
-
-(* TODO: Keep in sync with aggregate_cst() set of trivia tokens *)
-$triviaTokenPattern = Alternatives[
-	Token`Comment,
-	Token`Newline,
-	Token`Boxes`MultiWhitespace,
-	Whitespace
-]
-
-aggregate[cst_] := (
-	Replace[cst, {
-		LeafNode[$triviaTokenPattern, _, _]
-			:> Nothing,
-
-		CallNode[head_List, group_, data_]
-			:> CallNode[
-				First[aggregate /@ head],
-				aggregate[group],
-				data
-			],
-
-		node_[tag_, children_List, data_]
-			:> node[tag, aggregate /@ children, data]
-
-		(* Leave unrecognized forms untouched. *)
-	}]
-)
-
-(*====================================*)
-(* aggregateButNotToplevelNewlines    *)
-(*====================================*)
 
 (*
 Remove comments, whitespace, and newlines
@@ -61,12 +25,25 @@ Collapse CallNode[{op}, xxx] to CallNode[op, xxx]
 
 *)
 
+aggregate[LeafNode[Whitespace | Token`Comment | Token`Newline | Token`Boxes`MultiWhitespace, _, _]] := Nothing
+
 aggregateButNotToplevelNewlines[LeafNode[Whitespace | Token`Comment | Token`Boxes`MultiWhitespace, _, _]] := Nothing
+
+aggregate[l_LeafNode] := l
 
 
 (*
 Multiple implicit Times tokens may have been inserted when parsing boxes, so remove them here
 *)
+aggregate[InfixNode[Times, children_, data_]] :=
+Module[{aggregatedChildren},
+
+  aggregatedChildren = aggregate /@ children;
+
+  aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
+
+  InfixNode[Times, aggregatedChildren, data]
+]
 
 aggregateButNotToplevelNewlines[InfixNode[Times, children_, data_]] :=
 Module[{aggregatedChildren},
@@ -82,15 +59,52 @@ Module[{aggregatedChildren},
 (*
 from boxes
 *)
+aggregate[GroupNode[Comment, _, _]] := Nothing
 
 aggregateButNotToplevelNewlines[GroupNode[Comment, _, _]] := Nothing
 
 
 
+aggregate[CallNode[head_List, child_, data_]] :=
+  CallNode[aggregate[head[[1]]], aggregate[child], data]
+
 aggregateButNotToplevelNewlines[CallNode[head_List, child_, data_]] :=
   CallNode[aggregate[head[[1]]], aggregate[child], data]
 
 
+
+aggregate[node:CallNode[headIn_, childIn_, dataIn_]] :=
+  Failure["InvalidHead", <|
+      "Message" -> "Head is not a list (Possibly calling Aggregate on abstract syntax)",
+      "Function" -> aggregate,
+      "Arguments" -> {node}
+    |>
+  ]
+
+
+aggregate[ContainerNode[File, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+  children = childrenIn;
+  data = dataIn;
+
+  aggChildren = aggregate /@ children;
+
+  ContainerNode[File, aggChildren, data]
+]]
+
+aggregate[ContainerNode[Box, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+  children = childrenIn;
+  data = dataIn;
+
+  aggChildren = aggregate /@ children;
+
+  ContainerNode[Box, aggChildren, data]
+]]
 
 aggregateButNotToplevelNewlines[ContainerNode[Box, childrenIn_, dataIn_]] :=
 Catch[
@@ -104,10 +118,23 @@ Module[{children, aggChildren, data},
   ContainerNode[Box, aggChildren, data]
 ]]
 
+aggregate[ContainerNode[Hold, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+  children = childrenIn;
+  data = dataIn;
+
+  aggChildren = aggregate /@ children;
+
+  ContainerNode[Hold, aggChildren, data]
+]]
+
 
 (*
 BoxNode[RowBox] and BoxNode[GridBox] have lists as children
 *)
+aggregate[l_List] := aggregate /@ l
 
 aggregateButNotToplevelNewlines[l_List] := aggregateButNotToplevelNewlines /@ l
 
@@ -131,10 +158,36 @@ Module[{children, aggChildren, data},
   BoxNode[RowBox, aggChildren, data]
 ]]
 
+aggregate[BoxNode[RowBox, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+  children = childrenIn;
+  data = dataIn;
+
+  aggChildren = aggregate /@ children;
+
+  If[MatchQ[aggChildren, {{_}}],
+    (*
+    children is now a single node, so collapse the RowBox
+    *)
+    Throw[aggChildren[[1, 1]]]
+  ];
+
+  BoxNode[RowBox, aggChildren, data]
+]]
 
 (*
 Do not descend into CodeNode
 *)
+aggregate[n:CodeNode[_, _, _]] := n
+
+aggregate[f_?FailureQ] := f
+
+aggregate[m_?MissingQ] := m
+
+aggregate[node_[tag_, children_, data_]] :=
+  node[tag, aggregate /@ children, data]
 
 aggregateButNotToplevelNewlines[node_[tag_, children_, data_]] :=
   node[tag, aggregate /@ children, data]

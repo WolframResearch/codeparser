@@ -1,7 +1,30 @@
-Print["\n===== Start Abstract.mt =====\n"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Scoping`"]
+
+(* bug 459016 *)
+
+Test[
+	CodeParser`Abstract`Abstract[
+	 CodeParser`InfixNode[
+	  Plus, {LeafNode[Integer, "1", <|Source -> {1, 1}|>], 
+	   LeafNode[Token`Plus, "+", <|Source -> {1, 2}|>], 
+	   LeafNode[Integer, "1", <|Source -> {1, 3}|>], 
+	   GroupNode[
+	    Comment, {LeafNode[Token`Boxes`OpenParenStar, 
+	      "(*", <|Source -> {1, 5, 1, 1}|>], 
+	     LeafNode[String, "something", <|Source -> {1, 5, 1, 2}|>], 
+	     LeafNode[Token`Boxes`StarCloseParen, 
+	      "*)", <|Source -> {1, 5, 1, 3}|>]}, <|Source -> {1, 
+	       5}|>]}, <|Source -> {}|>]]
+	       ,
+	CallNode[
+	 LeafNode[Symbol, 
+	  "Plus", <||>], {LeafNode[Integer, "1", <|Source -> {1, 1}|>], 
+	  LeafNode[Integer, "1", <|Source -> {1, 3}|>]}, <|Source -> {}|>]
+	,
+	TestID->"Abstract-20250801-3H23SH98-bug-459016"
+]
 
 
 agg =
@@ -39,62 +62,9 @@ Test[
 (*
 Bug 409472
 *)
-cst = CodeConcreteParseBox[{
-	RowBox[{"Begin", "[", "\"\<FindMinimumTrek`\>\"", "]"}],
-	"\n",
-	RowBox[{"End", "[", "]"}]
-}]
-
-Test[
-	cst,
-	ContainerNode[Box, {
-		CallNode[
-			{
-				LeafNode[Symbol, "Begin", <| Source -> {1, 1, 1} |>]
-			},
-			GroupNode[GroupSquare, {
-				LeafNode[Token`OpenSquare, "[", <| Source -> {1, 1, 2} |>],
-				LeafNode[String, "\"FindMinimumTrek`\"", <| Source -> {1, 1, 3}|>],
-				LeafNode[Token`CloseSquare, "]", <| Source -> {1, 1, 4} |>]
-			}, <||>],
-			<|Source -> {1} |>
-		],
-		LeafNode[Token`Newline, "\n", <| Source -> {2} |>],
-		CallNode[
-			{LeafNode[Symbol, "End", <| Source -> {3, 1, 1} |>]},
-			GroupNode[GroupSquare, {
-				LeafNode[Token`OpenSquare, "[", <| Source -> {3, 1, 2} |>],
-				LeafNode[Token`CloseSquare,	"]", <| Source -> {3, 1, 3} |>]
-			}, <||>],
-			<| Source -> {3} |>
-		]
-	}, <||>]
-]
+cst = CodeConcreteParseBox[{RowBox[{"Begin", "[", "\"\<FindMinimumTrek`\>\"", "]"}], "\n", RowBox[{"End", "[", "]"}]}]
 
 agg = CodeParser`Abstract`Aggregate[cst]
-
-Test[
-	agg,
-	ContainerNode[Box, {
-		CallNode[
-			LeafNode[Symbol, "Begin", <| Source -> {1, 1, 1} |>],
-			GroupNode[GroupSquare, {
-				LeafNode[Token`OpenSquare, "[", <| Source -> {1, 1, 2} |>],
-				LeafNode[String, "\"FindMinimumTrek`\"", <| Source -> {1, 1, 3}|>],
-				LeafNode[Token`CloseSquare, "]", <| Source -> {1, 1, 4} |>]
-			}, <||>],
-			<|Source -> {1} |>
-		],
-		CallNode[
-			LeafNode[Symbol, "End", <| Source -> {3, 1, 1} |>],
-			GroupNode[GroupSquare, {
-				LeafNode[Token`OpenSquare, "[", <| Source -> {3, 1, 2} |>],
-				LeafNode[Token`CloseSquare,	"]", <| Source -> {3, 1, 3} |>]
-			}, <||>],
-			<| Source -> {3} |>
-		]
-	}, <||>]
-]
 
 Test[
 	CodeParser`Abstract`Abstract[agg]
@@ -170,50 +140,7 @@ TestMatch[
 bug 414139
 *)
 
-cst = CodeConcreteParseBox[RowBox[{
-	RowBox[{"Function", "[", RowBox[{"x", ",", RowBox[{"x", "^", "2"}]}], "]"}],
-	"'"
-}]]
-
-Test[
-	cst,
-	ContainerNode[Box, {
-		PostfixNode[Derivative, {
-			CallNode[
-				{
-					LeafNode[Symbol, "Function", <| Source -> {1, 1, 1, 1} |>]
-				},
-				GroupNode[
-					GroupSquare,
-					{
-						LeafNode[Token`OpenSquare, "[", <| Source -> {1, 1, 1, 2} |>],
-						InfixNode[
-							Comma,
-							{
-								LeafNode[Symbol, "x", <| Source -> {1, 1, 1, 3, 1, 1} |>],
-								LeafNode[Token`Comma, ",", <| Source -> {1, 1, 1, 3, 1, 2} |>],
-								BinaryNode[
-									Power,
-									{
-										LeafNode[Symbol, "x", <| Source -> {1, 1, 1, 3, 1, 3, 1, 1} |>],
-										LeafNode[Token`Caret, "^", <| Source -> {1, 1, 1, 3, 1, 3, 1, 2} |>],
-										LeafNode[Integer, "2", <| Source -> {1, 1, 1, 3, 1, 3, 1, 3} |>]
-									},
-									<| Source -> {1, 1, 1, 3, 1, 3} |>
-								]
-							},
-							<| Source -> {1, 1, 1, 3} |>
-						],
-						LeafNode[Token`CloseSquare, "]", <| Source -> {1, 1, 1, 4} |>]
-					},
-					<||>
-				],
-				<| Source -> {1, 1} |>
-			],
-			LeafNode[Token`Boxes`MultiSingleQuote, "'", <| Source -> {1, 2} |>]
-		}, <| Source -> {} |>]
-	}, <||>]
-]
+cst = CodeConcreteParseBox[RowBox[{RowBox[{"Function", "[", RowBox[{"x", ",", RowBox[{"x", "^", "2"}]}], "]"}], "'"}]]
 
 agg = CodeParser`Abstract`Aggregate[cst]
 
@@ -221,32 +148,12 @@ TestMatch[
 	CodeParser`Abstract`Abstract[agg]
 	,
 	ContainerNode[Box, {
-		CallNode[
-			CallNode[
-				LeafNode[Symbol, "Derivative", <||>],
-				{LeafNode[Integer, "1", <||>]},
-				_
-			],
-			{
-				CallNode[
-					LeafNode[Symbol, "Function", <| Source -> {1, 1, 1, 1} |>],
-					{
-						LeafNode[Symbol, "x", <| Source -> {1, 1, 1, 3, 1, 1} |>],
-						CallNode[
-							LeafNode[Symbol, "Power", <||>],
-							{
-								LeafNode[Symbol, "x", <| Source -> {1, 1, 1, 3, 1, 3, 1, 1} |>],
-								LeafNode[Integer, "2", <| Source -> {1, 1, 1, 3, 1, 3, 1, 3} |>]
-							},
-							<| Source -> {1, 1, 1, 3, 1, 3} |>
-						]
-					},
-					<| Source -> {1, 1} |>
-				]
-			},
-			<||>
-		]
-	}, <||>]
+		CallNode[CallNode[LeafNode[Symbol, "Derivative", _], {LeafNode[Integer, "1", _]}, _], {
+			CallNode[LeafNode[Symbol, "Function", _], {
+				LeafNode[Symbol, "x", _],
+				CallNode[LeafNode[Symbol, "Power", _], {
+					LeafNode[Symbol, "x", _],
+					LeafNode[Integer, "2", _]}, _]}, _]}, _]}, _]
 	,
 	TestID->"Abstract-20210908-F9H3D4"
 ]

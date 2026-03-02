@@ -1,5 +1,3 @@
-Print["\n===== Start CallMissingCloserNodes.mt =====\n"]
-
 (* Wolfram Language Test file *)
 
 Needs["CodeParser`"]

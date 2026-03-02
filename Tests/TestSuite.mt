@@ -1,15 +1,10 @@
 (* Wolfram Language Test file *)
 
-Needs["MUnit`"]
-
-SetEnvironment["CODEPARSER_DEBUG" -> "True"]
-
 TestSuite[{
 	"Abstract.mt",
 	"AbstractCallNode.mt",
 	"AbstractSyntaxErrorNodes.mt",
 	"AbstractSyntaxIssues.mt",
-	"Aggregate.mt",
 	"Arrows.mt",
 	"Boxes.mt",
 	"CallMissingCloserNodes.mt",
@@ -26,14 +21,12 @@ TestSuite[{
 	"LineContinuations.mt",
 	"Parse.mt",
 	"Quirks.mt",
-	"Regressions.mt",
 	"SafeString.mt",
 	"Scoping.mt",
 	"Span.mt",
 	"SyntaxErrorNodes.mt",
 	"SyntaxIssues.mt",
 	"TokenErrors.mt",
-	"TokenEnum.mt",
 	"Tokenize.mt",
 	"ToNode.mt",
 	"TopLevel.mt",

@@ -1,4 +1,3 @@
-Print["\n===== Start SyntaxIssues.mt =====\n"]
 
 Needs["CodeParser`"]
 

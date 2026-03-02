@@ -1,4 +1,3 @@
-Print["\n===== Start Definitions.mt =====\n"]
 
 Needs["CodeParser`Definitions`"]
 Needs["CodeParser`"]

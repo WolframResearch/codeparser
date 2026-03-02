@@ -1,7 +1,6 @@
 BeginPackage["CodeParser`Generate`Common`"]
 
 toGlobal
-toTokenEnumVariant
 
 generatedCPPDir
 generatedCPPIncludeDir
@@ -17,7 +16,7 @@ importedLongNames
 
 importedPrecedenceSource
 
-FatalError::usage = "FatalError[expr, ...] prints an error message an exists with a fatal error code."
+importedTokenEnumSource
 
 Begin["`Private`"]
 
@@ -36,53 +35,12 @@ Needs["CodeTools`Generate`GenerateSources`"];
 (*
 uppercases and replaces ` with _
 *)
-toGlobal[n0_String] := Module[{n = n0},
-	(* TODO(cleanup): This is a workaround *)
-	If[StringStartsQ[n, "CodePoint`LongName`"],
-		n = ToUpperCase[n]
-	];
+toGlobal[n_] :=
+  StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
-	StringReplace[n, {"`" -> "_", "$" -> "_"}]
-]
-
-toGlobal[n_Symbol] := (
-	If[StringStartsQ[Context[n], "Precedence`"],
-		StringReplace[
-			toGlobal[ToUpperCase[ToString[n]]],
-			"PRECEDENCE_" -> "Precedence::"
-		]
-		,
-		toGlobal[ToUpperCase[ToString[n]]]
-	]
-)
-
-toGlobal[n_, "CodePoint"] :=
-	Replace[n, {
-		CodePoint`CRLF -> "CodePoint::CRLF",
-		"CodePoint`LongName`RawDoubleQuote" -> toGlobal[n],
-		"CodePoint`LongName`RawBackslash" -> toGlobal[n],
-		other_String :> StringJoin["CodePoint::from_char(", toGlobal[other], ")"]
-	}]
-
-toGlobal[n_, "UpperCamelCase"] :=
-  StringReplace[ToString[n], {"`" -> "_", "$" -> "_"}]
-
-
-toGlobal[sym_Symbol, "DefinePrecedence"] :=
-	StringTrim[toGlobal[sym], "Precedence::"]
-
-toGlobal[args___] := FatalError[{"BAD ARGS: ", args}]
-
-toTokenEnumVariant[name_] :=
-	StringReplace[
-		toGlobal[name, "UpperCamelCase"],
-		StartOfString ~~ "Token_" -> ""
-	]
-
-(* generatedCPPDir = FileNameJoin[{buildDir, "generated", "rust"}] *)
-generatedCPPDir = FileNameJoin[{srcDir, "crates", "wolfram-parser", "src", "generated"}]
-generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir}]
-generatedCPPSrcDir = FileNameJoin[{generatedCPPDir}]
+generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
+generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
+generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
 
 dataDir := dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 
@@ -94,11 +52,7 @@ importedLongNames := importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.w
 
 importedPrecedenceSource := importedPrecedenceSource = Get[FileNameJoin[{dataDir, "Precedence.wl"}]]
 
-FatalError[args___] := (
-	Print["\n\nFATAL ERROR: ", args, "\n\n"];
-
-	Exit[-1]
-)
+importedTokenEnumSource := importedTokenEnumSource = Get[FileNameJoin[{dataDir, "TokenEnum.wl"}]]
 
 End[]
 

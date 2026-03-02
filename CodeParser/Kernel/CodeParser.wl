@@ -211,9 +211,6 @@ ContainerNode
 
 SyntaxErrorNode
 GroupMissingCloserNode
-(* TODO(cleanup):
-	UnterminatedGroupNeedsReparseNode symbol is now unused. Remove if there is
-	limited risk of backwards incompatibility. *)
 UnterminatedGroupNeedsReparseNode
 (*
 GroupMissingOpenerNode is only used in Boxes
@@ -292,6 +289,7 @@ Needs["CodeParser`Abstract`"]
 Needs["CodeParser`Boxes`"]
 Needs["CodeParser`CodeAction`"]
 Needs["CodeParser`Definitions`"]
+Needs["CodeParser`Error`"]
 Needs["CodeParser`Library`"]
 Needs["CodeParser`Quirks`"]
 Needs["CodeParser`Scoping`"]
@@ -346,7 +344,8 @@ Options[CodeConcreteParse] = {
   (*
   more obscure options
   *)
-  ContainerNode -> Automatic
+  ContainerNode -> Automatic,
+  "AlreadyHasEOFSentinel" -> False
 }
 
 
@@ -387,6 +386,19 @@ Module[{cst, bytes, encoding, fileFormat, firstLineBehavior},
     Throw[cst]
   ];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+  
   cst
 ]]
 
@@ -458,7 +470,7 @@ Module[{res, convention, container, tabWidth,
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], False];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -547,6 +559,27 @@ Module[{cst, encoding, full, bytes, fileFormat, firstLineBehavior,
 
   cst = Insert[cst, "FileName" -> full, {3, -1}];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    (*
+    Was:
+    bytes = Import[full, "Byte"];
+
+    but this is slow
+    *)
+    bytes = ReadByteArray[full];
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   cst
 ]]
 
@@ -578,7 +611,7 @@ Module[{res, convention, container, containerWasAutomatic,
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
+  res = libraryFunctionWrapper[concreteParseFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -677,6 +710,19 @@ Module[{cst, encoding, fileFormat, firstLineBehavior, bytes},
     Throw[cst]
   ];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   cst
 ]]
 
@@ -718,14 +764,24 @@ Module[{res, container, containerWasAutomatic},
 
 concreteParseBytes[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, container, tabWidth, containerWasAutomatic},
+Module[{res, convention, container, tabWidth, containerWasAutomatic,
+  alreadyHasEOFSentinel},
 
   convention = OptionValue[func, {opts}, SourceConvention];
   container = OptionValue[func, {opts}, ContainerNode];
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  alreadyHasEOFSentinel = OptionValue[func, {opts}, "AlreadyHasEOFSentinel"];
 
   If[Length[bytes] == 0,
     Throw[concreteParseBytes[{}, firstLineBehavior, func, opts]]
+  ];
+
+  If[!MatchQ[alreadyHasEOFSentinel, True | False],
+    Throw[Failure["AlreadyHasEOFSentinelIsNotTrueOrFalse", <| "AlreadyHasEOFSentinel" -> alreadyHasEOFSentinel |>]]
+  ];
+
+  If[alreadyHasEOFSentinel && bytes[[-1]] != 255,
+    Throw[Failure["EOFSentinelIsNotPresent", <||>]]
   ];
 
   (*
@@ -747,7 +803,7 @@ Module[{res, convention, container, tabWidth, containerWasAutomatic},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], alreadyHasEOFSentinel];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -784,7 +840,8 @@ Options[CodeParse] = {
   (*
   more obscure options
   *)
-  ContainerNode -> Automatic
+  ContainerNode -> Automatic,
+  "AlreadyHasEOFSentinel" -> False
 }
 
 
@@ -842,7 +899,8 @@ Options[CodeTokenize] = {
   CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   "TabWidth" -> 1,
-  "FileFormat" -> Automatic
+  "FileFormat" -> Automatic,
+  "AlreadyHasEOFSentinel" -> False
 }
 
 
@@ -862,6 +920,19 @@ Module[{toks, encoding, bytes},
 
   If[FailureQ[toks],
     Throw[toks]
+  ];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
   ];
 
   toks
@@ -886,7 +957,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], False];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -951,6 +1022,21 @@ Module[{toks, encoding, full, bytes, fileFormat, firstLineBehavior,
     Throw[toks]
   ];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    bytes = ReadByteArray[full];
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   toks
 ]]
 
@@ -965,7 +1051,7 @@ Module[{res, convention, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
+  res = libraryFunctionWrapper[tokenizeFileFunc, $ParserSession, full, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -996,6 +1082,19 @@ Module[{toks, encoding, bytes},
     Throw[toks]
   ];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   toks
 ]]
 
@@ -1009,16 +1108,25 @@ Module[{res, convention, tabWidth, alreadyHasEOFSentinel},
 
   convention = OptionValue[func, {opts}, SourceConvention];
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  alreadyHasEOFSentinel = OptionValue[func, {opts}, "AlreadyHasEOFSentinel"];
 
   If[Length[bytes] == 0,
     Throw[tokenizeBytes[{}, firstLineBehavior, func, opts]]
+  ];
+
+  If[!MatchQ[alreadyHasEOFSentinel, True | False],
+    Throw[Failure["AlreadyHasEOFSentinelIsNotTrueOrFalse", <| "AlreadyHasEOFSentinel" -> alreadyHasEOFSentinel |>]]
+  ];
+
+  If[alreadyHasEOFSentinel && bytes[[-1]] != 255,
+    Throw[Failure["EOFSentinelIsNotPresent", <||>]]
   ];
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], $Quirks];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, $ParserSession, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], alreadyHasEOFSentinel];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1085,6 +1193,19 @@ Module[{res, leaf, data, exprs, bytes},
 
   leaf = exprs[[1]];
 
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    leaf = leaf
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
   If[!empty[res[[2]]],
     data = leaf[[3]];
     data[SyntaxIssues] = res[[2]];
@@ -1147,7 +1268,7 @@ Module[{res, stringifyMode, convention, tabWidth, encodingMode},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  res = libraryFunctionWrapper[concreteParseLeafFunc, $ParserSession, bytes, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode, $Quirks];
+  res = libraryFunctionWrapper[concreteParseLeafFunc, $ParserSession, bytes, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1196,6 +1317,8 @@ Module[{res},
   If[FailureQ[res],
     Throw[res]
   ];
+
+  res = res[[1]];
 
   res
 ]]

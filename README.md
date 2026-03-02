@@ -119,12 +119,6 @@ $ git lfs pull --exclude="" --include="*"
 
 This will override the default settings in [`.lfsconfig`](./.lfsconfig).
 
-Then, to begin running the benchmarks, execute:
-
-```shell
-$ cargo bench
-```
-
 ## File Overview
 
 * [Tests/files/large/](./Tests/files/large/) contains files

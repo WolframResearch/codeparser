@@ -68,7 +68,7 @@ execute_process(
 )
 
 if(NOT ${SCRIPT_RESULT} EQUAL "0")
-message(FATAL_ERROR "Bad exit code from script: ${SCRIPT_RESULT} (script was ${SCRIPT})")
+message(FATAL_ERROR "Bad exit code from script: ${SCRIPT_RESULT}")
 endif()
 
 endif()

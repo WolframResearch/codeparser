@@ -1,4 +1,3 @@
-Print["\n===== Start Parse.mt =====\n"]
 
 path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
@@ -2727,9 +2726,6 @@ Test[
 
 
 
-(* NOTE:
-    CodeParser has dropped support for matching this quirky Kernel ~ parsing
-	behavior, so these equivalence tests now intentionally no longer succeed.
 Test[
 	" a ~f!~ b "
 	,
@@ -2749,53 +2745,11 @@ Test[
 	,
 	TestID->"Parse-20200121-V7I9V3"
 ]
-*)
-
-Test[
-	CodeConcreteParse[" a ~f,~ b "]
-	,
-	ContainerNode[String, {
-		LeafNode[Whitespace, " ", <|Source -> {{1, 1}, {1, 2}}|>],
-		InfixNode[Comma, {
-			SyntaxErrorNode[
-				SyntaxError`ExpectedTilde,
-				{
-					LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>],
-					LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
-					LeafNode[Token`Tilde, "~", <|Source -> {{1, 4}, {1, 5}}|>],
-					LeafNode[Symbol, "f", <|Source -> {{1, 5}, {1, 6}}|>]
-				},
-				<|Source -> {{1, 2}, {1, 6}}|>
-			],
-			LeafNode[Token`Comma, ",", <|Source -> {{1, 6}, {1, 7}}|>],
-			SyntaxErrorNode[SyntaxError`ExpectedTilde, {
-				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>],
-				LeafNode[Token`Tilde, "~", <|Source -> {{1, 7}, {1, 8}}|>],
-				LeafNode[Whitespace, " ", <|Source -> {{1, 8}, {1, 9}}|>],
-				LeafNode[Symbol, "b", <|Source -> {{1, 9}, {1, 10}}|>]
-			}, <|Source -> {{1, 7}, {1, 10}}|>]
-		}, <|Source -> {{1, 2}, {1, 10}}|>],
-		LeafNode[Whitespace, " ", <|Source -> {{1, 10}, {1, 11}}|>]
-	}, <|Source -> {{1, 1}, {1, 11}}|>]
-	,
-	TestID->"Parse-20200121-C5U1S2"
-]
 
 Test[
 	CodeParse[" a ~f,~ b "]
 	,
-	ContainerNode[String, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, {
-			SyntaxErrorNode[SyntaxError`ExpectedTilde, {
-				LeafNode[Symbol, "a", <|Source -> {{1, 2},{1, 3}}|>],
-				LeafNode[Symbol, "f", <|Source -> {{1, 5}, {1, 6}}|>]
-			}, <|Source -> {{1, 2}, {1, 6}}|>],
-			SyntaxErrorNode[SyntaxError`ExpectedTilde, {
-				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>],
-				LeafNode[Symbol, "b", <|Source -> {{1, 9}, {1, 10}}|>]
-			}, <|Source -> {{1, 7}, {1, 10}}|>]
-		}, <|Source -> {{1, 2}, {1, 10}}|>]
-	}, <|Source -> {{1, 1}, {1, 11}}|>]
+	ContainerNode[String, {SyntaxErrorNode[SyntaxError`ExpectedTilde, {LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>], CallNode[LeafNode[Symbol, "CodeParser`Comma", <||>], {LeafNode[Symbol, "f", <|Source -> {{1, 5}, {1, 6}}|>], SyntaxErrorNode[SyntaxError`ExpectedTilde, {ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>], LeafNode[Symbol, "b", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 7}, {1, 10}}|>]}, <|Source -> {{1, 5}, {1, 10}}|>]}, <|Source -> {{1, 2}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
 	,
 	TestID->"Parse-20200121-C5U1S2"
 ]
@@ -3603,6 +3557,18 @@ Test[
 			LeafNode[String, "\"[\\\\0]\"", <|Source -> {{1, 4}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
 	,
 	TestID->"Parse-20221001-M7B3J3"
+]
+
+(* This test fails with the Rust based Codeparser - V1.10  *)
+VerificationTest[
+	CodeConcreteParse["x = \"str
+
+"]
+	,
+	_ContainerNode
+	,
+	TestID->"Parse-bug#452255",
+	SameTest -> MatchQ
 ]
 
 

@@ -1,4 +1,3 @@
-Print["\n===== Start SyntaxErrorNodes.mt =====\n"]
 
 Needs["CodeParser`"]
 

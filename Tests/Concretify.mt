@@ -1,10 +1,7 @@
-Print["\n===== Start Concretify.mt =====\n"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Concretify`"]
 Needs["CodeParser`Utils`"]
-
-SetEnvironment["CODEPARSER_DEBUG" -> "False"]
 
 
 Test[
@@ -1135,4 +1132,3 @@ Test[
 
 
 
-SetEnvironment["CODEPARSER_DEBUG" -> "True"]
